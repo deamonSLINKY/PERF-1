@@ -21,7 +21,7 @@ PART_COLOURS = {}                                     # (X0X marks its parts wit
 
 CSS = """
 /* HYP-1's screen: a charcoal ground, a cyberpunk purple, orange for what is live (the names below are
-   AMB-1's: paper the ground, sheet the cards, river the purple, ink the text) */
+   inherited from AMB-1: paper the ground, sheet the cards, river the purple, ink the text) */
 :root {
   --paper: #141318; --sheet: #211e29; --green-1: #2f2840; --green-3: #6b5a8c;
   --river: #a44cff; --river-2: #c18cff; --ink: #f1ecf4; --muted: #aaa1b8; --rule: #3e3a4c;

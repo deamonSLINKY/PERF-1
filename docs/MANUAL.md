@@ -6,6 +6,10 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
+This manual is for HYP-1 version 1.0.21. To hear it first, watch
+[five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
+[YouTube](https://www.youtube.com/@RedtailWorks).
+
 ![The FM-1 running HYP-1](img/hyp-device.png)
 
 ---
@@ -75,7 +79,7 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 14 | ENV | Pad; press again for Pad env, again for Pad LFO. |
 | 15 | LFO | Drone; again for Drone env, again for Drone LFO. |
 | 16 | EDIT | The next chord, on the next bar. |
-| 17 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. |
+| 17 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. With SEL held: remote (see 13). |
 | 18 | HOME | The Tempo page. Hold it and turn SELECT for the tempo. |
 | 19 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. In FX, held: lock mode. |
 | 20 | ARP | Acid; again for Acid env, again for Acid line. |
@@ -116,11 +120,11 @@ button again steps through that voice's envelope and LFO. KNOB 1 is always a voi
 | Tempo | HOME | Tempo (70–190) | Evolve | Motion | Drift (20 s – 5 min a chord) |
 | Pad | ENV | Level | Bright | Colour (Rhodes / Voices) | Detune |
 | Pad env | ENV ×2 | Attack | Hold | Release | Rest |
-| Pad LFO | ENV ×3 | Rate (1/4 – 32 bars) | Depth | Shape | Target (filter, level, pan, pitch) |
+| Pad LFO | ENV ×3 | Rate (a 1/4 note – 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
 | Noise | SELECT | Level | Colour (8) | Tone | Pump |
 | Drone | LFO | Level | Octave | Cutoff | Reso |
 | Drone env | LFO ×2 | Trigger (chord, 1–8 bars, off) | Attack | Decay | Amount |
-| Drone LFO | LFO ×3 | Rate | Depth | Shape | Target (cutoff, pitch, level, drive) |
+| Drone LFO | LFO ×3 | Rate (a 1/4 note – 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP ×2 | Decay | Accent | Slide | Wave (saw / square) |
 | Acid line | ARP ×3 | Density | Length (1–16) | Range (1–3 oct) | Mutate |

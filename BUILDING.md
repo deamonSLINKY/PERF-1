@@ -1,4 +1,7 @@
-# Building AMB-1
+# Building HYP-1
+
+This covers HYP-1 version 1.0.21. Every push to `main` builds a release on GitHub (see
+[Releases on GitHub](#releases-on-github)); building locally is only needed to work on the firmware.
 
 The build makes three files in `build/`:
 
@@ -41,7 +44,8 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
 (`~/.jieli/toolchain`, `~/fw-AC79_AIoT_SDK`).
 
-`./build.sh --release 0.9` makes a release build; the package is `build/amb-0.9.fwsc`.
+`./build.sh --release 1.0.21` makes a release build; the package is `build/amb-1.0.21.fwsc` (the site
+publishes it as `hyp1-1.0.21.fwsc`).
 
 On macOS with podman instead of Docker, put a `docker` script that runs `exec podman "$@"` first
 on your PATH. `EN_JOBS` (default 4) limits parallel compiles: a podman machine drops
@@ -81,11 +85,35 @@ mode. If the FM-1 no longer starts but reaches the chip's update mode (4C4A:8057
 `tools/fm1_rescue.sh` puts stock firmware back from a Mac; otherwise recovery needs
 [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).
 
-## Publishing a release
+## Releases on GitHub
 
-1. `./build.sh --release X.Y` (the identity, FM-1_7XXYYZZ, is what the installer checks).
-2. `tools/publish_pages.sh X.Y`: builds the site (landing page, manual, browser emulator, web
-   installer, firmware) with `tools/make_pages.py` and pushes it to the `gh-pages` branch, which
-   GitHub Pages serves at <https://charlesvestal.github.io/fm1-amb/>. The manual's source is
-   `docs/MANUAL.md` (`tools/manual_html.py` turns it into the page).
-3. `gh release create vX.Y build/amb-X.Y.fwsc` for the command-line download.
+Every push to `main` runs `.github/workflows/firmware.yml`:
+
+1. It fetches JieLi's toolchain and the AC79 SDK (cached between runs, with retries).
+2. It builds a release numbered `1.0.N`, N being the workflow's run number, so each push is a new
+   version (the FM-1 reports it as FM-1_7XXYYZZ, which the installer checks).
+3. It runs the tests, and fails the build on a size, pool or soft-double problem (shown as
+   annotations on the run).
+4. It builds the site with `tools/make_pages.py` (landing page, manual, PDF manual, browser emulator,
+   web installer, firmware download) and deploys it to GitHub Pages at
+   <https://rustypawz.github.io/fm1-HYP1/>. The firmware is also kept as the run's artifact.
+
+The manual's source is `docs/MANUAL.md` (`tools/manual_html.py` turns it into the page; the site
+stamps the build's version into it). The PDF manual, `docs/HYP-1_Manual.pdf`, is built separately and
+committed.
+
+## The site's pictures and videos
+
+All made from the firmware itself, run in the simulator:
+
+```
+host/build_host.sh
+build/host/amb_host tools/site/shots.amb build/site_shots      # the screens
+python3 tools/site/mockups.py                                  # docs/img: the device, screens, themes
+python3 tools/site/panda.py                                    # the red panda mark and favicon
+python3 tools/site/video.py [--vertical]                       # the tour; --seq, --voices, --links,
+                                                               # --song for the other videos
+```
+
+`tools/publish_pages.sh` (pushing a site to a `gh-pages` branch by hand) is AMB-1's older route and
+isn't needed with the workflow.

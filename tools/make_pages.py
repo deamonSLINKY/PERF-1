@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""Make the AMB-1 site for GitHub Pages (https://charlesvestal.github.io/fm1-amb/):
+"""Make the HYP-1 site for GitHub Pages (https://rustypawz.github.io/fm1-HYP1/; the workflow runs this):
 
-  index.html                  what AMB-1 is, and the ways in: try, install, manual, download, source
+  index.html                  what HYP-1 is, the video, and the ways in: try, install, manual, download, source
   img/                        screenshots (docs/img)
-  emu/                        AMB-1 in the browser (build/emu, from web/emu/build.sh)
+  emu/                        HYP-1 in the browser (build/emu, from web/emu/build.sh)
   install/index.html          the web installer (web/amb_installer.html, with fm1pkg.js, fm1ota.js and
                               the package's metadata inlined; Chrome or Edge, Web MIDI)
   manual/index.html, img/     the manual (tools/manual_html.py, from docs/MANUAL.md)
   firmware/amb-VERSION.fwsc   the package the installer writes; also the download
 
-  tools/make_pages.py build/amb-0.9.fwsc 0.9 OUT_DIR
+  tools/make_pages.py build/amb-1.0.21.fwsc 1.0.21 OUT_DIR
 
 The package must be a release build (./build.sh --release X.Y): its identity, FM-1_7XXYYZZ, is what
 the installer checks the download against and what the FM-1 reports after the install."""
@@ -99,6 +99,12 @@ code { font-size: .9em; background: var(--card-2); padding: .05em .35em; border-
 footer { margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; align-items: center; }
 footer .rw { font: 700 1.05rem "Chakra Petch", sans-serif; letter-spacing: .08em; text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
 footer .rw span:nth-child(2) { color: var(--purple-2); } footer .rw span:last-child { color: var(--orange); }
+.video { margin: 0 0 1.8rem; }
+.video .frame { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 1px solid var(--rule); background: #000; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video figcaption { display: flex; flex-wrap: wrap; gap: .3rem 1rem; justify-content: space-between; }
+.video figcaption a { color: var(--orange); }
+footer .ver { font-family: "Chakra Petch", sans-serif; color: var(--muted); font-size: .9rem; }
 @media (max-width: 560px) { .lede { font-size: 1.15rem; } h2 { font-size: 1.25rem; } }
 </style>
 </head>
@@ -114,12 +120,18 @@ it's switched on: a breathing pad, a deep drone, a generative 303 line and grain
 You shape the voices like a small modular, flip patterns on the bar, break it down, build it up, and record
 the whole performance into your DAW.</p>
 
+<figure class="video">
+  <div class="frame"><iframe src="https://www.youtube-nocookie.com/embed/0UvGnZE2_VI?rel=0" title="HYP-1: a five-minute live take on the M-VAVE FM-1" loading="lazy"
+    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+  <figcaption><span>Five minutes played live on piece 01: no edits, just the firmware.</span><a href="https://www.youtube.com/watch?v=0UvGnZE2_VI">Watch on YouTube</a></figcaption>
+</figure>
+
 <nav class="ways" aria-label="Get HYP-1">
   <a href="emu/"><strong>Try it in the browser</strong><span>The same code the FM-1 runs, with sound. Mouse, touch or keyboard; no FM-1 needed.</span></a>
   <a href="install/"><strong>Install <em class="v">v__VERSION__</em></strong><span>From Chrome or Edge, with the FM-1 connected by USB. Nothing to install on the computer.</span></a>
   <a href="manual/"><strong>Manual</strong><span>Every control, every page, every screen, on one page.</span></a>
   <a href="manual/HYP-1_Manual.pdf"><strong>PDF manual</strong><span>Printable, with every control numbered and every screen lettered.</span></a>
-  <a href="https://www.youtube.com/@RedtailWorks"><strong>Watch it</strong><span>Tours and jams on the RedtailWorks YouTube channel.</span></a>
+  <a href="https://www.youtube.com/@RedtailWorks"><strong>More videos</strong><span>Tours, the sequencer, the voices and the links on the RedtailWorks YouTube channel.</span></a>
   <a href="firmware/__PKG__"><strong>Download <em class="v">__PKG__</em></strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
 </nav>
 
@@ -157,6 +169,7 @@ the whole performance into your DAW.</p>
   <div class="card"><h3>Breakdowns</h3><p><b>SAVE</b> drops a breakdown on the next bar; tap again for a four-bar build and the drop, or hold it for the drop straight away. <b>REC</b> freezes the chord.</p></div>
   <div class="card"><h3>Shift</h3><p>Hold <b>SEL</b>: white keys 1&ndash;6 jump to a pattern on the bar, <b>PRESETS</b> changes piece on the next bar, and in the sequencer you copy, clear and restore lanes.</p></div>
   <div class="card"><h3>Links</h3><p>Patch the drums into the voices: each <b>kick</b> opens the drone's filter, <b>snares</b> flash the pad, <b>hats</b> accent the acid, and the <b>perc</b> lane can clock the acid line. <b>SEL + SEQ</b> turns them on and off.</p></div>
+  <div class="card"><h3>Remote</h3><p>Plug the FM-1 into a computer, open the <a href="emu/">emulator</a> and press <b>SEL + GLO</b>: its whole panel plays the browser, lights and all. Any other MIDI controller works too, with MIDI learn.</p></div>
   <div class="card"><h3>Always different</h3><p>Every power-on starts on a piece at random: as you stored it, or slightly nudged from its factory settings. Chords drift, the acid mutates, a slow tide moves between sparse and full.</p></div>
 </div>
 
@@ -182,7 +195,7 @@ M-VAVE and FM-1 are trademarks of their owners; HYP-1 is not affiliated with M-V
 M-VAVE's updater, M-UPGRADE, from <a href="https://www.m-vave.com/download">m-vave.com/download</a>.
 Installing firmware is at your own risk.</p>
 <footer><a class="rw" href="https://www.redtail.works"><img class="panda" src="img/panda.png" width="48" height="38" alt=""><span>REDTAIL</span><span>WORKS</span></a>
-  <span class="small">HYP-1 is a RedtailWorks project &middot; <a href="https://www.redtail.works">www.redtail.works</a> &middot; <a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a> &middot; <a href="__REPO__">source on GitHub</a></span></footer>
+  <span class="small">HYP-1 is a RedtailWorks project &middot; <a href="https://www.redtail.works">www.redtail.works</a> &middot; <a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a> &middot; <a href="__REPO__">source on GitHub</a></span><span class="ver">version __VERSION__</span></footer>
 </main>
 </body>
 </html>
@@ -216,6 +229,9 @@ def main(pkg, version, out):
     # the manual (a complete page; its images beside it)
     subprocess.run([sys.executable, str(SRC / "tools" / "manual_html.py"), str(SRC / "docs" / "MANUAL.md"),
                     str(out / "manual" / "index.html")], check=True, capture_output=True)
+    man = out / "manual" / "index.html"                 # the build's own version, wherever the manual names one
+    man.write_text(re.sub(r"HYP-1 version \d+\.\d+\.\d+", "HYP-1 version " + html.escape(version), man.read_text(encoding="utf-8")),
+                   encoding="utf-8")
     shutil.copytree(SRC / "docs" / "img", out / "manual" / "img")
     if (SRC / "docs" / "HYP-1_Manual.pdf").exists():
         shutil.copy(SRC / "docs" / "HYP-1_Manual.pdf", out / "manual" / "HYP-1_Manual.pdf")

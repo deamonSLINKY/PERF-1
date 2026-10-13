@@ -8,13 +8,17 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal.
+by Charles Vestal. Current version: **1.0.21** (each push to `main` builds the next one).
+
+[![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
+
+*Five minutes played live on piece 01: [watch on YouTube](https://www.youtube.com/watch?v=0UvGnZE2_VI).*
 
 - **Try it in your browser** (no FM-1 needed): <https://rustypawz.github.io/fm1-HYP1/emu/>
 - **Install it** (Chrome or Edge, with the FM-1 plugged in): <https://rustypawz.github.io/fm1-HYP1/install/>
 - **Read the manual**: <https://rustypawz.github.io/fm1-HYP1/manual/>, or the
   [printable PDF](docs/HYP-1_Manual.pdf) with every control numbered and every screen lettered
-- **Watch it**: tours and jams on [YouTube](https://www.youtube.com/@RedtailWorks)
+- **Watch it**: [a five-minute live take](https://www.youtube.com/watch?v=0UvGnZE2_VI), and more on [YouTube](https://www.youtube.com/@RedtailWorks)
 - **More from RedtailWorks**: <https://www.redtail.works>
 
 Installing it is at your own risk, though it's hard to get stuck: the web installer can put M-VAVE's
@@ -69,6 +73,24 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
 | OCT− / OCT+ | ±3 octaves: the page's voice (pad, drone, acid), or the whole song on any other page; in the sequencer, the drum |
 | Keys | The scale; in the sequencer, the steps; in FX, effects |
 
+## Versions
+
+Each build is numbered 1.0.N from the workflow's run; the installer always offers the latest.
+
+| Version | What came in |
+|---|---|
+| 1.0.21 | The documentation brought up to date; the live take on the site |
+| 1.0.17 – 1.0.20 | The video tools (sequencer, voices, links, the live take); no firmware change |
+| 1.0.16 | One look across the site (the installer restyled), the red panda as its mark and favicon, YouTube links |
+| 1.0.15 | Boot: a pixel red panda on the RedtailWorks card, then a HYP-1 card (any button skips) |
+| 1.0.13 – 1.0.14 | Remote: SEL + GLO, the FM-1's panel plays the browser emulator over USB MIDI; MIDI learn in the emulator; a vertical tour video |
+| 1.0.11 – 1.0.12 | A safety review: the audio's buffers off the interrupt stack, fuzzed storage, sanitizers clean |
+| 1.0.10 | FX: tapping a locked effect turns just that one off |
+| 1.0.9 | OCT− / OCT+: the page's voice or the whole song, three octaves each way |
+| 1.0.8 | Theme, Tune and MIDI out kept across power-off, even when changed while playing |
+| 1.0.7 | Links (the drums into the voices) and FX lock mode |
+| 1.0.5 – 1.0.6 | HYP-1: styles, ten pieces with their own drums, storing on Global, shift; the site |
+
 ## Building and testing
 
 Every push to `main` builds the firmware on GitHub (`.github/workflows/firmware.yml`): JieLi's
@@ -84,7 +106,9 @@ python3 tools/fm1_install.py build/amb.fwsc     # install it over USB
 `build/host/amb_host SCRIPT OUTDIR` runs the whole app on a computer from a script
 (`tests/scenarios/*.amb`), with audio and screenshots coming out. `web/emu/build_clang.sh` builds the
 same code for the browser with plain clang. The drum patterns are written as grids in
-`tools/gen_pats.py`; the site's pictures come from `tools/site/mockups.py`.
+`tools/gen_pats.py`; the site's pictures come from `tools/site/mockups.py`, its videos from
+`tools/site/video.py` (all from the firmware itself, in the simulator). [BUILDING.md](BUILDING.md) has
+the details.
 
 ## Credits
 
