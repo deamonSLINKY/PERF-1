@@ -8,6 +8,8 @@ screens, lights and sound), drawn into the FM-1 of the site's pictures, with cap
                                                            in the drum sequencer; --seq works landscape too)
   python3 tools/site/video.py --vertical --voices     ->  build/video/voices/hyp1-voices-vertical.mp4 (the voices
                                                            shaped: sound, envelope, LFO, pump)
+  python3 tools/site/video.py --vertical --links      ->  build/video/links/hyp1-links-vertical.mp4 (the drums
+                                                           shaping the voices)
   python3 tools/site/video.py --vertical [--reuse]      ->  build/video/hyp1-tour-vertical.mp4 (1080 x 1920,
                                                            for Shorts; --reuse: the simulator's frames as they are)
 
@@ -374,6 +376,89 @@ def voices_tour():
     return t
 
 
+def links_tour():
+    """about a minute of the links: stripped back to drums and drone, then each voice brought back in as
+    its link is shown (each heard on and off), and the perc lane rewriting the acid line's rhythm"""
+    W = M.WHITE_K
+    t = Tour()
+    t.lines += ["master 3000", "wav tour.wav"]
+
+    def knob(k, n, per=1, rest=10):
+        t.spin(k, n, per)
+        t.f(rest)
+
+    def shift(*acts):
+        t.lines.append("press SEL")
+        t.f(6)
+        for a in acts:
+            a()
+        t.lines.append("release SEL")
+        t.f(10)
+
+    def links_page():
+        t.tap("SEQ", 4, 6)
+        t.tap("SEQ", 4, 10)
+
+    t.cap("DRUMS THAT SHAPE THE VOICES", "HYP-1's links, on the M-VAVE FM-1")
+    t.f(50)
+    t.cap("STRIP IT BACK", "pad and acid out: just the drums and the drone")
+    t.tap("ENV", 4, 6)
+    knob("K1", -45, 1, 4)
+    t.tap("ARP", 4, 6)
+    knob("K1", -55, 1, 4)
+    t.cap("THE DRONE, CLOSED DOWN", "cutoff low, resonance and level up")
+    t.tap("LFO", 4, 6)
+    knob("K3", -35, 1, 2)
+    knob("K4", 35, 1, 2)
+    knob("K1", 35, 1, 30)
+    t.cap("SEQ, SEQ: THE LINKS PAGE", "SEL + SEQ turns them on")
+    links_page()
+    shift(lambda: t.tap("SEQ", 5, 6))
+    t.cap("K>DRONE", "every kick throws the drone's filter open")
+    knob("K1", 50, 1, 100)
+    t.cap("LINKS OFF ...", "the drone sits still")
+    shift(lambda: t.tap("SEQ", 5, 6))
+    t.f(66)
+    t.cap("... AND ON", "it pumps with the kick")
+    shift(lambda: t.tap("SEQ", 5, 6))
+    t.f(66)
+    t.cap("S>PAD", "the pad back in: each snare and clap flashes it open")
+    t.tap("ENV", 4, 6)
+    knob("K1", 45, 1, 4)
+    links_page()
+    knob("K2", 60, 1, 100)
+    t.cap("H>ACID", "the acid back in: the hats push accents into it")
+    t.tap("ARP", 4, 6)
+    knob("K1", 55, 1, 4)
+    links_page()
+    knob("K3", 50, 1, 90)
+    t.cap("P>CLOCK", "the acid line now steps only on the perc lane's hits")
+    knob("K4", 1, 3, 90)
+    t.cap("HOLD SEQ, OCT−: THE PERC LANE", "change the perc, and the melody's rhythm follows")
+    t.lines.append("press SEQ")
+    t.f(16)
+    t.lines.append("release SEQ")
+    t.f(8)
+    t.tap("OCT-")
+    t.f(20)
+    t.cap("SEL + OCT−: PERC CLEARED", "no perc hits: the acid holds still")
+    shift(lambda: t.tap("OCT-", 5, 6))
+    t.f(56)
+    t.cap("PERC ON 1, 4, 7, 10, 13, 16", "the acid falls into a rolling 3-3-3")
+    for st in (0, 3, 6, 9, 12, 15):
+        t.key(W[st], 5, 10)
+    t.f(84)
+    t.cap("A BURST ON 2 AND 3", "the line skips ahead in a flurry")
+    for st in (1, 2):
+        t.key(W[st], 5, 12)
+    t.f(84)
+    t.cap("HYP-1", "rustypawz.github.io/fm1-HYP1  ·  youtube.com/@RedtailWorks")
+    t.tap("SEQ")
+    t.f(66)
+    t.lines.append("wavstop")
+    return t
+
+
 # ------------------------------------------------------------------ drawing --
 def device_png(**kw):
     dev = M.device(None, **kw)
@@ -418,15 +503,16 @@ def wrap(d, s, font, width):                       # a caption's words, in lines
 def main():
     global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT, OUT
     vertical, reuse, seq = "--vertical" in sys.argv, "--reuse" in sys.argv, "--seq" in sys.argv
-    voices = "--voices" in sys.argv
+    voices, links = "--voices" in sys.argv, "--links" in sys.argv
     if vertical:
         globals().update(VERTICAL)
     pre, outname = ("s_", "hyp1-tour-vertical.mp4") if vertical else ("v_", "hyp1-tour.mp4")
-    if seq or voices:                            # a minute of its own, in its own folder
-        OUT = OUT / ("seq" if seq else "voices")
-        outname = outname.replace("tour", "sequencer" if seq else "voices")
+    one = "seq" if seq else "voices" if voices else "links" if links else None
+    if one:                                      # a minute of its own, in its own folder
+        OUT = OUT / one
+        outname = outname.replace("tour", {"seq": "sequencer"}.get(one, one))
     OUT.mkdir(parents=True, exist_ok=True)
-    t = seq_tour() if seq else voices_tour() if voices else tour()
+    t = {"seq": seq_tour, "voices": voices_tour, "links": links_tour}.get(one, tour)()
     if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
         for f in OUT.glob("frame_*.png"):
             f.unlink()
