@@ -53,6 +53,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_ROOT] = {"Root", 0, 11, 9},          [P_MODE] = {"Mode", 0, EN_NMODES - 1, 5}, [P_TUNE] = {"Tune", -50, 50, 0},
     [P_MIDI] = {"MIDI out", 0, 1, 1},       [P_THEME] = {"Theme", 0, EN_NTHEME - 1, 0},
     [P_STYLE] = {"Style", 0, EN_NSTYLE - 1, 0},
+    [P_LINKS] = {"Links", 0, 1, 0},         [P_LK_KICK] = {"Kick", 0, 100, 50},    [P_LK_SNARE] = {"Snare", 0, 100, 40},
+    [P_LK_HAT] = {"Hats", 0, 100, 50},      [P_LK_PERC] = {"Perc", 0, 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -204,6 +206,8 @@ void en_param_text(int i, int v, char *b)
     case P_AC_WAVE: s = v ? "Square" : "Saw"; break;
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_STYLE: s = EN_STYLE_NAME[(unsigned)v < EN_NSTYLE ? v : 0]; break;
+    case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
+    case P_LK_PERC: s = v ? "Clock" : "Off"; break;
     default: break;
     }
     if (s) {
@@ -434,6 +438,7 @@ volatile uint8_t en_pad_note[EN_NPAD];
 volatile float en_pad_amp[EN_NPAD];
 
 static int16_t par[P_NPARAMS];
+static int links_on(void) { return par[P_LINKS] != 0; }
 static uint32_t pool = 0xAADu;                  /* Ionian until told */
 static int nsteps, steps[12];                   /* the scale */
 static int deg;                                 /* the chord's scale degree */
@@ -549,6 +554,15 @@ void en_style_tempo(int s, int *lo, int *hi)
     *hi = t->tmax;
 }
 static float stab_env, stab_k = 0.99f;          /* the pad's stabs: the envelope, its fall each 32 samples */
+
+/* ---------------------------------------------------------------- links --- */
+/* The drums patched into the voices (P_LINKS on, SEL + SEQ): each kick opens the drone's filter for a
+ * moment (a rolling bass from the kick's pattern), each snare or clap flashes the pad's filter open, a
+ * hat on an acid note accents it, and the perc lane can be the acid's clock (it steps only on a perc
+ * hit; in a breakdown, with the drums out, it runs free again). Each by its amount (0: none). */
+static float lk_kick, lk_snare;                 /* their envelopes, 1 at a hit, falling */
+static uint8_t lk_hat;                          /* a hat on this sixteenth */
+static int links_on(void);
 
 /* ---------------------------------------------------------------- pad --- */
 /* Breathing voices, as the sung tape loops of Music for Airports' "2/1": each voice swells in, hangs
@@ -955,6 +969,8 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
             acid.inc = acid.inc_t;
             acid.env = 1.0f;
             acid.acc = (ac_accent & m) ? 1.0f : 0.0f;
+            if (lk_hat && links_on())            /* the links: a hat here accents it */
+                acid.acc = fm_maxf(acid.acc, (float)par[P_LK_HAT] * 0.012f);
             acid.amp_t = 1.0f;
             acid.edec = fm_expf(-6.9f * 32.0f / (dec * (acid.acc > 0.0f ? 0.6f : 1.0f) * EN_SR));
             if (acid.note)
@@ -1076,6 +1092,12 @@ static void drum_fire(int d, float vel)
         break;
     }
     }
+    if (links_on()) {                           /* the links: the hits into the voices */
+        if (d == L_KICK)
+            lk_kick = fm_maxf(lk_kick, vel);
+        else if (d == L_SNARE || d == L_CLAP)
+            lk_snare = fm_maxf(lk_snare, vel);
+    }
     en_drum_glow[d] = 1.0f;
     midi(0x99, v->note, (uint32_t)(vel * 100.0f));
     midi(0x89, v->note, 0);
@@ -1123,6 +1145,7 @@ static void tick(void)
     const float pa = fm_clampf(1.0f + 0.4f * arcm, 0.6f, 1.1f);   /* the arc: the hats a little softer */
     const int32_t sw = (st & 1) ? (int32_t)(fm_minf(swing + S->swing, 0.5f) * step_len) : 0;
     const float chop = S->chop * (0.4f + 0.6f * evolve);   /* breakcore: how much the drums are chopped */
+    int perc_hit = 0;
     step_t = 0;
     if (rpt_arm) {                              /* the beat repeat starts on the sixteenth */
         rpt_engage(rpt_arm - 1);
@@ -1142,6 +1165,7 @@ static void tick(void)
         bars++;
     }
     drum_publish();
+    lk_hat = 0;
     for (l = 0; l < EN_NDRUM; l++) {
         int hit = (int)(en_pats[pat_now][l] >> st & 1u);
         float vel = 0.9f;
@@ -1171,6 +1195,10 @@ static void tick(void)
                 vel = 0.5f;
             }
         }
+        if (hit && (l == L_HAT || l == L_OHAT))
+            lk_hat = 1;
+        if (hit && l == L_PERC)
+            perc_hit = 1;
         if (hit) {
             vel *= l == L_HAT || l == L_OHAT ? pa : 1.0f;
             if (chop > 0.0f && !sw && (l == L_SNARE || l == L_KICK || l == L_HAT) && frand() < 0.2f * chop) {
@@ -1200,8 +1228,12 @@ static void tick(void)
         }
     }
     en_drum_pos = (uint8_t)st;
-    if (!S->a_half || !(st & 1))
+    if (links_on() && par[P_LK_PERC] && sec == SEC_GROOVE) {
+        if (perc_hit)
+            acid_step();                        /* the links: the perc lane is the acid's clock */
+    } else if (!S->a_half || !(st & 1)) {
         acid_step();                            /* (half time: every other sixteenth) */
+    }
     if (st == 0 && change_pending && !en_frozen) {   /* chords move on the bar */
         change_pending = 0;
         chord_change();
@@ -1977,7 +2009,8 @@ static float plp[4];
 
 static void pad_bus(uint32_t n)
 {
-    const float fc = fm_clampf(700.0f * S->pad_fc * fm_exp2f(bright * 0.03f + 0.6f * arcm + 1.5f * pad_filt), 200.0f, 12000.0f);
+    const float fc = fm_clampf(700.0f * S->pad_fc * fm_exp2f(bright * 0.03f + 0.6f * arcm + 1.5f * pad_filt +
+                                                         3.0f * (float)par[P_LK_SNARE] * 0.01f * lk_snare), 200.0f, 12000.0f);
     const float c = 1.0f - fm_expf(-FM_TWO_PI * fc * (1.0f / EN_SR));
     uint32_t j;
     for (j = 0; j < n; j++) {
@@ -2004,7 +2037,8 @@ static void render_pad(uint32_t n)
     uint32_t j0;
     for (j0 = 0; j0 < n; j0++)
         padl[j0] = padr[j0] = 0.0f;
-    const float g = pad_vol * 0.5f * pad_lvl * (1.0f + 0.9f * fm_maxf(brk, 0.0f)) * S->pad_g;   /* the pad rises in a breakdown */
+    const float g = pad_vol * 0.5f * pad_lvl * (1.0f + 0.9f * fm_maxf(brk, 0.0f)) * S->pad_g *   /* the pad rises in a breakdown */
+                    (1.0f + 0.35f * (float)par[P_LK_SNARE] * 0.01f * lk_snare);                  /* and swells with the links */
     uint32_t nb = (n + 31u) >> 5;
     pad_gain += (pad_gate - pad_gain) * fm_minf((float)n / ((pad_gate > 0.0f ? 2.0f : 5.0f) * EN_SR), 1.0f);
     for (i = 0; i < EN_NPAD; i++) {
@@ -2114,7 +2148,8 @@ static void render_bass(uint32_t n)
             float oct, fc;
             oct = (float)par[P_DR_CUT] * 0.075f - 1.5f + S->d_cut + (dest == 0 ? 2.5f * depth * drone_lfo.v : 0.0f) +
                   4.0f * (float)par[P_DE_AMT] * 0.01f * bass.env + 0.8f * motion * mod[9].v + 0.8f * arcm -
-                  2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) - 0.35f * duck_env * pulse_vol;
+                  2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) - 0.35f * duck_env * pulse_vol +
+                  4.0f * (float)par[P_LK_KICK] * 0.01f * lk_kick;   /* the links: the kick opens it */
             fc = fm_clampf(f * 2.0f * fm_exp2f(oct), 45.0f, 9000.0f);
             svf_coefs(bass.c1, fc, reso_k);
             svf_coefs(bass.c2, fc * 1.3f, 1.4f);
@@ -2583,6 +2618,13 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     }
     en_drift = drift_total > 0.0f ? 1.0f - fm_clampf(drift_left / drift_total, 0.0f, 1.0f) : 0.0f;
     en_acid_glow *= 0.93f;
+    {   /* the links' envelopes: the amount sets how far and how long (kick 40 .. 160 ms, snare 80 .. 280 ms) */
+        float ak = (float)par[P_LK_KICK] * 0.01f, as = (float)par[P_LK_SNARE] * 0.01f;
+        lk_kick *= fm_expf(-(float)n / ((0.04f + 0.12f * ak) * EN_SR));
+        lk_snare *= fm_expf(-(float)n / ((0.08f + 0.2f * as) * EN_SR));
+    }
+    if (!links_on())
+        lk_kick = lk_snare = 0.0f;
     for (i = 0; i < EN_NDRUM; i++)
         en_drum_glow[i] *= 0.95f;
     {   /* the LFOs, and where the pad's goes */

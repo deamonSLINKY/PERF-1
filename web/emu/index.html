@@ -131,6 +131,12 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
         </dl>
       </div>
       <div>
+        <h3>Links <span>SEQ, SEQ</span></h3>
+        <dl>
+          <dt>The drums into the voices</dt><dd>SEL + SEQ turns them on and off (+LINK shows on the line above the knobs). K&gt;Drone: each kick opens the drone's filter (a rolling bass). S&gt;Pad: each snare or clap flashes the pad open. H&gt;Acid: a hat on an acid note accents it. P&gt;Clock: the acid steps only on the perc lane's hits (free again in a breakdown).</dd>
+        </dl>
+      </div>
+      <div>
         <h3>Space <span>SELECT</span></h3>
         <dl>
           <dt>Echo, Echo time</dt><dd>The tape echo's send; its time, an eighth to a bar.</dd><dt>Reverb, Size</dt><dd>The plate's send; how long it rings, and how often the echo returns.</dd>
@@ -169,16 +175,17 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
       <li><b>Keys</b> are the scale: each one adds or removes its note. The root stays.</li>
       <li><b>PLAY</b> plays / stops. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
       <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and the drop. Hold it instead for the drop on the next bar. It lights while a breakdown or build runs, and blinks while one waits for the bar.</li>
-      <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held, and SAVE with keys held locks those effects on.</li>
+      <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held; hold SAVE and tap keys to lock effects on.</li>
       <li><b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (01 to 10).</li>
-      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, and <b>ALGORITHM</b> picks the piece's style.</li>
+      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> picks the piece's style, and <b>SEQ</b> turns the links on and off.</li>
       <li>On the <b>Global</b> page, <b>SAVE</b> stores the piece instead (held: factory settings). Stored while playing, it is written as soon as you stop: a write silences the sound for a moment, so it never happens mid-performance. A dot at the top right means a write is waiting.</li>
     </ul>
   </div>
   <div>
     <h2>Effects (FX on)</h2>
     <ul>
-      <li>Each key plays its effect while held. Hold one or more and press <b>SAVE</b> to lock them on (they turn purple); tap any key, or close FX, to let them go.</li>
+      <li>Each key plays its effect while held.</li>
+      <li><b>Hold SAVE</b> for lock mode: each key you tap locks its effect on (it turns purple), one at a time or several together; tap a locked one again to unlock it. Keys already held when SAVE goes down lock too. Let go of SAVE and the locks stay while you play other effects on top. Closing FX lets them all go. SAVE tapped alone is still the breakdown.</li>
       <li><b>White keys 1–6</b>: beat repeat 1/2, 1/4, 1/6, 1/8, 1/16, 1/32 (from the next sixteenth; the shortest held wins). <b>7</b> reverse, <b>8</b> tape stop.</li>
       <li><b>White keys 9–14</b>: mute kick, hats, snare (with clap and perc), drone, acid, pad (with the noise). <b>15</b> low-pass, <b>16</b> high-pass.</li>
       <li><b>Black keys 1–5</b>: gate 1/16, gate 1/8, echo throw, crush, drum fill. <b>6–11</b>: solo, each beside its mute.</li>
@@ -298,7 +305,7 @@ function hit(c, cls) {
 }
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO)", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the style", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
-  ARP: "Acid (again: env, line)", SEQ: "Drums; hold: the sequencer", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
+  ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
   "OCT-": "Acid an octave down; sequencer: the drum above", "OCT+": "Acid an octave up; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

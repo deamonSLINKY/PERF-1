@@ -7,13 +7,16 @@
  *   ENV            Pad, then Pad env, Pad LFO (each press the next)
  *   LFO            Drone, then Drone env, Drone LFO
  *   ARP            Acid, then Acid env, Acid line
- *   SEQ            Drums; held, the sequencer (six lanes, sixteen steps)
+ *   SEQ            Drums, then Links; held, the sequencer (six lanes, sixteen steps); with SEL held, the
+ *                  links (the drums into the voices) on and off
  *   GLO            Global (root, theme, tune, MIDI out); Noise and Space are on the SELECT dial only.
  *                  On Global, SAVE stores the piece as it is (patterns and all); held, the piece goes
  *                  back to its factory settings and out of the store
  *   KNOB 1-4       the page's four values (in the sequencer: the lane's level, tune, decay; the pattern)
- *   FX             the effects menu, on and off: while it is on, each key is an effect while held;
- *                  SAVE pressed with effect keys held locks them on, until a key is pressed or FX closes
+ *   FX             the effects menu, on and off: while it is on, each key is an effect while held.
+ *                  SAVE held is lock mode: each key tapped locks its effect on (or, locked, off again),
+ *                  one at a time or together; keys held as SAVE goes down lock too. Closing FX lets
+ *                  them all go. SAVE tapped alone is still the breakdown
  *   SAVE           the breakdown on the next bar; again, a four-bar build and the drop; held, the drop
  *                  (on Global: the piece stored, above)
  *   OCT- / OCT+    the acid line's octave; in the sequencer, the lane
@@ -33,9 +36,9 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
-       V_DRUMS, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
+       V_DRUMS, V_LINKS, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Noise", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Space", "Global",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE };
@@ -52,6 +55,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
+    {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
@@ -69,6 +73,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Decay", "Accent", "Slide", "Wave"},
     {"Density", "Length", "Range", "Mutate"},
     {"Level", "Drive", "Swing", "Pattern"},
+    {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Level", "Tune", "Decay", "Pattern"},
@@ -77,7 +82,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 3}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 1}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 3}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 2}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -166,7 +171,9 @@ static struct {
     uint8_t seq_held;                  /* SEQ held long enough: the sequencer opened this hold */
     uint8_t fx_menu;                   /* the FX menu is on: the keys are effects */
     uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
-    uint32_t fx_lock;                  /* the effects locked on (SAVE with their keys held) */
+    uint32_t fx_lock;                  /* the effects locked on (lock mode: SAVE held in FX) */
+    uint8_t lock_mode;                 /* SAVE held in the FX menu: keys tapped lock and unlock */
+    uint32_t lock_keys;                /* keys pressed in lock mode: not effects while they're held */
     uint8_t lane;                      /* the sequencer's lane (OCT- / OCT+) */
     uint8_t save_global;               /* SAVE went down on Global: the piece is stored when it comes up */
     uint8_t factory_done;              /* SAVE held on Global: the piece went back to its factory settings */
@@ -577,23 +584,32 @@ static void input(void)
                 ui.save_held = 0;
                 ui.save_global = 0;
             }
-            if (i == B_SAVE && ui.view == V_GLOBAL && !(ui.fx_menu && keys)) {   /* Global: store the piece */
+            if (i == B_SAVE && ui.view == V_GLOBAL && !ui.fx_menu) {   /* Global: store the piece */
                 ui.save_global = 1;
                 ui.factory_done = 0;
                 ui.btn_used |= m;              /* not a breakdown */
                 ui.save_held = 1;              /* nor a drop */
-            } else if (i == B_SAVE && ui.fx_menu && keys) {   /* FX: SAVE locks the effects held */
-                uint32_t k;
-                ui.fx_lock = 0;
-                for (k = 0; k < NKEYS; k++)
-                    if ((keys & ~ui.shift_keys) >> k & 1u)
+            } else if (i == B_SAVE && ui.fx_menu) {   /* FX: SAVE held is lock mode */
+                uint32_t k, held = keys & ~ui.shift_keys;
+                ui.lock_mode = 1;
+                ui.save_held = 1;              /* no drop while it's held */
+                for (k = 0; k < NKEYS; k++)    /* keys already held: locked */
+                    if (held >> k & 1u)
                         ui.fx_lock |= 1u << KEY_FX[k];
-                ui.btn_used |= m;              /* not a breakdown */
-                ui.save_held = 1;
-                say("FX", "LOCKED");
+                if (held) {
+                    ui.lock_keys |= held;
+                    ui.btn_used |= m;          /* not a breakdown */
+                }
+                say("LOCK MODE", "TAP EFFECTS");
             }
             if (i == B_SEQ)
                 ui.seq_held = 0;
+            if (i == B_SEQ && (btn >> B_SEL & 1u)) {   /* shift: the links on and off */
+                knob_set(P_LINKS, !proj.par[P_LINKS]);
+                say("LINKS", proj.par[P_LINKS] ? "ON" : "OFF");
+                ui.btn_used |= m | 1u << B_SEL;
+                ui.seq_held = 1;               /* no sequencer for this hold */
+            }
             if (i == B_SEL)
                 ui.shift_hint = 0;
             if ((i == B_OCTDN || i == B_OCTUP) && (btn >> B_SEL & 1u) && ui.view == V_SEQ) {
@@ -602,6 +618,12 @@ static void input(void)
             }
             if (i == B_PLAY)                   /* transport on the press */
                 button((int)i);
+        } else if (i == B_SAVE && ui.lock_mode) {
+            ui.lock_mode = 0;                  /* lock mode over; SAVE tapped alone: the breakdown, as ever */
+            if (!(ui.btn_used & m))
+                button((int)i);
+            else
+                say("FX", ui.fx_lock ? "LOCKED" : "NONE LOCKED");
         } else if (i == B_SAVE && ui.save_global) {
             ui.save_global = 0;                /* Global: SAVE let go, the piece stored (unless held to factory) */
             if (!ui.factory_done)
@@ -623,14 +645,25 @@ static void input(void)
             if ((ch & keys) >> i & 1u)
                 shift_key((int)i);
     }
+    ui.lock_keys &= keys;
+    if (ui.fx_menu && ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* lock mode: a key tapped, its effect */
+        uint32_t p = ch & keys & ~ui.shift_keys;                         /* locked, or unlocked */
+        for (i = 0; i < NKEYS; i++)
+            if (p >> i & 1u)
+                ui.fx_lock ^= 1u << KEY_FX[i];
+        ui.lock_keys |= p;
+        ui.btn_used |= 1u << B_SAVE;
+    }
     {   /* the effects: each key held while the FX menu is on, and those locked */
         uint32_t m = 0;
-        if (!ui.fx_menu || (ch & keys & ~ui.shift_keys))
-            ui.fx_lock = 0;                    /* a key pressed (or FX closed): the lock is let go */
+        if (!ui.fx_menu) {
+            ui.fx_lock = 0;                    /* FX closed: the locks let go */
+            ui.lock_mode = 0;
+        }
         if (ui.fx_menu) {
             m = ui.fx_lock;
             for (i = 0; i < NKEYS; i++)
-                if ((keys & ~ui.shift_keys) >> i & 1u)
+                if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
                     m |= 1u << KEY_FX[i];
         }
         if (m != ui.fx_mask) {
@@ -1183,9 +1216,11 @@ static void draw_help(void)
 static void draw_fx(void)
 {
     int k;
-    cv_text(4, 1, &FONT_XS, "FX: HOLD A KEY", K_ACC);
-    if (ui.fx_lock)
-        cv_text(118, 1, &FONT_XS, "LOCKED: TAP A KEY", K_PAD);
+    cv_text(4, 1, &FONT_XS, ui.lock_mode ? "LOCK: TAP KEYS" : "FX: HOLD A KEY", ui.lock_mode ? K_PAD : K_ACC);
+    if (ui.lock_mode)
+        cv_text(118, 1, &FONT_XS, "TAP AGAIN: OFF", K_PAD);
+    else if (ui.fx_lock)
+        cv_text(118, 1, &FONT_XS, "LOCKED: SAVE+KEY", K_PAD);
     else
         cv_text(118, 1, &FONT_XS, "M: MUTE  S: SOLO", K_DIM);
     for (k = 0; k < NKEYS; k++) {
@@ -1215,7 +1250,7 @@ static void draw_main(void)
         return;
     h = hash(h, ui.theme);
     if (ui.fx_menu) {
-        h = hash(hash(0x46584D4Eu, ui.fx_mask ^ (uint32_t)ui.theme << 28), ui.fx_lock);
+        h = hash(hash(0x46584D4Eu, ui.fx_mask ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), ui.fx_lock);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
@@ -1280,7 +1315,7 @@ static void draw_main(void)
 static void draw_knobs(void)
 {
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8 | (uint32_t)ui.lane << 16 | (uint32_t)ui.theme << 24), i;
-    h = hash(h, (uint32_t)proj.par[P_STYLE]);
+    h = hash(h, (uint32_t)proj.par[P_STYLE] | (uint32_t)proj.par[P_LINKS] << 8);
     if (ui.view == V_GLOBAL)
         h = hash(h, (uint32_t)proj.piece | (uint32_t)(proj.edited >> proj.piece & 1u) << 8 |
                         (uint32_t)project_saved(proj.piece) << 9);
@@ -1329,6 +1364,10 @@ static void draw_knobs(void)
             int32_t xs;
             caps(u, EN_STYLE_NAME[(unsigned)proj.par[P_STYLE] < EN_NSTYLE ? proj.par[P_STYLE] : 0], sizeof u);
             xs = cv_text(4, -1, &FONT_XS, u, K_DIM);
+            if (proj.par[P_LINKS])               /* the links on: said beside it */
+                xs = cv_text(xs + 5, -1, &FONT_XS, "+LINK", K_ACC);
+            else if (ui.view == V_LINKS)
+                xs = cv_text(xs + 5, -1, &FONT_XS, "LINKS OFF", K_DIM);
             if (xt - 9 > xs + 4)
                 cv_rect(xs + 4, 5, xt - 9 - xs - 4, 1, K_LINE);
         }

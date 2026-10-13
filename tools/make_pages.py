@@ -142,12 +142,13 @@ the whole performance into your DAW.</p>
 <h2>Play it</h2>
 <div class="pair">
   <figure><img src="img/hyp-device-seq.png" width="1600" height="1161" alt="The FM-1 in the sequencer: the kick's hits lit on the white keys."><figcaption><b>Hold SEQ:</b> the sixteen white keys are the steps of the drum you're on. Tap to toggle; <kbd>OCT&minus;</kbd> / <kbd>OCT+</kbd> choose the drum.</figcaption></figure>
-  <figure><img src="img/hyp-device-fx.png" width="1600" height="1161" alt="The FM-1 with the FX menu open: three keys held, glowing orange."><figcaption><b>FX:</b> every key is a momentary effect: beat repeats, reverse, tape stop, mutes and solos, filters, trance gate, echo throw, crush, drum fill. <kbd>SAVE</kbd> locks them.</figcaption></figure>
+  <figure><img src="img/hyp-device-fx.png" width="1600" height="1161" alt="The FM-1 with the FX menu open: three keys held, glowing orange."><figcaption><b>FX:</b> every key is a momentary effect: beat repeats, reverse, tape stop, mutes and solos, filters, trance gate, echo throw, crush, drum fill. Hold <kbd>SAVE</kbd> and tap to lock any number on.</figcaption></figure>
 </div>
 <div class="grid">
   <div class="card"><h3>Ten pieces</h3><p><b>PRESETS</b> picks 01&ndash;10, each with its own settings, six drum patterns and drum sounds. On Global, <b>SAVE</b> stores the piece; it's written while the music is stopped, so it never interrupts a take.</p></div>
   <div class="card"><h3>Breakdowns</h3><p><b>SAVE</b> drops a breakdown on the next bar; tap again for a four-bar build and the drop, or hold it for the drop straight away. <b>REC</b> freezes the chord.</p></div>
   <div class="card"><h3>Shift</h3><p>Hold <b>SEL</b>: white keys 1&ndash;6 jump to a pattern on the bar, <b>PRESETS</b> changes piece on the next bar, and in the sequencer you copy, clear and restore lanes.</p></div>
+  <div class="card"><h3>Links</h3><p>Patch the drums into the voices: each <b>kick</b> opens the drone's filter, <b>snares</b> flash the pad, <b>hats</b> accent the acid, and the <b>perc</b> lane can clock the acid line. <b>SEL + SEQ</b> turns them on and off.</p></div>
   <div class="card"><h3>Always different</h3><p>Every power-on starts on a piece at random: as you stored it, or slightly nudged from its factory settings. Chords drift, the acid mutates, a slow tide moves between sparse and full.</p></div>
 </div>
 

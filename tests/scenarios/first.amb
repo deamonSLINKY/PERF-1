@@ -44,13 +44,13 @@ tap SEQ
 expect view 11
 shot drums.png
 tap GLO
-expect view 13
+expect view 14
 shot global.png
 # SELECT: the pages in order, Noise and Space among them
 turn SELECT -1 100
-expect view 12
+expect view 13
 shot space.png
-turn SELECT -8 100
+turn SELECT -9 100
 expect view 4
 shot noise.png
 turn SELECT -9 100

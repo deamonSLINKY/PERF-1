@@ -1,0 +1,37 @@
+# the links: the drums into the voices. SEQ again from Drums: the Links page (the amounts); SEL + SEQ
+# turns them on and off (no sequencer for that hold); stored with the piece
+wait 500
+expect par77 0
+tap SEQ
+expect view 11
+tap SEQ
+expect view 12
+shot links_off.png
+press SEL
+tap SEQ
+release SEL
+expect par77 1
+expect view 12
+expect edited 1
+wait 2000
+shot links_on.png
+# the amounts: kick 50, snare 40, hats 50, perc clock off
+expect par78 50
+expect par79 40
+expect par80 50
+expect par81 0
+spin K4 1
+expect par81 1
+spin K1 30
+expect par78 80
+# SEL + SEQ again: off, the amounts kept
+press SEL
+tap SEQ
+release SEL
+expect par77 0
+expect par78 80
+# SEQ held without SEL: still the sequencer
+press SEQ
+wait 500
+release SEQ
+expect view 15

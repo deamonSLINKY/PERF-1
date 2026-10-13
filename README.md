@@ -35,9 +35,12 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
   the piece (written as soon as the music stops, so it never interrupts a take).
 - **Styles** (SEL + ALGORITHM): Hypnotic, House, Techno, Acid and Breakcore reshape every voice and the
   feel. Tempo runs from 70 to 190.
+- **Links** (SEL + SEQ, amounts on the Links page): the drums patched into the voices. Each kick opens
+  the drone's filter, each snare or clap flashes the pad, hats accent the acid, and the perc lane can
+  clock the acid line.
 - **Performance**: SAVE for a breakdown on the next bar, again for a four-bar build and the drop; an FX
   menu of momentary effects on the keys (beat repeat, reverse, tape stop, mutes and solos, filters,
-  trance gate, echo throw, crush, fill), lockable with SAVE; SEL as a shift (patterns on keys 1–6,
+  trance gate, echo throw, crush, fill), hold SAVE and tap effects to lock any number on; SEL as a shift (patterns on keys 1–6,
   pieces on the bar, copy, clear and restore lanes).
 - Five screen themes, the RedtailWorks card at boot, Chakra Petch (SIL OFL) as the screen's font.
 
@@ -52,12 +55,12 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
 | | |
 |---|---|
 | SELECT | The pages in order; with HOME held, the tempo |
-| HOME · ENV · LFO · ARP · SEQ · GLO | Tempo · Pad · Drone · Acid · Drums (hold: sequencer) · Global; press again for each voice's env and LFO |
+| HOME · ENV · LFO · ARP · SEQ · GLO | Tempo · Pad · Drone · Acid · Drums (again: Links; hold: sequencer) · Global; press again for each voice's env and LFO |
 | KNOB 1–4 | The page's four values |
 | PRESETS · ALGORITHM | The piece · the mode (with SEL: the piece on the next bar · the style) |
 | SAVE | Breakdown / build / drop; on Global, store the piece |
 | FX | The effects menu |
-| SEL | Shift |
+| SEL | Shift (SEL + SEQ: the links on and off) |
 | PLAY · REC · EDIT | Play / stop · freeze · the next chord |
 | OCT− / OCT+ | The acid's octave; in the sequencer, the drum |
 | Keys | The scale; in the sequencer, the steps; in FX, effects |

@@ -17,7 +17,7 @@ expect par52 50
 expect edited 1
 # Global: SAVE while playing stores it, written to flash once stopped
 tap GLO
-expect view 13
+expect view 14
 shot global_edited.png
 expect sec 0
 tap SAVE

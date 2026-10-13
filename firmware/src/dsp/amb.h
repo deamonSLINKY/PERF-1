@@ -63,6 +63,9 @@ enum {
     P_ECHO = P_LANE + 3 * EN_NLANE, P_ETIME, P_REVERB, P_SIZE,   /* space */
     P_ROOT, P_MODE, P_TUNE, P_MIDI, P_THEME,              /* global (the mode on ALGORITHM) */
     P_STYLE,                                              /* the piece's style (SEL + ALGORITHM) */
+    P_LINKS, P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC,  /* the drums into the voices: on / off (SEL + SEQ);
+                                                           * kick > drone, snare and clap > pad, hats > acid
+                                                           * accents, perc > the acid's clock */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))

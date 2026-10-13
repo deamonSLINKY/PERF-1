@@ -197,7 +197,7 @@ def main():
     b, k = L["seq"]
     scene(device("seq", b, k), OUT / "hyp-device-seq.png", "SEQUENCER", "THE 16 WHITE KEYS ARE THE STEPS")
     b, k = L["fx"]
-    scene(device("fx", b - {"HOME"}, set(), held=k), OUT / "hyp-device-fx.png", "FX MENU", "HOLD KEYS · SAVE LOCKS",
+    scene(device("fx", b - {"HOME"}, set(), held=k), OUT / "hyp-device-fx.png", "FX MENU", "HOLD KEYS · HOLD SAVE + TAP: LOCK",
           glow="#ff6a00")
     b, k = L["house"]
     scene(device("house", b, k), OUT / "hyp-device-house.png", "STYLES", "SEL + ALGORITHM")

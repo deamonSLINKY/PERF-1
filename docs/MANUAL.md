@@ -76,9 +76,9 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 16 | EDIT | The next chord, on the next bar. |
 | 17 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. |
 | 18 | HOME | The Tempo page. Hold it and turn SELECT for the tempo. |
-| 19 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. In FX with keys held: lock them. |
+| 19 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. In FX, held: lock mode. |
 | 20 | ARP | Acid; again for Acid env, again for Acid line. |
-| 21 | SEQ | Drums; held, the sequencer; tapped in the sequencer, back to Drums. |
+| 21 | SEQ | Drums; again, Links; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
 | 22 | PLAY | Play and stop. |
 | 23 | REC | Freeze: the chord holds until pressed again. |
 | 24 | White keys | The scale (each key adds or removes its note; the root stays). Sequencer: the 16 steps. FX: effects. |
@@ -124,6 +124,7 @@ button again steps through that voice's envelope and LFO. KNOB 1 is always a voi
 | Acid env | ARP ×2 | Decay | Accent | Slide | Wave (saw / square) |
 | Acid line | ARP ×3 | Density | Length (1–16) | Range (1–3 oct) | Mutate |
 | Drums | SEQ | Level | Drive | Swing | Pattern (1–6, on the bar) |
+| Links | SEQ ×2 | K>Drone | S>Pad | H>Acid | P>Clock (off / on) |
 | Space | SELECT | Echo | Echo time (1/8 – 1 bar) | Reverb | Size |
 | Global | GLO | Root | Theme | Tune | MIDI out |
 
@@ -192,6 +193,22 @@ tempo from 70 to 190 works. The style is stored with the piece.
 | Acid | 120–132 | Punchy 909-style kit with a cowbell and a little swing. The 303 driven and up front; pad and drone pulled back. |
 | Breakcore | 160–180 | Distorted, crushed drums chopped live: ghost snares, extra kicks, 32nd rolls (Evolve: more). Dirty sub; the acid at half time. |
 
+### Links: the drums into the voices
+
+The drum hits can be patched into the voices, like trigger cables on a modular. **SEL + SEQ** turns the
+links on and off without losing their amounts (+LINK shows on the line above the knobs while they're
+on); the **Links** page (SEQ, then SEQ again) sets each one, 0 being none. They're stored with the piece.
+
+| Link | What it does |
+|---|---|
+| K>Drone | Each kick opens the drone's filter, falling back over the beat: a rolling bass that follows your kick pattern. The amount sets how far and how long. |
+| S>Pad | Each snare or clap flashes the pad's filter open and swells it a little, so the pad answers the backbeat. |
+| H>Acid | A hat landing on an acid note accents it: busier hats, a squelchier 303. |
+| P>Clock | The acid line steps only when the perc lane hits, so the perc pattern in the sequencer becomes the acid's rhythm. In a breakdown or build, with the drums out, it runs free again. |
+
+Muting a drum with FX silences it but its hits still drive the links: mute the perc and it's a pure
+clock for the acid.
+
 ---
 
 ## 8. The sequencer
@@ -215,8 +232,14 @@ tempo from 70 to 190 works. The style is stored with the piece.
 ![The FX menu](img/hyp-device-fx.png)
 
 Press **FX** to open the menu; press it again to close it. While it's open, every key is an effect,
-playing while you hold it. Hold one or more keys and press **SAVE** to lock them on (they turn purple);
-tap any key, or close FX, to let them go.
+playing while you hold it.
+
+**Locking:** hold **SAVE** for lock mode. Each key you tap locks its effect on (it turns purple), one at
+a time or several together; tap a locked one again to unlock it. Keys already held when SAVE goes down
+lock too. Let go of SAVE and the locks stay while you play other effects over them. Closing FX lets them
+all go. Tapping SAVE alone in FX is still the breakdown.
+
+For example: FX, then hold SAVE, tap Gate 1/8, tap Crush, let go of SAVE: both stay on.
 
 | Keys | Notes | Effect |
 |---|---|---|
@@ -257,6 +280,7 @@ Hold **SEL** and:
 | White keys 1–6 | Pattern 1–6, on the bar. The keys light the one chosen; the one still playing blinks. |
 | PRESETS | The next or previous piece, on the next bar ("PIECE 03 NEXT BAR" until it comes). |
 | ALGORITHM | The piece's style. |
+| SEQ | The links on and off. |
 | Black keys 1–6 (sequencer) | Copy the pattern you're editing into pattern 1–6. |
 | OCT− (sequencer) | Clear this drum's lane. |
 | OCT+ (sequencer) | This drum's lane back to the piece's own. |
