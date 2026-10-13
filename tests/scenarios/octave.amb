@@ -1,0 +1,68 @@
+# OCT- / OCT+: on a voice's pages, that voice's octave (pad, drone, acid), 3 down to 3 up; on any other
+# page, the whole song's; stored with the piece
+wait 500
+# the Tempo page: the song
+expect view 0
+tap OCT+
+expect par82 1
+expect par45 0
+shot song_up.png
+tap OCT-
+tap OCT-
+tap OCT-
+tap OCT-
+tap OCT-
+expect par82 -3
+tap OCT-
+expect par82 -3
+tap OCT+
+tap OCT+
+tap OCT+
+expect par82 0
+# the Pad pages: the pad's
+tap ENV
+tap OCT+
+expect par83 1
+tap ENV
+tap OCT+
+expect par83 2
+wait 3000
+expect chord0 >70
+shot pad_up.png
+# the Drone pages: the drone's (its knob on the Drone page shows it too)
+tap LFO
+tap OCT-
+tap OCT-
+expect par23 -2
+# the Acid pages: the acid's
+tap ARP
+tap ARP
+tap ARP
+tap OCT+
+tap OCT+
+tap OCT+
+tap OCT+
+expect par45 3
+# Drums, Space, Global: the song again
+tap SEQ
+tap OCT+
+expect par82 1
+# the sequencer: the drum, as ever
+press SEQ
+wait 500
+release SEQ
+tap OCT+
+expect seqlane 1
+expect par82 1
+# a stored piece keeps them
+tap SEQ
+tap GLO
+tap SAVE
+tap PLAY
+wait 4000
+reboot
+wait 300
+expect par82 1
+expect par83 2
+expect par23 -2
+expect par45 3

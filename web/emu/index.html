@@ -121,7 +121,7 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
       <div>
         <h3>Acid <span>ARP, ARP, ARP</span></h3>
         <dl>
-          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Wave (saw or square).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave.</dd>
+          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Wave (saw or square).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave (on any Acid page).</dd>
         </dl>
       </div>
       <div>
@@ -174,6 +174,7 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
     <ul>
       <li><b>Keys</b> are the scale: each one adds or removes its note. The root stays.</li>
       <li><b>PLAY</b> plays / stops. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
+      <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Drone or Acid page, that voice; on any other page, the whole song. The line above the knobs shows OCT+1 (the voice) or SONG+1 (the song).</li>
       <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and the drop. Hold it instead for the drop on the next bar. It lights while a breakdown or build runs, and blinks while one waits for the bar.</li>
       <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held; hold SAVE and tap keys to lock effects on.</li>
       <li><b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (01 to 10).</li>
@@ -306,7 +307,7 @@ function hit(c, cls) {
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO)", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the style", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
   ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
-  "OCT-": "Acid an octave down; sequencer: the drum above", "OCT+": "Acid an octave up; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
+  "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);
 for (const k of Object.values(knobs)) hit(k, "knob");

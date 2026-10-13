@@ -62,7 +62,7 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
 | FX | The effects menu |
 | SEL | Shift (SEL + SEQ: the links on and off) |
 | PLAY · REC · EDIT | Play / stop · freeze · the next chord |
-| OCT− / OCT+ | The acid's octave; in the sequencer, the drum |
+| OCT− / OCT+ | ±3 octaves: the page's voice (pad, drone, acid), or the whole song on any other page; in the sequencer, the drum |
 | Keys | The scale; in the sequencer, the steps; in FX, effects |
 
 ## Building and testing

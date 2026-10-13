@@ -67,8 +67,8 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 3 | PRESETS | The piece, 01–10. With SEL held: the piece changes on the next bar. |
 | 4 | ALGORITHM | The mode of the scale. With SEL held: the piece's style. |
 | 5–8 | KNOB 1–4 | The four values (a, b, c, d) of the page on screen. |
-| 10 | OCT− | The acid line an octave down. In the sequencer: the previous drum. |
-| 11 | OCT+ | The acid line an octave up. In the sequencer: the next drum. |
+| 10 | OCT− | An octave down (to −3): on a voice's pages, that voice (pad, drone, acid); on any other page, the whole song. In the sequencer: the previous drum. |
+| 11 | OCT+ | An octave up (to +3), the same way. In the sequencer: the next drum. |
 | 12 | FX | The effects menu, on and off. |
 | 13 | SEL | Shift, held (see 11. Shift). |
 | 14 | ENV | Pad; press again for Pad env, again for Pad LFO. |
@@ -135,6 +135,14 @@ The pad's voices breathe on unequal cycles and take the new chord's notes as the
 follows the chord's root and glides. The acid line's notes are tied to the chord, so the riff transposes;
 Mutate rewrites steps each time round. Motion sets how far a slow tide swings between sparse and full,
 over a minute or two. Evolve makes the acid and the chords more restless.
+
+### Octaves
+
+**OCT− / OCT+** move an octave at a time, three down to three up. On the Pad, Drone or Acid pages
+(or their env and LFO pages) they move that voice alone; on any other page, Tempo among them, they move
+the whole song (pad, drone and acid together). The line above the knobs shows it when it isn't home:
+`OCT+2` for the page's voice, `SONG-1` for the song. The octaves are stored with the piece. Going down,
+each voice stops at the bottom of what you can hear (about C1), so −2 and −3 may sound alike.
 
 ---
 

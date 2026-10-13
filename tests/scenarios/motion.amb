@@ -11,7 +11,8 @@ expect frozen 0
 # the next chord comes on the bar
 tap EDIT
 wait 4000
-# OCT+: the acid an octave up
+# OCT+ on an Acid page: the acid an octave up
+tap ARP
 tap OCT+
 expect par45 1
 tap ENV

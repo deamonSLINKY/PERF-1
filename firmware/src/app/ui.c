@@ -19,7 +19,8 @@
  *                  them all go. SAVE tapped alone is still the breakdown
  *   SAVE           the breakdown on the next bar; again, a four-bar build and the drop; held, the drop
  *                  (on Global: the piece stored, above)
- *   OCT- / OCT+    the acid line's octave; in the sequencer, the lane
+ *   OCT- / OCT+    the octave (3 down .. 3 up) of the voice whose page it is (pad, drone, acid); on any
+ *                  other page, the whole song's; in the sequencer, the lane
  *   keys           the scale (each adds or removes its note); in the sequencer, the sixteen white keys
  *                  (the lower row) are the lane's steps: lit where it hits, tapped to turn a hit on or off
  *   SEL            shift, held: white keys 1-6 the pattern (on the bar); PRESETS the piece, on the next
@@ -457,6 +458,17 @@ static void set_view(int v)
     ui.touched = -1;
 }
 
+static int oct_par(int v)                       /* what OCT moves on page v */
+{
+    if (v >= V_PAD && v <= V_PADLFO)
+        return P_PAD_OCT;
+    if (v >= V_DRONE && v <= V_DRLFO)
+        return P_BASSOCT;
+    if (v >= V_ACID && v <= V_ACLINE)
+        return P_AC_OCT;
+    return P_OCT;
+}
+
 static int group_of(int v)
 {
     int g;
@@ -505,11 +517,12 @@ static void button(int b)
         if (ui.view == V_SEQ) {                  /* the sequencer: the lane */
             ui.lane = (uint8_t)((ui.lane + (b == B_OCTUP ? 1 : EN_NLANE - 1)) % EN_NLANE);
             ui.touched = -1;
-        } else {
+        } else {                                 /* the page's voice's octave, or the song's */
+            int p = oct_par(ui.view);
             char t[8];
-            knob_set(P_AC_OCT, proj.par[P_AC_OCT] + (b == B_OCTUP ? 1 : -1));
-            en_param_text(P_AC_OCT, proj.par[P_AC_OCT], t);
-            say("ACID OCTAVE", t);
+            knob_set(p, proj.par[p] + (b == B_OCTUP ? 1 : -1));
+            en_param_text(p, proj.par[p], t);
+            say(p == P_PAD_OCT ? "PAD OCTAVE" : p == P_BASSOCT ? "DRONE OCTAVE" : p == P_AC_OCT ? "ACID OCTAVE" : "SONG OCTAVE", t);
         }
         break;
     case B_SAVE:                                 /* nothing is saved by it: SAVE is the breakdown (and the build) */
@@ -1316,7 +1329,8 @@ static void draw_main(void)
 static void draw_knobs(void)
 {
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8 | (uint32_t)ui.lane << 16 | (uint32_t)ui.theme << 24), i;
-    h = hash(h, (uint32_t)proj.par[P_STYLE] | (uint32_t)proj.par[P_LINKS] << 8);
+    h = hash(h, (uint32_t)proj.par[P_STYLE] | (uint32_t)proj.par[P_LINKS] << 8 |
+                    (uint32_t)(proj.par[oct_par(ui.view)] + 8) << 12);
     if (ui.view == V_GLOBAL)
         h = hash(h, (uint32_t)proj.piece | (uint32_t)(proj.edited >> proj.piece & 1u) << 8 |
                         (uint32_t)project_saved(proj.piece) << 9);
@@ -1369,6 +1383,21 @@ static void draw_knobs(void)
                 xs = cv_text(xs + 5, -1, &FONT_XS, "+LINK", K_ACC);
             else if (ui.view == V_LINKS)
                 xs = cv_text(xs + 5, -1, &FONT_XS, "LINKS OFF", K_DIM);
+            {   /* the octave OCT moves here, if it isn't home: "OCT+1" (the song's, off a voice: "SONG-2") */
+                int op = oct_par(ui.view), ov = proj.par[op];
+                if (ov) {
+                    char o[10];
+                    const char *pre = op == P_OCT ? "SONG" : "OCT";
+                    int j = 0;
+                    while (*pre)
+                        o[j++] = *pre++;
+                    o[j++] = ov > 0 ? '+' : '-';
+                    o[j++] = (char)('0' + (ov > 0 ? ov : -ov));
+                    o[j] = 0;
+                    if (xs + 5 + text_w(&FONT_XS, o) < xt - 8)
+                        xs = cv_text(xs + 5, -1, &FONT_XS, o, K_TEXT);
+                }
+            }
             if (xt - 9 > xs + 4)
                 cv_rect(xs + 4, 5, xt - 9 - xs - 4, 1, K_LINE);
         }

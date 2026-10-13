@@ -31,7 +31,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_PL_RATE] = {"Rate", 0, 7, 4},        [P_PL_DEPTH] = {"Depth", 0, 100, 25},  [P_PL_SHAPE] = {"Shape", 0, 5, 0},
     [P_PL_DEST] = {"Target", 0, 3, 0},
     [P_NZ_COLOR] = {"Colour", 0, 7, 1},     [P_NZ_TONE] = {"Tone", 0, 100, 50},    [P_NZ_PUMP] = {"Pump", 0, 100, 60},
-    [P_BASSOCT] = {"Octave", -1, 1, 0},     [P_DR_CUT] = {"Cutoff", 0, 100, 45},   [P_DR_RES] = {"Reso", 0, 100, 45},
+    [P_BASSOCT] = {"Octave", -3, 3, 0},     [P_DR_CUT] = {"Cutoff", 0, 100, 45},   [P_DR_RES] = {"Reso", 0, 100, 45},
     [P_DE_TRIG] = {"Trigger", 0, 5, 0},     [P_DE_ATK] = {"Attack", 0, 100, 25},   [P_DE_DEC] = {"Decay", 0, 100, 55},
     [P_DE_AMT] = {"Amount", 0, 100, 35},
     [P_DL_RATE] = {"Rate", 0, 7, 6},        [P_DL_DEPTH] = {"Depth", 0, 100, 55},  [P_DL_SHAPE] = {"Shape", 0, 5, 0},
@@ -40,7 +40,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_AC_DEC] = {"Decay", 0, 100, 40},     [P_AC_ACC] = {"Accent", 0, 100, 50},   [P_AC_SLIDE] = {"Slide", 0, 100, 30},
     [P_AC_WAVE] = {"Wave", 0, 1, 0},
     [P_AC_DENS] = {"Density", 0, 100, 60},  [P_AC_LEN] = {"Length", 1, 16, 16},    [P_AC_RANGE] = {"Range", 1, 3, 1},
-    [P_AC_MUT] = {"Mutate", 0, 100, 25},    [P_AC_OCT] = {"Acid oct", -1, 2, 0},
+    [P_AC_MUT] = {"Mutate", 0, 100, 25},    [P_AC_OCT] = {"Acid oct", -3, 3, 0},
     [P_DRIVE] = {"Drive", 0, 100, 40},      [P_SWING] = {"Swing", 0, 100, 0},      [P_PATTERN] = {"Pattern", 0, EN_NPAT - 1, 0},
     [P_LANE_LVL(0)] = {"Level", 0, 100, 85}, [P_LANE_TUNE(0)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(0)] = {"Decay", 0, 100, 50},
     [P_LANE_LVL(1)] = {"Level", 0, 100, 60}, [P_LANE_TUNE(1)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(1)] = {"Decay", 0, 100, 45},
@@ -55,6 +55,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_STYLE] = {"Style", 0, EN_NSTYLE - 1, 0},
     [P_LINKS] = {"Links", 0, 1, 0},         [P_LK_KICK] = {"Kick", 0, 100, 50},    [P_LK_SNARE] = {"Snare", 0, 100, 40},
     [P_LK_HAT] = {"Hats", 0, 100, 50},      [P_LK_PERC] = {"Perc", 0, 1, 0},
+    [P_OCT] = {"Song oct", -3, 3, 0},       [P_PAD_OCT] = {"Pad oct", -3, 3, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -246,7 +247,7 @@ void en_param_text(int i, int v, char *b)
     case P_SWING: b = itoa_s(50 + v / 4, b); *b++ = '%'; *b = 0; return;
     default: break;
     }
-    if ((i == P_TUNE || i == P_AC_OCT || i == P_BASSOCT || (i >= P_LANE && i < P_ECHO && (i - P_LANE) % 3 == 1)) && v > 0)
+    if ((i == P_TUNE || i == P_AC_OCT || i == P_BASSOCT || i == P_OCT || i == P_PAD_OCT || (i >= P_LANE && i < P_ECHO && (i - P_LANE) % 3 == 1)) && v > 0)
         *b++ = '+';
     itoa_s(v, b);
 }
@@ -840,8 +841,8 @@ static void scale_set(void)
 static int acid_note(int s)                     /* acid step s's note: from the chord's degree, in its register */
 {
     int d = deg + ac_off[s], o = d / nsteps, n;
-    n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + ac_oct[s] + par[P_AC_OCT]);   /* the root: C2 .. B2 */
-    while (n > 84)
+    n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + ac_oct[s] + par[P_AC_OCT] + par[P_OCT]);   /* the root: C2 .. B2 */
+    while (n > 96)
         n -= 12;
     while (n < 28)
         n += 12;
@@ -854,7 +855,14 @@ static void pad_retarget(void)                  /* the chord's tones to the four
     chord_nt = en_chord_tones(pool, par[P_ROOT], deg, chord_pcs);
     for (i = 0; i < EN_NPAD; i++)
         from[i] = (int)(pad[i].target + 0.5f);
-    en_voice_lead(from, chord_pcs, chord_nt, to, 48, 77);
+    {   /* the pad's register (C3 .. F5), moved by its octaves and the song's, within C1 .. C8 */
+        int sh = 12 * (par[P_PAD_OCT] + par[P_OCT]), lo = 48 + sh, hi = 77 + sh;
+        while (lo < 24)
+            lo += 12, hi += 12;
+        while (hi > 108)
+            lo -= 12, hi -= 12;
+        en_voice_lead(from, chord_pcs, chord_nt, to, lo, hi);
+    }
     for (i = 0; i < EN_NPAD; i++) {             /* each voice takes its note at its next breath */
         pad[i].target = (float)to[i];
         en_chord[i] = (uint8_t)to[i];
@@ -865,7 +873,11 @@ static void pad_retarget(void)                  /* the chord's tones to the four
 
 static void bass_to(int pc)
 {
-    int n = 36 + pc % 12 + 12 * par[P_BASSOCT];     /* C2..B2, an octave down or up */
+    int n = 36 + pc % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]);   /* C2..B2, its octaves and the song's */
+    while (n < 24)                              /* kept where it can be heard: C1 .. B5 */
+        n += 12;
+    while (n > 83)
+        n -= 12;
     bass.target = (float)n;
     if (en_playing && bass.midi_note != n) {
         midi(0x82, bass.midi_note, 0);
@@ -1511,6 +1523,17 @@ static void apply(int p, int v)
     case P_BASSOCT:
         if (nsteps)
             bass_to(bass.midi_note % 12);
+        break;
+    case P_OCT: case P_PAD_OCT:                  /* the pad's voices cross over as for a new key */
+        if (nsteps) {
+            int i;
+            for (i = 0; i < EN_NPAD; i++)       /* a voice's next note: from its register's middle */
+                pad[i].target = (float)(55 + 12 * (par[P_PAD_OCT] + par[P_OCT]));
+            pad_retarget();
+            pad_handoff();
+            if (p == P_OCT)
+                bass_to(bass.midi_note % 12);
+        }
         break;
     case P_DR_RES: reso_k = 1.5f - 0.0138f * (float)v; break;   /* none .. near singing (k 1.5 .. 0.12) */
     case P_AC_LEN:

@@ -66,6 +66,8 @@ enum {
     P_LINKS, P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC,  /* the drums into the voices: on / off (SEL + SEQ);
                                                            * kick > drone, snare and clap > pad, hats > acid
                                                            * accents, perc > the acid's clock */
+    P_OCT, P_PAD_OCT,                                     /* the whole song's octave; the pad's (OCT- / OCT+;
+                                                           * the drone's is P_BASSOCT, the acid's P_AC_OCT) */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
