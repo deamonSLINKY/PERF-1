@@ -16,6 +16,7 @@ The package must be a release build (./build.sh --release X.Y): its identity, FM
 the installer checks the download against and what the FM-1 reports after the install."""
 import html
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -26,7 +27,7 @@ SRC = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SRC / "web"))
 from make_site import product_of, strip_module  # noqa: E402  (Felucca's: the package format)
 
-REPO = "https://github.com/charlesvestal/fm1-amb"
+REPO = os.environ.get("REPO_URL", "https://github.com/charlesvestal/fm1-amb")
 
 LANDING = """<!doctype html>
 <html lang="en">
@@ -126,6 +127,7 @@ def main(pkg, version, out):
     for mark in ("/*LIB*/", "/*META*/"):
         if page.count(mark) != 1:
             raise SystemExit(f"amb_installer.html must contain {mark} once")
+    page = page.replace("https://github.com/charlesvestal/fm1-amb", REPO).replace("github.com/charlesvestal/fm1-amb", REPO[8:])
     (out / "install" / "index.html").write_text(page.replace("/*LIB*/", lib).replace("/*META*/", meta), encoding="utf-8")
     # the manual (a complete page; its images beside it)
     subprocess.run([sys.executable, str(SRC / "tools" / "manual_html.py"), str(SRC / "docs" / "MANUAL.md"),

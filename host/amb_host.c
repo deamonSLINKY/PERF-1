@@ -18,8 +18,10 @@
  *   shot FILE.png                save the screen
  *   leds                         print the lit buttons and keys
  *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound
- *   reboot                       re-run boot from the simulated flash (persistence test)
- *   storev3 N                    write the project as format 3 did, with the playing piece's Pad at N
+ *   reboot                       re-run boot (power off and on)
+ *   seed N                       the seed the next boot uses (0: the first piece, exact)
+ *   bank76 P N                   write a bank as the firmware before styles did (76 settings a piece),
+ *                                piece P stored with its Pad at N
  */
 #define EN_HOST 1
 #include <stdio.h>
@@ -268,10 +270,13 @@ static double now_ns(void)
     return (double)t.tv_sec * 1e9 + (double)t.tv_nsec;
 }
 
+static uint32_t host_seed;                     /* 0: power-on is the first piece, exact (the tests) */
+uint32_t plat_seed(void) { return host_seed; }
+
 static void boot(void)
 {
     en_init();
-    project_load();
+    project_start(plat_seed());
     project_apply();
     lcd_fill(0, 0, 240, 240, 0);
     ui_init();
@@ -356,8 +361,14 @@ static int expect(const char *what, const char *val)
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
         got = proj.pool;
-    else if (!strcmp(what, "dirty"))
-        got = ui.dirty;
+    else if (!strcmp(what, "dirty"))              /* the bank has changes not yet in flash */
+        got = project_pending();
+    else if (!strcmp(what, "saved"))              /* the pieces in the bank (bit i: piece i) */
+        got = (int)(project_saved(0) | project_saved(1) << 1 | project_saved(2) << 2 | project_saved(3) << 3 |
+                    project_saved(4) << 4 | project_saved(5) << 5 | project_saved(6) << 6 | project_saved(7) << 7 |
+                    project_saved(8) << 8 | project_saved(9) << 9);
+    else if (!strcmp(what, "edited"))             /* the pieces changed since taken up (bit i: piece i) */
+        got = proj.edited;
     else if (!strcmp(what, "store_writes"))
         got = (int)store_writes;
     else if (!strcmp(what, "clocks_out"))
@@ -376,13 +387,33 @@ static int expect(const char *what, const char *val)
         got = en_chord_root;
     else if (!strncmp(what, "chord", 5))          /* chordN: pad voice N's note */
         got = en_chord[atoi(what + 5) & 3];
-    else if (!strcmp(what, "loopnotes")) {        /* the notes in all the loops */
-        int l, i;
-        got = 0;
-        for (l = 0; l < EN_NLOOP; l++)
-            for (i = 0; i < EN_LOOP_MAX; i++)
-                got += en_loop_note[l][i] >= 0;
-    } else if (!strncmp(what, "par", 3))          /* parN: parameter N (amb.h P_*) */
+    else if (!strcmp(what, "sec"))                /* the section: 0 groove, 1 breakdown, 2 build */
+        got = en_sec;
+    else if (!strcmp(what, "fxmask"))             /* the effects held (FX menu) */
+        got = (int)ui.fx_mask;
+    else if (!strcmp(what, "tempo"))
+        got = proj.par[P_TEMPO];
+    else if (!strcmp(what, "pat"))                /* the drum pattern playing (0..5) */
+        got = en_pat_now;
+    else if (!strcmp(what, "patnext"))            /* the one waiting for the bar */
+        got = en_pat_next;
+    else if (!strncmp(what, "lane", 4))           /* laneL: lane L's steps in the pattern chosen (bits) */
+        got = (int)en_pats[proj.par[P_PATTERN]][atoi(what + 4) % EN_NLANE];
+    else if (!strncmp(what, "pats", 4))           /* patsP_L: pattern P's lane L (bits) */
+        got = (int)en_pats[atoi(what + 4) % EN_NPAT][atoi(strchr(what, '_') ? strchr(what, '_') + 1 : "0") % EN_NLANE];
+    else if (!strcmp(what, "fxlock"))             /* the effects locked on (SAVE with their keys held) */
+        got = (int)ui.fx_lock;
+    else if (!strcmp(what, "fxon"))               /* the FX menu is on */
+        got = ui.fx_menu;
+    else if (!strcmp(what, "litkeys"))            /* the keys lit (bit k: key k) */
+        got = (int)lit_keys;
+    else if (!strcmp(what, "seqlane"))            /* the sequencer's lane (OCT- / OCT+) */
+        got = ui.lane;
+    else if (!strcmp(what, "acidnotes"))          /* the acid loop's steps that play */
+        got = __builtin_popcount(en_acid_gate);
+    else if (!strcmp(what, "theme"))
+        got = proj.par[P_THEME];
+    else if (!strncmp(what, "par", 3))          /* parN: parameter N (amb.h P_*) */
         got = proj.par[atoi(what + 3)];
     else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
         double db = 20.0 * log10(peak_out > 1e-9f ? peak_out : 1e-9f);
@@ -428,6 +459,7 @@ int main(int argc, char **argv)
     }
     snprintf(out, sizeof out, "%s/midi_out.txt", dir);
     midi_log = fopen(out, "w");
+    ui_splash_ms = 0u;                           /* the tests start at the UI (script: splash MS) */
     boot();
     while (fgets(line, sizeof line, sc)) {
         char cmd[32] = {0}, a[256] = {0}, b[64] = {0}, c[64] = {0};
@@ -525,26 +557,34 @@ int main(int argc, char **argv)
             printf("\n");
         } else if (!strcmp(cmd, "expect"))
             fails += expect(a, b);
-        else if (!strcmp(cmd, "storev3")) {          /* the project as format 3 (0.9 before the layer
-                                                         * pages) wrote it, Pad of the playing piece at N */
-            static project_v3_t o;
-            int i, k;
-            memset(&o, 0, sizeof o);
-            o.magic = PROJ_MAGIC;
-            o.format = 3u;
-            for (k = 0; k < V3_NPARAMS; k++)
-                o.par[k] = proj.par[k];
-            o.par[P_PAD] = (int16_t)atoi(a);
-            o.pool = proj.pool;
-            o.leds = proj.leds;
-            o.piece = proj.piece;
+        else if (!strcmp(cmd, "bank76")) {
+            static uint8_t bk[PLAT_STORE_MAX];
+            static int16_t par[P_NPARAMS];
+            static uint16_t pats[EN_NPAT][EN_NLANE];
+            uint16_t pool;
+            int pc = atoi(a), k, o = 20, i, PADV = atoi(b);
+            memset(bk, 0, sizeof bk);
+            bk[0] = 'H', bk[1] = 'Y', bk[2] = 'P', bk[3] = '2';
+            bk[4] = 1;
+            bk[8] = 76;
+            bk[10] = (uint8_t)(1u << pc), bk[11] = (uint8_t)((1u << pc) >> 8);
+            bk[13] = 0, bk[14] = 1, bk[16] = 2;      /* MIDI on, theme Ice */
             for (i = 0; i < NPIECES; i++) {
-                for (k = 0; k < V3_NPARAMS; k++)
-                    o.slot[i].par[k] = proj.slot[i].par[k];
-                o.slot[i].pool = proj.slot[i].pool;
+                en_piece(i, par, &pool);
+                en_piece_pats(i, pats);
+                if (i == pc)
+                    par[P_PAD] = (int16_t)PADV;
+                for (k = 0; k < 76; k++, o += 2)
+                    bk[o] = (uint8_t)par[k], bk[o + 1] = (uint8_t)((uint16_t)par[k] >> 8);
+                bk[o] = (uint8_t)pool, bk[o + 1] = (uint8_t)(pool >> 8), o += 2;
+                for (k = 0; k < EN_NPAT * EN_NLANE; k++, o += 2)
+                    bk[o] = (uint8_t)pats[k / EN_NLANE][k % EN_NLANE], bk[o + 1] = (uint8_t)(pats[k / EN_NLANE][k % EN_NLANE] >> 8);
             }
-            o.slot[proj.piece].par[P_PAD] = o.par[P_PAD];
-            plat_store_save(OBJ_PROJ, &o, sizeof o);
+            plat_store_save(OBJ_PROJ, bk, (uint32_t)o + 16u);
+        } else if (!strcmp(cmd, "splash")) {         /* splash MS: the next boot's RedtailWorks card */
+            ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
+        } else if (!strcmp(cmd, "seed")) {           /* seed N: the next power-on's (reboot) */
+            host_seed = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "reboot")) {
             memset(&proj, 0, sizeof proj);
             boot();

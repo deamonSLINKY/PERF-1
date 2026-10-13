@@ -1,7 +1,7 @@
-# help cards and the knobs (X0X's ways): a held button shows its card and then does nothing; SAVE
-# held on goes back to the recipe; a few quick clicks are exact, a quick spin sweeps
+# help cards and the knobs (X0X's ways): a held button shows its card and then does nothing; a few
+# quick clicks are exact, a quick spin sweeps
 wait 300
-expect par0 60
+expect par0 45
 press REC
 wait 1000
 shot help_rec.png
@@ -16,10 +16,10 @@ wait 200
 expect frozen 0
 tap ENV
 turn K1 3 10
-expect par0 63
+expect par0 48
 wait 500
 turn K1 -3 30
-expect par0 60
+expect par0 45
 wait 500
 turn K1 -12 10
 expect par0 0
@@ -27,20 +27,16 @@ wait 500
 turn K1 2 100
 expect par0 2
 wait 1500
-press SAVE
+press LFO
 wait 1000
-shot help_save.png
-wait 700
-release SAVE
+shot help_lfo.png
+release LFO
 wait 200
-expect par0 60
-tap FX
-turn K2 1 80
-wait 100
-shot space_turning.png
+expect par0 2
+expect view 1
 # HOME + SELECT: the tempo, from any page
 press HOME
 turn SELECT 3 100
 release HOME
-expect par18 75
-expect view 5
+expect par5 131
+expect view 1

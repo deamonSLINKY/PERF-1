@@ -1,0 +1,36 @@
+# SAVE drives the sections (the drums are sequenced, so nothing else does): a tap, a breakdown on the next bar, held
+# as long as it is left; a tap, the build (four bars) and the drop; held, the drop at once; two taps
+# before the bar, nothing. (128 BPM: a bar is 1875 ms.)
+wav sections.wav
+wait 300
+expect sec 0
+wait 62000
+expect sec 0
+tap SAVE
+wait 50
+expect sec 0
+wait 2000
+expect sec 1
+shot breakdown.png
+wait 12000
+expect sec 1
+tap SAVE
+wait 2000
+expect sec 2
+shot build.png
+wait 7600
+expect sec 0
+tap SAVE
+wait 2000
+expect sec 1
+press SAVE
+wait 700
+release SAVE
+wait 2000
+expect sec 0
+tap SAVE
+wait 100
+tap SAVE
+wait 2000
+expect sec 0
+wavstop

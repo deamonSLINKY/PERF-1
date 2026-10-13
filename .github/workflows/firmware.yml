@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# HYP-1 on GitHub: every push to the default branch builds the firmware with JieLi's toolchain (Linux
+# x86-64, as GitHub's runners are), runs the tests, and publishes the site to this repository's GitHub
+# Pages: the web installer with this build in it, the browser emulator, and the .fwsc to download.
+#
+# Once, in the repository's Settings > Pages: Source = "GitHub Actions". Then the installer is at
+#   https://<you>.github.io/<repo>/install/
+# Each build is a release build 1.B.N (from the run number), so the FM-1 can tell builds apart.
+name: firmware
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tools
+        run: |
+          pip install Pillow
+          sudo apt-get update -qq && sudo apt-get install -y -qq clang lld >/dev/null
+          command -v wasm-ld >/dev/null || sudo ln -sf "$(ls /usr/bin/wasm-ld* | head -1)" /usr/local/bin/wasm-ld
+      - name: JieLi toolchain and SDK (cached)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.jieli
+            ~/fw-AC79_AIoT_SDK
+          key: jieli-ac79-v1.2.1
+      - name: Fetch them if not cached
+        run: |
+          [ -x ~/.jieli/toolchain/pi32v2/bin/clang ] || tools/get_toolchain.sh
+          [ -f ~/fw-AC79_AIoT_SDK/cpu/wl82/tools/uboot.boot ] || \
+            git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
+              https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
+      - name: Version
+        run: |
+          N=$GITHUB_RUN_NUMBER
+          echo "V=1.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"
+      - name: Build the firmware
+        run: ./build.sh --release "$V"
+      - name: Tests
+        run: tests/run_tests.sh
+      - name: Site (installer, emulator, download)
+        run: |
+          EN_VERSION="$V" sh web/emu/build_clang.sh
+          REPO_URL="https://github.com/$GITHUB_REPOSITORY" python3 tools/make_pages.py "build/amb-$V.fwsc" "$V" build/pages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hyp1-firmware-${{ env.V }}
+          path: build/amb-${{ env.V }}.fwsc
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/pages
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}install/
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

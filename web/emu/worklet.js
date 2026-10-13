@@ -43,6 +43,7 @@ class Amb extends AudioWorkletProcessor {
       }
       this.sentWrites = this.ex.web_store_writes();
       this.ex.web_master(m.master ?? 2800);
+      if (this.ex.web_seed) this.ex.web_seed(m.seed >>> 0);   // a different start each time
       this.ex.web_boot();
       this.port.postMessage({ type: "ready" });
     } else if (!this.ex) {

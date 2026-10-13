@@ -1,0 +1,117 @@
+# storing a piece: on Global, SAVE stores the piece as it is (its settings and its six patterns); it
+# goes to flash while stopped. Held, the piece goes back to its factory settings and out of the store.
+wait 500
+expect saved 0
+expect dirty 0
+# change 01: the pad down, a kick on step 3, the snare's level
+tap ENV
+spin K1 -10
+press SEQ
+wait 500
+release SEQ
+tapkey 4
+tap OCT+
+spin K1 -10
+expect lane0 0x1115
+expect par52 50
+expect edited 1
+# Global: SAVE while playing stores it, written to flash once stopped
+tap GLO
+expect view 13
+shot global_edited.png
+expect sec 0
+tap SAVE
+wait 20
+expect sec 0
+expect saved 1
+expect edited 0
+expect dirty 1
+expect store_writes 0
+shot global_stored.png
+tap PLAY
+wait 4000
+expect dirty 0
+expect store_writes 1
+# a theme: the player's, written with the store
+spin K2 2
+expect theme 2
+expect dirty 1
+wait 4000
+expect dirty 0
+# 02 changed but not stored
+turn PRESET 1
+expect piece 1
+spin K1 5
+expect edited 2
+# power off and on (seed 0: 01): 01 as stored, 02 its factory settings, the theme kept
+reboot
+wait 300
+expect piece 0
+expect saved 1
+expect par0 35
+expect lane0 0x1115
+expect par52 50
+expect theme 2
+turn PRESET 1
+expect par71 2
+expect par5 124
+turn PRESET -1
+# a stored piece is not nudged at power-on: seed 3 lands on 08; store it, then come back to it
+seed 3
+reboot
+wait 300
+expect piece 7
+expect tempo 123
+tap HOME
+spin K1 5
+expect tempo 128
+tap GLO
+tap SAVE
+wait 20
+expect saved 0x81
+tap PLAY
+wait 4000
+expect store_writes >2
+reboot
+wait 300
+expect piece 7
+expect saved 0x81
+# as stored, not nudged again
+expect tempo 128
+seed 0
+reboot
+wait 300
+# SAVE held on Global: 01 back to its factory settings, out of the store
+tap GLO
+press SAVE
+wait 700
+shot global_hold.png
+wait 1000
+release SAVE
+expect par0 45
+expect lane0 0x1111
+expect par52 60
+expect saved 0x80
+expect sec 0
+expect dirty 1
+# powered off while playing, before it was written: the store as it was
+reboot
+wait 300
+expect saved 0x81
+tap GLO
+press SAVE
+wait 1700
+release SAVE
+expect saved 0x80
+tap PLAY
+wait 4000
+expect dirty 0
+reboot
+wait 300
+expect saved 0x80
+expect par0 45
+# SAVE elsewhere is still the breakdown
+tap HOME
+tap SAVE
+wait 3000
+expect sec 1

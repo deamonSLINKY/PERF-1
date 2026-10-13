@@ -128,9 +128,17 @@ int main(void)
         en_param_text(P_DRIFT, 100, t);
         CHECK(!strcmp(t, "5:00"), "drift 100: %s", t);
         en_param_text(P_ETIME, 3, t);
-        CHECK(!strcmp(t, "1 bar"), "etime: %s", t);
-        en_param_text(P_BOCT, 1, t);
-        CHECK(!strcmp(t, "+1"), "boct: %s", t);
+        CHECK(!strcmp(t, "1/4."), "etime: %s", t);
+        en_param_text(P_AC_OCT, 1, t);
+        CHECK(!strcmp(t, "+1"), "acid oct: %s", t);
+        en_param_text(P_PATTERN, 0, t);
+        CHECK(!strcmp(t, "1"), "pattern: %s", t);
+        en_param_text(P_NZ_COLOR, 1, t);
+        CHECK(!strcmp(t, "Pink"), "noise colour: %s", t);
+        en_param_text(P_DL_RATE, 6, t);
+        CHECK(!strcmp(t, "16 bars"), "lfo rate: %s", t);
+        en_param_text(P_PE_ATK, 0, t);
+        CHECK(!strcmp(t, "0.05s"), "pad attack: %s", t);
     }
 
     /* the render: silent at rest, sound when growing, never NaN, bounded */
@@ -190,21 +198,31 @@ int main(void)
         CHECK(!bad_s, "%d voices still off the new chord 2 s after a change", bad_s);
     }
 
-    /* the loops evolve: with Evolve at 100, the phrases change */
+    /* the acid line mutates: with Mutate at 100, its steps change; and a new drum pattern waits for the
+     * bar, turning through several on the way playing none of them */
     {
-        int8_t before[EN_NLOOP][EN_LOOP_MAX];
-        int diff = 0, l;
-        en_set(P_EVOLVE, 100);
-        en_set(P_DENSITY, 80);
-        memcpy(before, (const void *)en_loop_note, sizeof before);
-        run(90.0f);
-        for (l = 0; l < EN_NLOOP; l++)
-            for (i = 0; i < EN_LOOP_MAX; i++)
-                diff += before[l][i] != en_loop_note[l][i];
-        CHECK(diff > 0, "the loops evolved");
-        for (l = 0; l < EN_NLOOP; l++)
-            for (i = EN_LOOP_LEN[l]; i < EN_LOOP_MAX; i++)
-                CHECK(en_loop_note[l][i] == -1, "loop %d slot %d past its end", l, i);
+        uint16_t before;
+        int k, seen_mid = 0;
+        en_set(P_AC_MUT, 100);
+        en_set(P_AC_DENS, 60);
+        run(0.5f);
+        before = en_acid_gate;
+        run(30.0f);
+        CHECK(en_acid_gate != before, "the acid line mutated");
+        while (en_drum_pos != 5)                 /* mid-bar */
+            run(0.006f);
+        for (k = 1; k <= 4; k++)                 /* through 2, 3, 4 to 5 */
+            en_set(P_PATTERN, k);
+        run(0.01f);
+        CHECK(en_pat_now != 4 && en_pat_next == 4, "the new pattern waits (now %d, next %d)", en_pat_now, en_pat_next);
+        for (k = 0; k < 400 && en_pat_now != 4; k++) {
+            run(0.006f);
+            if (en_pat_now != 0 && en_pat_now != 4)
+                seen_mid = 1;
+        }
+        CHECK(en_pat_now == 4 && en_drum_pos <= 1, "the new pattern on the bar (now %d, step %d)", en_pat_now, en_drum_pos);
+        CHECK(!seen_mid, "a pattern turned through was played");
+        en_set(P_PATTERN, 0);
     }
 
     /* freeze: the chord holds */
@@ -246,6 +264,23 @@ int main(void)
             CHECK(pent >> ((en_chord[i] - 2 + 120) % 12) & 1u, "chord note %d not in the pool", en_chord[i]);
     }
 
+    /* each style: bounded, and every voice still heard */
+    {
+        int st;
+        for (st = 0; st < EN_NSTYLE; st++) {
+            int lo, hi;
+            en_style_tempo(st, &lo, &hi);
+            en_set(P_STYLE, st);
+            en_set(P_TEMPO, hi);
+            peak = 0.0f;
+            run(6.0f);
+            CHECK(!bad && peak < 1.0f && peak > 0.05f, "style %d: peak %f", st, (double)peak);
+            CHECK(en_pad_level > 0.0f || st == 1, "style %d: the pad silent", st);
+        }
+        en_set(P_STYLE, 0);
+        en_set(P_TEMPO, 128);
+    }
+
     /* every setting at its extremes: still bounded */
     {
         int p;
@@ -262,37 +297,50 @@ int main(void)
         CHECK(!bad, "all at min: NaN");
     }
 
-    /* Bell tone and Bell oct are heard: brighter (zero crossings) and higher with them, bells alone */
+    /* the acid's cutoff and octave, and the noise's colour, are heard (zero crossings: brightness, pitch) */
     {
-        float zc[3];
+        float zc[5], hf[5];
         int k;
-        static const int TONE[3] = {0, 100, 0}, OCT[3] = {0, 0, 2};
-        for (k = 0; k < 3; k++) {
+        for (k = 0; k < 5; k++) {
             int b2, j;
             long z = 0;
             float prev = 0.0f;
+            double e = 1e-9, d = 0.0;
             en_init();
             en_set(P_PAD, 0);
             en_set(P_BASS, 0);
             en_set(P_PULSE, 0);
             en_set(P_ECHO, 0);
             en_set(P_REVERB, 0);
-            en_set(P_DENSITY, 100);
-            en_set(P_BTONE, TONE[k]);
-            en_set(P_BOCT, OCT[k]);
+            if (k < 3) {                         /* the acid alone: cutoff low, high; an octave up twice */
+                en_set(P_NOISE, 0);
+                en_set(P_AC_DENS, 100);
+                en_set(P_AC_ENV, 0);
+                en_set(P_AC_CUT, k == 1 ? 100 : 20);
+                en_set(P_AC_OCT, k == 2 ? 2 : 0);
+            } else {                             /* the noise alone: brown, white */
+                en_set(P_ACID, 0);
+                en_set(P_NOISE, 80);
+                en_set(P_NZ_TONE, 100);
+                en_set(P_NZ_COLOR, k == 3 ? 2 : 0);
+            }
             en_play(1);
-            for (b2 = 0; b2 < 20 * 44100 / 256; b2++) {
+            for (b2 = 0; b2 < 10 * 44100 / 256; b2++) {
                 en_render(buf, 256, 2048);
                 for (j = 0; j < 256; j++) {
-                    float x = (float)buf[2 * j];
+                    float x = (float)buf[2 * j] * (1.0f / 8388608.0f);
                     z += (x > 0.0f) != (prev > 0.0f);
+                    e += (double)(x * x);
+                    d += (double)((x - prev) * (x - prev));   /* the difference: the highs' share */
                     prev = x;
                 }
             }
             zc[k] = (float)z;
+            hf[k] = (float)(d / e);
         }
-        CHECK(zc[1] > 2.5f * zc[0], "Bell tone 100 not brighter: %.0f vs %.0f", (double)zc[1], (double)zc[0]);
-        CHECK(zc[2] > 1.8f * zc[0], "Bell oct +2 not higher: %.0f vs %.0f", (double)zc[2], (double)zc[0]);
+        CHECK(hf[1] > 3.0f * hf[0], "acid cutoff 100 not brighter: %.4f vs %.4f", (double)hf[1], (double)hf[0]);
+        CHECK(zc[2] > 1.5f * zc[0], "acid oct +2 not higher: %.0f vs %.0f", (double)zc[2], (double)zc[0]);
+        CHECK(zc[4] > 3.0f * zc[3], "white noise not brighter than brown: %.0f vs %.0f", (double)zc[4], (double)zc[3]);
         en_init();
         en_play(1);
     }

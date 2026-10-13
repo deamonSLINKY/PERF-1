@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// The browser build in Node: boot it, press a few keys, expect sound and screen frames.
+// The browser build in Node: boot it (past its 1.8 s RedtailWorks card), press a few keys, expect sound
+// and screen frames.
 import fs from "fs";
 const wasm = fs.readFileSync(process.argv[2]);
 let mem;
@@ -11,8 +12,8 @@ if (ex._initialize) ex._initialize();
 ex.web_master(2800); ex.web_boot();
 let peak = 0;
 const WHITE = [0,2,4,6,7,9,11,12,14,16,18,19,21,23,24,26];
-for (let i = 0; i < 400; i++) {
-  if (i % 20 === 0 && i < 340) ex.web_keys(1 << WHITE[(i / 20) % 16]);
+for (let i = 0; i < 1600; i++) {             // 4.6 s
+  if (i >= 800 && i % 20 === 0 && i < 1140) ex.web_keys(1 << WHITE[((i - 800) / 20) % 16]);
   ex.web_render(128);
   const l = new Float32Array(mem.buffer, ex.web_out_l(), 128);
   for (const v of l) peak = Math.max(peak, Math.abs(v));

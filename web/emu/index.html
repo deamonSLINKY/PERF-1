@@ -3,20 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AMB-1 in the browser</title>
-<meta name="description" content="AMB-1, a generative ambient firmware for the M-VAVE FM-1, in your browser: the same code the FM-1 runs.">
+<title>HYP-1 Emulator</title>
+<meta name="description" content="HYP-1, a generative hypnotic techno firmware for the M-VAVE FM-1 (a fork of AMB-1), in your browser: the same code the FM-1 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
 <style>
-/* the colours of Ambient 1: Music for Airports (1978), as the site; the FM-1 itself stays black */
-:root { --ground: #fdf9e4; --ink: #1d1b02; --muted: #4f4b25; --rule: #1d1b02; --accent: #1d1b02; --river: #85c3c1; --river-2: #549995;
-        --green-1: #d0dc92; --card: #f6eeb5; color-scheme: light; }
+/* HYP-1's colours, as its screen: a charcoal ground, a cyberpunk purple (the primary), orange for what
+ * is live; one dark look, whatever the viewer's theme. The FM-1 itself keeps its grey. */
+:root { --ground: #141318; --ink: #ece8f2; --muted: #a39cb3; --rule: #3e3a4c; --accent: #ff8020; --river: #a44cff; --river-2: #c18cff;
+        --green-1: #5a2f8f; --card: #26222f; color-scheme: dark; }
 body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
        font: 400 16px/1.55 "Helvetica Neue", Helvetica, Arial, sans-serif; }
 main { max-width: 1040px; margin: 0 auto; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
-h1 { font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .06em; margin: 0; }
+h1 { font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .06em; margin: 0; color: var(--river-2); }
 header p { margin: 0; color: var(--muted); }
 header nav { margin-left: auto; display: flex; gap: 1rem; }
 header nav a[aria-current] { text-decoration: none; color: var(--river-2); }
@@ -25,28 +26,30 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .device svg { pointer-events: none; }
 .hit { position: absolute; touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 12px; }
 .hit.knob { cursor: ns-resize; border-radius: 50%; }
-.hit:focus-visible { outline: 2px solid #f28a5a; outline-offset: 2px; }
+.hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
 .ctl { cursor: pointer; }
 .ctl.knob { cursor: ns-resize; }
 .btnface { transition: fill .06s; }
-.lit .btnface { fill: #f28a5a; }
-.lit text.btn { fill: #2a140a; }
-.held .btnface, .held .keyface { stroke: #f28a5a; stroke-width: 3; }
-.latched .btnface { stroke: #6fc3ff; stroke-width: 3; }
+.lit .btnface { fill: #ff8020; }
+.lit text.btn { fill: #241005; }
+.held .btnface, .held .keyface { stroke: #ff8020; stroke-width: 3; }
+.latched .btnface { stroke: #b46cff; stroke-width: 3; }
 .keyface { transition: fill .06s; }
-.lit .keyface.white { fill: #f6b48e; }
-.lit .keyface.black { fill: #4cc3b6; }
+.lit .keyface.white { fill: #c99cff; }
+.lit .keyface.black { fill: #9a3cff; }
 .start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .55); border-radius: 4.4% / 6.9%; }
 .start button { font: 400 1.2rem "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: .6em 1.6em;
-                border: 1px solid var(--ink); background: var(--river); color: var(--ink); cursor: pointer; }
+                border: 1px solid var(--river-2); background: var(--river); color: #fff; cursor: pointer; }
+.start button:hover { background: var(--accent); border-color: var(--accent); color: #1a0c03; }
 .start[hidden] { display: none; }
 .turn { display: none; margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
 @media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
 .start button:disabled { opacity: .6; cursor: progress; }
 .bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
-.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--ink); padding: .3em .8em; cursor: pointer; }
+.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--rule); padding: .3em .8em; cursor: pointer; }
+.bar button:hover { border-color: var(--accent); color: var(--accent); }
 .bar .cpu { font-variant-numeric: tabular-nums; }
 .help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
 .help { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
@@ -56,19 +59,20 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .help .knobs { grid-column: 1 / -1; }
 .knobs .pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem 2rem; margin-top: .4rem; }
 .knobs h3 { font: 600 1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .2rem; color: var(--ink); }
-.knobs h3 span { color: var(--muted); font-weight: 400; }
+.knobs h3 span { color: var(--accent); font-weight: 400; }
 .knobs dl { margin: 0; color: var(--muted); }
 .knobs dt { color: var(--ink); font-weight: 600; }
 .knobs dd { margin: 0 0 .45rem; }
-kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--ink); padding: 0 .3em; color: var(--ink); }
+kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--rule); padding: 0 .3em; color: var(--river-2); }
+.help b { color: var(--ink); }
 </style>
 </head>
 <body>
 <main>
 <header>
-  <h1><a href="../" style="color:inherit;text-decoration:none" title="AMB-1 home">AMB-1</a></h1>
-  <p>an ambient garden for the FM-1, in the browser: the same code the FM-1 runs</p>
-  <nav><a href="../emu/" aria-current="page">Emulator</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="https://github.com/charlesvestal/fm1-amb">Source</a></nav>
+  <h1>HYP-1</h1>
+  <p>hypnotic techno and acid for the FM-1, in the browser: the same code the FM-1 runs</p>
+  <nav><a href="https://github.com/charlesvestal/fm1-amb">AMB-1, the original</a></nav>
 </header>
 
 <p class="turn">Turn your phone sideways for bigger controls.</p>
@@ -81,88 +85,117 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
 <div class="bar">
   <span id="status">Off. Sound starts when you switch it on.</span>
   <span class="cpu" id="cpu"></span>
-  <button id="reset" type="button" title="Forget your scale and sound, and start again from the factory settings">Factory reset</button>
+  <button id="reset" type="button" title="Power off and on: a new piece at random (stored pieces kept)">New start</button>
+  <button id="forget" type="button" title="Forget every stored piece and the theme">Forget stored</button>
 </div>
 
 <section class="help">
   <div class="knobs">
     <h2>Pages and knobs</h2>
-    <p>One page a layer, each on its own button; a layer's level is always KNOB 1. <b>SELECT</b> steps through the pages. Each piece remembers its own settings.</p>
+    <p>SELECT steps through every page in order. The buttons jump to a voice; pressing the same button again steps through that voice's pages (its envelope, its LFO). KNOB 1 is a voice's level. There are ten pieces, 01 to 10 (PRESETS), each with its own settings and its own six drum patterns. Each keeps your changes until the power goes off, unless you store it: on Global, press SAVE. Each power-on starts on a piece at random: as you stored it, or a little changed from its factory settings if you never did.</p>
     <div class="pages">
       <div>
-        <h3>Garden <span>HOME</span></h3>
+        <h3>Tempo <span>HOME</span></h3>
         <dl>
-          <dt>Tempo</dt><dd>30 to 120 (also HOME + SELECT, from any page).</dd><dt>Evolve</dt><dd>How restless the garden is: at 0 the loops repeat exactly; turned up, bell notes change, the pulse patterns turn, and the layers take rests.</dd><dt>Motion</dt><dd>How far the slow tide swings between sparse and full, and how much pitch, pan and the echo wander.</dd><dt>Drift</dt><dd>How long a chord lasts, 20 s to 5 min. The thin bar top right fills on the way to the next. EDIT moves on now.</dd>
+          <dt>Tempo, Evolve</dt><dd>70 to 190 BPM (also HOME + SELECT, from any page); how restless the acid line and the chords are.</dd><dt>Motion, Drift</dt><dd>How far the slow tide swings between sparse and full; how long a chord lasts, 20 s to 5 min.</dd>
         </dl>
       </div>
       <div>
-        <h3>Pad <span>ENV</span></h3>
+        <h3>Pad <span>ENV, ENV, ENV</span></h3>
         <dl>
-          <dt>Level, Swell</dt><dd>How loud; how long the voices breathe.</dd><dt>Bright</dt><dd>Opens the filter (and moves the Voices' vowel).</dd><dt>Colour</dt><dd>Rhodes or Voices.</dd>
+          <dt>Pad</dt><dd>Level, Bright (the filter and the vowel), Colour (Rhodes or Voices), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack, Hold, Release, Rest.</dd><dt>Pad LFO</dt><dd>Rate (1/4 note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd>
         </dl>
       </div>
       <div>
-        <h3>Bells <span>ARP</span></h3>
+        <h3>Noise <span>SELECT</span></h3>
         <dl>
-          <dt>Level, Density</dt><dd>How loud; how many notes each of the four loops (13, 17, 23, 29 beats) holds.</dd><dt>Tone, Octave</dt><dd>Round to metallic; two octaves down to two up.</dd>
+          <dt>Level, Colour</dt><dd>A bed of grain: white, pink, brown, blue, violet, grey, black (crackle), yellow (a radio's hiss).</dd><dt>Tone, Pump</dt><dd>A low-pass on it; how hard the kick ducks it.</dd>
         </dl>
       </div>
       <div>
-        <h3>Bass <span>LFO</span></h3>
+        <h3>Drone <span>LFO, LFO, LFO</span></h3>
         <dl>
-          <dt>Level, Octave</dt><dd>How loud; an octave down or up.</dd><dt>Glide, Fifth</dt><dd>How slowly it slides to its note; how often it leans on the fifth.</dd>
+          <dt>Drone</dt><dd>Level, Octave, Cutoff, Reso.</dd><dt>Drone env</dt><dd>Trigger (each chord, or every 1 to 8 bars), Attack, Decay, Amount (on the cutoff).</dd><dt>Drone LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
         </dl>
       </div>
       <div>
-        <h3>Pulse <span>SEQ</span></h3>
+        <h3>Acid <span>ARP, ARP, ARP</span></h3>
         <dl>
-          <dt>Level, Hits</dt><dd>How loud; how many beats the three rings play (16, 12 and 7 steps).</dd><dt>Swing, Hats</dt><dd>The off sixteenths late (50% to 75%); the hats dark to bright.</dd>
+          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Wave (saw or square).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave.</dd>
         </dl>
       </div>
       <div>
-        <h3>Space <span>FX</span></h3>
+        <h3>Drums <span>SEQ (hold: sequencer)</span></h3>
         <dl>
-          <dt>Echo, Echo time</dt><dd>The tape echo's send; its loop, a dotted quarter to 4 bars.</dd><dt>Reverb, Size</dt><dd>The plate's send; how long it rings, and how often the echo returns.</dd>
+          <dt>Level, Drive, Swing</dt><dd>The kit's level; the kick's drive; the off sixteenths late.</dd><dt>Pattern</dt><dd>One of six. A new pattern waits for the end of the bar, so turning past others on the way plays none of them.</dd>
         </dl>
       </div>
       <div>
-        <h3>Setup <span>GLO</span></h3>
+        <h3>Space <span>SELECT</span></h3>
         <dl>
-          <dt>Root, Tune</dt><dd>The key's root; fine tuning in cents.</dd><dt>MIDI out, Lights</dt><dd>MIDI out over USB; the key lights and the buttons' glow. The audio load shows top right.</dd>
+          <dt>Echo, Echo time</dt><dd>The tape echo's send; its time, an eighth to a bar.</dd><dt>Reverb, Size</dt><dd>The plate's send; how long it rings, and how often the echo returns.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Global <span>GLO</span></h3>
+        <dl>
+          <dt>Root, Theme</dt><dd>The key's root; the screen's colours (Synth, Acid, Ice, Ember, Phosphor).</dd><dt>Tune, MIDI out</dt><dd>Fine tuning in cents; MIDI out over USB.</dd><dt>SAVE (here)</dt><dd>Stores the piece as it is: every setting, its six patterns, its drums' sounds. Hold it 1.5 s to put the piece back to its factory settings (and out of the store). The line above the knobs says whether the piece is stored, factory, or changed; a dot in the piece's tag means unstored changes.</dd>
         </dl>
       </div>
     </div>
   </div>
   <div>
+    <h2>Styles (SEL + ALGORITHM)</h2>
+    <ul>
+      <li>Each piece has a style, shown at the left of the line above the knobs, and stored with the piece. It reshapes every voice and the feel; the patterns stay yours.</li>
+      <li><b>Hypnotic</b>: the sound as it always was. <b>House</b>: a round kick, a shuffle, a wide clap and open hats, congas, the pad stabbing chords on the off-beats, a warm bass. <b>Techno</b>: a hard kick with a rumble, metal hats, a bell perc, a dark pad and a gritty drone. <b>Acid</b>: a punchy kit with a cowbell, a little swing, the 303 driven and up front. <b>Breakcore</b>: a distorted, crushed kit, chopped with ghost notes and 32nd rolls (Evolve: more), a dirty sub, the acid at half time.</li>
+      <li>Switching style takes the tempo into its usual range (house 118–128, techno 128–138, acid 120–132, breakcore 160–180); after that any tempo from 70 to 190 goes.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>The sequencer (hold SEQ)</h2>
+    <ul>
+      <li>Six lanes: kick, snare, clap, closed hat, open hat, perc. Sixteen steps.</li>
+      <li>The sixteen <b>white keys</b> (the lower row) are the steps of the drum you're on: they light where it hits, and a tap turns a hit on or off. The light running across them is the playhead.</li>
+      <li><b>OCT−</b> / <b>OCT+</b> step through the drums. <b>SELECT</b> leaves for the next page.</li>
+      <li>With <b>SEL</b> held: <b>black keys 1–6</b> copy the pattern you're editing into pattern 1–6, <b>OCT−</b> clears the drum's lane, <b>OCT+</b> puts the piece's own lane back, and <b>white keys 1–6</b> pick the pattern to edit.</li>
+      <li>The knobs: the lane's Level, Tune and Decay, and the Pattern. It edits the pattern chosen, even before it plays.</li>
+      <li><b>SEQ</b> again goes back to the Drums page. The patterns and the lanes' sounds are the piece's: store the piece (Global, SAVE) to keep them.</li>
+    </ul>
+  </div>
+  <div>
     <h2>Buttons</h2>
     <ul>
       <li><b>Keys</b> are the scale: each one adds or removes its note. The root stays.</li>
-      <li><b>PLAY</b> grows / rests. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
-      <li><b>SELECT</b> the previous or next page; with <b>HOME</b> held, the tempo. <b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (each remembers how you left it).</li>
-      <li><b>OCT−</b> / <b>OCT+</b> move the bells an octave. <b>SAVE</b> saves; hold it to reset the piece.</li>
-      <li>Hold a button for a second and a card says what it does (with a mouse: <kbd>Shift</kbd>-click to hold it, click again to let go).</li>
+      <li><b>PLAY</b> plays / stops. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
+      <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and the drop. Hold it instead for the drop on the next bar. It lights while a breakdown or build runs, and blinks while one waits for the bar.</li>
+      <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held, and SAVE with keys held locks those effects on.</li>
+      <li><b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (01 to 10).</li>
+      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, and <b>ALGORITHM</b> picks the piece's style.</li>
+      <li>On the <b>Global</b> page, <b>SAVE</b> stores the piece instead (held: factory settings). Stored while playing, it is written as soon as you stop: a write silences the sound for a moment, so it never happens mid-performance. A dot at the top right means a write is waiting.</li>
     </ul>
   </div>
   <div>
-    <h2>Mouse and touch</h2>
+    <h2>Effects (FX on)</h2>
     <ul>
-      <li>Drag a knob up or down, or use the scroll wheel over it.</li>
-      <li>Click or touch buttons and keys. Several fingers at once work on a touch screen.</li>
-      <li>Combinations with a mouse: <kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
+      <li>Each key plays its effect while held. Hold one or more and press <b>SAVE</b> to lock them on (they turn purple); tap any key, or close FX, to let them go.</li>
+      <li><b>White keys 1–6</b>: beat repeat 1/2, 1/4, 1/6, 1/8, 1/16, 1/32 (from the next sixteenth; the shortest held wins). <b>7</b> reverse, <b>8</b> tape stop.</li>
+      <li><b>White keys 9–14</b>: mute kick, hats, snare (with clap and perc), drone, acid, pad (with the noise). <b>15</b> low-pass, <b>16</b> high-pass.</li>
+      <li><b>Black keys 1–5</b>: gate 1/16, gate 1/8, echo throw, crush, drum fill. <b>6–11</b>: solo, each beside its mute.</li>
     </ul>
   </div>
   <div>
-    <h2>Keyboard</h2>
+    <h2>Mouse, touch and keyboard</h2>
     <ul>
+      <li>Drag a knob up or down, or use the scroll wheel over it. Click or touch buttons and keys; <kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
       <li>White keys 1–8: <kbd>Q</kbd>–<kbd>I</kbd>, 9–16: <kbd>A</kbd>–<kbd>K</kbd>. Black keys 1–11: <kbd>1</kbd>–<kbd>0</kbd>, <kbd>-</kbd>.</li>
-      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC (freeze), <kbd>V</kbd> ENV (the Pad page), <kbd>Esc</kbd> HOME, <kbd>Z</kbd> / <kbd>X</kbd> OCT− / OCT+.</li>
-      <li><kbd>↑</kbd> <kbd>↓</kbd> turn SELECT.</li>
+      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC, <kbd>Esc</kbd> HOME, <kbd>V</kbd> ENV, <kbd>L</kbd> LFO, <kbd>P</kbd> ARP, <kbd>M</kbd> SEQ (hold: the sequencer), <kbd>O</kbd> GLO, <kbd>C</kbd> EDIT, <kbd>`</kbd> FX, <kbd>B</kbd> SAVE, <kbd>Z</kbd> / <kbd>X</kbd> OCT− / OCT+, <kbd>↑</kbd> <kbd>↓</kbd> SELECT.</li>
     </ul>
   </div>
   <div>
-    <h2>Saving</h2>
-    <p>SAVE keeps your scale and sound in this browser, as the FM-1 keeps them in its memory. Factory reset forgets them.
-      It is the firmware, not a recording: what you hear is AMB-1 running, at the FM-1's 44.1 kHz.
+    <h2>Power-on</h2>
+    <p>Each start shows RedtailWorks, then plays a piece at random. New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
+      It is the firmware, not a recording: what you hear is HYP-1 running, at the FM-1's 44.1 kHz.
       The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
   </div>
 </section>
@@ -177,7 +210,7 @@ const WHITE_K = [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26];
 const BLACK_K = [1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25];
 const BLACK_AFTER = [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14];
 const BODY = "#3a3d42", TRAY = "#26282c", KEY_W = "#d9dadc", KEY_B = "#c9cacd", KNOB = "#1f2124", BTNC = "#2e3135", LABEL = "#e8e8ea";
-const STORE_KEY = "amb-emu-store";
+const STORE_KEY = "hyp1-emu-store";
 
 const svg = document.getElementById("panel");
 function el(tag, attrs, parent = svg) {
@@ -264,9 +297,9 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { FX: "Space page", SEL: "Tone page", ENV: "Pad colour: Rhodes / Voices", EDIT: "Next page", GLO: "Setup page", HOME: "Layers page", SAVE: "Save",
-  ARP: "The next chord", SEQ: "Motion page", PLAY: "Grow / rest", REC: "Freeze: the chord holds, the reverb rings on",
-  "OCT-": "Bells an octave down", "OCT+": "Bells an octave up", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece",
+const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO)", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the style", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
+  ARP: "Acid (again: env, line)", SEQ: "Drums; hold: the sequencer", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
+  "OCT-": "Acid an octave down; sequencer: the drum above", "OCT+": "Acid an octave up; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);
 for (const k of Object.values(knobs)) hit(k, "knob");
@@ -377,7 +410,9 @@ const KEYMAP = {};
 "1234567890".split("").forEach((c, i) => KEYMAP["Digit" + c] = { key: BLACK_K[i] });
 KEYMAP.Minus = { key: BLACK_K[10] };
 Object.assign(KEYMAP, { Space: { btn: BTN.PLAY }, Enter: { btn: BTN.REC }, KeyV: { btn: BTN.ENV },
-                        Escape: { btn: BTN.HOME }, KeyZ: { btn: BTN["OCT-"] }, KeyX: { btn: BTN["OCT+"] } });
+                        Escape: { btn: BTN.HOME }, KeyZ: { btn: BTN["OCT-"] }, KeyX: { btn: BTN["OCT+"] },
+                        Backquote: { btn: BTN.FX }, KeyB: { btn: BTN.SAVE }, KeyL: { btn: BTN.LFO }, KeyP: { btn: BTN.ARP },
+                        KeyM: { btn: BTN.SEQ }, KeyO: { btn: BTN.GLO }, KeyN: { btn: BTN.SEL }, KeyC: { btn: BTN.EDIT } });
 addEventListener("keydown", (e) => {
   if (!node || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.code === "ArrowUp" || e.code === "ArrowDown") { turn(knobs.SELECT, e.code === "ArrowUp" ? 1 : -1); e.preventDefault(); return; }
@@ -454,12 +489,12 @@ async function switchOn() {
           if (m.fb) drawScreen(m.fb);
           drawLights(m.buttons, m.keys);
           window.ambLast = m;
-          if (m.load !== undefined) cpu.textContent = `AMB-1 uses ${m.load}% of this computer's time`;
+          if (m.load !== undefined) cpu.textContent = `HYP-1 uses ${m.load}% of this computer's time`;
           if (m.store) saveStore(m.store);
         }
       };
     });
-    node.port.postMessage({ type: "load", wasm, store: loadStore(), master }, [wasm]);
+    node.port.postMessage({ type: "load", wasm, store: loadStore(), master, seed: (Math.random() * 4294967295) >>> 0 || 1 }, [wasm]);
     await ready;
     await ac.resume();
     document.getElementById("start").hidden = true;
@@ -472,13 +507,15 @@ async function switchOn() {
   }
 }
 document.getElementById("go").addEventListener("click", switchOn);
-document.getElementById("reset").addEventListener("click", () => {
-  if (document.getElementById("reset").dataset.armed) {
+document.getElementById("reset").addEventListener("click", () => location.reload());
+document.getElementById("forget").addEventListener("click", () => {
+  const f = document.getElementById("forget");
+  if (f.dataset.armed) {
     try { localStorage.removeItem(STORE_KEY); } catch {}
     location.reload();
   } else {
-    document.getElementById("reset").dataset.armed = "1";
-    document.getElementById("reset").textContent = "Click again to forget everything";
+    f.dataset.armed = "1";
+    f.textContent = "Click again: forget all stored pieces";
   }
 });
 </script>

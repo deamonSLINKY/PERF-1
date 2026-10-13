@@ -4,6 +4,22 @@
 
 uint32_t plat_ms(void) { return fm1_ms; }
 
+/* the power-on seed: the MASTER pot's noise and the timer between reads, with what the last boot left
+ * (RAM that survives a reset; after a power cut, whatever it powered up as) */
+static uint32_t seed_carry __attribute__((section(".noinit")));
+uint32_t plat_seed(void)
+{
+    uint32_t h = 2166136261u ^ seed_carry, i;
+    for (i = 0; i < 24u; i++) {
+        h = (h ^ (uint32_t)fm1_adc_read(FM1_ADC_MASTER)) * 16777619u;
+        h = (h ^ fm1_ticks()) * 16777619u;
+        fm1_delay_ms(1);
+    }
+    h ^= h >> 15;
+    seed_carry = h * 2654435761u + 1u;
+    return h ? h : 1u;
+}
+
 uint32_t plat_buttons(void)
 {
     uint32_t raw = fm1_in.buttons, out = 0, i;

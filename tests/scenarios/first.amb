@@ -1,37 +1,58 @@
-# a first look and listen: it grows from power-on; the pages; a minute of the garden
+# a first look and listen: it plays from power-on; every page; half a minute of Hypnos
 wav first.wav
 wait 200
 expect playing 1
-expect pool 0x6AD
+expect pool 0x5AD
 wait 6000
-shot garden.png
-expect pad_level >40
+shot flow.png
+expect pad_level >20
 wait 30000
-shot garden30.png
+shot flow30.png
 expect sixteenths >40
-expect loopnotes >0
+expect acidnotes >0
 wavstop
 expect peak_db_max -0.5
 expect peak_db_min -30
+# the buttons' pages: ENV the pad (again: its envelope, its LFO), LFO the drone (and its own two),
+# ARP the acid (and its envelope, its line), SEQ the drums, GLO global
 tap ENV
-wait 100
+expect view 1
 shot pad.png
-tap ARP
-wait 100
-shot bells.png
+tap ENV
+expect view 2
+shot pad_env.png
+tap ENV
+expect view 3
+shot pad_lfo.png
+tap ENV
+expect view 1
 tap LFO
-wait 100
-shot bass.png
+expect view 5
+shot drone.png
+tap LFO
+tap LFO
+expect view 7
+shot drone_lfo.png
+tap ARP
+expect view 8
+shot acid.png
+tap ARP
+tap ARP
+expect view 10
+shot acid_line.png
 tap SEQ
-wait 100
-shot pulse.png
-tap FX
-wait 100
-shot space.png
+expect view 11
+shot drums.png
 tap GLO
-wait 100
-shot setup.png
-# SELECT steps through the pages, from the last back to the first
-turn SELECT -6 100
+expect view 13
+shot global.png
+# SELECT: the pages in order, Noise and Space among them
+turn SELECT -1 100
+expect view 12
+shot space.png
+turn SELECT -8 100
+expect view 4
+shot noise.png
+turn SELECT -9 100
 expect view 0
 tap HOME

@@ -1,4 +1,4 @@
-# freeze, next chord, stop and rest, save and reboot
+# freeze, next chord, stop, and power-on: the voices start fresh (seed 0: the first piece, exact)
 wait 2000
 tap REC
 wait 50
@@ -11,23 +11,21 @@ expect frozen 0
 # the next chord comes on the bar
 tap EDIT
 wait 4000
+# OCT+: the acid an octave up
 tap OCT+
-expect par21 1
+expect par45 1
 tap ENV
 spin K1 -20
-expect par0 40
+expect par0 25
 tap PLAY
 wait 50
 expect playing 0
 wait 50000
 expect pad_level <1
-shot resting.png
-# while resting, the change saves itself
+shot stopped.png
 wait 5000
-expect dirty 0
-expect store_writes >0
 reboot
 wait 300
-expect par0 40
-expect par21 1
+expect par0 45
+expect par45 0
 expect playing 1

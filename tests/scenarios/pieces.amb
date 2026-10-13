@@ -1,60 +1,62 @@
-# the pieces: PRESETS picks one, each remembers its settings, SAVE held resets one, all saved
+# the pieces: PRESETS picks one of ten (01 .. 10), each with its own settings and its own six drum
+# patterns; each remembers its changes while the power is on
 wait 500
 expect piece 0
-# Garden's pad down (the Pad page: ENV)
+expect lane0 0x1111
+# 01's pad down (the Pad page: ENV): an edit, marked
 tap ENV
 spin K1 -10
-expect par0 50
-# the next piece: Departures, its recipe (tempo 60, no pulse, C# Ionian)
+expect par0 35
+expect edited 1
+shot edited.png
+# the next piece: 02, its recipe (124 BPM, D Dorian, the drone up, its second pattern) and its patterns
 turn PRESET 1
 expect piece 1
-expect par18 60
-expect par3 0
-expect par19 1
-expect pool 0xAB5
+expect par5 124
+expect par2 80
+expect par71 2
+expect par48 1
+expect pool 0x6AD
+expect lane5 0x0848
+expect pats0_0 0x1111
+expect pats5_0 0
 wait 8000
-shot departures.png
-# and Voices
+shot piece02.png
+# and 03 (E Phrygian, its acid up, the rumbling kick)
 turn PRESET 1
 expect piece 2
-expect par1 0
-wait 20000
-shot voices.png
-expect pad_level >10
-# the pad's colour (the Pad page's fourth knob), kept with the piece (Voices starts as Voices)
-expect par22 1
-spin K4 -1
-expect par22 0
-wait 3000
-# back to Garden: as it was left
+expect par1 60
+expect par72 2
+expect lane0 0x9999
+wait 10000
+expect pad_level >5
+# back to 01: as it was left
 turn PRESET -2
-expect par22 0
 expect piece 0
-expect par0 50
-spin K4 1
-expect par22 1
-turn PRESET 2
-expect par22 0
-turn PRESET -2
-expect par22 1
-# SAVE held: Garden's recipe again
-press SAVE
-wait 1700
-release SAVE
-expect par0 60
-expect par22 0
-expect store_writes 0
-# a tweak, saved, survives a reboot, on the piece it was made on (the Bells page: ARP)
-tap ARP
-spin K1 5
-expect par1 70
-turn PRESET 6
-expect piece 6
-tap SAVE
-expect store_writes 1
+expect par0 35
+# a pattern edited in 01 stays 01's: 02's is untouched
+press SEQ
+wait 500
+release SEQ
+tapkey 4
+expect lane0 0x1115
+turn PRESET 1
+expect piece 1
+expect pats0_0 0x1111
+turn PRESET -1
+expect lane0 0x1115
+# ten of them, round and round: 10 is next to 01
+turn PRESET -1
+expect piece 9
+expect par5 118
+turn PRESET 1
+expect piece 0
+expect par0 35
+expect lane0 0x1115
+# none of it stored: power off and on, all as it was made
 reboot
 wait 300
-expect piece 6
-turn PRESET 2
 expect piece 0
-expect par1 70
+expect par0 45
+expect lane0 0x1111
+expect edited 0

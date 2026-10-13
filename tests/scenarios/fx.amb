@@ -1,0 +1,88 @@
+# FX: one press, the menu (and the keys are effects while held); again, off. The audio (fx.wav) has
+# each effect in its own stretch, for listening: the times are in the comments.
+wait 4000
+wav fx.wav
+wait 4000
+tap FX
+wait 100
+expect fxon 1
+expect fxmask 0
+shot fx_menu.png
+# 4.1 s: beat repeat 1/4 (G3), 4 s
+key 2 down
+wait 4000
+expect fxmask 2
+shot fx_held.png
+key 2 up
+wait 2000
+# 10.1 s: the kick muted (G4), 4 s
+key 14 down
+wait 4000
+expect fxmask 256
+key 14 up
+# 14.1 s: reverse (E4), 2 s; 16.1 s: tape stop (F4), 2 s
+key 11 down
+wait 2000
+key 11 up
+key 12 down
+wait 2000
+key 12 up
+# 18.1 s: low-pass (F5), 3 s; 21.1 s: gate 1/16 (F#3), 3 s
+key 24 down
+wait 3000
+key 24 up
+key 1 down
+wait 3000
+key 1 up
+# 24.1 s: echo throw (A#3), 2 s; 26.1 s: crush (C#4), 2 s; 28.1 s: fill (D#4), 2 s
+key 5 down
+wait 2000
+key 5 up
+key 8 down
+wait 2000
+key 8 up
+key 10 down
+wait 2000
+key 10 up
+# 30.1 s: the kick alone (solo, F#4), 3 s
+key 13 down
+wait 3000
+key 13 up
+# 33.1 s: SAVE with an effect held locks it (the low-pass, F5): it stays when the key is let go, and
+# SAVE does not bring a breakdown
+key 24 down
+wait 300
+tap SAVE
+key 24 up
+wait 2500
+expect fxlock 16384
+expect fxmask 16384
+expect sec 0
+shot fx_locked.png
+# another key: the lock goes, and the new one plays while it is held
+key 2 down
+wait 300
+expect fxlock 0
+expect fxmask 2
+key 2 up
+wait 100
+expect fxmask 0
+# locked again, two at once (the low-pass and the gate); FX closed lets them go
+key 24 down
+key 1 down
+wait 100
+tap SAVE
+key 24 up
+key 1 up
+wait 100
+expect fxmask 81920
+tap FX
+wait 100
+expect fxon 0
+expect fxmask 0
+# with the menu off, a key is the scale again
+tapkey 1
+expect pool 0x7AD
+wait 3000
+wavstop
+expect peak_db_max -0.5

@@ -1,0 +1,83 @@
+# a performance: patterns, the acid shaped by hand, a breakdown and a drop
+wav live.wav
+wait 15000
+tap ARP
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K2 2
+wait 1000
+spin K4 2
+wait 6000
+tap SEQ
+spin K4 1
+wait 14000
+tap LFO
+spin K3 6
+wait 8000
+tap SAVE
+wait 26000
+tap SAVE
+wait 8500
+tap SEQ
+spin K4 2
+wait 16000
+tap ARP
+tap ARP
+tap ARP
+spin K2 -3
+wait 16000
+tap ARP
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+spin K2 -2
+wait 800
+wait 10000
+wavstop

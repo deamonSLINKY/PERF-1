@@ -1,0 +1,86 @@
+# styles: SEL + ALGORITHM steps the piece's style (hypnotic, house, techno, acid, breakcore), the tempo
+# taken into the style's range; stored with the piece. ALGORITHM alone is still the mode.
+wait 500
+expect par76 0
+expect tempo 128
+press SEL
+turn ALGO 1
+release SEL
+expect par76 1
+expect tempo 128
+expect par72 5
+expect edited 1
+shot house.png
+wait 3000
+shot house_play.png
+press SEL
+turn ALGO 1
+release SEL
+expect par76 2
+expect tempo 128
+press SEL
+turn ALGO 1
+release SEL
+expect par76 3
+press SEL
+turn ALGO 1
+release SEL
+expect par76 4
+expect tempo 160
+wait 3000
+shot breakcore.png
+# back to acid: the tempo into 120-132
+press SEL
+turn ALGO -1
+release SEL
+expect par76 3
+expect tempo 132
+# and round past hypnotic to breakcore
+press SEL
+turn ALGO 2
+release SEL
+expect par76 0
+press SEL
+turn ALGO -1
+release SEL
+expect par76 4
+# ALGORITHM alone: the mode, the style kept
+turn ALGO 1
+expect par72 6
+expect par76 4
+# the tempo: 70 to 190 (HOME + SELECT)
+press HOME
+spin SELECT 40
+release HOME
+expect tempo 190
+press HOME
+spin SELECT -200
+release HOME
+expect tempo 70
+# piece 09 is techno; the style is the piece's
+turn PRESET -2
+expect piece 8
+expect par76 2
+turn PRESET 2
+expect piece 0
+expect par76 4
+# stored with the piece
+tap GLO
+tap SAVE
+tap PLAY
+wait 4000
+reboot
+wait 300
+expect par76 4
+expect tempo 70
+# a bank the firmware before styles wrote (76 settings a piece): its pieces load, hypnotic
+bank76 3 33
+reboot
+wait 300
+expect saved 8
+expect theme 2
+turn PRESET 3
+expect piece 3
+expect par0 33
+expect par76 0
+expect par5 138

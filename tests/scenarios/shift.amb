@@ -1,0 +1,86 @@
+# SEL held is a shift: white keys 1-6 the pattern (on the bar), PRESETS the piece on the next bar; in
+# the sequencer, black keys 1-6 copy the pattern there, OCT- clears the drum's lane, OCT+ puts it back
+wait 500
+expect pat 0
+expect pool 0x5AD
+# SEL + white key 3 (B3 is key 4... white keys: 0 2 4 6 7 9 11 12 ...): pattern 3, on the bar
+press SEL
+tapkey w2
+expect par48 2
+expect pool 0x5AD
+wait 20
+expect patnext 2
+leds
+shot shift_pattern.png
+release SEL
+wait 2500
+expect pat 2
+# the key was a pattern, not a note: the scale is as it was; SEL let go did nothing more
+expect pool 0x5AD
+expect view 0
+# SEL + PRESETS: the piece waits for the bar; plain PRESETS is at once
+press SEL
+turn K1 0
+turn PRESET 2
+wait 10
+expect piece 0
+shot shift_piece.png
+release SEL
+wait 2200
+expect piece 2
+turn PRESET -2
+wait 10
+expect piece 0
+# and turned back to the piece playing before the bar: it stays
+press SEL
+turn PRESET 1
+turn PRESET -1
+release SEL
+wait 2500
+expect piece 0
+# the sequencer (SEQ held): the kick of pattern 3
+press SEQ
+wait 500
+release SEQ
+expect view 14
+expect par48 2
+expect lane0 0x5111
+# SEL + black key 5: pattern 3 copied into pattern 5
+press SEL
+tapkey b4
+release SEL
+expect pats4_0 0x5111
+expect pats4_1 0x1010
+expect pats4_3 0xAAAA
+# SEL + OCT-: the kick's lane cleared; SEL + OCT+: the piece's own back
+press SEL
+tap OCT-
+release SEL
+expect lane0 0
+expect seqlane 0
+press SEL
+tap OCT+
+release SEL
+expect lane0 0x5111
+expect seqlane 0
+# without SEL, OCT is the drum again
+tap OCT+
+expect seqlane 1
+# SEL + white key 1 here: the pattern edited (and played) is 1
+press SEL
+tapkey w0
+release SEL
+expect par48 0
+expect lane0 0x1111
+expect view 14
+# in FX, a key pressed with SEL held is a pattern, not an effect
+tap SEQ
+tap FX
+press SEL
+key 2 down
+wait 20
+expect fxmask 0
+expect par48 1
+key 2 up
+release SEL
+expect fxon 1

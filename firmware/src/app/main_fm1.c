@@ -230,15 +230,7 @@ static void safe_main(void)
 
 static void splash(void)
 {
-    lcd_fill(0, 0, 240, 240, RGB(246, 238, 181));    /* the paper of Music for Airports' cover */
-    cv_begin(240, 64, RGB(246, 238, 181));
-    {
-        int32_t w = text_w(&FONT_L, "AMB-1");
-        cv_text((240 - w) / 2, 0, &FONT_L, "AMB-1", RGB(29, 27, 2));
-        w = text_w(&FONT_S, "An ambient garden for the FM-1");
-        cv_text((240 - w) / 2, 42, &FONT_S, "An ambient garden for the FM-1", RGB(112, 106, 58));
-    }
-    cv_blit(0, 92);
+    lcd_fill(0, 0, 240, 240, RGB(22, 21, 27));       /* charcoal, until the UI's RedtailWorks card (ui_init) */
     lcd_sync();
 }
 
@@ -282,7 +274,7 @@ static void fm1_main(void)
     panel_init();
     led_pos_init();
     en_init();
-    project_load();                                 /* defaults when nothing (or another format) is saved */
+    project_start(plat_seed());                     /* a piece at random, a little changed */
     project_apply();
     audio_init();
     usb_start();

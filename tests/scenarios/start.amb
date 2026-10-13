@@ -1,0 +1,18 @@
+# power-on: with a seed, a piece at random, its recipe nudged (seed 0, the tests' default: the first, exact)
+wait 300
+expect piece 0
+expect tempo 128
+seed 2
+reboot
+wait 300
+# piece 09 (Warehouse, 136 BPM), nudged, with its own drum patterns (its second, "floor")
+expect piece 8
+expect tempo >132
+expect tempo <140
+expect par48 1
+expect lane0 0x1111
+expect lane3 0x5555
+expect lane4 0x4444
+expect edited 0
+expect playing 1
+shot start.png
