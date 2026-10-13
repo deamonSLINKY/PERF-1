@@ -20,6 +20,7 @@ by Charles Vestal. Current version: **1.0.21** (each push to `main` builds the n
   [printable PDF](docs/HYP-1_Manual.pdf) with every control numbered and every screen lettered
 - **Watch it**: [a five-minute live take](https://www.youtube.com/watch?v=0UvGnZE2_VI), and more on [YouTube](https://www.youtube.com/@RedtailWorks)
 - **The board**: feature requests (vote with a 👍) and comments: <https://rustypawz.github.io/fm1-HYP1/board/>
+- **Support it**: HYP-1 is free; if it's useful to you, [buy me a coffee on Ko-fi](https://ko-fi.com/redtailworks)
 - **More from RedtailWorks**: <https://www.redtail.works>
 
 Installing it is at your own risk, though it's hard to get stuck: the web installer can put M-VAVE's

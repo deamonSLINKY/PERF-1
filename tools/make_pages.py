@@ -105,13 +105,19 @@ footer .rw span:nth-child(2) { color: var(--purple-2); } footer .rw span:last-ch
 .video figcaption { display: flex; flex-wrap: wrap; gap: .3rem 1rem; justify-content: space-between; }
 .video figcaption a { color: var(--orange); }
 footer .ver { font-family: "Chakra Petch", sans-serif; color: var(--muted); font-size: .9rem; }
+a.kofi { display: inline-flex; align-items: center; gap: .4em; background: var(--rust, #c85420); color: #fff8f0 !important; text-decoration: none; border-radius: 999px; padding: .15em .8em; font-weight: 600; } a.kofi:hover { background: var(--orange, #ff8020); color: #1a0c03 !important; }
+.support { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1.4rem; background: var(--card); border: 1px solid var(--rust);
+           border-radius: 10px; padding: 16px 18px; margin: 2.4rem 0 0; }
+.support p { margin: 0; color: var(--muted); flex: 1 1 22rem; }
+.support p b { color: var(--ink); font-weight: 600; }
+.support a.kofi { font-size: 1.05rem; padding: .5em 1.2em; }
 @media (max-width: 560px) { .lede { font-size: 1.15rem; } h2 { font-size: 1.25rem; } }
 </style>
 </head>
 <body>
 <main>
 <header class="site"><a class="home" href="./"><img class="panda" src="img/panda.png" width="64" height="50" alt="">HYP-1</a>
-  <nav><a href="emu/">Emulator</a><a href="install/">Install</a><a href="manual/">Manual</a><a href="manual/HYP-1_Manual.pdf">PDF manual</a><a href="board/">Board</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>
+  <nav><a href="emu/">Emulator</a><a href="install/">Install</a><a href="manual/">Manual</a><a href="manual/HYP-1_Manual.pdf">PDF manual</a><a href="board/">Board</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav></header>
 
 <img class="hero" src="img/hyp-hero.png" width="1600" height="1161" alt="An M-VAVE FM-1 running HYP-1: the screen shows piece 01 in A Aeolian at 128 BPM, the chord Am7, the drum pattern and the Tempo page; the sixteen white keys glow purple with the scale.">
 
@@ -186,6 +192,12 @@ the whole performance into your DAW.</p>
 </div>
 <figure style="margin-top:14px"><img src="img/hyp-themes.png" width="1344" height="328" alt="The five screen themes: Synth, Acid, Ice, Ember, Phosphor."><figcaption>Five screen themes on Global: Synth, Acid, Ice, Ember, Phosphor.</figcaption></figure>
 
+<div class="support">
+  <p><b>HYP-1 is free, and always will be.</b> If it's found a place in your music, a coffee keeps the
+  updates, videos and new pieces coming.</p>
+  <a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support on Ko-fi</a>
+</div>
+
 <h2>Credits</h2>
 <p class="credits">HYP-1 is a fork of <a href="https://github.com/charlesvestal/fm1-amb">AMB-1</a> by Charles Vestal, the generative ambient firmware it grew from.
 The platform (USB, update loader, storage, installer) is <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita (@kurogedelic), Hügelton Instruments.
@@ -195,7 +207,7 @@ M-VAVE and FM-1 are trademarks of their owners; HYP-1 is not affiliated with M-V
 M-VAVE's updater, M-UPGRADE, from <a href="https://www.m-vave.com/download">m-vave.com/download</a>.
 Installing firmware is at your own risk.</p>
 <footer><a class="rw" href="https://www.redtail.works"><img class="panda" src="img/panda.png" width="48" height="38" alt=""><span>REDTAIL</span><span>WORKS</span></a>
-  <span class="small">HYP-1 is a RedtailWorks project &middot; <a href="https://www.redtail.works">www.redtail.works</a> &middot; <a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a> &middot; <a href="__REPO__">source on GitHub</a></span><span class="ver">version __VERSION__</span></footer>
+  <span class="small">HYP-1 is a RedtailWorks project &middot; <a href="https://www.redtail.works">www.redtail.works</a> &middot; <a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a> &middot; <a href="https://ko-fi.com/redtailworks">Ko-fi</a> &middot; <a href="__REPO__">source on GitHub</a></span><span class="ver">version __VERSION__</span></footer>
 </main>
 </body>
 </html>

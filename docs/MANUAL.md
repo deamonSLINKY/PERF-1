@@ -386,4 +386,6 @@ HYP-1 is a [RedtailWorks](https://www.redtail.works) project (videos on
 storage, installer) is [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic),
 Hügelton Instruments. Screen font: Chakra Petch (SIL OFL). Licence: GPL-3.0.
 
+HYP-1 is free. If it's found a place in your music, you can support it on [Ko-fi](https://ko-fi.com/redtailworks).
+
 M-VAVE and FM-1 are trademarks of their owners; HYP-1 is not affiliated with M-VAVE.
