@@ -109,6 +109,7 @@ static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 #define DROP_HOLD 500u                 /* SAVE held this long: the drop, on the next bar */
 #define HELP_HOLD 900u
 #define KIT_QUIET 3000u                /* the store is written this long after a change, while stopped */
+#define GLOB_QUIET 2000u               /* the theme, Tune, MIDI out: written this long after a change */
 #define FACTORY_HOLD 1500u             /* SAVE held this long on Global: the piece to its factory settings */
 
 /* ---------------------------------------------------------------- themes --- */
@@ -1448,14 +1449,17 @@ static void leds(void)
     plat_leds(b, k);
 }
 
-/* the store goes to flash while stopped: a flash write silences the audio for a moment, so never
- * while playing */
+/* the store goes to flash while stopped: a flash write silences the audio for a moment, so the pieces
+ * wait for the music to stop; the player's three (theme, Tune, MIDI out) don't, or they'd never stick */
 static void autosave(void)
 {
     uint32_t now = plat_ms();
-    if (!project_pending() || en_playing || ui.btn || ui.keys || now - ui.act_t < KIT_QUIET)
+    if (!project_pending() || ui.btn || ui.keys)
         return;
-    project_flush();
+    if (!en_playing && now - ui.act_t >= KIT_QUIET)
+        project_flush();                         /* stopped: all of it */
+    else if (project_pending_globals() && now - ui.act_t >= GLOB_QUIET)
+        project_flush_globals();                 /* playing: the theme, Tune, MIDI out (a moment's gap) */
 }
 
 /* the RedtailWorks card, at power-on: the name, and a red panda's ringed tail beneath it */

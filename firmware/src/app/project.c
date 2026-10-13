@@ -19,7 +19,8 @@ typedef struct {
 } bank_t;
 typedef char bank_fits[sizeof(bank_t) <= PLAT_STORE_MAX ? 1 : -1];
 static bank_t bank;
-static uint8_t pending;
+static bank_t disk;                          /* the bank as it is in flash */
+static uint8_t pending, pending_glob;        /* the pieces; the player's three (theme, Tune, MIDI out) */
 
 #define OLD_KIT_MAGIC 0x31505948u            /* "HYP1": the kit before the bank (its theme carried over) */
 typedef struct {
@@ -135,6 +136,7 @@ static void bank_load(void)
     bank.magic = BANK_MAGIC;
     bank.format = BANK_FORMAT;
     bank.npar = P_NPARAMS;
+    disk = bank;
 }
 
 /* power-on: each piece as saved, or its recipe; a piece at random. One never saved is nudged: the
@@ -218,18 +220,35 @@ void project_piece_factory(void)
 void project_globals(void)
 {
     bank_globals();
-    pending = 1;
+    pending_glob = 1;
 }
 
 int project_saved(int i) { return (unsigned)i < NPIECES && (bank.saved >> i & 1u); }
-int project_pending(void) { return pending; }
+int project_pending(void) { return pending || pending_glob; }
+int project_pending_globals(void) { return pending_glob; }
 
 int project_flush(void)
 {
-    if (!pending)
+    if (!pending && !pending_glob)
         return 0;
     if (plat_store_save(OBJ_PROJ, &bank, sizeof bank) != 0)
         return -1;
-    pending = 0;
+    disk = bank;
+    pending = pending_glob = 0;
+    return 0;
+}
+
+/* the player's three alone, into flash as it is (a piece stored but not yet written stays waiting):
+ * the music plays from power-on, so these are written without waiting for it to stop */
+int project_flush_globals(void)
+{
+    if (!pending_glob)
+        return 0;
+    disk.tune = bank.tune;
+    disk.midi = bank.midi;
+    disk.theme = bank.theme;
+    if (plat_store_save(OBJ_PROJ, &disk, sizeof disk) != 0)
+        return -1;
+    pending_glob = 0;
     return 0;
 }

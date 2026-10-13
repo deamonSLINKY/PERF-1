@@ -41,6 +41,8 @@ void project_globals(void);              /* the theme, Tune or MIDI out changed:
 int project_saved(int i);                /* piece i is in the bank */
 int project_pending(void);               /* the bank has changes not yet in flash */
 int project_flush(void);                 /* and into flash (call while stopped): 0 = written */
+int project_pending_globals(void);       /* the theme, Tune or MIDI out changed, not yet in flash */
+int project_flush_globals(void);         /* those alone into flash (while playing too): 0 = written */
 
 void ui_init(void);
 void ui_frame(void);

@@ -159,7 +159,8 @@ playing is written as soon as you stop. A small dot by the tempo means a write i
 > Stop the music before you switch off, or a store still waiting is lost.
 
 **Power-on** starts on a piece at random: as you stored it, or with small random changes to its factory
-settings if you never did. Theme, Tune and MIDI out are yours across all pieces and are kept too.
+settings if you never did. Theme, Tune and MIDI out are yours across all pieces and are kept too: they're
+written two seconds after you change them, even while the music plays.
 
 | Piece | Character | BPM | Key |
 |---|---|---|---|
