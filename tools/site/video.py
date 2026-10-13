@@ -10,6 +10,8 @@ screens, lights and sound), drawn into the FM-1 of the site's pictures, with cap
                                                            shaped: sound, envelope, LFO, pump)
   python3 tools/site/video.py --vertical --links      ->  build/video/links/hyp1-links-vertical.mp4 (the drums
                                                            shaping the voices)
+  python3 tools/site/video.py --song                  ->  build/video/song/hyp1-song.mp4 (five minutes played
+                                                           as a live set; 16:9)
   python3 tools/site/video.py --vertical [--reuse]      ->  build/video/hyp1-tour-vertical.mp4 (1080 x 1920,
                                                            for Shorts; --reuse: the simulator's frames as they are)
 
@@ -459,6 +461,131 @@ def links_tour():
     return t
 
 
+def song_tour():
+    """five minutes played, not demonstrated: piece 01 as a live set, from an ambient open to a fade.
+    Captions only at the start and the end."""
+    W = M.WHITE_K
+    t = Tour()
+    # set the stage before the recording starts: drums and acid silent, a little more pad, grain, space
+    t.lines += ["master 3000", "tap SEQ", "spin K1 -75", "tap ARP", "spin K1 -55", "tap ENV", "spin K1 15",
+                "tap LFO", "spin K3 -15", "tap HOME", "spin SELECT 4", "spin K1 15", "spin SELECT 9", "spin K3 20",
+                "tap HOME", "wait 4000", "wav tour.wav"]
+
+    def sec(x):
+        t.f(int(round(x * 30)))
+
+    def ride(k, n, per, rest=0):                 # a slow hand on a knob
+        t.spin(k, n, per)
+        t.f(rest)
+
+    def shift(*acts):
+        t.lines.append("press SEL")
+        t.f(6)
+        for a in acts:
+            a()
+        t.lines.append("release SEL")
+        t.f(8)
+
+    def hold(k, frames):                         # an effect key held (the FX menu open)
+        t.lines.append(f"key {k} down")
+        t.f(frames)
+        t.lines.append(f"key {k} up")
+        t.f(4)
+
+    BAR = 56                                     # frames in a bar at 128
+
+    # 0:00 the open: pad, drone, grain
+    t.cap("HYP-1", "a five-minute live take  ·  piece 01, hypnotic, 128 BPM  ·  M-VAVE FM-1")
+    sec(9)
+    t.cap("", "")
+    t.tap("LFO")
+    ride("K3", 25, 16)                           # the drone opens, slowly
+    sec(2)
+    # 0:28 the drums fade in
+    t.tap("SEQ")
+    ride("K1", 75, 8)
+    sec(2)
+    # 0:50 the acid arrives
+    t.tap("ARP")
+    ride("K1", 55, 8)
+    ride("K2", 12, 20)
+    sec(12)
+    # 1:25 pattern 2
+    shift(lambda: t.key(W[1], 6, 10))
+    sec(16)
+    # riding the acid
+    ride("K2", 28, 5)
+    ride("K3", 15, 6)
+    sec(6)
+    ride("K2", -20, 7)
+    t.tap("ARP")
+    t.tap("ARP")                                 # the line: mutate it
+    ride("K4", 35, 10)
+    sec(6)
+    # 2:15 repeats and an echo throw
+    t.tap("FX")
+    sec(1)
+    hold(6, BAR)
+    sec(3)
+    hold(5, BAR // 2)
+    t.tap("FX")
+    # the breakdown
+    t.tap("SAVE")
+    sec(3)
+    t.tap("ENV")
+    ride("K2", 30, 14)                           # the pad brightens in the space
+    t.tap("REC")                                 # and freezes
+    sec(7)
+    t.tap("REC")
+    sec(3)
+    # the build, under a high-pass, and the drop
+    t.tap("SAVE")
+    t.tap("FX")
+    t.lines.append("key 26 down")
+    t.f(4 * BAR - 30)
+    t.lines.append("key 26 up")
+    t.f(4)
+    t.tap("FX")
+    shift(lambda: t.key(W[2], 6, 10))            # pattern 3 at the drop
+    sec(8)
+    # 3:15 the peak: the links on, the acid opened up
+    shift(lambda: t.tap("SEQ", 5, 6))
+    t.tap("ARP")
+    ride("K2", 18, 8)
+    sec(22)
+    # 3:45 a gate locked on, then a tape stop into the next phrase
+    t.tap("FX")
+    t.lines.append("press SAVE")
+    t.f(10)
+    t.key(3, 6, 8)
+    t.lines.append("release SAVE")
+    t.f(8 * BAR)
+    t.key(3, 6, 2 * BAR - 60)
+    hold(12, 46)
+    t.tap("FX")
+    # 4:15 winding down: pattern 1, the links off, the acid out
+    shift(lambda: t.key(W[0], 6, 10))
+    shift(lambda: t.tap("SEQ", 5, 6))
+    sec(4)
+    t.tap("HOME")
+    t.tap("ARP")
+    ride("K1", -60, 6)
+    sec(9)
+    # 4:40 the drums out; pad and drone to the end, fading
+    t.tap("SAVE")
+    sec(4)
+    t.tap("LFO")
+    t.spin("K3", -30, 10)
+    for m in range(3000, 0, -150):
+        t.lines.append(f"master {m}")
+        t.f(12)
+    t.lines.append("master 0")
+    t.cap("HYP-1  ·  RedtailWorks", "rustypawz.github.io/fm1-HYP1  ·  youtube.com/@RedtailWorks")
+    sec(6)
+    t.lines.append("wavstop")
+    return t
+
+
 # ------------------------------------------------------------------ drawing --
 def device_png(**kw):
     dev = M.device(None, **kw)
@@ -503,16 +630,16 @@ def wrap(d, s, font, width):                       # a caption's words, in lines
 def main():
     global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT, OUT
     vertical, reuse, seq = "--vertical" in sys.argv, "--reuse" in sys.argv, "--seq" in sys.argv
-    voices, links = "--voices" in sys.argv, "--links" in sys.argv
+    voices, links, song = "--voices" in sys.argv, "--links" in sys.argv, "--song" in sys.argv
     if vertical:
         globals().update(VERTICAL)
     pre, outname = ("s_", "hyp1-tour-vertical.mp4") if vertical else ("v_", "hyp1-tour.mp4")
-    one = "seq" if seq else "voices" if voices else "links" if links else None
+    one = "seq" if seq else "voices" if voices else "links" if links else "song" if song else None
     if one:                                      # a minute of its own, in its own folder
         OUT = OUT / one
         outname = outname.replace("tour", {"seq": "sequencer"}.get(one, one))
     OUT.mkdir(parents=True, exist_ok=True)
-    t = {"seq": seq_tour, "voices": voices_tour, "links": links_tour}.get(one, tour)()
+    t = {"seq": seq_tour, "voices": voices_tour, "links": links_tour, "song": song_tour}.get(one, tour)()
     if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
         for f in OUT.glob("frame_*.png"):
             f.unlink()
@@ -536,7 +663,10 @@ def main():
                                                 outline=(85, 88, 95, 255), width=2)
     ss = int(200 * SCALE)
     log = [list(map(int, ln.split())) for ln in (OUT / "frames.txt").read_text().splitlines()]
+    first = int(next((x.split("=")[1] for x in sys.argv if x.startswith("--from=")), 0))   # (re-draw from frame N)
     for fn, lb, lk, hb, hk in log:
+        if fn < first and (OUT / f"{pre}{fn:05d}.png").exists():
+            continue
         dev = base.copy()
         for i, name in enumerate(BTN):
             if lb >> i & 1:
@@ -570,7 +700,7 @@ def main():
             d.ellipse((a, b, c, e), outline=(255, 128, 32, 255), width=5)
         ca, cb = t.caps.get(fn, ("", ""))
         if ca:                                              # the caption: at the top
-            x0, y0, tw = CAP_X, CAP_Y, W - CAP_X - 128 - 40
+            x0, y0, tw = CAP_X, CAP_Y, (W - CAP_X - 168) if vertical else (BX - 50 - CAP_X - 128)   # (clear of the big screen)
             d.rectangle((x0, y0 + 20, x0 + 70, y0 + 27), fill=(255, 128, 32, 255))
             d.rectangle((x0 + 76, y0 + 20, x0 + 110, y0 + 27), fill=(164, 76, 255, 255))
             d.text((x0 + 128, y0), ca, font=font_a, fill=(239, 233, 255, 255))
@@ -580,7 +710,8 @@ def main():
                anchor="ms" if vertical else "rs")
         frame.convert("RGB").save(OUT / f"{pre}{fn:05d}.png")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS), "-i", str(OUT / f"{pre}%05d.png"),
-                    "-i", str(OUT / "tour.wav"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
+                    "-i", str(OUT / "tour.wav"), *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11"] if one == "song" else []),
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
                     "-preset", "medium", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
                     str(OUT / outname)], check=True)
     print("wrote", (OUT / outname).relative_to(SRC), f"({len(log)} frames)")
