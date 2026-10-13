@@ -49,9 +49,20 @@ jobs:
           N=$GITHUB_RUN_NUMBER
           echo "V=1.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"
       - name: Build the firmware
-        run: ./build.sh --release "$V"
+        run: |
+          set -o pipefail
+          ./build.sh --release "$V" 2>&1 | tee build.log || {
+            # the log's end as an annotation too: readable from the run's summary and the API
+            echo "::error title=build failed::$(tail -60 build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
       - name: Tests
-        run: tests/run_tests.sh
+        run: |
+          set -o pipefail
+          tests/run_tests.sh 2>&1 | tee tests.log || {
+            echo "::error title=tests failed::$(grep -A12 FAIL tests.log | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
       - name: Site (installer, emulator, download)
         run: |
           EN_VERSION="$V" sh web/emu/build_clang.sh
