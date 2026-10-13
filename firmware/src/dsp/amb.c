@@ -1704,8 +1704,8 @@ static void play_stop(void)
 }
 
 /* --------------------------------------------------------- performance FX --- */
-/* Held effects (en_fx). The master is recorded, always, into a ring of 1.25 s (22.05 kHz, stereo:
- * a half note at 110 BPM), which three of them play back instead of the live mix while the engine
+/* Held effects (en_fx). The master is recorded, always, into a ring of 0.95 s (22.05 kHz, stereo:
+ * a half note at 126 BPM; the pool holds no more beside the reverb, the tape and the screen's canvas), which three of them play back instead of the live mix while the engine
  * runs on underneath, in time:
  *   beat repeat   from the next sixteenth, the last 1/2 .. 1/32 note looped (the shortest held wins;
  *                 the ring stops recording while it loops);
@@ -1714,7 +1714,7 @@ static void play_stop(void)
  * The rest shape the live mix: mute and solo for six tracks (5 ms ramps), a low-pass and a high-pass
  * closing in over half a second, a trance gate on the synths (1/16, 1/8), an echo throw (everything
  * into the tape echo, its feedback up), a crusher (5.5 kHz, 5 bits), and a drum fill (the pulse's). */
-#define RB_N 27600
+#define RB_N 21000
 static int16_t rb[RB_N * 2] EN_POOL;
 static uint32_t rb_w;                            /* frames written (they wrap: an index is taken mod RB_N) */
 static uint8_t rb_odd;
@@ -1740,6 +1740,8 @@ const char *const EN_FX_NAME[EN_NFX] = {
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
     float len = RPT_BEATS[r] * 4.0f * step_len;
+    while (len > (float)(RB_N - 8) * 2.0f && r < 5)   /* too long for the ring: the next shorter, in time */
+        len = RPT_BEATS[++r] * 4.0f * step_len;
     if (len > (float)(RB_N - 8) * 2.0f)
         len = (float)(RB_N - 8) * 2.0f;
     bmode = BM_RPT;
