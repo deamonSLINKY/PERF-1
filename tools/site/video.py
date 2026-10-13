@@ -6,6 +6,8 @@ screens, lights and sound), drawn into the FM-1 of the site's pictures, with cap
   host/build_host.sh && python3 tools/site/video.py      ->  build/video/hyp1-tour.mp4
   python3 tools/site/video.py --vertical --seq        ->  build/video/seq/hyp1-sequencer-vertical.mp4 (a minute
                                                            in the drum sequencer; --seq works landscape too)
+  python3 tools/site/video.py --vertical --voices     ->  build/video/voices/hyp1-voices-vertical.mp4 (the voices
+                                                           shaped: sound, envelope, LFO, pump)
   python3 tools/site/video.py --vertical [--reuse]      ->  build/video/hyp1-tour-vertical.mp4 (1080 x 1920,
                                                            for Shorts; --reuse: the simulator's frames as they are)
 
@@ -297,6 +299,81 @@ def seq_tour():
     return t
 
 
+def voices_tour():
+    """about a minute shaping the voices: each one's sound, envelope and LFO, by hand"""
+    t = Tour()
+    t.lines += ["master 3000", "wav tour.wav"]
+
+    def knob(k, n, per=1, rest=10):
+        t.spin(k, n, per)
+        t.f(rest)
+
+    t.cap("SHAPING THE VOICES", "HYP-1 on the M-VAVE FM-1")
+    t.f(50)
+    t.cap("ENV: THE PAD", "KNOB 2 brightens it, KNOB 4 detunes it wide")
+    t.tap("ENV")
+    knob("K2", 40, 1, 6)
+    knob("K4", 45, 1, 20)
+    t.cap("ENV AGAIN: PAD ENVELOPE", "attack and release short: the breath becomes stabs")
+    t.tap("ENV")
+    knob("K1", -40)
+    knob("K3", -45, 1, 36)
+    knob("K1", 40, 1, 0)
+    knob("K3", 45, 1, 6)
+    t.cap("ENV AGAIN: PAD LFO", "faster and deeper, then onto the level: a tremolo")
+    t.tap("ENV")
+    knob("K1", -3, 3)
+    knob("K2", 55)
+    knob("K4", 1, 3, 50)
+    knob("K2", -55, 1, 0)
+    t.cap("NOISE", "eight colours of grain, and its own sidechain pump")
+    t.spin("SELECT", 1, 1)
+    knob("K1", 45)
+    for _ in range(3):
+        knob("K2", 1, 2, 14)
+    knob("K4", 40, 1, 30)
+    knob("K1", -45, 1, 4)
+    t.cap("LFO: THE DRONE", "the 24 dB filter opened, resonance up, an octave down")
+    t.tap("LFO")
+    knob("K3", 35)
+    knob("K4", 30)
+    knob("K2", -1, 3, 40)
+    t.cap("LFO AGAIN: DRONE ENVELOPE", "on every bar, sweeping the filter open")
+    t.tap("LFO")
+    knob("K1", 1, 3)
+    knob("K4", 55, 1, 46)
+    t.cap("LFO AGAIN: DRONE LFO", "the slow sweep made quick, a new shape")
+    t.tap("LFO")
+    knob("K1", -4, 3)
+    knob("K3", 2, 4, 50)
+    t.cap("ARP: THE ACID", "cutoff and resonance: the squelch")
+    t.tap("ARP")
+    knob("K3", 20)
+    knob("K2", 45, 1, 6)
+    knob("K2", -30, 1, 6)
+    knob("K4", 35, 1, 24)
+    t.cap("ARP AGAIN: ACID ENVELOPE", "longer decay, harder accents, more slide, square wave")
+    t.tap("ARP")
+    knob("K1", 30, 1, 4)
+    knob("K2", 35, 1, 4)
+    knob("K3", 40, 1, 4)
+    knob("K4", 1, 3, 40)
+    t.cap("ARP AGAIN: THE LINE", "Mutate rewrites it as it plays; 7 steps against the bar")
+    t.tap("ARP")
+    knob("K4", 50)
+    knob("K2", -9, 2, 56)
+    t.cap("SPACE", "tape echo and plate reverb, opened up")
+    for _ in range(3):
+        t.spin("SELECT", 1, 1)
+        t.f(4)
+    knob("K1", 35)
+    knob("K4", 35, 1, 44)
+    t.cap("HYP-1", "rustypawz.github.io/fm1-HYP1  ·  youtube.com/@RedtailWorks")
+    t.f(70)
+    t.lines.append("wavstop")
+    return t
+
+
 # ------------------------------------------------------------------ drawing --
 def device_png(**kw):
     dev = M.device(None, **kw)
@@ -341,14 +418,15 @@ def wrap(d, s, font, width):                       # a caption's words, in lines
 def main():
     global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT, OUT
     vertical, reuse, seq = "--vertical" in sys.argv, "--reuse" in sys.argv, "--seq" in sys.argv
+    voices = "--voices" in sys.argv
     if vertical:
         globals().update(VERTICAL)
     pre, outname = ("s_", "hyp1-tour-vertical.mp4") if vertical else ("v_", "hyp1-tour.mp4")
-    if seq:                                      # the sequencer's own minute, in its own folder
-        OUT = OUT / "seq"
-        outname = outname.replace("tour", "sequencer")
+    if seq or voices:                            # a minute of its own, in its own folder
+        OUT = OUT / ("seq" if seq else "voices")
+        outname = outname.replace("tour", "sequencer" if seq else "voices")
     OUT.mkdir(parents=True, exist_ok=True)
-    t = seq_tour() if seq else tour()
+    t = seq_tour() if seq else voices_tour() if voices else tour()
     if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
         for f in OUT.glob("frame_*.png"):
             f.unlink()
