@@ -4,6 +4,8 @@
 screens, lights and sound), drawn into the FM-1 of the site's pictures, with captions.
 
   host/build_host.sh && python3 tools/site/video.py      ->  build/video/hyp1-tour.mp4
+  python3 tools/site/video.py --vertical --seq        ->  build/video/seq/hyp1-sequencer-vertical.mp4 (a minute
+                                                           in the drum sequencer; --seq works landscape too)
   python3 tools/site/video.py --vertical [--reuse]      ->  build/video/hyp1-tour-vertical.mp4 (1080 x 1920,
                                                            for Shorts; --reuse: the simulator's frames as they are)
 
@@ -203,6 +205,98 @@ def tour():
     return t
 
 
+def seq_tour():
+    """about a minute in the drum sequencer: a beat built from nothing, shaped, copied and flipped"""
+    W, BK = M.WHITE_K, M.BLACK_K
+    t = Tour()
+    t.lines += ["master 3000", "wav tour.wav"]
+
+    def shift(*acts):                            # SEL held for these
+        t.lines.append("press SEL")
+        t.f(6)
+        for a in acts:
+            a()
+        t.lines.append("release SEL")
+        t.f(10)
+
+    def steps(ss, gap=14):
+        for s in ss:
+            t.key(W[s], 5, gap)
+
+    t.cap("THE DRUM SEQUENCER", "HYP-1 on the M-VAVE FM-1")
+    t.f(60)
+    t.cap("HOLD SEQ", "the 16 white keys become the kick's 16 steps")
+    t.lines.append("press SEQ")
+    t.f(16)
+    t.lines.append("release SEQ")
+    t.f(48)
+    t.cap("SEL + OCT−", "clear the lane: start from nothing")
+    shift(lambda: t.tap("OCT-", 5, 6))
+    t.f(40)
+    t.cap("FOUR ON THE FLOOR", "steps 1, 5, 9 and 13")
+    steps((0, 4, 8, 12), 22)
+    t.f(36)
+    t.cap("OCT+ : THE SNARE", "cleared, then 5 and 13")
+    t.tap("OCT+")
+    shift(lambda: t.tap("OCT-", 5, 6))
+    steps((4, 12), 24)
+    t.f(40)
+    t.cap("OCT+ : THE CLAP", "on 13, and a ghost on 16")
+    t.tap("OCT+")
+    shift(lambda: t.tap("OCT-", 5, 6))
+    steps((12, 15), 24)
+    t.f(36)
+    t.cap("OCT+ : CLOSED HATS", "the off-beats, then a run into the bar")
+    t.tap("OCT+")
+    shift(lambda: t.tap("OCT-", 5, 6))
+    steps((2, 6, 10, 14), 16)
+    steps((13, 15), 10)
+    t.f(50)
+    t.cap("OCT+ : OPEN HAT", "left as the piece wrote it")
+    t.tap("OCT+")
+    t.f(36)
+    t.cap("OCT+ : PERC", "syncopation on 4, 7, 11 and 16")
+    t.tap("OCT+")
+    shift(lambda: t.tap("OCT-", 5, 6))
+    steps((3, 6, 10, 15), 18)
+    t.f(36)
+    t.cap("THE KNOBS: THE DRUM'S SOUND", "KNOB 2 tunes the perc up, KNOB 3 makes it short")
+    t.spin("K2", 10, 3)
+    t.f(20)
+    t.spin("K3", -8, 3)
+    t.f(36)
+    t.cap("BACK ROUND TO THE KICK", "tuned down, with a longer boom")
+    t.tap("OCT+")
+    t.f(10)
+    t.spin("K2", -6, 3)
+    t.f(16)
+    t.spin("K3", 8, 3)
+    t.f(36)
+    t.cap("SEL + BLACK KEY 2", "copies this pattern into pattern 2")
+    shift(lambda: t.key(BK[1], 6, 30))
+    t.f(20)
+    t.cap("KNOB 4: PATTERN 2", "it comes in on the next bar, ready to change")
+    t.spin("K4", 1, 3)
+    t.f(40)
+    t.cap("PATTERN 2", "kicks on 11 and 16 for a rolling variation")
+    steps((10, 15), 24)
+    t.f(30)
+    t.cap("PATTERN 2: HATS", "a 16th-note run filling the last beat")
+    for _ in range(3):
+        t.tap("OCT+", 4, 6)
+    steps((11, 12), 10)
+    t.f(44)
+    t.cap("SEL + WHITE KEYS 1 AND 2", "flip between the patterns, always on the bar")
+    shift(lambda: t.key(W[0], 6, 75), lambda: t.key(W[1], 6, 70))
+    t.cap("TAP SEQ", "back to the Drums page; it all keeps playing")
+    t.tap("SEQ")
+    t.f(50)
+    t.cap("HYP-1", "rustypawz.github.io/fm1-HYP1  ·  youtube.com/@RedtailWorks")
+    t.f(70)
+    t.lines.append("wavstop")
+    return t
+
+
 # ------------------------------------------------------------------ drawing --
 def device_png(**kw):
     dev = M.device(None, **kw)
@@ -245,13 +339,16 @@ def wrap(d, s, font, width):                       # a caption's words, in lines
 
 
 def main():
-    global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT
-    vertical, reuse = "--vertical" in sys.argv, "--reuse" in sys.argv
+    global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT, OUT
+    vertical, reuse, seq = "--vertical" in sys.argv, "--reuse" in sys.argv, "--seq" in sys.argv
     if vertical:
         globals().update(VERTICAL)
     pre, outname = ("s_", "hyp1-tour-vertical.mp4") if vertical else ("v_", "hyp1-tour.mp4")
+    if seq:                                      # the sequencer's own minute, in its own folder
+        OUT = OUT / "seq"
+        outname = outname.replace("tour", "sequencer")
     OUT.mkdir(parents=True, exist_ok=True)
-    t = tour()
+    t = seq_tour() if seq else tour()
     if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
         for f in OUT.glob("frame_*.png"):
             f.unlink()
