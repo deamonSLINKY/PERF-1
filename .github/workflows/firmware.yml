@@ -70,6 +70,8 @@ jobs:
             echo "::error title=build failed::$(tail -60 build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             exit 1
           }
+          # the size checks, as notices on the run's summary
+          grep -E "^\s+ok\s" build.log | sed 's/^\s*ok\s*/::notice title=check::/' || true
       - name: Tests
         run: |
           set -o pipefail
