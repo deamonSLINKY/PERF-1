@@ -1317,7 +1317,7 @@ static void plate_init(void)
  * (the repeats fall in changing patterns, left and right), and now and then the second head slides to
  * another part of the loop, as a head moved by hand (the repeats bend a little in pitch on the way).
  * The Echoplex has a second tap, for the right. */
-#define TAPE_N 24400                             /* 2.2 s at 11.025 kHz: a bar at 110 BPM, the longest echo */
+#define TAPE_N 21800                             /* 2.0 s at 11.025 kHz: a bar at 122 BPM, the longest echo */
 #define TAPE_SR 11025.0f
 static int16_t tape[TAPE_N] EN_POOL;
 static int tape_w, tape_ph;
