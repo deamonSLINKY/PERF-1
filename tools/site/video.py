@@ -4,6 +4,8 @@
 screens, lights and sound), drawn into the FM-1 of the site's pictures, with captions.
 
   host/build_host.sh && python3 tools/site/video.py      ->  build/video/hyp1-tour.mp4
+  python3 tools/site/video.py --vertical [--reuse]      ->  build/video/hyp1-tour-vertical.mp4 (1080 x 1920,
+                                                           for Shorts; --reuse: the simulator's frames as they are)
 
 Needs cairosvg, Pillow, ffmpeg, and the fonts in assets/fonts installed."""
 import io
@@ -24,6 +26,9 @@ W, H = 1920, 1080
 SCALE = 1.1                                     # the device's units (1000 x 640) to pixels
 DX, DY = 56, 190                                 # the device, left; the screen large on the right
 BIG, BX, BY = 660, 1196, 150
+CAP_X, CAP_Y, FOOT = DX, 60, (W - 56, H - 40)
+VERTICAL = dict(W=1080, H=1920, SCALE=1.0, DX=40, DY=1080, BIG=720, BX=180, BY=330, CAP_X=60, CAP_Y=120,
+                FOOT=(540, 1790))                # Shorts: the screen large on top, the FM-1 under it
 BTN = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"]
 BTN_BOX = {}                                     # name -> (x, y, w, h) in the device's units
 R1, R2 = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"], ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"]
@@ -227,14 +232,32 @@ def region(box, pad=10):
     return (a - DX, b - DY, c - DX, d - DY)
 
 
+def wrap(d, s, font, width):                       # a caption's words, in lines that fit
+    lines, cur = [], ""
+    for w in s.split(" "):
+        t = (cur + " " + w).strip()
+        if cur and d.textlength(t, font=font) > width:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = t
+    return lines + [cur] if cur else lines
+
+
 def main():
+    global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT
+    vertical, reuse = "--vertical" in sys.argv, "--reuse" in sys.argv
+    if vertical:
+        globals().update(VERTICAL)
+    pre, outname = ("s_", "hyp1-tour-vertical.mp4") if vertical else ("v_", "hyp1-tour.mp4")
     OUT.mkdir(parents=True, exist_ok=True)
-    for f in OUT.glob("frame_*.png"):
-        f.unlink()
     t = tour()
-    (OUT / "tour.amb").write_text("\n".join(t.lines) + "\n")
-    subprocess.run([str(SRC / "build" / "host" / "amb_host"), str(OUT / "tour.amb"), str(OUT)], check=True,
-                   stdout=subprocess.DEVNULL)
+    if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
+        for f in OUT.glob("frame_*.png"):
+            f.unlink()
+        (OUT / "tour.amb").write_text("\n".join(t.lines) + "\n")
+        subprocess.run([str(SRC / "build" / "host" / "amb_host"), str(OUT / "tour.amb"), str(OUT)], check=True,
+                       stdout=subprocess.DEVNULL)
     allb = set(BTN) - {"PLAY"}
     allk = set(KEY_BOX)
     base = device_png()
@@ -285,20 +308,21 @@ def main():
             c, e = px(x + r + 9, y + r + 9)
             d.ellipse((a, b, c, e), outline=(255, 128, 32, 255), width=5)
         ca, cb = t.caps.get(fn, ("", ""))
-        if ca:                                              # the caption: above the device
-            y0 = 60
-            d.rectangle((DX, y0 + 20, DX + 70, y0 + 27), fill=(255, 128, 32, 255))
-            d.rectangle((DX + 76, y0 + 20, DX + 110, y0 + 27), fill=(164, 76, 255, 255))
-            d.text((DX + 128, y0), ca, font=font_a, fill=(239, 233, 255, 255))
-            if cb:
-                d.text((DX + 128, y0 + 56), cb, font=font_b, fill=(178, 170, 198, 255))
-        d.text((W - 56, H - 40), "HYP-1  ·  RedtailWorks", font=font_c, fill=(120, 112, 140, 255), anchor="rs")
-        frame.convert("RGB").save(OUT / f"v_{fn:05d}.png")
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS), "-i", str(OUT / "v_%05d.png"),
+        if ca:                                              # the caption: at the top
+            x0, y0, tw = CAP_X, CAP_Y, W - CAP_X - 128 - 40
+            d.rectangle((x0, y0 + 20, x0 + 70, y0 + 27), fill=(255, 128, 32, 255))
+            d.rectangle((x0 + 76, y0 + 20, x0 + 110, y0 + 27), fill=(164, 76, 255, 255))
+            d.text((x0 + 128, y0), ca, font=font_a, fill=(239, 233, 255, 255))
+            for i, ln in enumerate(wrap(d, cb, font_b, tw) if cb else []):
+                d.text((x0 + 128, y0 + 56 + i * 40), ln, font=font_b, fill=(178, 170, 198, 255))
+        d.text(FOOT, "HYP-1  ·  RedtailWorks", font=font_c, fill=(120, 112, 140, 255),
+               anchor="ms" if vertical else "rs")
+        frame.convert("RGB").save(OUT / f"{pre}{fn:05d}.png")
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS), "-i", str(OUT / f"{pre}%05d.png"),
                     "-i", str(OUT / "tour.wav"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
                     "-preset", "medium", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
-                    str(OUT / "hyp1-tour.mp4")], check=True)
-    print("wrote", (OUT / "hyp1-tour.mp4").relative_to(SRC), f"({len(log)} frames)")
+                    str(OUT / outname)], check=True)
+    print("wrote", (OUT / outname).relative_to(SRC), f"({len(log)} frames)")
 
 
 if __name__ == "__main__":
