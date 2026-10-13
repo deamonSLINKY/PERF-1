@@ -7,17 +7,25 @@
 <meta name="description" content="HYP-1, a generative hypnotic techno firmware for the M-VAVE FM-1 (a fork of AMB-1), in your browser: the same code the FM-1 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap">
+<link rel="icon" type="image/png" href="../img/favicon.png">
 <style>
 /* HYP-1's colours, as its screen: a charcoal ground, a cyberpunk purple (the primary), orange for what
  * is live; one dark look, whatever the viewer's theme. The FM-1 itself keeps its grey. */
-:root { --ground: #141318; --ink: #ece8f2; --muted: #a39cb3; --rule: #3e3a4c; --accent: #ff8020; --river: #a44cff; --river-2: #c18cff;
+:root { --ground: #141318; --ink: #f1ecf4; --muted: #aaa1b8; --orange: #ff8020; --rule: #3e3a4c; --accent: #ff8020; --river: #a44cff; --river-2: #c18cff;
         --green-1: #5a2f8f; --card: #26222f; color-scheme: dark; }
 body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
-       font: 400 16px/1.55 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+       font: 400 17px/1.55 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+h1, h2, h3, .start button, kbd { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif !important; }
 main { max-width: 1040px; margin: 0 auto; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
-h1 { font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .06em; margin: 0; color: var(--river-2); }
+h1 { font-size: 1.6rem; font-weight: 700; line-height: 1.1; letter-spacing: .06em; margin: 0; }
+h1 a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+h1 img { image-rendering: pixelated; display: block; }
+header nav a.yt { color: var(--orange); }
+header { align-items: center !important; }
+.help h2, .midi h2 { text-transform: uppercase; letter-spacing: .04em; color: var(--river-2); }
+.start button { font-weight: 700; border-radius: 8px; }
 header p { margin: 0; color: var(--muted); }
 header nav { margin-left: auto; display: flex; gap: 1rem; }
 header nav a[aria-current] { text-decoration: none; color: var(--river-2); }
@@ -48,7 +56,7 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 @media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
 .start button:disabled { opacity: .6; cursor: progress; }
 .bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
-.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--rule); padding: .3em .8em; cursor: pointer; }
+.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .8em; cursor: pointer; }
 .bar button:hover { border-color: var(--accent); color: var(--accent); }
 .bar .cpu { font-variant-numeric: tabular-nums; }
 .help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
@@ -65,6 +73,8 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .knobs dd { margin: 0 0 .45rem; }
 kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--rule); padding: 0 .3em; color: var(--river-2); }
 .help b { color: var(--ink); }
+.foot { margin-top: 2.4rem; padding-top: 1rem; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; color: var(--muted); font-size: .95rem; }
+.foot a.yt { color: var(--orange); }
 .midi { margin: 1.2rem 0 0; padding: .9rem 1rem; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
 .midi h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
 .midi p { margin: .3rem 0 0; color: var(--muted); font-size: .92rem; max-width: 80ch; }
@@ -87,9 +97,9 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
 <body>
 <main>
 <header>
-  <h1>HYP-1</h1>
+  <h1><a href="../"><img src="../img/panda.png" width="48" height="38" alt="">HYP-1</a></h1>
   <p>hypnotic techno and acid for the FM-1, in the browser: the same code the FM-1 runs</p>
-  <nav><a href="../">Home</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="https://www.redtail.works">RedtailWorks</a></nav>
+  <nav><a href="../">Home</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav>
 </header>
 
 <p class="turn">Turn your phone sideways for bigger controls.</p>
@@ -231,11 +241,12 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
   </div>
   <div>
     <h2>Power-on</h2>
-    <p>Each start shows RedtailWorks, then plays a piece at random. New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
+    <p>Each start shows RedtailWorks (and its red panda), then HYP-1, then plays a piece at random (any button or key skips ahead). New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
       It is the firmware, not a recording: what you hear is HYP-1 running, at the FM-1's 44.1 kHz.
       The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
   </div>
 </section>
+<footer class="foot"><span>HYP-1 is a <a href="https://www.redtail.works">RedtailWorks</a> project</span><a class="yt" href="https://www.youtube.com/@RedtailWorks">Videos on YouTube</a><a href="https://github.com/RustyPawz/fm1-HYP1">Source</a></footer>
 </main>
 
 <script>

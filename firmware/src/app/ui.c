@@ -1768,7 +1768,7 @@ static void draw_hyp(void)
                         cv_rect(18 + (g * 6 + c) * 7 + (pass ? 0 : 3), 10 + r * 7 + (pass ? 0 : 3), 7, 7,
                                 pass ? K_PAD : K_ACC);
     text_c(120, 76, &FONT_S, "HYPNOTIC TECHNO  //  ACID", K_TEXT);
-    text_c(120, 102, &FONT_XS, "FOR THE FM-1  //  " EN_VERSION, K_DIM);
+    text_c(120, 102, &FONT_XS, EN_VERSION[0] == 'D' ? "FOR THE M-VAVE FM-1" : "FOR THE FM-1  //  " EN_VERSION, K_DIM);
     cv_blit(0, 30);
     for (c = 0; c < 16; c++)
         lcd_fill(8 + c * 14, SPLASH_STEP_Y, 11, 11, K_PANEL);

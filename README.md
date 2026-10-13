@@ -14,6 +14,7 @@ by Charles Vestal.
 - **Install it** (Chrome or Edge, with the FM-1 plugged in): <https://rustypawz.github.io/fm1-HYP1/install/>
 - **Read the manual**: <https://rustypawz.github.io/fm1-HYP1/manual/>, or the
   [printable PDF](docs/HYP-1_Manual.pdf) with every control numbered and every screen lettered
+- **Watch it**: tours and jams on [YouTube](https://www.youtube.com/@RedtailWorks)
 - **More from RedtailWorks**: <https://www.redtail.works>
 
 Installing it is at your own risk, though it's hard to get stuck: the web installer can put M-VAVE's
@@ -87,7 +88,7 @@ same code for the browser with plain clang. The drum patterns are written as gri
 
 ## Credits
 
-HYP-1 is a [RedtailWorks](https://www.redtail.works) project. It is a fork of
+HYP-1 is a [RedtailWorks](https://www.redtail.works) project ([YouTube](https://www.youtube.com/@RedtailWorks)). It is a fork of
 [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal, whose generative harmony, voices
 and platform work it builds on. The reverb is Jon Dattorro's plate ("Effect Design, Part 1", JAES 1997).
 The platform (hardware layer, USB, update loader, storage, installer) is

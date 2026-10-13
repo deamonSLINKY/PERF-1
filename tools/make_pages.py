@@ -37,22 +37,28 @@ LANDING = """<!doctype html>
 <title>HYP-1</title>
 <meta name="description" content="HYP-1: hypnotic techno and acid firmware for the M-VAVE FM-1. Generative voices you shape like a small modular, over drums you sequence. By RedtailWorks.">
 <meta name="theme-color" content="#141318">
+<link rel="icon" type="image/png" href="img/favicon.png">
 <meta property="og:title" content="HYP-1: hypnotic techno and acid for the M-VAVE FM-1">
 <meta property="og:image" content="img/hyp-hero.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
 <style>
-/* HYP-1's screen: a charcoal ground, a cyberpunk purple, orange for what is live */
-:root { --ground: #141318; --card: #1f1c27; --card-2: #2a2534; --ink: #ece8f2; --muted: #a39cb3; --rule: #3e3a4c;
-        --purple: #a44cff; --purple-2: #c18cff; --orange: #ff8020; color-scheme: dark; }
+/* the boot screen's colours: a charcoal ground, HYP-1's purple and orange, and the red panda's rust and
+ * cream for RedtailWorks (the same on every page: landing, installer, emulator, manual) */
+:root { --ground: #141318; --card: #1f1c27; --card-2: #2a2534; --ink: #f1ecf4; --muted: #aaa1b8; --rule: #3e3a4c;
+        --purple: #a44cff; --purple-2: #c18cff; --orange: #ff8020; --rust: #c85420; --cream: #f6ecde; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 64px;
        font: 400 18px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
 main { max-width: 1040px; margin: 0 auto; }
 h1, h2, h3, .ways strong, .tag { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
 header.site { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.4rem; margin: 0 0 1.2rem; }
-header.site .home { font: 700 1.4rem "Chakra Petch", sans-serif; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
+header.site { align-items: center; }
+header.site .home { font: 700 1.4rem "Chakra Petch", sans-serif; letter-spacing: .06em; color: var(--ink); text-decoration: none;
+                    display: inline-flex; align-items: center; gap: .6rem; }
+img.panda { image-rendering: pixelated; display: block; height: auto; }
+header.site nav a.yt, footer a.yt { color: var(--orange); }
 header.site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; font-size: 1rem; }
 img.hero { width: 100%; height: auto; display: block; border-radius: 14px; margin: 0 0 1.6rem; }
 .lede { font-size: 1.3rem; line-height: 1.5; max-width: 44rem; margin: 0 0 1.8rem; }
@@ -61,11 +67,12 @@ h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: .04em; text-transform:
      display: flex; align-items: center; gap: .7rem; }
 h2::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 62%, var(--purple) 62%); }
 h3 { font-size: 1.1rem; font-weight: 600; letter-spacing: .03em; margin: 0 0 .3rem; color: var(--purple-2); }
-.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; margin: 0 0 1rem; }
+.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; margin: 0 0 1rem; }
 .ways a { display: block; text-decoration: none; color: var(--ink); background: var(--card); border: 1px solid var(--rule);
           border-radius: 10px; padding: 14px 16px; transition: border-color .15s, background .15s; }
 .ways a:first-child { background: linear-gradient(135deg, #5a2a9a, #2a1b44); border-color: var(--purple); }
 .ways a:nth-child(2) { border-color: var(--orange); }
+.ways a:nth-child(5) { border-color: var(--rust); }
 .ways a:hover, .ways a:focus-visible { border-color: var(--purple-2); background: var(--card-2); outline: none; }
 .ways strong { font-weight: 700; font-size: 1.1rem; letter-spacing: .05em; text-transform: uppercase; display: block; }
 .ways span { color: var(--muted); font-size: .98rem; }
@@ -78,7 +85,7 @@ h3 { font-size: 1.1rem; font-weight: 600; letter-spacing: .03em; margin: 0 0 .3r
 figure { margin: 0; }
 figure img { width: 100%; height: auto; display: block; border-radius: 10px; border: 1px solid var(--rule); }
 figcaption { color: var(--muted); font-size: .95rem; margin-top: .4rem; }
-.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .shots img { image-rendering: pixelated; }
 table { border-collapse: collapse; width: 100%; font-size: 1rem; }
 th, td { text-align: left; vertical-align: top; padding: .5rem .8rem .5rem 0; border-bottom: 1px solid var(--rule); }
@@ -90,15 +97,15 @@ a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thi
 a:hover { color: var(--purple-2); }
 code { font-size: .9em; background: var(--card-2); padding: .05em .35em; border-radius: 4px; }
 footer { margin-top: 3.5rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; align-items: center; }
-footer .rw { font: 700 1.05rem "Chakra Petch", sans-serif; letter-spacing: .08em; text-decoration: none; }
-footer .rw span:first-child { color: var(--purple-2); } footer .rw span:last-child { color: var(--orange); }
+footer .rw { font: 700 1.05rem "Chakra Petch", sans-serif; letter-spacing: .08em; text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+footer .rw span:nth-child(2) { color: var(--purple-2); } footer .rw span:last-child { color: var(--orange); }
 @media (max-width: 560px) { .lede { font-size: 1.15rem; } h2 { font-size: 1.25rem; } }
 </style>
 </head>
 <body>
 <main>
-<header class="site"><a class="home" href="./">HYP-1</a>
-  <nav><a href="emu/">Emulator</a><a href="install/">Install</a><a href="manual/">Manual</a><a href="manual/HYP-1_Manual.pdf">PDF manual</a><a href="__REPO__">Source</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>
+<header class="site"><a class="home" href="./"><img class="panda" src="img/panda.png" width="64" height="50" alt="">HYP-1</a>
+  <nav><a href="emu/">Emulator</a><a href="install/">Install</a><a href="manual/">Manual</a><a href="manual/HYP-1_Manual.pdf">PDF manual</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>
 
 <img class="hero" src="img/hyp-hero.png" width="1600" height="1161" alt="An M-VAVE FM-1 running HYP-1: the screen shows piece 01 in A Aeolian at 128 BPM, the chord Am7, the drum pattern and the Tempo page; the sixteen white keys glow purple with the scale.">
 
@@ -112,6 +119,7 @@ the whole performance into your DAW.</p>
   <a href="install/"><strong>Install <em class="v">v__VERSION__</em></strong><span>From Chrome or Edge, with the FM-1 connected by USB. Nothing to install on the computer.</span></a>
   <a href="manual/"><strong>Manual</strong><span>Every control, every page, every screen, on one page.</span></a>
   <a href="manual/HYP-1_Manual.pdf"><strong>PDF manual</strong><span>Printable, with every control numbered and every screen lettered.</span></a>
+  <a href="https://www.youtube.com/@RedtailWorks"><strong>Watch it</strong><span>Tours and jams on the RedtailWorks YouTube channel.</span></a>
   <a href="firmware/__PKG__"><strong>Download <em class="v">__PKG__</em></strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
 </nav>
 
@@ -154,6 +162,8 @@ the whole performance into your DAW.</p>
 
 <h2>Screens</h2>
 <div class="shots">
+  <figure><img src="img/hyp-screen-splash.png" width="480" height="480" alt="The boot screen: a pixel red panda sitting on the RedtailWorks name"><figcaption>Switching on</figcaption></figure>
+  <figure><img src="img/hyp-screen-splash-hyp.png" width="480" height="480" alt="The second boot screen: HYP-1 in big pixel letters, steps filling in"><figcaption>&hellip;then HYP-1</figcaption></figure>
   <figure><img src="img/hyp-screen-home.png" width="480" height="480" alt="Tempo page"><figcaption>Tempo</figcaption></figure>
   <figure><img src="img/hyp-screen-seq.png" width="480" height="480" alt="The sequencer"><figcaption>Sequencer</figcaption></figure>
   <figure><img src="img/hyp-screen-fx.png" width="480" height="480" alt="The FX menu"><figcaption>FX menu</figcaption></figure>
@@ -171,8 +181,8 @@ M-VAVE and FM-1 are trademarks of their owners; HYP-1 is not affiliated with M-V
 <p class="small">To go back to the official firmware, use the installer's "Back to the stock firmware", or
 M-VAVE's updater, M-UPGRADE, from <a href="https://www.m-vave.com/download">m-vave.com/download</a>.
 Installing firmware is at your own risk.</p>
-<footer><a class="rw" href="https://www.redtail.works"><span>REDTAIL</span><span>WORKS</span></a>
-  <span class="small">HYP-1 is a RedtailWorks project &middot; <a href="https://www.redtail.works">www.redtail.works</a> &middot; <a href="__REPO__">source on GitHub</a></span></footer>
+<footer><a class="rw" href="https://www.redtail.works"><img class="panda" src="img/panda.png" width="48" height="38" alt=""><span>REDTAIL</span><span>WORKS</span></a>
+  <span class="small">HYP-1 is a RedtailWorks project &middot; <a href="https://www.redtail.works">www.redtail.works</a> &middot; <a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a> &middot; <a href="__REPO__">source on GitHub</a></span></footer>
 </main>
 </body>
 </html>

@@ -376,7 +376,8 @@ which in the list). The list is kept in that browser; **Forget learned** clears 
 
 ## 15. Credits
 
-HYP-1 is a [RedtailWorks](https://www.redtail.works) project, a fork of
+HYP-1 is a [RedtailWorks](https://www.redtail.works) project (videos on
+[YouTube](https://www.youtube.com/@RedtailWorks)), a fork of
 [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal. The platform (USB, update loader,
 storage, installer) is [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic),
 Hügelton Instruments. Screen font: Chakra Petch (SIL OFL). Licence: GPL-3.0.

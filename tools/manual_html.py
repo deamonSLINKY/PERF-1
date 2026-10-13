@@ -24,7 +24,7 @@ CSS = """
    AMB-1's: paper the ground, sheet the cards, river the purple, ink the text) */
 :root {
   --paper: #141318; --sheet: #211e29; --green-1: #2f2840; --green-3: #6b5a8c;
-  --river: #a44cff; --river-2: #c18cff; --ink: #ece8f2; --muted: #a39cb3; --rule: #3e3a4c;
+  --river: #a44cff; --river-2: #c18cff; --ink: #f1ecf4; --muted: #aaa1b8; --rule: #3e3a4c;
   --orange: #ff8020;
   color-scheme: dark;
 }
@@ -36,7 +36,8 @@ body {
 main { max-width: 46rem; margin: 0 auto; }
 h1, h2, h3, th, .site .home { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
 h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
-h1 { font-size: 2.2rem; font-weight: 300; margin: 0 0 .4rem; letter-spacing: .04em; text-transform: uppercase; }
+h1 { font-size: 2.1rem; font-weight: 700; margin: 0 0 .6rem; letter-spacing: .05em; text-transform: uppercase; display: flex; align-items: center; gap: .7rem; }
+h1::before { content: ""; width: 34px; height: 5px; flex: none; background: linear-gradient(90deg, var(--orange) 0 62%, var(--river) 62%); }
 h2 { font-size: 1.3rem; font-weight: 400; margin: 3rem 0 .8rem; padding-top: .8rem; border-top: 1px solid var(--rule);
      text-transform: uppercase; letter-spacing: .04em; }
 h2 .num { color: var(--orange); margin-right: .5em; font-variant-numeric: tabular-nums; }
@@ -63,8 +64,10 @@ td:first-child { white-space: nowrap; }
 .lede { margin-bottom: 1.6rem; }
 .status { background: var(--sheet); border: 1px solid var(--rule); padding: 12px 16px; }
 .status p { margin: 0; }
-.site { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule); }
-.site .home { font-size: 1.05rem; font-weight: 400; letter-spacing: .08em; color: var(--ink); text-decoration: none; }
+.site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule); }
+.site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+.site .home img { image-rendering: pixelated; display: block; }
+.site nav a.yt { color: var(--orange); }
 .site .home:hover { color: var(--river-2); background: none; }
 .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .92rem; }
 .site nav a { color: var(--ink); text-decoration-color: var(--river-2); text-underline-offset: 3px; }
@@ -173,7 +176,7 @@ def convert(md):
         if ln.startswith("# "):                         # the title; AMB-1's own a way home (the site's root)
             t = ln[2:].strip()
             if t == NAME:                               # the site's header (home, the other pages), then the title
-                out.append('<header class="site"><a class="home" href="../">HYP-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="HYP-1_Manual.pdf">PDF</a><a href="' + REPO + '">Source</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>')
+                out.append('<header class="site"><a class="home" href="../"><img src="img/panda.png" width="48" height="38" alt="">HYP-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="HYP-1_Manual.pdf">PDF</a><a href="' + REPO + '">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>')
                 out.append('<h1>Manual</h1>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')
@@ -250,6 +253,7 @@ def main():
     page = (f"<title>{html.escape(title)}</title>\n"
             f'<meta name="description" content="{html.escape(what)} for {NAME}, hypnotic techno and acid firmware for the M-VAVE FM-1.">\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">\n'
+            '<link rel="icon" type="image/png" href="img/favicon.png">\n'
             f"<style>{CSS}</style>\n<main>\n{body}\n</main>\n")
     if not fragment:
         head, _, rest = page.partition("<main>")
