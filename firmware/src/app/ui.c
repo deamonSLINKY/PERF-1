@@ -160,7 +160,7 @@ static const theme_t *th = &THEMES[0];
 #define K_PULSE_T (th->pulse_t)
 #define K_FROST (th->frost)
 
-uint32_t ui_splash_ms = 1800u;           /* the RedtailWorks card at power-on (the host's tests set 0) */
+uint32_t ui_splash_ms = 3200u;           /* the boot cards: RedtailWorks, then HYP-1 (the host's tests set 0) */
 
 static struct {
     uint8_t view, last_dial;
@@ -183,7 +183,8 @@ static struct {
     uint32_t shift_keys;               /* keys pressed while SEL (shift) was held: not notes, not effects */
     uint8_t piece_q;                   /* a piece waiting for the bar (SEL + PRESETS): its number + 1 */
     uint8_t shift_hint;                /* SEL held alone: its hint shown this hold */
-    uint8_t splash, theme;             /* the RedtailWorks card is up; the theme drawn */
+    uint8_t splash, theme;             /* the boot cards are up (2: the HYP-1 card); the theme drawn */
+    uint8_t splash_step;               /* the HYP-1 card's steps lit */
     uint32_t boot_t, act_t;
     char msg[2][24];
     uint32_t msg_until;
@@ -1679,19 +1680,118 @@ static void autosave(void)
         project_flush_globals();                 /* playing: the theme, Tune, MIDI out (a moment's gap) */
 }
 
-/* the RedtailWorks card, at power-on: the name, and a red panda's ringed tail beneath it */
+/* THE BOOT CARDS. First RedtailWorks: a pixel red panda (3x) sitting on the name, its ringed tail
+ * curled up behind it, and the rings again beneath; then HYP-1 in big pixel letters, sixteen steps
+ * filling in (the white keys lighting with them) until the music starts. Any button or key: straight
+ * to the music. */
+#define PANDA_W 32
+#define PANDA_H 25
+static const char *const PANDA[PANDA_H] = {
+    ".WWW..............WWW...........",
+    ".WBBW............WBBW...........",
+    ".WBBRRRRRRRRRRRRRRBBW...........",
+    "..RRRRRRRRRRRRRRRRRR............",
+    ".RRRWWWRRRRRRRRWWWRRR...........",
+    ".RRRRRRRRRRRRRRRRRRRR...........",
+    ".RRRRKKRRRRRRRRKKRRRR...........",
+    ".RWWDKKDRRRRRRDKKDWWR...........",
+    ".WWWWDDWWWWWWWWDDWWWW...........",
+    ".WWWWWDDWWKKWWDDWWWWW...........",
+    "..WWWWWDDWWWWDDWWWWW........DDD.",
+    "...DWWWWDDWWDDWWWWD........DDDDD",
+    "....DDWWWWWWWWWWDD.........TTTTT",
+    "......DDDDDDDDDD...........TTTTT",
+    "......DRRRRRRRRD...........RRRRR",
+    ".....BRRRRRRRRRRB..........RRRRR",
+    "....BBRRRRRRRRRRBB.........TTTTT",
+    "....BBBRRRRRRRRBBB........TTTTTT",
+    "...BBBBBRRRRRRBBBBB.......RRRRRR",
+    "...BBBBBBBBBBBBBBBB......RRRRRR.",
+    "...BBBBBBBBBBBBBBBBRRTTRRTTTTT..",
+    "...BBBBBBBBBBBBBBBBRRTTRRTTTTT..",
+    "....BBBB.BBBB.BBBBRRRTTRRRRRR...",
+    "...KKBBB..BB..BBBKKDDTTDDDD.....",
+    "...KKKK...KK...KKKK............."
+};
+static uint16_t panda_col(char c)
+{
+    switch (c) {
+    case 'R': return RGB(200, 84, 32);           /* rust */
+    case 'D': return RGB(140, 52, 20);           /* its shade */
+    case 'T': return RGB(232, 156, 92);          /* the tail's pale rings */
+    case 'W': return RGB(246, 236, 222);         /* the face's white */
+    case 'B': return RGB(64, 30, 22);            /* the dark legs and belly, the ears inside */
+    case 'K': return RGB(24, 16, 18);            /* eyes, nose, paws */
+    default: return 0;
+    }
+}
+
 static void draw_splash(void)
 {
-    int i;
+    int i, x, y;
     lcd_fill(0, 0, 240, 240, K_BG);
-    cv_begin(240, 120, K_BG);
-    text_c(120, 6, &FONT_L, "REDTAIL", K_PAD);
-    text_c(120, 42, &FONT_L, "WORKS", K_ACC);
-    for (i = 0; i < 9; i++)                     /* the tail's rings */
-        cv_rect(48 + i * 16, 88, 12, 6, i & 1 ? K_ACC : K_PAD);
-    cv_frame(40, 82, 160, 18, K_LINE);
-    text_c(120, 104, &FONT_XS, "HYP-1  //  HYPNOTIC TECHNO", K_DIM);
-    cv_blit(0, 56);
+    cv_begin(240, 96, K_BG);                     /* the panda */
+    for (y = 0; y < PANDA_H; y++)
+        for (x = 0; PANDA[y][x]; x++)
+            if (PANDA[y][x] != '.')
+                cv_rect(120 - PANDA_W * 3 / 2 + x * 3, 96 - PANDA_H * 3 - 4 + y * 3, 3, 3, panda_col(PANDA[y][x]));
+    cv_blit(0, 0);
+    cv_begin(240, 144, K_BG);                    /* the name, the rings, and what's next */
+    text_c(120, 0, &FONT_L, "REDTAIL", K_PAD);
+    text_c(120, 36, &FONT_L, "WORKS", K_ACC);
+    for (i = 0; i < 9; i++)
+        cv_rect(48 + i * 16, 86, 12, 6, i & 1 ? K_ACC : K_PAD);
+    cv_frame(40, 80, 160, 18, K_LINE);
+    text_c(120, 110, &FONT_XS, "PRESENTS", K_DIM);
+    cv_blit(0, 96);
+}
+
+/* the HYP-1 card: big 5 x 7 pixel letters (7 px a pixel), an orange shadow under the purple */
+static const uint8_t BIG_GLYPH[5][7] = {
+    {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},  /* H */
+    {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04},  /* Y */
+    {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  /* P */
+    {0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00},  /* - */
+    {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},  /* 1 */
+};
+#define SPLASH_STEP_Y 184
+static void draw_hyp(void)
+{
+    int g, r, c, pass;
+    lcd_fill(0, 0, 240, 240, K_BG);
+    cv_begin(240, 144, K_BG);
+    for (pass = 0; pass < 2; pass++)             /* the shadow, then the letters */
+        for (g = 0; g < 5; g++)
+            for (r = 0; r < 7; r++)
+                for (c = 0; c < 5; c++)
+                    if (BIG_GLYPH[g][r] >> (4 - c) & 1u)
+                        cv_rect(18 + (g * 6 + c) * 7 + (pass ? 0 : 3), 10 + r * 7 + (pass ? 0 : 3), 7, 7,
+                                pass ? K_PAD : K_ACC);
+    text_c(120, 76, &FONT_S, "HYPNOTIC TECHNO  //  ACID", K_TEXT);
+    text_c(120, 102, &FONT_XS, "FOR THE FM-1  //  " EN_VERSION, K_DIM);
+    cv_blit(0, 30);
+    for (c = 0; c < 16; c++)
+        lcd_fill(8 + c * 14, SPLASH_STEP_Y, 11, 11, K_PANEL);
+}
+
+static void splash_tick(void)                    /* the HYP-1 card's steps, filling in to the music */
+{
+    uint32_t t = plat_ms() - ui.boot_t, t1 = ui_splash_ms * 17u / 32u, n, k = 0, i;
+    if (ui.splash == 1) {
+        if (t < t1)
+            return;
+        ui.splash = 2;
+        draw_hyp();
+    }
+    n = (t - t1) * 17u / (ui_splash_ms - t1 + 1u);
+    if (n > 16u)
+        n = 16u;
+    for (; ui.splash_step < n; ui.splash_step++)
+        lcd_fill(8 + ui.splash_step * 14, SPLASH_STEP_Y, 11, 11, ui.splash_step % 4u ? K_PAD : K_ACC);
+    for (i = 0; i < n; i++)
+        k |= 1u << WHITE_KEY[i];
+    plat_glow(1);
+    plat_leds(n ? 1u << B_PLAY : 0u, k);
 }
 
 void ui_init(void)
@@ -1717,9 +1817,16 @@ void ui_init(void)
 void ui_frame(void)
 {
     if (ui.splash) {
-        if (plat_ms() - ui.boot_t < ui_splash_ms)
+        uint32_t held = plat_buttons() | plat_keys();
+        if (plat_ms() - ui.boot_t < ui_splash_ms && !held) {
+            splash_tick();
             return;
-        ui.splash = 0;                           /* the card's time is up: the UI, and the music */
+        }
+        ui.splash = 0;                           /* the cards' time is up (or skipped): the UI, and the music */
+        ui.btn = plat_buttons();                 /* a press that skipped them does nothing more */
+        ui.keys = plat_keys();
+        ui.btn_used = ui.btn;
+        ui.shift_keys = ui.keys;
         lcd_fill(0, 0, 240, 240, K_BG);
         if (!en_playing)
             en_play(1);

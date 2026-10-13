@@ -91,9 +91,9 @@ class Tour:
 
 def tour():
     t = Tour()
-    t.lines += ["master 3000", "splash 1800", "reboot", "wav tour.wav"]
+    t.lines += ["master 3000", "splash 3200", "reboot", "wav tour.wav"]
     t.cap("HYP-1", "hypnotic techno + acid for the M-VAVE FM-1")
-    t.f(70)
+    t.f(100)                                     # the boot cards: RedtailWorks, then HYP-1
     t.cap("PIECE 01 · TEMPO PAGE", "it plays from the moment it's switched on")
     t.f(90)
     t.cap("SELECT", "steps through the pages: each voice, its envelope, its LFO")

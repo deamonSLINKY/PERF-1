@@ -45,7 +45,7 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
 - **Remote** (SEL + GLO): plug the FM-1 in and its panel plays HYP-1 in the [emulator](https://rustypawz.github.io/fm1-HYP1/emu/)
   over USB MIDI, lights and all. With M-VAVE's firmware or any controller, the keys play straight away and
   MIDI learn maps the rest.
-- Five screen themes, the RedtailWorks card at boot, Chakra Petch (SIL OFL) as the screen's font.
+- Five screen themes, a boot sequence (the RedtailWorks card with its pixel red panda, then HYP-1), Chakra Petch (SIL OFL) as the screen's font.
 
 ![Hypnotic, House, Techno and Breakcore](docs/img/hyp-styles.png)
 

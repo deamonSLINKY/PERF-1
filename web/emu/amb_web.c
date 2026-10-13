@@ -48,7 +48,7 @@ __attribute__((used, visibility("default"))) void web_render(uint32_t n)
 
 __attribute__((used, visibility("default"))) void web_boot(void)
 {
-    ui_splash_ms = 1800u;                        /* the RedtailWorks card, as on the FM-1 */
+    ui_splash_ms = 3200u;                        /* the boot cards, as on the FM-1 */
     boot();
 }
 __attribute__((used, visibility("default"))) void web_seed(uint32_t s) { host_seed = s; }   /* before web_boot */

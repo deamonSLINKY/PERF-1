@@ -92,7 +92,9 @@ wait 300
 shot theme_phosphor.png
 spin K2 -4
 wait 300
-splash 1800
+splash 3200
 reboot
-wait 700
+wait 900
 shot splash.png
+wait 1700
+shot splash_hyp.png

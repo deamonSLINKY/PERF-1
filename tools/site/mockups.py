@@ -203,7 +203,7 @@ def main():
     b, k = L["house"]
     scene(device("house", b, k), OUT / "hyp-device-house.png", "STYLES", "SEL + ALGORITHM")
     for n in ("home", "house", "techno", "breakcore", "seq", "fx", "stored", "breakdown", "build", "pad", "drone",
-              "acid_line", "splash"):
+              "acid_line", "splash", "splash_hyp"):
         im = Image.open(SHOTS / f"{n}.png").convert("RGB")
         im.resize((480, 480), Image.NEAREST).save(OUT / f"hyp-screen-{n.replace('_', '-')}.png")
     print("wrote docs/img/hyp-screen-*.png")

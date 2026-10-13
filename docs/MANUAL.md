@@ -48,7 +48,8 @@ M-VAVE's own updater, M-UPGRADE, works too.
 
 ## 2. Getting started
 
-1. Switch it on. The RedtailWorks card shows, then a piece starts playing at random.
+1. Switch it on. The RedtailWorks card (a pixel red panda on the name) shows, then HYP-1 with sixteen steps
+   filling in, then a piece starts playing at random. Press any button or key to skip straight to the music.
 2. Turn **SELECT** to walk through the pages; the four knobs under the screen change what each page shows.
 3. Press **SEQ** for the drums, hold it for the step sequencer, and tap the white keys to change the beat.
 4. Turn **PRESETS** for another piece. Hold **SEL** and turn **ALGORITHM** to hear it as house, techno, acid or breakcore.
