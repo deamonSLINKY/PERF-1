@@ -2573,7 +2573,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         static uint32_t hc;
         const uint32_t hold = 2u + (uint32_t)(S->crush * 4.0f);
         const float c = S->crush, q = 24.0f;
-        float bl[BLK], br[BLK];
+        static float bl[BLK], br[BLK];      /* static: the audio interrupt's stack is small (and this never re-enters) */
         for (j = 0; j < n; j++) {
             bl[j] = mixl[j];
             br[j] = mixr[j];

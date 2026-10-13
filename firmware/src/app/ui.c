@@ -1213,11 +1213,25 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ENV: L("THE PAD"); L("PRESS AGAIN: ITS ENVELOPE,"); L("THEN ITS LFO"); break;
     case B_ARP: L("THE ACID LINE"); L("PRESS AGAIN: ITS ENVELOPE,"); L("THEN THE LINE ITSELF"); break;
     case B_LFO: L("THE DRONE"); L("PRESS AGAIN: ITS ENVELOPE,"); L("THEN ITS LFO"); break;
-    case B_GLO: L("GLOBAL"); L("ROOT, THEME, TUNE, MIDI OUT"); break;
+    case B_GLO: {                                /* and the audio's load, for testing on the device */
+        static char cpu[24];
+        uint32_t c = plat_cpu_pct(), x = plat_xruns(), j = 4;
+        cpu[0] = 'C', cpu[1] = 'P', cpu[2] = 'U', cpu[3] = ' ';
+        itoa_u(c, cpu + j);
+        while (cpu[j])
+            j++;
+        cpu[j++] = '%', cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'X', cpu[j++] = 'R', cpu[j++] = 'U', cpu[j++] = 'N', cpu[j++] = 'S',
+        cpu[j++] = ' ';
+        itoa_u(x > 9999u ? 9999u : x, cpu + j);
+        L("GLOBAL");
+        L("ROOT, THEME, TUNE, MIDI OUT");
+        L(cpu);
+        break;
+    }
     case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); break;
     case B_REC: L("FREEZE: THE CHORD HOLDS"); L("AND THE REVERB RINGS ON"); L("AGAIN: THAW"); break;
-    case B_OCTDN: L("THE ACID AN OCTAVE DOWN"); L("SEQUENCER: THE DRUM ABOVE"); break;
-    case B_OCTUP: L("THE ACID AN OCTAVE UP"); L("SEQUENCER: THE DRUM BELOW"); break;
+    case B_OCTDN: L("AN OCTAVE DOWN: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM ABOVE"); break;
+    case B_OCTUP: L("AN OCTAVE UP: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM BELOW"); break;
     default: break;
     }
 #undef L
@@ -1284,6 +1298,8 @@ static void draw_main(void)
     }
     if (ui.help) {
         h = hash(0x48454C50u, ui.help | (uint32_t)ui.theme << 8);
+        if (ui.help - 1 == B_GLO)                /* the load, as it changes */
+            h = hash(h, plat_cpu_pct() | plat_xruns() << 8);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);

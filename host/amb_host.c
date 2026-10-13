@@ -20,6 +20,7 @@
  *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound
  *   reboot                       re-run boot (power off and on)
  *   seed N                       the seed the next boot uses (0: the first piece, exact)
+ *   storefuzz SEED               fill the project object with random damage (for the sanitizer runs)
  *   bank76 P N                   write a bank as the firmware before styles did (76 settings a piece),
  *                                piece P stored with its Pad at N
  */
@@ -367,7 +368,18 @@ static int expect(const char *what, const char *val)
         got = (int)(project_saved(0) | project_saved(1) << 1 | project_saved(2) << 2 | project_saved(3) << 3 |
                     project_saved(4) << 4 | project_saved(5) << 5 | project_saved(6) << 6 | project_saved(7) << 7 |
                     project_saved(8) << 8 | project_saved(9) << 9);
-    else if (!strcmp(what, "edited"))             /* the pieces changed since taken up (bit i: piece i) */
+    else if (!strcmp(what, "parsbad")) {          /* settings out of range: the playing piece's and every slot's */
+        int p, i;
+        got = 0;
+        for (p = 0; p < P_NPARAMS; p++) {
+            const en_param_t *pi = en_param_info(p);
+            got += proj.par[p] < pi->lo || proj.par[p] > pi->hi;
+            for (i = 0; i < NPIECES; i++)
+                got += proj.slot[i].par[p] < pi->lo || proj.slot[i].par[p] > pi->hi;
+        }
+        for (i = 0; i < NPIECES; i++)
+            got += !(proj.slot[i].pool & 1u) || (proj.slot[i].pool >> 12);
+    } else if (!strcmp(what, "edited"))             /* the pieces changed since taken up (bit i: piece i) */
         got = proj.edited;
     else if (!strcmp(what, "store_writes"))
         got = (int)store_writes;
@@ -557,7 +569,31 @@ int main(int argc, char **argv)
             printf("\n");
         } else if (!strcmp(cmd, "expect"))
             fails += expect(a, b);
-        else if (!strcmp(cmd, "bank76")) {
+        else if (!strcmp(cmd, "storefuzz")) {         /* storefuzz SEED: the project object filled with damage:
+                                                         * random bytes behind a header that is now valid, now not */
+            static uint8_t bk[PLAT_STORE_MAX];
+            uint32_t r = (uint32_t)strtoul(a, 0, 10) * 2654435761u + 1u, k, n;
+#define FZ() (r ^= r << 13, r ^= r >> 17, r ^= r << 5, r)
+            n = FZ() % (PLAT_STORE_MAX + 1u);
+            for (k = 0; k < n; k++)
+                bk[k] = (uint8_t)FZ();
+            if (n >= 20u && (FZ() & 3u)) {             /* mostly a real header, so the parser goes deep */
+                bk[0] = 'H', bk[1] = 'Y', bk[2] = 'P', bk[3] = '2';
+                bk[4] = 1, bk[5] = bk[6] = bk[7] = 0;
+                if (FZ() & 1u) {
+                    uint32_t np = FZ() % 100u;
+                    bk[8] = (uint8_t)np, bk[9] = 0;
+                }
+                if (FZ() & 1u) {                       /* and values mostly in range */
+                    for (k = 20; k + 1 < n; k += 2)
+                        bk[k + 1] = (FZ() & 7u) ? 0 : bk[k + 1];
+                }
+            } else if (n >= 4u && (FZ() & 1u)) {
+                bk[0] = 'H', bk[1] = 'Y', bk[2] = 'P', bk[3] = '1';   /* the old kit's magic */
+            }
+#undef FZ
+            plat_store_save(OBJ_PROJ, bk, n);
+        } else if (!strcmp(cmd, "bank76")) {
             static uint8_t bk[PLAT_STORE_MAX];
             static int16_t par[P_NPARAMS];
             static uint16_t pats[EN_NPAT][EN_NLANE];
