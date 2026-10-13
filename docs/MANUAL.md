@@ -245,8 +245,9 @@ playing while you hold it.
 
 **Locking:** hold **SAVE** for lock mode. Each key you tap locks its effect on (it turns purple), one at
 a time or several together; tap a locked one again to unlock it. Keys already held when SAVE goes down
-lock too. Let go of SAVE and the locks stay while you play other effects over them. Closing FX lets them
-all go. Tapping SAVE alone in FX is still the breakdown.
+lock too. Let go of SAVE and the locks stay while you play other effects over them. To turn one off, just
+tap its key (no SAVE needed): the others stay locked. Closing FX lets them all go. Tapping SAVE alone in
+FX is still the breakdown.
 
 For example: FX, then hold SAVE, tap Gate 1/8, tap Crush, let go of SAVE: both stay on.
 

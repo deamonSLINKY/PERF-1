@@ -15,8 +15,9 @@
  *   KNOB 1-4       the page's four values (in the sequencer: the lane's level, tune, decay; the pattern)
  *   FX             the effects menu, on and off: while it is on, each key is an effect while held.
  *                  SAVE held is lock mode: each key tapped locks its effect on (or, locked, off again),
- *                  one at a time or together; keys held as SAVE goes down lock too. Closing FX lets
- *                  them all go. SAVE tapped alone is still the breakdown
+ *                  one at a time or together; keys held as SAVE goes down lock too. A locked effect's
+ *                  key tapped (no SAVE) turns that one off; closing FX lets them all go. SAVE tapped
+ *                  alone is still the breakdown
  *   SAVE           the breakdown on the next bar; again, a four-bar build and the drop; held, the drop
  *                  (on Global: the piece stored, above)
  *   OCT- / OCT+    the octave (3 down .. 3 up) of the voice whose page it is (pad, drone, acid); on any
@@ -667,6 +668,14 @@ static void input(void)
                 ui.fx_lock ^= 1u << KEY_FX[i];
         ui.lock_keys |= p;
         ui.btn_used |= 1u << B_SAVE;
+    }
+    if (ui.fx_menu && !ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* a locked effect's key tapped: that */
+        uint32_t p = ch & keys & ~ui.shift_keys;                         /* one off, the others stay locked */
+        for (i = 0; i < NKEYS; i++)
+            if ((p >> i & 1u) && (ui.fx_lock >> KEY_FX[i] & 1u)) {
+                ui.fx_lock &= ~(1u << KEY_FX[i]);
+                ui.lock_keys |= 1u << i;       /* and not played while it's held */
+            }
     }
     {   /* the effects: each key held while the FX menu is on, and those locked */
         uint32_t m = 0;

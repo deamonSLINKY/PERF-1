@@ -79,6 +79,22 @@ wait 100
 expect fxlock 655360
 expect fxmask 655360
 expect sec 0
+# a locked effect's key tapped, no SAVE: that one off (the crush), the gate 1/8 stays locked
+tapkey 8
+wait 50
+expect fxlock 131072
+expect fxmask 131072
+# and the last one locked, tapped: none locked
+tapkey 3
+wait 50
+expect fxlock 0
+expect fxmask 0
+# lock mode once more: the gate 1/8 and the crush
+press SAVE
+tapkey 3
+tapkey 8
+release SAVE
+expect fxlock 655360
 # keys held as SAVE goes down lock too (the low-pass and the gate 1/16)
 key 24 down
 key 1 down
