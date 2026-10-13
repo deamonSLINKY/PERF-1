@@ -11,6 +11,7 @@ Handles what the manual uses: headings, paragraphs, **bold**, `code`, lists, tab
 code, rules, and the contents list (linked to the sections by number)."""
 import base64
 import html
+import os
 import re
 import sys
 from pathlib import Path
@@ -19,25 +20,26 @@ SRC = Path(__file__).resolve().parents[1]
 PART_COLOURS = {}                                     # (X0X marks its parts with a swatch; AMB-1 has none)
 
 CSS = """
-/* the colours of Ambient 1: Music for Airports (1978), as the web app: the map's paper, its greens,
-   its rivers, the ink. Light only, as the cover is. The page a shade lighter than the cover's paper, so
-   the screenshots (on that paper) stand out from it; the cover's paper for code and callouts. */
+/* HYP-1's screen: a charcoal ground, a cyberpunk purple, orange for what is live (the names below are
+   AMB-1's: paper the ground, sheet the cards, river the purple, ink the text) */
 :root {
-  --paper: #fdf9e4; --sheet: #f6eeb5; --green-1: #d0dc92; --green-3: #9cb16f;
-  --river: #85c3c1; --river-2: #549995; --ink: #1d1b02; --muted: #4f4b25; --rule: #c2ce7f;
-  color-scheme: light;
+  --paper: #141318; --sheet: #211e29; --green-1: #2f2840; --green-3: #6b5a8c;
+  --river: #a44cff; --river-2: #c18cff; --ink: #ece8f2; --muted: #a39cb3; --rule: #3e3a4c;
+  --orange: #ff8020;
+  color-scheme: dark;
 }
 body {
   background: var(--paper); color: var(--ink); margin: 0;
-  font: 400 17px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font: 400 18px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding-inline: 16px; padding-block: 32px 64px;
 }
 main { max-width: 46rem; margin: 0 auto; }
-h1, h2, h3 { font-family: inherit; text-wrap: balance; line-height: 1.2; }
+h1, h2, h3, th, .site .home { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 h1 { font-size: 2.2rem; font-weight: 300; margin: 0 0 .4rem; letter-spacing: .04em; text-transform: uppercase; }
-h2 { font-size: 1.3rem; font-weight: 400; margin: 3rem 0 .8rem; padding-top: .8rem; border-top: 1px solid var(--ink);
+h2 { font-size: 1.3rem; font-weight: 400; margin: 3rem 0 .8rem; padding-top: .8rem; border-top: 1px solid var(--rule);
      text-transform: uppercase; letter-spacing: .04em; }
-h2 .num { color: var(--river-2); margin-right: .5em; font-variant-numeric: tabular-nums; }
+h2 .num { color: var(--orange); margin-right: .5em; font-variant-numeric: tabular-nums; }
 h3 { font-size: 1.1rem; font-weight: 600; margin: 2rem 0 .5rem; }
 p, li { max-width: 65ch; }
 p { margin: 0 0 1rem; }
@@ -50,7 +52,7 @@ a:hover { background: var(--green-1); }
 a:focus-visible { outline: 2px solid var(--river-2); outline-offset: 2px; }
 code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .86em; }
 code { background: var(--sheet); padding: .08em .35em; border: 1px solid var(--rule); }
-pre { background: var(--sheet); border: 1px solid var(--ink); padding: 14px 16px; overflow-x: auto; line-height: 1.45; margin: 0 0 1.2rem; }
+pre { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; overflow-x: auto; line-height: 1.45; margin: 0 0 1.2rem; }
 pre code { background: none; padding: 0; border: 0; font-size: inherit; }
 hr { display: none; }
 .table { overflow-x: auto; margin: 0 0 1.3rem; }
@@ -59,9 +61,9 @@ th, td { text-align: left; vertical-align: top; padding: .45rem .7rem .45rem 0; 
 th { font-weight: 400; text-transform: uppercase; letter-spacing: .06em; font-size: .8rem; color: var(--muted); border-bottom-color: var(--ink); }
 td:first-child { white-space: nowrap; }
 .lede { margin-bottom: 1.6rem; }
-.status { background: var(--sheet); border: 1px solid var(--ink); padding: 12px 16px; }
+.status { background: var(--sheet); border: 1px solid var(--rule); padding: 12px 16px; }
 .status p { margin: 0; }
-.site { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--ink); }
+.site { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule); }
 .site .home { font-size: 1.05rem; font-weight: 400; letter-spacing: .08em; color: var(--ink); text-decoration: none; }
 .site .home:hover { color: var(--river-2); background: none; }
 .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .92rem; }
@@ -72,7 +74,7 @@ a.home:hover { background: none; color: var(--river-2); }
 main > a.home { display: inline-block; font-size: .9rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 .4rem; }
 .callout { border-left: 4px solid var(--river); background: var(--sheet); padding: 10px 16px; margin: 0 0 1.2rem; max-width: 65ch; }
 .callout p { margin: 0; }
-details { border: 1px solid var(--ink); background: var(--sheet); padding: 0 16px; margin: 0 0 1.2rem; }
+details { border: 1px solid var(--rule); background: var(--sheet); padding: 0 16px; margin: 0 0 1.2rem; }
 details > summary { cursor: pointer; padding: 10px 0; }
 details[open] > summary { margin-bottom: .4rem; }
 details > :last-child { margin-bottom: 1rem; }
@@ -81,7 +83,8 @@ nav.contents ol { columns: 2 14rem; column-gap: 2rem; padding-left: 1.3rem; }
 .figs { display: flex; flex-wrap: wrap; gap: 20px; margin: .4rem 0 1.6rem; }
 figure { margin: 0; flex: 0 1 auto; }
 figure img { display: block; max-width: 100%; height: auto; }
-figure.shot img { width: 300px; image-rendering: pixelated; border: 1px solid var(--ink); }
+figure.shot img { width: 300px; image-rendering: pixelated; border: 1px solid var(--rule); border-radius: 6px; }
+figure.wide img { border-radius: 10px; }
 figure.wide { flex-basis: 100%; }
 figure.wide img { width: 100%; }
 figcaption { color: var(--muted); font-size: .88rem; margin-top: .4rem; max-width: 300px; }
@@ -107,7 +110,8 @@ def slug(title):
     return f"s{m.group(1)}" if m else re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
 
 
-NAME = "AMB-1"
+NAME = "HYP-1"
+REPO = os.environ.get("REPO_URL", "https://github.com/RustyPawz/fm1-HYP1")
 IMG_BASE = SRC / "docs"
 EMBED = False                                         # --fragment: images as data URIs
 
@@ -119,7 +123,7 @@ def figure(caption, src):
         url = f"data:{mime};base64," + base64.b64encode(path.read_bytes()).decode()
     else:
         url = src
-    cls = "wide" if src.endswith(".svg") else "shot"
+    cls = "wide" if src.endswith(".svg") or re.search(r"hyp-(device|hero|styles|themes)", src) else "shot"
     return (f'<figure class="{cls}"><img src="{url}" alt="{html.escape(caption)}" loading="lazy">'
             f"<figcaption>{inline(caption)}</figcaption></figure>")
 
@@ -169,7 +173,7 @@ def convert(md):
         if ln.startswith("# "):                         # the title; AMB-1's own a way home (the site's root)
             t = ln[2:].strip()
             if t == NAME:                               # the site's header (home, the other pages), then the title
-                out.append('<header class="site"><a class="home" href="../">AMB-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="https://github.com/charlesvestal/fm1-amb">Source</a></nav></header>')
+                out.append('<header class="site"><a class="home" href="../">HYP-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="HYP-1_Manual.pdf">PDF</a><a href="' + REPO + '">Source</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>')
                 out.append('<h1>Manual</h1>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')
@@ -244,7 +248,8 @@ def main():
     title, what = (f"{NAME} Manual", "The manual") if not h1 or h1.group(1) == NAME else (f"{NAME}: {h1.group(1)}", h1.group(1))
     body = convert(md)
     page = (f"<title>{html.escape(title)}</title>\n"
-            f'<meta name="description" content="{html.escape(what)} for {NAME}, a generative ambient firmware for the M-VAVE FM-1.">\n'
+            f'<meta name="description" content="{html.escape(what)} for {NAME}, hypnotic techno and acid firmware for the M-VAVE FM-1.">\n'
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">\n'
             f"<style>{CSS}</style>\n<main>\n{body}\n</main>\n")
     if not fragment:
         head, _, rest = page.partition("<main>")

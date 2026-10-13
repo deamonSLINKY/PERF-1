@@ -1,0 +1,98 @@
+# the site's screenshots (tools/site/mockups.py runs this in the simulator); "echo @name" before each
+# "leds" names the lights that go with the shot
+wait 9000
+tap HOME
+wait 400
+shot home.png
+echo @home
+leds
+tap ENV
+wait 300
+shot pad.png
+tap ARP
+tap ARP
+tap ARP
+wait 400
+shot acid_line.png
+tap LFO
+wait 300
+shot drone.png
+press SEQ
+wait 600
+release SEQ
+wait 700
+shot seq.png
+echo @seq
+leds
+tap SEQ
+tap HOME
+tap FX
+key 2 down
+key 14 down
+key 25 down
+wait 300
+shot fx.png
+echo @fx
+leds
+key 2 up
+key 14 up
+key 25 up
+tap FX
+wait 200
+tap SAVE
+wait 2800
+shot breakdown.png
+tap SAVE
+wait 400
+shot build.png
+wait 6000
+press SEL
+turn ALGO 1
+release SEL
+wait 1500
+tap HOME
+wait 1500
+shot house.png
+echo @house
+leds
+press SEL
+turn ALGO 1
+release SEL
+wait 1500
+tap ARP
+wait 1500
+shot techno.png
+press SEL
+turn ALGO 2
+release SEL
+wait 1500
+tap SEQ
+wait 1500
+shot breakcore.png
+echo @breakcore
+leds
+tap ENV
+spin K1 -5
+tap GLO
+wait 300
+tap SAVE
+wait 1200
+shot stored.png
+spin K2 1
+wait 300
+shot theme_acid.png
+spin K2 1
+wait 300
+shot theme_ice.png
+spin K2 1
+wait 300
+shot theme_ember.png
+spin K2 1
+wait 300
+shot theme_phosphor.png
+spin K2 -4
+wait 300
+splash 1800
+reboot
+wait 700
+shot splash.png
