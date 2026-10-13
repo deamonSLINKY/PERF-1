@@ -19,6 +19,7 @@ by Charles Vestal. Current version: **1.0.21** (each push to `main` builds the n
 - **Read the manual**: <https://rustypawz.github.io/fm1-HYP1/manual/>, or the
   [printable PDF](docs/HYP-1_Manual.pdf) with every control numbered and every screen lettered
 - **Watch it**: [a five-minute live take](https://www.youtube.com/watch?v=0UvGnZE2_VI), and more on [YouTube](https://www.youtube.com/@RedtailWorks)
+- **The board**: feature requests (vote with a 👍) and comments: <https://rustypawz.github.io/fm1-HYP1/board/>
 - **More from RedtailWorks**: <https://www.redtail.works>
 
 Installing it is at your own risk, though it's hard to get stuck: the web installer can put M-VAVE's

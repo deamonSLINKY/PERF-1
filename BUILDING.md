@@ -95,8 +95,14 @@ Every push to `main` runs `.github/workflows/firmware.yml`:
 3. It runs the tests, and fails the build on a size, pool or soft-double problem (shown as
    annotations on the run).
 4. It builds the site with `tools/make_pages.py` (landing page, manual, PDF manual, browser emulator,
-   web installer, firmware download) and deploys it to GitHub Pages at
+   web installer, the board, firmware download) and deploys it to GitHub Pages at
    <https://rustypawz.github.io/fm1-HYP1/>. The firmware is also kept as the run's artifact.
+
+The board (`web/board.html`) shows the repository's GitHub Discussions with [giscus](https://giscus.app):
+the workflow looks up the Discussions categories each build (`board/config.json`), so it switches itself
+on once Discussions is enabled (Settings > General > Features) and the giscus app is installed on the
+repository. Feature requests go in the **Ideas** category, comments in **General**; moderate them in
+Discussions.
 
 The manual's source is `docs/MANUAL.md` (`tools/manual_html.py` turns it into the page; the site
 stamps the build's version into it). The PDF manual, `docs/HYP-1_Manual.pdf`, is built separately and

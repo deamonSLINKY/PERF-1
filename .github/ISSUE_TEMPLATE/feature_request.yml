@@ -1,0 +1,16 @@
+name: Feature request
+description: An idea for HYP-1. (You can also post it on the board, where others can vote for it.)
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What would it do, and what would you play with it?
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: On the FM-1
+      description: Which buttons, knobs or page could it live on? (Optional.)

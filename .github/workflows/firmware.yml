@@ -13,6 +13,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  discussions: read          # the board: the Discussions categories, for giscus
   pages: write
   id-token: write
 concurrency:
@@ -79,10 +80,19 @@ jobs:
             echo "::error title=tests failed::$(grep -A12 FAIL tests.log | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
             exit 1
           }
-      - name: Site (installer, emulator, download)
+      - name: Board (the repository's Discussions categories, for giscus)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api graphql -F owner="${GITHUB_REPOSITORY%/*}" -F name="${GITHUB_REPOSITORY#*/}" -f query='
+            query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) {
+              id hasDiscussionsEnabled discussionCategories(first: 25) { nodes { id name } } } }' > build/board.json \
+            || echo '{}' > build/board.json
+          python3 -c "import json; r=json.load(open('build/board.json')).get('data',{}).get('repository') or {}; print('::notice title=board::' + ('Discussions on: ' + ', '.join(c['name'] for c in r['discussionCategories']['nodes']) if r.get('hasDiscussionsEnabled') else 'Discussions are off: the board waits (Settings > General > Features > Discussions)'))"
+      - name: Site (installer, emulator, board, download)
         run: |
           EN_VERSION="$V" sh web/emu/build_clang.sh
-          REPO_URL="https://github.com/$GITHUB_REPOSITORY" python3 tools/make_pages.py "build/amb-$V.fwsc" "$V" build/pages
+          BOARD_JSON=build/board.json REPO_URL="https://github.com/$GITHUB_REPOSITORY" python3 tools/make_pages.py "build/amb-$V.fwsc" "$V" build/pages
       - uses: actions/upload-artifact@v4
         with:
           name: hyp1-firmware-${{ env.V }}

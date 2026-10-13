@@ -176,7 +176,7 @@ def convert(md):
         if ln.startswith("# "):                         # the title; AMB-1's own a way home (the site's root)
             t = ln[2:].strip()
             if t == NAME:                               # the site's header (home, the other pages), then the title
-                out.append('<header class="site"><a class="home" href="../"><img src="img/panda.png" width="48" height="38" alt="">HYP-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="HYP-1_Manual.pdf">PDF</a><a href="' + REPO + '">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>')
+                out.append('<header class="site"><a class="home" href="../"><img src="img/panda.png" width="48" height="38" alt="">HYP-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="HYP-1_Manual.pdf">PDF</a><a href="../board/">Board</a><a href="' + REPO + '">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>')
                 out.append('<h1>Manual</h1>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')

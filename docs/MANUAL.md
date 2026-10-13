@@ -8,7 +8,7 @@ control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf
 
 This manual is for HYP-1 version 1.0.21. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
-[YouTube](https://www.youtube.com/@RedtailWorks).
+[YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
 ![The FM-1 running HYP-1](img/hyp-device.png)
 
@@ -374,7 +374,7 @@ which in the list). The list is kept in that browser; **Forget learned** clears 
 - **An install was cut off:** run it again; the FM-1 stays in update mode until it finishes.
 - **A stored piece came back as it was before:** it was stored while playing and the power went off before the music stopped.
 - **The emulator doesn't see the FM-1:** close any DAW holding its MIDI port, and use Chrome, Edge or Firefox (Safari has no Web MIDI). The FM-1 must be in remote (SEL + GLO) for its panel to play the emulator.
-- **Crackles or dropouts:** please report the piece, style and tempo (an issue on GitHub, or via [redtail.works](https://www.redtail.works)).
+- **Crackles or dropouts:** please report the piece, style and tempo ([a bug report](https://github.com/RustyPawz/fm1-HYP1/issues/new/choose) on GitHub, or the [board](../board/)).
 
 ---
 

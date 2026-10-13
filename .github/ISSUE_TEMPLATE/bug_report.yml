@@ -1,0 +1,34 @@
+name: Bug report
+description: Something in HYP-1 doesn't work as the manual says, sounds wrong, or crackles.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. The more of this you can fill in, the quicker it's found.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The landing page's footer, or the HYP-1 card when the FM-1 starts.
+      placeholder: "1.0.21"
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [On the FM-1, In the browser emulator, Both, The installer, The site or manual]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+      description: The piece, style and tempo help a lot, and the page you were on.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      placeholder: "1. Piece 04, Techno style\n2. Hold SEQ, OCT+ twice\n3. ..."

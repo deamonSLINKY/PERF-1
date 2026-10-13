@@ -1,0 +1,127 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     HYP-1's board: feature requests and comments, kept in the repository's GitHub Discussions and shown
+     with giscus (https://giscus.app). tools/make_pages.py puts it at board/ with config.json beside it:
+     the repository's Discussions categories, looked up by the workflow at build time. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HYP-1 board</title>
+<meta name="description" content="Feature requests and comments for HYP-1, hypnotic techno and acid firmware for the M-VAVE FM-1.">
+<meta name="theme-color" content="#141318">
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
+<style>
+/* the boot screen's colours, as every HYP-1 page */
+:root { --ground: #141318; --card: #1f1c27; --card-2: #2a2534; --ink: #f1ecf4; --muted: #aaa1b8; --rule: #3e3a4c;
+        --purple: #a44cff; --purple-2: #c18cff; --orange: #ff8020; --rust: #c85420; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 64px;
+       font: 400 18px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+main { max-width: 860px; margin: 0 auto; }
+h1, h2, .tabs button, .site .home { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
+a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+a:hover { color: var(--purple-2); }
+.site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
+.site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+.site .home img { image-rendering: pixelated; display: block; }
+.site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: 1rem; }
+.site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
+.site nav a.yt { color: var(--orange); }
+h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 .6rem;
+     display: flex; align-items: center; gap: .7rem; }
+h1::before { content: ""; width: 34px; height: 5px; flex: none; background: linear-gradient(90deg, var(--orange) 0 62%, var(--purple) 62%); }
+.lede { color: var(--muted); max-width: 44rem; margin: 0 0 1.4rem; }
+.lede b { color: var(--ink); font-weight: 600; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 1rem; }
+.tabs button { font-size: .95rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
+               color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 8px; padding: .5em 1.1em; }
+.tabs button[aria-selected="true"] { background: var(--purple); border-color: var(--purple-2); color: #fff; }
+.tabs button:hover:not([aria-selected="true"]) { border-color: var(--orange); color: var(--orange); }
+.tabs a.bug { margin-left: auto; align-self: center; font-size: .95rem; color: var(--orange); }
+.about { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; margin: 0 0 1rem; color: var(--muted); font-size: .98rem; }
+.about b { color: var(--ink); font-weight: 600; }
+.giscus { min-height: 240px; }
+.wait { background: var(--card); border: 1px solid var(--rust); border-radius: 10px; padding: 16px 18px; }
+.wait h2 { font-size: 1.1rem; margin: 0 0 .4rem; color: var(--purple-2); letter-spacing: .04em; text-transform: uppercase; }
+.wait p { margin: 0 0 .6rem; color: var(--muted); }
+.wait p:last-child { margin: 0; }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .95rem; }
+@media (max-width: 560px) { .tabs a.bug { margin-left: 0; } }
+</style>
+</head>
+<body>
+<main>
+<header class="site"><a class="home" href="../"><img src="../img/panda.png" width="48" height="38" alt="">HYP-1</a>
+  <nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="./" aria-current="page">Board</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>
+
+<h1>The board</h1>
+<p class="lede">Ideas for HYP-1, questions, things you made with it. <b>Sign in with GitHub</b> to post
+(free), and give a 👍 to the requests you'd like most: the most wanted come first in line.</p>
+
+<div class="tabs" role="tablist" aria-label="Board">
+  <button role="tab" id="t-ideas" aria-controls="board" aria-selected="true" data-t="ideas">Feature requests</button>
+  <button role="tab" id="t-talk" aria-controls="board" aria-selected="false" data-t="talk">Comments</button>
+  <a class="bug" href="__REPO__/issues/new?template=bug_report.yml">Found a bug? Report it &rarr;</a>
+</div>
+<p class="about" id="about"></p>
+
+<div id="board" role="tabpanel" aria-labelledby="t-ideas"><div class="giscus"></div></div>
+
+<footer>Posts are kept in the <a href="__REPO__/discussions">project's GitHub Discussions</a>, shown here with
+<a href="https://giscus.app">giscus</a>. Be kind; off-topic or abusive posts are removed. HYP-1 is a
+<a href="https://www.redtail.works">RedtailWorks</a> project.</footer>
+</main>
+<script>
+const REPO = "__REPO_NAME__";
+const BOARDS = {
+  ideas: { term: "HYP-1 feature requests", category: "Ideas",
+           about: "<b>One request per comment</b>, so each can be voted on. Say what you'd do with it: what you'd play, and how it would feel on the FM-1. Reply to a request to add to it." },
+  talk:  { term: "HYP-1 comments", category: "General",
+           about: "<b>Anything else:</b> how it's going on your FM-1, questions, tips, links to what you recorded." },
+};
+const board = document.getElementById("board"), about = document.getElementById("about");
+let cfg = null;
+
+function categoryId(name) {
+  const cats = cfg && cfg.categories || [];
+  const c = cats.find((x) => x.name === name) || cats.find((x) => x.name === "General") || cats[0];
+  return c ? c : null;
+}
+function show(key) {
+  const b = BOARDS[key];
+  document.querySelectorAll(".tabs button").forEach((t) => t.setAttribute("aria-selected", t.dataset.t === key));
+  board.setAttribute("aria-labelledby", "t-" + key);
+  about.innerHTML = b.about;
+  try { localStorage.setItem("hyp1-board", key); } catch {}
+  board.innerHTML = '<div class="giscus"></div>';
+  const cat = categoryId(b.category);
+  if (!cfg || !cfg.repoId || !cat) {
+    board.innerHTML = `<div class="wait"><h2>The board opens soon</h2>
+      <p>It's being set up. Until then, ideas and questions are welcome in the comments on
+      <a href="https://www.youtube.com/@RedtailWorks">YouTube</a>, or through
+      <a href="https://www.redtail.works">www.redtail.works</a>.</p></div>`;
+    return;
+  }
+  const s = document.createElement("script");
+  const theme = new URL("giscus-theme.css", location.href).href;
+  Object.entries({ src: "https://giscus.app/client.js", "data-repo": REPO, "data-repo-id": cfg.repoId,
+                   "data-category": cat.name, "data-category-id": cat.id, "data-mapping": "specific", "data-term": b.term,
+                   "data-strict": "1", "data-reactions-enabled": "1", "data-emit-metadata": "0", "data-input-position": "top",
+                   "data-theme": theme, "data-lang": "en", "data-loading": "lazy", crossorigin: "anonymous" })
+    .forEach(([k, v]) => s.setAttribute(k, v));
+  s.async = true;
+  board.appendChild(s);
+}
+document.querySelectorAll(".tabs button").forEach((t) => t.addEventListener("click", () => show(t.dataset.t)));
+let first = "ideas";
+try { if (BOARDS[localStorage.getItem("hyp1-board")]) first = localStorage.getItem("hyp1-board"); } catch {}
+if (location.hash === "#comments") first = "talk";
+fetch("config.json", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).catch(() => null)
+  .then((c) => { cfg = c; show(first); });
+</script>
+</body>
+</html>

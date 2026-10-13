@@ -111,7 +111,7 @@ footer .ver { font-family: "Chakra Petch", sans-serif; color: var(--muted); font
 <body>
 <main>
 <header class="site"><a class="home" href="./"><img class="panda" src="img/panda.png" width="64" height="50" alt="">HYP-1</a>
-  <nav><a href="emu/">Emulator</a><a href="install/">Install</a><a href="manual/">Manual</a><a href="manual/HYP-1_Manual.pdf">PDF manual</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>
+  <nav><a href="emu/">Emulator</a><a href="install/">Install</a><a href="manual/">Manual</a><a href="manual/HYP-1_Manual.pdf">PDF manual</a><a href="board/">Board</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a></nav></header>
 
 <img class="hero" src="img/hyp-hero.png" width="1600" height="1161" alt="An M-VAVE FM-1 running HYP-1: the screen shows piece 01 in A Aeolian at 128 BPM, the chord Am7, the drum pattern and the Tempo page; the sixteen white keys glow purple with the scale.">
 
@@ -131,7 +131,7 @@ the whole performance into your DAW.</p>
   <a href="install/"><strong>Install <em class="v">v__VERSION__</em></strong><span>From Chrome or Edge, with the FM-1 connected by USB. Nothing to install on the computer.</span></a>
   <a href="manual/"><strong>Manual</strong><span>Every control, every page, every screen, on one page.</span></a>
   <a href="manual/HYP-1_Manual.pdf"><strong>PDF manual</strong><span>Printable, with every control numbered and every screen lettered.</span></a>
-  <a href="https://www.youtube.com/@RedtailWorks"><strong>More videos</strong><span>Tours, the sequencer, the voices and the links on the RedtailWorks YouTube channel.</span></a>
+  <a href="board/"><strong>Board</strong><span>Request a feature, vote for others, or tell us how it's going on your FM-1.</span></a>
   <a href="firmware/__PKG__"><strong>Download <em class="v">__PKG__</em></strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
 </nav>
 
@@ -239,12 +239,28 @@ def main(pkg, version, out):
     shutil.copytree(SRC / "docs" / "img", out / "img")
     (out / "index.html").write_text(LANDING.replace("__VERSION__", html.escape(version)).replace("__PKG__", name)
                                     .replace("__REPO__", REPO), encoding="utf-8")
+    # the board: giscus over the repository's Discussions; config.json is what the workflow found
+    # (BOARD_JSON: the GraphQL answer for the repository's id and Discussions categories), or nothing yet
+    (out / "board").mkdir()
+    (out / "board" / "index.html").write_text((SRC / "web" / "board.html").read_text(encoding="utf-8")
+                                              .replace("__REPO_NAME__", REPO.split("github.com/")[-1]).replace("__REPO__", REPO),
+                                              encoding="utf-8")
+    shutil.copy(SRC / "web" / "board-giscus.css", out / "board" / "giscus-theme.css")
+    board = {}
+    try:
+        r = json.loads(Path(os.environ["BOARD_JSON"]).read_text())["data"]["repository"]
+        if r.get("hasDiscussionsEnabled"):
+            board = {"repoId": r["id"], "categories": [{"id": c["id"], "name": c["name"]}
+                                                       for c in r["discussionCategories"]["nodes"]]}
+    except (KeyError, TypeError, ValueError, OSError):
+        pass
+    (out / "board" / "config.json").write_text(json.dumps(board), encoding="utf-8")
     emu = SRC / "build" / "emu"
     if not (emu / "amb.wasm").exists():
         raise SystemExit("no build/emu/amb.wasm: run web/emu/build.sh (needs Emscripten)")
     shutil.copytree(emu, out / "emu")
     (out / ".nojekyll").write_text("")
-    print(f"site: {out}: index.html, install/ ({product}), manual/, emu/, firmware/{name} ({len(raw)} B)")
+    print(f"site: {out}: index.html, install/ ({product}), manual/, emu/, board/ ({'ready' if board else 'waiting for Discussions'}), firmware/{name} ({len(raw)} B)")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,32 @@
+/* SPDX-License-Identifier: GPL-3.0-only
+   giscus in HYP-1's colours (served at board/giscus-theme.css): giscus's own transparent dark theme, with
+   the site's ink, rules, purple and orange laid over it */
+@import url("https://giscus.app/themes/transparent_dark.css");
+main {
+  --color-fg-default: #f1ecf4;
+  --color-fg-muted: #aaa1b8;
+  --color-fg-subtle: #8a8299;
+  --color-canvas-default: #1f1c27;
+  --color-canvas-overlay: #1f1c27;
+  --color-canvas-subtle: #2a2534;
+  --color-border-default: #3e3a4c;
+  --color-border-muted: #3e3a4c;
+  --color-neutral-muted: rgba(164, 76, 255, .18);
+  --color-accent-fg: #c18cff;
+  --color-accent-emphasis: #a44cff;
+  --color-accent-muted: rgba(164, 76, 255, .4);
+  --color-accent-subtle: rgba(164, 76, 255, .15);
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #a44cff;
+  --color-btn-primary-border: #c18cff;
+  --color-btn-primary-hover-bg: #ff8020;
+  --color-btn-primary-hover-border: #ff8020;
+  --color-btn-primary-selected-bg: #8a36e0;
+  --color-btn-primary-disabled-bg: rgba(164, 76, 255, .45);
+  --color-btn-primary-disabled-text: rgba(255, 255, 255, .6);
+  --color-btn-bg: #2a2534;
+  --color-btn-border: #3e3a4c;
+  --color-btn-hover-bg: #34304a;
+  --color-btn-hover-border: #ff8020;
+  --color-btn-text: #f1ecf4;
+}
