@@ -32,18 +32,32 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq clang lld >/dev/null
           command -v wasm-ld >/dev/null || sudo ln -sf "$(ls /usr/bin/wasm-ld* | head -1)" /usr/local/bin/wasm-ld
       - name: JieLi toolchain and SDK (cached)
-        uses: actions/cache@v4
+        id: jl
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.jieli
             ~/fw-AC79_AIoT_SDK
           key: jieli-ac79-v1.2.1
       - name: Fetch them if not cached
+        if: steps.jl.outputs.cache-hit != 'true'
         run: |
-          [ -x ~/.jieli/toolchain/pi32v2/bin/clang ] || tools/get_toolchain.sh
-          [ -f ~/fw-AC79_AIoT_SDK/cpu/wl82/tools/uboot.boot ] || \
+          try() { for i in 1 2 3 4; do "$@" && return 0; echo "retry $i: $*"; sleep $((i * 15)); done; return 1; }
+          [ -x ~/.jieli/toolchain/pi32v2/bin/clang ] || try tools/get_toolchain.sh
+          fetch_sdk() {
+            rm -rf ~/fw-AC79_AIoT_SDK
             git clone --depth 1 --branch AC79NN_SDK_V1.2.1_2023-12-13 \
               https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git ~/fw-AC79_AIoT_SDK
+          }
+          [ -f ~/fw-AC79_AIoT_SDK/cpu/wl82/tools/uboot.boot ] || try fetch_sdk
+      - name: Keep them for next time
+        if: steps.jl.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.jieli
+            ~/fw-AC79_AIoT_SDK
+          key: jieli-ac79-v1.2.1
       - name: Version
         run: |
           N=$GITHUB_RUN_NUMBER
