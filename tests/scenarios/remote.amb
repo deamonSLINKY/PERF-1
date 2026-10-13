@@ -1,0 +1,64 @@
+# Remote (SEL + GLO): the panel plays HYP-1 in the browser over USB MIDI, channel 16, and the FM-1
+# goes quiet. Keys: notes 48 + k; buttons: CC 102 + b; knobs: CC 85 + role (64 + detents); CC 116:
+# hello. The browser's lights come back the same way, CC 117 saying it's there. SEL + GLO: back.
+wait 500
+expect playing 1
+expect remote 0
+press SEL
+tap GLO
+release SEL
+wait 300
+expect remote 1
+expect playing 0
+expect view 0
+expect remotelink 0
+shot remote_wait.png
+peakreset
+wait 1500
+expect peak_db_max -80
+expect lastout 0xBF747F
+# the panel: a button, a key, the knobs
+press HOME
+expect lastout 0xBF6C7F
+release HOME
+expect lastout 0xBF6C00
+key w0 down
+expect lastout 0x9F3064
+key w0 up
+expect lastout 0x8F3000
+turn K1 1 20
+expect lastout 0xBF5841
+turn SELECT -1 20
+expect lastout 0xBF553F
+# and none of it touched the FM-1
+expect view 0
+expect playing 0
+# the browser answers: linked, and its lights on the panel
+midi BF 75 7F
+midi BF 6C 7F
+midi 9F 30 64
+wait 40
+expect remotelink 1
+expect litbtn 0x40
+expect litkeys 1
+shot remote_link.png
+midi 8F 30 00
+wait 40
+expect litkeys 0
+# the browser gone quiet: waiting again, the lights out
+wait 3500
+expect remotelink 0
+expect litbtn 0
+# SEL + GLO: back, stopped, nothing else done by the press
+press SEL
+tap GLO
+expect lastout 0xBF7400
+release SEL
+wait 100
+expect remote 0
+expect playing 0
+expect view 0
+tap PLAY
+wait 1500
+expect playing 1
+expect peak_db_min -40

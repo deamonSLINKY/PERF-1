@@ -47,6 +47,7 @@ int project_flush_globals(void);         /* those alone into flash (while playin
 void ui_init(void);
 void ui_frame(void);
 void ui_input_only(void);
+int ui_remote(void);                   /* remote (SEL + GLO): the panel plays the browser over USB */
 extern uint32_t ui_splash_ms;            /* the RedtailWorks card's time at power-on (0: none) */
 int ui_dirty(void);
 void ui_say(const char *a, const char *b);

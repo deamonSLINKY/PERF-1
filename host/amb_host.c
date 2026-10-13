@@ -86,6 +86,7 @@ void plat_play_red(int red) { (void)red; }      /* the device's PLAY colour: gre
 #define MQ 256
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
+static uint32_t last_out;                        /* the last packet out, not clock: status << 16 | d1 << 8 | d2 */
 static uint32_t midi_out_count, clock_out_count;
 int plat_midi_in(uint32_t *pkt)
 {
@@ -97,6 +98,8 @@ int plat_midi_in(uint32_t *pkt)
 void plat_midi_out(uint32_t pkt)
 {
     midi_out_count++;
+    if (((pkt >> 8) & 0xFF) != 0xF8)
+        last_out = (pkt >> 8 & 0xFFu) << 16 | (pkt >> 16 & 0xFFu) << 8 | pkt >> 24;
     if (((pkt >> 8) & 0xFF) == 0xF8) {
         clock_out_count++;
         return;
@@ -417,6 +420,14 @@ static int expect(const char *what, const char *val)
         got = (int)ui.fx_lock;
     else if (!strcmp(what, "fxon"))               /* the FX menu is on */
         got = ui.fx_menu;
+    else if (!strcmp(what, "remote"))             /* remote (SEL + GLO) on; the browser answering */
+        got = rm.on;
+    else if (!strcmp(what, "remotelink"))
+        got = rm.link;
+    else if (!strcmp(what, "lastout"))            /* the last MIDI out: status << 16 | d1 << 8 | d2 */
+        got = (int)last_out;
+    else if (!strcmp(what, "litbtn"))             /* the buttons lit (bit b: B_*) */
+        got = (int)lit_btn;
     else if (!strcmp(what, "litkeys"))            /* the keys lit (bit k: key k) */
         got = (int)lit_keys;
     else if (!strcmp(what, "seqlane"))            /* the sequencer's lane (OCT- / OCT+) */
@@ -551,7 +562,29 @@ int main(int argc, char **argv)
             wav_close();
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
-        else if (!strcmp(cmd, "shot")) {
+        else if (!strcmp(cmd, "frames")) {           /* frames N [FPS]: a video's frames, at their exact times
+                                                         * from the first: frame_NNNNN.png, and frames.txt
+                                                         * (frame, lit buttons, lit keys, held buttons, held keys) */
+            static FILE *flog;
+            static uint32_t fn, ft0, fps = 30;
+            int k, n = atoi(a);
+            if (b[0])
+                fps = (uint32_t)atoi(b);
+            if (!flog) {
+                snprintf(out, sizeof out, "%s/frames.txt", dir);
+                flog = fopen(out, "w");
+                ft0 = now_ms;
+            }
+            for (k = 0; k < n; k++, fn++) {
+                uint32_t t = ft0 + (uint32_t)((uint64_t)fn * 1000u / fps);
+                if (t > now_ms)
+                    run_ms(t - now_ms);
+                snprintf(out, sizeof out, "%s/frame_%05u.png", dir, fn);
+                png_write(out);
+                fprintf(flog, "%u %u %u %u %u\n", fn, lit_btn, lit_keys, held_btn, held_keys);
+            }
+            fflush(flog);
+        } else if (!strcmp(cmd, "shot")) {
             snprintf(out, sizeof out, "%s/%s", dir, a);
             png_write(out);
         } else if (!strcmp(cmd, "leds")) {

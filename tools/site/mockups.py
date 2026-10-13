@@ -115,7 +115,8 @@ def device(screen, btns=(), keys=(), held=()):
     # the screen: a bezel, the panel's own image, a little glass
     o.append('<rect x="296" y="40" width="244" height="244" rx="28" fill="#0b0b0d" stroke="#55585f" stroke-width="1.2"/>')
     o.append('<rect x="314" y="58" width="208" height="208" rx="6" fill="#000"/>')
-    o.append(f'<image x="318" y="62" width="200" height="200" href="{shot_uri(screen)}" preserveAspectRatio="none"/>')
+    if screen:
+        o.append(f'<image x="318" y="62" width="200" height="200" href="{shot_uri(screen)}" preserveAspectRatio="none"/>')
     o.append('<rect x="318" y="62" width="200" height="200" fill="url(#glass)"/>')
     o.append('<rect x="568" y="160" width="400" height="140" rx="18" fill="url(#tray)"/>')
     r1, r2 = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"], ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"]

@@ -88,6 +88,7 @@ void en_play(int on);                          /* play / stop (the tails ring on
 void en_next(void);                            /* the next chord: on the next bar (now while resting) */
 void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
+void en_mute(int on);                          /* remote: silent, no MIDI out (1) or back (0), in turn */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops, the home chord */
 

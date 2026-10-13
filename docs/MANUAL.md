@@ -291,6 +291,7 @@ Hold **SEL** and:
 | PRESETS | The next or previous piece, on the next bar ("PIECE 03 NEXT BAR" until it comes). |
 | ALGORITHM | The piece's style. |
 | SEQ | The links on and off. |
+| GLO | Remote: the FM-1 plays the emulator (see 13). |
 | Black keys 1–6 (sequencer) | Copy the pattern you're editing into pattern 1–6. |
 | OCT− (sequencer) | Clear this drum's lane. |
 | OCT+ (sequencer) | This drum's lane back to the piece's own. |
@@ -336,6 +337,29 @@ browser); **Forget stored** clears them.
 | Q–I, A–K | White keys 1–8, 9–16 |
 | 1–0, - | Black keys 1–11 |
 
+### Playing it from the FM-1 (remote)
+
+Plug the FM-1 in by USB, open the emulator in Chrome, Edge or Firefox, switch it on and press **Connect
+MIDI** (allow MIDI when the browser asks). Then, on the FM-1, hold **SEL** and press **GLO**: the screen
+says REMOTE, the FM-1 stops and goes quiet, and its whole panel plays the emulator: every button, key and
+knob, MASTER too. The emulator's lights come back to the FM-1's buttons and keys, so the panel reads as
+it always does; the emulator's screen is the one to watch. The FM-1 shows PLAYING THE BROWSER while the
+emulator answers and WAITING FOR THE BROWSER when it doesn't. **SEL** + **GLO** again gives the FM-1 back,
+stopped (PLAY starts it).
+
+How it talks, for the curious: USB MIDI channel 16. Keys are notes 48–74, buttons CC 102–115 (127 down,
+0 up), the knobs CC 85–91 (64 ± the detents), MASTER CC 7, and CC 116 is a hello each second. The
+emulator sends its lights back the same way, with CC 117 each second.
+
+### Any other controller (MIDI learn)
+
+With M-VAVE's own firmware on the FM-1, or any MIDI keyboard or controller, the keys play the
+emulator's keys as soon as it's connected (by pitch, F3 to G5; notes outside fold into that range). For
+everything else, press **MIDI learn**, click a control on the emulator (it's outlined), then press or move
+the one you want on your controller. Learn as many as you like and press **Done learning**. Buttons and
+keys take a note or a CC; knobs take a CC, absolute (a knob or fader) or relative (an endless encoder: pick
+which in the list). The list is kept in that browser; **Forget learned** clears it.
+
 ---
 
 ## 14. Troubleshooting
@@ -344,6 +368,7 @@ browser); **Forget stored** clears them.
 - **The installer doesn't find the FM-1:** use Chrome or Edge, a USB data cable (not charge-only), and close any DAW holding its MIDI port.
 - **An install was cut off:** run it again; the FM-1 stays in update mode until it finishes.
 - **A stored piece came back as it was before:** it was stored while playing and the power went off before the music stopped.
+- **The emulator doesn't see the FM-1:** close any DAW holding its MIDI port, and use Chrome, Edge or Firefox (Safari has no Web MIDI). The FM-1 must be in remote (SEL + GLO) for its panel to play the emulator.
 - **Crackles or dropouts:** please report the piece, style and tempo (an issue on GitHub, or via [redtail.works](https://www.redtail.works)).
 
 ---

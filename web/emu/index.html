@@ -65,6 +65,23 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .knobs dd { margin: 0 0 .45rem; }
 kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--rule); padding: 0 .3em; color: var(--river-2); }
 .help b { color: var(--ink); }
+.midi { margin: 1.2rem 0 0; padding: .9rem 1rem; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
+.midi h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.midi p { margin: .3rem 0 0; color: var(--muted); font-size: .92rem; max-width: 80ch; }
+.midi .bar { margin: .5rem 0 0; }
+.midi .bar button { background: var(--ground); }
+.midi .bar button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.midi .live { color: var(--river-2); }
+.midi ul { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .3rem 1rem; font-size: .9rem; }
+.midi li { display: flex; align-items: center; gap: .5rem; color: var(--muted); }
+.midi li b { color: var(--ink); font-weight: 600; }
+.midi li span, .midi li b { white-space: nowrap; }
+.midi li select { max-width: 9.5rem; }
+.midi li select, .midi li button { font: inherit; font-size: .85rem; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); padding: .1em .3em; cursor: pointer; }
+.midi li button { margin-left: auto; }
+.device.learning .hit { outline: 1px dashed var(--river-2); outline-offset: 1px; }
+.device.learning .hit.picked { outline: 3px solid var(--accent); }
+.device.remote canvas { box-shadow: 0 0 0 3px var(--river); }
 </style>
 </head>
 <body>
@@ -88,6 +105,18 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
   <button id="reset" type="button" title="Power off and on: a new piece at random (stored pieces kept)">New start</button>
   <button id="forget" type="button" title="Forget every stored piece and the theme">Forget stored</button>
 </div>
+
+<section class="midi" id="midi" aria-labelledby="midi-h">
+  <h2 id="midi-h">Play it from your FM-1, or any MIDI controller</h2>
+  <p>Plug the FM-1 in by USB and connect it here (Chrome, Edge or Firefox). <b>With HYP-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel plays this one exactly (buttons, keys, every knob and MASTER), its own sound goes quiet, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back. <b>With M-VAVE's firmware, or any other controller</b>, its keys play the keys here straight away; for the rest, use MIDI learn: click a control here, then move or press the one you want on your controller.</p>
+  <div class="bar">
+    <button id="midiOn" type="button">Connect MIDI</button>
+    <span id="midiStatus">Not connected.</span>
+    <button id="learn" type="button" aria-pressed="false" hidden>MIDI learn</button>
+    <button id="unlearn" type="button" hidden>Forget learned</button>
+  </div>
+  <ul id="maps" aria-label="Learned controls"></ul>
+</section>
 
 <section class="help">
   <div class="knobs">
@@ -313,6 +342,9 @@ for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if 
 for (const k of Object.values(knobs)) hit(k, "knob");
 for (const b of Object.values(buttons)) hit(b);
 keys.forEach((k) => hit(k));
+for (const [n, k] of Object.entries(knobs)) { k.hit.dataset.t = k.role === "master" ? "m" : "e" + k.role; k.name = n; }
+for (const [n, b] of Object.entries(buttons)) { b.hit.dataset.t = "b" + b.bit; b.name = n; }
+keys.forEach((k, i) => { k.hit.dataset.t = "k" + i; });
 
 // ---------------------------------------------------------------- state and input
 let node = null, btnMask = 0, keyMask = 0, latched = 0, master = 2800;
@@ -461,6 +493,203 @@ function drawLights(b, k) {
   keys.forEach((x, i) => x.g.classList.toggle("lit", !!(k & (1 << i))));
 }
 
+// ---------------------------------------------------------------- USB MIDI: the FM-1 as a remote, and MIDI learn
+// HYP-1's remote (SEL + GLO on the FM-1) speaks on channel 16: keys are notes 48 + k, buttons CC 102 + b
+// (127 down, 0 up), knobs CC 85 + role (64 + detents), MASTER CC 7, CC 116 hello (0: goodbye). We answer
+// with our lights the same way and CC 117 each second. Anything else: learned controls first, then any
+// note plays the key of its pitch (F3 .. G5, folded into range).
+const MAP_KEY = "hyp1-emu-midimap";
+const NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const midiUI = { on: document.getElementById("midiOn"), status: document.getElementById("midiStatus"), learn: document.getElementById("learn"),
+                 unlearn: document.getElementById("unlearn"), maps: document.getElementById("maps") };
+let midi = null, learning = false, picked = null, remote = null, sentB = 0, sentK = 0, ackTimer = 0, maps = {};
+try { maps = JSON.parse(localStorage.getItem(MAP_KEY) || "{}") || {}; } catch { maps = {}; }
+const knobByRole = (r) => Object.values(knobs).find((k) => k.role === r);
+function targetName(t) {
+  if (t === "m") return "MASTER";
+  if (t[0] === "e") return knobByRole(+t.slice(1)).name.replace("KNOB", "KNOB ");
+  if (t[0] === "b") return Object.values(buttons).find((b) => b.bit === +t.slice(1)).name;
+  const k = +t.slice(1), n = 53 + k;
+  return `Key ${NOTE[n % 12]}${Math.floor(n / 12) - 1}`;
+}
+const srcName = (id) => { const [ty, ch, n] = id.split(":"); return `${ty === "n" ? "Note " + NOTE[n % 12] + (Math.floor(n / 12) - 1) : "CC " + n} ch ${+ch + 1}`; };
+function saveMaps() { try { localStorage.setItem(MAP_KEY, JSON.stringify(maps)); } catch {} drawMaps(); }
+function drawMaps() {
+  midiUI.maps.textContent = "";
+  for (const [id, m] of Object.entries(maps)) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${srcName(id)}</span> → <b>${targetName(m.t)}</b>`;
+    if (id[0] === "c" && (m.t[0] === "e" || m.t === "m")) {
+      const sel = document.createElement("select");
+      for (const [v, l] of [["abs", "absolute"], ["rel64", "relative (64 ± n)"], ["rel2c", "relative (1 up, 127 down)"]]) sel.add(new Option(l, v, false, m.mode === v));
+      sel.addEventListener("change", () => { m.mode = sel.value; saveMaps(); });
+      sel.setAttribute("aria-label", "How the controller sends this knob");
+      li.append(sel);
+    }
+    const x = document.createElement("button");
+    x.type = "button"; x.textContent = "✕"; x.title = "Forget this one"; x.setAttribute("aria-label", `Forget ${srcName(id)}`);
+    x.addEventListener("click", () => { delete maps[id]; saveMaps(); });
+    li.append(x);
+    midiUI.maps.append(li);
+  }
+  midiUI.unlearn.hidden = !midi || !Object.keys(maps).length;
+}
+
+function hold(id, t, down) {               // a button or key, held from MIDI (id: who holds it)
+  const map = t[0] === "b" ? btnHeldBy : keyHeldBy;
+  if (down) map.set(id, +t.slice(1)); else map.delete(id);
+  if (t[0] === "b") syncButtons(); else syncKeys();
+}
+function setMaster(v) {
+  const k = knobs.MASTER;
+  master = Math.max(0, Math.min(4096, Math.round(v)));
+  k.angle = -135 + 270 * master / 4096;
+  send({ type: "master", value: master });
+  drawKnob(k);
+}
+function releaseFrom(prefix) {
+  for (const id of [...btnHeldBy.keys()]) if (id.startsWith(prefix)) btnHeldBy.delete(id);
+  for (const id of [...keyHeldBy.keys()]) if (id.startsWith(prefix)) keyHeldBy.delete(id);
+  syncButtons(); syncKeys();
+}
+
+function outFor(input) {                   // the FM-1's own output: the same port name
+  if (!midi) return null;
+  for (const o of midi.outputs.values()) if (o.name === input.name && o.state === "connected") return o;
+  for (const o of midi.outputs.values()) if (input.manufacturer && o.manufacturer === input.manufacturer && o.state === "connected") return o;
+  return null;
+}
+function midiLights(b, k, all) {           // our lights to the FM-1's panel, as they change
+  if (!remote || !remote.out) return;
+  const o = remote.out, cb = all ? 0x3FFF : (b ^ sentB), ck = all ? 0x7FFFFFF : (k ^ sentK);
+  try {
+    for (let i = 0; i < 14; i++) if (cb & (1 << i)) o.send([0xBF, 102 + i, b & (1 << i) ? 127 : 0]);
+    for (let i = 0; i < 27; i++) if (ck & (1 << i)) o.send(k & (1 << i) ? [0x9F, 48 + i, 100] : [0x8F, 48 + i, 0]);
+  } catch { /* unplugged mid-send */ }
+  sentB = b; sentK = k;
+}
+function remoteStart(input) {
+  remote = { input, out: outFor(input) };
+  document.getElementById("device").classList.add("remote");
+  const ack = () => { try { remote && remote.out && remote.out.send([0xBF, 117, 127]); } catch {} };
+  ack();
+  clearInterval(ackTimer);
+  ackTimer = setInterval(ack, 1000);
+  const m = window.ambLast;
+  if (m) midiLights(m.buttons, m.keys, true);
+  midiStatusText();
+}
+function remoteStop() {
+  if (!remote) return;
+  clearInterval(ackTimer);
+  try { remote.out && remote.out.send([0xBF, 117, 0]); } catch {}
+  remote = null;
+  releaseFrom("r");
+  document.getElementById("device").classList.remove("remote");
+  midiStatusText();
+}
+
+function onMidi(e, input) {
+  const [st, d1 = 0, d2 = 0] = e.data;
+  if (st >= 0xF0) return;                  // clock, SysEx: not ours
+  const type = st & 0xF0, ch = st & 15, on = type === 0x90 && d2 > 0, off = type === 0x80 || (type === 0x90 && d2 === 0);
+  if (type !== 0x90 && type !== 0x80 && type !== 0xB0) return;
+  const isRemote = ch === 15 && ((type === 0xB0 && (d1 === 116 || d1 === 7 || (d1 >= 85 && d1 <= 91) || (d1 >= 102 && d1 <= 115))) ||
+                                 (type !== 0xB0 && d1 >= 48 && d1 < 75));
+  // the HYP-1 remote
+  if (ch === 15 && type === 0xB0 && d1 === 116) { if (d2) { if (!remote || remote.input !== input) remoteStart(input); } else remoteStop(); return; }
+  if (learning && !(remote && remote.input === input && isRemote)) {
+    if (!picked || (type === 0x80) || (type === 0x90 && !on)) return;
+    const t = picked.dataset.t, id = (type === 0xB0 ? "c" : "n") + ":" + ch + ":" + d1;
+    if (type !== 0xB0 && (t[0] === "e" || t === "m")) { midiUI.status.textContent = "A knob needs a knob or slider (a CC), not a key."; return; }
+    for (const [k, m] of Object.entries(maps)) if (m.t === t) delete maps[k];     // one source per control
+    maps[id] = { t, mode: type === 0xB0 && (t[0] === "e" || t === "m") ? (d2 === 63 || d2 === 65 ? "rel64" : "abs") : undefined };
+    picked.classList.remove("picked"); picked = null;
+    midiUI.status.textContent = `${srcName(id)} → ${targetName(t)}. Click another control, or MIDI learn to finish.`;
+    saveMaps();
+    return;
+  }
+  // learned controls
+  const id = (type === 0xB0 ? "c" : "n") + ":" + ch + ":" + d1, m = maps[id];
+  if (m) {
+    if (type === 0xB0) {
+      if (m.t[0] === "b" || m.t[0] === "k") { hold("m" + id, m.t, d2 >= 64); return; }
+      let n = 0;
+      if (m.mode === "rel64") n = d2 - 64;
+      else if (m.mode === "rel2c") n = d2 < 64 ? d2 : d2 - 128;
+      else if (m.t === "m") { setMaster(d2 * 4096 / 127); m.last = d2; return; }
+      else { m.acc = (m.acc || 0) + (m.last === undefined ? 0 : d2 - m.last); m.last = d2; n = Math.trunc(m.acc / 2); m.acc -= n * 2; }
+      if (m.t === "m") setMaster(master + n * 64); else turn(knobByRole(+m.t.slice(1)), n);
+    } else if (m.t[0] === "b" || m.t[0] === "k") hold("m" + id, m.t, on);
+    return;
+  }
+  // the remote's panel
+  if (remote && remote.input === input && isRemote) {
+    if (type === 0xB0) {
+      if (d1 === 7) setMaster(d2 * 4096 / 127);
+      else if (d1 >= 102) hold("rb" + (d1 - 102), "b" + (d1 - 102), d2 >= 64);
+      else turn(knobByRole(d1 - 85), d2 - 64);
+    } else hold("rk" + (d1 - 48), "k" + (d1 - 48), on);
+    return;
+  }
+  // any other note: the key of its pitch, folded into F3 .. G5
+  if (type !== 0xB0) {
+    let n = d1;
+    while (n < 53) n += 12;
+    while (n > 79) n -= 12;
+    hold("n" + input.id + ":" + d1, "k" + (n - 53), on);
+  }
+}
+
+function midiStatusText() {
+  if (!midi) return;
+  const ins = [...midi.inputs.values()].filter((i) => i.state === "connected");
+  if (remote) midiUI.status.innerHTML = `<span class="live">${remote.input.name}: HYP-1 remote, playing this one</span>${remote.out ? "" : " (its lights: no matching output)"}`;
+  else if (learning) midiUI.status.textContent = picked ? `${targetName(picked.dataset.t)}: now move or press a control on your controller.` : "Click a control here to learn it.";
+  else midiUI.status.textContent = ins.length ? `Listening to ${ins.map((i) => i.name).join(", ")}.` : "No MIDI devices. Plug one in.";
+}
+function attachInputs() {
+  for (const input of midi.inputs.values()) input.onmidimessage = (e) => onMidi(e, input);
+  if (remote && remote.input.state !== "connected") remoteStop();
+  if (remote && !remote.out) remote.out = outFor(remote.input);
+  midiStatusText();
+}
+async function midiConnect(quiet) {
+  if (!navigator.requestMIDIAccess) { if (!quiet) midiUI.status.textContent = "This browser has no Web MIDI: use Chrome, Edge or Firefox."; return; }
+  try {
+    midi = await navigator.requestMIDIAccess({ sysex: false });
+    midi.onstatechange = attachInputs;
+    attachInputs();
+    midiUI.on.hidden = true;
+    midiUI.learn.hidden = false;
+    drawMaps();
+  } catch (err) {
+    if (!quiet) midiUI.status.textContent = "MIDI was not allowed" + (err && err.message ? ": " + err.message : ".");
+  }
+}
+midiUI.on.addEventListener("click", () => midiConnect(false));
+midiUI.learn.addEventListener("click", () => {
+  learning = !learning;
+  midiUI.learn.setAttribute("aria-pressed", learning);
+  midiUI.learn.textContent = learning ? "Done learning" : "MIDI learn";
+  document.getElementById("device").classList.toggle("learning", learning);
+  if (picked) { picked.classList.remove("picked"); picked = null; }
+  midiStatusText();
+});
+midiUI.unlearn.addEventListener("click", () => { maps = {}; releaseFrom("m"); saveMaps(); });
+document.getElementById("device").addEventListener("pointerdown", (e) => {    // learning: a click picks, nothing pressed
+  if (!learning) return;
+  const h = e.target.closest && e.target.closest(".hit");
+  if (!h || !h.dataset.t) return;
+  e.preventDefault(); e.stopPropagation();
+  if (picked) picked.classList.remove("picked");
+  picked = h; h.classList.add("picked");
+  midiStatusText();
+}, true);
+drawMaps();
+if (navigator.permissions && navigator.requestMIDIAccess)                       // allowed before: connect at once
+  navigator.permissions.query({ name: "midi" }).then((p) => { if (p.state === "granted") midiConnect(true); }).catch(() => {});
+
 // ---------------------------------------------------------------- storage
 function loadStore() {
   try {
@@ -496,6 +725,7 @@ async function switchOn() {
         else if (m.type === "frame") {
           if (m.fb) drawScreen(m.fb);
           drawLights(m.buttons, m.keys);
+          midiLights(m.buttons, m.keys);
           window.ambLast = m;
           if (m.load !== undefined) cpu.textContent = `HYP-1 uses ${m.load}% of this computer's time`;
           if (m.store) saveStore(m.store);

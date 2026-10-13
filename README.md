@@ -42,6 +42,9 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
   menu of momentary effects on the keys (beat repeat, reverse, tape stop, mutes and solos, filters,
   trance gate, echo throw, crush, fill), hold SAVE and tap effects to lock any number on; SEL as a shift (patterns on keys 1–6,
   pieces on the bar, copy, clear and restore lanes).
+- **Remote** (SEL + GLO): plug the FM-1 in and its panel plays HYP-1 in the [emulator](https://rustypawz.github.io/fm1-HYP1/emu/)
+  over USB MIDI, lights and all. With M-VAVE's firmware or any controller, the keys play straight away and
+  MIDI learn maps the rest.
 - Five screen themes, the RedtailWorks card at boot, Chakra Petch (SIL OFL) as the screen's font.
 
 ![Hypnotic, House, Techno and Breakcore](docs/img/hyp-styles.png)
@@ -60,7 +63,7 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
 | PRESETS · ALGORITHM | The piece · the mode (with SEL: the piece on the next bar · the style) |
 | SAVE | Breakdown / build / drop; on Global, store the piece |
 | FX | The effects menu |
-| SEL | Shift (SEL + SEQ: the links on and off) |
+| SEL | Shift (SEL + SEQ: the links on and off; SEL + GLO: remote, the panel plays the emulator) |
 | PLAY · REC · EDIT | Play / stop · freeze · the next chord |
 | OCT− / OCT+ | ±3 octaves: the page's voice (pad, drone, acid), or the whole song on any other page; in the sequencer, the drum |
 | Keys | The scale; in the sequencer, the steps; in FX, effects |

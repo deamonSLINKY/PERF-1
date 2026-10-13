@@ -392,7 +392,8 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE };
+static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 #define QN 256u                                  /* more than every parameter at once (project_apply), with room */
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
@@ -412,6 +413,7 @@ void en_next(void) { post(C_NEXT, 0, 0); }
 void en_freeze(int on) { post(C_FREEZE, on, 0); }
 void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
+void en_mute(int on) { post(C_MUTE, on, 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_section(int cmd) { post(C_SECTION, cmd, 0); }
@@ -459,7 +461,7 @@ static int irand(int n) { return n > 0 ? (int)((rnd() >> 8) % (uint32_t)n) : 0; 
 
 static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 {
-    if (par[P_MIDI])
+    if (par[P_MIDI] && !muted)
         en_midi_out(st, d1, d2);
 }
 
@@ -2000,6 +2002,7 @@ static void drain(void)
             }
             break;
         case C_PANIC: quiet(); break;
+        case C_MUTE: muted = (uint8_t)(a != 0); break;
         case C_REGROW: regrow(); break;
         case C_SECTION:
             if (a == EN_CMD_BREAK && sec != SEC_GROOVE && sec != SEC_BUILD)
@@ -2674,8 +2677,9 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
 
 void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
 {
-    const float gain = (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
+    float gain;
     drain();
+    gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
     while (n) {
