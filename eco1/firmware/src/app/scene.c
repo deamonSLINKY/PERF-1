@@ -91,7 +91,7 @@ static void bg_forest(int dark)                 /* trunks in the mist; dark: clo
         cv_rect(X[i] - W[i] / 2, 0, W[i], GROUND, haze(lit(RGB(52, 40, 30)), far - (dark ? 0.15f : 0.0f)));
     }
     for (i = 0; i < 16; i++) {                   /* the canopy's edge */
-        uint32_t h = hh(0xCA0Bu, (uint32_t)i);
+        uint32_t h = hh(51723u, (uint32_t)i);
         blob((float)(h % 240u), (float)(h >> 8 & 7u), 6.0f, lit(RGB(34, 62, 34)));
     }
 }
@@ -100,7 +100,7 @@ static void ground_loam(void)
     int i;
     cv_rect(0, GROUND, 240, MAIN_H - GROUND, lit(mix(RGB(110, 84, 56), RGB(44, 32, 22), q16(en_soil))));
     for (i = 0; i < 22; i++) {                   /* leaf litter */
-        uint32_t h = hh(0x11770u, (uint32_t)i);
+        uint32_t h = hh(71536u, (uint32_t)i);
         cv_rect((int32_t)(h % 238u), GROUND + 1 + (int32_t)(h >> 8 & 15u), 3, 1,
                 lit((h >> 12 & 1u) ? RGB(150, 90, 40) : RGB(96, 70, 40)));
     }
@@ -244,7 +244,7 @@ static void ground_stream(void)
     cv_rect(0, GROUND, 240, MAIN_H - GROUND, lit(mix(RGB(70, 58, 40), RGB(36, 30, 22), q16(en_soil))));
     cv_rect(0, GROUND + 7, 240, 7, lit(RGB(70, 110, 130)));
     for (i = 0; i < 9; i++) {                    /* the stream running */
-        uint32_t h = hh(0x57EAu, (uint32_t)i);
+        uint32_t h = hh(22506u, (uint32_t)i);
         int32_t x = (int32_t)((h % 260u + (uint32_t)(sc_t * 2)) % 260u) - 10;
         cv_rect(x, GROUND + 8 + (int32_t)(h >> 9 & 3u), 6 + (int32_t)(h >> 12 & 7u), 1, lit(RGB(170, 210, 220)));
     }
@@ -256,7 +256,7 @@ static void draw_moss(void)
     oval(cx, cy, 64.0f, 30.0f, lit(RGB(112, 110, 104)));          /* the boulder */
     oval(cx - 14.0f, cy - 4.0f, 40.0f, 18.0f, lit(RGB(132, 130, 122)));
     for (i = 0; i < 70; i++) {                   /* the cushion over its top */
-        uint32_t h = hh(0x5055u, (uint32_t)i);
+        uint32_t h = hh(20565u, (uint32_t)i);
         float u = (float)(h % 1000u) / 1000.0f * 2.0f - 1.0f, x = cx + u * 58.0f;
         float y = cy - 28.0f * fm_sqrtf(fm_maxf(1.0f - u * u, 0.0f)) + (float)(h >> 10 & 7u) * 0.8f;
         int l2 = u < -0.33f ? 0 : u > 0.33f ? 1 : 2;
@@ -273,7 +273,7 @@ static void draw_moss(void)
         oval(tx + 1.0f, ty - 2.0f, 2.0f, 4.0f, part(l, RGB(160, 120, 50), RGB(120, 90, 50)));
         if (en_leaf_glow[l] > 0.1f)              /* spores, drifting up */
             for (i = 0; i < 6; i++) {
-                uint32_t h = hh(0x5904Eu + (uint32_t)l, (uint32_t)i);
+                uint32_t h = hh(364622u + (uint32_t)l, (uint32_t)i);
                 float rise = (1.0f - en_leaf_glow[l]) * 30.0f;
                 px_blend(ri(tx + (float)(h % 13u) - 6.0f + en_wind * rise * 0.8f), ri(ty - 4.0f - rise - (float)(h >> 8 & 7u)),
                          RGB(230, 220, 150), (uint32_t)(16.0f * en_leaf_glow[l]));
@@ -298,7 +298,7 @@ static void ground_sand(void)
     int i;
     cv_rect(0, GROUND, 240, MAIN_H - GROUND, lit(mix(RGB(226, 190, 132), RGB(170, 120, 76), q16(en_soil))));
     for (i = 0; i < 14; i++) {
-        uint32_t h = hh(0x5A2Du, (uint32_t)i);
+        uint32_t h = hh(23085u, (uint32_t)i);
         cv_rect((int32_t)(h % 236u), GROUND + 2 + (int32_t)(h >> 8 & 15u), 2, 1, lit(RGB(150, 110, 80)));
     }
 }
@@ -326,7 +326,7 @@ static void draw_cactus(void)
     }
     column(x + sw * 0.0f, g, g - 98.0f, w, c2, rib2);   /* the trunk (the crown is its top) */
     for (i = 0; i < 18; i++) {                   /* spines */
-        uint32_t h = hh(0x5714u, (uint32_t)i);
+        uint32_t h = hh(22292u, (uint32_t)i);
         px_blend(ri(x - w * 0.5f + (float)(h % (uint32_t)w)), ri(g - 4.0f - (float)(h >> 8 & 63u) * 1.4f), RGB(240, 230, 200), 8);
     }
     {   /* the crown's flowers: buds as the charge builds, open as it fires (and after rain) */
@@ -352,7 +352,7 @@ static void bg_lake(void)
     for (y = 92; y < GROUND; y++)                 /* the lake, the sky in it */
         cv_rect(0, y, 240, 1, lit(mix(sc_hor, RGB(60, 100, 120), 7 + (y - 92) / 4)));
     for (x = 0; x < 12; x++) {
-        uint32_t h = hh(0x1A4Eu, (uint32_t)x);
+        uint32_t h = hh(6734u, (uint32_t)x);
         cv_rect((int32_t)((h % 240u + (uint32_t)sc_t) % 240u), 94 + (int32_t)((h >> 8) % 28u), 8 + (int32_t)(h >> 13 & 7u), 1,
                 mix(lit(RGB(110, 150, 170)), RGB(230, 240, 250), q16(sc_dl * 0.6f)));
     }
@@ -362,7 +362,7 @@ static void ground_grass(void)
     int i;
     cv_rect(0, GROUND, 240, MAIN_H - GROUND, lit(mix(RGB(120, 130, 70), RGB(56, 84, 40), q16(en_soil))));
     for (i = 0; i < 40; i++) {
-        uint32_t h = hh(0x6A55u, (uint32_t)i);
+        uint32_t h = hh(27221u, (uint32_t)i);
         int32_t x = (int32_t)(h % 240u);
         cv_line(x, GROUND + 2, x + ri(en_wind * 2.0f), GROUND - 2 - (int32_t)(h >> 8 & 3u), lit(RGB(90, 120, 56)));
     }
@@ -397,7 +397,7 @@ static void draw_willow(void)
     seg(117.0f, g - 60.0f, 96.0f, g - 70.0f, 4.0f, bark);
     seg(118.0f, g - 56.0f, 146.0f, g - 70.0f, 4.0f, bark);
     for (i = 0; i < 110; i++) {                  /* the crown's dome */
-        uint32_t h = hh(0x3170u, (uint32_t)i);
+        uint32_t h = hh(12656u, (uint32_t)i);
         float u = (float)(h % 1000u) / 1000.0f, r = (float)((h >> 10) % 1000u) / 1000.0f;
         blob(70.0f + 100.0f * u, g - 64.0f - fm_sin_turns(u * 0.5f) * 20.0f * fm_sqrtf(r), 6.0f,
              lit(mix((h >> 20 & 1u) ? RGB(90, 130, 60) : RGB(110, 150, 70), RGB(150, 210, 120), q16(en_stem_level * 0.6f))));
@@ -431,7 +431,7 @@ static void bg_pond(void)
     if (en_rain > 0.02f) {                       /* the rain rings the water */
         int i, n = 4 + (int)(en_rain * 18.0f);
         for (i = 0; i < n; i++) {
-            uint32_t h = hh(0x919Eu + (uint32_t)((sc_t + i * 5) / 12), (uint32_t)i);
+            uint32_t h = hh(37278u + (uint32_t)((sc_t + i * 5) / 12), (uint32_t)i);
             float age = (float)((sc_t + i * 5) % 12) / 12.0f;
             oval_line((float)(h % 240u), 86.0f + (float)((h >> 8) % 54u), 1.0f + 7.0f * age, 0.5f + 2.2f * age,
                  RGB(220, 236, 240), (uint32_t)(12.0f * (1.0f - age)));
@@ -485,7 +485,7 @@ static void bg_wall(void)
     cv_rect(0, WALL_TOP - 4, 240, 4, lit(RGB(170, 160, 150)));   /* the coping */
     for (r = 0; WALL_TOP + r * 8 < GROUND; r++)
         for (x = (r & 1) ? -8 : 0; x < 240; x += 17) {
-            uint32_t h = hh(0xB41Cu + (uint32_t)r, (uint32_t)x);
+            uint32_t h = hh(46108u + (uint32_t)r, (uint32_t)x);
             cv_rect(x + 1, WALL_TOP + r * 8 + 1, 15, 6, (h & 3u) ? brick : brick2);
         }
 }
@@ -538,7 +538,7 @@ static void bg_mountains(void)
             cv_rect(x, GROUND - 30 + layer * 8 - h, 1, h + 40, haze(lit(RGB(70, 90, 86)), 0.75f - 0.22f * (float)layer));
         }
     for (x = 0; x < 30; x++) {                    /* the far grove */
-        uint32_t h = hh(0xBA4Bu, (uint32_t)x);
+        uint32_t h = hh(47691u, (uint32_t)x);
         cv_rect((int32_t)(h % 240u), 40 + (int32_t)(h >> 8 & 31u), 2, GROUND, haze(lit(RGB(70, 110, 70)), 0.45f));
     }
 }
@@ -589,7 +589,7 @@ static void sky(void)
         cv_rect(0, y, 240, 1, mix(sc_top, sc_hor, y * 16 / GROUND));
     if (sc_dl < 0.7f)                            /* stars */
         for (i = 0; i < 18; i++) {
-            uint32_t h = hh(0x5EED0000u, (uint32_t)i);
+            uint32_t h = hh(1592590336u, (uint32_t)i);
             int tw = (int)((1.0f - sc_dl / 0.7f) * (1.0f - en_rain) * 12.0f) - (int)((h >> 20) & 3u) * ((sc_t + i) % 9 == 0);
             px_blend((int32_t)(h % 236u) + 2, (int32_t)((h >> 9) % 70u) + 2, RGB(220, 226, 236), (uint32_t)(tw < 0 ? 0 : tw));
         }
@@ -612,14 +612,14 @@ static void weather(void)
     uint16_t c = mix(sc_hor, RGB(240, 244, 250), 6);
     n = ri(en_wind * 8.0f);
     for (i = 0; i < n; i++) {                    /* wind: streaks drifting across */
-        uint32_t h = hh(0x77100000u, (uint32_t)i);
+        uint32_t h = hh(1997537280u, (uint32_t)i);
         int32_t sp = 3 + (int32_t)(en_wind * 9.0f), wl = 6 + (int32_t)(en_wind * 16.0f);
         cv_rect((int32_t)((h % 300u + (uint32_t)(sc_t * sp)) % 300u) - 30, 8 + (int32_t)((h >> 8) % 100u), wl, 1, c);
     }
     n = ri(en_rain * 56.0f);
     c = mix(sc_hor, RGB(150, 190, 230), 11);
     for (i = 0; i < n; i++) {                    /* rain */
-        uint32_t h = hh(0x4A1A0000u, (uint32_t)i);
+        uint32_t h = hh(1243217920u, (uint32_t)i);
         int32_t slant = (int32_t)(en_wind * 4.0f), sy = (int32_t)(((h >> 8) % (uint32_t)GROUND + (uint32_t)(sc_t * 9)) % (uint32_t)GROUND);
         int32_t sx = (int32_t)((h % 240u + (uint32_t)(sy * slant / 12)) % 240u);
         cv_line(sx, sy, sx + slant / 2, sy + 4, c);
