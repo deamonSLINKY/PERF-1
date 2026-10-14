@@ -2,6 +2,8 @@
 # HYP-1 on GitHub: every push to the default branch builds the firmware with JieLi's toolchain (Linux
 # x86-64, as GitHub's runners are), runs the tests, and publishes the site to this repository's GitHub
 # Pages: the web installer with this build in it, the browser emulator, and the .fwsc to download.
+# ECO-1 (eco1/, experimental, versions 0.x) is built alongside, its pages under eco/, and a dropdown on
+# every page switches between the two.
 #
 # Once, in the repository's Settings > Pages: Source = "GitHub Actions". Then the installer is at
 #   https://<you>.github.io/<repo>/install/
@@ -29,9 +31,10 @@ jobs:
           python-version: "3.12"
       - name: Tools
         run: |
-          pip install Pillow
+          pip install Pillow cairosvg
           sudo apt-get update -qq && sudo apt-get install -y -qq clang lld >/dev/null
           command -v wasm-ld >/dev/null || sudo ln -sf "$(ls /usr/bin/wasm-ld* | head -1)" /usr/local/bin/wasm-ld
+          mkdir -p ~/.fonts && cp eco1/assets/fonts/*.ttf ~/.fonts/ && fc-cache -f >/dev/null || true
       - name: JieLi toolchain and SDK (cached)
         id: jl
         uses: actions/cache/restore@v4
@@ -63,6 +66,7 @@ jobs:
         run: |
           N=$GITHUB_RUN_NUMBER
           echo "V=1.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"
+          echo "EV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # ECO-1: 0.x while it's experimental
       - name: Build the firmware
         run: |
           set -o pipefail
@@ -93,10 +97,40 @@ jobs:
         run: |
           EN_VERSION="$V" sh web/emu/build_clang.sh
           BOARD_JSON=build/board.json REPO_URL="https://github.com/$GITHUB_REPOSITORY" python3 tools/make_pages.py "build/amb-$V.fwsc" "$V" build/pages
+      # ECO-1, experimental, in eco1/: its own build, tests, renders and pages under eco/. Its failure
+      # never holds HYP-1 back: the site then goes out without ECO-1 (and without the dropdown).
+      - name: ECO-1 (experimental) — build
+        id: eco
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cd eco1
+          sh build.sh --release "$EV" 2>&1 | tee build.log || {
+            echo "::warning title=ECO-1 build failed::$(tail -60 build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
+          sh tests/run_tests.sh 2>&1 | tee tests.log || {
+            echo "::warning title=ECO-1 tests failed::$(grep -A12 FAIL tests.log | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
+          mkdir -p build/site_shots
+          build/host/amb_host tools/site/shots.amb build/site_shots > build/site_shots/log.txt
+          python3 tools/site/mockups.py
+          python3 tools/site/panda.py
+          python3 tools/gen_manual_figures.py
+          EN_VERSION="$EV" sh web/emu/build_clang.sh
+          REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/eco1" python3 tools/make_pages.py "build/amb-$EV.fwsc" "$EV" ../build/pages/eco
+      - name: The firmware dropdown on every page
+        run: python3 tools/site/switcher.py build/pages
       - uses: actions/upload-artifact@v4
         with:
           name: hyp1-firmware-${{ env.V }}
           path: build/amb-${{ env.V }}.fwsc
+      - uses: actions/upload-artifact@v4
+        if: steps.eco.outcome == 'success'
+        with:
+          name: eco1-firmware-${{ env.EV }}
+          path: eco1/build/amb-${{ env.EV }}.fwsc
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/pages
