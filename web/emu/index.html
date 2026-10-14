@@ -143,7 +143,7 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
       <div>
         <h3>Pad <span>ENV, ENV, ENV</span></h3>
         <dl>
-          <dt>Pad</dt><dd>Level, Bright (the filter and the vowel), Colour (Rhodes or Voices), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack, Hold, Release, Rest.</dd><dt>Pad LFO</dt><dd>Rate (1/4 note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd>
+          <dt>Pad</dt><dd>Level, Bright (the filter and the vowel), Sound (Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs, Dark), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack, Hold, Release, Rest.</dd><dt>Pad LFO</dt><dd>Rate (1/4 note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd>
         </dl>
       </div>
       <div>
@@ -155,13 +155,13 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
       <div>
         <h3>Drone <span>LFO, LFO, LFO</span></h3>
         <dl>
-          <dt>Drone</dt><dd>Level, Octave, Cutoff, Reso.</dd><dt>Drone env</dt><dd>Trigger (each chord, or every 1 to 8 bars), Attack, Decay, Amount (on the cutoff).</dd><dt>Drone LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
+          <dt>Drone</dt><dd>Level, Sound (Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ), Cutoff, Reso. OCT− / OCT+ its octave.</dd><dt>Drone env</dt><dd>Trigger (each chord, or every 1 to 8 bars), Attack, Decay, Amount (on the cutoff).</dd><dt>Drone LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
         </dl>
       </div>
       <div>
         <h3>Acid <span>ARP, ARP, ARP</span></h3>
         <dl>
-          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Wave (saw or square).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave (on any Acid page).</dd>
+          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Sound (Saw, Square, Driven, Sync, Pluck, PWM, Chip, Sub).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave (on any Acid page).</dd>
         </dl>
       </div>
       <div>
@@ -174,6 +174,12 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
         <h3>Links <span>SEQ, SEQ</span></h3>
         <dl>
           <dt>The drums into the voices</dt><dd>SEL + SEQ turns them on and off (+LINK shows on the line above the knobs). K&gt;Drone: each kick opens the drone's filter (a rolling bass). S&gt;Pad: each snare or clap flashes the pad open. H&gt;Acid: a hat on an acid note accents it. P&gt;Clock: the acid steps only on the perc lane's hits (free again in a breakdown).</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Kit <span>SEQ, SEQ, SEQ</span></h3>
+        <dl>
+          <dt>Kick, Snare, Hats, Perc</dt><dd>Each drum's sound: Hypno, House, Techno, Acid or Break (the snare takes the clap with it, the hats both closed and open). The Break kick also chops and crushes the drums live. SEL + ALGORITHM here: all four at once.</dd>
         </dl>
       </div>
       <div>
@@ -191,11 +197,11 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
     </div>
   </div>
   <div>
-    <h2>Styles (SEL + ALGORITHM)</h2>
+    <h2>Sounds, and playing a voice</h2>
     <ul>
-      <li>Each piece has a style, shown at the left of the line above the knobs, and stored with the piece. It reshapes every voice and the feel; the patterns stay yours.</li>
-      <li><b>Hypnotic</b>: the sound as it always was. <b>House</b>: a round kick, a shuffle, a wide clap and open hats, congas, the pad stabbing chords on the off-beats, a warm bass. <b>Techno</b>: a hard kick with a rumble, metal hats, a bell perc, a dark pad and a gritty drone. <b>Acid</b>: a punchy kit with a cowbell, a little swing, the 303 driven and up front. <b>Breakcore</b>: a distorted, crushed kit, chopped with ghost notes and 32nd rolls (Evolve: more), a dirty sub, the acid at half time.</li>
-      <li>Switching style takes the tempo into its usual range (house 118–128, techno 128–138, acid 120–132, breakcore 160–180); after that any tempo from 70 to 190 goes.</li>
+      <li>Each voice has eight sounds and each drum five (the Sound knob on the voice's page, the Kit page for the drums), stored with the piece. <b>SEL + ALGORITHM</b> changes the sound of the voice on screen, or the whole kit on the drums' pages; its name shows at the left of the line above the knobs.</li>
+      <li><b>Play a voice:</b> with a Pad, Drone or Acid page on screen, the keys play that voice over the song. The pad takes up to four notes, ringing out with its envelope's Release; the drone and the acid take the last key held (the acid slides between held keys, as a 303). The generated part waits while you play. It works while stopped too.</li>
+      <li>On any other page the keys edit the scale, as before.</li>
     </ul>
   </div>
   <div>
@@ -212,13 +218,13 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
   <div>
     <h2>Buttons</h2>
     <ul>
-      <li><b>Keys</b> are the scale: each one adds or removes its note. The root stays.</li>
+      <li><b>Keys</b> are the scale: each one adds or removes its note (the root stays). On a Pad, Drone or Acid page they play that voice instead.</li>
       <li><b>PLAY</b> plays / stops. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
       <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Drone or Acid page, that voice; on any other page, the whole song. The line above the knobs shows OCT+1 (the voice) or SONG+1 (the song).</li>
       <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and the drop. Hold it instead for the drop on the next bar. It lights while a breakdown or build runs, and blinks while one waits for the bar.</li>
       <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held; hold SAVE and tap keys to lock effects on.</li>
       <li><b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (01 to 10).</li>
-      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> picks the piece's style, and <b>SEQ</b> turns the links on and off.</li>
+      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> changes the sound of the voice on screen (the drums: the kit), and <b>SEQ</b> turns the links on and off.</li>
       <li>On the <b>Global</b> page, <b>SAVE</b> stores the piece instead (held: factory settings). Stored while playing, it is written as soon as you stop: a write silences the sound for a moment, so it never happens mid-performance. A dot at the top right means a write is waiting.</li>
     </ul>
   </div>
@@ -346,8 +352,8 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO)", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the style", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
-  ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
+const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO); its pages: the keys play it", LFO: "Drone (again: env, LFO); its pages: the keys play it", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
+  ARP: "Acid (again: env, line); its pages: the keys play it", SEQ: "Drums (again: Links, Kit); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
   "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

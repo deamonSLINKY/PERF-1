@@ -116,6 +116,7 @@ static void bank_load(void)
                 bad |= v != clamp_par(p, v);
                 s->par[p] = (int16_t)v;
             }
+            en_style_sounds(s->par);         /* stored with a style (before 1.0.27): its sounds and kit */
             q += 2u * npar;
             s->pool = rd16(q);
             q += 2;

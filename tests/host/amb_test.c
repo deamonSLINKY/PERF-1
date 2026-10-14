@@ -264,21 +264,91 @@ int main(void)
             CHECK(pent >> ((en_chord[i] - 2 + 120) % 12) & 1u, "chord note %d not in the pool", en_chord[i]);
     }
 
-    /* each style: bounded, and every voice still heard */
+    /* the voice bank: each sound of the pad, drone and acid, and each kit, bounded and heard; a stored
+     * style turned into its sounds */
     {
-        int st;
-        for (st = 0; st < EN_NSTYLE; st++) {
-            int lo, hi;
-            en_style_tempo(st, &lo, &hi);
-            en_set(P_STYLE, st);
-            en_set(P_TEMPO, hi);
-            peak = 0.0f;
-            run(6.0f);
-            CHECK(!bad && peak < 1.0f && peak > 0.05f, "style %d: peak %f", st, (double)peak);
-            CHECK(en_pad_level > 0.0f || st == 1, "style %d: the pad silent", st);
+        int k, v;
+        static const int SP[3] = {P_PADTONE, P_DR_INST, P_AC_WAVE};
+        for (v = 0; v < 3; v++) {
+            for (k = 0; k < EN_NSOUND; k++) {
+                en_set(SP[v], k);
+                peak = 0.0f;
+                run(3.0f);
+                CHECK(!bad && peak < 0.9f && peak > 0.05f, "voice %d sound %d: peak %f", v, k, (double)peak);
+                if (v == 0)
+                    CHECK(en_pad_level > 0.0f || k == 6, "pad sound %d silent", k);
+                if (v == 1)
+                    CHECK(en_bass_level > 0.0f, "drone sound %d silent", k);
+            }
+            en_set(SP[v], en_param_info(SP[v])->def);
         }
-        en_set(P_STYLE, 0);
+        for (k = 0; k < EN_NKIT; k++) {
+            en_set(P_KIT_KICK, k);
+            en_set(P_KIT_SNARE, k);
+            en_set(P_KIT_HAT, k);
+            en_set(P_KIT_PERC, k);
+            en_set(P_TEMPO, 175);
+            peak = 0.0f;
+            run(4.0f);
+            CHECK(!bad && peak < 0.9f && peak > 0.05f, "kit %d: peak %f", k, (double)peak);
+        }
+        for (k = 0; k < 4; k++)
+            en_set(P_KIT_KICK + k, 0);
         en_set(P_TEMPO, 128);
+        {
+            int16_t pp[P_NPARAMS];
+            for (k = 0; k < P_NPARAMS; k++)
+                pp[k] = en_param_info(k)->def;
+            pp[P_STYLE] = 1;                    /* house: the stabbing pad, the house kit, the warm drone */
+            en_style_sounds(pp);
+            CHECK(pp[P_STYLE] == 0 && pp[P_KIT_KICK] == 1 && pp[P_KIT_PERC] == 1 && pp[P_PADTONE] == 6 && pp[P_DR_INST] == 1,
+                  "style to sounds: %d %d %d %d", pp[P_STYLE], pp[P_KIT_KICK], pp[P_PADTONE], pp[P_DR_INST]);
+        }
+    }
+
+    /* keys played: the pad, the drone and the acid answer, and let go */
+    {
+        int k;
+        en_note(EN_V_DRONE, 60, 1);
+        run(0.3f);
+        CHECK(en_bass_level > 0.1f, "drone played: level %f", (double)en_bass_level);
+        en_note(EN_V_DRONE, 60, 0);
+        en_note(EN_V_ACID, 64, 1);
+        run(0.2f);
+        CHECK(en_acid_level > 0.05f, "acid played: level %f", (double)en_acid_level);
+        en_note(EN_V_ACID, 64, 0);
+        for (k = 0; k < 6; k++)                 /* more keys than voices: no harm */
+            en_note(EN_V_PAD, 60 + k, 1);
+        peak = 0.0f;
+        run(0.5f);
+        CHECK(!bad && peak < 1.0f && en_pad_level > 0.1f, "pad played: level %f peak %f", (double)en_pad_level, (double)peak);
+        for (k = 0; k < 6; k++)
+            en_note(EN_V_PAD, 60 + k, 0);
+        run(2.0f);
+        CHECK(!bad, "pad let go");
+    }
+
+    /* sounds changed and keys played at random while it plays, for a minute: bounded, never stuck */
+    {
+        uint32_t r = 12345u;
+        int k, v;
+        static const int SP[7] = {P_PADTONE, P_DR_INST, P_AC_WAVE, P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC};
+        peak = 0.0f;
+        for (k = 0; k < 600; k++) {
+            r ^= r << 13, r ^= r >> 17, r ^= r << 5;
+            v = (int)(r % 7u);
+            if (r & 0x100u)
+                en_set(SP[v], (int)((r >> 9) % (v < 3 ? EN_NSOUND : EN_NKIT)));
+            else
+                en_note((int)((r >> 9) % 3u), 53 + (int)((r >> 12) % 27u), (int)(r >> 20 & 1u));
+            run(0.1f);
+        }
+        for (v = 0; v < 3; v++)
+            for (k = 53; k < 80; k++)
+                en_note(v, k, 0);
+        run(3.0f);
+        CHECK(!bad && peak < 0.95f, "random sounds and keys: peak %f", (double)peak);
+        CHECK(en_held == 0, "random sounds and keys: %d keys still held", en_held);
     }
 
     /* every setting at its extremes: still bounded */

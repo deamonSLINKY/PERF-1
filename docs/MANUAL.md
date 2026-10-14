@@ -6,7 +6,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
-This manual is for HYP-1 version 1.0.21. To hear it first, watch
+This manual is for HYP-1 version 1.0.27. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
 [YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
@@ -22,7 +22,7 @@ This manual is for HYP-1 version 1.0.21. To hear it first, watch
 4. The screen
 5. The pages
 6. Pieces and storing
-7. Styles
+7. Sounds, kits and playing
 8. The sequencer
 9. Effects
 10. Performing
@@ -56,7 +56,7 @@ M-VAVE's own updater, M-UPGRADE, works too.
    filling in, then a piece starts playing at random. Press any button or key to skip straight to the music.
 2. Turn **SELECT** to walk through the pages; the four knobs under the screen change what each page shows.
 3. Press **SEQ** for the drums, hold it for the step sequencer, and tap the white keys to change the beat.
-4. Turn **PRESETS** for another piece. Hold **SEL** and turn **ALGORITHM** to hear it as house, techno, acid or breakcore.
+4. Turn **PRESETS** for another piece. Press **LFO** for the drone and play the keys: you're playing it now. Hold **SEL** and turn **ALGORITHM** for its other sounds.
 5. Tap **SAVE** for a breakdown on the next bar; tap it again for a four-bar build and the drop.
 6. Press **FX** and hold keys for effects.
 7. Like a piece? Go to **Global** (GLO) and press **SAVE** to store it.
@@ -70,24 +70,24 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 1 | MASTER | Volume. |
 | 2 | SELECT | Steps through the pages in order. With HOME held: the tempo, from any page. |
 | 3 | PRESETS | The piece, 01–10. With SEL held: the piece changes on the next bar. |
-| 4 | ALGORITHM | The mode of the scale. With SEL held: the piece's style. |
+| 4 | ALGORITHM | The mode of the scale. With SEL held: the sound of the voice on screen (on the drums' pages, the whole kit). |
 | 5–8 | KNOB 1–4 | The four values (a, b, c, d) of the page on screen. |
 | 10 | OCT− | An octave down (to −3): on a voice's pages, that voice (pad, drone, acid); on any other page, the whole song. In the sequencer: the previous drum. |
 | 11 | OCT+ | An octave up (to +3), the same way. In the sequencer: the next drum. |
 | 12 | FX | The effects menu, on and off. |
 | 13 | SEL | Shift, held (see 11. Shift). |
-| 14 | ENV | Pad; press again for Pad env, again for Pad LFO. |
-| 15 | LFO | Drone; again for Drone env, again for Drone LFO. |
+| 14 | ENV | Pad; press again for Pad env, again for Pad LFO. On its pages the keys play the pad. |
+| 15 | LFO | Drone; again for Drone env, again for Drone LFO. On its pages the keys play the drone. |
 | 16 | EDIT | The next chord, on the next bar. |
 | 17 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. With SEL held: remote (see 13). |
 | 18 | HOME | The Tempo page. Hold it and turn SELECT for the tempo. |
 | 19 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. In FX, held: lock mode. |
-| 20 | ARP | Acid; again for Acid env, again for Acid line. |
-| 21 | SEQ | Drums; again, Links; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
+| 20 | ARP | Acid; again for Acid env, again for Acid line. On its pages the keys play the acid. |
+| 21 | SEQ | Drums; again, Links; again, Kit; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
 | 22 | PLAY | Play and stop. |
 | 23 | REC | Freeze: the chord holds until pressed again. |
-| 24 | White keys | The scale (each key adds or removes its note; the root stays). Sequencer: the 16 steps. FX: effects. |
-| 25 | Black keys | The scale. FX: effects. |
+| 24 | White keys | The scale (each key adds or removes its note; the root stays). On a voice's pages: that voice, played. Sequencer: the 16 steps. FX: effects. |
+| 25 | Black keys | The scale; on a voice's pages, that voice. FX: effects. |
 
 Hold any button alone for a second and a card on the screen says what it does (except PLAY, SEL, SAVE,
 SEQ and FX, whose hold means something else).
@@ -105,7 +105,7 @@ SEQ and FX, whose hold means something else).
 - **Left:** the levels of the pad (P), noise (N), drone (D), acid (A) and the kit (K).
 - **Middle:** the scale as a ring with the chord in it; around it, the acid loop, one dot a step.
 - **Right:** the drum pattern playing, its number, and a bar filling towards the next chord.
-- **The line above the knobs:** the piece's style on the left; on the right, the page's name and a dot for each page.
+- **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit); on the right, the page's name and a dot for each page.
 - **Bottom:** the four knobs: each value's name, its ring and its value.
 
 ---
@@ -118,18 +118,19 @@ button again steps through that voice's envelope and LFO. KNOB 1 is always a voi
 | Page | Reach it | a | b | c | d |
 |---|---|---|---|---|---|
 | Tempo | HOME | Tempo (70–190) | Evolve | Motion | Drift (20 s – 5 min a chord) |
-| Pad | ENV | Level | Bright | Colour (Rhodes / Voices) | Detune |
+| Pad | ENV | Level | Bright | Sound (8) | Detune |
 | Pad env | ENV ×2 | Attack | Hold | Release | Rest |
 | Pad LFO | ENV ×3 | Rate (a 1/4 note – 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
 | Noise | SELECT | Level | Colour (8) | Tone | Pump |
-| Drone | LFO | Level | Octave | Cutoff | Reso |
+| Drone | LFO | Level | Sound (8) | Cutoff | Reso |
 | Drone env | LFO ×2 | Trigger (chord, 1–8 bars, off) | Attack | Decay | Amount |
 | Drone LFO | LFO ×3 | Rate (a 1/4 note – 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
-| Acid env | ARP ×2 | Decay | Accent | Slide | Wave (saw / square) |
+| Acid env | ARP ×2 | Decay | Accent | Slide | Sound (8) |
 | Acid line | ARP ×3 | Density | Length (1–16) | Range (1–3 oct) | Mutate |
 | Drums | SEQ | Level | Drive | Swing | Pattern (1–6, on the bar) |
 | Links | SEQ ×2 | K>Drone | S>Pad | H>Acid | P>Clock (off / on) |
+| Kit | SEQ ×3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Space | SELECT | Echo | Echo time (1/8 – 1 bar) | Reverb | Size |
 | Global | GLO | Root | Theme | Tune | MIDI out |
 
@@ -160,7 +161,7 @@ its own drum sounds; patterns 1–6 run roughly intro, groove, build, peak, vari
 While the power is on, each piece keeps your changes as you left it.
 
 **Storing:** go to **Global** and press **SAVE**. The piece is stored as it is: every page's values, the
-scale and mode, its style, its patterns and its drums' sounds. The line above the knobs says
+scale and mode, its voices' sounds and kit, its patterns and its drums' sounds. The line above the knobs says
 `01 SAVE: STORE` while it has changes, then `01 STORED`.
 
 **Factory:** on Global, hold SAVE for 1.5 seconds (the screen says HOLD: FACTORY): the piece goes back to
@@ -185,27 +186,61 @@ written two seconds after you change them, even while the music plays.
 | 06 | Dub techno: sparse, swung | 120 | F Pent minor |
 | 07 | Minimal glitch: threes on fours | 134 | B Pent major |
 | 08 | Rolling, tom-like percussion | 126 | Bb Mixolydian |
-| 09 | Warehouse: hard, rides, rumble (Techno) | 136 | C Phrygian |
+| 09 | Warehouse: hard, rides, rumble (the Techno kit) | 136 | C Phrygian |
 | 10 | Deep field: half time, breaks | 118 | Eb Aeolian |
 
 ---
 
-## 7. Styles
+## 7. Sounds, kits and playing
 
-![Styles](img/hyp-styles.png)
+![Sounds](img/hyp-sounds.png)
 
-Hold **SEL** and turn **ALGORITHM**. A style reshapes every voice's sound and the feel: the drums'
-tones and decays, the swing, how the pad plays, the drone's grit, the acid's drive. Your patterns, levels
-and settings stay as they are. Switching style moves the tempo into the style's range; after that any
-tempo from 70 to 190 works. The style is stored with the piece.
+Each voice has eight sounds, and each drum five, kept with the piece. Change them on the voice's own
+page (the **Sound** knob), or from any of its pages with **SEL** + **ALGORITHM**. The voice keeps playing
+what it was playing: its notes, envelope, LFO and filter carry over to the new sound.
 
-| Style | BPM | What it does |
+| Voice | Where | Sounds |
 |---|---|---|
-| Hypnotic | 110–145 | Deep kick, metallic 808-style hats, breathing pad, smooth drone. |
-| House | 118–128 | Round kick, shuffle, wide clap, long open hats, congas. The pad stabs chords on the off-beats (Pad env Release sets their length; Evolve adds a few). Warm bass, more pump. |
-| Techno | 128–138 | Hard, driven kick with a rumble tail, tight clap, metal hats, a bell perc. Dark pad, gritty drone. |
-| Acid | 120–132 | Punchy 909-style kit with a cowbell and a little swing. The 303 driven and up front; pad and drone pulled back. |
-| Breakcore | 160–180 | Distorted, crushed drums chopped live: ghost snares, extra kicks, 32nd rolls (Evolve: more). Dirty sub; the acid at half time. |
+| Pad | Pad, knob c | **Rhodes** (FM, blooming as it swells) · **Voices** (sung: formants) · **Strings** (two detuned saws; Detune spreads them) · **Glass** (an FM bell) · **Organ** (drawbars) · **Warm** (soft triangles) · **Stabs** (Rhodes chords on the off-beats, Pad env Release their length; Evolve adds a few) · **Dark** (Voices, closed down) |
+| Drone | Drone, knob b | **Saws** (three, a few cents apart) · **Warm** (rounder, more sub) · **Grit** (driven) · **Dirty** (a distorted sub) · **Reese** (two saws far apart: phasing) · **Pulse** (its width wandering) · **FM** (the envelope opening it) · **Organ** |
+| Acid | Acid env, knob d | **Saw** · **Square** (the 303's two) · **Driven** (pushed hard, up front) · **Sync** (hard sync, swept by the envelope) · **Pluck** (FM) · **PWM** · **Chip** (a raw 8-bit square) · **Sub** (with a square an octave down) |
+
+![The Kit page](img/hyp-screen-kit.png)
+
+**The kit:** press **SEQ** three times for the Kit page. Each knob picks one drum's sound: the kick,
+the snare (and the clap with it), the hats (closed and open) and the perc, each from the same five:
+
+| Kit | The kick | The rest |
+|---|---|---|
+| Hypno | Deep | Metallic 808-style hats, a soft rim |
+| House | Round | A wide clap, long open hats, congas |
+| Techno | Hard, with a rumble tail | Tight clap, metal hats, a bell perc |
+| Acid | Punchy 909-style | A cowbell for the perc |
+| Break | Distorted | A cracking snare, noisy hats, a tom. The Break kick also chops the drums live (ghost snares, extra kicks, 32nd rolls; Evolve: more) and crushes them. |
+
+On any of the drums' pages, **SEL** + **ALGORITHM** turns all four to the next kit at once. Mix them
+freely: a Techno kick under House hats is fine.
+
+### Playing a voice
+
+![Playing the drone](img/hyp-device-play.png)
+
+With a voice's page on screen (Pad, Pad env or Pad LFO; the drone's three; the acid's three), the keys
+play that voice over the song instead of changing the scale:
+
+- **Pad:** up to four notes at once, each on one of its voices, ringing out with the Pad env's Release
+  and then breathing on with the song.
+- **Drone:** the last key held, two octaves down; the envelope opens on each new press. Let go and it
+  glides back to the chord's root.
+- **Acid:** the last key held, an octave down, with its filter and envelope. A second key while one is
+  held slides to it, as a 303 does. The generated line rests while you play and picks up when you let go.
+
+The keys follow the voice's octave and the song's (OCT− / OCT+), and the lit keys still show the scale, so
+you can see what's in key. It works while stopped too. A key keeps playing its voice until you let go,
+even if you change page; on any other page (Tempo, Global and so on) the keys edit the scale as before.
+MIDI out sends what you play, on the voice's channel.
+
+Pieces stored with a style before version 1.0.27 come back with that style's sounds and kit.
 
 ### Links: the drums into the voices
 
@@ -294,7 +329,7 @@ Hold **SEL** and:
 |---|---|
 | White keys 1–6 | Pattern 1–6, on the bar. The keys light the one chosen; the one still playing blinks. |
 | PRESETS | The next or previous piece, on the next bar ("PIECE 03 NEXT BAR" until it comes). |
-| ALGORITHM | The piece's style. |
+| ALGORITHM | The sound of the voice on screen; on the drums' pages, the whole kit. |
 | SEQ | The links on and off. |
 | GLO | Remote: the FM-1 plays the emulator (see 13). |
 | Black keys 1–6 (sequencer) | Copy the pattern you're editing into pattern 1–6. |
@@ -374,7 +409,7 @@ which in the list). The list is kept in that browser; **Forget learned** clears 
 - **An install was cut off:** run it again; the FM-1 stays in update mode until it finishes.
 - **A stored piece came back as it was before:** it was stored while playing and the power went off before the music stopped.
 - **The emulator doesn't see the FM-1:** close any DAW holding its MIDI port, and use Chrome, Edge or Firefox (Safari has no Web MIDI). The FM-1 must be in remote (SEL + GLO) for its panel to play the emulator.
-- **Crackles or dropouts:** please report the piece, style and tempo ([a bug report](https://github.com/RustyPawz/fm1-HYP1/issues/new/choose) on GitHub, or the [board](../board/)).
+- **Crackles or dropouts:** please report the piece, its sounds and the tempo ([a bug report](https://github.com/RustyPawz/fm1-HYP1/issues/new/choose) on GitHub, or the [board](../board/)).
 
 ---
 

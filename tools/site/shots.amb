@@ -46,32 +46,49 @@ tap SAVE
 wait 400
 shot build.png
 wait 6000
-press SEL
-turn ALGO 1
-release SEL
-wait 1500
-tap HOME
-wait 1500
-shot house.png
-echo @house
-leds
-press SEL
-turn ALGO 1
-release SEL
-wait 1500
-tap ARP
-wait 1500
-shot techno.png
+wait 3000
+tap ENV
 press SEL
 turn ALGO 2
 release SEL
 wait 1500
-tap SEQ
+shot sound_pad.png
+tap LFO
+press SEL
+turn ALGO 4
+release SEL
+wait 600
+key w2 down
 wait 1500
-shot breakcore.png
-echo @breakcore
+shot sound_drone.png
+echo @drone_play
 leds
+key w2 up
+tap ARP
+tap ARP
+turn K4 3
+wait 1500
+shot sound_acid.png
+tap SEQ
+tap SEQ
+tap SEQ
+press SEL
+turn ALGO 2
+release SEL
+wait 1500
+shot kit.png
+echo @kit
+leds
+press SEL
+turn ALGO 3
+release SEL
+tap ARP
+tap ARP
+turn K4 -3
+tap LFO
+turn K2 -4
 tap ENV
+turn K3 -2
 spin K1 -5
 tap GLO
 wait 300

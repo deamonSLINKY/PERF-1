@@ -143,27 +143,30 @@ the whole performance into your DAW.</p>
 
 <h2>The voices</h2>
 <div class="grid">
-  <div class="card"><h3>Pad</h3><p>Four breathing voices, Rhodes or sung, each on its own cycle, so the chord forms and dissolves. <b>Env</b> and <b>LFO</b> pages shape the breath and move the filter, level, pan or pitch.</p></div>
-  <div class="card"><h3>Drone</h3><p>Detuned saws and a sub through a resonant 24 dB low-pass, with its own <b>envelope</b> (on each chord, or every 1&ndash;8 bars) and <b>LFO</b>: a slow 16-bar sweep by default.</p></div>
-  <div class="card"><h3>Acid</h3><p>A 303-style line written as it plays: 1&ndash;16 steps of chord tones with accents and slides, resonant and driven. <b>Mutate</b> rewrites a few steps each time round.</p></div>
-  <div class="card"><h3>Drums</h3><p>Kick, snare, clap, closed and open hats, perc. A <b>16-step sequencer</b> with six patterns per piece; a new pattern waits for the bar.</p></div>
+  <div class="card"><h3>Pad</h3><p>Four breathing voices in eight sounds (Rhodes, sung, strings, glass, organ and more), each on its own cycle, so the chord forms and dissolves. <b>Env</b> and <b>LFO</b> pages shape the breath and move the filter, level, pan or pitch.</p></div>
+  <div class="card"><h3>Drone</h3><p>Eight sounds (saws, Reese, pulse, FM, organ&hellip;) and a sub through a resonant 24 dB low-pass, with its own <b>envelope</b> (on each chord, or every 1&ndash;8 bars) and <b>LFO</b>: a slow 16-bar sweep by default.</p></div>
+  <div class="card"><h3>Acid</h3><p>A 303-style line written as it plays: 1&ndash;16 steps of chord tones with accents and slides, in eight sounds from the 303's saw and square to sync, pluck and chip. <b>Mutate</b> rewrites a few steps each time round.</p></div>
+  <div class="card"><h3>Drums</h3><p>Kick, snare, clap, closed and open hats, perc, each drum's sound from five kits. A <b>16-step sequencer</b> with six patterns per piece; a new pattern waits for the bar.</p></div>
   <div class="card"><h3>Noise</h3><p>A bed of grain in eight colours (white, pink, brown, blue, violet, grey, crackle, radio hiss), with its own tone and sidechain pump.</p></div>
   <div class="card"><h3>Space</h3><p>A tape echo, from an eighth to a bar, and a plate reverb, from a room to a long hall.</p></div>
 </div>
 
-<h2>Styles</h2>
-<figure><img src="img/hyp-styles.png" width="2040" height="568" alt="Four HYP-1 screens: Hypnotic, House, Techno and Breakcore, each named at the left of the line above the knobs."></figure>
-<p>Hold <kbd>SEL</kbd> and turn <kbd>ALGORITHM</kbd>, and the same piece is reshaped: every voice's sound and the feel change, your patterns and settings stay. Each piece keeps its own style.</p>
+<h2>Sounds, and playing them</h2>
+<figure><img src="img/hyp-sounds.png" width="2040" height="568" alt="Four HYP-1 screens: the pad as Glass, the drone as Reese, the acid as Sync, and the Kit page set to Techno."></figure>
+<p>Each voice has eight sounds and each drum five, stored with the piece. Pick them on the voice's own page, or hold <kbd>SEL</kbd> and turn <kbd>ALGORITHM</kbd> on any of its pages; on the drums' pages that swaps the whole kit.</p>
 <table>
-  <thead><tr><th>Style</th><th>BPM</th><th>What it does</th></tr></thead>
+  <thead><tr><th>Voice</th><th>Sounds</th></tr></thead>
   <tbody>
-  <tr><td>Hypnotic</td><td>110&ndash;145</td><td>Deep kick, metallic 808-style hats, breathing pad, smooth drone.</td></tr>
-  <tr><td>House</td><td>118&ndash;128</td><td>Round kick, shuffle, wide clap, long open hats, congas; the pad stabs chords on the off-beats.</td></tr>
-  <tr><td>Techno</td><td>128&ndash;138</td><td>Hard, driven kick with a rumble tail, metal hats, a bell perc; dark pad, gritty drone.</td></tr>
-  <tr><td>Acid</td><td>120&ndash;132</td><td>Punchy 909-style kit with a cowbell and a little swing; the 303 driven and up front.</td></tr>
-  <tr><td>Breakcore</td><td>160&ndash;180</td><td>Distorted, crushed drums chopped live with ghosts and 32nd rolls; dirty sub; acid at half time.</td></tr>
+  <tr><td>Pad</td><td>Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs (chords on the off-beats), Dark</td></tr>
+  <tr><td>Drone</td><td>Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ</td></tr>
+  <tr><td>Acid</td><td>Saw, Square, Driven, Sync, Pluck, PWM, Chip, Sub</td></tr>
+  <tr><td>Kit</td><td>Kick, snare (and clap), hats and perc, each Hypno, House, Techno, Acid or Break (the Break kick chops and crushes the drums live)</td></tr>
   </tbody>
 </table>
+<div class="pair" style="margin-top:1rem">
+  <figure><img src="img/hyp-device-play.png" width="1600" height="1161" alt="The FM-1 on the Drone page, a white key held, playing the drone."><figcaption><b>Play a voice:</b> with the pad's, drone's or acid's page on screen, the keys play it over the song: the pad up to four notes, the drone and the acid one, the acid sliding 303-style. The generated part waits while you play, and carries on when you let go.</figcaption></figure>
+  <figure><img src="img/hyp-screen-kit.png" width="480" height="480" alt="The Kit page: kick, snare, hats and perc, each set to Techno." style="image-rendering:pixelated"><figcaption><b>The Kit page</b> (press SEQ three times): a sound for each drum. A Techno kick under House hats is fine.</figcaption></figure>
+</div>
 
 <h2>Play it</h2>
 <div class="pair">
@@ -173,7 +176,7 @@ the whole performance into your DAW.</p>
 <div class="grid">
   <div class="card"><h3>Ten pieces</h3><p><b>PRESETS</b> picks 01&ndash;10, each with its own settings, six drum patterns and drum sounds. On Global, <b>SAVE</b> stores the piece; it's written while the music is stopped, so it never interrupts a take.</p></div>
   <div class="card"><h3>Breakdowns</h3><p><b>SAVE</b> drops a breakdown on the next bar; tap again for a four-bar build and the drop, or hold it for the drop straight away. <b>REC</b> freezes the chord.</p></div>
-  <div class="card"><h3>Shift</h3><p>Hold <b>SEL</b>: white keys 1&ndash;6 jump to a pattern on the bar, <b>PRESETS</b> changes piece on the next bar, and in the sequencer you copy, clear and restore lanes.</p></div>
+  <div class="card"><h3>Shift</h3><p>Hold <b>SEL</b>: white keys 1&ndash;6 jump to a pattern on the bar, <b>PRESETS</b> changes piece on the next bar, <b>ALGORITHM</b> the voice's sound, and in the sequencer you copy, clear and restore lanes.</p></div>
   <div class="card"><h3>Links</h3><p>Patch the drums into the voices: each <b>kick</b> opens the drone's filter, <b>snares</b> flash the pad, <b>hats</b> accent the acid, and the <b>perc</b> lane can clock the acid line. <b>SEL + SEQ</b> turns them on and off.</p></div>
   <div class="card"><h3>Remote</h3><p>Plug the FM-1 into a computer, open the <a href="emu/">emulator</a> and press <b>SEL + GLO</b>: its whole panel plays the browser, lights and all. Any other MIDI controller works too, with MIDI learn.</p></div>
   <div class="card"><h3>Always different</h3><p>Every power-on starts on a piece at random: as you stored it, or slightly nudged from its factory settings. Chords drift, the acid mutates, a slow tide moves between sparse and full.</p></div>

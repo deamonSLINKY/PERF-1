@@ -25,7 +25,7 @@
  *   keys           the scale (each adds or removes its note); in the sequencer, the sixteen white keys
  *                  (the lower row) are the lane's steps: lit where it hits, tapped to turn a hit on or off
  *   SEL            shift, held: white keys 1-6 the pattern (on the bar); PRESETS the piece, on the next
- *                  bar; ALGORITHM the piece's style (hypnotic, house, techno, acid, breakcore); in the sequencer, black keys 1-6 copy the pattern there, OCT- clears the drum's
+ *                  bar; ALGORITHM the sound of the voice on screen (pad, drone, acid; on the drums' pages the kit); in the sequencer, black keys 1-6 copy the pattern there, OCT- clears the drum's
  *                  lane, OCT+ puts back the piece's own
  *   PLAY           play / stop         REC  FREEZE       EDIT  the next chord
  *   ALGORITHM      the mode            PRESETS  the piece (01 .. 10)
@@ -38,9 +38,9 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
-       V_DRUMS, V_LINKS, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
+       V_DRUMS, V_LINKS, V_KIT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Noise", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Space", "Global",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE };
@@ -50,7 +50,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
     {P_NOISE, P_NZ_COLOR, P_NZ_TONE, P_NZ_PUMP},
-    {P_BASS, P_BASSOCT, P_DR_CUT, P_DR_RES},
+    {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
@@ -58,24 +58,26 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
+    {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tempo", "Evolve", "Motion", "Drift"},
-    {"Level", "Bright", "Colour", "Detune"},
+    {"Level", "Bright", "Sound", "Detune"},
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Level", "Colour", "Tone", "Pump"},
-    {"Level", "Octave", "Cutoff", "Reso"},
+    {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Level", "Cutoff", "Reso", "Env mod"},
-    {"Decay", "Accent", "Slide", "Wave"},
+    {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
+    {"Kick", "Snare", "Hats", "Perc"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Level", "Tune", "Decay", "Pattern"},
@@ -84,7 +86,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 3}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 2}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 3}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 3}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -183,6 +185,7 @@ static struct {
     uint32_t shift_keys;               /* keys pressed while SEL (shift) was held: not notes, not effects */
     uint8_t piece_q;                   /* a piece waiting for the bar (SEL + PRESETS): its number + 1 */
     uint8_t shift_hint;                /* SEL held alone: its hint shown this hold */
+    uint8_t key_voice[NKEYS];          /* a key playing a voice: its EN_V_* + 1 (the note-off goes there) */
     uint8_t splash, theme;             /* the boot cards are up (2: the HYP-1 card); the theme drawn */
     uint8_t splash_step;               /* the HYP-1 card's steps lit */
     uint32_t boot_t, act_t;
@@ -458,6 +461,44 @@ static void set_view(int v)
     if (v < NDIAL)
         ui.last_dial = (uint8_t)v;
     ui.touched = -1;
+}
+
+static int voice_of(int v)                      /* the voice page v belongs to (EN_V_*), or -1 */
+{
+    if (v >= V_PAD && v <= V_PADLFO)
+        return EN_V_PAD;
+    if (v >= V_DRONE && v <= V_DRLFO)
+        return EN_V_DRONE;
+    if (v >= V_ACID && v <= V_ACLINE)
+        return EN_V_ACID;
+    return -1;
+}
+static const int SOUND_PAR[3] = {P_PADTONE, P_DR_INST, P_AC_WAVE};
+static int kit_view(int v) { return v == V_DRUMS || v == V_LINKS || v == V_KIT || v == V_SEQ; }
+
+static void caps(char *d, const char *s, int n);
+static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's next sound, or the whole kit's */
+{
+    char a[16], b[16];
+    int vc = voice_of(ui.view);
+    if (vc >= 0) {
+        static const char *const WHO[3] = {"PAD", "DRONE", "ACID"};
+        int p = SOUND_PAR[vc];
+        knob_set(p, (proj.par[p] + d + EN_NSOUND) % EN_NSOUND);
+        en_param_text(p, proj.par[p], b);
+        caps(a, b, sizeof a);
+        say(WHO[vc], a);
+    } else if (kit_view(ui.view)) {             /* the drums: all four to the next kit */
+        int k = (proj.par[P_KIT_KICK] + d + EN_NKIT) % EN_NKIT;
+        knob_set(P_KIT_KICK, k);
+        knob_set(P_KIT_SNARE, k);
+        knob_set(P_KIT_HAT, k);
+        knob_set(P_KIT_PERC, k);
+        caps(a, EN_KIT_NAME[k], sizeof a);
+        say("KIT", a);
+    } else {
+        say("SOUND", "ON A VOICE'S PAGE");
+    }
 }
 
 static int oct_par(int v)                       /* what OCT moves on page v */
@@ -865,10 +906,18 @@ static void input(void)
                     for (s = 0; s < 16; s++)
                         if (WHITE_KEY[s] == i)
                             step_toggle(s);
+                } else if (voice_of(ui.view) >= 0) {   /* a voice's page: the key plays it */
+                    ui.key_voice[i] = (uint8_t)(voice_of(ui.view) + 1);
+                    en_note(voice_of(ui.view), 53 + (int)i, 1);
                 } else {
                     toggle_note((int)((5u + i) % 12u));   /* key 0 is F3 */
                 }
             }
+    for (i = 0; i < NKEYS; i++)                  /* let go: its note off, wherever it went */
+        if (ui.key_voice[i] && !(keys >> i & 1u)) {
+            en_note(ui.key_voice[i] - 1, 53 + (int)i, 0);
+            ui.key_voice[i] = 0;
+        }
     if (btn || keys || ch)
         ui.act_t = plat_ms();
     midi_in();
@@ -897,22 +946,9 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {
-        if (btn >> B_SEL & 1u) {               /* shift: the style, the tempo into its range */
-            int st = (proj.par[P_STYLE] + (e > 0 ? 1 : -1) + EN_NSTYLE) % EN_NSTYLE, lo, hi, t = proj.par[P_TEMPO];
-            char a[12], b[12];
+        if (btn >> B_SEL & 1u) {               /* shift: the sound of the voice on screen (drums: the kit) */
             ui.btn_used |= 1u << B_SEL;
-            knob_set(P_STYLE, st);
-            en_style_tempo(st, &lo, &hi);
-            knob_set(P_TEMPO, t < lo ? lo : t > hi ? hi : t);
-            caps(a, EN_STYLE_NAME[st], sizeof a);
-            itoa_u((uint32_t)proj.par[P_TEMPO], b);
-            {
-                int k = 0;
-                while (b[k])
-                    k++;
-                b[k++] = ' ', b[k++] = 'B', b[k++] = 'P', b[k++] = 'M', b[k] = 0;
-            }
-            say(a, b);
+            shift_sound(e > 0 ? 1 : -1);
         } else {
             set_mode(proj.par[P_MODE] + (e > 0 ? 1 : -1));
         }
@@ -948,7 +984,7 @@ static void input(void)
     if ((btn >> B_SEL & 1u) && !(ui.btn_used >> B_SEL & 1u) && !ui.shift_hint &&
         plat_ms() - ui.down_t[B_SEL] >= 400u) {
         ui.shift_hint = 1;                     /* SEL held alone: what the shift does */
-        say("SHIFT", ui.view == V_SEQ ? "COPY / CLEAR" : "ALGO: STYLE");
+        say("SHIFT", ui.view == V_SEQ ? "COPY / CLEAR" : "ALGO: SOUND");
     }
     if (ui.save_global && !ui.factory_done && (btn >> B_SAVE & 1u)) {
         uint32_t held = plat_ms() - ui.down_t[B_SAVE];
@@ -1373,9 +1409,9 @@ static int help_lines(int b, const char *l[HELP_LINES])
 #define L(t) (l[n++] = (t))
     switch (b) {
     case B_HOME: L("TEMPO"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("+ SELECT: TEMPO"); break;
-    case B_ENV: L("THE PAD"); L("PRESS AGAIN: ITS ENVELOPE,"); L("THEN ITS LFO"); break;
-    case B_ARP: L("THE ACID LINE"); L("PRESS AGAIN: ITS ENVELOPE,"); L("THEN THE LINE ITSELF"); break;
-    case B_LFO: L("THE DRONE"); L("PRESS AGAIN: ITS ENVELOPE,"); L("THEN ITS LFO"); break;
+    case B_ENV: L("THE PAD; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("KEYS HERE PLAY IT"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("KEYS HERE PLAY IT"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("KEYS HERE PLAY IT"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
         static char cpu[24];
         uint32_t c = plat_cpu_pct(), x = plat_xruns(), j = 4;
@@ -1518,7 +1554,10 @@ static void draw_main(void)
 static void draw_knobs(void)
 {
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8 | (uint32_t)ui.lane << 16 | (uint32_t)ui.theme << 24), i;
-    h = hash(h, (uint32_t)proj.par[P_STYLE] | (uint32_t)proj.par[P_LINKS] << 8 |
+    h = hash(h, (uint32_t)proj.par[P_PADTONE] | (uint32_t)proj.par[P_DR_INST] << 3 | (uint32_t)proj.par[P_AC_WAVE] << 6 |
+                (uint32_t)(proj.par[P_KIT_KICK] | proj.par[P_KIT_SNARE] << 3 | proj.par[P_KIT_HAT] << 6) << 9 |
+                (uint32_t)proj.par[P_KIT_PERC] << 18);
+    h = hash(h, (uint32_t)proj.par[P_LINKS] << 8 |
                     (uint32_t)(proj.par[oct_par(ui.view)] + 8) << 12);
     if (ui.view == V_GLOBAL)
         h = hash(h, (uint32_t)proj.piece | (uint32_t)(proj.edited >> proj.piece & 1u) << 8 |
@@ -1563,10 +1602,20 @@ static void draw_knobs(void)
             xs = cv_text(4, -1, &FONT_XS, u, proj.edited >> proj.piece & 1u ? K_TEXT : K_DIM);
             if (xt - 9 > xs + 4)
                 cv_rect(xs + 4, 5, xt - 9 - xs - 4, 1, K_LINE);
-        } else {                                 /* the piece's style, then the rule */
-            char u[16];
+        } else {                                 /* the voice's sound (the drums: the kit), then the rule */
+            char u[16], t[12];
             int32_t xs;
-            caps(u, EN_STYLE_NAME[(unsigned)proj.par[P_STYLE] < EN_NSTYLE ? proj.par[P_STYLE] : 0], sizeof u);
+            int vc = voice_of(ui.view);
+            if (vc >= 0) {
+                en_param_text(SOUND_PAR[vc], proj.par[SOUND_PAR[vc]], t);
+                caps(u, t, sizeof u);
+            } else if (kit_view(ui.view)) {
+                int k = proj.par[P_KIT_KICK];
+                int same = proj.par[P_KIT_SNARE] == k && proj.par[P_KIT_HAT] == k && proj.par[P_KIT_PERC] == k;
+                caps(u, same ? EN_KIT_NAME[(unsigned)k < EN_NKIT ? k : 0] : "Mixed kit", sizeof u);
+            } else {
+                caps(u, "HYP-1", sizeof u);
+            }
             xs = cv_text(4, -1, &FONT_XS, u, K_DIM);
             if (proj.par[P_LINKS])               /* the links on: said beside it */
                 xs = cv_text(xs + 5, -1, &FONT_XS, "+LINK", K_ACC);

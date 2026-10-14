@@ -200,14 +200,16 @@ def main():
     b, k = L["fx"]
     scene(device("fx", b - {"HOME"}, set(), held=k), OUT / "hyp-device-fx.png", "FX MENU", "HOLD KEYS · HOLD SAVE + TAP: LOCK",
           glow="#ff6a00")
-    b, k = L["house"]
-    scene(device("house", b, k), OUT / "hyp-device-house.png", "STYLES", "SEL + ALGORITHM")
-    for n in ("home", "house", "techno", "breakcore", "seq", "fx", "stored", "breakdown", "build", "pad", "drone",
+    b, k = L["drone_play"]
+    scene(device("sound_drone", b, k, held={WHITE_K[2]}), OUT / "hyp-device-play.png", "PLAY A VOICE",
+          "ITS PAGE ON SCREEN, THE KEYS PLAY IT")
+    for n in ("home", "sound_pad", "sound_drone", "sound_acid", "kit", "seq", "fx", "stored", "breakdown", "build", "pad", "drone",
               "acid_line", "splash", "splash_hyp"):
         im = Image.open(SHOTS / f"{n}.png").convert("RGB")
         im.resize((480, 480), Image.NEAREST).save(OUT / f"hyp-screen-{n.replace('_', '-')}.png")
     print("wrote docs/img/hyp-screen-*.png")
-    screens(["home", "house", "techno", "breakcore"], OUT / "hyp-styles.png", label=["HYPNOTIC", "HOUSE", "TECHNO", "BREAKCORE"])
+    screens(["sound_pad", "sound_drone", "sound_acid", "kit"], OUT / "hyp-sounds.png",
+            label=["PAD: GLASS", "DRONE: REESE", "ACID: SYNC", "KIT: TECHNO"])
     screens(["home", "theme_acid", "theme_ice", "theme_ember", "theme_phosphor"], OUT / "hyp-themes.png",
             label=["SYNTH", "ACID", "ICE", "EMBER", "PHOSPHOR"], scale=1)
 

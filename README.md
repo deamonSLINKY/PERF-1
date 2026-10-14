@@ -8,7 +8,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.0.21** (each push to `main` builds the next one).
+by Charles Vestal. Current version: **1.0.27** (each push to `main` builds the next one).
 
 [![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
 
@@ -39,20 +39,23 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
 
 ## What it does
 
-- **Pad**: four breathing voices (Rhodes or sung) with their own envelope page (attack, hold,
+- **Pad**: four breathing voices in eight sounds (Rhodes, sung voices, strings, glass, organ, warm, stabs,
+  dark) with their own envelope page (attack, hold,
   release, rest) and LFO page (rate, depth, shape, target).
-- **Drone**: detuned saws and a sub through a resonant 24 dB low-pass, with an envelope (on each chord
+- **Drone**: eight sounds (saws, warm, grit, dirty, Reese, pulse, FM, organ) and a sub through a resonant 24 dB low-pass, with an envelope (on each chord
   or every 1–8 bars) and an LFO (a 16-bar sweep on the cutoff by default).
 - **Acid**: a generative 303-style line: 1–16 steps of chord tones with accents and slides, resonant
-  filter, envelope, saw or square. Mutate rewrites steps as it plays.
+  filter, envelope, eight sounds (saw, square, driven, sync, pluck, PWM, chip, sub). Mutate rewrites steps as it plays.
 - **Noise**: eight colours (white, pink, brown, blue, violet, grey, crackle, radio hiss), a tone filter
   and its own sidechain pump.
 - **Drums**: a 16-step sequencer with six lanes (kick, snare, clap, closed hat, open hat, perc), six
-  patterns per piece, and a level, tune and decay per lane. Hold SEQ: the 16 white keys are the steps.
+  patterns per piece, a level, tune and decay per lane, and a kit: each drum's sound from five (Hypno,
+  House, Techno, Acid, Break). Hold SEQ: the 16 white keys are the steps.
 - **Ten pieces** (01–10), each with its own settings, patterns and drum sounds. On Global, SAVE stores
   the piece (written as soon as the music stops, so it never interrupts a take).
-- **Styles** (SEL + ALGORITHM): Hypnotic, House, Techno, Acid and Breakcore reshape every voice and the
-  feel. Tempo runs from 70 to 190.
+- **Play a voice**: with a voice's page on screen the keys play it over the song: the pad up to four
+  notes, the drone and the acid one (sliding, 303-style). **SEL + ALGORITHM** changes the sound of the
+  voice on screen, or the whole kit on the drums' pages. Tempo runs from 70 to 190.
 - **Links** (SEL + SEQ, amounts on the Links page): the drums patched into the voices. Each kick opens
   the drone's filter, each snare or clap flashes the pad, hats accent the acid, and the perc lane can
   clock the acid line.
@@ -65,26 +68,27 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
   MIDI learn maps the rest.
 - Five screen themes, a boot sequence (the RedtailWorks card with its pixel red panda, then HYP-1), Chakra Petch (SIL OFL) as the screen's font.
 
-![Hypnotic, House, Techno and Breakcore](docs/img/hyp-styles.png)
+![Pad: Glass, Drone: Reese, Acid: Sync, Kit: Techno](docs/img/hyp-sounds.png)
 
 | | |
 |---|---|
 | ![The sequencer](docs/img/hyp-device-seq.png) | ![The FX menu](docs/img/hyp-device-fx.png) |
+| ![Playing the drone](docs/img/hyp-device-play.png) | ![The themes](docs/img/hyp-themes.png) |
 
 ## In short
 
 | | |
 |---|---|
 | SELECT | The pages in order; with HOME held, the tempo |
-| HOME · ENV · LFO · ARP · SEQ · GLO | Tempo · Pad · Drone · Acid · Drums (again: Links; hold: sequencer) · Global; press again for each voice's env and LFO |
+| HOME · ENV · LFO · ARP · SEQ · GLO | Tempo · Pad · Drone · Acid · Drums (again: Links, then Kit; hold: sequencer) · Global; press again for each voice's env and LFO |
 | KNOB 1–4 | The page's four values |
-| PRESETS · ALGORITHM | The piece · the mode (with SEL: the piece on the next bar · the style) |
+| PRESETS · ALGORITHM | The piece · the mode (with SEL: the piece on the next bar · the voice's sound, or the kit) |
 | SAVE | Breakdown / build / drop; on Global, store the piece |
 | FX | The effects menu |
 | SEL | Shift (SEL + SEQ: the links on and off; SEL + GLO: remote, the panel plays the emulator) |
 | PLAY · REC · EDIT | Play / stop · freeze · the next chord |
+| Keys | The scale; on a voice's pages they play that voice; in the sequencer the steps; in FX the effects |
 | OCT− / OCT+ | ±3 octaves: the page's voice (pad, drone, acid), or the whole song on any other page; in the sequencer, the drum |
-| Keys | The scale; in the sequencer, the steps; in FX, effects |
 
 ## Versions
 
@@ -92,6 +96,9 @@ Each build is numbered 1.0.N from the workflow's run; the installer always offer
 
 | Version | What came in |
 |---|---|
+| 1.0.27 | The voice bank: eight sounds each for pad, drone and acid, a kit of five sounds per drum (the styles become sounds; stored styles carry over), and the keys play the voice on screen |
+| 1.0.25 – 1.0.26 | ECO-1 (experimental) built alongside, with a HYP-1 / ECO-1 dropdown on the site |
+| 1.0.22 – 1.0.24 | The board (feature requests, comments); a Ko-fi button |
 | 1.0.21 | The documentation brought up to date; the live take on the site |
 | 1.0.17 – 1.0.20 | The video tools (sequencer, voices, links, the live take); no firmware change |
 | 1.0.16 | One look across the site (the installer restyled), the red panda as its mark and favicon, YouTube links |

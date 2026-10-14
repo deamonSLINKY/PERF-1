@@ -31,7 +31,11 @@
 #define EN_NSTEP 16
 #define EN_NPAD 4                      /* pad voices */
 #define EN_NTHEME 5                    /* the screen's colour themes (the UI's; kept with the settings) */
-#define EN_NSTYLE 5                    /* the styles: hypnotic, house, techno, acid, breakcore */
+#define EN_NSTYLE 5                    /* the old styles (hypnotic, house, techno, acid, breakcore): now the kits,
+                                        * and a stored piece's style is turned into sounds (en_style_sounds) */
+#define EN_NSOUND 8                    /* the sounds each of pad, drone and acid can play */
+#define EN_NKIT 5                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
+enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID };   /* the voices the keys can play (en_note) */
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
 enum { MODE_IONIAN, MODE_DORIAN, MODE_PHRYGIAN, MODE_LYDIAN, MODE_MIXOLYDIAN, MODE_AEOLIAN, MODE_PENT_MAJ,
@@ -40,8 +44,10 @@ extern const char *const EN_MODE_NAME[EN_NMODES];
 extern const uint16_t EN_MODE_POOL[EN_NMODES];
 extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_LANE_NAME[EN_NLANE];
-extern const char *const EN_STYLE_NAME[EN_NSTYLE];
-void en_style_tempo(int s, int *lo, int *hi);  /* a style's usual tempo range (switching style keeps to it) */
+extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NSOUND];
+extern const char *const EN_KIT_NAME[EN_NKIT];
+void en_style_sounds(int16_t *par);             /* a piece stored with a style (before 1.0.27): its sounds and
+                                                 * kit set as the style had them, the style cleared */
 
 /* parameters: value ranges in en_param_info() */
 enum {
@@ -62,12 +68,16 @@ enum {
     P_LANE,                                               /* each lane's level, tune, decay: P_LANE + 3 * lane + 0..2 */
     P_ECHO = P_LANE + 3 * EN_NLANE, P_ETIME, P_REVERB, P_SIZE,   /* space */
     P_ROOT, P_MODE, P_TUNE, P_MIDI, P_THEME,              /* global (the mode on ALGORITHM) */
-    P_STYLE,                                              /* the piece's style (SEL + ALGORITHM) */
+    P_STYLE,                                              /* (before 1.0.27: the style; now always 0) */
     P_LINKS, P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC,  /* the drums into the voices: on / off (SEL + SEQ);
                                                            * kick > drone, snare and clap > pad, hats > acid
                                                            * accents, perc > the acid's clock */
     P_OCT, P_PAD_OCT,                                     /* the whole song's octave; the pad's (OCT- / OCT+;
                                                            * the drone's is P_BASSOCT, the acid's P_AC_OCT) */
+    P_DR_INST,                                            /* the drone's sound (the pad's: P_PADTONE, the acid's:
+                                                           * P_AC_WAVE) */
+    P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC,       /* the kit: each drum's sound (snare: and the clap;
+                                                           * hats: closed and open) */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -88,6 +98,7 @@ void en_play(int on);                          /* play / stop (the tails ring on
 void en_next(void);                            /* the next chord: on the next bar (now while resting) */
 void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
+void en_note(int voice, int note, int on);      /* a key played on a voice's page: EN_V_*, MIDI note, on / off */
 void en_mute(int on);                          /* remote: silent, no MIDI out (1) or back (0), in turn */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops, the home chord */
@@ -137,6 +148,7 @@ extern volatile float en_noise_level, en_acid_level;
 extern volatile uint8_t en_acid_len, en_acid_pos;    /* the acid loop's length and step */
 extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; those accented */
 extern volatile float en_acid_glow;
+extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
 extern volatile float en_drum_glow[EN_NDRUM];
 extern volatile uint8_t en_pat_now, en_pat_next;      /* the pattern playing; the one waiting for the bar */

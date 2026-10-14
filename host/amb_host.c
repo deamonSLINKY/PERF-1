@@ -420,6 +420,8 @@ static int expect(const char *what, const char *val)
         got = (int)ui.fx_lock;
     else if (!strcmp(what, "fxon"))               /* the FX menu is on */
         got = ui.fx_menu;
+    else if (!strcmp(what, "held"))               /* keys held playing a voice */
+        got = en_held;
     else if (!strcmp(what, "remote"))             /* remote (SEL + GLO) on; the browser answering */
         got = rm.on;
     else if (!strcmp(what, "remotelink"))
