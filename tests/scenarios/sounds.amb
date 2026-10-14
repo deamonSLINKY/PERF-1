@@ -54,18 +54,45 @@ turn ALGO 1
 release SEL
 expect par10 3
 expect par84 4
-# keys on a voice's page play it, the scale untouched; let go, the note's gone
+# keys on a voice's page still edit the scale while it plays with the music, as everywhere
 tap LFO
+tapkey w3
+wait 50
+expect held 0
+expect pool <0x5AD
+tapkey w3
+wait 50
+expect pool 0x5AD
+# SEL + LFO: the drone off the algorithm (silent but for the keys); now its keys play it, the scale untouched
+press SEL
+tap LFO
+release SEL
+expect par90 1
+expect view 5
+wait 1500
+expect bass_level <5
 key w2 down
 wait 300
 expect held 1
 expect pool 0x5AD
+expect bass_level >50
 shot playing_drone.png
 key w2 up
 wait 100
 expect held 0
-# two keys on the pad: two of its voices
+# back on the algorithm: SEL + LFO again; the keys are the scale's again
+press SEL
+tap LFO
+release SEL
+expect par90 0
+wait 2500
+expect bass_level >50
+# the pad by hand: two keys, two of its voices; its breaths quiet meanwhile
+press SEL
 tap ENV
+release SEL
+expect par89 1
+expect view 1
 key w0 down
 key w4 down
 wait 400
@@ -75,8 +102,15 @@ key w4 up
 wait 100
 expect held 0
 expect pool 0x5AD
-# the acid, played while stopped: it sounds
+press SEL
+tap ENV
+release SEL
+expect par89 0
+# the acid by hand, played while stopped: it sounds
+press SEL
 tap ARP
+release SEL
+expect par91 1
 tap PLAY
 wait 600
 expect playing 0
@@ -99,3 +133,15 @@ tapkey w1
 wait 50
 expect held 0
 expect pool 0x1AD
+# back on the algorithm while a key is held: the note let go
+tap ARP
+key w9 down
+wait 50
+expect held 1
+press SEL
+tap ARP
+release SEL
+expect par91 0
+wait 50
+expect held 0
+key w9 up

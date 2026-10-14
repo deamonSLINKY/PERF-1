@@ -201,8 +201,8 @@ def main():
     scene(device("fx", b - {"HOME"}, set(), held=k), OUT / "hyp-device-fx.png", "FX MENU", "HOLD KEYS · HOLD SAVE + TAP: LOCK",
           glow="#ff6a00")
     b, k = L["drone_play"]
-    scene(device("sound_drone", b, k, held={WHITE_K[2]}), OUT / "hyp-device-play.png", "PLAY A VOICE",
-          "ITS PAGE ON SCREEN, THE KEYS PLAY IT")
+    scene(device("sound_drone", b, k, held={WHITE_K[2]}), OUT / "hyp-device-play.png", "BY HAND",
+          "SEL + LFO: THE DRONE OFF THE ALGORITHM, THE KEYS PLAY IT")
     for n in ("home", "sound_pad", "sound_drone", "sound_acid", "kit", "seq", "fx", "stored", "breakdown", "build", "pad", "drone",
               "acid_line", "splash", "splash_hyp"):
         im = Image.open(SHOTS / f"{n}.png").convert("RGB")

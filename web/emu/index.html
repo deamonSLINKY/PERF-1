@@ -200,8 +200,7 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
     <h2>Sounds, and playing a voice</h2>
     <ul>
       <li>Each voice has eight sounds and each drum five (the Sound knob on the voice's page, the Kit page for the drums), stored with the piece. <b>SEL + ALGORITHM</b> changes the sound of the voice on screen, or the whole kit on the drums' pages; its name shows at the left of the line above the knobs.</li>
-      <li><b>Play a voice:</b> with a Pad, Drone or Acid page on screen, the keys play that voice over the song. The pad takes up to four notes, ringing out with its envelope's Release; the drone and the acid take the last key held (the acid slides between held keys, as a 303). The generated part waits while you play. It works while stopped too.</li>
-      <li>On any other page the keys edit the scale, as before.</li>
+      <li><b>The keys set the scale</b>, on every page. <b>By hand:</b> hold <b>SEL</b> and press <b>ENV</b>, <b>LFO</b> or <b>ARP</b> to take the pad, drone or acid off the algorithm. It goes quiet (BY HAND shows on the line above the knobs), and on its pages the keys play it over the song: the pad up to four notes, the drone and the acid the last key held (the acid sliding between held keys, as a 303). It works while stopped too. SEL + the button again gives it back.</li>
     </ul>
   </div>
   <div>
@@ -218,13 +217,13 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
   <div>
     <h2>Buttons</h2>
     <ul>
-      <li><b>Keys</b> are the scale: each one adds or removes its note (the root stays). On a Pad, Drone or Acid page they play that voice instead.</li>
+      <li><b>Keys</b> are the scale: each one adds or removes its note (the root stays). On the pages of a voice taken off the algorithm (SEL + ENV, LFO or ARP) they play that voice instead.</li>
       <li><b>PLAY</b> plays / stops. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
       <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Drone or Acid page, that voice; on any other page, the whole song. The line above the knobs shows OCT+1 (the voice) or SONG+1 (the song).</li>
       <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and the drop. Hold it instead for the drop on the next bar. It lights while a breakdown or build runs, and blinks while one waits for the bar.</li>
       <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held; hold SAVE and tap keys to lock effects on.</li>
       <li><b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (01 to 10).</li>
-      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> changes the sound of the voice on screen (the drums: the kit), and <b>SEQ</b> turns the links on and off.</li>
+      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> changes the sound of the voice on screen (the drums: the kit), <b>SEQ</b> turns the links on and off, and <b>ENV</b>, <b>LFO</b> or <b>ARP</b> takes that voice off the algorithm to play by hand.</li>
       <li>On the <b>Global</b> page, <b>SAVE</b> stores the piece instead (held: factory settings). Stored while playing, it is written as soon as you stop: a write silences the sound for a moment, so it never happens mid-performance. A dot at the top right means a write is waiting.</li>
     </ul>
   </div>
@@ -352,8 +351,8 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO); its pages: the keys play it", LFO: "Drone (again: env, LFO); its pages: the keys play it", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
-  ARP: "Acid (again: env, line); its pages: the keys play it", SEQ: "Drums (again: Links, Kit); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
+const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO); with SEL: play it by hand", LFO: "Drone (again: env, LFO); with SEL: play it by hand", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV / LFO / ARP that voice by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
+  ARP: "Acid (again: env, line); with SEL: play it by hand", SEQ: "Drums (again: Links, Kit); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
   "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

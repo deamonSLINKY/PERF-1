@@ -306,9 +306,26 @@ int main(void)
         }
     }
 
-    /* keys played: the pad, the drone and the acid answer, and let go */
+    /* keys played: the pad, the drone and the acid answer, and let go; a voice off the algorithm is silent
+     * but for them, and back on it plays again */
     {
         int k;
+        en_set(P_DR_MAN, 1);
+        run(1.5f);
+        CHECK(en_bass_level < 0.05f, "drone off the algorithm still sounds: %f", (double)en_bass_level);
+        en_note(EN_V_DRONE, 48, 1);
+        run(0.3f);
+        CHECK(en_bass_level > 0.1f, "drone by hand: level %f", (double)en_bass_level);
+        en_note(EN_V_DRONE, 48, 0);
+        run(1.5f);
+        CHECK(en_bass_level < 0.05f, "drone by hand, let go: level %f", (double)en_bass_level);
+        en_set(P_DR_MAN, 0);
+        run(3.0f);
+        CHECK(en_bass_level > 0.5f, "drone back on the algorithm: level %f", (double)en_bass_level);
+        en_set(P_PAD_MAN, 1);
+        run(1.0f);
+        CHECK(en_pad_level < 0.02f, "pad off the algorithm still sounds: %f", (double)en_pad_level);
+        en_set(P_PAD_MAN, 0);
         en_note(EN_V_DRONE, 60, 1);
         run(0.3f);
         CHECK(en_bass_level > 0.1f, "drone played: level %f", (double)en_bass_level);

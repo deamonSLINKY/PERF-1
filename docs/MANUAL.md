@@ -6,7 +6,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
-This manual is for HYP-1 version 1.0.27. To hear it first, watch
+This manual is for HYP-1 version 1.0.28. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
 [YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
@@ -56,10 +56,11 @@ M-VAVE's own updater, M-UPGRADE, works too.
    filling in, then a piece starts playing at random. Press any button or key to skip straight to the music.
 2. Turn **SELECT** to walk through the pages; the four knobs under the screen change what each page shows.
 3. Press **SEQ** for the drums, hold it for the step sequencer, and tap the white keys to change the beat.
-4. Turn **PRESETS** for another piece. Press **LFO** for the drone and play the keys: you're playing it now. Hold **SEL** and turn **ALGORITHM** for its other sounds.
-5. Tap **SAVE** for a breakdown on the next bar; tap it again for a four-bar build and the drop.
-6. Press **FX** and hold keys for effects.
-7. Like a piece? Go to **Global** (GLO) and press **SAVE** to store it.
+4. Tap keys to change the scale: each adds or removes its note. Turn **PRESETS** for another piece. On a voice's page, hold **SEL** and turn **ALGORITHM** for its other sounds.
+5. Want to play the drone yourself? Hold **SEL** and press **LFO**: it leaves the algorithm and the keys play it. **SEL** + **LFO** again gives it back.
+6. Tap **SAVE** for a breakdown on the next bar; tap it again for a four-bar build and the drop.
+7. Press **FX** and hold keys for effects.
+8. Like a piece? Go to **Global** (GLO) and press **SAVE** to store it.
 
 ---
 
@@ -76,18 +77,18 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 11 | OCT+ | An octave up (to +3), the same way. In the sequencer: the next drum. |
 | 12 | FX | The effects menu, on and off. |
 | 13 | SEL | Shift, held (see 11. Shift). |
-| 14 | ENV | Pad; press again for Pad env, again for Pad LFO. On its pages the keys play the pad. |
-| 15 | LFO | Drone; again for Drone env, again for Drone LFO. On its pages the keys play the drone. |
+| 14 | ENV | Pad; press again for Pad env, again for Pad LFO. With SEL held: the pad off the algorithm, played by hand (again: back). |
+| 15 | LFO | Drone; again for Drone env, again for Drone LFO. With SEL held: the drone by hand (again: back). |
 | 16 | EDIT | The next chord, on the next bar. |
 | 17 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. With SEL held: remote (see 13). |
 | 18 | HOME | The Tempo page. Hold it and turn SELECT for the tempo. |
 | 19 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. In FX, held: lock mode. |
-| 20 | ARP | Acid; again for Acid env, again for Acid line. On its pages the keys play the acid. |
+| 20 | ARP | Acid; again for Acid env, again for Acid line. With SEL held: the acid by hand (again: back). |
 | 21 | SEQ | Drums; again, Links; again, Kit; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
 | 22 | PLAY | Play and stop. |
 | 23 | REC | Freeze: the chord holds until pressed again. |
-| 24 | White keys | The scale (each key adds or removes its note; the root stays). On a voice's pages: that voice, played. Sequencer: the 16 steps. FX: effects. |
-| 25 | Black keys | The scale; on a voice's pages, that voice. FX: effects. |
+| 24 | White keys | The scale (each key adds or removes its note; the root stays). On the pages of a voice played by hand: that voice. Sequencer: the 16 steps. FX: effects. |
+| 25 | Black keys | The scale; on the pages of a voice played by hand, that voice. FX: effects. |
 
 Hold any button alone for a second and a card on the screen says what it does (except PLAY, SEL, SAVE,
 SEQ and FX, whose hold means something else).
@@ -221,24 +222,27 @@ the snare (and the clap with it), the hats (closed and open) and the perc, each 
 On any of the drums' pages, **SEL** + **ALGORITHM** turns all four to the next kit at once. Mix them
 freely: a Techno kick under House hats is fine.
 
-### Playing a voice
+### Playing a voice by hand
 
-![Playing the drone](img/hyp-device-play.png)
+![Playing the drone by hand](img/hyp-device-play.png)
 
-With a voice's page on screen (Pad, Pad env or Pad LFO; the drone's three; the acid's three), the keys
-play that voice over the song instead of changing the scale:
+The keys set the scale, as ever. To play a voice yourself, take it off the algorithm: hold **SEL** and press
+its button (**ENV** the pad, **LFO** the drone, **ARP** the acid). It goes quiet, its page comes up, and
+the line above the knobs says BY HAND. Now, while its pages are on screen (Pad, Pad env or Pad LFO; the
+drone's three; the acid's three), the keys play it over the rest of the song:
 
-- **Pad:** up to four notes at once, each on one of its voices, ringing out with the Pad env's Release
-  and then breathing on with the song.
-- **Drone:** the last key held, two octaves down; the envelope opens on each new press. Let go and it
-  glides back to the chord's root.
+- **Pad:** up to four notes at once, each on one of its voices, with the Pad env's Attack and Release
+  (quicker than the breaths).
+- **Drone:** the last key held, two octaves down; the envelope opens on each new press.
 - **Acid:** the last key held, an octave down, with its filter and envelope. A second key while one is
-  held slides to it, as a 303 does. The generated line rests while you play and picks up when you let go.
+  held slides to it, as a 303 does.
 
-The keys follow the voice's octave and the song's (OCT− / OCT+), and the lit keys still show the scale, so
-you can see what's in key. It works while stopped too. A key keeps playing its voice until you let go,
-even if you change page; on any other page (Tempo, Global and so on) the keys edit the scale as before.
-MIDI out sends what you play, on the voice's channel.
+Everything else carries on with the algorithm: the other voices, the chords, the drums. The keys follow the
+voice's octave and the song's (OCT− / OCT+), and the lit keys still show the scale, so you can see what's in
+key. It works while stopped too. A key keeps playing until you let go, even if you change page; on any other
+page (Tempo, Global and so on) the keys still edit the scale. **SEL** + the voice's button again puts it back
+on the algorithm. Which voices are played by hand is kept with the piece. MIDI out sends what you play, on
+the voice's channel.
 
 Pieces stored with a style before version 1.0.27 come back with that style's sounds and kit.
 
@@ -331,6 +335,7 @@ Hold **SEL** and:
 | PRESETS | The next or previous piece, on the next bar ("PIECE 03 NEXT BAR" until it comes). |
 | ALGORITHM | The sound of the voice on screen; on the drums' pages, the whole kit. |
 | SEQ | The links on and off. |
+| ENV · LFO · ARP | The pad, drone or acid off the algorithm, played by hand on its pages; again, back. |
 | GLO | Remote: the FM-1 plays the emulator (see 13). |
 | Black keys 1–6 (sequencer) | Copy the pattern you're editing into pattern 1–6. |
 | OCT− (sequencer) | Clear this drum's lane. |

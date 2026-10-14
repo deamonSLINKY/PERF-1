@@ -164,7 +164,7 @@ the whole performance into your DAW.</p>
   </tbody>
 </table>
 <div class="pair" style="margin-top:1rem">
-  <figure><img src="img/hyp-device-play.png" width="1600" height="1161" alt="The FM-1 on the Drone page, a white key held, playing the drone."><figcaption><b>Play a voice:</b> with the pad's, drone's or acid's page on screen, the keys play it over the song: the pad up to four notes, the drone and the acid one, the acid sliding 303-style. The generated part waits while you play, and carries on when you let go.</figcaption></figure>
+  <figure><img src="img/hyp-device-play.png" width="1600" height="1161" alt="The FM-1 on the Drone page, the drone off the algorithm, a white key held, playing it."><figcaption><b>By hand:</b> the keys set the scale. Hold <kbd>SEL</kbd> and press <kbd>ENV</kbd>, <kbd>LFO</kbd> or <kbd>ARP</kbd> to take the pad, drone or acid off the algorithm: it goes quiet, and on its pages the keys play it over the song (the pad up to four notes, the drone and the acid one, the acid sliding 303-style). The same again gives it back.</figcaption></figure>
   <figure><img src="img/hyp-screen-kit.png" width="480" height="480" alt="The Kit page: kick, snare, hats and perc, each set to Techno." style="image-rendering:pixelated"><figcaption><b>The Kit page</b> (press SEQ three times): a sound for each drum. A Techno kick under House hats is fine.</figcaption></figure>
 </div>
 
@@ -176,7 +176,7 @@ the whole performance into your DAW.</p>
 <div class="grid">
   <div class="card"><h3>Ten pieces</h3><p><b>PRESETS</b> picks 01&ndash;10, each with its own settings, six drum patterns and drum sounds. On Global, <b>SAVE</b> stores the piece; it's written while the music is stopped, so it never interrupts a take.</p></div>
   <div class="card"><h3>Breakdowns</h3><p><b>SAVE</b> drops a breakdown on the next bar; tap again for a four-bar build and the drop, or hold it for the drop straight away. <b>REC</b> freezes the chord.</p></div>
-  <div class="card"><h3>Shift</h3><p>Hold <b>SEL</b>: white keys 1&ndash;6 jump to a pattern on the bar, <b>PRESETS</b> changes piece on the next bar, <b>ALGORITHM</b> the voice's sound, and in the sequencer you copy, clear and restore lanes.</p></div>
+  <div class="card"><h3>Shift</h3><p>Hold <b>SEL</b>: white keys 1&ndash;6 jump to a pattern on the bar, <b>PRESETS</b> changes piece on the next bar, <b>ALGORITHM</b> the voice's sound, <b>ENV / LFO / ARP</b> that voice by hand, and in the sequencer you copy, clear and restore lanes.</p></div>
   <div class="card"><h3>Links</h3><p>Patch the drums into the voices: each <b>kick</b> opens the drone's filter, <b>snares</b> flash the pad, <b>hats</b> accent the acid, and the <b>perc</b> lane can clock the acid line. <b>SEL + SEQ</b> turns them on and off.</p></div>
   <div class="card"><h3>Remote</h3><p>Plug the FM-1 into a computer, open the <a href="emu/">emulator</a> and press <b>SEL + GLO</b>: its whole panel plays the browser, lights and all. Any other MIDI controller works too, with MIDI learn.</p></div>
   <div class="card"><h3>Always different</h3><p>Every power-on starts on a piece at random: as you stored it, or slightly nudged from its factory settings. Chords drift, the acid mutates, a slow tide moves between sparse and full.</p></div>

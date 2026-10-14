@@ -59,6 +59,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_DR_INST] = {"Sound", 0, EN_NSOUND - 1, 0},
     [P_KIT_KICK] = {"Kick", 0, EN_NKIT - 1, 0}, [P_KIT_SNARE] = {"Snare", 0, EN_NKIT - 1, 0},
     [P_KIT_HAT] = {"Hats", 0, EN_NKIT - 1, 0},  [P_KIT_PERC] = {"Perc", 0, EN_NKIT - 1, 0},
+    [P_PAD_MAN] = {"Pad hand", 0, 1, 0},     [P_DR_MAN] = {"Drone hand", 0, 1, 0}, [P_AC_MAN] = {"Acid hand", 0, 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -731,7 +732,7 @@ static void pad_breathe(pad_t *v, int i)        /* a new breath: its length, its
     v->note = v->target;
     v->voices = (uint8_t)pad_osc();
     v->midi_note = (uint8_t)v->target;
-    if (en_playing)
+    if (en_playing && !par[P_PAD_MAN])
         midi(0x90, v->midi_note, (uint32_t)(50.0f + 40.0f * v->peak));
 }
 
@@ -791,20 +792,22 @@ static void pad_coefs(pad_t *v, int i)          /* every 32 samples: the breath,
             v->hand = 0;
         }
     }
-    if (v->play) {                              /* played: its own envelope, then back to breathing */
-        float rel = fm_clampf(pe_rel_s(par[P_PE_REL]) * 0.35f, 0.08f, 3.0f);
+    if (v->play) {                              /* played: its own envelope (Pad env's attack and release, quicker) */
+        float rel = fm_clampf(pe_rel_s(par[P_PE_REL]) * 0.35f, 0.08f, 3.0f),
+              atk = fm_clampf(pe_atk_s(par[P_PE_ATK]) * 0.12f, 0.006f, 2.0f);
         if (v->play == 1)
-            v->pamp = fm_minf(v->pamp + 32.0f / (0.012f * EN_SR), 1.0f);
+            v->pamp = fm_minf(v->pamp + 32.0f / (atk * EN_SR), 1.0f);
         else if ((v->pamp -= 32.0f / (rel * EN_SR)) <= 0.0f) {
             v->pamp = 0.0f;
             v->play = 0;
             v->note = v->target;
             v->hand = 0;
             v->hf = 1.0f;
-            v->t = 0.0f;                        /* a breath from the start: rising again */
-            pad_breathe(v, i);
+            v->t = 0.0f;                        /* a breath from the start: rising again (when it's back) */
+            if (!par[P_PAD_MAN])
+                pad_breathe(v, i);
         }
-    } else if (!pad_stabs()) {                  /* stabs: the tick plays them, no breaths */
+    } else if (!pad_stabs() && !par[P_PAD_MAN]) {   /* stabs: the tick plays them; off the algorithm: none */
         v->t += v->rate;
         if (v->t >= 1.0f) {
             v->t -= 1.0f;
@@ -1061,7 +1064,7 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
     int st = ac_pos, len = par[P_AC_LEN], prev = (st + len - 1) % len;
     uint16_t m = (uint16_t)(1u << st);
     en_acid_pos = (uint8_t)st;
-    if (acid.play) {                            /* the keys have it: the line steps on, unheard */
+    if (acid.play || par[P_AC_MAN]) {           /* the keys have it: the line steps on, unheard */
     } else if (ac_gate & m) {
         int n = acid_note(st), slid = (ac_slide >> prev & 1u) && (ac_gate >> prev & 1u) && acid.amp_t > 0.0f;
         float dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
@@ -1311,7 +1314,7 @@ static void tick(void)
             }
         }
     }
-    if (pad_stabs() && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: the off-beats, more with Evolve */
+    if (pad_stabs() && !par[P_PAD_MAN] && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: the off-beats, more with Evolve */
         ((st & 3) == 2 || ((st == 7 || st == 15) && frand() < 0.35f * evolve))) {
         int i;
         stab_env = st & 1 ? 0.7f : 1.0f;
@@ -1672,6 +1675,16 @@ static void apply(int p, int v)
         pad_handoff();
         break;
     case P_MOTION: motion = (float)v * 0.01f; break;
+    case P_AC_MAN:                               /* the acid off the algorithm: the line's note let go */
+        if (v && !acid.play) {
+            acid.amp_t = 0.0f;
+            acid.gate_left = 0;
+        }
+        break;
+    case P_DR_MAN:                               /* the drone back: to the chord's root */
+        if (!v && !bass.play)
+            bass_to(chord_pcs[0]);
+        break;
     case P_KIT_KICK: KK = &STYLES[(unsigned)v < EN_NKIT ? v : 0]; break;   /* the kit: at each drum's next hit */
     case P_KIT_SNARE: KS = &STYLES[(unsigned)v < EN_NKIT ? v : 0]; break;
     case P_KIT_PERC: KP = &STYLES[(unsigned)v < EN_NKIT ? v : 0]; break;
@@ -1819,6 +1832,8 @@ static void note_cmd(int voice, int key, int on)
             int m = fold_note(t - 24 + 12 * (par[P_BASSOCT] + par[P_OCT]), 24, 83);
             if (on && !legato)
                 bass.env_up = 1;                /* a new press: the envelope again */
+            if (bass.amp < 0.02f)
+                bass.note = (float)m;           /* from silence: straight there, no glide */
             if (bass.midi_note != m) {
                 midi(0x82, bass.midi_note, 0);
                 midi(0x92, (uint32_t)m, 100);
@@ -2297,7 +2312,7 @@ static void render_pad(uint32_t n)
     for (i = 0; i < EN_NPAD; i++) {
         pad_t *v = &pad[i];
         float p0 = v->ph[0], p1 = v->ph[1], amp = v->amp, s0 = v->ic[0], s1 = v->ic[1], s2 = v->ic[2], s3 = v->ic[3],
-              gl, gr, pn, tgt = 0.0f, idx = 0.0f, se = stab_env;
+              gl, gr, pn, tgt = 0.0f, idx = 0.0f, se = stab_env, ar = 0.01f;
         uint32_t j;
         if (amp < 1e-5f && pad_gain < 1e-4f && !v->play) {
             v->amp = 0.0f;
@@ -2311,9 +2326,14 @@ static void render_pad(uint32_t n)
             if (!(j & 31u)) {
                 float br;
                 pad_coefs(v, i);
+                ar = 0.01f;
                 if (v->play) {                   /* played from the keys */
                     br = v->pamp;
                     tgt = br * 0.8f;
+                } else if (par[P_PAD_MAN]) {     /* off the algorithm: quiet (fading, not cut) */
+                    br = 0.0f;
+                    tgt = 0.0f;
+                    ar = 0.0004f;
                 } else if (pad_stabs()) {        /* a stab: the shared envelope */
                     br = se;
                     se *= stab_k;
@@ -2325,7 +2345,7 @@ static void render_pad(uint32_t n)
                 /* the Rhodes blooms: more overtones as the breath swells (index in turns) */
                 idx = (0.04f + 0.1f * bright * 0.01f + 0.1f * br) * (1.0f + 0.4f * arcm);
             }
-            amp += (tgt - amp) * 0.01f;
+            amp += (tgt - amp) * ar;
             switch (v->voices) {
             case PO_RHODES: {                    /* FM, the modulator at the carrier's pitch: a Rhodes */
                 float m = sine(p0) * idx;
@@ -2403,8 +2423,8 @@ static void render_bass(uint32_t n)
                 drv = 1.4f * DS->drive * (dest == 3 ? 1.0f + 2.5f * depth * (0.5f + 0.5f * drone_lfo.v) : 1.0f),
                 g = bass_vol * 0.36f * lv * DS->g / fm_minf(1.0f + 0.15f * (DS->drive - 1.0f), 1.3f),
                 dsaw = DS->saw, dsub = DS->sub,
-                tgt = en_playing || bass.play ? 1.0f : 0.0f,
-                rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / (4.0f * EN_SR),
+                tgt = (en_playing && !par[P_DR_MAN]) || bass.play ? 1.0f : 0.0f,
+                rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),
                 fmi = 0.5f + 2.2f * bass.env + 0.3f * arcm, pw = 0.5f + 0.3f * mod[9].v;
     float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, amp = bass.amp, f, i0, i1, i2;
     if (amp < 1e-5f && !en_playing && !bass.play) {

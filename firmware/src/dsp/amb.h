@@ -78,6 +78,8 @@ enum {
                                                            * P_AC_WAVE) */
     P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC,       /* the kit: each drum's sound (snare: and the clap;
                                                            * hats: closed and open) */
+    P_PAD_MAN, P_DR_MAN, P_AC_MAN,                        /* a voice off the algorithm (SEL + ENV / LFO / ARP):
+                                                           * silent but for the keys (en_note) */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -98,7 +100,8 @@ void en_play(int on);                          /* play / stop (the tails ring on
 void en_next(void);                            /* the next chord: on the next bar (now while resting) */
 void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
-void en_note(int voice, int note, int on);      /* a key played on a voice's page: EN_V_*, MIDI note, on / off */
+void en_note(int voice, int note, int on);      /* a key played on the page of a voice off the algorithm (P_*_MAN):
+                                                 * EN_V_*, MIDI note, on / off */
 void en_mute(int on);                          /* remote: silent, no MIDI out (1) or back (0), in turn */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops, the home chord */

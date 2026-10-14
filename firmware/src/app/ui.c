@@ -474,6 +474,8 @@ static int voice_of(int v)                      /* the voice page v belongs to (
     return -1;
 }
 static const int SOUND_PAR[3] = {P_PADTONE, P_DR_INST, P_AC_WAVE};
+static const int HAND_PAR[3] = {P_PAD_MAN, P_DR_MAN, P_AC_MAN};   /* off the algorithm: played by hand */
+static int by_hand(int vc) { return vc >= 0 && proj.par[HAND_PAR[vc]] != 0; }
 static int kit_view(int v) { return v == V_DRUMS || v == V_LINKS || v == V_KIT || v == V_SEQ; }
 
 static void caps(char *d, const char *s, int n);
@@ -823,6 +825,23 @@ static void input(void)
                 return;
             }
 #endif
+            if ((i == B_ENV || i == B_LFO || i == B_ARP) && (btn >> B_SEL & 1u)) {
+                /* shift: the voice off the algorithm (silent but for the keys on its pages), or back on it */
+                static const char *const WHO[3] = {"PAD", "DRONE", "ACID"};
+                int vc = i == B_ENV ? EN_V_PAD : i == B_LFO ? EN_V_DRONE : EN_V_ACID, g, k;
+                knob_set(HAND_PAR[vc], !proj.par[HAND_PAR[vc]]);
+                if (!proj.par[HAND_PAR[vc]])     /* back on the algorithm: any of its keys let go */
+                    for (k = 0; k < NKEYS; k++)
+                        if (ui.key_voice[k] == vc + 1) {
+                            en_note(vc, 53 + k, 0);
+                            ui.key_voice[k] = 0;
+                        }
+                for (g = 0; g < NGROUP; g++)     /* and its page on screen, to play it */
+                    if (GROUP[g].btn == i && voice_of(ui.view) != vc)
+                        set_view(GROUP[g].first);
+                say(WHO[vc], proj.par[HAND_PAR[vc]] ? "BY HAND: PLAY THE KEYS" : "BACK WITH THE MUSIC");
+                ui.btn_used |= m | 1u << B_SEL;
+            }
             if (i == B_SEQ && (btn >> B_SEL & 1u)) {   /* shift: the links on and off */
                 knob_set(P_LINKS, !proj.par[P_LINKS]);
                 say("LINKS", proj.par[P_LINKS] ? "ON" : "OFF");
@@ -906,7 +925,7 @@ static void input(void)
                     for (s = 0; s < 16; s++)
                         if (WHITE_KEY[s] == i)
                             step_toggle(s);
-                } else if (voice_of(ui.view) >= 0) {   /* a voice's page: the key plays it */
+                } else if (by_hand(voice_of(ui.view))) {   /* a voice off the algorithm, its page: the key plays it */
                     ui.key_voice[i] = (uint8_t)(voice_of(ui.view) + 1);
                     en_note(voice_of(ui.view), 53 + (int)i, 1);
                 } else {
@@ -1409,9 +1428,9 @@ static int help_lines(int b, const char *l[HELP_LINES])
 #define L(t) (l[n++] = (t))
     switch (b) {
     case B_HOME: L("TEMPO"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("+ SELECT: TEMPO"); break;
-    case B_ENV: L("THE PAD; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("KEYS HERE PLAY IT"); L("SEL + ALGO: ITS SOUND"); break;
-    case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("KEYS HERE PLAY IT"); L("SEL + ALGO: ITS SOUND"); break;
-    case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("KEYS HERE PLAY IT"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_ENV: L("THE PAD; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("+ SEL: PLAY IT BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("+ SEL: PLAY IT BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("+ SEL: PLAY IT BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
         static char cpu[24];
         uint32_t c = plat_cpu_pct(), x = plat_xruns(), j = 4;
@@ -1557,7 +1576,8 @@ static void draw_knobs(void)
     h = hash(h, (uint32_t)proj.par[P_PADTONE] | (uint32_t)proj.par[P_DR_INST] << 3 | (uint32_t)proj.par[P_AC_WAVE] << 6 |
                 (uint32_t)(proj.par[P_KIT_KICK] | proj.par[P_KIT_SNARE] << 3 | proj.par[P_KIT_HAT] << 6) << 9 |
                 (uint32_t)proj.par[P_KIT_PERC] << 18);
-    h = hash(h, (uint32_t)proj.par[P_LINKS] << 8 |
+    h = hash(h, (uint32_t)(proj.par[P_PAD_MAN] | proj.par[P_DR_MAN] << 1 | proj.par[P_AC_MAN] << 2) << 24 |
+                (uint32_t)proj.par[P_LINKS] << 8 |
                     (uint32_t)(proj.par[oct_par(ui.view)] + 8) << 12);
     if (ui.view == V_GLOBAL)
         h = hash(h, (uint32_t)proj.piece | (uint32_t)(proj.edited >> proj.piece & 1u) << 8 |
@@ -1617,7 +1637,9 @@ static void draw_knobs(void)
                 caps(u, "HYP-1", sizeof u);
             }
             xs = cv_text(4, -1, &FONT_XS, u, K_DIM);
-            if (proj.par[P_LINKS])               /* the links on: said beside it */
+            if (by_hand(vc))                     /* the voice off the algorithm: said beside its sound */
+                xs = cv_text(xs + 5, -1, &FONT_XS, "BY HAND", K_ACC);
+            else if (proj.par[P_LINKS])          /* the links on: said beside it */
                 xs = cv_text(xs + 5, -1, &FONT_XS, "+LINK", K_ACC);
             else if (ui.view == V_LINKS)
                 xs = cv_text(xs + 5, -1, &FONT_XS, "LINKS OFF", K_DIM);

@@ -8,7 +8,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.0.27** (each push to `main` builds the next one).
+by Charles Vestal. Current version: **1.0.28** (each push to `main` builds the next one).
 
 [![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
 
@@ -53,9 +53,10 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
   House, Techno, Acid, Break). Hold SEQ: the 16 white keys are the steps.
 - **Ten pieces** (01–10), each with its own settings, patterns and drum sounds. On Global, SAVE stores
   the piece (written as soon as the music stops, so it never interrupts a take).
-- **Play a voice**: with a voice's page on screen the keys play it over the song: the pad up to four
-  notes, the drone and the acid one (sliding, 303-style). **SEL + ALGORITHM** changes the sound of the
-  voice on screen, or the whole kit on the drums' pages. Tempo runs from 70 to 190.
+- **The keys** set the scale, as on AMB-1. **By hand**: SEL + ENV / LFO / ARP takes the pad, drone or acid
+  off the algorithm, and on its pages the keys play it over the song (the pad up to four notes, the drone
+  and the acid one, the acid sliding 303-style); SEL + the button again gives it back. **SEL + ALGORITHM**
+  changes the sound of the voice on screen, or the whole kit on the drums' pages. Tempo runs from 70 to 190.
 - **Links** (SEL + SEQ, amounts on the Links page): the drums patched into the voices. Each kick opens
   the drone's filter, each snare or clap flashes the pad, hats accent the acid, and the perc lane can
   clock the acid line.
@@ -87,7 +88,7 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
 | FX | The effects menu |
 | SEL | Shift (SEL + SEQ: the links on and off; SEL + GLO: remote, the panel plays the emulator) |
 | PLAY · REC · EDIT | Play / stop · freeze · the next chord |
-| Keys | The scale; on a voice's pages they play that voice; in the sequencer the steps; in FX the effects |
+| Keys | The scale; on the pages of a voice played by hand (SEL + its button), that voice; in the sequencer the steps; in FX the effects |
 | OCT− / OCT+ | ±3 octaves: the page's voice (pad, drone, acid), or the whole song on any other page; in the sequencer, the drum |
 
 ## Versions
@@ -96,6 +97,7 @@ Each build is numbered 1.0.N from the workflow's run; the installer always offer
 
 | Version | What came in |
 |---|---|
+| 1.0.28 | The keys set the scale again everywhere; a voice is played by hand only when taken off the algorithm (SEL + ENV / LFO / ARP), which silences its generated part |
 | 1.0.27 | The voice bank: eight sounds each for pad, drone and acid, a kit of five sounds per drum (the styles become sounds; stored styles carry over), and the keys play the voice on screen |
 | 1.0.25 – 1.0.26 | ECO-1 (experimental) built alongside, with a HYP-1 / ECO-1 dropdown on the site |
 | 1.0.22 – 1.0.24 | The board (feature requests, comments); a Ko-fi button |

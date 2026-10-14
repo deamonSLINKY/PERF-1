@@ -58,12 +58,19 @@ press SEL
 turn ALGO 4
 release SEL
 wait 600
+press SEL
+tap LFO
+release SEL
+wait 1500
 key w2 down
 wait 1500
 shot sound_drone.png
 echo @drone_play
 leds
 key w2 up
+press SEL
+tap LFO
+release SEL
 tap ARP
 tap ARP
 turn K4 3
