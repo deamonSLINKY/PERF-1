@@ -8,7 +8,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.0.29** (each push to `main` builds the next one).
+by Charles Vestal. Current version: **1.0.30** (each push to `main` builds the next one).
 
 [![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
 
@@ -39,23 +39,23 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
 
 ## What it does
 
-- **Pad**: four breathing voices in eight sounds (Rhodes, sung voices, strings, glass, organ, warm, stabs,
-  dark) with their own envelope page (attack, hold,
+- **Pad**: four breathing voices in sixteen sounds (Rhodes, sung voices, strings, glass, organ, warm, stabs,
+  dark, dub chords, trance supersaw, poly, hollow, bell and organ stabs, rave stabs, sine) with their own envelope page (attack, hold,
   release, rest) and LFO page (rate, depth, shape, target).
-- **Drone**: eight sounds (saws, warm, grit, dirty, Reese, pulse, FM, organ) and a sub through a resonant 24 dB low-pass, with an envelope (on each chord
+- **Drone**: sixteen sounds (saws, warm, grit, dirty, Reese, pulse, FM, organ, rumble, sub, square, hoover, fifths, metal, sync, bright) and a sub through a resonant 24 dB low-pass, with an envelope (on each chord
   or every 1–8 bars) and an LFO (a 16-bar sweep on the cutoff by default).
 - **Acid**: a generative 303-style line: 1–16 steps of chord tones with accents and slides, resonant
-  filter, envelope, eight sounds (saw, square, driven, sync, pluck, PWM, chip, sub). Mutate rewrites steps as it plays.
+  filter, envelope, sixteen sounds (saw, square, driven, sync, pluck, PWM, chip, sub, and arp leads: trance, bleep, fifth, bell, organ, laser, fold, soft). Mutate rewrites steps as it plays.
 - **Noise**: eight colours (white, pink, brown, blue, violet, grey, crackle, radio hiss), a tone filter
   and its own sidechain pump.
 - **Drums**: a 16-step sequencer with six lanes (kick, snare, clap, closed hat, open hat, perc), six
-  patterns per piece, a level, tune and decay per lane, and a kit: each drum's sound from five (Hypno,
-  House, Techno, Acid, Break). Hold SEQ: the 16 white keys are the steps.
+  patterns per piece, a level, tune and decay per lane, and a kit: each drum's sound from eight (Hypno,
+  House, Techno, Acid, Break, Minimal, Hard, 808). Hold SEQ: the 16 white keys are the steps.
 - **Ten pieces** (01–10), each with its own settings, patterns and drum sounds. On Global, SAVE stores
   the piece (written as soon as the music stops, so it never interrupts a take).
 - **The keys** set the scale, as on AMB-1. **By hand**: on a voice's page, SEL + ENV takes the pad, drone or acid
   off the algorithm, and on its pages the keys play it over the song (the pad up to four notes, the drone
-  and the acid one, the acid sliding 303-style); SEL + the button again gives it back. **SEL + ALGORITHM**
+  and the acid one, the acid sliding 303-style); SEL + ENV again gives it back. **SEL + ALGORITHM**
   changes the sound of the voice on screen, or the whole kit on the drums' pages. Tempo runs from 70 to 190.
 - **Links** (SEL + SEQ, amounts on the Links page): the drums patched into the voices. Each kick opens
   the drone's filter, each snare or clap flashes the pad, hats accent the acid, and the perc lane can
@@ -97,6 +97,7 @@ Each build is numbered 1.0.N from the workflow's run; the installer always offer
 
 | Version | What came in |
 |---|---|
+| 1.0.30 | Twice the sounds: sixteen each for pad, drone and acid (dub, trance and rave chords; rumble, hoover and fifths basses; trance, bleep, bell and laser arps) and three more kits (Minimal, Hard, 808); old style code cleared out |
 | 1.0.29 | SEL + ENV on any voice's page (pad, drone or acid, any of its three) takes that voice by hand and back; SEL + LFO / ARP no longer do |
 | 1.0.28 | The keys set the scale again everywhere; a voice is played by hand only when taken off the algorithm (SEL + a voice button), which silences its generated part |
 | 1.0.27 | The voice bank: eight sounds each for pad, drone and acid, a kit of five sounds per drum (the styles become sounds; stored styles carry over), and the keys play the voice on screen |

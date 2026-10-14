@@ -73,6 +73,7 @@ volatile uint16_t en_pats[EN_NPAT][EN_NLANE];
 #define LV(l) P_LANE_LVL(l)
 #define TU(l) P_LANE_TUNE(l)
 #define DE(l) P_LANE_DEC(l)
+#define KIT(k) P_KIT_KICK, k, P_KIT_SNARE, k, P_KIT_HAT, k, P_KIT_PERC, k   /* all four drums from kit k */
 static const int16_t PC_HYPNOS[] = {-1};
 static const int16_t PC_UNDERTOW[] = {P_TEMPO, 124, P_ROOT, 2, P_MODE, 1, P_PAD, 30, P_ACID, 45, P_BASS, 80, P_NOISE, 25,
     P_NZ_COLOR, 2, P_BASSOCT, -1, P_DR_RES, 60, P_DL_DEPTH, 70, P_AC_CUT, 25, P_AC_DENS, 45, P_AC_LEN, 13,
@@ -97,7 +98,7 @@ static const int16_t PC_TIDAL[] = {P_TEMPO, 126, P_ROOT, 10, P_MODE, 4, P_PAD, 5
     P_DE_TRIG, 3, P_DE_AMT, 60, TU(5), -25, DE(5), 60, LV(5), 60, -1};
 static const int16_t PC_WAREHOUSE[] = {P_TEMPO, 136, P_ROOT, 0, P_MODE, 2, P_PAD, 15, P_ACID, 55, P_BASS, 80,
     P_DRIVE, 75, P_AC_RES, 85, P_AC_ENV, 75, P_AC_DENS, 75, P_EVOLVE, 55, P_MOTION, 50, P_DL_DEPTH, 65,
-    P_NOISE, 20, P_NZ_COLOR, 5, P_REVERB, 30, P_SIZE, 55, P_ECHO, 30, P_PATTERN, 1, P_STYLE, 2,
+    P_NOISE, 20, P_NZ_COLOR, 5, P_REVERB, 30, P_SIZE, 55, P_ECHO, 30, P_PATTERN, 1, KIT(2), P_PADTONE, 7, P_DR_INST, 2,
     LV(0), 90, DE(0), 60, LV(4), 60, DE(4), 60, -1};
 static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BRIGHT, 30, P_PE_ATK, 60, P_PE_REL, 70,
     P_ACID, 35, P_AC_CUT, 25, P_AC_DENS, 40, P_AC_LEN, 11, P_AC_MUT, 40, P_BASS, 60, P_NOISE, 30, P_NZ_COLOR, 1,
@@ -106,6 +107,7 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
 #undef LV
 #undef TU
 #undef DE
+#undef KIT
 static const int16_t *const PIECES[EN_NPIECES] = {
     PC_HYPNOS, PC_UNDERTOW, PC_MONOLITH, PC_ASCENSION, PC_NIGHT_DRIVE,
     PC_DUB_CHAMBER, PC_GLASS_TUNNEL, PC_TIDAL, PC_WAREHOUSE, PC_DEEP_FIELD,
@@ -122,7 +124,6 @@ void en_piece(int i, int16_t *par, uint16_t *pool)
         par[p] = PARAMS[p].def;
     for (c = PIECES[i]; c[0] >= 0; c += 2)
         par[c[0]] = c[1];
-    en_style_sounds(par);                       /* a recipe's style: its kit and sounds */
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
 void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
@@ -146,10 +147,13 @@ static const char *const TRIG_NAME[6] = {"Chord", "1 bar", "2 bars", "4 bars", "
 static const char *const THEME_NAME[EN_NTHEME] = {"Synth", "Acid", "Ice", "Ember", "Phosphor"};
 /* the voice bank: what each voice can play (the sounds themselves: PAD_SOUND, DRONE_SOUND, ACID_SOUND, and
  * the kits: the old styles' drums) */
-const char *const EN_PAD_SOUND[EN_NSOUND] = {"Rhodes", "Voices", "Strings", "Glass", "Organ", "Warm", "Stabs", "Dark"};
-const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", "Reese", "Pulse", "FM", "Organ"};
-const char *const EN_ACID_SOUND[EN_NSOUND] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub"};
-const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break"};
+const char *const EN_PAD_SOUND[EN_NSOUND] = {"Rhodes", "Voices", "Strings", "Glass", "Organ", "Warm", "Stabs", "Dark",
+                                             "Dub", "Trance", "Poly", "Hollow", "Pings", "Hits", "Rave", "Sine"};
+const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", "Reese", "Pulse", "FM", "Organ",
+                                               "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright"};
+const char *const EN_ACID_SOUND[EN_NSOUND] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
+                                              "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft"};
+const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808"};
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -527,72 +531,101 @@ static float motion;                            /* 0..1: Motion */
 
 /* -------------------------------------------------- the voice bank --- */
 /* What each voice plays. The drums: a kit for each of the kick, the snare (with the clap), the hats (closed
- * and open) and the perc, from the five the styles had (hypnotic, house, techno, acid, break). The pad,
- * drone and acid: eight sounds each (PAD_SOUND, DRONE_SOUND, ACID_SOUND below). Before 1.0.27 a piece
- * had one style for all of it; en_style_sounds turns a stored style into these. */
+ * and open) and the perc (KITS: the first five were the old styles'). The pad, drone and acid: sixteen
+ * sounds each (PAD_SOUND, DRONE_SOUND, ACID_SOUND below). Before 1.0.27 a piece had one style for all of
+ * it; en_style_sounds turns a stored style into these. */
 typedef struct {
-    uint8_t tmin, tmax;                         /* its usual tempo */
-    float swing;                                /* added to Swing (a part of a sixteenth) */
     float k_start, k_drop, k_dec0, k_dec1, k_click, k_drive, k_rumble;   /* kick: its sweep from k_start times
                                                  * its note, the drop's speed, its decay, click, drive, a rumble */
     float sn_f1, sn_f2, sn_noise, sn_body, sn_dec;   /* snare: its two tones (Hz), noise, body, decay */
     float cl_gap, cl_dec;                       /* clap: its bursts apart (samples), its tail */
     float h_metal, h_noise, h_dec, oh_dec;      /* hats: the metal's pitch, the noise in it, the decays */
     float p_freq, p_ratio, p_idx;               /* perc: its note (Hz), the modulator's ratio, its index */
-    uint8_t stabs;                              /* the pad: chords stabbed on the off-beats, not breaths */
-    float pad_fc, pad_g;                        /* the pad's filter and level */
-    float d_saw, d_sub, d_drive, d_cut, d_g;    /* drone: saws, sub, drive, cutoff (octaves), level */
-    float a_drive, a_g;                         /* acid: drive, level */
-    uint8_t a_half;                             /* the acid line at half time */
-    float duck, chop, crush;                    /* the kick's duck; breakcore's chops and crush */
-} style_t;
-static const style_t STYLES[EN_NSTYLE] = {
-    /* hypnotic: as it was */
-    {110, 145, 0.0f, 5.0f, 0.0016f, 0.15f, 0.75f, 0.25f, 1.0f, 0.0f, 185.0f, 330.0f, 1.1f, 0.7f, 1.0f, 353.0f, 1.0f,
-     1.0f, 0.6f, 1.0f, 1.0f, 380.0f, 1.48f, 1.4f, 0, 1.0f, 1.0f, 0.4f, 0.55f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0, 1.0f, 0.0f,
-     0.0f},
-    /* house: a round kick, a shuffle, a wide clap, open hats, congas; the pad stabs the off-beats; a warm bass */
-    {118, 128, 0.12f, 3.2f, 0.0011f, 0.2f, 0.8f, 0.12f, 0.6f, 0.0f, 210.0f, 360.0f, 1.3f, 0.5f, 0.9f, 440.0f, 1.4f,
-     1.25f, 0.9f, 1.1f, 1.4f, 300.0f, 1.0f, 0.6f, 1, 1.3f, 0.9f, 0.3f, 0.75f, 0.8f, -0.4f, 1.0f, 1.0f, 0.85f, 0, 1.25f,
-     0.0f, 0.0f},
-    /* techno: a hard kick with a rumble, metal hats, a tight clap, a bell perc; a dark pad, a gritty drone */
-    {128, 138, 0.0f, 7.0f, 0.0024f, 0.12f, 0.5f, 0.4f, 1.6f, 0.6f, 170.0f, 290.0f, 1.4f, 0.4f, 0.7f, 260.0f, 0.7f, 1.55f,
-     0.35f, 0.7f, 1.3f, 560.0f, 3.5f, 2.2f, 0, 0.6f, 0.8f, 0.45f, 0.5f, 2.2f, -0.3f, 1.0f, 1.2f, 0.95f, 0, 1.1f, 0.0f,
-     0.0f},
-    /* acid: a punchy 909-ish kit with a cowbell, a little swing; the 303 up front, driven; pad and drone back */
-    {120, 132, 0.06f, 4.0f, 0.0014f, 0.13f, 0.6f, 0.35f, 1.25f, 0.0f, 180.0f, 330.0f, 1.5f, 0.6f, 1.2f, 440.0f, 1.1f,
-     1.0f, 0.6f, 0.9f, 1.6f, 560.0f, 1.48f, 2.0f, 0, 0.9f, 0.6f, 0.35f, 0.6f, 1.0f, -0.2f, 0.7f, 1.5f, 1.45f, 0, 1.0f,
-     0.0f, 0.0f},
-    /* breakcore: a distorted kick, a cracking snare, noisy hats, a tom; chopped and crushed; a dirty sub, the
-     * acid at half time over it */
-    {160, 180, 0.0f, 6.0f, 0.0022f, 0.1f, 0.45f, 0.45f, 2.5f, 0.2f, 240.0f, 420.0f, 1.6f, 0.8f, 0.6f, 300.0f, 0.8f,
-     1.3f, 1.0f, 0.6f, 0.8f, 200.0f, 1.0f, 0.9f, 0, 1.0f, 1.0f, 0.3f, 0.8f, 3.0f, -0.6f, 0.9f, 1.3f, 0.9f, 1, 0.8f, 1.0f,
-     0.6f},
+    float duck, chop, crush;                    /* the kick's: its duck; chops and crush (the drums all) */
+} kit_t;
+static const kit_t KITS[EN_NKIT] = {
+    /* Hypno: as it always was */
+    {5.0f, 0.0016f, 0.15f, 0.75f, 0.25f, 1.0f, 0.0f,
+     185.0f, 330.0f, 1.1f, 0.7f, 1.0f, 353.0f, 1.0f,
+     1.0f, 0.6f, 1.0f, 1.0f, 380.0f, 1.48f, 1.4f, 1.0f, 0.0f, 0.0f},
+    /* House: a round kick, a wide clap, open hats, congas */
+    {3.2f, 0.0011f, 0.2f, 0.8f, 0.12f, 0.6f, 0.0f,
+     210.0f, 360.0f, 1.3f, 0.5f, 0.9f, 440.0f, 1.4f,
+     1.25f, 0.9f, 1.1f, 1.4f, 300.0f, 1.0f, 0.6f, 1.25f, 0.0f, 0.0f},
+    /* Techno: a hard kick with a rumble, metal hats, a tight clap, a bell perc */
+    {7.0f, 0.0024f, 0.12f, 0.5f, 0.4f, 1.6f, 0.6f,
+     170.0f, 290.0f, 1.4f, 0.4f, 0.7f, 260.0f, 0.7f,
+     1.55f, 0.35f, 0.7f, 1.3f, 560.0f, 3.5f, 2.2f, 1.1f, 0.0f, 0.0f},
+    /* Acid: a punchy 909-ish kit with a cowbell */
+    {4.0f, 0.0014f, 0.13f, 0.6f, 0.35f, 1.25f, 0.0f,
+     180.0f, 330.0f, 1.5f, 0.6f, 1.2f, 440.0f, 1.1f,
+     1.0f, 0.6f, 0.9f, 1.6f, 560.0f, 1.48f, 2.0f, 1.0f, 0.0f, 0.0f},
+    /* Break: a distorted kick, a cracking snare, noisy hats, a tom; chopped and crushed */
+    {6.0f, 0.0022f, 0.1f, 0.45f, 0.45f, 2.5f, 0.2f,
+     240.0f, 420.0f, 1.6f, 0.8f, 0.6f, 300.0f, 0.8f,
+     1.3f, 1.0f, 0.6f, 0.8f, 200.0f, 1.0f, 0.9f, 0.8f, 1.0f, 0.6f},
+    /* Minimal: a short clicky kick, a rim, tight hats, a woodblock */
+    {4.0f, 0.0018f, 0.08f, 0.35f, 0.5f, 1.0f, 0.0f,
+     400.0f, 820.0f, 0.5f, 1.0f, 0.5f, 300.0f, 0.6f,
+     1.4f, 0.3f, 0.5f, 0.7f, 720.0f, 2.0f, 0.8f, 0.9f, 0.0f, 0.0f},
+    /* Hard: an industrial kick, distorted with a long rumble, a noisy snare, a metal clank; a little crushed */
+    {8.0f, 0.0028f, 0.14f, 0.6f, 0.6f, 3.2f, 0.9f,
+     200.0f, 340.0f, 1.8f, 0.5f, 0.8f, 220.0f, 0.8f,
+     1.7f, 0.8f, 0.8f, 1.2f, 140.0f, 2.76f, 2.8f, 1.3f, 0.0f, 0.25f},
+    /* 808: a long boom, a snappy snare, a wide clap, a cowbell */
+    {2.2f, 0.0007f, 0.3f, 1.6f, 0.08f, 0.5f, 0.0f,
+     238.0f, 476.0f, 1.0f, 0.9f, 1.1f, 380.0f, 1.6f,
+     1.15f, 0.5f, 0.8f, 1.8f, 540.0f, 1.48f, 1.2f, 1.0f, 0.0f, 0.0f},
 };
-static const style_t *KK = &STYLES[0], *KS = &STYLES[0], *KH = &STYLES[0], *KP = &STYLES[0];   /* kick, snare and
+static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */
 
 /* the pad's sounds: the oscillator, stabs (chords on the off-beats) or breaths, its bus filter and level */
-enum { PO_RHODES, PO_VOICES, PO_STRINGS, PO_GLASS, PO_ORGAN, PO_WARM };
+enum { PO_RHODES, PO_VOICES, PO_STRINGS, PO_GLASS, PO_ORGAN, PO_WARM, PO_SUPER, PO_PWM, PO_HOLLOW, PO_SINE };
 static const struct { uint8_t osc, stabs; float fc, g; } PAD_SOUND[EN_NSOUND] = {
     {PO_RHODES, 0, 1.0f, 1.0f}, {PO_VOICES, 0, 1.0f, 1.0f}, {PO_STRINGS, 0, 1.25f, 0.75f}, {PO_GLASS, 0, 1.7f, 0.85f},
     {PO_ORGAN, 0, 1.1f, 0.8f}, {PO_WARM, 0, 0.85f, 1.0f}, {PO_RHODES, 1, 1.3f, 0.9f}, {PO_VOICES, 0, 0.6f, 0.8f},
+    {PO_STRINGS, 1, 0.55f, 1.4f},               /* Dub: saw chords stabbed, dark, into the echo */
+    {PO_SUPER, 0, 1.3f, 0.75f},                 /* Trance: a supersaw */
+    {PO_PWM, 0, 1.1f, 1.1f},                   /* Poly: two detuned saws less each other, a pulse's width drifting */
+    {PO_HOLLOW, 0, 1.0f, 0.75f},                /* Hollow: odd harmonics, a clarinet's */
+    {PO_GLASS, 1, 1.6f, 1.2f},                  /* Pings: the bells, stabbed */
+    {PO_ORGAN, 1, 1.3f, 1.05f},                 /* Hits: a house organ, stabbed */
+    {PO_SUPER, 1, 1.5f, 1.1f},                  /* Rave: supersaw stabs */
+    {PO_SINE, 0, 1.0f, 0.65f},                   /* Sine: pure, for minimal */
 };
 /* the drone's: the oscillator; the saws and sub's levels, drive, cutoff (octaves) and level */
-enum { DO_SAWS, DO_REESE, DO_PULSE, DO_FM, DO_ORGAN };
+enum { DO_SAWS, DO_REESE, DO_PULSE, DO_FM, DO_ORGAN, DO_SINE, DO_SQUARE, DO_HOOVER, DO_FIFTHS, DO_METAL, DO_SYNC };
 typedef struct { uint8_t osc; float saw, sub, drive, cut, g; } drone_snd_t;
 static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_SAWS, 0.4f, 0.55f, 1.0f, 0.0f, 1.0f},   {DO_SAWS, 0.3f, 0.75f, 0.8f, -0.4f, 1.0f},
     {DO_SAWS, 0.45f, 0.5f, 2.2f, -0.3f, 1.0f},  {DO_SAWS, 0.3f, 0.8f, 3.0f, -0.6f, 0.9f},
     {DO_REESE, 0.5f, 0.4f, 1.4f, 0.0f, 1.0f},   {DO_PULSE, 0.45f, 0.45f, 1.1f, 0.0f, 1.0f},
     {DO_FM, 0.55f, 0.35f, 1.2f, 0.4f, 1.0f},    {DO_ORGAN, 0.45f, 0.5f, 1.0f, 0.6f, 0.9f},
+    {DO_SAWS, 0.12f, 1.0f, 2.6f, -1.0f, 0.95f}, /* Rumble: the sub driven, the saws far back: a techno rumble */
+    {DO_SINE, 0.6f, 0.5f, 1.3f, 0.0f, 1.05f},   /* Sub: a sine and its sub, a little drive */
+    {DO_SQUARE, 0.45f, 0.45f, 1.0f, 0.2f, 0.95f},   /* Square: a hollow deep-house bass */
+    {DO_HOOVER, 0.4f, 0.5f, 1.6f, 0.5f, 0.85f}, /* Hoover: detuned pulses, far apart, and an octave down */
+    {DO_FIFTHS, 0.4f, 0.5f, 1.2f, 0.2f, 0.9f},  /* Fifths: the root and its fifth, a dub techno chord */
+    {DO_METAL, 0.5f, 0.45f, 1.3f, 0.5f, 0.95f}, /* Metal: FM at a ratio off the harmonics: clangy */
+    {DO_SYNC, 0.45f, 0.5f, 1.2f, 0.3f, 0.85f},  /* Sync: a saw synced, the envelope sweeping it */
+    {DO_SAWS, 0.45f, 0.4f, 1.2f, 1.2f, 0.85f},  /* Bright: the saws, the filter open */
 };
 /* the acid's: the oscillator, its drive and level */
-enum { AO_SAW, AO_SQUARE, AO_SYNC, AO_PLUCK, AO_PWM, AO_CHIP, AO_SUB };
+enum { AO_SAW, AO_SQUARE, AO_SYNC, AO_PLUCK, AO_PWM, AO_CHIP, AO_SUB, AO_TRANCE, AO_BLEEP, AO_FIFTH, AO_BELL, AO_ORGAN,
+       AO_LASER, AO_FOLD, AO_SOFT };
 typedef struct { uint8_t osc; float drive, g; } acid_snd_t;
 static const acid_snd_t ACID_SOUND[EN_NSOUND] = {
     {AO_SAW, 1.0f, 1.0f}, {AO_SQUARE, 1.0f, 1.0f}, {AO_SAW, 1.5f, 1.45f}, {AO_SYNC, 1.1f, 0.85f},
     {AO_PLUCK, 1.0f, 1.15f}, {AO_PWM, 1.0f, 1.0f}, {AO_CHIP, 1.2f, 0.7f}, {AO_SUB, 1.1f, 0.95f},
+    {AO_TRANCE, 1.0f, 0.9f},                   /* Trance: three saws detuned, a trance arp's */
+    {AO_BLEEP, 0.9f, 0.85f},                     /* Bleep: a sine, the bleeps of early techno */
+    {AO_FIFTH, 1.1f, 0.85f},                    /* Fifth: a saw and its fifth, a rave stab */
+    {AO_BELL, 1.0f, 1.0f},                      /* Bell: FM at 3.5, the index falling */
+    {AO_ORGAN, 1.0f, 0.95f},                    /* Organ: drawbars, a house organ's riff */
+    {AO_LASER, 1.0f, 1.0f},                     /* Laser: a sine, its pitch falling with the envelope */
+    {AO_FOLD, 1.1f, 1.0f},                      /* Fold: a sine folded over, more as the envelope opens */
+    {AO_SOFT, 0.9f, 0.95f},                      /* Soft: a triangle, round, for quiet arps */
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
@@ -850,7 +883,7 @@ static inline float blep_saw(float t, float dt)
  * each chord or every 1 .. 8 bars), its LFO (to the cutoff, the pitch, the level or the drive), a slow
  * random drift, the arc, and the sections (it closes in a breakdown, opens through the build). */
 static struct {
-    float ph[3], sph, note, target, amp;
+    float ph[3], sph, mph, note, target, amp;   /* mph: Metal's modulator, Sync's slave */
     float s[4], c1[4], c2[4];                   /* the filters' states, their coefficients */
     float env;                                  /* its envelope, 0..1 */
     float gtarget;                              /* the chord's root, while the keys play it */
@@ -875,7 +908,7 @@ static struct {
     int32_t gate_left;                          /* samples until the note's gate closes; -1 held (a slide) */
     uint8_t note, sliding;
     uint8_t play;                               /* played from the keys: the line steps on, silent */
-    float ps, lph;                              /* a second phase (sync, sub), the PWM's LFO */
+    float ps, p3, lph;                          /* more phases (sync, sub, the trance saws...), the PWM's LFO */
 } acid;
 static int8_t ac_off[EN_NSTEP], ac_oct[EN_NSTEP];   /* each step: scale steps above the chord's degree, octave */
 static uint16_t ac_gate, ac_accent, ac_slide;       /* bit s: step s plays; is accented; slides into the next */
@@ -1685,12 +1718,12 @@ static void apply(int p, int v)
         if (!v && !bass.play)
             bass_to(chord_pcs[0]);
         break;
-    case P_KIT_KICK: KK = &STYLES[(unsigned)v < EN_NKIT ? v : 0]; break;   /* the kit: at each drum's next hit */
-    case P_KIT_SNARE: KS = &STYLES[(unsigned)v < EN_NKIT ? v : 0]; break;
-    case P_KIT_PERC: KP = &STYLES[(unsigned)v < EN_NKIT ? v : 0]; break;
+    case P_KIT_KICK: KK = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;   /* the kit: at each drum's next hit */
+    case P_KIT_SNARE: KS = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;
+    case P_KIT_PERC: KP = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;
     case P_KIT_HAT: {
         int k;
-        KH = &STYLES[(unsigned)v < EN_NKIT ? v : 0];
+        KH = &KITS[(unsigned)v < EN_NKIT ? v : 0];
         for (k = 0; k < 4; k++)
             hat_inc[k] = HAT_INC[k] * KH->h_metal;
         break;
@@ -2368,6 +2401,25 @@ static void render_pad(uint32_t n)
                 x = ((p0 < 0.5f ? 4.0f * p0 - 1.0f : 3.0f - 4.0f * p0) + (p1 < 0.5f ? 4.0f * p1 - 1.0f : 3.0f - 4.0f * p1)) *
                     0.7f + 0.5f * sine(p0);
                 break;
+            case PO_SUPER: {                     /* two saws detuned and one an octave up: a supersaw */
+                float p2 = 2.0f * p0;
+                p2 -= (float)(int)p2;
+                x = 0.5f * (blep_saw(p0, v->inc[0]) + blep_saw(p1, v->inc[1])) + 0.3f * blep_saw(p2, 2.0f * v->inc[0]);
+                break;
+            }
+            case PO_PWM: {                       /* a saw less another, detuned: a pulse whose width drifts */
+                float q = p1 + 0.5f;
+                if (q >= 1.0f)
+                    q -= 1.0f;
+                x = 0.55f * (blep_saw(p0, v->inc[0]) - blep_saw(q, v->inc[1])) + 0.3f * sine(p0);
+                break;
+            }
+            case PO_HOLLOW:                      /* odd harmonics: hollow, as a clarinet */
+                x = (sine(p0) + 0.33f * sine(3.0f * p0) + 0.2f * sine(5.0f * p0) + 0.14f * sine(7.0f * p0)) * 1.15f;
+                break;
+            case PO_SINE:                        /* a sine and a little of its octave */
+                x = (sine(p0) + 0.18f * sine(2.0f * p0)) * 1.3f;
+                break;
             default:                             /* Voices: as Discreet Music's Synthi, through two formants */
                 x = (p0 < 0.5f ? 4.0f * p0 - 1.0f : 3.0f - 4.0f * p0) * 1.4f + 0.45f * blep_saw(p0, v->inc[0]) + 0.6f * sine(p0);
                 v3 = x - s1;                     /* the first formant: TPT SVF (Zavalishin), bp and lp */
@@ -2426,7 +2478,7 @@ static void render_bass(uint32_t n)
                 tgt = (en_playing && !par[P_DR_MAN]) || bass.play ? 1.0f : 0.0f,
                 rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),
                 fmi = 0.5f + 2.2f * bass.env + 0.3f * arcm, pw = 0.5f + 0.3f * mod[9].v;
-    float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, amp = bass.amp, f, i0, i1, i2;
+    float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, mp = bass.mph, amp = bass.amp, f, i0, i1, i2, mi;
     if (amp < 1e-5f && !en_playing && !bass.play) {
         bass.amp = 0.0f;
         en_bass_level = 0.0f;
@@ -2434,9 +2486,11 @@ static void render_bass(uint32_t n)
     }
     bass.note += (bass.target - bass.note) * fm_minf((float)n * (bass.play ? GLIDE_K * 12.0f : GLIDE_K), 1.0f);
     f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f));   /* the LFO on the pitch: a semitone at most */
-    i0 = f * (osc == DO_REESE ? 0.9862f : 0.99481f) * (1.0f / EN_SR);   /* -9, 0, +9 cents (Reese: 24) */
+    i0 = f * (osc == DO_FIFTHS ? 1.49831f : osc == DO_REESE || osc == DO_HOOVER ? 0.9862f : 0.99481f) *
+         (1.0f / EN_SR);                        /* -9, 0, +9 cents (Reese and Hoover: 24; Fifths: a fifth) */
     i1 = f * (1.0f / EN_SR);
-    i2 = f * (osc == DO_REESE ? 1.0140f : 1.00521f) * (1.0f / EN_SR);
+    i2 = f * (osc == DO_REESE || osc == DO_HOOVER ? 1.0140f : 1.00521f) * (1.0f / EN_SR);
+    mi = osc == DO_METAL ? i1 * 1.4142f : i1 * (1.5f + 2.5f * bass.env);   /* Metal's modulator; Sync's slave */
     for (j = 0; j < n; j++) {
         float x;
         if (!(j & 31u)) {                       /* the filter, every 32 samples */
@@ -2466,6 +2520,35 @@ static void render_bass(uint32_t n)
         case DO_ORGAN:
             x = (sine(p1) + 0.5f * sine(2.0f * p1) + 0.33f * sine(3.0f * p1) + 0.2f * sine(4.0f * p1)) * dsaw * 1.5f;
             break;
+        case DO_SINE:
+            x = (sine(p1) + 0.15f * sine(2.0f * p1)) * dsaw * 1.8f;
+            break;
+        case DO_SQUARE: {                       /* a square: the saw less itself half a turn on */
+            float q = p1 + 0.5f;
+            if (q >= 1.0f)
+                q -= 1.0f;
+            x = (blep_saw(p1, i1) - blep_saw(q, i1)) * dsaw * 1.2f;
+            break;
+        }
+        case DO_HOOVER: {                       /* two pulses (a third wide), far apart, and the saw's octave down */
+            float q0 = p0 + 0.3f, q2 = p2 + 0.3f;
+            if (q0 >= 1.0f)
+                q0 -= 1.0f;
+            if (q2 >= 1.0f)
+                q2 -= 1.0f;
+            x = (blep_saw(p0, i0) - blep_saw(q0, i0) + blep_saw(p2, i2) - blep_saw(q2, i2)) * dsaw * 0.9f +
+                0.5f * dsaw * (2.0f * sp - 1.0f);
+            break;
+        }
+        case DO_FIFTHS:                         /* the root and the fifth (p0 runs at 3/2) */
+            x = (blep_saw(p1, i1) + 0.75f * blep_saw(p0, i0)) * dsaw * 1.1f;
+            break;
+        case DO_METAL:                          /* FM, the modulator at 1.41: off the harmonics */
+            x = sine_any(p1 + (0.3f + 1.6f * bass.env) * sine(mp)) * dsaw * 2.0f;
+            break;
+        case DO_SYNC:                           /* a saw synced to the note, the envelope sweeping it */
+            x = blep_saw(mp, mi) * dsaw * 1.3f;
+            break;
         default:                                /* three saws a few cents apart */
             x = (blep_saw(p0, i0) + blep_saw(p1, i1) + blep_saw(p2, i2)) * dsaw;
             break;
@@ -2475,6 +2558,11 @@ static void render_bass(uint32_t n)
         p1 += i1;
         p2 += i2;
         sp += i1 * 0.5f;                        /* the sub: an octave down */
+        mp += mi;
+        if (mp >= 1.0f)
+            mp -= (float)(int)mp;
+        if (osc == DO_SYNC && p1 >= 1.0f)
+            mp = (p1 - 1.0f) * (mi / i1);       /* the sync: the slave starts again with the note */
         if (p0 >= 1.0f)
             p0 -= 1.0f;
         if (p1 >= 1.0f)
@@ -2498,6 +2586,7 @@ static void render_bass(uint32_t n)
     bass.ph[1] = p1;
     bass.ph[2] = p2;
     bass.sph = sp;
+    bass.mph = mp;
     bass.amp = amp;
     en_bass_level = amp;
 }
@@ -2511,7 +2600,7 @@ static void render_acid(uint32_t n)
                 accamt = (float)par[P_AC_ACC] * 0.01f,
                 base = (float)par[P_AC_CUT] * 0.066f, k1 = 1.45f - 1.38f * res,
                 vel = 0.75f + 0.5f * accamt * acid.acc, glide = acid.sliding ? 0.0012f : 1.0f;
-    float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, sratio = 1.0f, pw = 0.5f;
+    float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, sratio = 1.0f, pw = 0.5f, lz = 1.0f;
     if (amp < 1e-5f && acid.amp_t <= 0.0f) {
         acid.amp = 0.0f;
         en_acid_level = 0.0f;
@@ -2529,6 +2618,7 @@ static void render_acid(uint32_t n)
             if (acid.lph >= 1.0f)
                 acid.lph -= 1.0f;
             pw = 0.5f + 0.38f * sine(acid.lph);
+            lz = 1.0f + 7.0f * acid.env * acid.env;   /* Laser: its pitch, falling as the envelope does */
             acid.env *= acid.edec;
         }
         if (acid.gate_left > 0 && --acid.gate_left == 0)
@@ -2560,6 +2650,45 @@ static void render_acid(uint32_t n)
             if (ps >= 1.0f)
                 ps -= 1.0f;
             break;
+        case AO_TRANCE:                         /* three saws, -15, 0, +15 cents */
+            x = 0.5f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0087f) + blep_saw(p3, inc * 0.9913f));
+            ps += inc * 1.0087f;
+            p3 += inc * 0.9913f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            if (p3 >= 1.0f)
+                p3 -= (float)(int)p3;
+            break;
+        case AO_BLEEP:
+            x = sine(ph) * 1.3f;
+            break;
+        case AO_FIFTH:                          /* the saw and its fifth */
+            x = 0.75f * (blep_saw(ph, inc) + 0.75f * blep_saw(ps, inc * 1.49831f));
+            ps += inc * 1.49831f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            break;
+        case AO_BELL:                           /* FM, the modulator at 3.5 */
+            x = sine_any(ph + (0.15f + 1.8f * acid.env) * sine(ps)) * 1.2f;
+            ps += inc * 3.5f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            break;
+        case AO_ORGAN:
+            x = (sine(ph) + 0.5f * sine(2.0f * ph) + 0.3f * sine(3.0f * ph) + 0.2f * sine(4.0f * ph)) * 0.95f;
+            break;
+        case AO_LASER:                          /* a sine, up to three octaves above the note as it starts, falling */
+            x = sine(ps) * 1.25f;
+            ps += inc * lz;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            break;
+        case AO_FOLD:                           /* a sine through a sine: it folds over as the envelope opens */
+            x = sine_any((0.3f + 1.2f * acid.env) * sine(ph)) * 1.1f;
+            break;
+        case AO_SOFT:                           /* a triangle */
+            x = (ph < 0.5f ? 4.0f * ph - 1.0f : 3.0f - 4.0f * ph) * 1.2f;
+            break;
         default:
             x = blep_saw(ph, inc);
             break;
@@ -2585,6 +2714,7 @@ static void render_acid(uint32_t n)
         acid.s[j] = fm_flush(acid.s[j]);
     acid.ph = ph;
     acid.ps = ps;
+    acid.p3 = p3;
     acid.inc = inc;
     acid.amp = amp;
     en_acid_level = lvl * (0.6f + 0.4f * acid.env);

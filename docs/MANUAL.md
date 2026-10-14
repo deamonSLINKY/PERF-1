@@ -6,7 +6,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
-This manual is for HYP-1 version 1.0.29. To hear it first, watch
+This manual is for HYP-1 version 1.0.30. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
 [YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
@@ -196,20 +196,20 @@ written two seconds after you change them, even while the music plays.
 
 ![Sounds](img/hyp-sounds.png)
 
-Each voice has eight sounds, and each drum five, kept with the piece. Change them on the voice's own
+Each voice has sixteen sounds, and each drum eight, kept with the piece. Change them on the voice's own
 page (the **Sound** knob), or from any of its pages with **SEL** + **ALGORITHM**. The voice keeps playing
 what it was playing: its notes, envelope, LFO and filter carry over to the new sound.
 
 | Voice | Where | Sounds |
 |---|---|---|
-| Pad | Pad, knob c | **Rhodes** (FM, blooming as it swells) · **Voices** (sung: formants) · **Strings** (two detuned saws; Detune spreads them) · **Glass** (an FM bell) · **Organ** (drawbars) · **Warm** (soft triangles) · **Stabs** (Rhodes chords on the off-beats, Pad env Release their length; Evolve adds a few) · **Dark** (Voices, closed down) |
-| Drone | Drone, knob b | **Saws** (three, a few cents apart) · **Warm** (rounder, more sub) · **Grit** (driven) · **Dirty** (a distorted sub) · **Reese** (two saws far apart: phasing) · **Pulse** (its width wandering) · **FM** (the envelope opening it) · **Organ** |
-| Acid | Acid env, knob d | **Saw** · **Square** (the 303's two) · **Driven** (pushed hard, up front) · **Sync** (hard sync, swept by the envelope) · **Pluck** (FM) · **PWM** · **Chip** (a raw 8-bit square) · **Sub** (with a square an octave down) |
+| Pad | Pad, knob c | **Rhodes** (FM, blooming as it swells) · **Voices** (sung: formants) · **Strings** (two detuned saws; Detune spreads them) · **Glass** (an FM bell) · **Organ** (drawbars) · **Warm** (soft triangles) · **Stabs** (Rhodes chords on the off-beats, Pad env Release their length; Evolve adds a few) · **Dark** (Voices, closed down) · **Dub** (saw chords stabbed, dark, for dub techno) · **Trance** (a supersaw) · **Poly** (two detuned saws as a drifting pulse, an 80s poly) · **Hollow** (odd harmonics, like a clarinet) · **Pings** (the Glass bells, stabbed) · **Hits** (a house organ, stabbed) · **Rave** (supersaw stabs) · **Sine** (pure, for minimal) |
+| Drone | Drone, knob b | **Saws** (three, a few cents apart) · **Warm** (rounder, more sub) · **Grit** (driven) · **Dirty** (a distorted sub) · **Reese** (two saws far apart: phasing) · **Pulse** (its width wandering) · **FM** (the envelope opening it) · **Organ** · **Rumble** (the sub driven, a techno rumble) · **Sub** (a sine and its sub) · **Square** (hollow, deep house) · **Hoover** (detuned pulses and an octave down) · **Fifths** (the root and its fifth: a dub chord) · **Metal** (FM off the harmonics: clangy) · **Sync** (swept by the envelope) · **Bright** (the saws, the filter open) |
+| Acid | Acid env, knob d | **Saw** · **Square** (the 303's two) · **Driven** (pushed hard, up front) · **Sync** (hard sync, swept by the envelope) · **Pluck** (FM) · **PWM** · **Chip** (a raw 8-bit square) · **Sub** (with a square an octave down) · **Trance** (three detuned saws: a trance arp) · **Bleep** (a sine, the bleeps of early techno) · **Fifth** (a saw and its fifth: a rave stab) · **Bell** (FM) · **Organ** (a house organ riff) · **Laser** (its pitch falling with the envelope) · **Fold** (a sine folding over as the envelope opens) · **Soft** (a triangle, for quiet arps) |
 
 ![The Kit page](img/hyp-screen-kit.png)
 
 **The kit:** press **SEQ** three times for the Kit page. Each knob picks one drum's sound: the kick,
-the snare (and the clap with it), the hats (closed and open) and the perc, each from the same five:
+the snare (and the clap with it), the hats (closed and open) and the perc, each from the same eight:
 
 | Kit | The kick | The rest |
 |---|---|---|
@@ -218,6 +218,9 @@ the snare (and the clap with it), the hats (closed and open) and the perc, each 
 | Techno | Hard, with a rumble tail | Tight clap, metal hats, a bell perc |
 | Acid | Punchy 909-style | A cowbell for the perc |
 | Break | Distorted | A cracking snare, noisy hats, a tom. The Break kick also chops the drums live (ghost snares, extra kicks, 32nd rolls; Evolve: more) and crushes them. |
+| Minimal | Short and clicky | A rim for the snare, tight hats, a woodblock |
+| Hard | Industrial: distorted, a long rumble | A noisy snare, a metal clank; the Hard kick crushes the drums a little |
+| 808 | A long boom | A snappy snare, a wide clap, a cowbell |
 
 On any of the drums' pages, **SEL** + **ALGORITHM** turns all four to the next kit at once. Mix them
 freely: a Techno kick under House hats is fine.

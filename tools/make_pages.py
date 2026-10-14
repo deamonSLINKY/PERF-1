@@ -143,24 +143,24 @@ the whole performance into your DAW.</p>
 
 <h2>The voices</h2>
 <div class="grid">
-  <div class="card"><h3>Pad</h3><p>Four breathing voices in eight sounds (Rhodes, sung, strings, glass, organ and more), each on its own cycle, so the chord forms and dissolves. <b>Env</b> and <b>LFO</b> pages shape the breath and move the filter, level, pan or pitch.</p></div>
-  <div class="card"><h3>Drone</h3><p>Eight sounds (saws, Reese, pulse, FM, organ&hellip;) and a sub through a resonant 24 dB low-pass, with its own <b>envelope</b> (on each chord, or every 1&ndash;8 bars) and <b>LFO</b>: a slow 16-bar sweep by default.</p></div>
-  <div class="card"><h3>Acid</h3><p>A 303-style line written as it plays: 1&ndash;16 steps of chord tones with accents and slides, in eight sounds from the 303's saw and square to sync, pluck and chip. <b>Mutate</b> rewrites a few steps each time round.</p></div>
-  <div class="card"><h3>Drums</h3><p>Kick, snare, clap, closed and open hats, perc, each drum's sound from five kits. A <b>16-step sequencer</b> with six patterns per piece; a new pattern waits for the bar.</p></div>
+  <div class="card"><h3>Pad</h3><p>Four breathing voices in sixteen sounds (Rhodes, sung, strings, glass, dub and rave chords, supersaw and more), each on its own cycle, so the chord forms and dissolves. <b>Env</b> and <b>LFO</b> pages shape the breath and move the filter, level, pan or pitch.</p></div>
+  <div class="card"><h3>Drone</h3><p>Sixteen sounds (saws, Reese, rumble, hoover, fifths, FM&hellip;) and a sub through a resonant 24 dB low-pass, with its own <b>envelope</b> (on each chord, or every 1&ndash;8 bars) and <b>LFO</b>: a slow 16-bar sweep by default.</p></div>
+  <div class="card"><h3>Acid</h3><p>A 303-style line written as it plays: 1&ndash;16 steps of chord tones with accents and slides, in sixteen sounds from the 303's saw and square to sync, pluck and chip. <b>Mutate</b> rewrites a few steps each time round.</p></div>
+  <div class="card"><h3>Drums</h3><p>Kick, snare, clap, closed and open hats, perc, each drum's sound from eight kits. A <b>16-step sequencer</b> with six patterns per piece; a new pattern waits for the bar.</p></div>
   <div class="card"><h3>Noise</h3><p>A bed of grain in eight colours (white, pink, brown, blue, violet, grey, crackle, radio hiss), with its own tone and sidechain pump.</p></div>
   <div class="card"><h3>Space</h3><p>A tape echo, from an eighth to a bar, and a plate reverb, from a room to a long hall.</p></div>
 </div>
 
 <h2>Sounds, and playing them</h2>
 <figure><img src="img/hyp-sounds.png" width="2040" height="568" alt="Four HYP-1 screens: the pad as Glass, the drone as Reese, the acid as Sync, and the Kit page set to Techno."></figure>
-<p>Each voice has eight sounds and each drum five, stored with the piece. Pick them on the voice's own page, or hold <kbd>SEL</kbd> and turn <kbd>ALGORITHM</kbd> on any of its pages; on the drums' pages that swaps the whole kit.</p>
+<p>Each voice has sixteen sounds and each drum eight, stored with the piece. Pick them on the voice's own page, or hold <kbd>SEL</kbd> and turn <kbd>ALGORITHM</kbd> on any of its pages; on the drums' pages that swaps the whole kit.</p>
 <table>
   <thead><tr><th>Voice</th><th>Sounds</th></tr></thead>
   <tbody>
-  <tr><td>Pad</td><td>Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs (chords on the off-beats), Dark</td></tr>
-  <tr><td>Drone</td><td>Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ</td></tr>
-  <tr><td>Acid</td><td>Saw, Square, Driven, Sync, Pluck, PWM, Chip, Sub</td></tr>
-  <tr><td>Kit</td><td>Kick, snare (and clap), hats and perc, each Hypno, House, Techno, Acid or Break (the Break kick chops and crushes the drums live)</td></tr>
+  <tr><td>Pad</td><td>Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs (chords on the off-beats), Dark, Dub (dark saw stabs), Trance (supersaw), Poly, Hollow, Pings (bell stabs), Hits (organ stabs), Rave (supersaw stabs), Sine</td></tr>
+  <tr><td>Drone</td><td>Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ, Rumble, Sub, Square, Hoover, Fifths, Metal, Sync, Bright</td></tr>
+  <tr><td>Acid</td><td>Saw, Square, Driven, Sync, Pluck, PWM, Chip, Sub, Trance, Bleep, Fifth, Bell, Organ, Laser, Fold, Soft (the last eight made for arps and leads)</td></tr>
+  <tr><td>Kit</td><td>Kick, snare (and clap), hats and perc, each Hypno, House, Techno, Acid, Break, Minimal, Hard or 808 (the Break kick chops and crushes the drums live)</td></tr>
   </tbody>
 </table>
 <div class="pair" style="margin-top:1rem">

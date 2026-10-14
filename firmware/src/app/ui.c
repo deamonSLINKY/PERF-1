@@ -478,7 +478,6 @@ static const int HAND_PAR[3] = {P_PAD_MAN, P_DR_MAN, P_AC_MAN};   /* off the alg
 static int by_hand(int vc) { return vc >= 0 && proj.par[HAND_PAR[vc]] != 0; }
 static int kit_view(int v) { return v == V_DRUMS || v == V_LINKS || v == V_KIT || v == V_SEQ; }
 
-static void caps(char *d, const char *s, int n);
 static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's next sound, or the whole kit's */
 {
     char a[16], b[16];
