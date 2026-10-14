@@ -59,7 +59,7 @@ turn ALGO 4
 release SEL
 wait 600
 press SEL
-tap LFO
+tap ENV
 release SEL
 wait 1500
 key w2 down
@@ -69,7 +69,7 @@ echo @drone_play
 leds
 key w2 up
 press SEL
-tap LFO
+tap ENV
 release SEL
 tap ARP
 tap ARP

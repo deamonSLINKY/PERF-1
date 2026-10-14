@@ -825,21 +825,23 @@ static void input(void)
                 return;
             }
 #endif
-            if ((i == B_ENV || i == B_LFO || i == B_ARP) && (btn >> B_SEL & 1u)) {
-                /* shift: the voice off the algorithm (silent but for the keys on its pages), or back on it */
+            if (i == B_ENV && (btn >> B_SEL & 1u)) {
+                /* shift: the voice whose page is on screen off the algorithm (silent but for the keys on its
+                 * pages), or back on it */
                 static const char *const WHO[3] = {"PAD", "DRONE", "ACID"};
-                int vc = i == B_ENV ? EN_V_PAD : i == B_LFO ? EN_V_DRONE : EN_V_ACID, g, k;
-                knob_set(HAND_PAR[vc], !proj.par[HAND_PAR[vc]]);
-                if (!proj.par[HAND_PAR[vc]])     /* back on the algorithm: any of its keys let go */
-                    for (k = 0; k < NKEYS; k++)
-                        if (ui.key_voice[k] == vc + 1) {
-                            en_note(vc, 53 + k, 0);
-                            ui.key_voice[k] = 0;
-                        }
-                for (g = 0; g < NGROUP; g++)     /* and its page on screen, to play it */
-                    if (GROUP[g].btn == i && voice_of(ui.view) != vc)
-                        set_view(GROUP[g].first);
-                say(WHO[vc], proj.par[HAND_PAR[vc]] ? "BY HAND: PLAY THE KEYS" : "BACK WITH THE MUSIC");
+                int vc = voice_of(ui.view), k;
+                if (vc < 0) {
+                    say("BY HAND", "ON A VOICE'S PAGE");
+                } else {
+                    knob_set(HAND_PAR[vc], !proj.par[HAND_PAR[vc]]);
+                    if (!proj.par[HAND_PAR[vc]]) /* back on the algorithm: any of its keys let go */
+                        for (k = 0; k < NKEYS; k++)
+                            if (ui.key_voice[k] == vc + 1) {
+                                en_note(vc, 53 + k, 0);
+                                ui.key_voice[k] = 0;
+                            }
+                    say(WHO[vc], proj.par[HAND_PAR[vc]] ? "BY HAND: PLAY THE KEYS" : "BACK WITH THE MUSIC");
+                }
                 ui.btn_used |= m | 1u << B_SEL;
             }
             if (i == B_SEQ && (btn >> B_SEL & 1u)) {   /* shift: the links on and off */
@@ -1428,9 +1430,9 @@ static int help_lines(int b, const char *l[HELP_LINES])
 #define L(t) (l[n++] = (t))
     switch (b) {
     case B_HOME: L("TEMPO"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("+ SELECT: TEMPO"); break;
-    case B_ENV: L("THE PAD; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("+ SEL: PLAY IT BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
-    case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("+ SEL: PLAY IT BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
-    case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("+ SEL: PLAY IT BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_ENV: L("THE PAD; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV ON A VOICE'S"); L("PAGE: PLAY IT BY HAND"); break;
+    case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
         static char cpu[24];
         uint32_t c = plat_cpu_pct(), x = plat_xruns(), j = 4;

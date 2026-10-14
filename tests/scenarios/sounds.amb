@@ -63,11 +63,13 @@ expect pool <0x5AD
 tapkey w3
 wait 50
 expect pool 0x5AD
-# SEL + LFO: the drone off the algorithm (silent but for the keys); now its keys play it, the scale untouched
+# SEL + ENV on the drone's page: the drone off the algorithm (silent but for the keys); now its keys play it,
+# the scale untouched
 press SEL
-tap LFO
+tap ENV
 release SEL
 expect par90 1
+expect par89 0
 expect view 5
 wait 1500
 expect bass_level <5
@@ -80,19 +82,21 @@ shot playing_drone.png
 key w2 up
 wait 100
 expect held 0
-# back on the algorithm: SEL + LFO again; the keys are the scale's again
+# back on the algorithm: SEL + ENV again; the keys are the scale's again
 press SEL
-tap LFO
+tap ENV
 release SEL
 expect par90 0
 wait 2500
 expect bass_level >50
-# the pad by hand: two keys, two of its voices; its breaths quiet meanwhile
+# the pad by hand (from its envelope page: any of its pages will do): two keys, two of its voices
+tap ENV
+tap ENV
 press SEL
 tap ENV
 release SEL
 expect par89 1
-expect view 1
+expect view 2
 key w0 down
 key w4 down
 wait 400
@@ -106,9 +110,19 @@ press SEL
 tap ENV
 release SEL
 expect par89 0
-# the acid by hand, played while stopped: it sounds
+# not on a voice's page: SEL + ENV changes nothing
+tap HOME
 press SEL
+tap ENV
+release SEL
+expect par89 0
+expect par90 0
+expect par91 0
+expect view 0
+# the acid by hand, played while stopped: it sounds
 tap ARP
+press SEL
+tap ENV
 release SEL
 expect par91 1
 tap PLAY
@@ -139,7 +153,7 @@ key w9 down
 wait 50
 expect held 1
 press SEL
-tap ARP
+tap ENV
 release SEL
 expect par91 0
 wait 50

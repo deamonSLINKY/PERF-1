@@ -202,7 +202,7 @@ def main():
           glow="#ff6a00")
     b, k = L["drone_play"]
     scene(device("sound_drone", b, k, held={WHITE_K[2]}), OUT / "hyp-device-play.png", "BY HAND",
-          "SEL + LFO: THE DRONE OFF THE ALGORITHM, THE KEYS PLAY IT")
+          "ON ITS PAGE, SEL + ENV: THE DRONE OFF THE ALGORITHM, THE KEYS PLAY IT")
     for n in ("home", "sound_pad", "sound_drone", "sound_acid", "kit", "seq", "fx", "stored", "breakdown", "build", "pad", "drone",
               "acid_line", "splash", "splash_hyp"):
         im = Image.open(SHOTS / f"{n}.png").convert("RGB")
