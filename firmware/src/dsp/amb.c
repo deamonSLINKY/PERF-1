@@ -408,8 +408,11 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
+static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
+static float hush_g = 1.0f;                      /* its gain, 0..1 */
+volatile uint8_t en_hushed;                      /* faded right out: the flash can be written */
 #define QN 256u                                  /* more than every parameter at once (project_apply), with room */
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
@@ -430,6 +433,7 @@ void en_freeze(int on) { post(C_FREEZE, on, 0); }
 void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
 void en_mute(int on) { post(C_MUTE, on, 0); }
+void en_hush(int on) { post(C_HUSH, on, 0); }
 void en_note(int voice, int note, int on) { post(C_NOTE, voice, (note & 0x7F) | (on ? 0x100 : 0)); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
@@ -2277,6 +2281,7 @@ static void drain(void)
             break;
         case C_PANIC: quiet(); break;
         case C_MUTE: muted = (uint8_t)(a != 0); break;
+        case C_HUSH: hush = (uint8_t)(a != 0); break;
         case C_NOTE: note_cmd(a, b & 0x7F, b >> 8); break;
         case C_REGROW: regrow(); break;
         case C_SECTION:
@@ -3132,7 +3137,15 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
 void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
 {
     float gain;
+    int32_t *const out0 = out;
+    const uint32_t n0 = n;
     drain();
+    if (hush && hush_g <= 0.0f) {               /* hushed: the music holds still (the song resumes where it was) */
+        for (n = 0; n < 2 * n0; n++)
+            out0[n] = 0;
+        en_hushed = 1;
+        return;
+    }
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
@@ -3162,4 +3175,14 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         out += 2 * k;
         n -= k;
     }
+    if (hush || hush_g < 1.0f) {                /* the hush: ~6 ms each way */
+        const float step = 1.0f / (0.006f * EN_SR), tgt = hush ? 0.0f : 1.0f;
+        uint32_t j;
+        for (j = 0; j < n0; j++) {
+            hush_g = tgt > hush_g ? fm_minf(hush_g + step, 1.0f) : fm_maxf(hush_g - step, 0.0f);
+            out0[2 * j] = (int32_t)((float)out0[2 * j] * hush_g);
+            out0[2 * j + 1] = (int32_t)((float)out0[2 * j + 1] * hush_g);
+        }
+    }
+    en_hushed = (uint8_t)(hush && hush_g <= 0.0f);
 }

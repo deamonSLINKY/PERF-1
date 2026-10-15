@@ -104,6 +104,8 @@ void en_seed(uint32_t s);                      /* stir some entropy into the gen
 void en_note(int voice, int note, int on);      /* a key played on the page of a voice off the algorithm (P_*_MAN):
                                                  * EN_V_*, MIDI note, on / off */
 void en_mute(int on);                          /* remote: silent, no MIDI out (1) or back (0), in turn */
+void en_hush(int on);                          /* a store while playing: fade out (1), back in (0) */
+extern volatile uint8_t en_hushed;             /* faded right out (the flash can be written) */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops, the home chord */
 

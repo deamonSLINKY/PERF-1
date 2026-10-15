@@ -6,7 +6,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
-This manual is for HYP-1 version 1.0.30. To hear it first, watch
+This manual is for HYP-1 version 1.0.31. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
 [YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
@@ -168,10 +168,10 @@ scale and mode, its voices' sounds and kit, its patterns and its drums' sounds. 
 **Factory:** on Global, hold SAVE for 1.5 seconds (the screen says HOLD: FACTORY): the piece goes back to
 how it shipped and out of the store.
 
-**When it's written:** writing to the FM-1's memory silences it for a moment, so a store made while
-playing is written as soon as you stop. A small dot by the tempo means a write is waiting.
-
-> Stop the music before you switch off, or a store still waiting is lost.
+**When it's written:** at once. The FM-1 can't make sound while it writes to its memory, so a store
+made while playing fades the music out (STORING), writes it, and fades back in exactly where it was: a
+pause of a fraction of a second, the song carrying on in time with itself. MIDI clock out pauses with it.
+Factory works the same way.
 
 **Power-on** starts on a piece at random: as you stored it, or with small random changes to its factory
 settings if you never did. Theme, Tune and MIDI out are yours across all pieces and are kept too: they're

@@ -31,9 +31,9 @@
  *   ALGORITHM      the mode            PRESETS  the piece (01 .. 10)
  *
  * Each piece has its own settings and six drum patterns. Power-on starts on a piece at random, as it was
- * stored, or its factory settings nudged a little if it never was (project_start). The store is written
- * to flash while stopped (a write silences the audio for a moment); the theme, Tune and MIDI out go
- * with it. */
+ * stored, or its factory settings nudged a little if it never was (project_start). A store is written
+ * at once (store_now: playing, the music hushes around the write); the theme, Tune and MIDI out two
+ * seconds after a change. */
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
@@ -112,7 +112,7 @@ static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 #define SEQ_HOLD 400u                  /* SEQ held this long: the sequencer */
 #define DROP_HOLD 500u                 /* SAVE held this long: the drop, on the next bar */
 #define HELP_HOLD 900u
-#define KIT_QUIET 3000u                /* the store is written this long after a change, while stopped */
+#define KIT_QUIET 3000u                /* anything left unwritten: this long after a change, while stopped */
 #define GLOB_QUIET 2000u               /* the theme, Tune, MIDI out: written this long after a change */
 #define FACTORY_HOLD 1500u             /* SAVE held this long on Global: the piece to its factory settings */
 
@@ -181,6 +181,9 @@ static struct {
     uint32_t lock_keys;                /* keys pressed in lock mode: not effects while they're held */
     uint8_t lane;                      /* the sequencer's lane (OCT- / OCT+) */
     uint8_t save_global;               /* SAVE went down on Global: the piece is stored when it comes up */
+    uint8_t store_wait;                /* a store while playing: the music fading out to write it (store_tick) */
+    uint32_t store_t;
+    char store_msg[12];
     uint8_t factory_done;              /* SAVE held on Global: the piece went back to its factory settings */
     uint32_t shift_keys;               /* keys pressed while SEL (shift) was held: not notes, not effects */
     uint8_t piece_q;                   /* a piece waiting for the bar (SEL + PRESETS): its number + 1 */
@@ -367,15 +370,39 @@ static void set_piece(int i)                    /* the piece playing kept as it 
     }
 }
 
+/* into flash now. Writing it stops the chip a moment (it runs from the same flash), so while the music
+ * plays it fades out (en_hush), holds still while the store is written, and fades back in where it was:
+ * a short pause, not a cut. Stopped: at once. */
+static void store_now(const char *done)
+{
+    int i;
+    for (i = 0; done[i] && i < (int)sizeof ui.store_msg - 1; i++)
+        ui.store_msg[i] = done[i];
+    ui.store_msg[i] = 0;
+    if (en_playing) {
+        en_hush(1);
+        ui.store_wait = 1;
+        ui.store_t = plat_ms();
+        say("STORING", 0);
+    } else {
+        say(ui.store_msg, project_flush() == 0 ? 0 : "NOT WRITTEN");
+    }
+}
+static void store_tick(void)                    /* the music faded out (or long enough): write, then back in */
+{
+    if (!ui.store_wait || (!en_hushed && plat_ms() - ui.store_t < 150u))
+        return;
+    ui.store_wait = 0;
+    say(ui.store_msg, project_flush() == 0 ? 0 : "NOT WRITTEN");
+    en_hush(0);
+}
+
 static void piece_store(void)                   /* Global, SAVE: the piece as it is, stored */
 {
     char t[12] = "STORED ";
     project_piece_save();
     caps(t + 7, piece_name(proj.piece), 4);
-    if (!en_playing && project_flush() == 0)
-        say(t, 0);
-    else
-        say(t, "ON STOP");                       /* written to flash when the music stops */
+    store_now(t);
 }
 
 static void piece_factory(void)                 /* Global, SAVE held: back to the factory settings */
@@ -385,9 +412,7 @@ static void piece_factory(void)                 /* Global, SAVE held: back to th
     project_apply();
     en_regrow();
     caps(t + 8, piece_name(proj.piece), 4);
-    if (!en_playing)
-        project_flush();
-    say(t, 0);
+    store_now(t);
 }
 
 /* ------------------------------------------------------------ the kit --- */
@@ -1226,7 +1251,7 @@ static void draw_header(void)
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
     } else {
         int32_t x = 232, w;
-        if (project_pending()) {                   /* the store: not yet in flash (written while stopped) */
+        if (project_pending()) {                   /* not yet in flash (the theme, Tune, MIDI out: two seconds on) */
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
         }
@@ -1739,12 +1764,12 @@ static void leds(void)
     plat_leds(b, k);
 }
 
-/* the store goes to flash while stopped: a flash write silences the audio for a moment, so the pieces
- * wait for the music to stop; the player's three (theme, Tune, MIDI out) don't, or they'd never stick */
+/* what's left waiting for flash (a store is written at once, store_now): stopped, all of it after a
+ * quiet moment; playing, the player's three (theme, Tune, MIDI out), with a moment's gap */
 static void autosave(void)
 {
     uint32_t now = plat_ms();
-    if (!project_pending() || ui.btn || ui.keys)
+    if (!project_pending() || ui.btn || ui.keys || ui.store_wait)
         return;
     if (!en_playing && now - ui.act_t >= KIT_QUIET)
         project_flush();                         /* stopped: all of it */
@@ -1909,6 +1934,7 @@ void ui_frame(void)
         ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
         lcd_fill(0, 0, 240, 240, K_BG);
     }
+    store_tick();
     if (rm.on) {                                 /* remote: the browser's screen, the browser's lights */
         rm_tick();
         if (rm.on) {

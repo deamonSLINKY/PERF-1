@@ -1,5 +1,5 @@
 # storing a piece: on Global, SAVE stores the piece as it is (its settings and its six patterns); it
-# goes to flash while stopped. Held, the piece goes back to its factory settings and out of the store.
+# goes to flash at once (playing, the music pauses a moment for it). Held, the piece goes back to its factory settings and out of the store.
 wait 500
 expect saved 0
 expect dirty 0
@@ -15,19 +15,23 @@ spin K1 -10
 expect lane0 0x1115
 expect par52 50
 expect edited 1
-# Global: SAVE while playing stores it, written to flash once stopped
+# Global: SAVE while playing stores it at once: the music hushes, the store is written, the music comes back
 tap GLO
 expect view 15
 shot global_edited.png
 expect sec 0
 tap SAVE
-wait 20
+wait 300
 expect sec 0
 expect saved 1
 expect edited 0
-expect dirty 1
-expect store_writes 0
+expect dirty 0
+expect store_writes 1
+expect playing 1
 shot global_stored.png
+peakreset
+wait 1500
+expect peak_db_min -40
 tap PLAY
 wait 4000
 expect dirty 0
@@ -67,10 +71,8 @@ spin K1 5
 expect tempo 128
 tap GLO
 tap SAVE
-wait 20
+wait 300
 expect saved 0x81
-tap PLAY
-wait 4000
 expect store_writes >2
 reboot
 wait 300
@@ -93,19 +95,10 @@ expect lane0 0x1111
 expect par52 60
 expect saved 0x80
 expect sec 0
-expect dirty 1
-# powered off while playing, before it was written: the store as it was
-reboot
 wait 300
-expect saved 0x81
-tap GLO
-press SAVE
-wait 1700
-release SAVE
-expect saved 0x80
-tap PLAY
-wait 4000
 expect dirty 0
+expect playing 1
+# written at once, playing: powered off now, it stays factory
 reboot
 wait 300
 expect saved 0x80

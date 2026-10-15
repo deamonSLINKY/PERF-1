@@ -8,7 +8,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.0.30** (each push to `main` builds the next one).
+by Charles Vestal. Current version: **1.0.31** (each push to `main` builds the next one).
 
 [![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
 
@@ -52,7 +52,7 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
   patterns per piece, a level, tune and decay per lane, and a kit: each drum's sound from eight (Hypno,
   House, Techno, Acid, Break, Minimal, Hard, 808). Hold SEQ: the 16 white keys are the steps.
 - **Ten pieces** (01–10), each with its own settings, patterns and drum sounds. On Global, SAVE stores
-  the piece (written as soon as the music stops, so it never interrupts a take).
+  the piece at once (playing, the music pauses for a fraction of a second while it's written, then carries on where it was).
 - **The keys** set the scale, as on AMB-1. **By hand**: on a voice's page, SEL + ENV takes the pad, drone or acid
   off the algorithm, and on its pages the keys play it over the song (the pad up to four notes, the drone
   and the acid one, the acid sliding 303-style); SEL + ENV again gives it back. **SEL + ALGORITHM**
@@ -97,6 +97,7 @@ Each build is numbered 1.0.N from the workflow's run; the installer always offer
 
 | Version | What came in |
 |---|---|
+| 1.0.31 | A store (Global, SAVE) is written at once: playing, the music fades out, it's written, and the song picks up where it was. The emulator's help no longer says SEL + LFO / ARP |
 | 1.0.30 | Twice the sounds: sixteen each for pad, drone and acid (dub, trance and rave chords; rumble, hoover and fifths basses; trance, bleep, bell and laser arps) and three more kits (Minimal, Hard, 808); old style code cleared out |
 | 1.0.29 | SEL + ENV on any voice's page (pad, drone or acid, any of its three) takes that voice by hand and back; SEL + LFO / ARP no longer do |
 | 1.0.28 | The keys set the scale again everywhere; a voice is played by hand only when taken off the algorithm (SEL + a voice button), which silences its generated part |
