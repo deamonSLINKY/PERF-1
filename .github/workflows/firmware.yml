@@ -65,7 +65,10 @@ jobs:
       - name: Version
         run: |
           N=$GITHUB_RUN_NUMBER
-          echo "V=1.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"
+          # HYP-1: 1.0.N up to run 32; from run 33 on, 1.5.0 and up (a hundred builds a minor version)
+          M=$((N - 33))
+          if [ "$M" -ge 0 ]; then V="1.$((5 + M / 100)).$((M % 100))"; else V="1.$((N / 100 % 100)).$((N % 100))"; fi
+          echo "V=$V" >> "$GITHUB_ENV"
           echo "EV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # ECO-1: 0.x while it's experimental
       - name: Build the firmware
         run: |

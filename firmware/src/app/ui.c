@@ -564,7 +564,7 @@ static void button(int b)
     switch (b) {
     case B_FX:
         ui.fx_menu = (uint8_t)!ui.fx_menu;
-        say("FX", ui.fx_menu ? "HOLD A KEY" : "OFF");
+        say("FX", ui.fx_menu ? "HOLD A KEY" : ui.fx_lock ? "LOCKED ONES STAY ON" : "OFF");
         break;
     case B_EDIT:
         en_next();
@@ -930,12 +930,10 @@ static void input(void)
     }
     {   /* the effects: each key held while the FX menu is on, and those locked */
         uint32_t m = 0;
-        if (!ui.fx_menu) {
-            ui.fx_lock = 0;                    /* FX closed: the locks let go */
-            ui.lock_mode = 0;
-        }
+        if (!ui.fx_menu)
+            ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
+        m = ui.fx_lock;
         if (ui.fx_menu) {
-            m = ui.fx_lock;
             for (i = 0; i < NKEYS; i++)
                 if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
                     m |= 1u << KEY_FX[i];
@@ -1239,7 +1237,7 @@ static void draw_header(void)
                            en_playing | (uint32_t)en_sec << 2 | (uint32_t)en_sec_req << 9 | (uint32_t)msg << 5 |
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
-                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8);
+                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     if (en_playing)
@@ -1269,6 +1267,11 @@ static void draw_header(void)
                 cv_text(x, 8, &FONT_XS, sn, K_FROST);
                 x -= 10;
             }
+        }
+        if (ui.fx_lock && !ui.fx_menu) {          /* effects locked on, the menu closed: they play on */
+            x -= text_w(&FONT_XS, "FX");
+            cv_text(x, 8, &FONT_XS, "FX", K_PAD);
+            x -= 10;
         }
         if (en_ext) {
             t[0] = 'E';
@@ -1734,6 +1737,8 @@ static void leds(void)
         b |= 1u << B_PLAY;
     if (en_frozen)
         b |= 1u << B_REC;
+    if (ui.fx_lock && !ui.fx_menu && (ui.frame / 16u) & 1u)
+        b |= 1u << B_FX;                         /* effects locked on, the menu closed: FX blinks */
     if (en_sec != EN_SEC_GROOVE || (en_sec_req && (ui.frame / 8u) & 1u))   /* a section; blinking: on its way */
         b |= 1u << B_SAVE;
     if (ui.btn >> B_SEL & 1u) {                  /* shift: the pattern chosen; the one playing blinks if not */

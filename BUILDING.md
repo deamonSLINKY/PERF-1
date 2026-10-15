@@ -90,7 +90,8 @@ mode. If the FM-1 no longer starts but reaches the chip's update mode (4C4A:8057
 Every push to `main` runs `.github/workflows/firmware.yml`:
 
 1. It fetches JieLi's toolchain and the AC79 SDK (cached between runs, with retries).
-2. It builds a release numbered `1.0.N`, N being the workflow's run number, so each push is a new
+2. It builds a release numbered from the workflow's run number N: `1.0.N` up to run 32, then `1.5.0`
+   at run 33 and up from there (`1.5.(N - 33)`, a new minor version every hundred), so each push is a new
    version (the FM-1 reports it as FM-1_7XXYYZZ, which the installer checks).
 3. It runs the tests, and fails the build on a size, pool or soft-double problem (shown as
    annotations on the run).

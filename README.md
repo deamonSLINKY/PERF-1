@@ -8,7 +8,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.0.32** (each push to `main` builds the next one).
+by Charles Vestal. Current version: **1.5.0** (each push to `main` builds the next one).
 
 [![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
 
@@ -62,7 +62,7 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
   clock the acid line.
 - **Performance**: SAVE for a breakdown on the next bar, again for a four-bar build and the drop; an FX
   menu of momentary effects on the keys (beat repeat, reverse, tape stop, mutes and solos, filters,
-  trance gate, echo throw, crush, fill), hold SAVE and tap effects to lock any number on; SEL as a shift (patterns on keys 1–6,
+  trance gate, echo throw, crush, fill), hold SAVE and tap effects to lock any number on (they keep playing after FX closes); SEL as a shift (patterns on keys 1–6,
   pieces on the bar, copy, clear and restore lanes).
 - **Remote** (SEL + GLO): plug the FM-1 in and its panel plays HYP-1 in the [emulator](https://rustypawz.github.io/fm1-HYP1/emu/)
   over USB MIDI, lights and all. With M-VAVE's firmware or any controller, the keys play straight away and
@@ -93,10 +93,11 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
 
 ## Versions
 
-Each build is numbered 1.0.N from the workflow's run; the installer always offers the latest.
+Each push to `main` is a new build, numbered from the workflow's run: 1.0.1 to 1.0.32, then 1.5.0 on (1.5.N; after 1.5.99, 1.6.0). The installer always offers the latest.
 
 | Version | What came in |
 |---|---|
+| 1.5.0 | Locked FX play on after the FX menu closes (FX blinks; reopen it and tap a key to stop one). The version moves to 1.5: everything since the first tour (16 sounds a voice, 8 kits, playing by hand, Chords, storing at once, the USB remote) |
 | 1.0.32 | Chords page (ENV ×4): the kind of chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths), close or open voicing, with Drift and Root; piece 06 plays dub chord stabs (issue #3) |
 | 1.0.31 | A store (Global, SAVE) is written at once: playing, the music fades out, it's written, and the song picks up where it was. The emulator's help no longer says SEL + LFO / ARP |
 | 1.0.30 | Twice the sounds: sixteen each for pad, drone and acid (dub, trance and rave chords; rumble, hoover and fifths basses; trance, bleep, bell and laser arps) and three more kits (Minimal, Hard, 808); old style code cleared out |

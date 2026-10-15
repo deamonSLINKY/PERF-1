@@ -10,6 +10,8 @@ screens, lights and sound), drawn into the FM-1 of the site's pictures, with cap
                                                            shaped: sound, envelope, LFO, pump)
   python3 tools/site/video.py --vertical --links      ->  build/video/links/hyp1-links-vertical.mp4 (the drums
                                                            shaping the voices)
+  python3 tools/site/video.py --update                ->  build/video/update/hyp1-update.mp4 (what's new in 1.5.0:
+                                                           sounds, kits, by hand, Chords, FX locks, storing; 16:9)
   python3 tools/site/video.py --song                  ->  build/video/song/hyp1-song.mp4 (five minutes played
                                                            as a live set; 16:9)
   python3 tools/site/video.py --vertical [--reuse]      ->  build/video/hyp1-tour-vertical.mp4 (1080 x 1920,
@@ -229,6 +231,138 @@ def tour():
     t.f(60)
     t.cap("HYP-1", "rustypawz.github.io/fm1-HYP1  ·  www.redtail.works")
     t.f(90)
+    t.lines.append("wavstop")
+    return t
+
+
+def update_tour():
+    """what's new since the first tour (1.5.0): the sounds and kits, playing by hand, the Chords page, the
+    locked effects that outlast the menu, storing a piece at once, the remote"""
+    t = Tour()
+    t.lines += ["master 3000", "splash 3200", "reboot", "wav tour.wav"]
+
+    def shift(*acts):                            # SEL held for these
+        t.lines.append("press SEL")
+        t.f(8)
+        for a in acts:
+            a()
+        t.lines.append("release SEL")
+        t.f(6)
+
+    t.cap("HYP-1 1.5.0", "what's new since the first tour")
+    t.f(110)
+    t.cap("SIXTEEN SOUNDS A VOICE", "the pad's Sound knob (KNOB 3): Trance, a supersaw")
+    t.tap("ENV")
+    t.spin("K3", 8, 2)
+    t.f(80)
+    t.cap("SIXTEEN SOUNDS A VOICE", "Rave: supersaw chords stabbed on the off-beats")
+    t.spin("K3", 5, 2)
+    t.f(100)
+    t.spin("K3", -13, 1)
+    t.cap("SEL + ALGORITHM", "the sound of the voice on screen: the drone's Rumble")
+    t.tap("LFO")
+    shift(lambda: t.spin("ALGO", 8, 2))
+    t.f(80)
+    t.cap("SEL + ALGORITHM", "Hoover, then Fifths: the root and its fifth")
+    shift(lambda: t.spin("ALGO", 3, 3))
+    t.f(70)
+    shift(lambda: t.spin("ALGO", 1, 3))
+    t.f(70)
+    shift(lambda: t.spin("ALGO", -12, 1))
+    t.cap("ARP LEADS", "the acid's last eight: Trance, Bleep, Laser")
+    t.tap("ARP")
+    t.tap("ARP")
+    t.spin("K4", 8, 2)
+    t.f(70)
+    t.spin("K4", 1, 2)
+    t.f(70)
+    t.spin("K4", 4, 2)
+    t.f(80)
+    t.spin("K4", -13, 1)
+    t.cap("EIGHT KITS", "SEQ three times; SEL + ALGORITHM swaps all four drums: Minimal")
+    t.tap("SEQ")
+    t.tap("SEQ")
+    t.tap("SEQ")
+    shift(lambda: t.spin("ALGO", 5, 2))
+    t.f(90)
+    t.cap("EIGHT KITS", "Hard: an industrial kick ... and 808")
+    shift(lambda: t.spin("ALGO", 1, 2))
+    t.f(90)
+    shift(lambda: t.spin("ALGO", 1, 2))
+    t.f(90)
+    shift(lambda: t.spin("ALGO", -7, 1))
+    t.cap("BY HAND", "on a voice's page, SEL + ENV takes it off the algorithm: the keys play it")
+    t.tap("LFO")
+    shift(lambda: t.tap("ENV", 5, 6))
+    t.f(20)
+    for k in (0, 4, 7, 4, 2, 0):
+        t.key(M.WHITE_K[k], 20, 8)
+    t.cap("BY HAND", "SEL + ENV again: back with the music. The keys set the scale everywhere else")
+    shift(lambda: t.tap("ENV", 5, 6))
+    t.f(50)
+    t.cap("THE CHORDS PAGE", "ENV four times: Chord, Voicing, Drift, Root")
+    for _ in range(4):
+        t.tap("ENV", 5, 10)
+    t.f(40)
+    t.cap("CHORD: 9THS", "1, 3, 7 and 9: Am9, FM9 ... (EDIT: the next chord, on the bar)")
+    t.spin("K1", 3, 3)
+    t.f(80)
+    t.tap("EDIT")
+    t.f(110)
+    t.cap("CHORD: DUB", "the same minor 9 shape on every chord: dub techno's stabs")
+    t.spin("K1", 2, 3)
+    t.f(70)
+    t.tap("EDIT")
+    t.f(110)
+    t.cap("CHORD: FOURTHS", "stacked fourths, an m11; VOICING: open spreads them out")
+    t.spin("K1", 1, 3)
+    t.f(60)
+    t.spin("K2", 1, 3)
+    t.f(90)
+    t.spin("K2", -1, 1)
+    t.spin("K1", -6, 1)
+    t.cap("PIECE 06", "dub techno: Dub chords on the Dub stabs, deep in the echo")
+    t.spin("PRESET", 5, 3)
+    t.f(260)
+    t.cap("FX LOCK", "FX, hold SAVE, tap the gate 1/8 and the crush: locked on")
+    t.tap("FX")
+    t.f(10)
+    t.lines.append("press SAVE")
+    t.f(14)
+    t.key(3, 6, 10)
+    t.key(8, 6, 10)
+    t.lines.append("release SAVE")
+    t.f(70)
+    t.cap("LOCKS OUTLAST THE MENU", "close FX: they play on (FX blinks); the keys are free again")
+    t.tap("FX")
+    t.f(140)
+    t.cap("LOCKS OUTLAST THE MENU", "open FX and tap a locked key to stop it")
+    t.tap("FX")
+    t.f(20)
+    t.key(3, 6, 30)
+    t.key(8, 6, 30)
+    t.tap("FX")
+    t.f(30)
+    t.cap("STORING A PIECE", "change it (here the Chords page: open voicing) ...")
+    for _ in range(4):
+        t.tap("ENV", 5, 8)
+    t.spin("K2", 1, 3)
+    t.f(50)
+    t.cap("GLOBAL, THEN SAVE", "stored at once: the music pauses a moment while it's written, then carries on")
+    t.tap("GLO")
+    t.f(30)
+    t.tap("SAVE", 6, 20)
+    t.f(110)
+    t.cap("STORED", "it comes back just so after power-off; hold SAVE on Global: factory")
+    t.f(80)
+    t.cap("SEL + GLO: REMOTE", "plugged in by USB, the FM-1's panel plays the emulator in your browser")
+    shift(lambda: t.tap("GLO", 5, 6))
+    t.f(110)
+    shift(lambda: t.tap("GLO", 5, 6))
+    t.tap("PLAY")
+    t.f(40)
+    t.cap("HYP-1 1.5.0", "update in your browser: rustypawz.github.io/fm1-HYP1")
+    t.f(130)
     t.lines.append("wavstop")
     return t
 
@@ -653,15 +787,16 @@ def main():
     global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT, OUT
     vertical, reuse, seq = "--vertical" in sys.argv, "--reuse" in sys.argv, "--seq" in sys.argv
     voices, links, song = "--voices" in sys.argv, "--links" in sys.argv, "--song" in sys.argv
+    update = "--update" in sys.argv
     if vertical:
         globals().update(VERTICAL)
     pre, outname = ("s_", "hyp1-tour-vertical.mp4") if vertical else ("v_", "hyp1-tour.mp4")
-    one = "seq" if seq else "voices" if voices else "links" if links else "song" if song else None
+    one = "seq" if seq else "voices" if voices else "links" if links else "song" if song else "update" if update else None
     if one:                                      # a minute of its own, in its own folder
         OUT = OUT / one
         outname = outname.replace("tour", {"seq": "sequencer"}.get(one, one))
     OUT.mkdir(parents=True, exist_ok=True)
-    t = {"seq": seq_tour, "voices": voices_tour, "links": links_tour, "song": song_tour}.get(one, tour)()
+    t = {"seq": seq_tour, "voices": voices_tour, "links": links_tour, "song": song_tour, "update": update_tour}.get(one, tour)()
     if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
         for f in OUT.glob("frame_*.png"):
             f.unlink()
@@ -732,7 +867,7 @@ def main():
                anchor="ms" if vertical else "rs")
         frame.convert("RGB").save(OUT / f"{pre}{fn:05d}.png")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS), "-i", str(OUT / f"{pre}%05d.png"),
-                    "-i", str(OUT / "tour.wav"), *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11"] if one == "song" else []),
+                    "-i", str(OUT / "tour.wav"), *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11"] if one in ("song", "update") else []),
                     "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
                     "-preset", "medium", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
                     str(OUT / outname)], check=True)

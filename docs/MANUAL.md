@@ -6,7 +6,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
-This manual is for HYP-1 version 1.0.32. To hear it first, watch
+This manual is for HYP-1 version 1.5.0. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
 [YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
@@ -314,8 +314,10 @@ playing while you hold it.
 **Locking:** hold **SAVE** for lock mode. Each key you tap locks its effect on (it turns purple), one at
 a time or several together; tap a locked one again to unlock it. Keys already held when SAVE goes down
 lock too. Let go of SAVE and the locks stay while you play other effects over them. To turn one off, just
-tap its key (no SAVE needed): the others stay locked. Closing FX lets them all go. Tapping SAVE alone in
-FX is still the breakdown.
+tap its key (no SAVE needed): the others stay locked. Tapping SAVE alone in FX is still the breakdown.
+
+**Locks outlast the menu:** close FX and the locked effects keep playing (FX blinks, and FX shows by the
+tempo), so the keys are free for the scale or a voice again. To turn one off, open FX and tap its key.
 
 For example: FX, then hold SAVE, tap Gate 1/8, tap Crush, let go of SAVE: both stay on.
 

@@ -104,12 +104,31 @@ key 24 up
 key 1 up
 wait 100
 expect fxmask 737280
-# FX closed lets them all go
+# FX closed: the locked ones play on (the keys are the scale again, the locks untouched)
+tap FX
+wait 100
+expect fxon 0
+expect fxmask 737280
+expect fxlock 737280
+shot fx_closed_locked.png
+tapkey 1
+expect pool 0x7AD
+tapkey 1
+expect pool 0x5AD
+expect fxlock 737280
+# FX again: a locked effect's key turns that one off; all four, none locked
+tap FX
+tapkey 3
+tapkey 8
+tapkey 24
+tapkey 1
+wait 100
+expect fxlock 0
+expect fxmask 0
 tap FX
 wait 100
 expect fxon 0
 expect fxmask 0
-expect fxlock 0
 # SAVE tapped alone in FX is the breakdown still
 tap FX
 tap SAVE
