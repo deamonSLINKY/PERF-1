@@ -66,6 +66,10 @@ class Tour:
     def __init__(self):
         self.lines, self.n, self.caption, self.turning = [], 0, ("", ""), None
         self.caps, self.turns = {}, {}
+        self.showing, self.shows = None, {}        # a picture shown top left (the caption goes below the FM-1)
+
+    def show(self, name=None):                   # name: a picture in the video's folder, or None
+        self.showing = name
 
     def cap(self, a, b=""):
         self.caption = (a, b)
@@ -74,6 +78,7 @@ class Tour:
         for _ in range(n):
             self.caps[self.n] = self.caption
             self.turns[self.n] = self.turning
+            self.shows[self.n] = self.showing
             self.n += 1
         self.lines.append(f"frames {n}")
 
@@ -300,6 +305,7 @@ def update_tour():
     t.cap("BY HAND", "SEL + ENV again: back with the music. The keys set the scale everywhere else")
     shift(lambda: t.tap("ENV", 5, 6))
     t.f(50)
+    t.show("issue.png")                          # the request it answers (GitHub issue #3)
     t.cap("THE CHORDS PAGE", "ENV four times: Chord, Voicing, Drift, Root")
     for _ in range(4):
         t.tap("ENV", 5, 10)
@@ -324,6 +330,7 @@ def update_tour():
     t.cap("PIECE 06", "dub techno: Dub chords on the Dub stabs, deep in the echo")
     t.spin("PRESET", 5, 3)
     t.f(260)
+    t.show(None)
     t.cap("FX LOCK", "FX, hold SAVE, tap the gate 1/8 and the crush: locked on")
     t.tap("FX")
     t.f(10)
@@ -362,7 +369,9 @@ def update_tour():
     t.tap("PLAY")
     t.f(40)
     t.cap("HYP-1 1.5.0", "update in your browser: rustypawz.github.io/fm1-HYP1")
-    t.f(130)
+    t.f(55)
+    t.cap("NOW AVAILABLE", "on https://thefirmwarehub.com/")
+    t.f(75)
     t.lines.append("wavstop")
     return t
 
@@ -819,6 +828,7 @@ def main():
     ImageDraw.Draw(big_frame).rounded_rectangle((0, 0, BIG + 43, BIG + 43), radius=30, fill=(11, 11, 13, 255),
                                                 outline=(85, 88, 95, 255), width=2)
     ss = int(200 * SCALE)
+    pics = {}
     log = [list(map(int, ln.split())) for ln in (OUT / "frames.txt").read_text().splitlines()]
     first = int(next((x.split("=")[1] for x in sys.argv if x.startswith("--from=")), 0))   # (re-draw from frame N)
     for fn, lb, lk, hb, hk in log:
@@ -856,8 +866,22 @@ def main():
             c, e = px(x + r + 9, y + r + 9)
             d.ellipse((a, b, c, e), outline=(255, 128, 32, 255), width=5)
         ca, cb = t.caps.get(fn, ("", ""))
+        pic = t.shows.get(fn)
+        if pic:                                             # a picture top left; the caption under the FM-1
+            if pic not in pics:
+                im = Image.open(OUT / pic).convert("RGBA")
+                pw = min((BX - 50 - CAP_X) if not vertical else (W - 2 * CAP_X), (DY - 50) * im.width // im.height)
+                im = im.resize((pw, round(im.height * pw / im.width)), Image.LANCZOS)
+                card = Image.new("RGBA", (im.width + 8, im.height + 8), (0, 0, 0, 0))
+                ImageDraw.Draw(card).rounded_rectangle((0, 0, card.width - 1, card.height - 1), radius=12,
+                                                       fill=(13, 17, 23, 255), outline=(164, 76, 255, 255), width=2)
+                card.alpha_composite(im, (4, 4))
+                pics[pic] = card
+            frame.alpha_composite(pics[pic], (CAP_X, 22 if not vertical else CAP_Y))
         if ca:                                              # the caption: at the top
             x0, y0, tw = CAP_X, CAP_Y, (W - CAP_X - 168) if vertical else (BX - 50 - CAP_X - 128)   # (clear of the big screen)
+            if pic:
+                y0 = DY + int(640 * SCALE) + 22 if not vertical else y0 + pics[pic].height + 24
             d.rectangle((x0, y0 + 20, x0 + 70, y0 + 27), fill=(255, 128, 32, 255))
             d.rectangle((x0 + 76, y0 + 20, x0 + 110, y0 + 27), fill=(164, 76, 255, 255))
             d.text((x0 + 128, y0), ca, font=font_a, fill=(239, 233, 255, 255))
@@ -867,7 +891,10 @@ def main():
                anchor="ms" if vertical else "rs")
         frame.convert("RGB").save(OUT / f"{pre}{fn:05d}.png")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(FPS), "-i", str(OUT / f"{pre}%05d.png"),
-                    "-i", str(OUT / "tour.wav"), *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11"] if one in ("song", "update") else []),
+                    "-i", str(OUT / "tour.wav"), *(["-af", "loudnorm=I=-14:TP=-1.5:LRA=11"] if one == "song" else []),
+                    *(["-vf", "tpad=stop_mode=clone:stop_duration=3",   # the end card held, the music fading out
+                       "-af", f"loudnorm=I=-14:TP=-1.5:LRA=11,afade=t=out:st={len(log) / FPS - 2.5:.2f}:d=2.5,apad"]
+                      if one == "update" else []),
                     "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20",
                     "-preset", "medium", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
                     str(OUT / outname)], check=True)
