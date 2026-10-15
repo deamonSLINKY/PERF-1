@@ -143,7 +143,7 @@ the whole performance into your DAW.</p>
 
 <h2>The voices</h2>
 <div class="grid">
-  <div class="card"><h3>Pad</h3><p>Four breathing voices in sixteen sounds (Rhodes, sung, strings, glass, dub and rave chords, supersaw and more), each on its own cycle, so the chord forms and dissolves. <b>Env</b> and <b>LFO</b> pages shape the breath and move the filter, level, pan or pitch.</p></div>
+  <div class="card"><h3>Pad</h3><p>Four breathing voices in sixteen sounds (Rhodes, sung, strings, glass, dub and rave chords, supersaw and more), each on its own cycle, so the chord forms and dissolves. <b>Env</b> and <b>LFO</b> pages shape the breath and move the filter, level, pan or pitch; the <b>Chords</b> page picks triads, 7ths, 9ths, sus, fourths or dub techno's minor 9 stabs.</p></div>
   <div class="card"><h3>Drone</h3><p>Sixteen sounds (saws, Reese, rumble, hoover, fifths, FM&hellip;) and a sub through a resonant 24 dB low-pass, with its own <b>envelope</b> (on each chord, or every 1&ndash;8 bars) and <b>LFO</b>: a slow 16-bar sweep by default.</p></div>
   <div class="card"><h3>Acid</h3><p>A 303-style line written as it plays: 1&ndash;16 steps of chord tones with accents and slides, in sixteen sounds from the 303's saw and square to sync, pluck and chip. <b>Mutate</b> rewrites a few steps each time round.</p></div>
   <div class="card"><h3>Drums</h3><p>Kick, snare, clap, closed and open hats, perc, each drum's sound from eight kits. A <b>16-step sequencer</b> with six patterns per piece; a new pattern waits for the bar.</p></div>

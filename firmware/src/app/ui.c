@@ -37,9 +37,9 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
        V_DRUMS, V_LINKS, V_KIT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
-static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Noise", "Drone", "Drone env",
+static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Noise", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
@@ -49,6 +49,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
+    {P_CHORD, P_VOICING, P_DRIFT, P_ROOT},         /* the harmony together (Drift is also on Tempo, Root on Global) */
     {P_NOISE, P_NZ_COLOR, P_NZ_TONE, P_NZ_PUMP},
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
@@ -68,6 +69,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Bright", "Sound", "Detune"},
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
+    {"Chord", "Voicing", "Drift", "Root"},
     {"Level", "Colour", "Tone", "Pump"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
@@ -86,7 +88,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 3}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 3}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 3}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -490,7 +492,7 @@ static void set_view(int v)
 
 static int voice_of(int v)                      /* the voice page v belongs to (EN_V_*), or -1 */
 {
-    if (v >= V_PAD && v <= V_PADLFO)
+    if (v >= V_PAD && v <= V_CHORDS)
         return EN_V_PAD;
     if (v >= V_DRONE && v <= V_DRLFO)
         return EN_V_DRONE;
@@ -529,7 +531,7 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
 
 static int oct_par(int v)                       /* what OCT moves on page v */
 {
-    if (v >= V_PAD && v <= V_PADLFO)
+    if (v >= V_PAD && v <= V_CHORDS)
         return P_PAD_OCT;
     if (v >= V_DRONE && v <= V_DRLFO)
         return P_BASSOCT;
@@ -1454,7 +1456,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
 #define L(t) (l[n++] = (t))
     switch (b) {
     case B_HOME: L("TEMPO"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("+ SELECT: TEMPO"); break;
-    case B_ENV: L("THE PAD; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV ON A VOICE'S"); L("PAGE: PLAY IT BY HAND"); break;
+    case B_ENV: L("PAD; AGAIN: ENV, LFO,"); L("THEN THE CHORDS"); L("SEL + ENV ON A VOICE'S"); L("PAGE: PLAY IT BY HAND"); break;
     case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */

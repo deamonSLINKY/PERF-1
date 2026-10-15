@@ -6,7 +6,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW. A printable version of this manual, with every
 control numbered and every screen lettered, is the [PDF manual](HYP-1_Manual.pdf).
 
-This manual is for HYP-1 version 1.0.31. To hear it first, watch
+This manual is for HYP-1 version 1.0.32. To hear it first, watch
 [five minutes played live](https://www.youtube.com/watch?v=0UvGnZE2_VI), or more on
 [YouTube](https://www.youtube.com/@RedtailWorks). Ideas and questions go on the [board](../board/).
 
@@ -77,7 +77,7 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 11 | OCT+ | An octave up (to +3), the same way. In the sequencer: the next drum. |
 | 12 | FX | The effects menu, on and off. |
 | 13 | SEL | Shift, held (see 11. Shift). |
-| 14 | ENV | Pad; press again for Pad env, again for Pad LFO. With SEL held: the voice on screen (pad, drone or acid) off the algorithm, played by hand (again: back). |
+| 14 | ENV | Pad; press again for Pad env, again for Pad LFO, again for Chords. With SEL held: the voice on screen (pad, drone or acid) off the algorithm, played by hand (again: back). |
 | 15 | LFO | Drone; again for Drone env, again for Drone LFO. |
 | 16 | EDIT | The next chord, on the next bar. |
 | 17 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. With SEL held: remote (see 13). |
@@ -114,20 +114,21 @@ SEQ and FX, whose hold means something else).
 ## 5. The pages
 
 SELECT walks through them in this order. The buttons jump straight to a voice, and pressing the same
-button again steps through that voice's envelope and LFO. KNOB 1 is always a voice's level.
+button again steps through that voice's envelope and LFO (and, for the pad, the chords). KNOB 1 is always a voice's level.
 
 | Page | Reach it | a | b | c | d |
 |---|---|---|---|---|---|
 | Tempo | HOME | Tempo (70–190) | Evolve | Motion | Drift (20 s – 5 min a chord) |
-| Pad | ENV | Level | Bright | Sound (8) | Detune |
+| Pad | ENV | Level | Bright | Sound (16) | Detune |
 | Pad env | ENV ×2 | Attack | Hold | Release | Rest |
 | Pad LFO | ENV ×3 | Rate (a 1/4 note – 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
+| Chords | ENV ×4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close / open) | Drift (as on Tempo) | Root (as on Global) |
 | Noise | SELECT | Level | Colour (8) | Tone | Pump |
-| Drone | LFO | Level | Sound (8) | Cutoff | Reso |
+| Drone | LFO | Level | Sound (16) | Cutoff | Reso |
 | Drone env | LFO ×2 | Trigger (chord, 1–8 bars, off) | Attack | Decay | Amount |
 | Drone LFO | LFO ×3 | Rate (a 1/4 note – 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
-| Acid env | ARP ×2 | Decay | Accent | Slide | Sound (8) |
+| Acid env | ARP ×2 | Decay | Accent | Slide | Sound (16) |
 | Acid line | ARP ×3 | Density | Length (1–16) | Range (1–3 oct) | Mutate |
 | Drums | SEQ | Level | Drive | Swing | Pattern (1–6, on the bar) |
 | Links | SEQ ×2 | K>Drone | S>Pad | H>Acid | P>Clock (off / on) |
@@ -152,6 +153,26 @@ the whole song (pad, drone and acid together). The line above the knobs shows it
 each voice stops at the bottom of what you can hear (about C1), so −2 and −3 may sound alike.
 
 ---
+
+### Chords
+
+The pad's chords come from the scale: each is built on a degree of it, and Drift sets how long one lasts
+(EDIT moves on now). The **Chords** page (ENV four times) sets what kind of chord that is:
+
+| Chord | What it plays |
+|---|---|
+| Auto | As it always has: sevenths on a 7-note scale (Am7, CM7, G7...), triads on a pentatonic |
+| Triads | Three notes: Am, C, G |
+| 7ths | Four: Am7, Dm7, CM7, on a pentatonic too |
+| 9ths | 1, 3, 7 and 9, the fifth left out (four voices): Am9, CM9, G9 |
+| Sus | 1, 4, 5 and the seventh: A7sus4, open and unresolved |
+| Dub | The same minor 9 shape on every chord, whatever the scale says: the parallel stabs of dub techno |
+| Fourths | Stacked fourths, an m11 sound: deep, hollow, modal |
+
+**Voicing:** Close keeps the four notes together; Open drops the second from the top an octave, spreading
+the chord out. The page also has **Drift** and **Root** (the same as on Tempo and Global), so the
+harmony is all in one place. For dub techno, try Chord on Dub with the pad's Dub sound (chord stabs,
+dark) and the echo up: piece 06 is set up that way.
 
 ## 6. Pieces and storing
 
@@ -184,7 +205,7 @@ written two seconds after you change them, even while the music plays.
 | 03 | Pounding: rumble kick, claps | 132 | E Phrygian |
 | 04 | Trance: offbeat opens, rolls | 138 | G Aeolian |
 | 05 | Acid electro: cowbells, breaks | 130 | A Dorian |
-| 06 | Dub techno: sparse, swung | 120 | F Pent minor |
+| 06 | Dub techno: chord stabs (Dub chords), sparse, swung | 120 | F Pent minor |
 | 07 | Minimal glitch: threes on fours | 134 | B Pent major |
 | 08 | Rolling, tom-like percussion | 126 | Bb Mixolydian |
 | 09 | Warehouse: hard, rides, rumble (the Techno kit) | 136 | C Phrygian |
@@ -231,7 +252,7 @@ freely: a Techno kick under House hats is fine.
 
 The keys set the scale, as ever. To play a voice yourself, take it off the algorithm: go to any of its pages
 (**ENV** the pad, **LFO** the drone, **ARP** the acid), hold **SEL** and press **ENV**. It goes quiet and
-the line above the knobs says BY HAND. On a page that isn't a voice's, SEL + ENV just says so. Now, while its pages are on screen (Pad, Pad env or Pad LFO; the
+the line above the knobs says BY HAND. On a page that isn't a voice's, SEL + ENV just says so. Now, while its pages are on screen (Pad, Pad env, Pad LFO or Chords; the
 drone's three; the acid's three), the keys play it over the rest of the song:
 
 - **Pad:** up to four notes at once, each on one of its voices, with the Pad env's Attack and Release

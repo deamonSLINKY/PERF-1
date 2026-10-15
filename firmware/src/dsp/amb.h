@@ -81,6 +81,8 @@ enum {
                                                            * hats: closed and open) */
     P_PAD_MAN, P_DR_MAN, P_AC_MAN,                        /* a voice off the algorithm (SEL + ENV on its page):
                                                            * silent but for the keys (en_note) */
+    P_CHORD, P_VOICING,                                   /* the pad's chords: their kind (EN_CH_*), close or
+                                                           * open (drop 2) */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -171,6 +173,12 @@ int en_par_global(int p);                      /* the player's, not a piece's: T
 int en_scale(uint32_t pool, int *steps);       /* the pool's pitch classes (relative), ascending; count */
 /* the chord on scale degree deg: its tones (MIDI pitch classes, absolute), 3 or 4 of them; count */
 int en_chord_tones(uint32_t pool, int root, int deg, int *pcs);
+/* the kinds of chord (P_CHORD): as the scale has it (sevenths on a 7-note scale, else triads); triads;
+ * sevenths; ninths (1 3 7 9); sus (1 4 5 b7); dub (a minor 9 shape on each degree, the scale or not);
+ * fourths (stacked fourths: an m11 sound) */
+enum { EN_CH_AUTO, EN_CH_TRIAD, EN_CH_7TH, EN_CH_9TH, EN_CH_SUS, EN_CH_DUB, EN_CH_4THS, EN_NCHORD };
+extern const char *const EN_CHORD_NAME[EN_NCHORD];
+int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs);   /* en_chord_tones, of a kind */
 /* voice leading: new pad notes for the tones, each voice moving as little as possible, all in lo..hi */
 void en_voice_lead(const int *from, const int *pcs, int ntones, int *to, int lo, int hi);
 const char *en_chord_name(const int *pcs, int n, char *buf);   /* "Em7", "Dsus4", "C" ... */

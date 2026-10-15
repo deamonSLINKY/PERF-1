@@ -8,7 +8,7 @@ sequence. You shape the voices like a small modular, flip patterns on the bar, b
 back up, and record the whole performance into your DAW.
 
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.0.31** (each push to `main` builds the next one).
+by Charles Vestal. Current version: **1.0.32** (each push to `main` builds the next one).
 
 [![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
 
@@ -39,7 +39,7 @@ dropdown at the top of every page switches between HYP-1 and ECO-1.
 
 ## What it does
 
-- **Pad**: four breathing voices in sixteen sounds (Rhodes, sung voices, strings, glass, organ, warm, stabs,
+- **Pad**: four breathing voices playing the chords (Auto, triads, 7ths, 9ths, sus, dub minor 9 stabs, fourths; close or open voicing) in sixteen sounds (Rhodes, sung voices, strings, glass, organ, warm, stabs,
   dark, dub chords, trance supersaw, poly, hollow, bell and organ stabs, rave stabs, sine) with their own envelope page (attack, hold,
   release, rest) and LFO page (rate, depth, shape, target).
 - **Drone**: sixteen sounds (saws, warm, grit, dirty, Reese, pulse, FM, organ, rumble, sub, square, hoover, fifths, metal, sync, bright) and a sub through a resonant 24 dB low-pass, with an envelope (on each chord
@@ -97,6 +97,7 @@ Each build is numbered 1.0.N from the workflow's run; the installer always offer
 
 | Version | What came in |
 |---|---|
+| 1.0.32 | Chords page (ENV ×4): the kind of chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths), close or open voicing, with Drift and Root; piece 06 plays dub chord stabs (issue #3) |
 | 1.0.31 | A store (Global, SAVE) is written at once: playing, the music fades out, it's written, and the song picks up where it was. The emulator's help no longer says SEL + LFO / ARP |
 | 1.0.30 | Twice the sounds: sixteen each for pad, drone and acid (dub, trance and rave chords; rumble, hoover and fifths basses; trance, bleep, bell and laser arps) and three more kits (Minimal, Hard, 808); old style code cleared out |
 | 1.0.29 | SEL + ENV on any voice's page (pad, drone or acid, any of its three) takes that voice by hand and back; SEL + LFO / ARP no longer do |

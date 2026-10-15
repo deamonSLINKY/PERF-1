@@ -143,7 +143,7 @@ a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c854
       <div>
         <h3>Pad <span>ENV, ENV, ENV</span></h3>
         <dl>
-          <dt>Pad</dt><dd>Level, Bright (the filter and the vowel), Sound (Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs, Dark, Dub, Trance, Poly, Hollow, Pings, Hits, Rave, Sine), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack, Hold, Release, Rest.</dd><dt>Pad LFO</dt><dd>Rate (1/4 note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd>
+          <dt>Pad</dt><dd>Level, Bright (the filter and the vowel), Sound (Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs, Dark, Dub, Trance, Poly, Hollow, Pings, Hits, Rave, Sine), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack, Hold, Release, Rest.</dd><dt>Pad LFO</dt><dd>Rate (1/4 note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd><dt>Chords</dt><dd>Chord (Auto (sevenths on a 7-note scale, triads on a pentatonic), Triads, 7ths, 9ths (1 3 7 9), Sus (7sus4), Dub (a minor 9 shape on every chord, in the scale or not), Fourths (stacked fourths: an m11)), Voicing (close or open), Drift and Root (as on Tempo and Global).</dd>
         </dl>
       </div>
       <div>
@@ -351,7 +351,7 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO); with SEL: the voice on screen by hand", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV the voice on screen by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
+const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO, chords); with SEL: the voice on screen by hand", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV the voice on screen by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
   ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links, Kit); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
   "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };

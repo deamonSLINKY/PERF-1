@@ -13,7 +13,7 @@ expect acidnotes >0
 wavstop
 expect peak_db_max -0.5
 expect peak_db_min -30
-# the buttons' pages: ENV the pad (again: its envelope, its LFO), LFO the drone (and its own two),
+# the buttons' pages: ENV the pad (again: its envelope, its LFO, the chords), LFO the drone (and its own two),
 # ARP the acid (and its envelope, its line), SEQ the drums, GLO global
 tap ENV
 expect view 1
@@ -25,33 +25,36 @@ tap ENV
 expect view 3
 shot pad_lfo.png
 tap ENV
+expect view 4
+shot chords.png
+tap ENV
 expect view 1
 tap LFO
-expect view 5
+expect view 6
 shot drone.png
 tap LFO
 tap LFO
-expect view 7
+expect view 8
 shot drone_lfo.png
 tap ARP
-expect view 8
+expect view 9
 shot acid.png
 tap ARP
 tap ARP
-expect view 10
+expect view 11
 shot acid_line.png
 tap SEQ
-expect view 11
+expect view 12
 shot drums.png
 tap GLO
-expect view 15
+expect view 16
 shot global.png
 # SELECT: the pages in order, Noise and Space among them
 turn SELECT -1 100
-expect view 14
+expect view 15
 shot space.png
 turn SELECT -10 100
-expect view 4
+expect view 5
 shot noise.png
 turn SELECT -9 100
 expect view 0

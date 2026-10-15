@@ -400,6 +400,12 @@ static int expect(const char *what, const char *val)
         got = (int)(en_bass_level * 100.0f);
     else if (!strcmp(what, "chordroot"))
         got = en_chord_root;
+    else if (!strcmp(what, "chordiv")) {          /* the pad's notes as intervals over the chord's root (bits) */
+        int k;
+        got = 0;
+        for (k = 0; k < EN_NPAD; k++)
+            got |= 1 << ((en_chord[k] - en_chord_root + 120) % 12);
+    }
     else if (!strncmp(what, "chord", 5))          /* chordN: pad voice N's note */
         got = en_chord[atoi(what + 5) & 3];
     else if (!strcmp(what, "sec"))                /* the section: 0 groove, 1 breakdown, 2 build */

@@ -101,6 +101,26 @@ int main(void)
     CHECK(n == 3 && pcs[0] != pcs[1] && pcs[1] != pcs[2] && pcs[0] != pcs[2], "4-note pool: distinct");
     n = en_chord_tones(1u | 1u << 4 | 1u << 7, 0, 1, pcs);
     CHECK(n == 3, "3-note pool: all three (%d)", n);
+    {   /* the kinds of chord (P_CHORD), in A Aeolian on i and iv, and on the pentatonic */
+        static const struct { int kind, deg; const char *name; } K[] = {
+            {EN_CH_AUTO, 0, "Am7"}, {EN_CH_TRIAD, 0, "Am"}, {EN_CH_7TH, 3, "Dm7"}, {EN_CH_9TH, 0, "Am9"},
+            {EN_CH_9TH, 3, "Dm9"}, {EN_CH_9TH, 2, "CM9"}, {EN_CH_SUS, 0, "A7sus4"}, {EN_CH_DUB, 0, "Am9"},
+            {EN_CH_DUB, 2, "Cm9"}, {EN_CH_4THS, 0, "Am11"}};
+        int k;
+        for (k = 0; k < (int)(sizeof K / sizeof K[0]); k++) {
+            n = en_chord_kind(EN_MODE_POOL[MODE_AEOLIAN], 9, K[k].deg, K[k].kind, pcs);
+            CHECK(n == (K[k].kind == EN_CH_TRIAD ? 3 : 4) && !strcmp(en_chord_name(pcs, n, name), K[k].name),
+                  "chord kind %d on %d: %s, not %s", K[k].kind, K[k].deg, name, K[k].name);
+        }
+        for (k = 0; k < EN_NCHORD; k++) {       /* on a pentatonic: still distinct tones */
+            int a, b, ok = 1;
+            n = en_chord_kind(EN_MODE_POOL[MODE_PENT_MIN], 9, 1, k, pcs);
+            for (a = 0; a < n; a++)
+                for (b = a + 1; b < n; b++)
+                    ok &= pcs[a] != pcs[b];
+            CHECK(ok && n >= 3, "pentatonic, kind %d: %d tones, distinct %d", k, n, ok);
+        }
+    }
 
     /* voice leading: small moves, in range, no unisons */
     {

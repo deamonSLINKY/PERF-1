@@ -60,6 +60,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_KIT_KICK] = {"Kick", 0, EN_NKIT - 1, 0}, [P_KIT_SNARE] = {"Snare", 0, EN_NKIT - 1, 0},
     [P_KIT_HAT] = {"Hats", 0, EN_NKIT - 1, 0},  [P_KIT_PERC] = {"Perc", 0, EN_NKIT - 1, 0},
     [P_PAD_MAN] = {"Pad hand", 0, 1, 0},     [P_DR_MAN] = {"Drone hand", 0, 1, 0}, [P_AC_MAN] = {"Acid hand", 0, 1, 0},
+    [P_CHORD] = {"Chord", 0, EN_NCHORD - 1, 0}, [P_VOICING] = {"Voicing", 0, 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -87,7 +88,7 @@ static const int16_t PC_ASCENSION[] = {P_TEMPO, 138, P_ROOT, 7, P_PAD, 60, P_BRI
 static const int16_t PC_NIGHT_DRIVE[] = {P_TEMPO, 130, P_ROOT, 9, P_MODE, 1, P_PAD, 35, P_ACID, 65, P_AC_CUT, 45,
     P_AC_RES, 75, P_AC_WAVE, 1, P_AC_SLIDE, 50, P_AC_DENS, 55, P_AC_LEN, 14, P_PATTERN, 1, P_NZ_COLOR, 4, P_NOISE, 12,
     P_SWING, 15, TU(5), 20, LV(5), 55, -1};
-static const int16_t PC_DUB_CHAMBER[] = {P_TEMPO, 120, P_ROOT, 5, P_MODE, 7, P_PAD, 45, P_ACID, 40, P_AC_CUT, 20,
+static const int16_t PC_DUB_CHAMBER[] = {P_TEMPO, 120, P_ROOT, 5, P_MODE, 7, P_PAD, 70, P_CHORD, EN_CH_DUB, P_PADTONE, 8, P_ACID, 40, P_AC_CUT, 20,
     P_AC_DEC, 60, P_ECHO, 80, P_SIZE, 90, P_AC_LEN, 7, P_AC_DENS, 35, P_PATTERN, 1, P_NZ_COLOR, 6, P_NOISE, 35,
     P_DE_TRIG, 1, P_SWING, 20, TU(1), 25, DE(1), 25, DE(0), 70, -1};
 static const int16_t PC_GLASS_TUNNEL[] = {P_TEMPO, 134, P_ROOT, 11, P_MODE, 6, P_PAD, 30, P_BRIGHT, 55, P_ACID, 55,
@@ -225,6 +226,8 @@ void en_param_text(int i, int v, char *b)
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
     case P_LK_PERC: s = v ? "Clock" : "Off"; break;
+    case P_CHORD: s = EN_CHORD_NAME[(unsigned)v < EN_NCHORD ? v : 0]; break;
+    case P_VOICING: s = v ? "Open" : "Close"; break;
     default: break;
     }
     if (s) {
@@ -323,14 +326,32 @@ int en_scale(uint32_t pool, int *steps)
     return m;
 }
 
-int en_chord_tones(uint32_t pool, int root, int deg, int *pcs)
+const char *const EN_CHORD_NAME[EN_NCHORD] = {"Auto", "Triads", "7ths", "9ths", "Sus", "Dub", "Fourths"};
+
+int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs)
 {
-    static const uint8_t OFF[7] = {0, 2, 4, 6, 1, 3, 5};   /* stacked thirds, then what's left */
+    /* the scale steps above the degree to take, in order (then what's left, should they repeat) */
+    static const uint8_t OFF[5][7] = {
+        {0, 2, 4, 6, 1, 3, 5},                  /* thirds: 1 3 5 7 */
+        {0, 2, 6, 1, 4, 3, 5},                  /* ninths: 1 3 7 9 (the fifth left out) */
+        {0, 3, 4, 6, 1, 2, 5},                  /* sus: 1 4 5 b7 */
+    };
+    static const uint8_t SHAPE[2][4] = {{0, 3, 10, 14}, {0, 5, 10, 15}};   /* dub: m9 (no fifth); fourths */
     int st[12], m = en_scale(pool, st), want, n = 0, i, j;
-    want = m >= 6 ? 4 : 3;
+    const uint8_t *off = OFF[0];
     deg = ((deg % m) + m) % m;
+    if (kind == EN_CH_DUB || kind == EN_CH_4THS) {   /* a fixed shape on the degree's note */
+        for (i = 0; i < 4; i++)
+            pcs[i] = (root + st[deg] + SHAPE[kind == EN_CH_4THS][i]) % 12;
+        return 4;
+    }
+    want = kind == EN_CH_TRIAD ? 3 : kind == EN_CH_AUTO ? (m >= 6 ? 4 : 3) : 4;
+    if (kind == EN_CH_9TH)
+        off = OFF[1];
+    else if (kind == EN_CH_SUS)
+        off = OFF[2];
     for (i = 0; i < 7 && n < want; i++) {
-        int pc = (root + st[(deg + OFF[i]) % m]) % 12, dup = 0;
+        int pc = (root + st[(deg + off[i]) % m]) % 12, dup = 0;
         for (j = 0; j < n; j++)
             dup |= pcs[j] == pc;
         if (!dup)
@@ -338,6 +359,7 @@ int en_chord_tones(uint32_t pool, int root, int deg, int *pcs)
     }
     return n;
 }
+int en_chord_tones(uint32_t pool, int root, int deg, int *pcs) { return en_chord_kind(pool, root, deg, EN_CH_AUTO, pcs); }
 
 static int nearest(int from, int pc, int lo, int hi)    /* the note of class pc nearest from, in lo..hi */
 {
@@ -389,13 +411,16 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
     third = iv >> 4 & 1u ? 4 : iv >> 3 & 1u ? 3 : 0;
     fifth = iv >> 7 & 1u ? 7 : iv >> 6 & 1u ? 6 : iv >> 8 & 1u ? 8 : 0;
     if (third == 4) {
-        q = fifth == 8 ? "aug" : iv >> 11 & 1u ? "M7" : iv >> 10 & 1u ? "7" : iv >> 9 & 1u ? "6"
+        q = fifth == 8 ? "aug" : iv >> 11 & 1u ? (iv >> 2 & 1u ? "M9" : "M7") : iv >> 10 & 1u ? (iv >> 2 & 1u ? "9" : "7")
+            : iv >> 9 & 1u ? "6"
             : iv >> 2 & 1u ? "add9" : "";
     } else if (third == 3) {
         if (fifth == 6)
             q = iv >> 10 & 1u ? "m7b5" : iv >> 9 & 1u ? "dim7" : "dim";
+        else if (iv >> 10 & 1u)
+            q = iv >> 5 & 1u ? "m11" : iv >> 2 & 1u ? "m9" : "m7";
         else
-            q = iv >> 10 & 1u ? "m7" : iv >> 11 & 1u ? "mM7" : iv >> 9 & 1u ? "m6" : iv >> 2 & 1u ? "madd9" : "m";
+            q = iv >> 11 & 1u ? "mM7" : iv >> 9 & 1u ? "m6" : iv >> 2 & 1u ? "madd9" : "m";
     } else {
         q = iv >> 5 & 1u ? (iv >> 10 & 1u ? "7sus4" : "sus4") : iv >> 2 & 1u ? "sus2" : "5";
     }
@@ -977,7 +1002,7 @@ static int acid_note(int s)                     /* acid step s's note: from the 
 static void pad_retarget(void)                  /* the chord's tones to the four voices */
 {
     int from[4], to[4], i;
-    chord_nt = en_chord_tones(pool, par[P_ROOT], deg, chord_pcs);
+    chord_nt = en_chord_kind(pool, par[P_ROOT], deg, par[P_CHORD], chord_pcs);
     for (i = 0; i < EN_NPAD; i++)
         from[i] = (int)(pad[i].target + 0.5f);
     {   /* the pad's register (C3 .. F5), moved by its octaves and the song's, within C1 .. C8 */
@@ -987,6 +1012,17 @@ static void pad_retarget(void)                  /* the chord's tones to the four
         while (hi > 108)
             lo -= 12, hi -= 12;
         en_voice_lead(from, chord_pcs, chord_nt, to, lo, hi);
+        if (par[P_VOICING]) {                   /* open: drop 2, the second voice from the top an octave down */
+            int a = -1, b = -1;
+            for (i = 0; i < EN_NPAD; i++)
+                if (a < 0 || to[i] > to[a])
+                    a = i;
+            for (i = 0; i < EN_NPAD; i++)
+                if (i != a && (b < 0 || to[i] > to[b]))
+                    b = i;
+            if (to[b] - 12 >= lo - 7)
+                to[b] -= 12;
+        }
     }
     for (i = 0; i < EN_NPAD; i++) {             /* each voice takes its note at its next breath */
         pad[i].target = (float)to[i];
@@ -1736,7 +1772,7 @@ static void apply(int p, int v)
         tempo_set();
         echo_time();
         break;
-    case P_ROOT:
+    case P_ROOT: case P_CHORD: case P_VOICING:   /* the chord again: each voice moves at its next breath */
         if (nsteps) {
             pad_retarget();
             pad_handoff();
