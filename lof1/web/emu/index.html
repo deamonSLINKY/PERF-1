@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LOF-1 Emulator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="LOF-1, a lofi groovebox firmware for the M-VAVE FM-1 (RedtailWorks): you play the lead, a tired jazz band follows. In your browser, the same code the FM-1 runs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<style>
+/* late night, as the firmware's screen: lamp orange and teal (paper by day, violet-dark by night); the FM-1 itself stays dark grey */
+:root { --ground: #f5efe6; --ink: #241c2c; --muted: #5d526b; --rule: #241c2c; --accent: #b4521c; --river: #e8873a; --river-2: #2a8579;
+        --green-1: #f1d9c4; --card: #ebe2d6; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ground: #1a1624; --ink: #f2eade; --muted: #b4a9c4; --rule: #f2eade; --accent: #ffb07c; --river: #ffb07c;
+          --river-2: #7eccc0; --green-1: #2e283d; --card: #231e30; }
+}
+:root[data-theme="dark"] { --ground: #1a1624; --ink: #f2eade; --muted: #b4a9c4; --rule: #f2eade; --accent: #ffb07c; --river: #ffb07c;
+          --river-2: #7eccc0; --green-1: #2e283d; --card: #231e30; }
+body { background: var(--ground); color: var(--ink); margin: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 48px;
+       font: 400 16px/1.55 Barlow, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+main { max-width: 1040px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
+h1 { font: 700 2rem/1.1 "Barlow Semi Condensed", Barlow, sans-serif; letter-spacing: .06em; margin: 0; color: var(--accent); }
+header p { margin: 0; color: var(--muted); }
+header nav { margin-left: auto; display: flex; gap: 1rem; }
+header nav a[aria-current] { text-decoration: none; color: var(--river-2); }
+a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.device { position: relative; width: 100%; aspect-ratio: 1000 / 640; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.device svg { pointer-events: none; }
+.hit { position: absolute; touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 12px; }
+.hit.knob { cursor: ns-resize; border-radius: 50%; }
+.hit:focus-visible { outline: 2px solid #f28a5a; outline-offset: 2px; }
+.device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.device.remote canvas { box-shadow: 0 0 0 3px #e8873a; }
+.device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
+.ctl { cursor: pointer; }
+.ctl.knob { cursor: ns-resize; }
+.btnface { transition: fill .06s; }
+.lit .btnface { fill: #f28a5a; }
+.lit text.btn { fill: #2a140a; }
+.held .btnface, .held .keyface { stroke: #f28a5a; stroke-width: 3; }
+.latched .btnface { stroke: #6fc3ff; stroke-width: 3; }
+.keyface { transition: fill .06s; }
+.lit .keyface.white { fill: #f6b48e; }
+.lit .keyface.black { fill: #4cc3b6; }
+.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .55); border-radius: 4.4% / 6.9%; }
+.start button { font: 700 1.2rem "Barlow Semi Condensed", Barlow, sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: .6em 1.6em;
+                border: 0; border-radius: 8px; background: #ffb07c; color: #2a1404; cursor: pointer; }
+.start[hidden] { display: none; }
+.turn { display: none; margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+@media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
+.start button:disabled { opacity: .6; cursor: progress; }
+.bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
+.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--ink); padding: .3em .8em; cursor: pointer; }
+.bar .cpu { font-variant-numeric: tabular-nums; }
+.link { margin: 1.2rem 0 0; padding: 1rem 1.1rem; background: var(--card); border-radius: 10px; display: grid; gap: .9rem; }
+.link h2 { font: 700 1.05rem "Barlow Semi Condensed", Barlow, sans-serif; letter-spacing: .04em; margin: 0; }
+.link .row { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.link .row > b { min-width: 7.5rem; }
+.link label { display: inline-flex; gap: .35rem; align-items: center; cursor: pointer; }
+.link select, .link button { font: inherit; color: var(--ink); background: var(--ground); border: 1px solid var(--muted); border-radius: 6px; padding: .25em .5em; max-width: 100%; }
+.link button { cursor: pointer; }
+.link .note { color: var(--muted); font-size: .92rem; margin: 0; max-width: 72ch; }
+.link .map { font-variant-numeric: tabular-nums; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help p, .help ul { margin: 0; color: var(--muted); max-width: 60ch; }
+.help ul { padding-left: 1.1rem; }
+.help .knobs { grid-column: 1 / -1; }
+.knobs .pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem 2rem; margin-top: .4rem; }
+.knobs h3 { font: 600 1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .2rem; color: var(--ink); }
+.knobs h3 span { color: var(--muted); font-weight: 400; }
+.knobs dl { margin: 0; color: var(--muted); }
+.knobs dt { color: var(--ink); font-weight: 600; }
+.knobs dd { margin: 0 0 .45rem; }
+kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--ink); padding: 0 .3em; color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>LOF-1 <span style="font:700 .8rem 'Barlow Semi Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1a0f05;background:#e8873a;border-radius:999px;padding:.15em .7em;vertical-align:middle">Experimental</span></h1>
+  <p>a lofi groovebox for the FM-1: you play the lead, a tired jazz band follows, an old record crackles under it. The same code the FM-1 would run.</p>
+  <nav><a href="../">LOF-1 home</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav>
+</header>
+
+<p class="turn">Turn your phone sideways for bigger controls.</p>
+<div class="device" id="device">
+  <svg id="panel" viewBox="0 0 1000 640" role="application" aria-label="The FM-1: knobs, buttons, screen and keys"></svg>
+  <canvas id="screen" width="240" height="240" aria-label="The FM-1 screen"></canvas>
+  <div class="start" id="start"><button id="go">Switch on</button></div>
+</div>
+
+<div class="bar">
+  <span id="status">Off. Sound starts when you switch it on.</span>
+  <span class="cpu" id="cpu"></span>
+  <button id="reset" type="button" title="Forget your stored presets and patterns, and start again from the factory settings">Factory reset</button>
+</div>
+
+<section class="link" aria-label="Connections to a DAW">
+  <h2>To your DAW</h2>
+  <div class="row">
+    <b>Audio out</b>
+    <label><input type="radio" name="aout" id="aout-mix" value="mix" checked> Stereo mix</label>
+    <label><input type="radio" name="aout" id="aout-split" value="split"> 8 channels: each voice apart</label>
+  </div>
+  <p class="note map" id="aout-note">Channels 1–2 the mix, 3 lead, 4 comp, 5 bass, 6 answer, 7 drums, 8 dust. The voices come dry, at the mix's level. It needs an output with 8 channels: an audio interface, or a loopback driver such as BlackHole (Mac) or VB-Audio (Windows) set as the browser's output, recorded into the DAW.</p>
+  <div class="row">
+    <b>MIDI</b>
+    <button type="button" id="midi-go">Connect MIDI</button>
+    <label>Send to <select id="midi-out" disabled><option value="">none</option></select></label>
+    <label>MIDI in from <select id="midi-in" disabled><option value="">none</option></select></label>
+  </div>
+  <p class="note">Leave it a minute untouched and the screensaver comes up: Red under the tree with a coffee, nodding to the beat. A button or knob wakes it; a key wakes it and plays.</p>
+  <p class="note" id="remote-note">Remote: with LOF-1 on your FM-1 and MIDI connected here, hold SEL and press GLO on the FM-1. Its panel plays this emulator and goes quiet itself.</p>
+  <p class="note" id="midi-note">MIDI in: notes play the lead (from any keyboard you connect), and with Global › MIDI set to Clock or Both, a DAW's clock drives the tempo (START plays from the top, STOP stops). MIDI out (Global › MIDI: Notes or Both): the lead, comp, bass and answer on channels 1–4, the drums on 10. To reach a DAW on this computer, use a virtual MIDI port: the IAC Driver (Mac) or loopMIDI (Windows).</p>
+</section>
+
+<section class="help">
+  <div class="knobs">
+    <h2>Pages and knobs</h2>
+    <p>One button a voice; press it again for its second page. <b>SELECT</b> steps through all of them. <b>ALGORITHM</b> picks the page's instrument (or the kit, or DUST's character). PRESETS picks a preset, 01–10. Each keeps your changes while you play; SAVE on the Global page stores the one playing.</p>
+    <div class="pages">
+      <div>
+        <h3>Groove, Groove 2 <span>HOME</span></h3>
+        <dl><dt>Tempo</dt><dd>60–100 BPM (also HOME + SELECT).</dd><dt>Swing</dt><dd>How late the off-sixteenths fall.</dd><dt>Jazz</dt><dd>The chords' colour: triads, 7ths, 9ths, 11ths.</dd><dt>Busy</dt><dd>How much the comp, bass and drums play around you.</dd><dt>Groove 2</dt><dd>Drift (off, or a change every 4–64 bars), Drums (on a change: keep the pattern, the next one, or a random one, after a fill), Pool (which patterns it picks from: 1–2 to 1–8), Chords (keep the progression, or swap to its other one). SEL + SEQ: a change on the next bar.</dd></dl>
+      </div>
+      <div>
+        <h3>Lead, Daydream, Daydream 2 <span>ENV</span></h3>
+        <dl><dt>Level, Tone, Release</dt><dd>The keys' instrument (14: Rhodes, Wurli, two uprights, vibes, kalimba, glock, strumstick, muted trumpet, tenor sax, flute, harmonica, bell, sine).</dd><dt>Lazy</dt><dd>Loosens the velocity, and the ghost's timing.</dd><dt>Daydream</dt><dd>Wait (4, 8, 16 bars, Always), Fill (how much of the time it plays: sparse phrases to non-stop), Density (how many notes a beat), Mood (stepwise to leaps): when the keys rest that long, a ghost takes the lead. Any key takes it back. SEL + ENV: on and off.</dd><dt>Daydream 2</dt><dd>Range, Legato (short to tied notes), Repeat (how often it comes back to its last motif), Dynamics (how much it accents).</dd></dl>
+      </div>
+      <div>
+        <h3>Comp, Comp style <span>LFO</span></h3>
+        <dl><dt>Level, Tone, Voicing, Roll</dt><dd>Close, open, shell or spread voicings, rolled like a tired pianist.</dd><dt>Pattern, Length, Push, Spread</dt><dd>Held, stabs, offbeats or an arpeggio; how long; how often it anticipates the next chord; how wide.</dd></dl>
+      </div>
+      <div>
+        <h3>Bass <span>EDIT</span> · Answer <span>ARP</span></h3>
+        <dl><dt>Bass</dt><dd>Level, Tone, Pattern (roots, root-fifth, walking, dub), Slide.</dd><dt>Answer</dt><dd>Level, Tone, Chatty (how often it answers your phrases), Echo (imitates yours, or invents its own). SEL + ARP: on and off.</dd></dl>
+      </div>
+      <div>
+        <h3>Drums, Kit <span>SEQ</span></h3>
+        <dl><dt>Drums</dt><dd>Level, Crunch, Pattern (1–8, on the bar), Fill. Hold SEQ for the sequencer: the white keys are the 16 steps, OCT− / OCT+ the lane.</dd><dt>Kit</dt><dd>Kick, Snare, Hats, Perc levels; ALGORITHM: Dusty (samples) or Tape (synthesized).</dd></dl>
+      </div>
+      <div>
+        <h3>Dust, Dust 2, Space, Global <span>GLO</span></h3>
+        <dl><dt>Dust</dt><dd>Level, Age, Surface, Hiss; ALGORITHM: Vinyl, Cassette, Reel or Radio.</dd><dt>Dust 2</dt><dd>Grain (a haze of the music itself), Smear, Duck (under the kick), Hum.</dd><dt>Space</dt><dd>Tape (wow, flutter, saturation), Mellow (low-pass), Room, Echo.</dd><dt>Global</dt><dd>Root, Scale, Keys (Chromatic, Scale, or Chords: each key plays the scale's chord on that note, as Jazz has it), MIDI. SAVE here stores the preset playing; held, it goes back to the factory's.</dd></dl>
+      </div>
+    </div>
+  </div>
+  <div>
+    <h2>Buttons</h2>
+    <ul>
+      <li><b>Keys</b> play the lead. The band hears which chord you imply and follows on the beat; stop playing and it carries on by itself.</li>
+      <li><b>PLAY</b> play / stop. <b>REC</b> holds the chord, so you can solo over it. <b>SAVE</b> is Side B: a breakdown on the next bar; again, back in with a fill. On the Global page, SAVE stores the preset.</li>
+      <li><b>FX</b> turns the keys into effects, and the screen shows a map of which key does what: stutters, record skip, half time, tape stop, backspin, muffle, radio, mutes, throws (white); wobble, crush, fill, grain freeze, dropout, solos (black). Hold <b>SAVE</b> in FX to lock effects on: tap as many keys as you like (they turn violet); keys already held lock too. Tap a locked key alone to turn it off. Press FX again and the locks keep playing while the keys play notes; <b>SEL + FX</b> turns every lock off.</li>
+      <li><b>SEL</b> held + a key: the key's root. On the drum pages, SEL + white keys 1–8: the pattern. SEL + SEQ: a change on the next bar (as Drift's). <b>SEL + HOME</b>: the keys play single notes or whole chords. <b>OCT−</b> / <b>OCT+</b> the lead's octave.</li>
+      <li>Hold a button for a second and a card says what it does (with a mouse: <kbd>Shift</kbd>-click to hold it).</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Mouse, touch, keyboard</h2>
+    <ul>
+      <li>Drag a knob up or down, or use the scroll wheel over it. Click or touch buttons and keys.</li>
+      <li>Play like a DAW's keyboard: <kbd>A</kbd> is C4, <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> … up to <kbd>'</kbd> (F5). <kbd>Z</kbd> <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd>: F3, G3, A3, B3.</li>
+      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC, <kbd>Esc</kbd> HOME, <kbd>,</kbd> / <kbd>.</kbd> OCT− / OCT+, <kbd>↑</kbd> <kbd>↓</kbd> SELECT. Or plug in a MIDI keyboard (Connect MIDI, then pick it under "MIDI in from").</li>
+    </ul>
+  </div>
+  <div>
+    <h2>The presets</h2>
+    <p>Ten, numbered like HYP-1's. Each starts as one of these and becomes yours when you store over it:</p>
+    <ul>
+      <li><b>01</b> Rhodes, upright bass, vinyl. D Dorian, 78.</li>
+      <li><b>02</b> The felt upright, vibes answering, a cassette. F major, 72.</li>
+      <li><b>03</b> Muted trumpet, walking bass, Tape kit. G minor, 84.</li>
+      <li><b>04</b> Kalimba over an organ, on reel to reel. C major, 88.</li>
+      <li><b>05</b> Tenor sax, a warm pad, sub bass. A minor, 70.</li>
+      <li><b>06</b> Strumstick arpeggios, harmonica, the radio. E Mixolydian, 90.</li>
+      <li><b>07</b> Glock, tape strings, slow. B♭ major, 64.</li>
+      <li><b>08</b> Hands off from the start (Daydream always). E minor pentatonic, 76.</li>
+      <li><b>09</b> Wurli over organ offbeats, root-fifth bass, 9ths. A Dorian, 92.</li>
+      <li><b>10</b> Late night: sine lead, pad, sub, a worn record, 11ths. E♭ minor, 60.</li>
+    </ul>
+    <p>What you hear is the firmware running at the FM-1's 44.1 kHz, not a recording. The sampled instruments are Versilian Studios' CC0 libraries (VCSL, VSCO-2 CE). Running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator, by way of AMB-1 and ECO-1.</p>
+  </div>
+</section>
+</main>
+
+<script>
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const BTN = { FX: 0, SEL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, "OCT-": 12, "OCT+": 13 };
+const ENC = { SELECT: 0, ALGORITHM: 1, PRESETS: 2, KNOB1: 3, KNOB2: 4, KNOB3: 5, KNOB4: 6 };
+const WHITE_K = [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26];
+const BLACK_K = [1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25];
+const BLACK_AFTER = [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14];
+const BODY = "#3a3d42", TRAY = "#26282c", KEY_W = "#d9dadc", KEY_B = "#c9cacd", KNOB = "#1f2124", BTNC = "#2e3135", LABEL = "#e8e8ea";
+const STORE_KEY = "lof1-emu-store";
+
+const svg = document.getElementById("panel");
+function el(tag, attrs, parent = svg) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  parent.appendChild(e);
+  return e;
+}
+function text(parent, x, y, s, size, fill = LABEL, weight = 600) {
+  const t = el("text", { x, y, "text-anchor": "middle", "font-family": "'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif",
+                         "font-size": size, "font-weight": weight, fill, "letter-spacing": ".05em", class: "btn", "pointer-events": "none" }, parent);
+  t.textContent = s;
+  return t;
+}
+
+// ---------------------------------------------------------------- the panel
+el("rect", { x: 4, y: 4, width: 992, height: 632, rx: 44, fill: BODY });
+const knobs = {};
+function knob(x, y, r, label, role) {
+  const g = el("g", { class: "ctl knob", tabindex: 0, role: "slider", "aria-label": label });
+  el("circle", { cx: x, cy: y, r: r + 5, fill: TRAY }, g);
+  el("circle", { cx: x, cy: y, r, fill: KNOB, stroke: "#44474c", "stroke-width": 2 }, g);
+  const ind = el("line", { x1: x, y1: y - r + 5, x2: x, y2: y - r + 15, stroke: LABEL, "stroke-width": 3, "stroke-linecap": "round" }, g);
+  text(g, x, y - r - 12, label, 17);
+  el("circle", { cx: x, cy: y, r: r + 14, fill: "transparent" }, g);
+  knobs[label] = { g, ind, x, y, angle: 0, role };
+  return knobs[label];
+}
+knob(105, 100, 24, "MASTER", "master");
+knob(215, 100, 24, "SELECT", ENC.SELECT);
+knob(105, 205, 24, "PRESETS", ENC.PRESETS);
+knob(215, 205, 24, "ALGORITHM", ENC.ALGORITHM);
+for (let i = 0; i < 4; i++) knob(610 + i * 104, 100, 22, `KNOB${i + 1}`, ENC[`KNOB${i + 1}`]);
+
+const buttons = {};
+function button(x, y, w, h, label, two) {
+  const g = el("g", { class: "ctl", role: "button", "aria-label": label });
+  el("rect", { x, y, width: w, height: h, rx: 9, fill: BTNC, stroke: "#4a4d52", "stroke-width": 1.5, class: "btnface" }, g);
+  if (two) { text(g, x + w / 2, y + h / 2 - 1, label, 12); text(g, x + w / 2, y + h / 2 + 12, two, 12); }
+  else text(g, x + w / 2, y + h / 2 + 5, label, 15);
+  buttons[label] = { g, bit: BTN[label] };
+}
+el("rect", { x: 58, y: 258, width: 210, height: 58, rx: 14, fill: TRAY });
+button(72, 268, 82, 38, "OCT-"); button(170, 268, 82, 38, "OCT+");
+el("rect", { x: 300, y: 44, width: 236, height: 236, rx: 26, fill: "#111214" });
+el("rect", { x: 568, y: 160, width: 400, height: 140, rx: 18, fill: TRAY });
+const ROW1 = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"], ROW2 = ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"];
+for (let i = 0; i < 6; i++) {
+  button(582 + i * 63, 174, 54, 48, ROW1[i]);
+  if (ROW2[i] === "PLAY") button(582 + i * 63, 236, 54, 48, "PLAY", "STOP"); else button(582 + i * 63, 236, 54, 48, ROW2[i]);
+}
+
+const keys = [];
+(function keybed(x0, y0, w, h) {
+  el("rect", { x: x0, y: y0, width: w, height: h, rx: 18, fill: TRAY });
+  const pitch = (w - 24) / 16, kw = pitch * 0.78;
+  for (let i = 0; i < 16; i++) {
+    const g = el("g", { class: "ctl", role: "button", "aria-label": `white key ${i + 1}` });
+    el("rect", { x: x0 + 12 + i * pitch + (pitch - kw) / 2, y: y0 + h * 0.43, width: kw, height: h * 0.52, rx: kw / 2, fill: KEY_W, class: "keyface white" }, g);
+    keys[WHITE_K[i]] = { g };
+  }
+  BLACK_AFTER.forEach((a, k) => {
+    const g = el("g", { class: "ctl", role: "button", "aria-label": `black key ${k + 1}` });
+    el("rect", { x: x0 + 12 + (a + 1) * pitch - kw / 2, y: y0 + h * 0.06, width: kw, height: h * 0.33, rx: kw / 2, fill: KEY_B, class: "keyface black" }, g);
+    keys[BLACK_K[k]] = { g };
+  });
+})(36, 340, 928, 270);
+
+// ---------------------------------------------------------------- touch targets
+// The drawing is only a picture (pointer-events: none). Each control gets an invisible HTML target
+// over it: browsers (iOS Safari above all) honour touch-action and touchstart on HTML elements but
+// not on SVG ones, so the controls keep their touches while a finger anywhere else on the device
+// scrolls the page natively.
+const device = document.getElementById("device");
+function hit(c, cls) {
+  const b = c.g.getBBox(), d = document.createElement("div");
+  d.className = "hit" + (cls ? " " + cls : "");
+  Object.assign(d.style, { left: `${b.x / 10}%`, top: `${b.y / 6.4}%`, width: `${b.width / 10}%`, height: `${b.height / 6.4}%` });
+  for (const a of ["role", "aria-label", "tabindex"]) if (c.g.hasAttribute(a)) { d.setAttribute(a, c.g.getAttribute(a)); c.g.removeAttribute(a); }
+  if (c.g.hasAttribute("aria-description")) { d.title = c.g.getAttribute("aria-description"); d.setAttribute("aria-description", d.title); }
+  c.g.setAttribute("aria-hidden", "true");
+  d.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  device.insertBefore(d, document.getElementById("start"));
+  c.hit = d;
+}
+// what each control does, on hover (the Buttons list below says the same)
+const TIP = { SEL: "Shift (hold): + a key, the root; + ENV / ARP: Daydream / Answer on and off; + HOME: notes or chords", FX: "The keys play effects; SAVE held: lock them on (again: notes; the locks stay); SEL + FX: locks off",
+  ENV: "Lead; again: Daydream; again: Daydream 2", ARP: "Answer", LFO: "Comp; again: Comp style", EDIT: "Bass", GLO: "Dust, Dust 2, Space, Global (on the FM-1: SEL + GLO plays this emulator from its panel)",
+  HOME: "Groove; again: Groove 2 (Drift)", SAVE: "Side B: a breakdown on the next bar (on Global: store the preset; held: the factory's back)", SEQ: "Drums; again: Kit; held: the sequencer; SEL + SEQ: a change on the next bar",
+  PLAY: "Play / stop", REC: "Chord hold", "OCT-": "The lead an octave down (sequencer: the lane)", "OCT+": "The lead an octave up (sequencer: the lane)",
+  SELECT: "Pages (HOME held: the tempo)", ALGORITHM: "The page's instrument, kit or character; elsewhere the root", PRESETS: "The preset, 01–10",
+};
+for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);
+for (const k of Object.values(knobs)) hit(k, "knob");
+for (const b of Object.values(buttons)) hit(b);
+keys.forEach((k) => hit(k));
+
+// ---------------------------------------------------------------- state and input
+let node = null, btnMask = 0, keyMask = 0, latched = 0, master = 2800;
+const btnHeldBy = new Map(), keyHeldBy = new Map();      // pointer / key id -> bit
+function send(m) { if (node) node.port.postMessage(m); }
+function syncButtons() {
+  let m = latched;
+  for (const b of btnHeldBy.values()) m |= 1 << b;
+  if (m !== btnMask) { btnMask = m; send({ type: "buttons", mask: m }); }
+  for (const b of Object.values(buttons)) {
+    b.g.classList.toggle("held", !!(m & (1 << b.bit)));
+    b.g.classList.toggle("latched", !!(latched & (1 << b.bit)));
+    b.hit.classList.toggle("latched", !!(latched & (1 << b.bit)));
+    b.hit.setAttribute("aria-pressed", m & (1 << b.bit) ? "true" : "false");
+  }
+}
+function syncKeys() {
+  let m = 0;
+  for (const k of keyHeldBy.values()) m |= 1 << k;
+  if (m !== keyMask) { keyMask = m; send({ type: "keys", mask: m }); }
+  keys.forEach((k, i) => k.g.classList.toggle("held", !!(m & (1 << i))));
+}
+
+for (const b of Object.values(buttons)) {
+  b.hit.addEventListener("contextmenu", (e) => e.preventDefault());
+  b.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    if (e.shiftKey || e.button === 2) { latched ^= 1 << b.bit; syncButtons(); return; }
+    if (latched & (1 << b.bit)) { latched &= ~(1 << b.bit); syncButtons(); return; }
+    b.hit.setPointerCapture(e.pointerId);
+    btnHeldBy.set("p" + e.pointerId, b.bit);
+    syncButtons();
+  });
+}
+keys.forEach((k, i) => {
+  k.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    k.hit.setPointerCapture(e.pointerId);
+    keyHeldBy.set("p" + e.pointerId, i);
+    syncKeys();
+  });
+});
+function pointerUp(e) {
+  const id = "p" + e.pointerId;
+  if (btnHeldBy.delete(id)) syncButtons();
+  if (keyHeldBy.delete(id)) syncKeys();
+}
+device.addEventListener("pointerup", pointerUp);
+device.addEventListener("pointercancel", pointerUp);
+device.addEventListener("lostpointercapture", pointerUp);
+
+function drawKnob(k) {
+  k.ind.setAttribute("transform", `rotate(${k.angle} ${k.x} ${k.y})`);
+}
+function turn(k, n) {
+  if (!n) return;
+  if (k.role === "master") {
+    master = Math.max(0, Math.min(4096, master + n * 64));
+    k.angle = -135 + 270 * master / 4096;
+    send({ type: "master", value: master });
+  } else {
+    k.angle = (k.angle + n * 18) % 360;
+    send({ type: "enc", role: k.role, n });
+  }
+  drawKnob(k);
+}
+for (const k of Object.values(knobs)) {
+  if (k.role === "master") { k.angle = -135 + 270 * master / 4096; drawKnob(k); }
+  let drag = null, wheel = 0;
+  k.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    k.hit.setPointerCapture(e.pointerId);
+    drag = { y: e.clientY, acc: 0 };
+  });
+  k.hit.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    drag.acc += drag.y - e.clientY;
+    drag.y = e.clientY;
+    const step = k.role === "master" ? 3 : 7;
+    const n = Math.trunc(drag.acc / step);
+    if (n) { drag.acc -= n * step; turn(k, n); }
+  });
+  const end = () => { drag = null; };
+  k.hit.addEventListener("pointerup", end);
+  k.hit.addEventListener("pointercancel", end);
+  k.hit.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    if (Math.abs(dy) >= 50) { turn(k, dy < 0 ? 1 : -1); wheel = 0; return; }   // a mouse wheel notch: one detent
+    wheel -= dy;                                                                   // a trackpad: by distance
+    const n = Math.trunc(wheel / 25);
+    if (n) { wheel -= n * 25; turn(k, n); }
+  }, { passive: false });
+  k.hit.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowRight") { turn(k, 1); e.preventDefault(); e.stopPropagation(); }
+    if (e.key === "ArrowDown" || e.key === "ArrowLeft") { turn(k, -1); e.preventDefault(); e.stopPropagation(); }
+  });
+}
+
+const KEYMAP = {};
+["KeyA","KeyW","KeyS","KeyE","KeyD","KeyF","KeyT","KeyG","KeyY","KeyH","KeyU","KeyJ","KeyK","KeyO","KeyL","KeyP","Semicolon","Quote"]
+  .forEach((c, i) => KEYMAP[c] = { key: 7 + i });                     // C4 .. F5 (key 7 = C4)
+["KeyZ","KeyX","KeyC","KeyV"].forEach((c, i) => KEYMAP[c] = { key: WHITE_K[i] });   // F3 G3 A3 B3
+Object.assign(KEYMAP, { Space: { btn: BTN.PLAY }, Enter: { btn: BTN.REC }, Escape: { btn: BTN.HOME },
+                        Comma: { btn: BTN["OCT-"] }, Period: { btn: BTN["OCT+"] } });
+addEventListener("keydown", (e) => {
+  if (!node || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.code === "ArrowUp" || e.code === "ArrowDown") { turn(knobs.SELECT, e.code === "ArrowUp" ? 1 : -1); e.preventDefault(); return; }
+  const m = KEYMAP[e.code];
+  if (!m) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  if (m.key !== undefined) { keyHeldBy.set("k" + e.code, m.key); syncKeys(); }
+  else { btnHeldBy.set("k" + e.code, m.btn); syncButtons(); }
+});
+addEventListener("keyup", (e) => {
+  const id = "k" + e.code;
+  if (keyHeldBy.delete(id)) syncKeys();
+  if (btnHeldBy.delete(id)) syncButtons();
+});
+addEventListener("blur", () => {
+  for (const id of [...btnHeldBy.keys()]) if (id[0] === "k") btnHeldBy.delete(id);
+  for (const id of [...keyHeldBy.keys()]) if (id[0] === "k") keyHeldBy.delete(id);
+  syncButtons(); syncKeys();
+});
+
+// ---------------------------------------------------------------- screen and lights
+const ctx = document.getElementById("screen").getContext("2d");
+const img = ctx.createImageData(240, 240);
+function drawScreen(fb) {
+  const d = img.data;
+  for (let i = 0; i < 240 * 240; i++) {
+    const v = fb[i], p = ((v >> 8) | (v << 8)) & 0xFFFF;
+    d[i * 4] = ((p >> 11) & 31) * 255 / 31;
+    d[i * 4 + 1] = ((p >> 5) & 63) * 255 / 63;
+    d[i * 4 + 2] = (p & 31) * 255 / 31;
+    d[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function drawLights(b, k) {
+  for (const x of Object.values(buttons)) x.g.classList.toggle("lit", !!(b & (1 << x.bit)));
+  keys.forEach((x, i) => x.g.classList.toggle("lit", !!(k & (1 << i))));
+}
+
+// ---------------------------------------------------------------- storage
+function loadStore() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"), out = {};
+    for (const [o, b64] of Object.entries(raw)) out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+    return out;
+  } catch { return {}; }
+}
+function saveStore(store) {
+  try {
+    const raw = {};
+    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); }
+    localStorage.setItem(STORE_KEY, JSON.stringify(raw));
+  } catch { /* storage unavailable: this session only */ }
+}
+
+// ---------------------------------------------------------------- switching on
+const status = document.getElementById("status"), cpu = document.getElementById("cpu");
+async function switchOn() {
+  const go = document.getElementById("go");
+  go.disabled = true;
+  go.textContent = "Starting...";
+  try {
+    const ac = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
+    const [wasm] = await Promise.all([fetch("amb.wasm").then((r) => { if (!r.ok) throw new Error(`amb.wasm: ${r.status}`); return r.arrayBuffer(); }),
+                                      ac.audioWorklet.addModule("worklet.js")]);
+    node = new AudioWorkletNode(ac, "amb", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [8] });
+    ac.destination.channelInterpretation = "discrete";     // channels 3-8 are voices, never a surround downmix
+    ac.destination.channelCount = 2;
+    node.connect(ac.destination);
+    window.ecoAudio = ac;
+    const ready = new Promise((res) => {
+      node.port.onmessage = (e) => {
+        const m = e.data;
+        if (m.type === "ready") res();
+        else if (m.type === "midi") midiSend(m.data);
+        else if (m.type === "frame") {
+          if (m.fb) drawScreen(m.fb);
+          drawLights(m.buttons, m.keys);
+          remoteLights(m.buttons, m.keys, false);
+          window.ambLast = m;
+          if (m.load !== undefined) cpu.textContent = `LOF-1 uses ${m.load}% of this computer's time`;
+          if (m.store) saveStore(m.store);
+        }
+      };
+    });
+    node.port.postMessage({ type: "load", wasm, store: loadStore(), master }, [wasm]);
+    await ready;
+    await ac.resume();
+    document.getElementById("start").hidden = true;
+    status.textContent = ac.sampleRate === 44100 ? "On." : `On (the browser runs audio at ${ac.sampleRate} Hz).`;
+    syncButtons(); syncKeys();
+    setSplit();
+  } catch (err) {
+    go.disabled = false;
+    go.textContent = "Switch on";
+    status.textContent = "Could not start: " + (err && err.message || err) + ". Chrome, Edge, Firefox and Safari should all work.";
+  }
+}
+document.getElementById("go").addEventListener("click", switchOn);
+
+// ---------------------------------------------------------------- to a DAW: audio channels, MIDI
+const aoutNote = document.getElementById("aout-note"), midiNote = document.getElementById("midi-note");
+const AOUT_TEXT = aoutNote.textContent;
+function setSplit() {
+  const split = document.getElementById("aout-split").checked, ac = window.ecoAudio;
+  if (!ac) return;
+  const max = ac.destination.maxChannelCount || 2;
+  if (split && max < 8) {
+    aoutNote.textContent = `This output has ${max} channels, so only the mix is heard. ` + AOUT_TEXT;
+  } else {
+    aoutNote.textContent = AOUT_TEXT;
+  }
+  ac.destination.channelCount = split ? Math.min(8, max) : 2;
+  send({ type: "split", on: split });
+}
+for (const r of document.querySelectorAll('input[name="aout"]')) r.addEventListener("change", setSplit);
+
+let midiAccess = null, midiOut = null, midiIn = null;
+const outSel = document.getElementById("midi-out"), inSel = document.getElementById("midi-in");
+function midiSend(list) {
+  if (!midiOut) return;
+  for (const d of list) {
+    const st = d[0];
+    const len = st >= 0xF8 ? 1 : (st & 0xF0) === 0xC0 || (st & 0xF0) === 0xD0 ? 2 : 3;
+    try { midiOut.send(d.slice(0, len)); } catch { /* a port gone: ignore */ }
+  }
+}
+function fillPorts() {
+  const keep = [outSel.value, inSel.value];
+  for (const [sel, ports] of [[outSel, midiAccess.outputs], [inSel, midiAccess.inputs]]) {
+    sel.length = 1;
+    for (const p of ports.values()) sel.add(new Option(p.name, p.id));
+    sel.disabled = false;
+  }
+  outSel.value = [...outSel.options].some((o) => o.value === keep[0]) ? keep[0] : "";
+  inSel.value = [...inSel.options].some((o) => o.value === keep[1]) ? keep[1] : "";
+  pickPorts();
+}
+function pickPorts() {
+  midiOut = outSel.value ? midiAccess.outputs.get(outSel.value) : null;
+  midiIn = inSel.value ? midiAccess.inputs.get(inSel.value) : null;
+  for (const input of midiAccess.inputs.values()) input.onmidimessage = (e) => onMidi(e, input);   // every input: the remote may be any
+  if (remote && remote.input.state !== "connected") remoteStop();
+  if (remote && !remote.out) remote.out = outFor(remote.input);
+}
+
+// ---------------------------------------------------------------- the FM-1 as a remote (SEL + GLO on it)
+// As HYP-1's: USB MIDI channel 16. Keys are notes 48 + k, buttons CC 102 + b (127 down, 0 up), knobs CC 85 + role
+// (64 ± detents), MASTER CC 7, CC 116 a hello each second (0: goodbye). We answer with our lights the same way and
+// CC 117 each second, so the FM-1's panel lights as this one does.
+let remote = null, sentB = 0, sentK = 0, ackTimer = 0;
+const remoteNote = document.getElementById("remote-note");
+const knobByRole = (r) => Object.values(knobs).find((k) => k.role === r);
+function outFor(input) {                    // the FM-1's own output: the same port name
+  for (const o of midiAccess.outputs.values()) if (o.name === input.name && o.state === "connected") return o;
+  for (const o of midiAccess.outputs.values()) if (input.manufacturer && o.manufacturer === input.manufacturer && o.state === "connected") return o;
+  return null;
+}
+function remoteLights(b, k, all) {
+  if (!remote || !remote.out) return;
+  const o = remote.out, cb = all ? 0x3FFF : (b ^ sentB), ck = all ? 0x7FFFFFF : (k ^ sentK);
+  try {
+    for (let i = 0; i < 14; i++) if (cb & (1 << i)) o.send([0xBF, 102 + i, b & (1 << i) ? 127 : 0]);
+    for (let i = 0; i < 27; i++) if (ck & (1 << i)) o.send(k & (1 << i) ? [0x9F, 48 + i, 100] : [0x8F, 48 + i, 0]);
+  } catch { /* unplugged mid-send */ }
+  sentB = b; sentK = k;
+}
+function setMaster(v) {
+  const k = knobs.MASTER;
+  master = Math.max(0, Math.min(4096, Math.round(v)));
+  k.angle = -135 + 270 * master / 4096;
+  send({ type: "master", value: master });
+  drawKnob(k);
+}
+function releaseRemote() {
+  for (const id of [...btnHeldBy.keys()]) if (id[0] === "r") btnHeldBy.delete(id);
+  for (const id of [...keyHeldBy.keys()]) if (id[0] === "r") keyHeldBy.delete(id);
+  syncButtons(); syncKeys();
+}
+function remoteText() {
+  remoteNote.textContent = remote ? `${remote.input.name} is playing this emulator${remote.out ? "" : " (its lights: no matching output found)"}. SEL + GLO on the FM-1 gives it back.`
+                                  : "Remote: with LOF-1 on your FM-1 and MIDI connected here, hold SEL and press GLO on the FM-1. Its panel plays this emulator and goes quiet itself.";
+}
+function remoteStart(input) {
+  remote = { input, out: outFor(input) };
+  document.getElementById("device").classList.add("remote");
+  const ack = () => { try { remote && remote.out && remote.out.send([0xBF, 117, 127]); } catch {} };
+  ack();
+  clearInterval(ackTimer);
+  ackTimer = setInterval(ack, 1000);
+  if (window.ambLast) remoteLights(window.ambLast.buttons, window.ambLast.keys, true);
+  remoteText();
+}
+function remoteStop() {
+  if (!remote) return;
+  clearInterval(ackTimer);
+  try { remote.out && remote.out.send([0xBF, 117, 0]); } catch {}
+  remote = null;
+  releaseRemote();
+  document.getElementById("device").classList.remove("remote");
+  remoteText();
+}
+function onMidi(e, input) {
+  const d = e.data, st = d[0], d1 = d[1] || 0, d2 = d[2] || 0, type = st & 0xF0, ch = st & 15;
+  if (ch === 15 && type === 0xB0 && d1 === 116 && st < 0xF0) {                        // the FM-1's hello / goodbye
+    if (d2) { if (!remote || remote.input !== input) remoteStart(input); } else if (remote && remote.input === input) remoteStop();
+    return;
+  }
+  if (remote && remote.input === input && st < 0xF0 && ch === 15) {                   // its panel
+    if (type === 0xB0) {
+      if (d1 === 7) setMaster(d2 * 4096 / 127);
+      else if (d1 >= 102 && d1 < 116) { const b = d1 - 102; if (d2 >= 64) btnHeldBy.set("rb" + b, b); else btnHeldBy.delete("rb" + b); syncButtons(); }
+      else if (d1 >= 85 && d1 <= 91) { const k = knobByRole(d1 - 85); if (k) turn(k, d2 - 64); }
+    } else if ((type === 0x90 || type === 0x80) && d1 >= 48 && d1 < 75) {
+      const k = d1 - 48;
+      if (type === 0x90 && d2) keyHeldBy.set("rk" + k, k); else keyHeldBy.delete("rk" + k);
+      syncKeys();
+    }
+    return;
+  }
+  if (input !== midiIn) return;                                                        // the chosen input: notes, clock
+  if (st === 0xF8 || st === 0xFA || st === 0xFB || st === 0xFC || type === 0x90 || type === 0x80) send({ type: "midi", data: [...d] });
+}
+outSel.addEventListener("change", pickPorts);
+inSel.addEventListener("change", pickPorts);
+document.getElementById("midi-go").addEventListener("click", async () => {
+  if (!navigator.requestMIDIAccess) {
+    midiNote.textContent = "This browser has no Web MIDI. Chrome, Edge, Opera and Firefox do; Safari doesn't.";
+    return;
+  }
+  try {
+    midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+    midiAccess.onstatechange = fillPorts;
+    fillPorts();
+    document.getElementById("midi-go").textContent = "MIDI connected";
+  } catch (err) {
+    midiNote.textContent = "MIDI isn't allowed here (" + (err && err.name || "refused") + "). Open the emulator on its own page to use MIDI, or allow MIDI for this site in the browser's settings.";
+  }
+});
+document.getElementById("reset").addEventListener("click", () => {
+  if (document.getElementById("reset").dataset.armed) {
+    try { localStorage.removeItem(STORE_KEY); } catch {}
+    location.reload();
+  } else {
+    document.getElementById("reset").dataset.armed = "1";
+    document.getElementById("reset").textContent = "Click again to forget everything";
+  }
+});
+</script>
+</body>
+</html>

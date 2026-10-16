@@ -1,0 +1,51 @@
+# FX locks: SAVE held in FX is lock mode; keys tapped lock (several); a locked key tapped alone unlocks it;
+# the locks play on with FX closed; SAVE tapped alone in FX is still Side B; SEL + FX: every lock off
+wait 3000
+tap FX
+expect fx 1
+press SAVE
+tapkey w6
+tapkey b1
+release SAVE
+# MUFFLE (6) and CRUSH (17) locked
+expect fx_lock 0x20040
+expect sideb 0
+shot lock_map.png
+tap FX
+expect fx 0
+wait 1000
+expect fx_lock 0x20040
+shot lock_closed.png
+# back in FX: tap the muffle key alone: it unlocks, crush stays
+tap FX
+tapkey w6
+expect fx_lock 0x20000
+# a key held as SAVE goes down locks too
+key w14 down
+press SAVE
+release SAVE
+key w14 up
+expect fx_lock 0x24000
+# SAVE alone in FX: Side B
+tap SAVE
+wait 100
+expect sideb 1
+press SEL
+tap FX
+release SEL
+expect fx_lock 0
+# remote: SEL + GLO, the FM-1 goes quiet and its panel goes out on channel 16
+peakreset
+press SEL
+tap GLO
+release SEL
+expect remote 1
+wait 3000
+peakreset
+wait 1000
+expect peak_db_max -60
+tapkey 3
+press SEL
+tap GLO
+release SEL
+expect remote 0

@@ -1,0 +1,26 @@
+# Keys: Chords. One key plays the scale's chord; the band follows it; SEL + HOME back to notes
+wait 3000
+press SEL
+tap HOME
+release SEL
+expect par50 2
+# D dorian: G (key 2) is degree IV: G B D F with 7ths
+key 2 down
+wait 2500
+expect chord_root 7
+expect auto 0
+shot chords_lead.png
+tap ENV
+wait 200
+shot chords_lead_page.png
+key 2 up
+# A (key 4): degree v, A C E G
+key 4 down
+wait 2000
+expect chord_root 9
+key 4 up
+wait 300
+press SEL
+tap HOME
+release SEL
+expect par50 1

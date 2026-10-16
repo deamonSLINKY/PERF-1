@@ -27,15 +27,17 @@ Installing it is at your own risk, though it's hard to get stuck: the web instal
 own firmware back, and an FM-1 that fails to start twice comes up in a safe mode the installer can reach.
 
 
-## Also here: ECO-1 (experimental)
+## Also here: LOF-1 (experimental)
 
-[`eco1/`](eco1/) holds **ECO-1**, a second RedtailWorks firmware for the FM-1: a small plant whose three
-leaves fire notes as light and water charge them, a stem that drones beneath, and weather (rain, wind,
-gusts, a day and night) that plays it. Eight plants, each in its own place on the screen; MIDI clock in,
-MIDI out per voice with the plant's signals as CCs. It's **experimental**: built and tested in the
-simulator and the browser emulator, not yet on a real FM-1, and numbered 0.x until it has been. The same
-workflow builds it, and the site has it under [`eco/`](https://rustypawz.github.io/fm1-HYP1/eco/): the
-dropdown at the top of every page switches between HYP-1 and ECO-1.
+[`lof1/`](lof1/) holds **LOF-1**, a second RedtailWorks firmware for the FM-1: a lofi groovebox. You play the
+lead on the keys and a tired jazz band follows: it hears which chord your notes imply and the comp, bass
+and drums move with it on the beat; an Answer voice replies to your phrases, and when the keys rest a ghost
+takes the lead. Under it all, a record, a cassette, a reel or a radio. Fourteen lead instruments, ten
+presets, chords on the keys, FX on the keys with locks, a drum sequencer, MIDI clock in and notes out. It's
+**experimental**: built and tested in the simulator and the browser emulator, not yet on a real FM-1, and
+numbered 0.x until it has been. The same workflow builds it, and the site has it under
+[`lof/`](https://rustypawz.github.io/fm1-HYP1/lof/): the dropdown at the top of every page switches between
+HYP-1 and LOF-1. (LOF-1 took ECO-1's place here; ECO-1 is in this repository's history.)
 
 ## What it does
 

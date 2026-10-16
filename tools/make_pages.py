@@ -195,10 +195,10 @@ the whole performance into your DAW.</p>
 </div>
 <figure style="margin-top:14px"><img src="img/hyp-themes.png" width="1344" height="328" alt="The five screen themes: Synth, Acid, Ice, Ember, Phosphor."><figcaption>Five screen themes on Global: Synth, Acid, Ice, Ember, Phosphor.</figcaption></figure>
 
-<!--eco--><h2>Also from RedtailWorks</h2>
-<div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><a href="eco/" style="flex:0 0 auto"><img src="eco/img/eco-screen-p-fern.png" width="160" height="160" alt="ECO-1's screen: a fern on a forest floor" style="display:block;border-radius:8px;image-rendering:pixelated;border:1px solid var(--rule)"></a>
-  <p style="flex:1 1 18rem"><b>ECO-1</b> <span style="font:700 .72rem 'Chakra Petch',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1a0c03;background:var(--orange);border-radius:999px;padding:.12em .6em">Experimental</span><br>
-  A second firmware for the FM-1: a small plant plays it. Three leaves fire notes as light and water charge them, a stem drones, and the rain, wind and the turning day play the plant. <a href="eco/">Have a look</a>, or try it in the <a href="eco/emu/">emulator</a>.</p></div><!--/eco-->
+<!--lof--><h2>Also from RedtailWorks</h2>
+<div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><a href="lof/" style="flex:0 0 auto"><img src="lof/img/lof-screen-playing.png" width="160" height="160" alt="LOF-1's screen: a record turning, the band following you" style="display:block;border-radius:8px;image-rendering:pixelated;border:1px solid var(--rule)"></a>
+  <p style="flex:1 1 18rem"><b>LOF-1</b> <span style="font:700 .72rem 'Chakra Petch',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1a0c03;background:var(--orange);border-radius:999px;padding:.12em .6em">Experimental</span><br>
+  A lofi groovebox for the FM-1: you play the lead on the keys and a tired jazz band follows, with an old record crackling under it. <a href="lof/">Have a look</a>, or try it in the <a href="lof/emu/">emulator</a>.</p></div><!--/lof-->
 <div class="support">
   <p><b>HYP-1 is free, and always will be.</b> If it's found a place in your music, a coffee keeps the
   updates, videos and new pieces coming.</p>

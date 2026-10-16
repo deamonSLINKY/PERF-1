@@ -1,0 +1,38 @@
+# presets 01-10: SAVE on Global stores the one playing; the others keep the factory's until stored
+expect piece 0
+spin K1 5
+expect par0 83
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+expect view 14
+tap SAVE
+expect store_writes 1
+expect sideb 0
+turn PRESET 1
+expect piece 1
+tap HOME
+spin K1 3
+expect par0 75
+reboot
+expect piece 0
+expect par0 83
+turn PRESET 1
+expect par0 72
+turn PRESET 8
+expect piece 9
+expect par0 60
+turn PRESET 1
+expect piece 0
+# held on Global: back to the factory's
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+press SAVE
+wait 1700
+release SAVE
+expect par0 78
+expect store_writes 1
+shot preset.png

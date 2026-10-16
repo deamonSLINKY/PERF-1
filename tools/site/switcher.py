@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""The HYP-1 / ECO-1 dropdown on every page of the site (the workflow runs this last, over build/pages):
-HYP-1's pages at the root, ECO-1's under eco/. Choosing the other firmware goes to its matching page
-(landing, emulator, installer, manual; HYP-1's board has no ECO-1 twin, so its landing), in its own
+"""The HYP-1 / LOF-1 dropdown on every page of the site (the workflow runs this last, over build/pages):
+HYP-1's pages at the root, LOF-1's under lof/. Choosing the other firmware goes to its matching page
+(landing, emulator, installer, manual; HYP-1's board has no LOF-1 twin, so its landing), in its own
 colours, text and images. The bar is the same neutral strip on both, so it reads as the site's own.
 
   python3 tools/site/switcher.py build/pages"""
 import sys
 from pathlib import Path
 
-PRODUCTS = [("hyp", "HYP-1", "hypnotic techno and acid", ""), ("eco", "ECO-1", "a plant plays it", "eco/")]
+PRODUCTS = [("hyp", "HYP-1", "hypnotic techno and acid", ""), ("lof", "LOF-1", "a lofi groovebox", "lof/")]
 SECTIONS = ("emu", "install", "manual", "board")
 
 BAR = """<style>
@@ -32,8 +32,8 @@ BAR = """<style>
 def page_parts(rel):
     """(product, section, depth to the site root) of a page's path under the site"""
     parts = rel.parts
-    prod = "eco" if parts[0] == "eco" else "hyp"
-    rest = parts[1:] if prod == "eco" else parts
+    prod = "lof" if parts[0] == "lof" else "hyp"
+    rest = parts[1:] if prod == "lof" else parts
     section = rest[0] if len(rest) > 1 and rest[0] in SECTIONS else ""
     return prod, section, len(parts) - 1
 
@@ -41,32 +41,32 @@ def page_parts(rel):
 def main(root):
     root = Path(root)
     n = 0
-    if not (root / "eco" / "index.html").exists():         # no ECO-1 this time: no word of it on the landing
+    if not (root / "lof" / "index.html").exists():         # no LOF-1 this time: no word of it on the landing
         idx = root / "index.html"
         if idx.exists():
             t = idx.read_text(encoding="utf-8")
-            a, b = t.find("<!--eco-->"), t.find("<!--/eco-->")
+            a, b = t.find("<!--lof-->"), t.find("<!--/lof-->")
             if a >= 0 and b > a:
-                idx.write_text(t[:a] + t[b + len("<!--/eco-->"):], encoding="utf-8")
+                idx.write_text(t[:a] + t[b + len("<!--/lof-->"):], encoding="utf-8")
     for f in sorted(root.rglob("*.html")):
         rel = f.relative_to(root)
         prod, section, depth = page_parts(rel)
-        if prod == "eco" and not (root / "eco" / "index.html").exists():
+        if prod == "lof" and not (root / "lof" / "index.html").exists():
             continue
         up = "../" * depth
         opts = []
         for key, name, what, base in PRODUCTS:
-            if key == "eco" and not (root / "eco" / "index.html").exists():
-                continue                                   # ECO-1 didn't build: no choice to offer
+            if key == "lof" and not (root / "lof" / "index.html").exists():
+                continue                                   # LOF-1 didn't build: no choice to offer
             sec = section if section != "board" or key == "hyp" else ""
-            if key == "eco" and sec and not (root / "eco" / sec).exists():
+            if key == "lof" and sec and not (root / "lof" / sec).exists():
                 sec = ""
             href = (up + base + (sec + "/" if sec else "")) or "./"
-            label = f"{name} · {what}" + (" (experimental)" if key == "eco" else "")
+            label = f"{name} · {what}" + (" (experimental)" if key == "lof" else "")
             opts.append(f'<option value="{href}"{" selected" if key == prod else ""}>{label}</option>')
         if len(opts) < 2:
             continue
-        bar = BAR.replace("__OPTS__", "".join(opts)).replace("__TAG__", '<span class="tag">Experimental</span>' if prod == "eco" else "")
+        bar = BAR.replace("__OPTS__", "".join(opts)).replace("__TAG__", '<span class="tag">Experimental</span>' if prod == "lof" else "")
         s = f.read_text(encoding="utf-8")
         if "rw-switch" in s:
             continue
