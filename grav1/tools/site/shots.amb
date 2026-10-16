@@ -40,6 +40,11 @@ wait 2500
 shot pulse.png
 echo @pulse
 leds
+tap SEQ
+wait 400
+shot drift.png
+echo @drift
+leds
 press SEQ
 wait 800
 release SEQ
@@ -586,3 +591,9 @@ wait 20
 shot synced.png
 midi FC 0 0
 wait 300
+# the orbit view: a minute untouched on the System page
+tap PLAY
+wait 62000
+shot full.png
+echo @full
+leds

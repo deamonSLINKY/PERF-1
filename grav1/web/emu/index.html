@@ -155,7 +155,13 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
       <div>
         <h3>Pulse <span>SEQ</span></h3>
         <dl>
-          <dt>Lane</dt><dd>Kick, Pulsar, Sonar, Geiger, Rim, Shaker; lane n is planet n's. The white keys are its 16 steps, black keys 1–6 pick it. Hold <b>SEQ</b> for the sequencer: the whole bank on screen, SELECT one of eight banks (it plays from the next bar), OCT− / OCT+ or black keys the lane.</dd><dt>Binding</dt><dd>What each hit does to the planet: Off, Pump, Blip, Flicker, Nudge.</dd><dt>Drums, Evolve</dt><dd>Their level; at each Great Year Shift moves a hit or two, Drift also adds or takes one (and the planets move to new orbits).</dd>
+          <dt>Lane</dt><dd>Kick, Pulsar, Sonar, Geiger, Rim, Shaker; lane n is planet n's. The white keys are its 16 steps, black keys 1–6 pick it. Hold <b>SEQ</b> for the sequencer: the whole bank on screen, SELECT one of eight banks (it plays from the next bar), OCT− / OCT+ or black keys the lane.</dd><dt>Binding</dt><dd>What each hit does to the planet: Off, Pump, Blip, Flicker, Nudge.</dd><dt>Drums, Evolve</dt><dd>Their level; at each Great Year Shift moves a hit or two, Morph also adds or takes one (and the planets move to new orbits).</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Drift <span>SEQ twice</span></h3>
+        <dl>
+          <dt>Change</dt><dd>The drums move to another bank: Off, Next, or Random from the Pool. A fill plays the bar before, and the planets glide to their new orbits.</dd><dt>Every</dt><dd>Great yr (with the chord; EDIT brings it) or every 4–64 bars.</dd><dt>Pool, Fill</dt><dd>The banks it uses (1–2 to 1–8); how busy the fill is.</dd>
         </dl>
       </div>
       <div>
@@ -307,7 +313,7 @@ function hit(c, cls) {
 }
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out)",
-  HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
+  HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (again: Drift; hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
   "OCT-": "The planet an octave down", "OCT+": "The planet an octave up", SELECT: "Every page in turn (HOME held: the tempo)", ALGORITHM: "The planet (on Pulse: the lane)", PRESETS: "The system",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

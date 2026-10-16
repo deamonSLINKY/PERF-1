@@ -58,8 +58,8 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 1. **Listen.** The first system, Sol, is playing: a yellow star, six planets. Turn MASTER for volume.
 2. **Watch it.** Each planet flashes as it plays. Near the star they glow red and orange, far out blue and
    ice. The thin line along the top of the screen is the Great Year going round.
-3. **Turn SELECT.** It walks every page: System, Star, each planet in turn, Gravity, Weather, Pulse, Space,
-   Setup, Display, MIDI out. The dots at the right of the knob strip show where you are.
+3. **Turn SELECT.** It walks every page: System, Star, each planet in turn, Gravity, Weather, Pulse, Drift,
+   Space, Setup, Display, MIDI out. The dots at the right of the knob strip show where you are.
 4. **Change a planet's year.** Hold SEQ for the sequencer: six lanes of 16 steps. The white keys are the
    lane's steps, black keys 1–6 (or OCT− / OCT+) pick the lane, SELECT picks one of eight banks. Add a hit:
    the planet's year gets shorter and it drifts closer to the star.
@@ -78,8 +78,8 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 | **Keys** | The scale: each key adds its note or takes it out (lit: in the scale). The root stays. On Pulse, the white keys are the lane's steps and black keys 1–6 pick the lane; on Weather, black keys 1–3 call a dust cloud, an asteroid, a comet. |
 | **PLAY** | Grow / rest. Resting, everything fades and the tails ring on. |
 | **REC** | Eclipse: the orbits and the weather hold still, the space rings on. Again to let go. |
-| **EDIT** | The Great Year now: the chord moves and the drums evolve. |
-| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse, Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
+| **EDIT** | The Great Year now: the chord moves, the drums evolve (and with Drift on the Great Year, change bank two bars later). |
+| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse (again: Drift), Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
 | **SEL** | The next planet (on Pulse, the next lane). |
 | **SELECT** | Every page in turn, each planet's page one by one. With HOME held: the tempo. In the sequencer: the drum bank. |
 | **ALGORITHM** | The planet (on Pulse, the lane). |
@@ -135,8 +135,16 @@ others. It stays silent until a larger neighbour's tide reaches it, then sounds 
 and fades with the pass. Wake sets how loud.
 
 **The Great Year.** The outermost planet's year (dormant ones included, unless Great year is Active). Each
-one moves the chord, and with Evolve on, the drums change a little: Shift moves a hit or two, Drift also
+one moves the chord, and with Evolve on, the drums change a little: Shift moves a hit or two, Morph also
 adds or takes one, so the planets slowly move to new orbits.
+
+**Drift.** Bigger changes, as on LOF-1: the drums move to another bank, the next one or one picked at random
+from banks 1 to the Pool. Drift can follow the system, changing at the Great Year (so the chord and the
+drums turn together), or keep its own time, every 4 to 64 bars. The bar before a change is a fill, the
+lanes tumbling in toward the bar line, and with the new bank every planet's year changes, so the whole
+system glides out or in to its new orbits. Evolve keeps working on whichever bank is playing, and what it
+changes stays in that bank, so each comes back a little different. A breakdown bank (8, with no hits for
+planets 2–5) sends those planets dormant until the next change; keep the Pool under 8 to leave it out.
 
 **Bindings.** Each hit of a lane does something to its planet: Pump ducks it, Blip brightens it, Flicker
 cuts it on and off, Nudge bends its pitch up and back.
@@ -242,7 +250,20 @@ Evolve works on the bank playing.
   keys are its steps (in the bank on screen); the step playing blinks.
 - **Binding:** what its hits do to its planet: Off, Pump, Blip, Flicker, Nudge.
 - **Drums:** their level.
-- **Evolve:** Off, Shift, Drift (at each Great Year).
+- **Evolve:** Off, Shift, Morph (at each Great Year).
+
+### Drift (SEQ again)
+
+![Drift](img/grav-screen-drift.png)
+
+- **Change:** Off, Next (bank after bank), Random (any bank in the Pool but the one playing).
+- **Every:** Great yr (with the chord; EDIT brings it now), or 4, 8, 16, 32, 64 bars.
+- **Pool:** the banks it uses: 1–2 up to 1–8.
+- **Fill:** how busy the fill is in the bar before a change (0: none).
+
+The rule above the knobs shows the bank playing and what's coming: the bars to go, FILL during the fill
+bar, or GREAT YR while it waits for the Great Year. In the sequencer, a change Drift makes shows as the bank
+on screen; edits you make there stay in the bank.
 
 ### Space (FX)
 

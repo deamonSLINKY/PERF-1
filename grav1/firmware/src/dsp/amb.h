@@ -62,6 +62,9 @@ enum {
     P_ROOT, P_TUNE, P_SYNC, P_MODE,                   /* setup; the mode loads a pool */
     P_MIDI, P_MCH,                                    /* MIDI out: what it sends, its first channel */
     P_THEME, P_SKY, P_LINES, P_TLINES,                /* the screen (the engine keeps them only to name them) */
+    P_HOP, P_HOPWHEN, P_HOPPOOL, P_HOPFILL,           /* Drift: the drums change bank (Off, Next, Random), when
+                                                         (the Great Year, or every 4-64 bars), from banks 1..pool,
+                                                         with a fill the bar before */
     P_NPARAMS
 };
 #define P_PAT_OF(b, l) (P_PAT + EN_NPL * (b) + (l))
@@ -129,6 +132,8 @@ extern volatile float en_drum_glow[EN_NPL];     /* 0..1: each lane just hit */
 extern volatile uint16_t en_pat[EN_NPL];       /* the playing bank's steps as they are now (Evolve changes them) */
 extern volatile uint8_t en_bank;               /* the bank playing (P_BANK may be waiting for the bar) */
 extern volatile uint8_t en_step;               /* the step playing, 0..15 */
+extern volatile int8_t en_hop_left;            /* Drift: bar lines until the bank changes (1: the fill bar), -1 none */
+extern volatile uint32_t en_hops;              /* bank changes since start */
 extern volatile float en_year;                 /* the Great Year: how far round it is, 0..1 */
 extern volatile float en_star;                 /* the star's size: its level, its roar, a flare (0..1.5) */
 extern volatile float en_flare, en_roar;
@@ -143,7 +148,7 @@ extern volatile uint32_t en_years, en_greats;  /* years (any planet) and Great Y
 extern volatile uint32_t en_wakes, en_rocks, en_comets, en_dusts;
 
 /* what happened, for the screen's messages: codes in a ring, en_ev_w counts them */
-enum { EV_YEAR = 1, EV_GREAT, EV_DUST, EV_CLEAR, EV_ROCK, EV_COMET, EV_BURN, EV_WAKE };
+enum { EV_YEAR = 1, EV_GREAT, EV_DUST, EV_CLEAR, EV_ROCK, EV_COMET, EV_BURN, EV_WAKE, EV_HOP, EV_FILL };
 #define EN_NEV 16
 extern volatile uint16_t en_ev[EN_NEV];        /* code << 8 | detail (a planet, the chord's root) */
 extern volatile uint32_t en_ev_w;

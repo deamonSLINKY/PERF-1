@@ -390,6 +390,8 @@ static int expect(const char *what, const char *val)
         got = ui.sel;
     else if (!strcmp(what, "lane"))
         got = ui.lane;
+    else if (!strcmp(what, "hops"))               /* Drift's bank changes */
+        got = (double)en_hops;
     else if (!strcmp(what, "full"))               /* the orbit view */
         got = ui.full;
     else if (!strcmp(what, "bank"))               /* the drum bank playing */

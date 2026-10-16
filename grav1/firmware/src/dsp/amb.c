@@ -49,6 +49,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Root", 0, 11, 2},       {"Tune", -50, 50, 0},    {"Sync", 0, 1, 1},       {"Mode", 0, EN_NMODES - 1, 1},
     {"MIDI out", 0, 3, 1},    {"Channel", 0, 8, 0},
     {"Theme", 0, EN_NTHEMES - 1, 0}, {"Starfield", 0, 100, 100}, {"Orbits", 0, 100, 100}, {"Tide lines", 0, 100, 100},
+    {"Change", 0, 2, 0},      {"Every", 0, 5, 0},      {"Pool", 2, EN_NBANK, 4}, {"Fill", 0, 100, 50},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -146,6 +147,12 @@ static int16_t pat_bits(const char *s)
     return (int16_t)(uint16_t)b;
 }
 
+/* each system's Drift: change (0 Off, 1 Next, 2 Random), when (0 the Great Year, 1-5 every 4, 8, 16, 32, 64
+ * bars), pool (banks 1..n), fill */
+static const uint8_t HOP[EN_NPIECES][4] = {
+    {1, 0, 4, 50}, {0, 0, 4, 50}, {2, 3, 4, 40}, {0, 0, 4, 50}, {1, 2, 3, 60},
+    {2, 0, 6, 40}, {1, 0, 2, 30}, {2, 0, 3, 20}, {0, 0, 4, 50}, {2, 2, 5, 70}};
+
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
 void en_piece(int i, int16_t *p, uint16_t *pool)
 {
@@ -179,6 +186,10 @@ void en_piece(int i, int16_t *p, uint16_t *pool)
     p[P_ROCKS] = s->rocks;
     p[P_COMETS] = s->comets;
     p[P_EVOLVE] = s->evolve;
+    p[P_HOP] = HOP[i][0];
+    p[P_HOPWHEN] = HOP[i][1];
+    p[P_HOPPOOL] = HOP[i][2];
+    p[P_HOPFILL] = HOP[i][3];
     p[P_ECHO] = s->echo;
     p[P_REVERB] = s->reverb;
     p[P_RADIO] = s->radio;
@@ -210,7 +221,9 @@ void en_param_text(int i, int v, char *b)
 {
     static const char *const MIDI_NAME[4] = {"Off", "Notes", "Notes+CC", "CC"};
     static const char *const SYNC_NAME[2] = {"Free", "Clock"};
-    static const char *const EVOLVE_NAME[3] = {"Off", "Shift", "Drift"};
+    static const char *const EVOLVE_NAME[3] = {"Off", "Shift", "Morph"};
+    static const char *const HOP_NAME[3] = {"Off", "Next", "Random"};
+    static const char *const WHEN_NAME[6] = {"Great yr", "4 bars", "8 bars", "16 bars", "32 bars", "64 bars"};
     static const char *const GY_NAME[2] = {"All", "Active"};
     static const char *const PHRASE_NAME[7] = {"Auto", "3", "4", "5", "6", "7", "8"};
     const char *s = 0;
@@ -220,6 +233,10 @@ void en_param_text(int i, int v, char *b)
         s = SYNC_NAME[v ? 1 : 0];
     else if (i == P_EVOLVE)
         s = EVOLVE_NAME[(unsigned)v < 3u ? v : 0];
+    else if (i == P_HOP)
+        s = HOP_NAME[(unsigned)v < 3u ? v : 0];
+    else if (i == P_HOPWHEN)
+        s = WHEN_NAME[(unsigned)v < 6u ? v : 0];
     else if (i == P_GY)
         s = GY_NAME[v ? 1 : 0];
     else if (i == P_PHRASE)
@@ -265,6 +282,12 @@ void en_param_text(int i, int v, char *b)
         *b++ = (char)('0' + v / 10);
         *b++ = (char)('0' + v % 10);
         *b = 0;
+        return;
+    }
+    if (i == P_HOPPOOL) {                        /* the banks Random picks from: 1-n */
+        *b++ = '1';
+        *b++ = '-';
+        itoa_s(v, b);
         return;
     }
     if (i == P_TEMPO) {
@@ -342,6 +365,11 @@ volatile float en_drum_glow[EN_NPL];
 volatile uint16_t en_pat[EN_NPL];
 volatile uint8_t en_bank;
 static int bank_play;                           /* the bank playing; par[P_BANK] the one asked for */
+volatile int8_t en_hop_left = -1;
+volatile uint32_t en_hops;
+static int8_t hop_in = -1;                      /* Drift: bar lines until the bank changes, -1 none */
+static uint8_t hop_fill;                        /* this bar is the fill */
+static uint32_t hop_bars;                       /* bars since the last change (Every) */
 volatile uint8_t en_step;
 volatile float en_year, en_star, en_flare, en_roar, en_dust;
 volatile uint8_t en_rock_on, en_comet_on;
@@ -1400,6 +1428,9 @@ static void regrow(void)
     int i;
     bank_play = par[P_BANK];
     en_bank = (uint8_t)bank_play;
+    hop_in = en_hop_left = -1;
+    hop_fill = 0;
+    hop_bars = 0;
     for (i = 0; i < EN_NPL; i++) {
         pl[i].ang = frand();
         pl[i].om = frand();
@@ -1555,7 +1586,44 @@ static void great_year(void)
         if (changed)
             periods();
     }
+    if (par[P_HOP] && par[P_HOPWHEN] == 0 && hop_in < 0)
+        hop_in = 2;                              /* Drift on the Great Year: a fill next bar, the new bank after */
     event(EV_GREAT, en_chord);
+}
+
+/* Drift, at each bar line: count down to the change; the bar before it is the fill */
+static void hop_bar(void)
+{
+    static const uint8_t LEN[6] = {0, 4, 8, 16, 32, 64};
+    int len = LEN[(unsigned)par[P_HOPWHEN] < 6u ? par[P_HOPWHEN] : 0];
+    if (!par[P_HOP]) {
+        hop_in = en_hop_left = -1;
+        hop_fill = 0;
+        hop_bars = 0;
+        return;
+    }
+    if (hop_in > 0)
+        hop_in--;
+    if (hop_in == 0) {                           /* the change: the next bank, or another from the pool */
+        int pool = par[P_HOPPOOL] < 2 ? 2 : par[P_HOPPOOL], nb = par[P_BANK];
+        if (par[P_HOP] == 1 || pool < 2)
+            nb = bank_play + 1 >= pool ? 0 : bank_play + 1;
+        else
+            do
+                nb = irand(pool);
+            while (nb == bank_play);
+        par[P_BANK] = (int16_t)nb;
+        en_hops++;
+        event(EV_HOP, nb);
+        hop_in = -1;
+        hop_bars = 0;
+    } else if (len && hop_in < 0 && ++hop_bars >= (uint32_t)len - 1u) {
+        hop_in = 1;
+    }
+    hop_fill = hop_in == 1 && par[P_HOPFILL] > 0;
+    if (hop_fill)
+        event(EV_FILL, bank_play);
+    en_hop_left = (int8_t)(hop_in >= 0 ? hop_in : len ? len - (int)hop_bars : -1);
 }
 
 static void year(int i)
@@ -1572,6 +1640,8 @@ static void step(int32_t at)
 {
     int s = (int)(step_count & 15u), l, i;
     const float bars_per_step = 1.0f / 16.0f;
+    if (s == 0)
+        hop_bar();
     if (s == 0 && par[P_BANK] != bank_play) {     /* a new bank, on the bar */
         bank_play = par[P_BANK];
         en_bank = (uint8_t)bank_play;
@@ -1592,6 +1662,15 @@ static void step(int32_t at)
             if (l < nplanets())
                 bind(l);
         }
+    if (hop_fill && s >= 12) {                    /* the fill: the lanes tumble in, more as the bar ends */
+        float pr = (float)par[P_HOPFILL] * 0.01f * 0.2f * (float)(s - 11);
+        for (l = 0; l < EN_NPL; l++)
+            if (!((uint16_t)par[P_PAT_OF(bank_play, l)] >> s & 1u) && frand() < pr) {
+                drum_hit(l, at);
+                note(1, 6, (uint32_t)(36 + l), 80);
+                drum_noteon |= (uint8_t)(1u << l);
+            }
+    }
     for (i = 0; i < nplanets(); i++) {
         planet_t *p = &pl[i];
         int k;

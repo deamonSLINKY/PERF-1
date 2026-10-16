@@ -19,11 +19,11 @@
 #include "../dsp/fastmath.h"
 
 /* the pages; SELECT walks them, a planet's page once for each planet */
-enum { V_SYSTEM, V_STAR, V_PLANET, V_GRAVITY, V_WEATHER, V_PULSE, V_SPACE, V_SETUP, V_DISPLAY, V_OUT, V_SEQ, NVIEWS };
+enum { V_SYSTEM, V_STAR, V_PLANET, V_GRAVITY, V_WEATHER, V_PULSE, V_DRIFT, V_SPACE, V_SETUP, V_DISPLAY, V_OUT, V_SEQ, NVIEWS };
 #define NWALK (V_OUT + 1)                 /* the pages SELECT walks; the sequencer is SEQ held */
-static const char *const VIEW_NAME[NVIEWS] = {"System", "Star", "Planet", "Gravity", "Weather", "Pulse", "Space", "Setup",
+static const char *const VIEW_NAME[NVIEWS] = {"System", "Star", "Planet", "Gravity", "Weather", "Pulse", "Drift", "Space", "Setup",
                                               "Display", "MIDI out", "Sequencer"};
-static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_LFO, B_SEQ, B_FX, B_GLO, B_GLO, B_GLO, B_SEQ};
+static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_LFO, B_SEQ, B_SEQ, B_FX, B_GLO, B_GLO, B_GLO, B_SEQ};
 enum { K_LEDS = 200, K_CPU, K_LANE, K_NONE };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Planets", "Tempo", "Wander", "Phrase"},
@@ -32,6 +32,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tide", "Reach", "Wake", "Great yr"},
     {"Dust", "Asteroids", "Comets", "Events"},
     {"Lane", "Binding", "Drums", "Evolve"},
+    {"Change", "Every", "Pool", "Fill"},
     {"Echo", "Reverb", "Radio", "Width"},
     {"Root", "Mode", "Tune", "Sync"},
     {"Theme", "Starfield", "Orbits", "Tide lines"},
@@ -162,7 +163,7 @@ static int view_knob(int v, int i)
     static const uint8_t K[NVIEWS][4] = {
         {P_PLANETS, P_TEMPO, P_WANDER, P_PHRASE}, {P_STAR, P_COLOUR, P_ROAR, P_FLARES}, {0, 0, 0, 0},
         {P_TIDE, P_REACH, P_WAKE, P_GY}, {P_DUST, P_ROCKS, P_COMETS, P_EVENTS}, {0, 0, P_DRUMS, P_EVOLVE},
-        {P_ECHO, P_REVERB, P_RADIO, P_WIDTH}, {P_ROOT, P_MODE, P_TUNE, P_SYNC}, {P_THEME, P_SKY, P_LINES, P_TLINES},
+        {P_HOP, P_HOPWHEN, P_HOPPOOL, P_HOPFILL}, {P_ECHO, P_REVERB, P_RADIO, P_WIDTH}, {P_ROOT, P_MODE, P_TUNE, P_SYNC}, {P_THEME, P_SKY, P_LINES, P_TLINES},
         {P_MIDI, P_MCH, 0, 0}, {0, 0, P_DRUMS, P_EVOLVE}};
     if (v == V_PLANET)
         return P_PL + 4 * ui.sel + i;
@@ -383,6 +384,10 @@ static void button(int b)
     }
     if (b == B_LFO && ui.view == V_GRAVITY) {    /* LFO again: Weather */
         set_view(V_WEATHER);
+        return;
+    }
+    if (b == B_SEQ && ui.view == V_PULSE) {      /* SEQ again: Drift */
+        set_view(V_DRIFT);
         return;
     }
     for (v = 0; v < NVIEWS; v++)
@@ -655,6 +660,15 @@ static void engine_news(void)
         case EV_COMET: say("COMET", "FALLING"); ui.trail_n = 0; break;
         case EV_BURN: say("COMET", "BURNS UP"); break;
         case EV_WAKE: say(t, "WAKES"); break;
+        case EV_HOP: {                           /* Drift changed the bank: the project follows */
+            char b[8] = "BANK ";
+            proj.par[P_BANK] = (int16_t)(ev & 0xFFu);
+            b[5] = (char)('1' + (ev & 0xFFu) % 8u);
+            b[6] = 0;
+            if (plat_ms() >= ui.msg_until)
+                say("DRUMS", b);
+            break;
+        }
         default: break;
         }
     }
@@ -1165,7 +1179,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ENV: L("THE STAR: LEVEL,"); L("COLOUR, ROAR, FLARES"); break;
     case B_ARP: L("A PLANET: LEVEL, INSTRUMENT,"); L("ELLIPSE, OCTAVE"); L("ALGORITHM / SEL: WHICH"); break;
     case B_LFO: L("GRAVITY: TIDE, REACH,"); L("WAKE, GREAT YEAR"); L("AGAIN: THE WEATHER"); break;
-    case B_SEQ: L("THE PULSE: WHITE KEYS THE"); L("STEPS, BLACK 1-6 THE LANE"); L("HOLD: THE SEQUENCER"); L("(SELECT: THE BANK)"); break;
+    case B_SEQ: L("THE PULSE: WHITE KEYS THE"); L("STEPS, BLACK 1-6 THE LANE"); L("AGAIN: DRIFT (THE BANKS)"); L("HOLD: THE SEQUENCER"); break;
     case B_SEL: L("THE NEXT PLANET"); L("(ON PULSE: THE NEXT LANE)"); break;
     case B_FX: L("THE SPACE: ECHO,"); L("REVERB, RADIO, WIDTH"); break;
     case B_GLO: L("SETUP: ROOT, MODE,"); L("TUNE, SYNC"); L("AGAIN: DISPLAY, MIDI OUT"); break;
@@ -1251,6 +1265,8 @@ static void draw_knobs(void)
                     (uint32_t)(uint16_t)proj.par[P_PAT_OF(proj.par[P_BANK], ui.lane)] << 12);
     if (ui.view == V_OUT)
         h = hash(h, plat_cpu_pct());
+    if (ui.view == V_DRIFT)
+        h = hash(h, (uint32_t)(uint8_t)en_hop_left | (uint32_t)en_bank << 8);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -1292,6 +1308,32 @@ static void draw_knobs(void)
             goto cells;
         }
         caps(t, VIEW_NAME[ui.view], sizeof t);
+        if (ui.view == V_DRIFT) {                /* DRIFT B2 - 3 BARS (or FILL, or GREAT YR) */
+            int m = 0, left = en_hop_left;
+            char nb[12];
+            const char *w = nb;
+            while (t[m])
+                m++;
+            t[m++] = ' ';
+            t[m++] = 'B';
+            t[m++] = (char)('1' + en_bank % 8u);
+            if (!proj.par[P_HOP])
+                w = "";
+            else if (left == 1)
+                w = " - FILL";
+            else if (left < 0)
+                w = " - GREAT YR";
+            else {
+                nb[0] = ' ', nb[1] = '-', nb[2] = ' ';
+                itoa_u((uint32_t)left, nb + 3);
+                for (left = 3; nb[left]; left++)
+                    ;
+                nb[left++] = ' ', nb[left++] = 'B', nb[left++] = 'A', nb[left++] = 'R', nb[left++] = 'S', nb[left] = 0;
+            }
+            while (*w && m < 22)
+                t[m++] = *w++;
+            t[m] = 0;
+        }
         if (ui.view == V_PLANET) {
             int m = 0;
             while (t[m])

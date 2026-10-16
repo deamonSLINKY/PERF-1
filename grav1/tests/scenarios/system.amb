@@ -41,7 +41,7 @@ shot pulse.png
 press SEQ
 wait 800
 release SEQ
-expect view 10
+expect view 11
 turn SELECT 1
 expect par42 1
 tap OCT+
@@ -58,6 +58,11 @@ wait 6000
 expect bank 0
 tap SEQ
 expect view 5
+# Drift (SEQ again): the drums change bank on the Great Year, a fill the bar before
+tap SEQ
+expect view 6
+expect par111 1
+shot drift.png
 # the weather: black keys 1-3 call it
 tap LFO
 expect view 3
@@ -85,17 +90,19 @@ expect frozen 0
 tap EDIT
 wait 300
 expect greats >0
+wait 10000
+expect hops >0
 # the screen's theme (global), then saving on Setup
 tap GLO
-expect view 7
-tap GLO
 expect view 8
+tap GLO
+expect view 9
 spin K1 2
 expect par107 2
 wait 300
 shot display.png
 tap GLO
-expect view 9
+expect view 10
 tap SAVE
 wait 300
 expect dirty 0
