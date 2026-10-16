@@ -166,7 +166,7 @@ a crackle and a flare. Weather holds in an eclipse and while resting.
 | **Rigel** | Blue giant | Six planets in G major pentatonic, quick, a long-ellipse laser. |
 | **Veil** | Violet | Five planets in B Hirajoshi, ether and ring hiss. |
 | **Cinder** | Grey dwarf | Four planets in F Phrygian: a dusk organ, a cello, two dormant worlds. |
-| **Horizon** | Black hole | Six planets in C# Aeolian, very slow: the Abyss, tolls, a gong, radio-heavy, crackling. |
+| **Horizon** | Black hole | The darkest and slowest: C# Phrygian at 30 BPM, every voice a dark one (Abyss, Dark choir, Toll, Cello, Gong), sparse drums, radio and crackle. Planet 6, a Whisper, is the drifter: small, on a long ellipse, asleep, sighing only when a bigger world swings past. |
 | **Kuiper** | Blue giant | Five planets far out, three of them dormant (whisper, cold pad, toll); asteroids and comets. |
 | **Nova** | White | Six planets in Bb Dorian at 70 BPM, flaring, comets. |
 
