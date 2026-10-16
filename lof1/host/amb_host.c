@@ -16,6 +16,7 @@
  *   wav FILE | wavstop           start / stop recording the output
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
+ *   frames N [FPS]               a video's next N frames (frame_NNNNN.png, frames.txt: the lights and what's held)
  *   leds                         print the lit buttons and keys
  *   saver MS                     the screensaver after MS untouched (default 0: never, in tests)
  *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound
@@ -395,6 +396,10 @@ static int expect(const char *what, const char *val)
         got = (int)ui.fx_lock;
     else if (!strcmp(what, "remote"))
         got = rm.on;
+    else if (!strcmp(what, "bar"))               /* bars since play, and the sixteenth playing */
+        got = (int)en_bar;
+    else if (!strcmp(what, "step"))
+        got = (int)en_step;
     else if (!strcmp(what, "saver"))             /* the screensaver up */
         got = ui.saver;
     else if (!strcmp(what, "ext"))
@@ -528,7 +533,29 @@ int main(int argc, char **argv)
             wav_close();
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
-        else if (!strcmp(cmd, "shot")) {
+        else if (!strcmp(cmd, "frames")) {           /* frames N [FPS]: a video's frames, at their exact times
+                                                         * from the first: frame_NNNNN.png, and frames.txt
+                                                         * (frame, lit buttons, lit keys, held buttons, held keys) */
+            static FILE *flog;
+            static uint32_t fn, ft0, fps = 30;
+            int k, n = atoi(a);
+            if (b[0])
+                fps = (uint32_t)atoi(b);
+            if (!flog) {
+                snprintf(out, sizeof out, "%s/frames.txt", dir);
+                flog = fopen(out, "w");
+                ft0 = now_ms;
+            }
+            for (k = 0; k < n; k++, fn++) {
+                uint32_t t = ft0 + (uint32_t)((uint64_t)fn * 1000u / fps);
+                if (t > now_ms)
+                    run_ms(t - now_ms);
+                snprintf(out, sizeof out, "%s/frame_%05u.png", dir, fn);
+                png_write(out);
+                fprintf(flog, "%u %u %u %u %u\n", fn, lit_btn, lit_keys, held_btn, held_keys);
+            }
+            fflush(flog);
+        } else if (!strcmp(cmd, "shot")) {
             snprintf(out, sizeof out, "%s/%s", dir, a);
             png_write(out);
         } else if (!strcmp(cmd, "leds")) {
