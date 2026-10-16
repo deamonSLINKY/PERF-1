@@ -2,8 +2,8 @@
 # HYP-1 on GitHub: every push to the default branch builds the firmware with JieLi's toolchain (Linux
 # x86-64, as GitHub's runners are), runs the tests, and publishes the site to this repository's GitHub
 # Pages: the web installer with this build in it, the browser emulator, and the .fwsc to download.
-# LOF-1 (lof1/, experimental, versions 0.x) is built alongside, its pages under lof/, and a dropdown on
-# every page switches between the two.
+# LOF-1 (lof1/) and ECO-1 (eco1/), experimental, versions 0.x, are built alongside, their pages under
+# lof/ and eco/, and a dropdown on every page switches between the three.
 #
 # Once, in the repository's Settings > Pages: Source = "GitHub Actions". Then the installer is at
 #   https://<you>.github.io/<repo>/install/
@@ -70,6 +70,7 @@ jobs:
           if [ "$M" -ge 0 ]; then V="1.$((5 + M / 100)).$((M % 100))"; else V="1.$((N / 100 % 100)).$((N % 100))"; fi
           echo "V=$V" >> "$GITHUB_ENV"
           echo "LV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # LOF-1: 0.x while it's experimental
+          echo "EV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # ECO-1: likewise
       - name: Build the firmware
         run: |
           set -o pipefail
@@ -124,14 +125,28 @@ jobs:
           python3 tools/gen_manual_figures.py
           EN_VERSION="$LV" sh web/emu/build_clang.sh
           REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/lof1" python3 tools/make_pages.py "build/amb-$LV.fwsc" "$LV" ../build/pages/lof
-          # ECO-1's old addresses (eco/, eco/emu/, ...) send their visitors on to LOF-1's
-          python3 -c "
-          import pathlib
-          for sec in ('', 'emu/', 'install/', 'manual/'):
-              d = pathlib.Path('../build/pages/eco/' + sec); d.mkdir(parents=True, exist_ok=True)
-              u = '../' * (1 + sec.count('/')) + 'lof/' + sec
-              (d / 'index.html').write_text(f'<!doctype html><meta charset=utf-8><title>LOF-1</title><meta http-equiv=refresh content=\"0; url={u}\"><p>ECO-1 has made way for LOF-1: <a href=\"{u}\">this way</a>.</p>')
-          "
+      # ECO-1, experimental, in eco1/: the same, its pages under eco/
+      - name: ECO-1 (experimental) — build
+        id: eco
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cd eco1
+          sh build.sh --release "$EV" 2>&1 | tee build.log || {
+            echo "::warning title=ECO-1 build failed::$(tail -60 build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
+          sh tests/run_tests.sh 2>&1 | tee tests.log || {
+            echo "::warning title=ECO-1 tests failed::$(grep -A12 FAIL tests.log | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
+          mkdir -p build/site_shots
+          build/host/amb_host tools/site/shots.amb build/site_shots > build/site_shots/log.txt
+          python3 tools/site/mockups.py
+          python3 tools/site/panda.py
+          python3 tools/gen_manual_figures.py
+          EN_VERSION="$EV" sh web/emu/build_clang.sh
+          REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/eco1" python3 tools/make_pages.py "build/amb-$EV.fwsc" "$EV" ../build/pages/eco
       - name: The firmware dropdown on every page
         run: python3 tools/site/switcher.py build/pages
       - uses: actions/upload-artifact@v4
@@ -143,6 +158,11 @@ jobs:
         with:
           name: lof1-firmware-${{ env.LV }}
           path: lof1/build/amb-${{ env.LV }}.fwsc
+      - uses: actions/upload-artifact@v4
+        if: steps.eco.outcome == 'success'
+        with:
+          name: eco1-firmware-${{ env.EV }}
+          path: eco1/build/amb-${{ env.EV }}.fwsc
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/pages

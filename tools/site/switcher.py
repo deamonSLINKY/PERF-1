@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""The HYP-1 / LOF-1 dropdown on every page of the site (the workflow runs this last, over build/pages):
-HYP-1's pages at the root, LOF-1's under lof/. Choosing the other firmware goes to its matching page
-(landing, emulator, installer, manual; HYP-1's board has no LOF-1 twin, so its landing), in its own
-colours, text and images. The bar is the same neutral strip on both, so it reads as the site's own.
+"""The firmware dropdown on every page of the site (the workflow runs this last, over build/pages):
+HYP-1's pages at the root, LOF-1's under lof/, ECO-1's under eco/. Choosing another firmware goes to its
+matching page (landing, emulator, installer, manual; HYP-1's board has no twin, so the landing), in its own
+colours, text and images. A firmware that didn't build this time isn't offered. The bar is the same neutral strip on both, so it reads as the site's own.
 
   python3 tools/site/switcher.py build/pages"""
 import sys
 from pathlib import Path
 
-PRODUCTS = [("hyp", "HYP-1", "hypnotic techno and acid", ""), ("lof", "LOF-1", "a lofi groovebox", "lof/")]
+PRODUCTS = [("hyp", "HYP-1", "hypnotic techno and acid", ""), ("lof", "LOF-1", "a lofi groovebox", "lof/"),
+            ("eco", "ECO-1", "a plant plays it", "eco/")]
+EXPERIMENTAL = {"lof", "eco"}
 SECTIONS = ("emu", "install", "manual", "board")
 
 BAR = """<style>
@@ -32,8 +34,8 @@ BAR = """<style>
 def page_parts(rel):
     """(product, section, depth to the site root) of a page's path under the site"""
     parts = rel.parts
-    prod = "lof" if parts[0] == "lof" else "hyp"
-    rest = parts[1:] if prod == "lof" else parts
+    prod = parts[0] if parts[0] in EXPERIMENTAL and len(parts) > 1 else "hyp"
+    rest = parts[1:] if prod != "hyp" else parts
     section = rest[0] if len(rest) > 1 and rest[0] in SECTIONS else ""
     return prod, section, len(parts) - 1
 
@@ -41,32 +43,35 @@ def page_parts(rel):
 def main(root):
     root = Path(root)
     n = 0
-    if not (root / "lof" / "index.html").exists():         # no LOF-1 this time: no word of it on the landing
-        idx = root / "index.html"
-        if idx.exists():
-            t = idx.read_text(encoding="utf-8")
-            a, b = t.find("<!--lof-->"), t.find("<!--/lof-->")
+    built = {key for key, *_ in PRODUCTS if key == "hyp" or (root / key / "index.html").exists()}
+    idx = root / "index.html"
+    if idx.exists():                                       # a firmware that didn't build: no word of it on the landing
+        t = idx.read_text(encoding="utf-8")
+        for key in EXPERIMENTAL - built:
+            a, b = t.find(f"<!--{key}-->"), t.find(f"<!--/{key}-->")
             if a >= 0 and b > a:
-                idx.write_text(t[:a] + t[b + len("<!--/lof-->"):], encoding="utf-8")
+                t = t[:a] + t[b + len(f"<!--/{key}-->"):]
+        idx.write_text(t, encoding="utf-8")
     for f in sorted(root.rglob("*.html")):
         rel = f.relative_to(root)
         prod, section, depth = page_parts(rel)
-        if prod == "lof" and not (root / "lof" / "index.html").exists():
+        if prod not in built:
             continue
         up = "../" * depth
         opts = []
         for key, name, what, base in PRODUCTS:
-            if key == "lof" and not (root / "lof" / "index.html").exists():
-                continue                                   # LOF-1 didn't build: no choice to offer
+            if key not in built:
+                continue
             sec = section if section != "board" or key == "hyp" else ""
-            if key == "lof" and sec and not (root / "lof" / sec).exists():
+            if key != "hyp" and sec and not (root / key / sec).exists():
                 sec = ""
             href = (up + base + (sec + "/" if sec else "")) or "./"
-            label = f"{name} · {what}" + (" (experimental)" if key == "lof" else "")
+            label = f"{name} · {what}" + (" (experimental)" if key in EXPERIMENTAL else "")
             opts.append(f'<option value="{href}"{" selected" if key == prod else ""}>{label}</option>')
         if len(opts) < 2:
             continue
-        bar = BAR.replace("__OPTS__", "".join(opts)).replace("__TAG__", '<span class="tag">Experimental</span>' if prod == "lof" else "")
+        bar = BAR.replace("__OPTS__", "".join(opts)).replace(
+            "__TAG__", '<span class="tag">Experimental</span>' if prod in EXPERIMENTAL else "")
         s = f.read_text(encoding="utf-8")
         if "rw-switch" in s:
             continue
