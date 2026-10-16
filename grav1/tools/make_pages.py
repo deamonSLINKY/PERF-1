@@ -138,7 +138,7 @@ planets swell smaller ones as they pass, and dust clouds, asteroids and comets d
 <h2>The system</h2>
 <div class="grid">
   <div class="card"><h3>The star</h3><p>A bed of noise in eight colours, drawn in its own colour: a <b>pink star</b> for pink noise, a <b>brown dwarf</b> for brown, a <b>blue giant</b>, a crackling <b>black hole</b>. It roars now and then, and flares, never above its level.</p></div>
-  <div class="card"><h3>Planets</h3><p>One to six voices: <b>Drone, Glass bell, Pluck, Soft keys, Choir, Laser, Ether, Ring hiss</b>. Each plays its phrase round its orbit, kept to the scale, a note or two changing every year.</p></div>
+  <div class="card"><h3>Planets</h3><p>One to six voices from sixteen: <b>Drone, Glass bell, Pluck, Soft keys, Choir, Laser, Ether, Ring hiss</b>, and darker ones: <b>Abyss, Dark choir, Cello, Gong, Toll, Whisper, Cold pad, Dusk organ</b>. Each plays its phrase round its orbit, kept to the scale, a note or two changing every year.</p></div>
   <div class="card"><h3>Pulse</h3><p>Six drum lanes (<b>Kick, Pulsar, Sonar, Geiger, Rim, Shaker</b>), one a planet. A lane's hits set its planet's year and, by Kepler, how close it orbits. A lane left empty leaves its planet dormant.</p></div>
   <div class="card"><h3>Gravity</h3><p>A bigger planet swells a smaller one as it passes, peaking at the closest approach. Dormant worlds wake only then. The outermost planet's year is the <b>Great Year</b>: the chord moves.</p></div>
   <div class="card"><h3>Weather</h3><p><b>Dust clouds</b> soften and warm the whole system, <b>asteroids</b> cross it pulling at the planets, and <b>comets</b> fall ringing into the star and burn up. Black keys 1&ndash;3 call them.</p></div>

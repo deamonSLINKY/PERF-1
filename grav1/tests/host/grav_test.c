@@ -111,6 +111,28 @@ int main(void)
         run(1.0);
     }
 
+    /* every instrument: it sounds, not too loud, not too quiet, no NaN */
+    for (i = 0; i < EN_NINST; i++) {
+        int k;
+        piece(0);
+        for (k = 0; k < EN_NPL; k++)
+            set(P_PL_INST(k), i);
+        set(P_STAR, 0);
+        set(P_DRUMS, 0);
+        set(P_RADIO, 0);
+        en_play(1);
+        run(6.0);
+        meter_reset();
+        run(24.0);
+        en_param_text(P_PL_INST(0), i, t);
+        printf("  %-10s rms %5.1f dB  peak %.2f\n", t, rms_db(), peak);
+        CHECK(!bad, "%s: NaN", t);
+        CHECK(peak < 0.99, "%s: peak %.3f", t, peak);
+        CHECK(rms_db() > -40.0 && rms_db() < -14.0, "%s: rms %.1f dB", t, rms_db());
+        en_play(0);
+        run(1.0);
+    }
+
     /* the orbits: more hits, a faster year, closer in */
     piece(0);
     en_play(1);

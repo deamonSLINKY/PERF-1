@@ -161,12 +161,12 @@ a crackle and a flare. Weather holds in an eclipse and while resting.
 | **Sol** | Yellow | Six planets in D Dorian: a drone, bells, keys, ether, a sleeping choir. |
 | **Lumen** | White | Four planets in A Lydian, open and bright, a slow choir. |
 | **Rosette** | Pink | Five planets in E minor pentatonic, two sharing an orbit, a laser. |
-| **Ember** | Brown dwarf | Three planets in C Aeolian, a low roar, dusty. |
+| **Ember** | Brown dwarf | Three planets in C Aeolian: the Abyss, a dark choir, a low roar, dusty. |
 | **Rigel** | Blue giant | Six planets in G major pentatonic, quick, a long-ellipse laser. |
 | **Veil** | Violet | Five planets in B Hirajoshi, ether and ring hiss. |
-| **Cinder** | Grey dwarf | Four planets in F Phrygian, sparse, two dormant worlds. |
-| **Horizon** | Black hole | Six planets in C# Aeolian, very slow, radio-heavy, crackling. |
-| **Kuiper** | Blue giant | Five planets far out, three of them dormant; asteroids and comets. |
+| **Cinder** | Grey dwarf | Four planets in F Phrygian: a dusk organ, a cello, two dormant worlds. |
+| **Horizon** | Black hole | Six planets in C# Aeolian, very slow: the Abyss, tolls, a gong, radio-heavy, crackling. |
+| **Kuiper** | Blue giant | Five planets far out, three of them dormant (whisper, cold pad, toll); asteroids and comets. |
 | **Nova** | White | Six planets in Bb Dorian at 70 BPM, flaring, comets. |
 
 Each system keeps its own settings as you leave it. SAVE on the Setup page keeps all ten.
@@ -192,7 +192,11 @@ Each system keeps its own settings as you leave it. SAVE on the Setup page keeps
 ### Planet (ARP; ALGORITHM or SEL for which)
 
 - **Level:** its loudness, and its size: its pull on the others.
-- **Instrument:** Drone, Glass bell, Pluck, Soft keys, Choir, Laser, Ether, Ring hiss.
+- **Instrument:** sixteen. The bright ones: Drone, Glass bell, Pluck, Soft keys, Choir, Laser, Ether, Ring
+  hiss. The dark ones: **Abyss** (a sub two octaves down, barely moving), **Dark choir** (low voices, slowly
+  beating), **Cello** (bowed, a vibrato growing in), **Gong** (inharmonic, ringing for seconds), **Toll** (a
+  low bell with a hum under it), **Whisper** (breath in a wide band), **Cold pad** (glassy, slow in and out)
+  and **Dusk organ** (a low reed organ with a sub).
 - **Ellipse:** a circle to a long ellipse (0.00–0.45).
 - **Octave:** two down to two up (also OCT− / OCT+).
 

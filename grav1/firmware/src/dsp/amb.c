@@ -19,7 +19,8 @@ const uint16_t EN_MODE_POOL[EN_NMODES] = {
     B5(0, 2, 3, 5, 7) | 1u << 8 | 1u << 10, B5(0, 2, 3, 5, 7) | 1u << 9 | 1u << 10, B5(0, 1, 3, 5, 7) | 1u << 8 | 1u << 10,
     B5(0, 2, 4, 6, 7) | 1u << 9 | 1u << 11, B5(0, 3, 5, 7, 10), B5(0, 2, 4, 7, 9), B5(0, 2, 3, 7, 8), B5(0, 2, 4, 6, 8) | 1u << 10};
 #undef B5
-const char *const EN_INST_NAME[EN_NINST] = {"Drone", "Glass bell", "Pluck", "Soft keys", "Choir", "Laser", "Ether", "Ring hiss"};
+const char *const EN_INST_NAME[EN_NINST] = {"Drone", "Glass bell", "Pluck", "Soft keys", "Choir", "Laser", "Ether", "Ring hiss",
+                                            "Abyss", "Dark choir", "Cello", "Gong", "Toll", "Whisper", "Cold pad", "Dusk organ"};
 const char *const EN_COLOUR_NAME[EN_NCOLOUR] = {"White", "Pink", "Brown", "Blue", "Violet", "Grey", "Black", "Yellow"};
 const char *const EN_STAR_KIND[EN_NCOLOUR] = {"White star", "Pink star", "Brown dwarf", "Blue giant", "Violet star",
                                               "Grey dwarf", "Black hole", "Yellow star"};
@@ -30,12 +31,12 @@ static const char *const THEME_NAME[EN_NTHEMES] = {"Deep space", "Nebula", "Auro
 static const en_param_t PARAMS[P_NPARAMS] = {
     {"Planets", 1, 6, 6},     {"Tempo", 30, 90, 52},   {"Wander", 0, 100, 35},  {"Phrase", 0, 6, 0},
     {"Star", 0, 100, 55},     {"Colour", 0, 7, 7},     {"Roar", 0, 100, 35},    {"Flares", 0, 100, 20},
-    {"P1 level", 0, 100, 85}, {"P1 inst", 0, 7, 0},    {"P1 ellipse", 0, 45, 5},  {"P1 oct", -2, 2, 0},
-    {"P2 level", 0, 100, 55}, {"P2 inst", 0, 7, 1},    {"P2 ellipse", 0, 45, 12}, {"P2 oct", -2, 2, 0},
-    {"P3 level", 0, 100, 62}, {"P3 inst", 0, 7, 3},    {"P3 ellipse", 0, 45, 20}, {"P3 oct", -2, 2, 0},
-    {"P4 level", 0, 100, 50}, {"P4 inst", 0, 7, 6},    {"P4 ellipse", 0, 45, 30}, {"P4 oct", -2, 2, 0},
-    {"P5 level", 0, 100, 40}, {"P5 inst", 0, 7, 4},    {"P5 ellipse", 0, 45, 8},  {"P5 oct", -2, 2, 0},
-    {"P6 level", 0, 100, 42}, {"P6 inst", 0, 7, 2},    {"P6 ellipse", 0, 45, 25}, {"P6 oct", -2, 2, 0},
+    {"P1 level", 0, 100, 85}, {"P1 inst", 0, 15, 0},    {"P1 ellipse", 0, 45, 5},  {"P1 oct", -2, 2, 0},
+    {"P2 level", 0, 100, 55}, {"P2 inst", 0, 15, 1},    {"P2 ellipse", 0, 45, 12}, {"P2 oct", -2, 2, 0},
+    {"P3 level", 0, 100, 62}, {"P3 inst", 0, 15, 3},    {"P3 ellipse", 0, 45, 20}, {"P3 oct", -2, 2, 0},
+    {"P4 level", 0, 100, 50}, {"P4 inst", 0, 15, 6},    {"P4 ellipse", 0, 45, 30}, {"P4 oct", -2, 2, 0},
+    {"P5 level", 0, 100, 40}, {"P5 inst", 0, 15, 4},    {"P5 ellipse", 0, 45, 8},  {"P5 oct", -2, 2, 0},
+    {"P6 level", 0, 100, 42}, {"P6 inst", 0, 15, 2},    {"P6 ellipse", 0, 45, 25}, {"P6 oct", -2, 2, 0},
     {"Tide", 0, 100, 70},     {"Reach", 5, 40, 18},    {"Wake", 0, 100, 75},    {"Great yr", 0, 1, 0},
     {"Dust", 0, 100, 25},     {"Asteroids", 0, 100, 20}, {"Comets", 0, 100, 20}, {"Events", 0, 100, 60},
     {"Drums", 0, 100, 70},    {"Evolve", 0, 2, 1},     {"Bank", 0, EN_NBANK - 1, 0},
@@ -53,7 +54,8 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
 
 /* ------------------------------------------------------------ the pieces --- */
 /* ten systems (the FM-1's PRESETS), one for each of the star's colours and two more. Instruments: 0 Drone,
- * 1 Glass bell, 2 Pluck, 3 Soft keys, 4 Choir, 5 Laser, 6 Ether, 7 Ring hiss; bindings: 0 Off, 1 Pump,
+ * 1 Glass bell, 2 Pluck, 3 Soft keys, 4 Choir, 5 Laser, 6 Ether, 7 Ring hiss, 8 Abyss, 9 Dark choir, 10 Cello,
+ * 11 Gong, 12 Toll, 13 Whisper, 14 Cold pad, 15 Dusk organ; bindings: 0 Off, 1 Pump,
  * 2 Blip, 3 Flicker, 4 Nudge */
 typedef struct {
     const char *name;
@@ -73,7 +75,7 @@ static const piece_t PIECES[EN_NPIECES] = {
      {0, 3, 1, 5, 6, 2}, {80, 55, 50, 45, 38, 40}, {5, 15, 15, 35, 10, 20}, {0, 0, 0, 0, 0, 0}, {1, 2, 2, 3, 0, 0},
      {"x.......x.......", "x...x.......x...", "..x.....x...x...", ".x.x.x.x.x.x.x.x", "................", "x..x..x..x..x..x"}},
     {"Ember", 2, 3, 0, 0, 0, 40, 20, 80, 22, 80, 65, 60, 10, 25, 60, 30, 60, 50, 15, 10,
-     {0, 4, 7, 2, 3, 1}, {85, 60, 40, 40, 40, 40}, {8, 20, 10, 20, 20, 20}, {-1, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0},
+     {8, 9, 7, 2, 3, 1}, {85, 60, 40, 40, 40, 40}, {8, 20, 10, 20, 20, 20}, {-1, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 0},
      {"x...............", "x.......x...x...", "................", "..x...x...x...x.", "x...x...x...x...", "x.x.x.x.x.x.x.x."}},
     {"Rigel", 3, 6, 7, 5, 2, 64, 45, 65, 16, 70, 55, 30, 40, 45, 50, 20, 85, 25, 20, 20,
      {4, 1, 5, 3, 2, 6}, {80, 55, 45, 50, 42, 36}, {5, 20, 40, 10, 25, 15}, {0, 0, 0, 0, 0, 0}, {1, 2, 4, 0, 3, 0},
@@ -82,13 +84,13 @@ static const piece_t PIECES[EN_NPIECES] = {
      {6, 1, 4, 7, 2, 3}, {80, 50, 60, 40, 36, 40}, {15, 10, 5, 20, 30, 20}, {0, 0, -1, 0, 0, 0}, {0, 2, 1, 4, 0, 0},
      {"x...........x...", "x.......x.......", "x...............", "....x.......x...", "................", "x...x...x...x..."}},
     {"Cinder", 5, 4, 5, 2, 1, 44, 25, 80, 22, 80, 45, 30, 10, 30, 70, 35, 70, 25, 20, 20,
-     {0, 3, 7, 1, 2, 6}, {85, 60, 40, 36, 40, 40}, {10, 25, 10, 10, 20, 20}, {0, 0, 0, 0, 0, 0}, {1, 3, 0, 0, 0, 0},
+     {15, 10, 13, 12, 2, 6}, {85, 60, 40, 36, 40, 40}, {10, 25, 10, 10, 20, 20}, {0, 0, 0, 0, 0, 0}, {1, 3, 0, 0, 0, 0},
      {"x.......x.......", "..x.....x.....x.", "................", "................", "x...x...x...x...", "..x...x...x...x."}},
     {"Horizon", 6, 6, 1, 0, 2, 36, 30, 75, 20, 80, 60, 50, 25, 50, 75, 55, 80, 25, 20, 20,
-     {0, 7, 1, 6, 4, 5}, {85, 55, 50, 45, 36, 34}, {5, 15, 25, 10, 5, 40}, {-1, 0, 0, 0, 0, 0}, {1, 0, 2, 4, 0, 3},
+     {8, 7, 12, 6, 9, 11}, {85, 55, 50, 45, 36, 34}, {5, 15, 25, 10, 5, 40}, {-1, 0, 0, 0, 0, 0}, {1, 0, 2, 4, 0, 3},
      {"x...............", "x.......x.......", "..x.......x..x..", "x.....x.....x...", "................", ".x..x..x..x..x.."}},
     {"Kuiper", 3, 5, 6, 0, 2, 34, 20, 85, 24, 85, 40, 25, 10, 45, 80, 40, 85, 25, 45, 40,
-     {0, 6, 7, 4, 1, 2}, {85, 60, 40, 38, 34, 40}, {5, 30, 10, 15, 20, 20}, {-1, 0, 0, 0, 1, 0}, {1, 4, 0, 0, 0, 0},
+     {8, 6, 13, 14, 12, 10}, {85, 60, 40, 38, 34, 40}, {5, 30, 10, 15, 20, 20}, {-1, 0, 0, 0, 1, 0}, {1, 4, 0, 0, 0, 0},
      {"x...............", "........x.......", "................", "................", "................", "x...x...x...x..."}},
     {"Nova", 0, 6, 10, 1, 1, 70, 50, 60, 15, 70, 50, 55, 70, 35, 50, 20, 80, 20, 30, 55,
      {0, 3, 2, 1, 5, 4}, {80, 55, 50, 45, 40, 45}, {10, 15, 30, 20, 40, 5}, {0, 0, 0, 0, 0, 0}, {1, 2, 3, 0, 4, 0},
@@ -468,7 +470,16 @@ static const struct {
     {2.0f, 0.3f, 0.0f, 1.5f, 2.5f, 12.0f, 0.0f, 0.0f, 8.0f, 0.0f, 0.85f, 1, 0},    /* Choir */
     {1.0f, 2.0f, 0.25f, 0.002f, 1.6f, 0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.6f, 0, 12},  /* Laser */
     {1.0f, 0.0f, 0.0f, 0.5f, 1.8f, 0.0f, 0.0f, 0.0f, 16.0f, 0.0f, 0.85f, 1, 12},   /* Ether */
-    {1.0f, 0.0f, 0.0f, 1.2f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.9f, 1, 12},     /* Ring hiss */
+    {1.0f, 0.0f, 0.0f, 1.2f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.025f, 0.9f, 1, 12},   /* Ring hiss */
+    /* the dark ones */
+    {1.0f, 0.35f, 0.0f, 3.0f, 5.0f, 5.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.2f, 1, -24},   /* Abyss: a sub, two octaves down, barely moving */
+    {1.0f, 0.45f, 0.0f, 2.2f, 3.5f, 9.0f, 0.3f, 0.0f, 6.0f, 0.0f, 1.0f, 1, -12},  /* Dark choir: low voices, slowly beating */
+    {1.0f, 1.5f, 0.0f, 0.6f, 2.2f, 4.0f, 0.0f, 0.0f, 12.0f, 0.0f, 0.75f, 1, -12},  /* Cello: bowed, dark, a vibrato growing in */
+    {1.41f, 3.0f, 1.2f, 0.004f, 9.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.35f, 0, -12},/* Gong: inharmonic, long */
+    {2.76f, 1.6f, 1.6f, 0.003f, 7.0f, 0.0f, 0.3f, 0.0f, 0.0f, 0.0f, 1.45f, 0, -12}, /* Toll: a low bell, a hum under it */
+    {1.0f, 0.0f, 0.0f, 1.0f, 2.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.3f, 1.6f, 1, 0},     /* Whisper: breath in a wide band */
+    {3.0f, 0.4f, 0.0f, 3.0f, 5.0f, 6.0f, 0.0f, 0.0f, 4.0f, 0.0f, 0.95f, 1, 0},      /* Cold pad: glassy, slow in, slow out */
+    {2.0f, 0.8f, 0.0f, 0.25f, 1.5f, 3.0f, 0.4f, 0.0f, 0.0f, 0.0f, 0.8f, 1, -12},   /* Dusk organ: a low reed organ, a sub */
 };
 
 typedef struct {
@@ -961,7 +972,7 @@ static void render_voices(uint32_t n)
         b = v->pl < 3 ? 1 : 2;
         /* the slow things, once a chunk: the glide, the vibrato, the nudge */
         v->cinc += (v->inc_t - v->cinc) * 0.08f;
-        v->vibd += (v->vibd_t - v->vibd) * (ins == 6 ? 0.005f : 1.0f);
+        v->vibd += (v->vibd_t - v->vibd) * (INST[ins].att >= 0.5f ? 0.005f : 1.0f);   /* the slow ones grow into it */
         v->vib += (float)n * (5.2f / EN_SR);
         if (v->vib >= 1.0f)
             v->vib -= 1.0f;
@@ -980,9 +991,9 @@ static void render_voices(uint32_t n)
                 if (noise > 0.0f) {              /* a ring of noise at the pitch */
                     float w = wnoise(&noise_r), hi;
                     bl += bf * bb;
-                    hi = w - bl - 0.025f * bb;
+                    hi = w - bl - noise * bb;
                     bb += bf * hi;
-                    x = bb * 0.22f;
+                    x = bb * 0.22f * (1.0f - 2.0f * noise);
                 } else {
                     float mod = sine(mph) * idx;
                     x = sine(cph + mod + 4.0f);

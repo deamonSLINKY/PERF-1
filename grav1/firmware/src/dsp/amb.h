@@ -7,7 +7,8 @@
  *            it) and flares (a bright burst); its LEVEL is the ceiling for both.
  *   PLANETS  one to six, each a voice: its instrument from the bank (Drone, Glass bell, Pluck, Soft keys,
  *            Choir, Laser, Ether, Ring hiss), its level (also its size, so its gravity), its orbit's
- *            ellipse and its octave. A planet plays a short phrase as it passes the points around its
+ *            ellipse and its octave. And the dark ones: Abyss, Dark choir, Cello, Gong, Toll, Whisper,
+ *            Cold pad, Dusk organ. A planet plays a short phrase as it passes the points around its
  *            orbit, kept to the scale, a note or two changing each year (each orbit). Near the star it
  *            sounds warm and dry, far out thin, cold and wet.
  *   PULSE    a drum sequencer, six lanes of 16 steps (Kick, Pulsar, Sonar, Geiger, Rim, Shaker). Lane n is
@@ -30,7 +31,7 @@
 
 #define EN_SR 44100.0f
 #define EN_NPL 6                       /* planets, and drum lanes */
-#define EN_NINST 8                     /* the instrument bank */
+#define EN_NINST 16                    /* the instrument bank: eight bright, eight dark */
 #define EN_NCOLOUR 8                   /* the star's noise colours */
 #define EN_NSTEP 16
 #define EN_NBANK 8                     /* drum banks, each six lanes of 16 steps */

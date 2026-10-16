@@ -51,7 +51,7 @@ same workflow, and on the site under [`eco/`](https://rustypawz.github.io/fm1-HY
 
 [`grav1/`](grav1/) holds **GRAV-1**, a fourth RedtailWorks firmware for the FM-1: a star and its planets play
 slow, dark, spacey ambient. The star is a bed of coloured noise drawn in its colour; up to six planets orbit
-it, each a voice (eight instruments) playing a phrase round its orbit, warm near the star and cold far out. A
+it, each a voice (sixteen instruments, half of them dark) playing a phrase round its orbit, warm near the star and cold far out. A
 drum sequencer sets their years and so their orbits, bigger planets swell smaller ones as they pass, dormant
 worlds wake in the tides, and dust clouds, asteroids and comets drift through. Ten systems, seven screen
 themes, MIDI clock in and MIDI out. Experimental and numbered 0.x, built by the same workflow, and on the site

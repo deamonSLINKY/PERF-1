@@ -1,8 +1,8 @@
 # GRAV-1 for the M-VAVE FM-1 (experimental)
 
 GRAV-1 turns the M-VAVE FM-1 into a small solar system that plays slow, dark, spacey ambient. A star hisses
-and roars in coloured noise, drawn in its noise's colour. Up to six planets orbit it, each a voice playing a
-short phrase round its orbit, warm and dry near the star, cold and wet far out. A drum sequencer sets their
+and roars in coloured noise, drawn in its noise's colour. Up to six planets orbit it, each a voice (sixteen instruments, half of them dark) playing
+a short phrase round its orbit, warm and dry near the star, cold and wet far out. A drum sequencer sets their
 years (and, by Kepler, how close they orbit), larger planets swell smaller ones as they pass, and dust
 clouds, asteroids and comets drift through. A RedtailWorks project, alongside HYP-1 in this repository.
 
