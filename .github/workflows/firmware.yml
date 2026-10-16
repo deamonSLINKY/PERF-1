@@ -2,8 +2,8 @@
 # HYP-1 on GitHub: every push to the default branch builds the firmware with JieLi's toolchain (Linux
 # x86-64, as GitHub's runners are), runs the tests, and publishes the site to this repository's GitHub
 # Pages: the web installer with this build in it, the browser emulator, and the .fwsc to download.
-# LOF-1 (lof1/) and ECO-1 (eco1/), experimental, versions 0.x, are built alongside, their pages under
-# lof/ and eco/, and a dropdown on every page switches between the three.
+# LOF-1 (lof1/), ECO-1 (eco1/) and GRAV-1 (grav1/), experimental, versions 0.x, are built alongside, their
+# pages under lof/, eco/ and grav/, and a dropdown on every page switches between them.
 #
 # Once, in the repository's Settings > Pages: Source = "GitHub Actions". Then the installer is at
 #   https://<you>.github.io/<repo>/install/
@@ -71,6 +71,7 @@ jobs:
           echo "V=$V" >> "$GITHUB_ENV"
           echo "LV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # LOF-1: 0.x while it's experimental
           echo "EV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # ECO-1: likewise
+          echo "GV=0.$((N / 100 % 100)).$((N % 100))" >> "$GITHUB_ENV"     # GRAV-1: likewise
       - name: Build the firmware
         run: |
           set -o pipefail
@@ -147,6 +148,29 @@ jobs:
           python3 tools/gen_manual_figures.py
           EN_VERSION="$EV" sh web/emu/build_clang.sh
           REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/eco1" python3 tools/make_pages.py "build/amb-$EV.fwsc" "$EV" ../build/pages/eco
+      # GRAV-1, experimental, in grav1/: the same, its pages under grav/
+      - name: GRAV-1 (experimental) — build
+        id: grav
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          cd grav1
+          sh build.sh --release "$GV" 2>&1 | tee build.log || {
+            echo "::warning title=GRAV-1 build failed::$(tail -60 build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
+          grep -E "^\s+ok\s" build.log | sed 's/^\s*ok\s*/::notice title=GRAV-1 check::/' || true
+          sh tests/run_tests.sh 2>&1 | tee tests.log || {
+            echo "::warning title=GRAV-1 tests failed::$(grep -A12 FAIL tests.log | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
+            exit 1
+          }
+          mkdir -p build/site_shots
+          build/host/amb_host tools/site/shots.amb build/site_shots > build/site_shots/log.txt
+          python3 tools/site/mockups.py
+          python3 tools/site/panda.py
+          python3 tools/gen_manual_figures.py
+          EN_VERSION="$GV" sh web/emu/build_clang.sh
+          REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/grav1" python3 tools/make_pages.py "build/amb-$GV.fwsc" "$GV" ../build/pages/grav
       - name: The firmware dropdown on every page
         run: python3 tools/site/switcher.py build/pages
       - uses: actions/upload-artifact@v4
@@ -163,6 +187,11 @@ jobs:
         with:
           name: eco1-firmware-${{ env.EV }}
           path: eco1/build/amb-${{ env.EV }}.fwsc
+      - uses: actions/upload-artifact@v4
+        if: steps.grav.outcome == 'success'
+        with:
+          name: grav1-firmware-${{ env.GV }}
+          path: grav1/build/amb-${{ env.GV }}.fwsc
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/pages

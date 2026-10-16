@@ -1,0 +1,104 @@
+# GRAV-1: the system plays; the pages; the Pulse on the keys; the weather on the keys; eclipse; the Great
+# Year; saving on Setup and coming back after a reboot; another system; resting
+wav sol.wav
+wait 4000
+shot boot.png
+wait 30000
+expect playing 1
+expect notes >5
+expect hits >20
+shot sol.png
+wavstop
+# the star: its level on KNOB 1
+tap ENV
+expect view 1
+spin K1 -20
+expect par4 35
+shot star.png
+# the planets: SELECT walks them one by one
+tap ARP
+expect view 2
+expect sel 0
+turn SELECT 1
+expect view 2
+expect sel 1
+spin K2 2
+expect par13 3
+tap OCT+
+expect par15 1
+wait 2000
+shot planet.png
+# the Pulse: black keys pick the lane, white keys its steps
+tap SEQ
+expect view 5
+tapkey b2
+expect lane 2
+tapkey w4
+expect par50 17
+wait 3000
+shot pulse.png
+# the weather: black keys 1-3 call it
+tap LFO
+expect view 3
+tap LFO
+expect view 4
+tapkey b1
+wait 500
+expect rock 1
+tapkey b2
+wait 500
+expect comet 1
+tapkey b0
+wait 9000
+expect dust >30
+shot weather.png
+# eclipse
+tap REC
+wait 1000
+expect frozen 1
+shot eclipse.png
+tap REC
+wait 500
+expect frozen 0
+# EDIT: the Great Year now
+tap EDIT
+wait 300
+expect greats >0
+# the screen's theme (global), then saving on Setup
+tap GLO
+expect view 7
+tap GLO
+expect view 8
+spin K1 2
+expect par64 2
+wait 300
+shot display.png
+tap GLO
+expect view 9
+tap SAVE
+wait 300
+expect dirty 0
+expect store_writes >0
+reboot
+wait 500
+expect par4 35
+expect par13 3
+expect par50 17
+expect par64 2
+# SAVE away from Setup starts the system again (nothing saved)
+tap HOME
+tap SAVE
+wait 500
+expect dirty 0
+# another system
+turn PRESET 3
+wait 4000
+expect piece 3
+shot ember.png
+# resting: quiet in the end
+tap PLAY
+wait 8000
+expect playing 0
+peakreset
+wait 25000
+expect peak_db_max -36

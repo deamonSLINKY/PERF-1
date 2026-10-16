@@ -202,6 +202,9 @@ the whole performance into your DAW.</p>
 <!--eco--><div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><a href="eco/" style="flex:0 0 auto"><img src="eco/img/eco-screen-p-fern.png" width="160" height="160" alt="ECO-1's screen: a fern on a forest floor" style="display:block;border-radius:8px;image-rendering:pixelated;border:1px solid var(--rule)"></a>
   <p style="flex:1 1 18rem"><b>ECO-1</b> <span style="font:700 .72rem 'Chakra Petch',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1a0c03;background:var(--orange);border-radius:999px;padding:.12em .6em">Experimental</span><br>
   A small plant plays the FM-1. Three leaves fire notes as light and water charge them, a stem drones, and the rain, wind and the turning day play the plant. <a href="eco/">Have a look</a>, or try it in the <a href="eco/emu/">emulator</a>.</p></div><!--/eco-->
+<!--grav--><div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center"><a href="grav/" style="flex:0 0 auto"><img src="grav/img/grav-screen-system.png" width="160" height="160" alt="GRAV-1's screen: a gold star and six planets on their orbits" style="display:block;border-radius:8px;image-rendering:pixelated;border:1px solid var(--rule)"></a>
+  <p style="flex:1 1 18rem"><b>GRAV-1</b> <span style="font:700 .72rem 'Chakra Petch',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#1a0c03;background:var(--orange);border-radius:999px;padding:.12em .6em">Experimental</span><br>
+  A star and its planets play the FM-1: each planet a voice on its orbit, the drums setting their years, gravity, dust clouds, asteroids and comets doing the rest. Slow, dark and spacey. <a href="grav/">Have a look</a>, or try it in the <a href="grav/emu/">emulator</a>.</p></div><!--/grav-->
 <div class="support">
   <p><b>HYP-1 is free, and always will be.</b> If it's found a place in your music, a coffee keeps the
   updates, videos and new pieces coming.</p>

@@ -37,7 +37,7 @@ presets, chords on the keys, FX on the keys with locks, a drum sequencer, MIDI c
 **experimental**: built and tested in the simulator and the browser emulator, not yet on a real FM-1, and
 numbered 0.x until it has been. The same workflow builds it, and the site has it under
 [`lof/`](https://rustypawz.github.io/fm1-HYP1/lof/): the dropdown at the top of every page switches between
-HYP-1, LOF-1 and ECO-1.
+HYP-1, LOF-1, ECO-1 and GRAV-1.
 
 ## And ECO-1 (experimental)
 
@@ -46,6 +46,16 @@ leaves fire notes as light and water charge them, a stem that drones beneath, an
 gusts, a day and night) that plays it. Eight plants, each in its own place on the screen; MIDI clock in,
 MIDI out per voice with the plant's signals as CCs. Experimental and numbered 0.x like LOF-1, built by the
 same workflow, and on the site under [`eco/`](https://rustypawz.github.io/fm1-HYP1/eco/).
+
+## And GRAV-1 (experimental)
+
+[`grav1/`](grav1/) holds **GRAV-1**, a fourth RedtailWorks firmware for the FM-1: a star and its planets play
+slow, dark, spacey ambient. The star is a bed of coloured noise drawn in its colour; up to six planets orbit
+it, each a voice (eight instruments) playing a phrase round its orbit, warm near the star and cold far out. A
+drum sequencer sets their years and so their orbits, bigger planets swell smaller ones as they pass, dormant
+worlds wake in the tides, and dust clouds, asteroids and comets drift through. Ten systems, seven screen
+themes, MIDI clock in and MIDI out. Experimental and numbered 0.x, built by the same workflow, and on the site
+under [`grav/`](https://rustypawz.github.io/fm1-HYP1/grav/).
 
 ## What it does
 
