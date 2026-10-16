@@ -110,6 +110,16 @@ tap HOME
 tap SAVE
 wait 500
 expect dirty 0
+# a minute untouched on the System page: the orbit view, the lights playing; a key only wakes it
+tap HOME
+wait 61000
+expect full 1
+shot full.png
+leds
+tapkey w3
+wait 300
+expect full 0
+expect pool 0x6AD
 # another system
 turn PRESET 3
 wait 4000

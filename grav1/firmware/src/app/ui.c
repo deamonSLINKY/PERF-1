@@ -58,6 +58,7 @@ static struct {
     uint32_t sig[3];
     uint32_t boot_t;
     uint8_t splash, splash_step;
+    uint8_t full;                      /* the orbit view: a minute untouched on the System page */
     uint32_t ev_r;                     /* the engine's events read so far */
     uint16_t pat_seen[EN_NPL];         /* the playing bank's steps as the engine last had them */
     uint8_t pat_bank;                  /* and which bank that was */
@@ -65,7 +66,8 @@ static struct {
     float trail[20][2];                /* the comet's trail */
     uint8_t trail_n;
 } ui;
-uint32_t ui_splash_ms = 3200u;         /* the boot cards: RedtailWorks, then GRAV-1 (the host's tests set 0) */
+uint32_t ui_splash_ms = 3200u;
+#define UI_IDLE_MS 60000u                  /* untouched this long on the System page: the orbit view */         /* the boot cards: RedtailWorks, then GRAV-1 (the host's tests set 0) */
 
 /* ------------------------------------------------------------- themes --- */
 /* the screen's colours: Deep space (gold and ice), Nebula, Aurora, Red planet, Phosphor, Redtail (HYP-1's
@@ -515,6 +517,22 @@ static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+    if (ui.full) {                               /* the orbit view: any touch only wakes the screen */
+        int any = btn != ui.btn || keys != ui.keys, r;
+        for (r = 0; r < NE; r++)
+            any |= plat_enc(r) != 0;
+        if (any) {
+            ui.full = 0;
+            ui.btn_used |= btn;                  /* what woke it does nothing more */
+            ui.btn = btn;
+            ui.keys = keys;
+            ui.act_t = plat_ms();
+            ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
+            lcd_fill(0, 0, 240, 240, K_BG);
+        }
+        midi_in();
+        return;
+    }
     ch = btn ^ ui.btn;
     ui.btn = btn;
     for (i = 0; i < NB; i++) {
@@ -876,13 +894,13 @@ static void draw_header(void)
 
 /* ---------------------------------------------------------- the system --- */
 /* the orbit plane seen from a little above: x as it is, y flattened; the star in the middle of the band */
-#define SCX 120.0f
-#define SCY 74.0f
+/* the scene's geometry: the band (the star in it, the orbits' scale), or the whole screen in the orbit view */
+static float SCX = 120.0f, SCY = 74.0f, SRX = 106.0f, SRY = 62.0f, SC_H = 144.0f, SC_BIG = 1.0f;
 static float zoom = 1.4f;                       /* the view follows the system: its outermost orbit near the edge */
 static void proj_xy(float x, float y, float *sx, float *sy)
 {
-    *sx = SCX + x * 106.0f * zoom;
-    *sy = SCY + y * 62.0f * zoom;
+    *sx = SCX + x * SRX * zoom;
+    *sy = SCY + y * SRY * zoom;
 }
 static float cos_t(float t) { return fm_sin_turns(t + 0.25f); }
 static float orbit_r(int i, float t)
@@ -908,7 +926,7 @@ static void sky_init(void)
 static void draw_star(void)
 {
     int k = proj.par[P_COLOUR];
-    float r = 3.0f + en_star * 6.5f + en_flare * 2.0f;
+    float r = (3.0f + en_star * 6.5f + en_flare * 2.0f) * SC_BIG;
     if (k == 6) {                                /* the black hole: a dark disc, its accretion ring, sparks */
         int i, j;
         glow(SCX, SCY, r * 0.8f, r * 3.0f, RGB(255, 170, 90), 0.22f);
@@ -947,7 +965,7 @@ static void draw_star(void)
 static void draw_planet(int i)
 {
     float sx, sy, lv = (float)proj.par[P_PL_LVL(i)] * 0.01f, depth = 0.85f + 0.15f * (en_pl_y[i] / 0.75f + 1.0f);
-    float s = (1.3f + lv * 3.6f) * depth * (1.0f + 0.35f * en_pl_glow[i]), ts = en_pl_tide[i];
+    float s = (1.3f + lv * 3.6f) * depth * (1.0f + 0.35f * en_pl_glow[i]) * SC_BIG, ts = en_pl_tide[i];
     int dorm = lane_hits(i) == 0, hl = (ui.view == V_PLANET && ui.sel == i) || (is_seq() && ui.lane == i);
     uint16_t c = heat(en_pl_dist[i]);
     proj_xy(en_pl_x[i], en_pl_y[i], &sx, &sy);
@@ -972,7 +990,8 @@ static void draw_planet(int i)
     }
 }
 
-static void draw_system(void)
+/* the system; half: -1 the band, 0 / 1 the top / bottom half of the whole screen (the orbit view) */
+static void draw_system(int half)
 {
     const int n = nplanets();
     const float sky = (float)proj.par[P_SKY] * 0.01f, lines = (float)proj.par[P_LINES] * 0.01f;
@@ -987,15 +1006,23 @@ static void draw_system(void)
                 far = apo;
         }
         z = fm_clampf(0.97f / far, 1.0f, 2.6f);
-        zoom += (z - zoom) * 0.03f;
+        if (half <= 0)
+            zoom += (z - zoom) * (half < 0 ? 0.03f : 0.06f);
     }
     if (en_dust > 0.01f)                         /* a dust cloud: the sky goes brown */
         bg = mix(bg, RGB(120, 86, 54), q16(en_dust * 0.3f));
-    cv_begin(240, MAIN_H, bg);
+    if (half < 0) {
+        cv_begin(240, MAIN_H, bg);
+    } else {                                     /* half the screen: draw at its rows */
+        cv_begin(240, 120, bg);
+        cv_oy = half ? -120 : 0;
+        cv_y0 = 0;
+        cv_y1 = 120;
+    }
     if (sky > 0.0f)
         for (k = 0; k < NSKY; k++) {
             int tw = (int)((ui.frame / 3u + (uint32_t)k * 7u) % 23u);
-            px_blend(sky_x[k], sky_y[k], K_SKY, (uint32_t)((float)(sky_b[k] - (tw < 3 ? 2 : 0)) * sky + 0.5f));
+            px_blend(sky_x[k], (int32_t)((float)sky_y[k] * SC_H / (float)MAIN_H), K_SKY, (uint32_t)((float)(sky_b[k] - (tw < 3 ? 2 : 0)) * sky + 0.5f));
         }
     {   /* the Great Year: a thin line along the top */
         int32_t w = (int32_t)(en_year * 232.0f);
@@ -1053,7 +1080,7 @@ static void draw_system(void)
             draw_planet(order[i]);
     if (en_dust > 0.01f)                         /* drifting dust */
         for (k = 0; k < 40; k++) {
-            uint32_t x = ((uint32_t)k * 53u + ui.frame * (1u + (uint32_t)k % 3u) / 2u) % 240u, y = (uint32_t)k * 97u % (uint32_t)MAIN_H;
+            uint32_t x = ((uint32_t)k * 53u + ui.frame * (1u + (uint32_t)k % 3u) / 2u) % 240u, y = (uint32_t)k * 97u % (uint32_t)SC_H;
             px_blend((int32_t)x, (int32_t)y, RGB(214, 178, 132), (uint32_t)(en_dust * 12.0f));
         }
     if (en_rock_on) {                            /* the asteroid, its wake behind it */
@@ -1194,10 +1221,21 @@ static void draw_main(void)
         return;
     }
     ui.sig[1] = 0;
+    if (ui.full) {                               /* the orbit view: the whole screen, ten frames a second */
+        if (ui.frame % 6u)
+            return;
+        SCX = 120.0f, SCY = 120.0f, SRX = 114.0f, SRY = 92.0f, SC_H = 240.0f, SC_BIG = 1.35f;
+        draw_system(0);
+        cv_blit(0, 0);
+        draw_system(1);
+        cv_blit(0, 120);
+        SCX = 120.0f, SCY = 74.0f, SRX = 106.0f, SRY = 62.0f, SC_H = 144.0f, SC_BIG = 1.0f;
+        return;
+    }
     if (ui.view == V_SEQ)
         draw_seq();
     else
-        draw_system();
+        draw_system(-1);
     cv_blit(0, MAIN_Y);
 }
 
@@ -1305,9 +1343,54 @@ cells:
 
 /* the lights: the page's button (ARP flashes as its planet plays), PLAY growing, REC in eclipse; the keys
  * the scale, or on PULSE the lane's steps (the step playing blinks) and its lane, on WEATHER the events */
+/* the orbit view's lights: the music on the panel. Each planet lights a page button as it plays (HOME, ENV,
+ * ARP, LFO, SEQ, FX) and the key of its note; the drums flash black keys 1-6; OCT- and OCT+ take the beats in
+ * turn; GLO flares with the star, EDIT as the Great Year comes round, SEL while dust drifts, SAVE while an
+ * asteroid crosses */
+static void leds_show(void)
+{
+    static const uint8_t PB[EN_NPL] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX};
+    uint32_t b = 0, k = 0, i;
+    if (en_playing)
+        b |= 1u << B_PLAY;
+    if (en_frozen)
+        b |= 1u << B_REC;
+    if (proj.leds) {
+        for (i = 0; i < (uint32_t)nplanets(); i++)
+            if (en_pl_glow[i] > 0.4f) {
+                int n = en_pl_note[i];
+                b |= 1u << PB[i];
+                while (n < 53)
+                    n += 12;
+                while (n > 79)
+                    n -= 12;
+                k |= 1u << (n - 53);             /* key 0 is F3 */
+            }
+        for (i = 0; i < EN_NPL; i++)
+            if (en_drum_glow[i] > 0.35f)
+                k |= 1u << BLACK_KEY[i];
+        if (en_playing && !en_frozen)
+            b |= 1u << (en_step / 4u & 1u ? B_OCTUP : B_OCTDN);
+        if (en_flare > 0.3f)
+            b |= 1u << B_GLO;
+        if (en_year < 0.03f || en_year > 0.985f)
+            b |= 1u << B_EDIT;
+        if (en_dust > 0.001f && (ui.frame / 30u) % 2u == 0u)
+            b |= 1u << B_SEL;
+        if (en_rock_on)
+            b |= 1u << B_SAVE;
+    }
+    plat_glow(0);
+    plat_leds(b, k);
+}
+
 static void leds(void)
 {
     uint32_t b = 0, k = 0, i, ap = pool_abs();
+    if (ui.full) {
+        leds_show();
+        return;
+    }
     b |= 1u << VIEW_BTN[ui.view];
     if (en_playing)
         b |= 1u << B_PLAY;
@@ -1501,9 +1584,15 @@ void ui_frame(void)
     engine_news();
     if (ui.sel >= nplanets())
         ui.sel = (uint8_t)(nplanets() - 1);
-    draw_header();
+    if (!ui.full && ui.view == V_SYSTEM && !ui.help && plat_ms() - ui.act_t >= UI_IDLE_MS) {
+        ui.full = 1;                             /* a minute on the System page untouched: the orbit view */
+        lcd_fill(0, 0, 240, 240, K_BG);
+    }
+    if (!ui.full)
+        draw_header();
     draw_main();
-    draw_knobs();
+    if (!ui.full)
+        draw_knobs();
     leds();
     ui.frame++;
 }

@@ -183,6 +183,15 @@ Each system keeps its own settings as you leave it. SAVE on the Setup page keeps
 - **Wander:** how much a phrase changes each year.
 - **Phrase:** Auto, or 3–8 notes round every orbit.
 
+**The orbit view.** Leave the System page untouched for a minute and everything but the system goes: the
+header and the knobs make way, and the orbits fill the whole screen. The panel's lights play along. Each
+planet lights a page button as it plays (planet 1 HOME, 2 ENV, 3 ARP, 4 LFO, 5 SEQ, 6 FX) and the white key
+of its note. The drums flash black keys 1–6, a lane each. OCT− and OCT+ take the beats in turn, GLO flares
+with the star, EDIT lights as the Great Year comes round, SEL blinks while dust drifts through and SAVE
+while an asteroid crosses. PLAY stays lit while the system grows, REC in an eclipse. Any button, key or
+knob brings the screen back and does nothing else; MIDI goes on throughout. With Lights off (MIDI out), the
+buttons stay dark but for PLAY and REC.
+
 ### Star (ENV)
 
 - **Level:** its loudness, the ceiling for its roar and flares.

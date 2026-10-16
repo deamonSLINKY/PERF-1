@@ -124,6 +124,8 @@ extern volatile int8_t en_pl_link[EN_NPL];     /* who swells it most: a planet, 
 extern volatile float en_pl_linkc[EN_NPL];     /* and how much */
 extern volatile uint8_t en_pl_awake[EN_NPL];   /* a dormant planet, woken by a tide */
 extern volatile uint8_t en_pl_notes[EN_NPL];   /* how many points its phrase has on its orbit */
+extern volatile uint8_t en_pl_note[EN_NPL];    /* its last note (MIDI) */
+extern volatile float en_drum_glow[EN_NPL];     /* 0..1: each lane just hit */
 extern volatile uint16_t en_pat[EN_NPL];       /* the playing bank's steps as they are now (Evolve changes them) */
 extern volatile uint8_t en_bank;               /* the bank playing (P_BANK may be waiting for the bar) */
 extern volatile uint8_t en_step;               /* the step playing, 0..15 */

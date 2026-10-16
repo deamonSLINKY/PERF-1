@@ -337,7 +337,8 @@ float en_bus[EN_NBUS];                          /* the FM-1 has no use for them 
 volatile float en_pl_x[EN_NPL], en_pl_y[EN_NPL], en_pl_a[EN_NPL], en_pl_om[EN_NPL], en_pl_bias[EN_NPL], en_pl_dist[EN_NPL];
 volatile float en_pl_tide[EN_NPL], en_pl_glow[EN_NPL], en_pl_linkc[EN_NPL];
 volatile int8_t en_pl_link[EN_NPL];
-volatile uint8_t en_pl_awake[EN_NPL], en_pl_notes[EN_NPL];
+volatile uint8_t en_pl_awake[EN_NPL], en_pl_notes[EN_NPL], en_pl_note[EN_NPL];
+volatile float en_drum_glow[EN_NPL];
 volatile uint16_t en_pat[EN_NPL];
 volatile uint8_t en_bank;
 static int bank_play;                           /* the bank playing; par[P_BANK] the one asked for */
@@ -572,6 +573,7 @@ static int voice_start(int p, int nn, float vel, float dur, int32_t wait, int he
     vc_age[k] = ++vc_clock;
     pl[p].lastf = f;
     pl[p].glow = 1.0f;
+    en_pl_note[p] = (uint8_t)nn;
     note(1, p, (uint32_t)nn, (uint32_t)(30.0f + 97.0f * fm_minf(vel / 0.2f, 1.0f)));
     en_notes++;
     return k;
@@ -780,6 +782,7 @@ static void drum_hit(int l, int32_t wait)
     }
     d->on = 1;
     en_hits++;
+    en_drum_glow[l] = 1.0f;
 }
 
 static void render_drums(uint32_t n)
@@ -1831,6 +1834,7 @@ static void control(uint32_t n)
             p->y = r * fm_sin_turns(tot);
             p->dist = fm_clampf(r / 0.75f, 0.0f, 1.0f);
             p->glow *= 1.0f - fm_minf(dt * 3.0f, 1.0f);
+            en_drum_glow[i] *= 1.0f - fm_minf(dt * 8.0f, 1.0f);
         }
     }
     if (run)                                     /* the weather holds in an eclipse, and while resting */
