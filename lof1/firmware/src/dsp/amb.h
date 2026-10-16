@@ -31,19 +31,20 @@
 enum { SC_MAJOR, SC_MINOR, SC_DORIAN, SC_MIXO, SC_PENT_MIN, SC_PENT_MAJ, SC_BLUES, EN_NSCALES };
 extern const char *const EN_SCALE_NAME[EN_NSCALES];
 extern const uint16_t EN_SCALE_POOL[EN_NSCALES];
+uint16_t en_scale_pool(int scale, int mask);    /* the melody's notes: the custom mask if set, else the scale's */
 extern const char *const EN_NOTE_NAME[12];
 
 /* the instruments: one table, each voice offers some of them (EN_*_INST lists) */
 enum {
     I_RHODES, I_WURLI, I_UPRIGHT, I_UPRIGHT2, I_VIBES, I_KALIMBA, I_GLOCK, I_STRUM, I_MUTETPT, I_TENORSAX,
     I_FLUTE, I_HARMONICA, I_BELL, I_SINE, I_PAD, I_ORGAN, I_STRINGS, I_UPBASS, I_SUB, I_ROUND, I_PLUCKB, I_MOOG,
-    I_WHISTLE, I_SQUARE, EN_NINST
+    I_WHISTLE, I_SQUARE, I_FMPIANO, I_MARIMBA, I_HARP, I_CLARINET, I_OCARINA, I_CELLOPZ, I_MUSICBOX, EN_NINST
 };
 extern const char *const EN_INST_NAME[EN_NINST];
-#define EN_NLEAD 14
-#define EN_NCOMP 9
-#define EN_NBASS 5
-#define EN_NANS 10
+#define EN_NLEAD 20
+#define EN_NCOMP 12
+#define EN_NBASS 6
+#define EN_NANS 14
 extern const uint8_t EN_LEAD_INST[EN_NLEAD], EN_COMP_INST[EN_NCOMP], EN_BASS_INST[EN_NBASS], EN_ANS_INST[EN_NANS];
 
 enum { DUST_VINYL, DUST_CASSETTE, DUST_REEL, DUST_RADIO, EN_NDUST };
@@ -83,6 +84,8 @@ enum {
     P_DRIFT, P_DRIFT_DRUMS, P_DRIFT_POOL, P_DRIFT_CHORDS,     /* Groove 2: every Drift bars the music changes: the
                                                                * drums to another pattern (Next or Random, from
                                                                * patterns 1..Pool), the progression to its other */
+    P_SCALE_MASK,                                             /* a scale of your own (the Global page's keys, as
+                                                               * AMB-1's): bit i, root + i semitones; 0: Scale's */
     P_NPARAMS
 };
 typedef struct {
@@ -101,6 +104,8 @@ void en_note(int note, int on, int vel);       /* the lead: MIDI note (before Sn
 void en_hold(int on);                          /* REC: the chord holds */
 void en_side_b(void);                          /* SAVE: a breakdown on the next bar; again, back in with a fill */
 void en_mute(int on);                          /* remote: silent and no MIDI out (1), or back (0) */
+void en_hush(int on);                          /* a store while playing: fade out and hold still (1), back in (0) */
+extern volatile uint8_t en_hushed;             /* faded right out: the flash can be written */
 void en_mutate(void);                          /* SEL + SEQ: a change now, on the next bar (as Drift's, with a fill) */
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_panic(void);                           /* everything quiet, now */

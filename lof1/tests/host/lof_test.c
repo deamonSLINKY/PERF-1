@@ -125,6 +125,35 @@ int main(void)
     CHECK(en_dreaming, "Daydream (Always) isn't dreaming");
     CHECK(en_dream_notes > n0 + 3, "Daydream: %u notes", (unsigned)(en_dream_notes - n0));
 
+    /* every instrument on every voice that offers it: heard, in tune enough to have energy, no NaN */
+    {
+        static const struct { int par, n; } V[4] = {{P_LEAD_INST, EN_NLEAD}, {P_COMP_INST, EN_NCOMP},
+                                                    {P_BASS_INST, EN_NBASS}, {P_ANS_INST, EN_NANS}};
+        int v, i;
+        en_hold(0);
+        en_set(P_DD_ON, 0);
+        for (v = 0; v < 4; v++)
+            for (i = 0; i < V[v].n; i++) {
+                en_set(V[v].par, i);
+                meter_reset();
+                if (v == 0) {
+                    en_note(60, 1, 100);
+                    run(0.6);
+                    en_note(60, 0, 0);
+                    run(0.4);
+                } else {
+                    run(2.0);
+                }
+                CHECK(!bad, "voice %d instrument %d: NaN", v, i);
+                CHECK(rms_db() > -50.0, "voice %d instrument %d: silent (%.1f dB)", v, i, rms_db());
+                CHECK(peak < 1.0, "voice %d instrument %d: clips", v, i);
+            }
+        en_set(P_LEAD_INST, 0);
+        en_set(P_COMP_INST, 0);
+        en_set(P_BASS_INST, 0);
+        en_set(P_ANS_INST, 0);
+    }
+
     /* every effect, alone, then all the space at full: no NaN, no clipping */
     for (f = 0; f < EN_NFX; f++) {
         meter_reset();

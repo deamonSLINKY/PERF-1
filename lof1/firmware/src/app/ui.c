@@ -130,6 +130,8 @@ static struct {
     uint8_t lock_mode;                 /* SAVE held in FX: keys tapped lock and unlock their effects */
     uint32_t lock_keys;                /* keys pressed to lock or unlock: no effect while they're held */
     uint32_t input_t;                  /* the last touch: a button, a key, a knob, a MIDI note */
+    uint8_t store_wait;                /* a store while playing: 1 the preset, 2 the settings, waiting for the hush */
+    uint32_t store_t;
     uint8_t saver, sv_shown;           /* the screensaver up; the pose on screen */
     uint32_t sv_t;                     /* input_t when it came up: any touch since takes it down */
     uint8_t theme, crt;                /* the theme and the CRT look drawn (a change: everything again) */
@@ -308,6 +310,13 @@ static void mark_dirty(void) { ui.dirty = 1; }
 int ui_dirty(void) { return ui.dirty != 0; }
 
 /* ------------------------------------------------------------ values --- */
+static void par_text(int p, int v, char *b)     /* a value as the screen shows it */
+{
+    en_param_text(p, v, b);
+    if (p == P_SCALE && proj.par[P_SCALE_MASK])      /* the Global page's keys made one of your own */
+        memcpy(b, "Custom", 7);
+}
+
 static int knob_get(int k)
 {
     if (k < P_NPARAMS)
@@ -338,7 +347,7 @@ static void knob_text(int k, char *b)
     static const char *const LEDS[3] = {"Off", "Glow", "Keys"};
     const char *s = 0;
     if (k < P_NPARAMS) {
-        en_param_text(k, v, b);
+        par_text(k, v, b);
         return;
     }
     if (k == K_LEDS)
@@ -362,6 +371,11 @@ static void knob_set(int k, int v)
         return;
     knob_range(k, &lo, &hi);
     v = v < lo ? lo : v > hi ? hi : v;
+    if (k == P_SCALE && proj.par[P_SCALE_MASK]) {   /* turning Scale: back to the named scales */
+        proj.par[P_SCALE_MASK] = 0;
+        en_set(P_SCALE_MASK, 0);
+        mark_dirty();
+    }
     if (v == knob_get(k))
         return;
     if (k < P_NPARAMS) {
@@ -490,6 +504,46 @@ static void rm_enter(void);                     /* REMOTE, below */
 #endif
 
 /* ------------------------------------------------------------ buttons --- */
+/* into flash. Writing it stops the chip a moment (the code runs from the same flash), so while the music
+ * plays it fades out (en_hush), holds still while the store is written, and fades back in where it was: a
+ * short pause, not a cut (HYP-1's way). Stopped: at once. */
+static void store_write(int what)
+{
+    if (what == 2) {
+        if (project_save_globals() == 0)
+            say("STORED", "SETTINGS");
+        else
+            say("NOT STORED", "FLASH ERROR");
+        return;
+    }
+    if (project_save() == 0) {
+        ui.dirty = 0;
+        say("STORED", piece_name(proj.piece));
+    } else {
+        say("NOT STORED", "FLASH ERROR");
+    }
+}
+static void store_now(int what)
+{
+    if (en_playing) {
+        en_hush(1);
+        ui.store_wait = (uint8_t)what;
+        ui.store_t = plat_ms();
+        say("STORING", piece_name(proj.piece));
+    } else {
+        store_write(what);
+    }
+}
+static void store_tick(void)                    /* faded out (or long enough): write it, then back in */
+{
+    int what = ui.store_wait;
+    if (!what || (!en_hushed && plat_ms() - ui.store_t < 150u))
+        return;
+    ui.store_wait = 0;
+    store_write(what);
+    en_hush(0);
+}
+
 static void button(int b)
 {
     int sel = (int)(ui.btn >> B_SEL & 1u), v;
@@ -565,19 +619,11 @@ static void button(int b)
         return;
     case B_SAVE:
         if (ui.view == V_GLOBAL2) {             /* Global 2: store the theme, CRT, Tune, lights alone */
-            if (project_save_globals() == 0)
-                say("STORED", "SETTINGS");
-            else
-                say("NOT STORED", "FLASH ERROR");
+            store_now(2);
             return;
         }
-        if (ui.view == V_GLOBAL) {              /* Global: store the preset */
-            if (project_save() == 0) {
-                ui.dirty = 0;
-                say("STORED", piece_name(proj.piece));
-            } else {
-                say("NOT STORED", "FLASH ERROR");
-            }
+        if (ui.view == V_GLOBAL) {              /* Global: store the preset (never Side B) */
+            store_now(1);
             return;
         }
         en_side_b();
@@ -620,7 +666,7 @@ static void button(int b)
             char t[8];
             lead_all_off();
             knob_set(P_LEAD_OCT, proj.par[P_LEAD_OCT] + (up ? 1 : -1));
-            en_param_text(P_LEAD_OCT, proj.par[P_LEAD_OCT], t);
+            par_text(P_LEAD_OCT, proj.par[P_LEAD_OCT], t);
             say("LEAD OCTAVE", t);
         }
         return;
@@ -670,6 +716,26 @@ static void key_down(int k)
         knob_set(P_ROOT, (5 + k) % 12);
         say("ROOT", EN_NOTE_NAME[proj.par[P_ROOT]]);
         return;
+    }
+    if (ui.view == V_GLOBAL) {                  /* the Global page: the keys set the scale (AMB-1's way): a key
+                                                 * lit is in it; tap one to take it out or put it in */
+        int pc = (5 + k) % 12, rel = (pc - proj.par[P_ROOT] % 12 + 12) % 12, s;
+        uint32_t m = en_scale_pool(proj.par[P_SCALE], proj.par[P_SCALE_MASK]) ^ (1u << rel);
+        if (!(m & 0xFFFu)) {
+            say("SCALE", "KEEP ONE NOTE");
+            return;
+        }
+        for (s = 0; s < EN_NSCALES && EN_SCALE_POOL[s] != m; s++)
+            ;
+        if (s < EN_NSCALES) {                   /* back to a named one */
+            knob_set(P_SCALE, s);
+            knob_set(P_SCALE_MASK, 0);
+        } else {
+            knob_set(P_SCALE_MASK, (int)m);
+        }
+        say(m >> rel & 1u ? "IN THE SCALE" : "OUT OF THE SCALE", EN_NOTE_NAME[pc]);
+        if (!(m >> rel & 1u))
+            return;                             /* put in: heard while held */
     }
     ui.lead_keys |= 1u << k;
     en_note(53 + k, 1, 100);
@@ -984,7 +1050,7 @@ static void input(void)
                 ui.touch_until = now + 1200u;
             } else {
                 char t[10];
-                en_param_text(P_TEMPO, proj.par[P_TEMPO], t);
+                par_text(P_TEMPO, proj.par[P_TEMPO], t);
                 say("TEMPO", t);
             }
         } else {
@@ -1004,7 +1070,7 @@ static void input(void)
         if (v < lo)
             v = hi;
         knob_set(p, v);
-        en_param_text(p, proj.par[p], t);
+        par_text(p, proj.par[p], t);
         caps(t, t, sizeof t);
         say(algo_word(p), t);
         ui.turn_t = now;
@@ -1102,7 +1168,8 @@ static uint32_t hash(uint32_t h, uint32_t v) { return (h ^ v) * 16777619u; }
 
 static void scale_name(char *b)
 {
-    const char *n = EN_NOTE_NAME[proj.par[P_ROOT] % 12], *s = EN_SCALE_NAME[proj.par[P_SCALE] % EN_NSCALES];
+    const char *n = EN_NOTE_NAME[proj.par[P_ROOT] % 12],
+               *s = proj.par[P_SCALE_MASK] ? "Custom" : EN_SCALE_NAME[proj.par[P_SCALE] % EN_NSCALES];
     while (*n)
         *b++ = *n++;
     *b++ = ' ';
@@ -1116,7 +1183,7 @@ static void draw_header(void)
 {
     int msg = plat_ms() < ui.msg_until;
     uint32_t h = hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.par[P_SCALE] << 12 |
-                                            (uint32_t)proj.par[P_TEMPO] << 16),
+                                            (uint32_t)proj.par[P_TEMPO] << 16 | (uint32_t)proj.par[P_SCALE_MASK] << 20),
                       en_playing | ui.dirty << 1 | (uint32_t)msg << 2 | (uint32_t)en_held << 3 | (uint32_t)en_sideb << 4 |
                           (uint32_t)ui.fx << 7 | (uint32_t)en_dreaming << 8 | (uint32_t)ui.seq << 9 | (uint32_t)en_ext << 10 | (uint32_t)proj.par[P_SNAP] << 11 | (uint32_t)(ui.fx_lock != 0) << 13);
     if (msg)
@@ -1278,7 +1345,7 @@ static void draw_voice(int trk)
     int32_t kx = 8, ky = 62, ww = 10;
     uint32_t on = 0, on2 = 0;
     int lo = LOW[trk];
-    en_param_text(PI_[trk], proj.par[PI_[trk]], t);
+    par_text(PI_[trk], proj.par[PI_[trk]], t);
     caps(t, t, sizeof t);
     cv_text(10, 8, &FONT_B, t, COL[trk]);
     en_chord_name(c);
@@ -1491,7 +1558,7 @@ static void draw_knobs(void)
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
-    h = hash(h, (uint32_t)now_touch);
+    h = hash(h, (uint32_t)now_touch ^ (uint32_t)proj.par[P_SCALE_MASK] << 4);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -1561,7 +1628,7 @@ static void leds(void)
     } else if (ui.fx) {
         k = ui.keys;
     } else if (proj.leds) {
-        uint32_t pool = EN_SCALE_POOL[proj.par[P_SCALE] % EN_NSCALES], r = (uint32_t)proj.par[P_ROOT];
+        uint32_t pool = en_scale_pool(proj.par[P_SCALE], proj.par[P_SCALE_MASK]), r = (uint32_t)proj.par[P_ROOT];
         for (i = 0; i < NKEYS; i++)
             if (pool >> (((5u + i) + 12u - r) % 12u) & 1u)
                 k |= 1u << i;
@@ -1806,6 +1873,7 @@ void ui_frame(void)
         if (!en_playing)
             en_play(1);
     }
+    store_tick();
     input();
     if (ui.theme != proj.theme || ui.crt != (proj.crt ? 1u : 0u)) {   /* a new look: everything again */
         look_apply();

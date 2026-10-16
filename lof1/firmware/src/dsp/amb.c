@@ -32,14 +32,15 @@ static const int8_t PARENT[EN_NSCALES][7] = {
 const char *const EN_INST_NAME[EN_NINST] = {
     "Rhodes", "Wurli", "Upright", "Old upright", "Vibes", "Kalimba", "Glock", "Strumstick", "Mute tpt", "Tenor sax",
     "Flute", "Harmonica", "Bell", "Sine", "Warm pad", "Organ", "Strings", "Upright bs", "Sub", "Round", "Pluck",
-    "Moog", "Whistle", "Square"};
+    "Moog", "Whistle", "Square", "FM piano", "Marimba", "Harp", "Clarinet", "Ocarina", "Cello pizz", "Music box"};
 const uint8_t EN_LEAD_INST[EN_NLEAD] = {I_RHODES, I_WURLI, I_UPRIGHT, I_UPRIGHT2, I_VIBES, I_KALIMBA, I_GLOCK,
-                                        I_STRUM, I_MUTETPT, I_TENORSAX, I_FLUTE, I_HARMONICA, I_BELL, I_SINE};
+                                        I_STRUM, I_MUTETPT, I_TENORSAX, I_FLUTE, I_HARMONICA, I_BELL, I_SINE,
+                                        I_FMPIANO, I_MARIMBA, I_HARP, I_CLARINET, I_OCARINA, I_MUSICBOX};
 const uint8_t EN_COMP_INST[EN_NCOMP] = {I_RHODES, I_WURLI, I_UPRIGHT, I_UPRIGHT2, I_VIBES, I_STRUM, I_PAD, I_ORGAN,
-                                        I_STRINGS};
-const uint8_t EN_BASS_INST[EN_NBASS] = {I_UPBASS, I_SUB, I_ROUND, I_PLUCKB, I_MOOG};
+                                        I_STRINGS, I_FMPIANO, I_MARIMBA, I_HARP};
+const uint8_t EN_BASS_INST[EN_NBASS] = {I_UPBASS, I_SUB, I_ROUND, I_PLUCKB, I_MOOG, I_CELLOPZ};
 const uint8_t EN_ANS_INST[EN_NANS] = {I_MUTETPT, I_TENORSAX, I_FLUTE, I_HARMONICA, I_VIBES, I_KALIMBA, I_GLOCK,
-                                      I_BELL, I_WHISTLE, I_SQUARE};
+                                      I_BELL, I_WHISTLE, I_SQUARE, I_CLARINET, I_OCARINA, I_MARIMBA, I_MUSICBOX};
 const char *const EN_DUST_NAME[EN_NDUST] = {"Vinyl", "Cassette", "Reel", "Radio"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Dusty", "Tape"};
 const char *const EN_LANE_NAME[EN_NLANE] = {"Kick", "Snare", "Rim", "Clap", "Hat", "Open hat", "Shaker", "Perc"};
@@ -91,6 +92,13 @@ static const inst_t INST[EN_NINST] = {
     {K_SUB, 0,                 0.003f, 1.2f, 0.5f, 0.10f, 0.50f, 0, 0, 0, 0, 0, 0, W_PULSE, 0.004f, 1.5f, 2.6f, 0.45f, 0},
     {K_FM, 0,                  0.045f, 0.0f, 0.9f, 0.20f, 0.40f, 2.0f, 0.12f, 1.0f, 1.0f, 0.0f, 0.0f, 0, 0, 0, 0, 0, 0.006f},
     {K_SUB, 0,                 0.006f, 0.0f, 0.8f, 0.15f, 0.30f, 0, 0, 0, 0, 0, 0, W_PULSE, 0.0f, 3.0f, 1.0f, 0.15f, 0.003f},
+    {K_SMP, SMP_FMPIANO,       0.001f, 2.8f, 0.0f, 0.30f, 0.85f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {K_SMP, SMP_MARIMBA,       0.001f, 0.0f, 1.0f, 0.40f, 0.7f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {K_SMP, SMP_HARP,          0.001f, 0.0f, 1.0f, 0.60f, 0.9f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {K_SMP, SMP_CLARINET,      0.020f, 0.0f, 1.0f, 0.12f, 0.6f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {K_SMP, SMP_OCARINA,       0.020f, 0.0f, 1.0f, 0.12f, 0.5f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {K_SMP, SMP_CELLOPZ,       0.001f, 0.0f, 1.0f, 0.15f, 1.1f, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {K_FM, 0,                  0.001f, 2.2f, 0.0f, 0.60f, 0.32f, 5.0f, 0.9f, 0.15f, 0.25f, 0.25f, 0.0f, 0, 0, 0, 0, 0, 0},   /* music box */
 };
 
 /* parameters (the screen's names; the pages are the UI's) */
@@ -113,6 +121,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Octave", -2, 2, 0},     {"Daydream", 0, 1, 1},    {"Answer", 0, 1, 1},       {"Tune", -50, 50, 0},
     {"Fill", 0, 100, 45},     {"Legato", 0, 100, 70},   {"Repeat", 0, 100, 35},    {"Dynamics", 0, 100, 40},
     {"Drift", 0, 5, 3},       {"Drums", 0, 2, 0},       {"Pool", 2, 8, 4},         {"Chords", 0, 1, 1},
+    {"Notes", 0, 4095, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -285,7 +294,7 @@ void en_param_text(int i, int v, char *b)
 }
 
 /* ============================================================== commands === */
-enum { C_SET, C_PLAY, C_NOTE, C_HOLD, C_SIDEB, C_SEED, C_PANIC, C_REGROW, C_CLOCK, C_MUTATE, C_MUTE };
+enum { C_SET, C_PLAY, C_NOTE, C_HOLD, C_SIDEB, C_SEED, C_PANIC, C_REGROW, C_CLOCK, C_MUTATE, C_MUTE, C_HUSH };
 #define QN 128u
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
@@ -309,6 +318,10 @@ void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_mutate(void) { post(C_MUTATE, 0, 0); }
 void en_mute(int on) { post(C_MUTE, on, 0); }
+void en_hush(int on) { post(C_HUSH, on, 0); }
+static uint8_t hush;                            /* a store while playing: fade out, hold still, fade back in (C_HUSH) */
+static float hush_g = 1.0f;                     /* its gain */
+volatile uint8_t en_hushed;                     /* faded right out: the flash can be written */
 static uint8_t muted;                           /* remote: the FM-1 is playing the browser */
 static float mute_g = 1.0f;
 static volatile uint32_t fx_mask;
@@ -1458,7 +1471,7 @@ static int ans_centre(void)
 {
     switch (EN_ANS_INST[par[P_ANS_INST]]) {
     case I_TENORSAX: return 60;
-    case I_MUTETPT: case I_VIBES: case I_HARMONICA: return 70;
+    case I_MUTETPT: case I_VIBES: case I_HARMONICA: case I_CLARINET: case I_MARIMBA: return 70;
     default: return 76;
     }
 }
@@ -2381,11 +2394,33 @@ static void master(uint32_t n, float gain, int32_t *out)
 }
 
 /* ============================================================ parameters === */
+uint16_t en_scale_pool(int scale, int mask)
+{
+    return mask & 0xFFF ? (uint16_t)(mask & 0xFFF) : EN_SCALE_POOL[(unsigned)scale < EN_NSCALES ? scale : 0];
+}
 static void key_set(void)
 {
+    int m = par[P_SCALE_MASK] & 0xFFF;
     root_pc = par[P_ROOT] % 12;
     scale_i = (unsigned)par[P_SCALE] < EN_NSCALES ? par[P_SCALE] : 0;
-    mel_pool = EN_SCALE_POOL[scale_i];
+    mel_pool = en_scale_pool(scale_i, m);
+    if (m) {   /* a scale of your own: the chords from the seven-note scale that fits it best (Scale's, on a tie) */
+        int s, best = -99, pick = scale_i;
+        for (s = -1; s < 4; s++) {
+            int si = s < 0 ? scale_i : s, k, fit = 0;
+            uint16_t par7 = 0;
+            for (k = 0; k < 7; k++)
+                par7 |= (uint16_t)(1u << PARENT[si][k]);
+            for (k = 0; k < 12; k++)
+                if (m >> k & 1u)
+                    fit += (par7 >> k & 1u) ? 1 : -2;
+            if (fit > best) {
+                best = fit;
+                pick = si;
+            }
+        }
+        scale_i = pick;
+    }
     chord_set(chord_deg);
 }
 static float tempo_spb(void) { return EN_SR * 60.0f / ((float)par[P_TEMPO] * 4.0f); }
@@ -2433,7 +2468,7 @@ static void apply(int p, int v)
     case P_MELLOW: mellow_hz = 18000.0f * fm_exp2f(-(float)v * 0.048f); break;
     case P_ROOM: room_amt = lvl(v) * 1.2f; break;
     case P_ECHO: echo_amt = lvl(v); break;
-    case P_ROOT: case P_SCALE: key_set(); break;
+    case P_ROOT: case P_SCALE: case P_SCALE_MASK: key_set(); break;
     case P_JAZZ: chord_set(chord_deg); break;
     case P_TUNE: tunefac = fm_exp2f((float)v * (1.0f / 1200.0f)); break;
     case P_TEMPO: spb = tempo_spb(); break;
@@ -2578,6 +2613,7 @@ static void drain(void)
             break;
         case C_PANIC: quiet(); break;
         case C_MUTE: muted = (uint8_t)(a != 0); break;
+        case C_HUSH: hush = (uint8_t)(a != 0); break;
         case C_MUTATE:
             mutate_now = 1;
             drift_fill = 1;
@@ -2681,8 +2717,15 @@ static void control(uint32_t n)                 /* once a sub-block: the slow th
 void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
 {
     const float gain = (float)gain_q12 * (1.0f / 4096.0f) * 2.3f;
-    uint32_t at = 0;
+    uint32_t at = 0, n0 = n, j0;
+    int32_t *out0 = out;
     drain();
+    if (hush && hush_g <= 0.0f) {               /* hushed: the music holds still (it carries on where it was) */
+        for (j0 = 0; j0 < 2u * n0; j0++)
+            out0[j0] = 0;
+        en_hushed = 1;
+        return;
+    }
     if (en_ext && ++ext_age > 120u) {
         en_ext = 0;
         spb = tempo_spb();
@@ -2728,4 +2771,13 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         at += k;
         n -= k;
     }
+    if (hush || hush_g < 1.0f) {                /* the hush: ~6 ms each way */
+        const float step = 1.0f / (0.006f * EN_SR), tgt = hush ? 0.0f : 1.0f;
+        for (j0 = 0; j0 < n0; j0++) {
+            hush_g = tgt > hush_g ? fm_minf(hush_g + step, 1.0f) : fm_maxf(hush_g - step, 0.0f);
+            out0[2 * j0] = (int32_t)((float)out0[2 * j0] * hush_g);
+            out0[2 * j0 + 1] = (int32_t)((float)out0[2 * j0 + 1] * hush_g);
+        }
+    }
+    en_hushed = (uint8_t)(hush && hush_g <= 0.0f);
 }

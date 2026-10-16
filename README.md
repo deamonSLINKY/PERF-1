@@ -32,7 +32,7 @@ own firmware back, and an FM-1 that fails to start twice comes up in a safe mode
 [`lof1/`](lof1/) holds **LOF-1**, a second RedtailWorks firmware for the FM-1: a lofi groovebox. You play the
 lead on the keys and a tired jazz band follows: it hears which chord your notes imply and the comp, bass
 and drums move with it on the beat; an Answer voice replies to your phrases, and when the keys rest a ghost
-takes the lead. Under it all, a record, a cassette, a reel or a radio. Fourteen lead instruments, ten
+takes the lead. Under it all, a record, a cassette, a reel or a radio. Twenty lead instruments, a scale of your own set on the keys, ten
 presets, chords on the keys, FX on the keys with locks, a drum sequencer, MIDI clock in and notes out. It's
 **experimental**: built and tested in the simulator and the browser emulator, not yet on a real FM-1, and
 numbered 0.x until it has been. The same workflow builds it, and the site has it under

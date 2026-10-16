@@ -124,7 +124,7 @@ record crackles.</p>
 </nav>
 <h2>The band</h2>
 <div class="grid">
-  <div class="card"><h3>You: the lead</h3><p>Fourteen instruments on the keys: <b>Rhodes, Wurli, two uprights, vibes, kalimba, glock, strumstick, muted trumpet, tenor sax, flute, harmonica, bell, sine</b>. Single notes, or whole chords on each key.</p></div>
+  <div class="card"><h3>You: the lead</h3><p>Twenty instruments on the keys: <b>Rhodes, Wurli, FM piano, two uprights, vibes, marimba, kalimba, glock, harp, strumstick, muted trumpet, tenor sax, clarinet, flute, ocarina, harmonica, bell, music box, sine</b>. Single notes, or whole chords on each key.</p></div>
   <div class="card"><h3>Comp and bass</h3><p>The chord, re-voiced on every change and rolled like a tired pianist: held, stabs, offbeats or an arpeggio. The bass plays roots, root and fifth, walks, or goes dub.</p></div>
   <div class="card"><h3>Answer</h3><p>Call and response: when you rest after a phrase, a second instrument answers it, echoing yours or inventing its own.</p></div>
   <div class="card"><h3>Drums</h3><p>A sixteen-step sequencer, eight lanes, eight patterns and swing, on the <b>Dusty</b> kit (samples) or the <b>Tape</b> kit (synthesized). Drift changes the pattern for you every few bars.</p></div>

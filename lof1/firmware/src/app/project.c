@@ -72,6 +72,46 @@ static int project_valid(void)                  /* an older format: the recipes 
     return 1;
 }
 
+/* format 4 (one parameter fewer: P_SCALE_MASK is new): the presets carried over, the new one at its default */
+#define NPAR4 P_SCALE_MASK
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR4];
+    uint8_t leds, piece, theme, crt;
+    uint16_t pats[EN_NPAT][EN_NLANE];
+    int16_t slot[NPIECES][NPAR4];
+    uint8_t rsv[16];
+} project4_t;
+static void from4(const project4_t *o, int16_t *par, const int16_t *opar)
+{
+    int p;
+    (void)o;
+    for (p = 0; p < P_NPARAMS; p++)
+        par[p] = p < NPAR4 ? opar[p] : en_param_info(p)->def;
+}
+static int migrate4(const void *raw, int n)
+{
+    static project4_t o;
+    int i;
+    if (n != (int)sizeof o)
+        return 0;
+    memcpy(&o, raw, sizeof o);
+    if (o.magic != PROJ_MAGIC || o.format != 4u)
+        return 0;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = PROJ_MAGIC;
+    proj.format = PROJ_FORMAT;
+    from4(&o, proj.par, o.par);
+    proj.leds = o.leds;
+    proj.piece = o.piece;
+    proj.theme = o.theme;
+    proj.crt = o.crt;
+    memcpy(proj.pats, o.pats, sizeof proj.pats);
+    for (i = 0; i < NPIECES; i++)
+        from4(&o, proj.slot[i].par, o.slot[i]);
+    return project_valid();
+}
+
 int project_load(void)
 {
     static project_t buf;
@@ -80,6 +120,10 @@ int project_load(void)
     n = plat_store_load(OBJ_PROJ, &buf, sizeof buf);
     proj = buf;
     if (n >= 8 && project_valid()) {
+        stored = proj;
+        return 0;
+    }
+    if (n > 0 && migrate4(&buf, n)) {           /* an older LOF-1's store: kept */
         stored = proj;
         return 0;
     }

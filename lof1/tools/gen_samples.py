@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """LOF-1's built-in sampled instruments as a C header.
 
-  python3 tools/samples/lof1_samples.py --rate 16000 --out build/samples --only UPRIGHT,...,KIT
+  python3 tools/samples/lof1_samples.py --rate 16000 --out build/samples --only UPRIGHT,...,KIT,FMPIANO,...,CELLOPZ
   python3 tools/gen_samples.py build/samples/sets firmware/src/dsp/lof_samples.h
 
 Reads each set's .json zone table and .adpcm data (4-bit IMA ADPCM, low nibble first, from predictor 0 /
@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 ORDER = ["UPRIGHT", "UPRIGHT2", "VIBES", "KALIMBA", "GLOCK", "STRUM", "UPBASS", "MUTETPT", "TENORSAX", "FLUTE",
-         "HARMONICA", "KIT"]
+         "HARMONICA", "KIT", "FMPIANO", "MARIMBA", "HARP", "CLARINET", "OCARINA", "CELLOPZ"]
 
 
 def main(src, dst):

@@ -14,9 +14,10 @@ static, plus a granular smear of the music itself. A RedtailWorks project, along
 
 ## What's in it
 
-- **The lead** on the keys: fourteen instruments, single notes or whole chords on each key, MIDI in too.
-- **The band:** comp (nine instruments, four patterns, four voicings), bass (five, roots to walking to
-  dub), an Answer voice (ten), and drums: a sixteen-step, eight-lane, eight-pattern sequencer on a sampled
+- **The lead** on the keys: twenty instruments, single notes or whole chords on each key, MIDI in too.
+  On the Global page the keys set the scale instead (AMB-1's way), for a scale of your own.
+- **The band:** comp (twelve instruments, four patterns, four voicings), bass (six, roots to walking to
+  dub), an Answer voice (fourteen), and drums: a sixteen-step, eight-lane, eight-pattern sequencer on a sampled
   or a synthesized kit, with swing and fills.
 - **Daydream:** a ghost lead when the keys rest, as sparse or busy as you set it. **Drift:** the drums and
   the progression change by themselves every few bars.
@@ -48,12 +49,13 @@ The sampled instruments are Versilian Studios' CC0 libraries (VCSL, VSCO-2 CE), 
 
 ```
 python3 tools/samples/lof1_samples.py --rate 16000 --out build/samples \
-    --only UPRIGHT,UPRIGHT2,VIBES,KALIMBA,GLOCK,STRUM,UPBASS,MUTETPT,TENORSAX,FLUTE,HARMONICA,KIT
+    --only UPRIGHT,UPRIGHT2,VIBES,KALIMBA,GLOCK,STRUM,UPBASS,MUTETPT,TENORSAX,FLUTE,HARMONICA,KIT,FMPIANO,MARIMBA,HARP,CLARINET,OCARINA,CELLOPZ
 python3 tools/gen_samples.py build/samples/sets firmware/src/dsp/lof_samples.h
 ```
 
-The rest (Rhodes, Wurli, bell, sine, pad, organ, strings, sub, round, pluck, Moog, whistle, square) are
-synthesized.
+Since 0.1 also the TX81Z FM piano, marimba, harp, clarinet, ocarina and cello pizzicato (FMPIANO, MARIMBA,
+HARP, CLARINET, OCARINA, CELLOPZ, appended in `tools/gen_samples.py`'s ORDER). The rest (Rhodes, Wurli, bell,
+sine, music box, pad, organ, strings, sub, round, pluck, Moog, whistle, square) are synthesized.
 
 ## The screen
 

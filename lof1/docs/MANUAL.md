@@ -165,7 +165,8 @@ run-out groove when you stop, and Grain, a haze made of the music itself.
 
 Lead: **Level, Tone, Release, Lazy** (loosens the velocity, and the ghost's timing). ALGORITHM picks the
 instrument: Rhodes, Wurli, Upright, Old upright, Vibes, Kalimba, Glock, Strumstick, Mute tpt, Tenor sax,
-Flute, Harmonica, Bell, Sine. OCT− / OCT+ move it by octaves.
+Flute, Harmonica, Bell, Sine, FM piano, Marimba, Harp, Clarinet, Ocarina, Music box. OCT− / OCT+ move it by
+octaves.
 
 Daydream: **Wait** (4, 8, 16 bars, Always), **Fill**, **Density**, **Mood**. Daydream 2: **Range,
 Legato, Repeat, Dynamics**. SEL + ENV turns Daydream on and off.
@@ -174,17 +175,17 @@ Legato, Repeat, Dynamics**. SEL + ENV turns Daydream on and off.
 
 Comp: **Level, Tone, Voicing** (Close, Open, Shell, Spread), **Roll**. Comp style: **Pattern** (Held,
 Stabs, Offbeat, Arp), **Length, Push** (how often it anticipates the next chord), **Spread**. Instruments:
-Rhodes, Wurli, Upright, Old upright, Vibes, Strumstick, Warm pad, Organ, Strings.
+Rhodes, Wurli, Upright, Old upright, Vibes, Strumstick, Warm pad, Organ, Strings, FM piano, Marimba, Harp.
 
 ### Bass (EDIT)
 
 **Level, Tone, Pattern** (Roots, Root-5th, Walking, Dub), **Slide**. Instruments: Upright bs, Sub, Round,
-Pluck, Moog.
+Pluck, Moog, Cello pizz.
 
 ### Answer (ARP)
 
 **Level, Tone, Chatty, Echo**. Instruments: Mute tpt, Tenor sax, Flute, Harmonica, Vibes, Kalimba, Glock,
-Bell, Whistle, Square. SEL + ARP turns it on and off.
+Bell, Whistle, Square, Clarinet, Ocarina, Marimba, Music box. SEL + ARP turns it on and off.
 
 ### Drums (SEQ), Kit (SEQ again)
 
@@ -206,7 +207,13 @@ Duck** (under the kick), **Hum**.
 
 **Root, Scale** (Major, Minor, Dorian, Mixolydian, Minor and Major pentatonic, Blues), **Keys**
 (Chromatic, Scale, or Chords: section 7), **MIDI** (Off, Notes, Clock, Both: section 9). SAVE here stores
-the preset.
+the preset, and only that: no Side B on this page.
+
+**A scale of your own** (AMB-1's way): on the Global page the keys set the scale instead of playing. The lit
+keys are the notes in it; tap one to take it out, or tap a dark one to put it in (you hear it while you hold
+it). Scale then reads **Custom**; the band plays in your notes, its chords taken from whichever seven-note
+scale fits them best. Tap your way back to a named scale and it takes its name again; turning Scale goes
+back to the named ones. SAVE stores your scale with the preset.
 
 ### Global 2 (GLO, five times)
 
@@ -269,7 +276,8 @@ white keys 1–8 picks the pattern.
 
 Each preset keeps your changes while you play. To keep them for good, go to Global and press **SAVE**: the
 preset playing is stored, with the drum patterns. Hold SAVE on Global for a second and a half to put the
-factory's version back (then SAVE to store that). Storing while it plays may pause the music for a moment.
+factory's version back (then SAVE to store that). Storing while it plays fades the music out for a moment
+(the FM-1 can't play while it writes its flash) and back in where it was.
 
 ---
 

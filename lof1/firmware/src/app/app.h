@@ -10,7 +10,7 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x314F464Cu           /* "LOF1" */
-#define PROJ_FORMAT 4u                   /* 2: Daydream 2; 3: ten presets; 4: Groove 2 */
+#define PROJ_FORMAT 5u                   /* 2: Daydream 2; 3: ten presets; 4: Groove 2; 5: a scale of your own */
 #define NPIECES EN_NPIECES
 
 typedef struct {
