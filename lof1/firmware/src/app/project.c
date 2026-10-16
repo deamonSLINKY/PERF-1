@@ -4,7 +4,8 @@
  *
  * The presets 01-10 (their factory recipes are the engine's, en_piece): each keeps its own settings in
  * memory as you leave it, but only SAVE on the Global page stores one: the preset playing goes into the
- * stored project (the others stay as they were stored). Tune and MIDI are global. */
+ * stored project (the others stay as they were stored). Tune and MIDI are global, and so are the theme, the
+ * CRT and the lights (Global 2: SAVE there stores them alone). */
 project_t proj;
 static project_t stored;                         /* what the flash holds */
 
@@ -42,6 +43,7 @@ void project_defaults(void)
         proj.par[i] = en_param_info(i)->def;
     take(&proj.slot[0]);
     proj.leds = 1;
+    proj.crt = 1;
     en_pats_default();
     memcpy(proj.pats, en_pats, sizeof proj.pats);
 }
@@ -95,7 +97,19 @@ int project_save(void)                           /* the preset playing (and the 
         stored.par[p] = proj.par[p];
     stored.piece = proj.piece;
     stored.leds = proj.leds;
+    stored.theme = proj.theme;
+    stored.crt = proj.crt;
     memcpy(stored.pats, proj.pats, sizeof stored.pats);
+    return plat_store_save(OBJ_PROJ, &stored, sizeof stored);
+}
+
+int project_save_globals(void)                   /* the globals alone (Global 2's SAVE): the presets as stored */
+{
+    stored.par[P_TUNE] = proj.par[P_TUNE];
+    stored.par[P_MIDI] = proj.par[P_MIDI];
+    stored.leds = proj.leds;
+    stored.theme = proj.theme;
+    stored.crt = proj.crt;
     return plat_store_save(OBJ_PROJ, &stored, sizeof stored);
 }
 

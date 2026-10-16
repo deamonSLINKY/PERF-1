@@ -140,6 +140,63 @@ leds
 turn PRESET 2
 wait 12000
 shot dreaming.png
+# the five themes, on preset 01's Groove page: Global 2's Theme
+turn PRESET -7
+wait 3000
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+wait 300
+shot global2.png
+tap HOME
+wait 300
+shot theme0.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+tap HOME
+wait 300
+shot theme1.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+tap HOME
+wait 300
+shot theme2.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+tap HOME
+wait 300
+shot theme3.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 1
+tap HOME
+wait 300
+shot theme4.png
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+tap GLO
+turn K1 -4
+tap HOME
+wait 300
 # the screensaver, nodding
 saver 4000
 wait 5000

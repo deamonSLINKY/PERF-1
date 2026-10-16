@@ -137,15 +137,18 @@ record crackles.</p>
 <h2>Four tapes</h2>
 <figure><img src="img/lof-tapes.png" width="2040" height="590" alt="LOF-1 playing from vinyl, a cassette, reel to reel and an old radio."></figure>
 <p>Ten presets, each a different session: a key, a tempo, a band and a tape. Store over any of them and it's yours.</p>
+<h2>Five themes</h2>
+<figure><img src="img/lof-themes.png" width="2544" height="568" alt="LOF-1's Groove page in five colour themes: Lamp, Matcha, Sakura, Midnight and Sepia."></figure>
+<p>Global 2 picks the screen's colours: <b>Lamp</b>, <b>Matcha</b>, <b>Sakura</b>, <b>Midnight</b> or <b>Sepia</b>. Every screen comes out as if on an old TV, a slight curve, scanlines and a soft band rolling slowly down; Global 2 turns that off too, if you'd rather.</p>
 <h2>Playing it</h2>
 <div class="pair">
   <figure><img src="img/lof-device-chords.png" width="1600" height="1161" alt="The FM-1 in Chords mode: each key plays a chord of the scale."><figcaption><b>Chords:</b> SEL + HOME and each key plays the scale's chord on that note, as rich as Jazz has it. The band follows.</figcaption></figure>
   <figure><img src="img/lof-device-fx.png" width="1600" height="1161" alt="The FM-1 in FX mode: a map of which key does what."><figcaption><b>FX:</b> every key an effect, with a map on screen: stutters, record skip, half time, tape stop, backspin, muffle, radio, mutes, solos, throws. Hold SAVE to lock them on.</figcaption></figure>
   <figure><img src="img/lof-device-seq.png" width="1600" height="1161" alt="The FM-1's drum sequencer."><figcaption><b>The sequencer:</b> hold SEQ and the white keys are the sixteen steps, OCT&minus; and OCT+ the lane.</figcaption></figure>
-  <figure><img src="img/lof-device-saver.png" width="1600" height="1161" alt="The screensaver: a red panda leaning on a tree with a coffee, nodding."><figcaption><b>A minute untouched:</b> the screensaver, nodding along. Every screen comes out as if on an old TV, scanlines and all.</figcaption></figure>
+  <figure><img src="img/lof-device-saver.png" width="1600" height="1161" alt="A red panda leaning on a tree with a coffee, nodding along."><figcaption><b>Leave it alone long enough</b> and someone drops by to listen.</figcaption></figure>
 </div>
 <h2>Screens</h2>
-<figure><img src="img/lof-moods.png" width="1536" height="1112" alt="Six LOF-1 screens: following you, chords on the keys, daydreaming, effects locked on, the sequencer, the screensaver."></figure>
+<figure><img src="img/lof-moods.png" width="1536" height="1112" alt="Six LOF-1 screens: following you, chords on the keys, daydreaming, effects locked on, the sequencer, a visitor."></figure>
 <div class="shots" style="margin-top:12px">
   <figure><img src="img/lof-screen-splash.png" width="480" height="480" alt="The boot screen: a pixel red panda on the RedtailWorks name"><figcaption>Switching on</figcaption></figure>
   <figure><img src="img/lof-screen-splash-lof.png" width="480" height="480" alt="The second boot screen: LOF-1 in big pixel letters"><figcaption>&hellip;then LOF-1</figcaption></figure>

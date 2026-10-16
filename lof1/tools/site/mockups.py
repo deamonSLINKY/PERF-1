@@ -192,7 +192,8 @@ def screens(names, out, cols=None, label=None, scale=2, gap=24):
 
 SCREENS = ["splash", "splash_lof", "groove", "playing", "groove2", "lead", "daydream", "daydream2", "comp", "compstyle",
            "bass", "answer", "drums", "kit", "seq", "dust", "dust2", "space", "global", "help", "chords", "fx",
-           "fx_muffle", "fx_lock", "tape2", "tape4", "tape6", "dreaming", "saver"]
+           "fx_muffle", "fx_lock", "tape2", "tape4", "tape6", "dreaming", "saver", "global2",
+           "theme0", "theme1", "theme2", "theme3", "theme4"]
 
 
 def main():
@@ -205,19 +206,21 @@ def main():
     scene(device("fx", *L["fx"]), OUT / "lof-device-fx.png", "THE FX KEYS", "FX: EVERY KEY AN EFFECT", glow="#c48cff")
     scene(device("seq", *L["seq"]), OUT / "lof-device-seq.png", "THE DRUMS", "HOLD SEQ: THE SEQUENCER", glow="#7eccc0")
     scene(device("tape6", *L["tape6"]), OUT / "lof-device-radio.png", glow="#c87a48")
-    scene(device("saver", *L["saver"]), OUT / "lof-device-saver.png", "A MINUTE OFF", "THE SCREENSAVER", glow="#6fae6a")
+    scene(device("saver", *L["saver"]), OUT / "lof-device-saver.png", "LEAVE IT A WHILE", "SOMEONE DROPS BY", glow="#6fae6a")
     for n in SCREENS:
         im = Image.open(SHOTS / f"{n}.png").convert("RGB")
         im.resize((480, 480), Image.NEAREST).save(OUT / f"lof-screen-{n.replace('_', '-')}.png")
     print("wrote docs/img/lof-screen-*.png")
-    screens(["groove", "lead", "comp", "bass", "answer", "drums", "dust", "global"], OUT / "lof-pages.png", cols=4,
+    screens(["groove", "lead", "comp", "bass", "answer", "drums", "dust", "global2"], OUT / "lof-pages.png", cols=4,
             label=["GROOVE · HOME", "LEAD · ENV", "COMP · LFO", "BASS · EDIT", "ANSWER · ARP", "DRUMS · SEQ",
-                   "DUST · GLO", "GLOBAL · GLO x4"])
+                   "DUST · GLO", "GLOBAL 2 · GLO x5"])
     screens(["groove", "tape2", "tape4", "tape6"], OUT / "lof-tapes.png", cols=4,
             label=["VINYL", "CASSETTE", "REEL TO REEL", "RADIO"])
     screens(["playing", "chords", "dreaming", "fx_lock", "seq", "saver"], OUT / "lof-moods.png", cols=3,
-            label=["FOLLOWING YOU", "CHORDS ON THE KEYS", "DAYDREAMING", "FX LOCKED ON", "THE SEQUENCER", "THE SCREENSAVER"])
+            label=["FOLLOWING YOU", "CHORDS ON THE KEYS", "DAYDREAMING", "FX LOCKED ON", "THE SEQUENCER", "A VISITOR"])
     screens(["splash", "splash_lof"], OUT / "lof-boot.png", label=["REDTAILWORKS", "LOF-1"])
+    screens(["theme0", "theme1", "theme2", "theme3", "theme4"], OUT / "lof-themes.png", cols=5,
+            label=["LAMP", "MATCHA", "SAKURA", "MIDNIGHT", "SEPIA"])
 
 
 if __name__ == "__main__":

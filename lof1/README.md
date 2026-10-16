@@ -25,8 +25,9 @@ static, plus a granular smear of the music itself. A RedtailWorks project, along
 - **FX on the keys:** stutters, record skip, half time, tape stop, backspin, muffle, radio, mutes, solos,
   throws, wobble, crush, fill, grain freeze, dropout; a map on screen; hold SAVE to lock them on.
 - **Ten presets**, stored over with Global › SAVE. MIDI clock in, notes out (channels 1–4 and 10).
-- **The screen** comes out as if on an old TV (a curve, scanlines, a rolling band), and after a minute
-  untouched, the screensaver: Red, RedtailWorks' red panda, under a tree with a coffee, nodding on the beat.
+- **The screen** in five colour themes (Lamp, Matcha, Sakura, Midnight, Sepia), as if on an old TV (a
+  curve, scanlines, a rolling band; Global 2 turns it off). And an easter egg: leave it untouched for half an
+  hour and Red, RedtailWorks' red panda, turns up under a tree with a coffee, nodding on the beat.
 
 ## Build and test
 
@@ -58,8 +59,9 @@ synthesized.
 
 Everything on the screen goes out through `firmware/src/app/crt.c`: a slight barrel curve, scanlines, a
 vignette and a soft band rolling slowly down. There's no RAM for a frame buffer, so each strip is warped
-from its own pixels on its way to the panel. The screensaver's art is in `tools/art/`, packed into
-`firmware/src/app/saver_art.h` (about 40 KB) by `tools/gen_saver.py`.
+from its own pixels on its way to the panel. The themes are `THEMES` in `firmware/src/app/ui.c`. The
+screensaver's art is in `tools/art/`, packed into `firmware/src/app/saver_art.h` (about 40 KB) by
+`tools/gen_saver.py`.
 
 ## Licence
 

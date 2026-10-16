@@ -124,6 +124,14 @@ jobs:
           python3 tools/gen_manual_figures.py
           EN_VERSION="$LV" sh web/emu/build_clang.sh
           REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/lof1" python3 tools/make_pages.py "build/amb-$LV.fwsc" "$LV" ../build/pages/lof
+          # ECO-1's old addresses (eco/, eco/emu/, ...) send their visitors on to LOF-1's
+          python3 -c "
+          import pathlib
+          for sec in ('', 'emu/', 'install/', 'manual/'):
+              d = pathlib.Path('../build/pages/eco/' + sec); d.mkdir(parents=True, exist_ok=True)
+              u = '../' * (1 + sec.count('/')) + 'lof/' + sec
+              (d / 'index.html').write_text(f'<!doctype html><meta charset=utf-8><title>LOF-1</title><meta http-equiv=refresh content=\"0; url={u}\"><p>ECO-1 has made way for LOF-1: <a href=\"{u}\">this way</a>.</p>')
+          "
       - name: The firmware dropdown on every page
         run: python3 tools/site/switcher.py build/pages
       - uses: actions/upload-artifact@v4

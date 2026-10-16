@@ -21,6 +21,7 @@ static int16_t crt_dh[240];            /* the distance from the centre in half p
 static uint16_t crt_vig[240];          /* the vignette across one axis, Q8 */
 static uint8_t crt_rl[CRT_ROLL_H];     /* the roll's brightening, Q8 over 1, by distance from its centre */
 static int32_t crt_roll = -100;        /* the roll's centre row (it starts off screen) */
+static uint8_t crt_mode = 1;           /* 0: straight to the panel, no curve, no lines, no roll (Global 2 > CRT) */
 
 static void crt_init(void)
 {
@@ -61,6 +62,13 @@ static void crt_out(uint32_t x0, uint32_t w, uint32_t y0, uint32_t h, const uint
         crt_init();
     if (!w || !h)
         return;
+    if (!crt_mode) {                               /* the look off: as it is */
+        if (src)
+            lcd_blit(x0, y0, w, h, src + (y0 - sy0) * w);
+        else
+            lcd_fill(x0, y0, w, h, swap16(fc));
+        return;
+    }
     for (r = 0; r < h; r += n) {
         uint16_t *o = crt_buf[crt_k];
         n = h - r < CRT_ROWS ? h - r : CRT_ROWS;   /* this buffer's last transfer, two slices ago, is done:
@@ -121,6 +129,8 @@ static void crt_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
 static int crt_roll_to(int32_t y, int32_t *lo, int32_t *hi)
 {
     int32_t a = crt_roll;
+    if (!crt_mode)
+        y = -100;                                  /* no roll: it stays off screen */
     if (y == a)
         return 0;
     crt_roll = y;

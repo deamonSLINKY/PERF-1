@@ -27,7 +27,7 @@ This manual covers LOF-1 version 0.1.0.
 7. Playing: chords, FX, the sequencer
 8. The presets and saving
 9. MIDI and your DAW
-10. The screensaver and the screen
+10. The screen: themes and the old TV
 11. Troubleshooting
 12. Credits
 
@@ -89,9 +89,9 @@ minutes with it:
 | EDIT | Bass |
 | ARP | Answer. SEL + ARP: the answer on and off |
 | SEQ | Drums; again: Kit. Held: the sequencer. SEL + SEQ: a change on the next bar |
-| GLO | Dust, Dust 2, Space, Global. SEL + GLO: remote (the panel plays the browser emulator) |
+| GLO | Dust, Dust 2, Space, Global, Global 2. SEL + GLO: remote (the panel plays the browser emulator) |
 | FX | The keys play effects. SEL + FX: every locked effect off |
-| SAVE | Side B: a breakdown on the next bar; again, back in with a fill. On Global: store the preset (held: the factory's back). In FX, held: lock effects on |
+| SAVE | Side B: a breakdown on the next bar; again, back in with a fill. On Global: store the preset (held: the factory's back). On Global 2: store the theme, CRT, Tune and lights. In FX, held: lock effects on |
 | PLAY | Play / stop |
 | REC | Chord hold: the band stays on this chord while you solo |
 | SEL + a key | The key's root. On the drum pages, SEL + white keys 1–8: the pattern |
@@ -208,6 +208,13 @@ Duck** (under the kick), **Hum**.
 (Chromatic, Scale, or Chords: section 7), **MIDI** (Off, Notes, Clock, Both: section 9). SAVE here stores
 the preset.
 
+### Global 2 (GLO, five times)
+
+**Theme** (Lamp, Matcha, Sakura, Midnight, Sepia: section 10), **CRT** (the old-TV look, on or off),
+**Tune** (±50 cents, for playing along with something not quite at A440), **Lights** (Off; Glow: the keys
+in the scale lit and the buttons glowing dimly; Keys: the keys only). These are the FM-1's, not a
+preset's: SAVE here stores them alone.
+
 ---
 
 ## 7. Playing: chords, FX, the sequencer
@@ -282,15 +289,18 @@ SEL + GLO on the FM-1 makes its panel play the emulator (the FM-1 goes quiet); S
 
 ---
 
-## 10. The screensaver and the screen
+## 10. The screen: themes and the old TV
 
-Leave LOF-1 untouched for a minute and the screensaver comes up: a red panda leaning on a tree with a
-coffee, nodding on the beat. A button or a knob only wakes it (it doesn't act); a key wakes it and plays.
+![The five themes](img/lof-themes.png)
+
+Global 2's Theme picks the screen's colours: **Lamp** (dusk purple and lamp light), **Matcha** (deep green
+and a pink blossom), **Sakura** (plum and cherry blossom), **Midnight** (navy and a streetlight) or
+**Sepia** (an old photograph).
 
 Every screen comes out as if on an old TV: a slight curve, scanlines, darker edges, and a soft bright band
-rolling slowly down the screen.
+rolling slowly down the screen. Global 2's CRT turns that off.
 
-![The screensaver](img/lof-screen-saver.png)
+And if you leave LOF-1 alone long enough, someone may drop by to listen.
 
 ---
 

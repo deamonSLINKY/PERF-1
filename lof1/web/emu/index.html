@@ -115,7 +115,6 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
     <label>Send to <select id="midi-out" disabled><option value="">none</option></select></label>
     <label>MIDI in from <select id="midi-in" disabled><option value="">none</option></select></label>
   </div>
-  <p class="note">Leave it a minute untouched and the screensaver comes up: Red under the tree with a coffee, nodding to the beat. A button or knob wakes it; a key wakes it and plays.</p>
   <p class="note" id="remote-note">Remote: with LOF-1 on your FM-1 and MIDI connected here, hold SEL and press GLO on the FM-1. Its panel plays this emulator and goes quiet itself.</p>
   <p class="note" id="midi-note">MIDI in: notes play the lead (from any keyboard you connect), and with Global › MIDI set to Clock or Both, a DAW's clock drives the tempo (START plays from the top, STOP stops). MIDI out (Global › MIDI: Notes or Both): the lead, comp, bass and answer on channels 1–4, the drums on 10. To reach a DAW on this computer, use a virtual MIDI port: the IAC Driver (Mac) or loopMIDI (Windows).</p>
 </section>
@@ -146,8 +145,8 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
         <dl><dt>Drums</dt><dd>Level, Crunch, Pattern (1–8, on the bar), Fill. Hold SEQ for the sequencer: the white keys are the 16 steps, OCT− / OCT+ the lane.</dd><dt>Kit</dt><dd>Kick, Snare, Hats, Perc levels; ALGORITHM: Dusty (samples) or Tape (synthesized).</dd></dl>
       </div>
       <div>
-        <h3>Dust, Dust 2, Space, Global <span>GLO</span></h3>
-        <dl><dt>Dust</dt><dd>Level, Age, Surface, Hiss; ALGORITHM: Vinyl, Cassette, Reel or Radio.</dd><dt>Dust 2</dt><dd>Grain (a haze of the music itself), Smear, Duck (under the kick), Hum.</dd><dt>Space</dt><dd>Tape (wow, flutter, saturation), Mellow (low-pass), Room, Echo.</dd><dt>Global</dt><dd>Root, Scale, Keys (Chromatic, Scale, or Chords: each key plays the scale's chord on that note, as Jazz has it), MIDI. SAVE here stores the preset playing; held, it goes back to the factory's.</dd></dl>
+        <h3>Dust, Dust 2, Space, Global, Global 2 <span>GLO</span></h3>
+        <dl><dt>Dust</dt><dd>Level, Age, Surface, Hiss; ALGORITHM: Vinyl, Cassette, Reel or Radio.</dd><dt>Dust 2</dt><dd>Grain (a haze of the music itself), Smear, Duck (under the kick), Hum.</dd><dt>Space</dt><dd>Tape (wow, flutter, saturation), Mellow (low-pass), Room, Echo.</dd><dt>Global</dt><dd>Root, Scale, Keys (Chromatic, Scale, or Chords: each key plays the scale's chord on that note, as Jazz has it), MIDI. SAVE here stores the preset playing; held, it goes back to the factory's.</dd><dt>Global 2</dt><dd>Theme (Lamp, Matcha, Sakura, Midnight, Sepia), CRT (the old-TV look, on or off), Tune, Lights. SAVE here stores them.</dd></dl>
       </div>
     </div>
   </div>
@@ -286,7 +285,7 @@ function hit(c, cls) {
 }
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { SEL: "Shift (hold): + a key, the root; + ENV / ARP: Daydream / Answer on and off; + HOME: notes or chords", FX: "The keys play effects; SAVE held: lock them on (again: notes; the locks stay); SEL + FX: locks off",
-  ENV: "Lead; again: Daydream; again: Daydream 2", ARP: "Answer", LFO: "Comp; again: Comp style", EDIT: "Bass", GLO: "Dust, Dust 2, Space, Global (on the FM-1: SEL + GLO plays this emulator from its panel)",
+  ENV: "Lead; again: Daydream; again: Daydream 2", ARP: "Answer", LFO: "Comp; again: Comp style", EDIT: "Bass", GLO: "Dust, Dust 2, Space, Global, Global 2 (on the FM-1: SEL + GLO plays this emulator from its panel)",
   HOME: "Groove; again: Groove 2 (Drift)", SAVE: "Side B: a breakdown on the next bar (on Global: store the preset; held: the factory's back)", SEQ: "Drums; again: Kit; held: the sequencer; SEL + SEQ: a change on the next bar",
   PLAY: "Play / stop", REC: "Chord hold", "OCT-": "The lead an octave down (sequencer: the lane)", "OCT+": "The lead an octave up (sequencer: the lane)",
   SELECT: "Pages (HOME held: the tempo)", ALGORITHM: "The page's instrument, kit or character; elsewhere the root", PRESETS: "The preset, 01–10",

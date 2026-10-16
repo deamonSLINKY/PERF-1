@@ -230,7 +230,7 @@ static void safe_main(void)
 
 static void splash(void)
 {
-    lcd_fill(0, 0, 240, 240, RGB(22, 26, 23));       /* the night garden, until the UI's RedtailWorks card (ui_init) */
+    lcd_fill(0, 0, 240, 240, RGB(26, 22, 36));       /* lamp-lit dusk, until the UI's RedtailWorks card (ui_init) */
     lcd_sync();
 }
 

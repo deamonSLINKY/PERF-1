@@ -20,12 +20,13 @@
 #include "crt.c"
 
 enum { V_GROOVE, V_GROOVE2, V_LEAD, V_DREAM, V_DREAM2, V_COMP, V_CSTYLE, V_BASS, V_ANS, V_DRUMS, V_KIT, V_DUST, V_DUST2,
-       V_SPACE, V_GLOBAL, NVIEWS };
+       V_SPACE, V_GLOBAL, V_GLOBAL2, NVIEWS };
 static const char *const VIEW_NAME[NVIEWS] = {"Groove", "Groove 2", "Lead", "Daydream", "Daydream 2", "Comp", "Comp style",
-                                              "Bass", "Answer", "Drums", "Kit", "Dust", "Dust 2", "Space", "Global"};
+                                              "Bass", "Answer", "Drums", "Kit", "Dust", "Dust 2", "Space", "Global",
+                                              "Global 2"};
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_HOME, B_ENV, B_ENV, B_ENV, B_LFO, B_LFO, B_EDIT, B_ARP, B_SEQ, B_SEQ,
-                                         B_GLO, B_GLO, B_GLO, B_GLO};
-enum { K_LEDS = 100, K_CPU, K_NONE };
+                                         B_GLO, B_GLO, B_GLO, B_GLO, B_GLO};
+enum { K_LEDS = 100, K_CPU, K_NONE, K_THEME, K_CRT };
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_SWING, P_JAZZ, P_BUSY},
     {P_DRIFT, P_DRIFT_DRUMS, P_DRIFT_POOL, P_DRIFT_CHORDS},
@@ -42,6 +43,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_GRAIN, P_SMEAR, P_DUCK, P_HUM},
     {P_TAPE, P_MELLOW, P_ROOM, P_ECHO},
     {P_ROOT, P_SCALE, P_SNAP, P_MIDI},
+    {K_THEME, K_CRT, P_TUNE, K_LEDS},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tempo", "Swing", "Jazz", "Busy"},      {"Drift", "Drums", "Pool", "Chords"},
@@ -52,23 +54,55 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Tone", "Chatty", "Echo"},     {"Level", "Crunch", "Pattern", "Fill"},
     {"Kick", "Snare", "Hats", "Perc"},       {"Level", "Age", "Surface", "Hiss"},
     {"Grain", "Smear", "Duck", "Hum"},       {"Tape", "Mellow", "Room", "Echo"},
-    {"Root", "Scale", "Keys", "MIDI"},
+    {"Root", "Scale", "Keys", "MIDI"},       {"Theme", "CRT", "Tune", "Lights"},
 };
 
-/* the screen's colours: a late-night study room, dusk purple and lamp-light peach */
-#define K_BG RGB(26, 22, 36)
-#define K_PANEL RGB(46, 40, 62)
-#define K_LINE RGB(70, 62, 92)
-#define K_DIM RGB(150, 138, 170)
-#define K_TEXT RGB(242, 234, 222)
-#define K_ACC RGB(255, 176, 124)          /* the accent: lamp light */
-#define K_TEAL RGB(126, 204, 192)         /* the second colour: the comp, the answer */
-#define K_VINYL RGB(18, 16, 22)
-#define K_GROOVE RGB(44, 40, 52)
-#define K_RUST RGB(200, 84, 32)
-#define K_RINGS RGB(232, 156, 92)
+/* the screen's colours, five themes (Global 2 > Theme): a ground, its panel and lines, the dim and the bright
+ * text, the accent (lamp light: what is live), a second colour (the comp, the answer, solos), the bass's
+ * and the answer's keys, the record and its grooves, the boot card's shadow and rings, a lock, a mute */
+typedef struct {
+    const char *name;
+    uint16_t bg, panel, line, dim, text, acc, teal, bass, ans, vinyl, groove, rust, rings, lock, mute, key;
+} theme_t;
+#define NTHEMES 5
+static const theme_t THEMES[NTHEMES] = {
+    /* Lamp: a late-night study room, dusk purple and lamp-light peach */
+    {"Lamp", RGB(26, 22, 36), RGB(46, 40, 62), RGB(70, 62, 92), RGB(150, 138, 170), RGB(242, 234, 222),
+     RGB(255, 176, 124), RGB(126, 204, 192), RGB(214, 170, 90), RGB(170, 150, 230), RGB(18, 16, 22), RGB(44, 40, 52),
+     RGB(200, 84, 32), RGB(232, 156, 92), RGB(196, 140, 255), RGB(96, 80, 140), RGB(214, 206, 196)},
+    /* Matcha: a tea house, deep green, matcha, a pink blossom */
+    {"Matcha", RGB(18, 26, 20), RGB(34, 48, 38), RGB(54, 74, 58), RGB(140, 164, 138), RGB(236, 240, 222),
+     RGB(176, 220, 120), RGB(240, 160, 180), RGB(220, 196, 120), RGB(150, 200, 220), RGB(14, 18, 15), RGB(36, 46, 38),
+     RGB(80, 120, 50), RGB(196, 220, 150), RGB(250, 200, 120), RGB(70, 100, 80), RGB(214, 220, 200)},
+    /* Sakura: plum night, cherry-blossom pink, mint */
+    {"Sakura", RGB(30, 20, 30), RGB(54, 36, 54), RGB(84, 58, 82), RGB(176, 144, 170), RGB(250, 236, 242),
+     RGB(255, 160, 196), RGB(140, 220, 196), RGB(240, 200, 140), RGB(190, 170, 250), RGB(20, 14, 20), RGB(48, 36, 48),
+     RGB(190, 70, 110), RGB(250, 190, 210), RGB(170, 210, 255), RGB(110, 70, 110), RGB(230, 214, 222)},
+    /* Midnight: a city at 3 AM, navy, a sodium streetlight, rain blue */
+    {"Midnight", RGB(14, 18, 34), RGB(28, 36, 62), RGB(46, 58, 92), RGB(130, 146, 184), RGB(230, 236, 250),
+     RGB(255, 196, 92), RGB(110, 190, 255), RGB(240, 150, 100), RGB(190, 150, 255), RGB(10, 12, 22), RGB(32, 38, 58),
+     RGB(200, 120, 40), RGB(255, 210, 130), RGB(255, 120, 170), RGB(60, 70, 130), RGB(206, 214, 232)},
+    /* Sepia: an old photograph, brown and cream */
+    {"Sepia", RGB(30, 24, 18), RGB(52, 42, 32), RGB(80, 66, 50), RGB(168, 150, 124), RGB(246, 234, 210),
+     RGB(240, 196, 130), RGB(196, 176, 140), RGB(226, 160, 100), RGB(200, 186, 160), RGB(20, 16, 12), RGB(48, 40, 30),
+     RGB(150, 90, 50), RGB(230, 190, 140), RGB(255, 226, 170), RGB(100, 84, 64), RGB(226, 214, 192)},
+};
+static const theme_t *th = &THEMES[0];
+#define K_BG (th->bg)
+#define K_PANEL (th->panel)
+#define K_LINE (th->line)
+#define K_DIM (th->dim)
+#define K_TEXT (th->text)
+#define K_ACC (th->acc)                   /* the accent: lamp light */
+#define K_TEAL (th->teal)                 /* the second colour: the comp, the answer */
+#define K_VINYL (th->vinyl)
+#define K_GROOVE (th->groove)
+#define K_RUST (th->rust)
+#define K_RINGS (th->rings)
 #define K_FILL K_ACC                      /* a knob's fill */
-#define K_LOCK RGB(196, 140, 255)         /* an effect locked on */
+#define K_LOCK (th->lock)                 /* an effect locked on */
+#define K_MUTE (th->mute)
+#define K_KEY (th->key)                   /* a key at rest on the voices' keyboards and the FX map */
 static const uint16_t TAPE_COL[10] = {RGB(232, 120, 96), RGB(120, 168, 220), RGB(214, 170, 90), RGB(150, 200, 120),
                                      RGB(170, 130, 210), RGB(220, 150, 80), RGB(200, 220, 236), RGB(240, 160, 190), RGB(180, 140, 100), RGB(110, 120, 190)};
 
@@ -98,9 +132,10 @@ static struct {
     uint32_t input_t;                  /* the last touch: a button, a key, a knob, a MIDI note */
     uint8_t saver, sv_shown;           /* the screensaver up; the pose on screen */
     uint32_t sv_t;                     /* input_t when it came up: any touch since takes it down */
+    uint8_t theme, crt;                /* the theme and the CRT look drawn (a change: everything again) */
 } ui;
 uint32_t ui_splash_ms = 3200u;
-uint32_t ui_saver_ms = 60000u;         /* the screensaver after this long untouched (0: never) */
+uint32_t ui_saver_ms = 30u * 60000u;   /* the screensaver after this long untouched (0: never): an easter egg */
 
 /* a rectangle with rounded corners (radius r, up to 6) */
 static void cv_round(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
@@ -279,6 +314,10 @@ static int knob_get(int k)
         return proj.par[k];
     if (k == K_LEDS)
         return proj.leds;
+    if (k == K_THEME)
+        return proj.theme;
+    if (k == K_CRT)
+        return proj.crt;
     if (k == K_CPU)
         return (int)plat_cpu_pct();
     return 0;
@@ -290,16 +329,31 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = en_param_info(k)->hi;
     } else {
         *lo = 0;
-        *hi = k == K_LEDS ? 2 : k == K_CPU ? 100 : 0;
+        *hi = k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_THEME ? NTHEMES - 1 : k == K_CRT ? 1 : 0;
     }
 }
 static void knob_text(int k, char *b)
 {
     int v = knob_get(k);
-    if (k < P_NPARAMS)
+    static const char *const LEDS[3] = {"Off", "Glow", "Keys"};
+    const char *s = 0;
+    if (k < P_NPARAMS) {
         en_param_text(k, v, b);
-    else
+        return;
+    }
+    if (k == K_LEDS)
+        s = LEDS[(unsigned)v < 3u ? v : 0];
+    else if (k == K_THEME)
+        s = THEMES[(unsigned)v < NTHEMES ? v : 0].name;
+    else if (k == K_CRT)
+        s = v ? "On" : "Off";
+    if (!s) {
         b[0] = 0;
+        return;
+    }
+    while (*s)
+        *b++ = *s++;
+    *b = 0;
 }
 static void knob_set(int k, int v)
 {
@@ -315,6 +369,10 @@ static void knob_set(int k, int v)
         en_set(k, v);
     } else if (k == K_LEDS) {
         proj.leds = (uint8_t)v;
+    } else if (k == K_THEME) {
+        proj.theme = (uint8_t)v;
+    } else if (k == K_CRT) {
+        proj.crt = (uint8_t)v;
     }
     mark_dirty();
 }
@@ -486,7 +544,7 @@ static void button(int b)
             return;
         }
 #endif
-        v = ui.view >= V_DUST && ui.view < V_GLOBAL ? ui.view + 1 : V_DUST;
+        v = ui.view >= V_DUST && ui.view < V_GLOBAL2 ? ui.view + 1 : V_DUST;
         set_view(v);
         return;
     case B_FX:
@@ -506,6 +564,13 @@ static void button(int b)
         say("CHORD HOLD", en_held ? "OFF" : "ON");
         return;
     case B_SAVE:
+        if (ui.view == V_GLOBAL2) {             /* Global 2: store the theme, CRT, Tune, lights alone */
+            if (project_save_globals() == 0)
+                say("STORED", "SETTINGS");
+            else
+                say("NOT STORED", "FLASH ERROR");
+            return;
+        }
         if (ui.view == V_GLOBAL) {              /* Global: store the preset */
             if (project_save() == 0) {
                 ui.dirty = 0;
@@ -1205,7 +1270,7 @@ static void draw_chord_panel(int32_t x0)
 /* a voice's page: its instrument, and its notes on a keyboard of three octaves */
 static void draw_voice(int trk)
 {
-    static const uint16_t COL[4] = {K_ACC, K_TEAL, RGB(214, 170, 90), RGB(170, 150, 230)};
+    const uint16_t COL[4] = {K_ACC, K_TEAL, th->bass, th->ans};
     static const uint8_t LOW[4] = {48, 48, 28, 60};   /* the keyboard's lowest note: C3, C3, E1, C4 */
     static const int PI_[4] = {P_LEAD_INST, P_COMP_INST, P_BASS_INST, P_ANS_INST};
     char t[16], c[16];
@@ -1240,7 +1305,7 @@ static void draw_voice(int trk)
         if (black)
             continue;
         lit = k < 32 ? (int)(on >> k & 1u) : (int)(on2 >> (k - 32) & 1u);
-        cv_round(kx + wk * ww, ky, ww - 1, 58, 2, lit ? COL[trk] : RGB(214, 206, 196));
+        cv_round(kx + wk * ww, ky, ww - 1, 58, 2, lit ? COL[trk] : K_KEY);
         wk++;
     }
     wk = 0;
@@ -1338,9 +1403,9 @@ static void draw_fx_map(void)
     uint32_t held = ui.keys & ~ui.lock_keys, lk = ui.fx_lock;
     int i, row;
     cv_text(6, 0, &FONT_XS, ui.lock_mode ? "LOCK: TAP KEYS" : "HOLD, OR SAVE+KEY", ui.lock_mode ? K_LOCK : K_ACC);
-    cv_round(112, 2, 8, 8, 2, RGB(96, 80, 140));
+    cv_round(112, 2, 8, 8, 2, K_MUTE);
     cv_text(122, 0, &FONT_XS, "MUTE", K_DIM);
-    cv_round(152, 2, 8, 8, 2, RGB(48, 110, 104));
+    cv_round(152, 2, 8, 8, 2, mix(K_TEAL, K_BG, 9));
     cv_text(162, 0, &FONT_XS, "SOLO", K_DIM);
     cv_round(192, 2, 8, 8, 2, K_LOCK);
     cv_text(202, 0, &FONT_XS, "LOCK", K_DIM);
@@ -1350,7 +1415,7 @@ static void draw_fx_map(void)
             int w = row * 8 + i, on = held >> WHITE_KEY[w] & 1u, mute = w >= 8 && w < 14;
             int lock = lk >> fx_bit_of(WHITE_KEY[w]) & 1u;
             int32_t x = x0 + i * xw;
-            cv_round(x, y0 + 24, xw - 2, 36, 3, on ? K_ACC : lock ? K_LOCK : mute ? RGB(96, 80, 140) : RGB(214, 206, 196));
+            cv_round(x, y0 + 24, xw - 2, 36, 3, on ? K_ACC : lock ? K_LOCK : mute ? K_MUTE : K_KEY);
             text_c(x + (xw - 2) / 2, y0 + 44, &FONT_XS, WN[w], on || lock ? K_BG : mute ? K_TEXT : K_BG);
         }
         for (i = 0; i < 11; i++) {
@@ -1359,7 +1424,7 @@ static void draw_fx_map(void)
             int32_t x = x0 + (r - row * 8) * xw - 14;
             if (krow != row)
                 continue;
-            cv_round(x + 1, y0, 24, 22, 3, on ? K_ACC : lock ? K_LOCK : i >= 5 ? RGB(48, 110, 104) : RGB(92, 84, 110));
+            cv_round(x + 1, y0, 24, 22, 3, on ? K_ACC : lock ? K_LOCK : i >= 5 ? mix(K_TEAL, K_BG, 9) : mix(K_MUTE, K_DIM, 4));
             text_c(x + 13, y0 + 6, &FONT_XS, BN[i], on || lock ? K_BG : K_TEXT);
         }
     }
@@ -1688,9 +1753,18 @@ static void sv_swallow(void)
         ui.input_t = now;
 }
 
+static void look_apply(void)                     /* the theme and the CRT look, as the project has them */
+{
+    ui.theme = proj.theme < NTHEMES ? proj.theme : 0;
+    ui.crt = proj.crt ? 1u : 0u;
+    th = &THEMES[ui.theme];
+    crt_mode = ui.crt;
+}
+
 void ui_init(void)
 {
     memset(&ui, 0, sizeof ui);
+    look_apply();
     ui.touched = -1;
     ui.boot_t = plat_ms();
     ui.input_t = ui.boot_t;
@@ -1733,6 +1807,13 @@ void ui_frame(void)
             en_play(1);
     }
     input();
+    if (ui.theme != proj.theme || ui.crt != (proj.crt ? 1u : 0u)) {   /* a new look: everything again */
+        look_apply();
+        if (!ui.saver) {
+            crt_fill(0, 0, 240, 240, K_BG);
+            ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
+        }
+    }
     crt_tick();
     if (ui.saver && ui.input_t != ui.sv_t)
         sv_leave();
