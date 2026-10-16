@@ -103,6 +103,11 @@ footer .ver { font-family: "Barlow Semi Condensed", sans-serif; color: var(--mut
        background: #e8873a; border-radius: 999px; padding: .15em .7em; margin-left: .2rem; }
 .expnote { background: #2a1d10; border: 1px solid #e8873a; border-radius: 10px; padding: 12px 16px; margin: 0 0 1.4rem; color: #f3dcc4; }
 .expnote b { color: #ffb070; }
+.video { margin: 0 0 1.8rem; }
+.video .frame { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 1px solid var(--rule); background: #000; }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video figcaption { display: flex; flex-wrap: wrap; gap: .3rem 1rem; justify-content: space-between; }
+.video figcaption a { color: var(--orange); }
 @media (max-width: 560px) { .lede { font-size: 1.15rem; } h2 { font-size: 1.25rem; } }
 </style>
 </head>
@@ -122,6 +127,11 @@ record crackles.</p>
   <a href="manual/"><strong>Manual</strong><span>Every page, every button, every effect, on one page.</span></a>
   <a href="firmware/__PKG__"><strong>Download <em class="v">__PKG__</em></strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
 </nav>
+<figure class="video">
+  <div class="frame"><iframe src="https://www.youtube-nocookie.com/embed/xtAcRBehhgc?rel=0" title="LOF-1: ambient lofi for the M-VAVE FM-1" loading="lazy"
+    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+  <figcaption><span>LOF-1 on the FM-1: play the lead and the band follows, or let it play by itself.</span><a href="https://www.youtube.com/watch?v=xtAcRBehhgc">Watch on YouTube</a></figcaption>
+</figure>
 <h2>The band</h2>
 <div class="grid">
   <div class="card"><h3>You: the lead</h3><p>Twenty instruments on the keys: <b>Rhodes, Wurli, FM piano, two uprights, vibes, marimba, kalimba, glock, harp, strumstick, muted trumpet, tenor sax, clarinet, flute, ocarina, harmonica, bell, music box, sine</b>. Single notes, or whole chords on each key.</p></div>
