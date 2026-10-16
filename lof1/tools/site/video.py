@@ -6,6 +6,7 @@ script is written in bars and beats at 70 BPM and turned into the simulator's mi
 
   host/build_host.sh && python3 tools/site/video.py        ->  build/video/lof1-features.mp4 (16:9)
   python3 tools/site/video.py --reuse                      ->  the simulator's frames as they are, drawn again
+  python3 tools/site/video.py --short drums|dream|dust     ->  build/video/lof1-short-NAME.mp4 (9:16, a minute)
 
 Preset 05 (Nightshift: A minor, 70 BPM, a warm pad under a tenor sax), the answer on the ocarina.
 After HYP-1's tools/site/video.py. Needs cairosvg, Pillow, ffmpeg and the fonts in assets/fonts."""
@@ -75,9 +76,11 @@ class Show:
         self.ev.append((self.ms(beat), order, s))
         self.end = max(self.end, self.ms(beat))
 
-    def cap(self, b0, b1, title, sub=""):
+    def cap(self, b0, b1, title, sub="", view=None):
         self.caps.append((self.ms(b0), self.ms(b1), title, sub))
         self.end = max(self.end, self.ms(b1))
+        if view is not None:                     # the script checks itself: on this page by then
+            self.line(b0 + 1, f"expect view {view}", 3)
 
     def tap(self, beat, b, hold=0.15):           # a button, pressed for hold beats
         self.line(beat, f"press {b}")
@@ -408,6 +411,153 @@ def features():
     return s
 
 
+def end_card(s, b):
+    s.cap(b, b + 8, "LOF-1  ·  RedtailWorks", "free lofi firmware for the M-VAVE FM-1  ·  try it in your browser: "
+                                             "rustypawz.github.io/fm1-HYP1/lof")
+    s.phrase(b, P1)
+    for i in range(12):
+        s.line(b + 2 + i * 0.5, f"master {max(0, 3000 - (i + 1) * 250)}")
+    s.end = s.ms(b + 8)
+
+
+def short_drums():
+    s = Show()
+    b = 0.0
+    s.cap(-0.1, 4, "THE DRUM SEQUENCER", "LOF-1: a lofi groovebox for the M-VAVE FM-1", view=0)
+    s.go(4 - 0.1, "SEQ")
+    b = 4.0
+    s.cap(b, b + 12, "EIGHT PATTERNS", "SEL + a white key picks one. It changes on the next bar", view=9)
+    for i, w in enumerate([5, 2, 7]):
+        s.hold(b + 4 * i, b + 4 * i + 0.6, "SEL")
+        s.note(b + 4 * i + 0.2, 0.3, M.WHITE_K[w])
+    b += 12
+    s.go(b - 0.1, "SEQ")
+    s.cap(b, b + 8, "THE KIT", "ALGORITHM: sampled drums or synthesized ones. K1–K4 tune the kick, snare, hats, perc",
+          view=10)
+    s.spin(b, "ALGO", 1, 0.3)
+    s.spin(b + 2, "K3", 20, 0.08)
+    s.spin(b + 5, "K3", -20, 0.06)
+    s.spin(b + 6, "ALGO", -1, 0.3)
+    b += 8
+    s.cap(b, b + 20, "HOLD SEQ: STEP EDIT", "the sixteen white keys are the steps. OCT− / OCT+ walk the eight lanes",
+          view=9)
+    s.hold(b, b + 0.9, "SEQ")
+    for i, w in enumerate([3, 10, 11]):
+        s.note(b + 1.5 + i * 0.5, 0.2, M.WHITE_K[w])
+    s.tap(b + 5, "OCT+")
+    for i, w in enumerate([7, 15]):
+        s.note(b + 5.8 + i * 0.5, 0.2, M.WHITE_K[w])
+    s.tap(b + 9, "OCT+")
+    for i, w in enumerate([1, 5, 9, 13]):
+        s.note(b + 9.8 + i * 0.35, 0.15, M.WHITE_K[w])
+    s.tap(b + 14, "OCT+")
+    for i, w in enumerate([6, 14]):
+        s.note(b + 14.8 + i * 0.5, 0.2, M.WHITE_K[w])
+    s.tap(b + 19.3, "SEQ")
+    b += 20
+    s.cap(b, b + 8, "CRUNCH AND FILLS", "dirt on the drums, and how often a fill rolls in", view=9)
+    s.spin(b, "K2", 40, 0.07)
+    s.spin(b + 3, "K4", 40, 0.06)
+    s.spin(b + 5.2, "K2", -40, 0.03)
+    s.spin(b + 6.5, "K4", -40, 0.02)
+    b += 8
+    s.go(b - 0.1, "HOME", "HOME")
+    s.cap(b, b + 8, "DRIFT", "every few bars it changes by itself. SEL + SEQ: a new groove on the next bar", view=1)
+    s.shift(b + 1, "SEQ")
+    s.phrase(b + 4, LICK)
+    b += 8
+    end_card(s, b)
+    return s
+
+
+def short_dream():
+    s = Show()
+    b = 0.0
+    s.cap(-0.1, 4, "PLAY IT, OR LET IT DREAM", "LOF-1: a lofi groovebox for the M-VAVE FM-1. The band's already going",
+          view=0)
+    b = 4.0
+    s.cap(b, b + 16, "YOU PLAY THE LEAD", "the band hears the chord your notes imply, and follows you on the beat",
+          view=0)
+    s.phrase(b, P1)
+    s.phrase(b + 8, P4)
+    b += 16
+    s.go(b - 0.1, "ARP")
+    s.cap(b, b + 16, "LEAVE A GAP", "and the ocarina answers your phrase", view=8)
+    s.phrase(b, CALL)
+    s.phrase(b + 8, CALL2)
+    b += 16
+    s.go(b - 0.1, "ENV", "ENV")
+    s.cap(b, b + 16, "HANDS OFF: DAYDREAM", "a ghost takes the lead when the keys rest (Wait: Always, for the demo). "
+                                           "Fill: how much it plays", view=3)
+    s.spin(b, "K1", 2, 0.3)
+    s.spin(b + 8, "K2", 30, 0.09)
+    b += 16
+    s.cap(b, b + 8, "ANY KEY", "and the lead is yours again", view=3)
+    s.spin(b, "K1", -2, 0.2)
+    s.spin(b + 0.6, "K2", -30, 0.04)
+    s.phrase(b + 1.5, LICK)
+    b += 8
+    end_card(s, b)
+    return s
+
+
+def short_dust():
+    s = Show()
+    b = 0.0
+    s.cap(-0.1, 4, "TAPE, VINYL, RADIO", "LOF-1's DUST: the noise under the music, on the M-VAVE FM-1", view=0)
+    s.go(4 - 0.1, "GLO")
+    b = 4.0
+    s.cap(b, b + 8, "CASSETTE", "hiss, wow and a worn tape. K4: the hiss", view=11)
+    s.spin(b, "K1", 20, 0.08)
+    s.spin(b + 2, "K4", 30, 0.07)
+    s.spin(b + 6, "K4", -30, 0.04)
+    b += 8
+    for name, sub in [("REEL TO REEL", "a slow, wide haze"),
+                      ("THE RADIO", "static between the stations"),
+                      ("VINYL", "crackle and pops. K2, Age: a record played a thousand times")]:
+        s.cap(b, b + 8, name, sub, view=11)
+        s.spin(b, "ALGO", 1, 0.3)
+        if name == "VINYL":
+            s.spin(b + 1.5, "K2", 45, 0.06)
+            s.spin(b + 6.5, "K2", -45, 0.02)
+        b += 8
+    s.spin(b - 0.2, "ALGO", 1, 0.2)
+    s.go(b - 0.1, "GLO")
+    s.cap(b, b + 8, "GRAIN", "DUST 2: a haze made of the music itself", view=12)
+    s.spin(b, "K1", 45, 0.07)
+    s.phrase(b + 1, LICK)
+    s.spin(b + 6.5, "K1", -45, 0.03)
+    b += 8
+    s.go(b - 0.1, "GLO")
+    s.cap(b, b + 8, "SPACE: TAPE", "wow and flutter and saturation, then an echo", view=13)
+    s.spin(b, "K1", 40, 0.07)
+    s.spin(b + 2, "K4", 30, 0.06)
+    s.phrase(b + 2.5, CALL2)
+    s.spin(b + 5.2, "K1", -40, 0.03)
+    s.spin(b + 6.5, "K4", -30, 0.02)
+    b += 8
+    s.go(b - 0.1, "HOME", "FX")
+    s.cap(b, b + 8, "TAPE ON THE KEYS", "FX: a tape stop, a backspin, the radio", view=0)
+    s.note(b + 0.5, 2, M.WHITE_K[4])
+    s.note(b + 3, 1, M.WHITE_K[5])
+    s.note(b + 5, 2.5, M.WHITE_K[7])
+    s.tap(b + 7.7, "FX")
+    b += 8
+    end_card(s, b)
+    return s
+
+
+SHORTS = {"drums": short_drums, "dream": short_dream, "dust": short_dust}
+
+# the shorts' pre-roll: as the tour's, with the upright bass and the ocarina (Chatty up) stored in preset 05
+PRE_SHORT = (["master 3000"] + ["spin PRESET 1", "wait 200"] * 4 +
+             ["tap EDIT", "wait 100", "spin ALGO -1", "wait 100", "tap ARP", "wait 100"] +
+             ["spin ALGO 1", "wait 80"] * 11 + ["spin K3 1", "wait 50"] * 30 +
+             ["tap LFO", "tap LFO", "wait 200", "spin K2 30", "wait 200",
+              "tap GLO", "tap GLO", "tap GLO", "tap GLO", "tap SAVE", "wait 1000", "tap HOME", "wait 300",
+              "splash 1500", "reboot", "wav tour.wav"])
+
+
 # the pre-roll (not filmed): preset 05 stored as the one to start on, the pad held longer, then a reboot
 PRE = ["master 3000", "spin PRESET 1", "wait 200", "spin PRESET 1", "wait 200", "spin PRESET 1", "wait 200",
        "spin PRESET 1", "wait 300", "tap GLO", "tap GLO", "tap GLO", "tap GLO", "tap SAVE", "wait 1000",
@@ -455,11 +605,32 @@ def wrap(d, s, font, width):
     return lines + [cur] if cur else lines
 
 
+def vertical():
+    """the shorts: 1080 x 1920, the caption on top, the screen large, the FM-1 under it"""
+    global W, H, SCALE, DX, DY, BIG, BX, BY, CAP_X, CAP_Y, FOOT
+    W, H = 1080, 1920
+    SCALE = 0.98
+    DX, DY = 50, 1222
+    BIG, BX, BY = 820, 130, 372
+    CAP_X, CAP_Y, FOOT = 64, 86, (W // 2, H - 26)
+
+
 def main():
+    global OUT
     reuse = "--reuse" in sys.argv
+    short = sys.argv[sys.argv.index("--short") + 1] if "--short" in sys.argv else None
+    if short:
+        vertical()
+        OUT = SRC / "build" / "video" / f"short-{short}"
+        show, pre, name = SHORTS[short](), PRE_SHORT, f"lof1-short-{short}.mp4"
+        show.line(0.5, "expect par55 11", 3)
+        show.line(0.5, "expect par52 9", 3)
+        for t0, _, title, _ in show.caps:
+            show.ev.append((t0 + BEAT, 3, "expect par0 70"))
+    else:
+        show, pre, name = features(), PRE, "lof1-features.mp4"
     OUT.mkdir(parents=True, exist_ok=True)
-    show = features()
-    for t0, _, title, _ in show.caps:            # the script checks itself: the page, A minor, the voices
+    for t0, _, title, _ in show.caps if not short else []:            # the script checks itself: the page, A minor, the voices
         v = next((v for k, v in VIEW_AT if title.startswith(k)), None)
         if v is not None:
             show.ev.append((t0 + BEAT, 3, f"expect view {v}"))
@@ -471,7 +642,7 @@ def main():
     if not (reuse and (OUT / "frames.txt").exists() and (OUT / "tour.wav").exists()):
         for f in OUT.glob("frame_*.png"):
             f.unlink()
-        (OUT / "tour.amb").write_text("\n".join(show.compile(PRE)) + "\n")
+        (OUT / "tour.amb").write_text("\n".join(show.compile(pre)) + "\n")
         r = subprocess.run([str(SRC / "build" / "host" / "amb_host"), str(OUT / "tour.amb"), str(OUT)],
                            capture_output=True, text=True)
         bad = [l for l in r.stdout.splitlines() if l.startswith("FAIL")]
@@ -486,8 +657,8 @@ def main():
     base, lit_b, lit_p = device_png(), device_png(btns=allb), device_png(btns={"PLAY"})
     lit_k, held_k = device_png(keys=allk), device_png(held=allk)
     bg = ground()
-    font_a = ImageFont.truetype(str(SRC / "assets" / "fonts" / "BarlowSemiCondensed-Bold.ttf"), 50)
-    font_b = ImageFont.truetype(str(SRC / "assets" / "fonts" / "BarlowSemiCondensed-Medium.ttf"), 34)
+    font_a = ImageFont.truetype(str(SRC / "assets" / "fonts" / "BarlowSemiCondensed-Bold.ttf"), 74 if short else 50)
+    font_b = ImageFont.truetype(str(SRC / "assets" / "fonts" / "BarlowSemiCondensed-Medium.ttf"), 42 if short else 34)
     font_c = ImageFont.truetype(str(SRC / "assets" / "fonts" / "BarlowSemiCondensed-SemiBold.ttf"), 26)
     sx, sy = px(318, 62)
     big_frame = Image.new("RGBA", (BIG + 44, BIG + 44), (0, 0, 0, 0))
@@ -501,13 +672,13 @@ def main():
                            "-af", f"loudnorm=I=-14:TP=-1.5:LRA=11,afade=t=in:d=0.5,afade=t=out:st={dur - 2:.2f}:d=2",
                            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-preset", "medium",
                            "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart",
-                           str(OUT / "lof1-features.mp4")], stdin=subprocess.PIPE)
+                           str(OUT.parent / name if short else OUT / name)], stdin=subprocess.PIPE)
     for fn, lb, lk, hb, hk in log:
         dev = base.copy()
-        for i, name in enumerate(BTN):
+        for i, bn in enumerate(BTN):
             if lb >> i & 1:
-                r = region(BTN_BOX[name])
-                dev.paste((lit_p if name == "PLAY" else lit_b).crop(r), r[:2])
+                r = region(BTN_BOX[bn])
+                dev.paste((lit_p if bn == "PLAY" else lit_b).crop(r), r[:2])
         for k, box in KEY_BOX.items():
             if hk >> k & 1:
                 r = region(box, 8)
@@ -522,9 +693,9 @@ def main():
         frame.alpha_composite(big_frame, (BX - 22, BY - 22))
         frame.paste(shot.resize((BIG, BIG), Image.NEAREST), (BX, BY))
         d = ImageDraw.Draw(frame)
-        for i, name in enumerate(BTN):                      # pressed: an orange ring
+        for i, bn in enumerate(BTN):                        # pressed: an orange ring
             if hb >> i & 1:
-                x, y, w, h = BTN_BOX[name]
+                x, y, w, h = BTN_BOX[bn]
                 a, b = px(x - 4, y - 4)
                 c, e = px(x + w + 4, y + h + 4)
                 d.rounded_rectangle((a, b, c, e), radius=int(13 * SCALE), outline=(255, 160, 100, 255), width=5)
@@ -534,20 +705,27 @@ def main():
             a, b = px(x - r - 9, y - r - 9)
             c, e = px(x + r + 9, y + r + 9)
             d.ellipse((a, b, c, e), outline=(255, 160, 100, 255), width=5)
-        if ca:
+        if ca and short:
+            x0, y0 = CAP_X, CAP_Y
+            d.rectangle((x0, y0, x0 + 70, y0 + 8), fill=(255, 176, 124, 255))
+            d.rectangle((x0 + 76, y0, x0 + 110, y0 + 8), fill=(126, 204, 192, 255))
+            d.text((x0, y0 + 22), ca, font=font_a, fill=(242, 234, 222, 255))
+            for i, ln in enumerate(wrap(d, cb, font_b, W - 2 * x0)[:3] if cb else []):
+                d.text((x0, y0 + 112 + i * 50), ln, font=font_b, fill=(190, 178, 206, 255))
+        elif ca:
             x0, y0, tw = CAP_X, CAP_Y, BX - 50 - CAP_X - 128
             d.rectangle((x0, y0 + 22, x0 + 70, y0 + 29), fill=(255, 176, 124, 255))
             d.rectangle((x0 + 76, y0 + 22, x0 + 110, y0 + 29), fill=(126, 204, 192, 255))
             d.text((x0 + 128, y0), ca, font=font_a, fill=(242, 234, 222, 255))
             for i, ln in enumerate(wrap(d, cb, font_b, tw)[:2] if cb else []):
                 d.text((x0 + 128, y0 + 58 + i * 38), ln, font=font_b, fill=(190, 178, 206, 255))
-        d.text(FOOT, "LOF-1  ·  RedtailWorks", font=font_c, fill=(130, 120, 150, 255), anchor="rs")
+        d.text(FOOT, "LOF-1  ·  RedtailWorks", font=font_c, fill=(130, 120, 150, 255), anchor="ms" if short else "rs")
         ff.stdin.write(frame.convert("RGB").tobytes())
         if fn % 900 == 0:
             print(f"  {fn / FPS:6.1f} s", flush=True)
     ff.stdin.close()
     ff.wait()
-    print("wrote", (OUT / "lof1-features.mp4").relative_to(SRC), f"({len(log)} frames, {dur:.0f} s)")
+    print("wrote", name, f"({len(log)} frames, {dur:.0f} s)")
 
 
 if __name__ == "__main__":
