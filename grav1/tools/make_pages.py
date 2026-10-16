@@ -148,7 +148,7 @@ planets swell smaller ones as they pass, and dust clouds, asteroids and comets d
 <figure><img src="img/grav-systems.png" width="2544" height="1112" alt="Ten GRAV-1 screens: Sol, Lumen, Rosette, Ember, Rigel, Veil, Cinder, Horizon, Kuiper and Nova, each its own star and planets."></figure>
 <p>One for each of the star's colours and two more. Each keeps its own settings; SAVE on the Setup page keeps all ten.</p>
 <div class="pair">
-  <figure><img src="img/grav-device-pulse.png" width="1600" height="1161" alt="The FM-1 on the Pulse page: the white keys lit with the lane's steps."><figcaption><b>The Pulse:</b> on SEQ the white keys are the lane's 16 steps and black keys 1&ndash;6 pick the lane. More hits, a faster year, a closer orbit.</figcaption></figure>
+  <figure><img src="img/grav-device-pulse.png" width="1600" height="1161" alt="The FM-1 in the sequencer: six lanes of 16 steps, the white keys lit with the lane's steps."><figcaption><b>The sequencer:</b> hold SEQ for eight banks of six lanes. The white keys are the lane's steps, black keys or OCT pick the lane, SELECT the bank. More hits, a faster year, a closer orbit.</figcaption></figure>
   <figure><img src="img/grav-device-weather.png" width="1600" height="1161" alt="The FM-1 in a dust cloud, an asteroid crossing."><figcaption><b>Weather:</b> dust, asteroids and comets come by on their own, or when you call them.</figcaption></figure>
 </div>
 <h2>Themes</h2>

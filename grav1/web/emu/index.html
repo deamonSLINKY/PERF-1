@@ -28,6 +28,55 @@ header p { margin: 0; color: var(--muted); }
 header nav { margin-left: auto; display: flex; gap: 1rem; }
 header nav a[aria-current] { text-decoration: none; color: var(--river-2); }
 a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.device { position: relative; width: 100%; aspect-ratio: 1000 / 640; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.device svg { pointer-events: none; }
+.hit { position: absolute; touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 12px; }
+.hit.knob { cursor: ns-resize; border-radius: 50%; }
+.hit:focus-visible { outline: 2px solid #f28a5a; outline-offset: 2px; }
+.device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
+.ctl { cursor: pointer; }
+.ctl.knob { cursor: ns-resize; }
+.btnface { transition: fill .06s; }
+.lit .btnface { fill: #f28a5a; }
+.lit text.btn { fill: #2a140a; }
+.held .btnface, .held .keyface { stroke: #f28a5a; stroke-width: 3; }
+.latched .btnface { stroke: #6fc3ff; stroke-width: 3; }
+.keyface { transition: fill .06s; }
+.lit .keyface.white { fill: #f6b48e; }
+.lit .keyface.black { fill: #4cc3b6; }
+.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .55); border-radius: 4.4% / 6.9%; }
+.start button { font: 700 1.2rem "Barlow Semi Condensed", Barlow, sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: .6em 1.6em;
+                border: 0; border-radius: 8px; background: #f2c96b; color: #1a1405; cursor: pointer; }
+.start[hidden] { display: none; }
+.turn { display: none; margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+@media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
+.start button:disabled { opacity: .6; cursor: progress; }
+.bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
+.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--ink); padding: .3em .8em; cursor: pointer; }
+.bar .cpu { font-variant-numeric: tabular-nums; }
+.link { margin: 1.2rem 0 0; padding: 1rem 1.1rem; background: var(--card); border-radius: 10px; display: grid; gap: .9rem; }
+.link h2 { font: 700 1.05rem "Barlow Semi Condensed", Barlow, sans-serif; letter-spacing: .04em; margin: 0; }
+.link .row { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+.link .row > b { min-width: 7.5rem; }
+.link label { display: inline-flex; gap: .35rem; align-items: center; cursor: pointer; }
+.link select, .link button { font: inherit; color: var(--ink); background: var(--ground); border: 1px solid var(--muted); border-radius: 6px; padding: .25em .5em; max-width: 100%; }
+.link button { cursor: pointer; }
+.link .note { color: var(--muted); font-size: .92rem; margin: 0; max-width: 72ch; }
+.link .map { font-variant-numeric: tabular-nums; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help p, .help ul { margin: 0; color: var(--muted); max-width: 60ch; }
+.help ul { padding-left: 1.1rem; }
+.help .knobs { grid-column: 1 / -1; }
+.knobs .pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem 2rem; margin-top: .4rem; }
+.knobs h3 { font: 600 1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .2rem; color: var(--ink); }
+.knobs h3 span { color: var(--muted); font-weight: 400; }
+.knobs dl { margin: 0; color: var(--muted); }
+.knobs dt { color: var(--ink); font-weight: 600; }
+.knobs dd { margin: 0 0 .45rem; }
+kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--ink); padding: 0 .3em; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -106,7 +155,7 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
       <div>
         <h3>Pulse <span>SEQ</span></h3>
         <dl>
-          <dt>Lane</dt><dd>Kick, Pulsar, Sonar, Geiger, Rim, Shaker; lane n is planet n's. The white keys are its 16 steps, black keys 1–6 pick it.</dd><dt>Binding</dt><dd>What each hit does to the planet: Off, Pump, Blip, Flicker, Nudge.</dd><dt>Drums, Evolve</dt><dd>Their level; at each Great Year Shift moves a hit or two, Drift also adds or takes one (and the planets move to new orbits).</dd>
+          <dt>Lane</dt><dd>Kick, Pulsar, Sonar, Geiger, Rim, Shaker; lane n is planet n's. The white keys are its 16 steps, black keys 1–6 pick it. Hold <b>SEQ</b> for the sequencer: the whole bank on screen, SELECT one of eight banks (it plays from the next bar), OCT− / OCT+ or black keys the lane.</dd><dt>Binding</dt><dd>What each hit does to the planet: Off, Pump, Blip, Flicker, Nudge.</dd><dt>Drums, Evolve</dt><dd>Their level; at each Great Year Shift moves a hit or two, Drift also adds or takes one (and the planets move to new orbits).</dd>
         </dl>
       </div>
       <div>
@@ -258,7 +307,7 @@ function hit(c, cls) {
 }
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out)",
-  HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
+  HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
   "OCT-": "The planet an octave down", "OCT+": "The planet an octave up", SELECT: "Every page in turn (HOME held: the tempo)", ALGORITHM: "The planet (on Pulse: the lane)", PRESETS: "The system",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

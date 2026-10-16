@@ -60,8 +60,9 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
    ice. The thin line along the top of the screen is the Great Year going round.
 3. **Turn SELECT.** It walks every page: System, Star, each planet in turn, Gravity, Weather, Pulse, Space,
    Setup, Display, MIDI out. The dots at the right of the knob strip show where you are.
-4. **Change a planet's year.** Press SEQ. The white keys are now the lane's 16 steps and black keys 1–6
-   pick the lane. Add a hit: the planet's year gets shorter and it drifts closer to the star.
+4. **Change a planet's year.** Hold SEQ for the sequencer: six lanes of 16 steps. The white keys are the
+   lane's steps, black keys 1–6 (or OCT− / OCT+) pick the lane, SELECT picks one of eight banks. Add a hit:
+   the planet's year gets shorter and it drifts closer to the star.
 5. **Call the weather.** Press LFO twice for Weather. Black key 1 brings a dust cloud, 2 an asteroid, 3 a
    comet.
 6. **Try another system.** Turn PRESETS. There are ten.
@@ -78,13 +79,13 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 | **PLAY** | Grow / rest. Resting, everything fades and the tails ring on. |
 | **REC** | Eclipse: the orbits and the weather hold still, the space rings on. Again to let go. |
 | **EDIT** | The Great Year now: the chord moves and the drums evolve. |
-| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse, Space, Setup (again: Display, then MIDI out). |
+| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse, Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
 | **SEL** | The next planet (on Pulse, the next lane). |
-| **SELECT** | Every page in turn, each planet's page one by one. With HOME held: the tempo. |
+| **SELECT** | Every page in turn, each planet's page one by one. With HOME held: the tempo. In the sequencer: the drum bank. |
 | **ALGORITHM** | The planet (on Pulse, the lane). |
 | **PRESETS** | The system: ten of them, each keeping its own settings. |
 | **KNOB 1–4** | The page's four values. On the Star and each Planet page, KNOB 1 is the level. |
-| **OCT− / OCT+** | The selected planet an octave down / up. |
+| **OCT− / OCT+** | The selected planet an octave down / up. In the sequencer: the lane. |
 | **SAVE** | On the Setup pages (Setup, Display, MIDI out): saves all ten systems. Elsewhere: starts the system again, planets on fresh orbits. Hold 1.5 s: the system back to its recipe. |
 | **MASTER** | Volume. |
 
@@ -208,12 +209,23 @@ Each system keeps its own settings as you leave it. SAVE on the Setup page keeps
 - **Events:** how loud the asteroid's rumble and the comet's bells are.
 - Black keys 1–3 call a dust cloud (or end one), an asteroid, a comet; they light while it's there.
 
-### Pulse (SEQ)
+### Pulse (SEQ) and the sequencer (SEQ held)
 
-![The Pulse](img/grav-device-pulse.png)
+![The sequencer](img/grav-device-pulse.png)
 
-- **Lane:** Kick, Pulsar, Sonar, Geiger, Rim, Shaker (black keys 1–6 too). The white keys are its steps;
-  the step playing blinks.
+**The sequencer:** hold SEQ. The screen shows the whole bank: six lanes of 16 steps, each lane lit in its
+planet's warmth (a lane past the planets is dim), the beats marked and the step playing framed. The white
+keys are the selected lane's steps; black keys 1–6 or OCT− / OCT+ pick the lane; SELECT picks one of eight
+banks. A new bank starts playing at the next bar, and with it every planet moves to its new year and orbit.
+The knob strip shows the lane's planet and year, and the same four knobs as the Pulse page. Press SEQ to go
+back to the Pulse page.
+
+**The banks:** each system has eight. Bank 1 is its own pattern; 2–8 start as turns of it (later by two
+steps, doubled, thinned, a beat later, back to front, the low lanes doubled, a breakdown) for you to change.
+Evolve works on the bank playing.
+
+- **Lane:** Kick, Pulsar, Sonar, Geiger, Rim, Shaker (black keys 1–6 too). On the Pulse page too the white
+  keys are its steps (in the bank on screen); the step playing blinks.
 - **Binding:** what its hits do to its planet: Off, Pump, Blip, Flicker, Nudge.
 - **Drums:** their level.
 - **Evolve:** Off, Shift, Drift (at each Great Year).

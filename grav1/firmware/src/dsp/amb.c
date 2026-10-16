@@ -38,10 +38,12 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"P6 level", 0, 100, 42}, {"P6 inst", 0, 7, 2},    {"P6 ellipse", 0, 45, 25}, {"P6 oct", -2, 2, 0},
     {"Tide", 0, 100, 70},     {"Reach", 5, 40, 18},    {"Wake", 0, 100, 75},    {"Great yr", 0, 1, 0},
     {"Dust", 0, 100, 25},     {"Asteroids", 0, 100, 20}, {"Comets", 0, 100, 20}, {"Events", 0, 100, 60},
-    {"Drums", 0, 100, 70},    {"Evolve", 0, 2, 1},
+    {"Drums", 0, 100, 70},    {"Evolve", 0, 2, 1},     {"Bank", 0, EN_NBANK - 1, 0},
     {"Bind 1", 0, 4, 1}, {"Bind 2", 0, 4, 2}, {"Bind 3", 0, 4, 0}, {"Bind 4", 0, 4, 4}, {"Bind 5", 0, 4, 0}, {"Bind 6", 0, 4, 3},
-    {"Steps 1", -32768, 32767, 0}, {"Steps 2", -32768, 32767, 0}, {"Steps 3", -32768, 32767, 0},
-    {"Steps 4", -32768, 32767, 0}, {"Steps 5", -32768, 32767, 0}, {"Steps 6", -32768, 32767, 0},
+#define STEPS6 {"Steps", -32768, 32767, 0}, {"Steps", -32768, 32767, 0}, {"Steps", -32768, 32767, 0}, \
+               {"Steps", -32768, 32767, 0}, {"Steps", -32768, 32767, 0}, {"Steps", -32768, 32767, 0}
+    STEPS6, STEPS6, STEPS6, STEPS6, STEPS6, STEPS6, STEPS6, STEPS6,
+#undef STEPS6
     {"Echo", 0, 100, 35},     {"Reverb", 0, 100, 55},  {"Radio", 0, 100, 25},   {"Width", 0, 100, 70},
     {"Root", 0, 11, 2},       {"Tune", -50, 50, 0},    {"Sync", 0, 1, 1},       {"Mode", 0, EN_NMODES - 1, 1},
     {"MIDI out", 0, 3, 1},    {"Channel", 0, 8, 0},
@@ -93,6 +95,42 @@ static const piece_t PIECES[EN_NPIECES] = {
      {"x.......x.......", "..x...x...x...x.", "x..x..x..x..x..x", "x.......x...x...", ".x.x.x.x.x.x.x.x", "................"}},
 };
 
+/* the eight banks of a system: its pattern, then seven turns of it. 1 later by two steps, 2 doubled half a
+ * bar on, 3 thinned to every other hit, 4 a beat later, 5 back to front, 6 the low lanes doubled a beat on and
+ * the high ones thinned, 7 a breakdown: the kick and the shaker thinned, the rest silent (their planets asleep) */
+static uint32_t rot16(uint32_t b, int k) { k &= 15; return ((b << k) | (b >> (16 - k))) & 0xFFFFu; }
+static uint32_t thin16(uint32_t b)
+{
+    uint32_t o = 0;
+    int s, n = 0;
+    for (s = 0; s < 16; s++)
+        if (b >> s & 1u)
+            if (!(n++ & 1))
+                o |= 1u << s;
+    return o;
+}
+static uint32_t rev16(uint32_t b)
+{
+    uint32_t o = 0;
+    int s;
+    for (s = 0; s < 16; s++)
+        if (b >> s & 1u)
+            o |= 1u << ((16 - s) & 15);
+    return o;
+}
+static uint32_t bank_turn(int k, int l, uint32_t b)
+{
+    switch (k) {
+    case 1: return rot16(b, 2);
+    case 2: return b | rot16(b, 8);
+    case 3: return thin16(b);
+    case 4: return rot16(b, 4);
+    case 5: return rev16(b);
+    case 6: return l < 3 ? b | rot16(b, 4) : thin16(b);
+    case 7: return l == 0 || l == 5 ? thin16(b) : 0u;
+    default: return b;
+    }
+}
 static int16_t pat_bits(const char *s)
 {
     uint32_t b = 0;
@@ -125,7 +163,9 @@ void en_piece(int i, int16_t *p, uint16_t *pool)
         p[P_PL_ECC(k)] = s->ecc[k];
         p[P_PL_OCT(k)] = s->oct[k];
         p[P_BIND + k] = s->bind[k];
-        p[P_PAT + k] = pat_bits(s->pat[k]);
+        int b;
+        for (b = 0; b < EN_NBANK; b++)
+            p[P_PAT_OF(b, k)] = (int16_t)(uint16_t)bank_turn(b, k, (uint16_t)pat_bits(s->pat[k]));
     }
     p[P_TIDE] = s->tide;
     p[P_REACH] = s->reach;
@@ -294,6 +334,8 @@ volatile float en_pl_tide[EN_NPL], en_pl_glow[EN_NPL], en_pl_linkc[EN_NPL];
 volatile int8_t en_pl_link[EN_NPL];
 volatile uint8_t en_pl_awake[EN_NPL], en_pl_notes[EN_NPL];
 volatile uint16_t en_pat[EN_NPL];
+volatile uint8_t en_bank;
+static int bank_play;                           /* the bank playing; par[P_BANK] the one asked for */
 volatile uint8_t en_step;
 volatile float en_year, en_star, en_flare, en_roar, en_dust;
 volatile uint8_t en_rock_on, en_comet_on;
@@ -399,7 +441,7 @@ static int chord_i;                             /* the Great Year's chord, in th
 
 static int hits_of(int l)
 {
-    uint32_t b = (uint16_t)par[P_PAT + l];
+    uint32_t b = (uint16_t)par[P_PAT_OF(bank_play, l)];
     int n = 0;
     while (b) {
         n += (int)(b & 1u);
@@ -674,7 +716,7 @@ static void periods(void)                       /* the lanes' hits to the planet
         if (P != pl[i].period)
             pl[i].period = P;
         phrase_fit(i);
-        en_pat[i] = (uint16_t)par[P_PAT + i];
+        en_pat[i] = (uint16_t)par[P_PAT_OF(bank_play, i)];
     }
     orbits(0);
 }
@@ -1275,8 +1317,17 @@ static void apply(int p, int v)
     if (v > pi->hi)
         v = pi->hi;
     par[p] = (int16_t)v;
-    if (p >= P_PAT && p < P_PAT + EN_NPL) {
-        periods();
+    if (p >= P_PAT && p < P_PAT + EN_NPL * EN_NBANK) {
+        if ((p - P_PAT) / EN_NPL == bank_play)
+            periods();
+        return;
+    }
+    if (p == P_BANK) {                           /* resting: now; playing: at the bar */
+        if (!en_playing && v != bank_play) {
+            bank_play = v;
+            en_bank = (uint8_t)v;
+            periods();
+        }
         return;
     }
     if (p >= P_PL && p < P_TIDE) {
@@ -1330,6 +1381,8 @@ static void pool_set(uint32_t p)
 static void regrow(void)
 {
     int i;
+    bank_play = par[P_BANK];
+    en_bank = (uint8_t)bank_play;
     for (i = 0; i < EN_NPL; i++) {
         pl[i].ang = frand();
         pl[i].om = frand();
@@ -1343,7 +1396,9 @@ static void regrow(void)
         pl[i].lastf = 0.0f;
         pl[i].mod = 1.0f;
         phrase_new(i);
-        en_pat[i] = (uint16_t)par[P_PAT + i];
+    }
+    for (i = 0; i < EN_NPL; i++) {
+        en_pat[i] = (uint16_t)par[P_PAT_OF(bank_play, i)];
     }
     chord_i = 0;
     orbits(1);
@@ -1403,7 +1458,7 @@ void en_init(void)
         int16_t pp[P_NPARAMS];
         uint16_t pool0;
         en_piece(0, pp, &pool0);
-        for (i = 0; i < EN_NPL; i++)
+        for (i = 0; i < EN_NPL * EN_NBANK; i++)
             par[P_PAT + i] = pp[P_PAT + i];
     }
     st.k = st.k_old = par[P_COLOUR];
@@ -1448,7 +1503,7 @@ static void great_year(void)
         int c, changed = 0;
         for (c = 0; c < 2; c++) {
             int l = irand(EN_NPL), on[16], m = 0, s;
-            uint32_t b = (uint16_t)par[P_PAT + l];
+            uint32_t b = (uint16_t)par[P_PAT_OF(bank_play, l)];
             for (s = 0; s < 16; s++)
                 if (b >> s & 1u)
                     on[m++] = s;
@@ -1456,14 +1511,14 @@ static void great_year(void)
                 int k = on[irand(m)], to = (k + (frand() < 0.5f ? 15 : 1)) & 15;
                 if (!(b >> to & 1u)) {
                     b = (b & ~(1u << k)) | 1u << to;
-                    par[P_PAT + l] = (int16_t)(uint16_t)b;
+                    par[P_PAT_OF(bank_play, l)] = (int16_t)(uint16_t)b;
                     changed = 1;
                 }
             }
         }
         if (par[P_EVOLVE] == 2) {
             int l = irand(nplanets()), h = hits_of(l), s, m = 0, pick[16];
-            uint32_t b = (uint16_t)par[P_PAT + l];
+            uint32_t b = (uint16_t)par[P_PAT_OF(bank_play, l)];
             if ((frand() < 0.5f && h > 1) || h >= 10) {
                 for (s = 0; s < 16; s++)
                     if (b >> s & 1u)
@@ -1477,7 +1532,7 @@ static void great_year(void)
                 if (m)
                     b |= 1u << pick[irand(m)];
             }
-            par[P_PAT + l] = (int16_t)(uint16_t)b;
+            par[P_PAT_OF(bank_play, l)] = (int16_t)(uint16_t)b;
             changed = 1;
         }
         if (changed)
@@ -1500,6 +1555,11 @@ static void step(int32_t at)
 {
     int s = (int)(step_count & 15u), l, i;
     const float bars_per_step = 1.0f / 16.0f;
+    if (s == 0 && par[P_BANK] != bank_play) {     /* a new bank, on the bar */
+        bank_play = par[P_BANK];
+        en_bank = (uint8_t)bank_play;
+        periods();
+    }
     en_step = (uint8_t)s;
     if (drum_noteon) {                           /* last step's drum notes end */
         for (l = 0; l < EN_NPL; l++)
@@ -1508,7 +1568,7 @@ static void step(int32_t at)
         drum_noteon = 0;
     }
     for (l = 0; l < EN_NPL; l++)
-        if ((uint16_t)par[P_PAT + l] >> s & 1u) {
+        if ((uint16_t)par[P_PAT_OF(bank_play, l)] >> s & 1u) {
             drum_hit(l, at);
             note(1, 6, (uint32_t)(36 + l), 100);
             drum_noteon |= (uint8_t)(1u << l);

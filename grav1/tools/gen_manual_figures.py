@@ -101,7 +101,7 @@ def panel(screen_png):
     s.append(what(766, 136, "The page's four values"))
     s.append(f'<rect x="568" y="146" width="400" height="236" rx="18" fill="{TRAY}"/>')
     top = [("FX", "Space"), ("SEL", "Next|planet"), ("ENV", "Star"), ("LFO", "Gravity,|Weather"), ("EDIT", "Great|Year"), ("GLO", "Setup,|Display…")]
-    bot = [("HOME", "System"), ("SAVE", "On Setup:|save"), ("ARP", "Planet"), ("SEQ", "Pulse"),
+    bot = [("HOME", "System"), ("SAVE", "On Setup:|save"), ("ARP", "Planet"), ("SEQ", "Pulse;|held: seq."),
            (("PLAY", "STOP"), "Grow /|rest"), ("REC", "Eclipse")]
     for i in range(6):
         x = 582 + i * 63

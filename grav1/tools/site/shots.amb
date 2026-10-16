@@ -40,6 +40,15 @@ wait 2500
 shot pulse.png
 echo @pulse
 leds
+press SEQ
+wait 800
+release SEQ
+turn SELECT 1
+wait 400
+shot seq.png
+echo @seq
+leds
+turn SELECT -1
 tap FX
 wait 400
 shot space.png

@@ -390,6 +390,8 @@ static int expect(const char *what, const char *val)
         got = ui.sel;
     else if (!strcmp(what, "lane"))
         got = ui.lane;
+    else if (!strcmp(what, "bank"))               /* the drum bank playing */
+        got = en_bank;
     else if (!strncmp(what, "par", 3))          /* parN: parameter N (amb.h P_*) */
         got = proj.par[atoi(what + 3)];
     else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {

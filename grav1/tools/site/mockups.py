@@ -191,7 +191,7 @@ def screens(names, out, cols=None, label=None, scale=2, gap=24):
 
 
 SCREENS = ["splash", "splash_grav", "system", "star", "planet", "gravity", "weather", "pulse", "space", "setup", "display",
-           "midiout", "help", "storm", "eclipse", "synced", "synced_setup",
+           "midiout", "help", "seq", "storm", "eclipse", "synced", "synced_setup",
            "s_sol", "s_lumen", "s_rosette", "s_ember", "s_rigel", "s_veil", "s_cinder", "s_horizon", "s_kuiper", "s_nova",
            "t_deep", "t_nebula", "t_aurora", "t_redplanet", "t_phosphor", "t_redtail", "t_mono"]
 SYSTEMS = ["sol", "lumen", "rosette", "ember", "rigel", "veil", "cinder", "horizon", "kuiper", "nova"]
@@ -205,8 +205,8 @@ def main():
     scene(device("system", b, k), OUT / "grav-device.png")
     b, k = L["storm"]
     scene(device("storm", b, k), OUT / "grav-device-weather.png", "WEATHER", "DUST, ASTEROIDS, COMETS", glow="#c9a27a")
-    b, k = L["pulse"]
-    scene(device("pulse", b, k), OUT / "grav-device-pulse.png", "THE PULSE", "SEQ: THE KEYS ARE THE STEPS", glow="#9cc3ff")
+    b, k = L["seq"]
+    scene(device("seq", b, k), OUT / "grav-device-pulse.png", "THE SEQUENCER", "SEQ HELD: EIGHT BANKS OF SIX LANES", glow="#9cc3ff")
     b, k = L["planet"]
     scene(device("planet", b, k), OUT / "grav-device-planet.png", "A PLANET", "ARP: ITS VOICE AND ORBIT")
     b, k = L["midiout"]
@@ -223,10 +223,10 @@ def main():
     print("wrote docs/img/grav-screen-*.png")
     screens([f"s_{n}" for n in SYSTEMS], OUT / "grav-systems.png", cols=5,
             label=["SOL", "LUMEN", "ROSETTE", "EMBER", "RIGEL", "VEIL", "CINDER", "HORIZON", "KUIPER", "NOVA"])
-    screens(["system", "star", "planet", "gravity", "weather", "pulse", "space", "setup", "display", "midiout", "eclipse", "help"],
+    screens(["system", "star", "planet", "gravity", "weather", "pulse", "seq", "space", "setup", "display", "midiout", "help"],
             OUT / "grav-pages.png", cols=4,
             label=["SYSTEM · HOME", "STAR · ENV", "A PLANET · ARP", "GRAVITY · LFO", "WEATHER · LFO TWICE", "PULSE · SEQ",
-                   "SPACE · FX", "SETUP · GLO", "DISPLAY · GLO TWICE", "MIDI OUT · GLO X3", "ECLIPSE · REC", "HOLD A BUTTON: ITS CARD"])
+                   "SEQUENCER · SEQ HELD", "SPACE · FX", "SETUP · GLO", "DISPLAY · GLO TWICE", "MIDI OUT · GLO X3", "HOLD A BUTTON: ITS CARD"])
     screens(["t_deep", "t_nebula", "t_aurora", "t_redplanet", "t_phosphor", "t_redtail", "t_mono"], OUT / "grav-themes.png", cols=4,
             label=["DEEP SPACE", "NEBULA", "AURORA", "RED PLANET", "PHOSPHOR", "REDTAIL", "MONO"])
     screens(["splash", "splash_grav"], OUT / "grav-boot.png", label=["REDTAILWORKS", "GRAV-1"])

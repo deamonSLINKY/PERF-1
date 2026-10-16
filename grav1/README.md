@@ -23,7 +23,7 @@ clouds, asteroids and comets drift through. A RedtailWorks project, alongside HY
 
 | | |
 |---|---|
-| Keys | The scale. On Pulse: the lane's 16 steps (black keys 1–6 the lane). On Weather: black keys 1–3 call dust, an asteroid, a comet |
+| Keys | The scale. On Pulse and in the sequencer (SEQ held): the lane's 16 steps (black keys 1–6 the lane; SELECT one of eight banks). On Weather: black keys 1–3 call dust, an asteroid, a comet |
 | PLAY · REC · EDIT | Grow / rest · eclipse (the orbits hold) · the Great Year now |
 | HOME · ENV · ARP · LFO · SEQ · FX · GLO | The pages: System, Star, Planet, Gravity (again: Weather), Pulse, Space, Setup (again: Display, MIDI out) |
 | SELECT | Every page in turn, each planet's one by one; with HOME held, the tempo |

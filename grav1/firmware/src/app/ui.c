@@ -19,10 +19,11 @@
 #include "../dsp/fastmath.h"
 
 /* the pages; SELECT walks them, a planet's page once for each planet */
-enum { V_SYSTEM, V_STAR, V_PLANET, V_GRAVITY, V_WEATHER, V_PULSE, V_SPACE, V_SETUP, V_DISPLAY, V_OUT, NVIEWS };
+enum { V_SYSTEM, V_STAR, V_PLANET, V_GRAVITY, V_WEATHER, V_PULSE, V_SPACE, V_SETUP, V_DISPLAY, V_OUT, V_SEQ, NVIEWS };
+#define NWALK (V_OUT + 1)                 /* the pages SELECT walks; the sequencer is SEQ held */
 static const char *const VIEW_NAME[NVIEWS] = {"System", "Star", "Planet", "Gravity", "Weather", "Pulse", "Space", "Setup",
-                                              "Display", "MIDI out"};
-static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_LFO, B_SEQ, B_FX, B_GLO, B_GLO, B_GLO};
+                                              "Display", "MIDI out", "Sequencer"};
+static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_LFO, B_SEQ, B_FX, B_GLO, B_GLO, B_GLO, B_SEQ};
 enum { K_LEDS = 200, K_CPU, K_LANE, K_NONE };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Planets", "Tempo", "Wander", "Phrase"},
@@ -35,6 +36,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Root", "Mode", "Tune", "Sync"},
     {"Theme", "Starfield", "Orbits", "Tide lines"},
     {"Sends", "Channels", "Lights", "CPU"},
+    {"Lane", "Binding", "Drums", "Evolve"},
 };
 
 static struct {
@@ -57,7 +59,8 @@ static struct {
     uint32_t boot_t;
     uint8_t splash, splash_step;
     uint32_t ev_r;                     /* the engine's events read so far */
-    uint16_t pat_seen[EN_NPL];         /* the drums' steps as the engine last had them */
+    uint16_t pat_seen[EN_NPL];         /* the playing bank's steps as the engine last had them */
+    uint8_t pat_bank;                  /* and which bank that was */
     uint32_t pat_hold;                 /* a step just changed here: the engine's copy catches up first */
     float trail[20][2];                /* the comet's trail */
     uint8_t trail_n;
@@ -139,9 +142,10 @@ static const char *mode_name(void)
     return proj.pool == EN_MODE_POOL[proj.par[P_MODE]] ? EN_MODE_NAME[proj.par[P_MODE]] : "Custom";
 }
 static int nplanets(void) { return proj.par[P_PLANETS]; }
-static int lane_hits(int l)
+static int is_seq(void) { return ui.view == V_PULSE || ui.view == V_SEQ; }
+static int lane_hits(int l)                    /* in the bank playing */
 {
-    uint32_t b = (uint16_t)proj.par[P_PAT + l];
+    uint32_t b = (uint16_t)proj.par[P_PAT_OF(en_bank < EN_NBANK ? en_bank : 0, l)];
     int n = 0;
     while (b) {
         n += (int)(b & 1u);
@@ -157,10 +161,10 @@ static int view_knob(int v, int i)
         {P_PLANETS, P_TEMPO, P_WANDER, P_PHRASE}, {P_STAR, P_COLOUR, P_ROAR, P_FLARES}, {0, 0, 0, 0},
         {P_TIDE, P_REACH, P_WAKE, P_GY}, {P_DUST, P_ROCKS, P_COMETS, P_EVENTS}, {0, 0, P_DRUMS, P_EVOLVE},
         {P_ECHO, P_REVERB, P_RADIO, P_WIDTH}, {P_ROOT, P_MODE, P_TUNE, P_SYNC}, {P_THEME, P_SKY, P_LINES, P_TLINES},
-        {P_MIDI, P_MCH, 0, 0}};
+        {P_MIDI, P_MCH, 0, 0}, {0, 0, P_DRUMS, P_EVOLVE}};
     if (v == V_PLANET)
         return P_PL + 4 * ui.sel + i;
-    if (v == V_PULSE && i < 2)
+    if ((v == V_PULSE || v == V_SEQ) && i < 2)
         return i == 0 ? K_LANE : P_BIND + ui.lane;
     if (v == V_OUT && i >= 2)
         return i == 2 ? K_LEDS : K_CPU;
@@ -302,8 +306,9 @@ static void set_mode(int m)
 static void sync_pats(void)                    /* the engine's steps into the project: what Evolve changed */
 {
     int l;
+    ui.pat_bank = en_bank;
     for (l = 0; l < EN_NPL; l++)
-        ui.pat_seen[l] = (uint16_t)proj.par[P_PAT + l];
+        ui.pat_seen[l] = en_pat[l];
 }
 
 static void set_piece(int i)
@@ -328,9 +333,11 @@ static void set_piece(int i)
 
 /* ------------------------------------------------------------ the walk --- */
 /* SELECT's list: System, Star, Planet 1..n, Gravity, Weather, Pulse, Space, Setup, Display, MIDI out */
-static int walk_len(void) { return NVIEWS - 1 + nplanets(); }
+static int walk_len(void) { return NWALK - 1 + nplanets(); }
 static int walk_pos(void)
 {
+    if (ui.view == V_SEQ)
+        return V_PULSE - 1 + nplanets();
     if (ui.view < V_PLANET)
         return ui.view;
     if (ui.view == V_PLANET)
@@ -355,7 +362,7 @@ static void walk_to(int k)
 }
 static void focus_step(int d)                  /* ALGORITHM, SEL: the planet; on Pulse, the lane */
 {
-    if (ui.view == V_PULSE) {
+    if (is_seq()) {
         ui.lane = (uint8_t)((ui.lane + d + EN_NPL) % EN_NPL);
         return;
     }
@@ -405,6 +412,11 @@ static void button(int b)
         break;
     case B_OCTDN: case B_OCTUP: {
         int p = P_PL_OCT(ui.sel);
+        if (ui.view == V_SEQ) {                  /* the sequencer: the lane */
+            focus_step(b == B_OCTUP ? 1 : -1);
+            say("LANE", EN_LANE_NAME[ui.lane]);
+            break;
+        }
         char t[8], h[12] = "PLANET ";
         knob_set(p, proj.par[p] + (b == B_OCTUP ? 1 : -1));
         en_param_text(p, proj.par[p], t);
@@ -439,13 +451,14 @@ static int black_of(int k) { int i; for (i = 0; i < 11; i++) if (BLACK_KEY[i] ==
 static void key(int k)
 {
     int w = white_of(k), bk = black_of(k);
-    if (ui.view == V_PULSE) {
-        if (w >= 0) {
-            int p = P_PAT + ui.lane;
+    if (is_seq()) {
+        if (w >= 0) {                            /* a step of the lane, in the bank on screen */
+            int bk = proj.par[P_BANK], p = P_PAT_OF(bk, ui.lane);
             uint16_t bits = (uint16_t)proj.par[p] ^ (uint16_t)(1u << w);
             proj.par[p] = (int16_t)bits;
             en_set(p, proj.par[p]);
-            ui.pat_seen[ui.lane] = bits;
+            if (bk == ui.pat_bank)
+                ui.pat_seen[ui.lane] = bits;
             ui.pat_hold = plat_ms() + 200u;
             mark_dirty();
         } else if (bk >= 0 && bk < EN_NPL) {
@@ -527,8 +540,19 @@ static void input(void)
     if (btn || keys || ch)
         ui.act_t = plat_ms();
     midi_in();
-    if ((e = plat_enc(EN_SELECT)) != 0) {        /* SELECT: the walk; with HOME held, the tempo */
-        if (btn >> B_HOME & 1u) {
+    if ((btn >> B_SEQ & 1u) && !(ui.btn_used >> B_SEQ & 1u) && plat_ms() - ui.down_t[B_SEQ] >= 600u) {
+        ui.btn_used |= 1u << B_SEQ;              /* SEQ held: the sequencer */
+        set_view(V_SEQ);
+        say("SEQUENCER", 0);
+    }
+    if ((e = plat_enc(EN_SELECT)) != 0) {        /* SELECT: the walk; with HOME held, the tempo; in the sequencer, the bank */
+        if (ui.view == V_SEQ && !(btn >> B_HOME & 1u)) {
+            char t[8] = "BANK ";
+            knob_set(P_BANK, proj.par[P_BANK] + (e > 0 ? 1 : -1));
+            t[5] = (char)('1' + proj.par[P_BANK]);
+            t[6] = 0;
+            say(t, en_playing && proj.par[P_BANK] != en_bank ? "AT THE BAR" : 0);
+        } else if (btn >> B_HOME & 1u) {
             turn(EN_SELECT, P_TEMPO, e);
             ui.btn_used |= 1u << B_HOME;
             if (ui.view == V_SYSTEM) {
@@ -580,14 +604,18 @@ static void input(void)
 static void engine_news(void)
 {
     int l;
-    if ((int32_t)(plat_ms() - ui.pat_hold) >= 0)
-        for (l = 0; l < EN_NPL; l++) {
-            uint16_t e = en_pat[l];
-            if (e != ui.pat_seen[l]) {
-                ui.pat_seen[l] = e;
-                proj.par[P_PAT + l] = (int16_t)e;
+    if ((int32_t)(plat_ms() - ui.pat_hold) >= 0) {
+        if (en_bank != ui.pat_bank)              /* another bank playing: its steps as they are */
+            sync_pats();
+        else
+            for (l = 0; l < EN_NPL; l++) {       /* what Evolve changed, into the project */
+                uint16_t e = en_pat[l];
+                if (e != ui.pat_seen[l]) {
+                    ui.pat_seen[l] = e;
+                    proj.par[P_PAT_OF(en_bank, l)] = (int16_t)e;
+                }
             }
-        }
+    }
     while (ui.ev_r != en_ev_w) {
         uint16_t ev;
         char t[12] = "PLANET ";
@@ -818,12 +846,12 @@ static void draw_header(void)
         } else {
             itoa_u((uint32_t)proj.par[P_TEMPO], c);
         }
-        x -= text_w(&FONT_XS, c);
-        cv_text(x, 8, &FONT_XS, c, en_ext ? K_ACC : K_DIM);
+        x -= text_w(&FONT_S, c);
+        cv_text(x, 6, &FONT_S, c, en_ext ? K_ACC : K_DIM);
         x -= 8;
         if (en_frozen) {
-            x -= text_w(&FONT_XS, "ECLIPSE");
-            cv_text(x, 8, &FONT_XS, "ECLIPSE", K_ECLIPSE);
+            x -= text_w(&FONT_S, "ECLIPSE");
+            cv_text(x, 6, &FONT_S, "ECLIPSE", K_ECLIPSE);
             x -= 6;
         } else if (en_playing) {
             for (l = nplanets() - 1; l >= 0; l--) {
@@ -839,8 +867,9 @@ static void draw_header(void)
         w = text_w(&FONT_B, piece_name(proj.piece)) + 12;
         cv_round(4, 4, w, 20, 6, K_ACC);
         cv_text(10, 6, &FONT_B, piece_name(proj.piece), K_BG);
-        w = cv_text(w + 10, 8, &FONT_XS, EN_NOTE_NAME[proj.par[P_ROOT]], K_TEXT);
-        cv_text(w + 3, 8, &FONT_XS, mode_name(), K_DIM);
+        w = cv_text(w + 10, 6, &FONT_S, EN_NOTE_NAME[proj.par[P_ROOT]], K_TEXT);
+        if (w + 3 + text_w(&FONT_S, mode_name()) < x - 4)
+            cv_text(w + 3, 6, &FONT_S, mode_name(), K_DIM);
     }
     cv_blit(0, 0);
 }
@@ -919,7 +948,7 @@ static void draw_planet(int i)
 {
     float sx, sy, lv = (float)proj.par[P_PL_LVL(i)] * 0.01f, depth = 0.85f + 0.15f * (en_pl_y[i] / 0.75f + 1.0f);
     float s = (1.3f + lv * 3.6f) * depth * (1.0f + 0.35f * en_pl_glow[i]), ts = en_pl_tide[i];
-    int dorm = lane_hits(i) == 0, hl = (ui.view == V_PLANET && ui.sel == i) || (ui.view == V_PULSE && ui.lane == i);
+    int dorm = lane_hits(i) == 0, hl = (ui.view == V_PLANET && ui.sel == i) || (is_seq() && ui.lane == i);
     uint16_t c = heat(en_pl_dist[i]);
     proj_xy(en_pl_x[i], en_pl_y[i], &sx, &sy);
     if (ts > 0.04f)
@@ -937,9 +966,9 @@ static void draw_planet(int i)
             px_blend((int32_t)(sx + (s + 4.0f) * cos_t(t + 0.02f)), (int32_t)(sy + (s + 4.0f) * fm_sin_turns(t + 0.02f)), K_ACC, 12);
         }
     }
-    if (ui.view == V_PLANET || ui.view == V_PULSE || hl) {
+    if (ui.view == V_PLANET || is_seq() || hl) {
         char t[2] = {(char)('1' + i), 0};
-        cv_text((int32_t)(sx + s + 2.0f), (int32_t)(sy - s - 12.0f), &FONT_XS, t, hl ? K_ACC : K_DIM);
+        cv_text((int32_t)(sx + s + 2.0f), (int32_t)(sy - s - 13.0f), &FONT_S, t, hl ? K_ACC : K_DIM);
     }
 }
 
@@ -975,7 +1004,7 @@ static void draw_system(void)
     }
     if (lines > 0.0f)                            /* the orbits, and the points the phrases sound at */
         for (i = 0; i < n; i++) {
-            int dorm = lane_hits(i) == 0, hl = (ui.view == V_PLANET && ui.sel == i) || (ui.view == V_PULSE && ui.lane == i);
+            int dorm = lane_hits(i) == 0, hl = (ui.view == V_PLANET && ui.sel == i) || (is_seq() && ui.lane == i);
             uint16_t c = hl ? mix(bg, K_ACC, 9) : mix(bg, K_LINE, q16(lines));
             float px = 0.0f, py = 0.0f;
             for (k = 0; k <= 48; k++) {
@@ -1054,7 +1083,45 @@ static void draw_system(void)
     }
     if (en_frozen || !en_playing) {              /* the state, top centre */
         const char *s = en_frozen ? "ECLIPSE" : "RESTING";
-        text_c(120, 4, &FONT_XS, s, en_frozen ? K_ECLIPSE : K_DIM);
+        text_c(120, 4, &FONT_S, s, en_frozen ? K_ECLIPSE : K_DIM);
+    }
+}
+
+/* THE SEQUENCER (SEQ held): the bank on screen, its six lanes of 16 steps, a lane a planet (lit in its
+ * planet's warmth; a lane past the planets dim), the beats marked, the step playing framed */
+static void draw_seq(void)
+{
+    const int bk = proj.par[P_BANK], n = nplanets();
+    int l, s;
+    char t[24];
+    cv_begin(240, MAIN_H, K_BG);
+    t[0] = 'B', t[1] = 'A', t[2] = 'N', t[3] = 'K', t[4] = ' ', t[5] = (char)('1' + bk), t[6] = 0;
+    cv_text(4, 0, &FONT_B, t, K_ACC);
+    if (bk != en_bank) {
+        char u[12] = "PLAYING ";
+        u[8] = (char)('1' + en_bank);
+        u[9] = 0;
+        cv_text(10 + text_w(&FONT_B, t), 1, &FONT_S, u, K_DIM);
+    }
+    for (s = 0; s < EN_NBANK; s++)               /* the eight banks */
+        cv_round(232 - (EN_NBANK - 1 - s) * 9, 6, 6, 6, 3, s == bk ? K_ACC : s == en_bank ? K_COLD : K_LINE);
+    for (l = 0; l < EN_NPL; l++) {
+        int y = 18 + l * 21, act = l < n, sel = l == ui.lane;
+        uint32_t bits = (uint16_t)proj.par[P_PAT_OF(bk, l)];
+        uint16_t on = act ? heat(en_pl_dist[l]) : K_DIM;
+        if (sel)
+            cv_round(0, y, 58, 21, 4, K_PANEL);
+        cv_text(5, y + 2, &FONT_S, EN_LANE_NAME[l], sel ? K_ACC : act ? K_TEXT : K_DIM);
+        for (s = 0; s < 16; s++)
+            cv_round(60 + s * 11, y + 2, 10, 17, 2, bits >> s & 1u ? on : mix(K_BG, sel ? K_DIM : K_LINE, s % 4 == 0 ? 11 : 6));
+    }
+    if (en_playing && bk == en_bank) {           /* the step playing */
+        int32_t x = 59 + en_step * 11;
+        uint16_t c = mix(K_BG, K_TEXT, 11);
+        cv_rect(x, 18, 12, 1, c);
+        cv_rect(x, 143, 12, 1, c);
+        cv_rect(x, 18, 1, 126, c);
+        cv_rect(x + 11, 18, 1, 126, c);
     }
 }
 
@@ -1071,7 +1138,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ENV: L("THE STAR: LEVEL,"); L("COLOUR, ROAR, FLARES"); break;
     case B_ARP: L("A PLANET: LEVEL, INSTRUMENT,"); L("ELLIPSE, OCTAVE"); L("ALGORITHM / SEL: WHICH"); break;
     case B_LFO: L("GRAVITY: TIDE, REACH,"); L("WAKE, GREAT YEAR"); L("AGAIN: THE WEATHER"); break;
-    case B_SEQ: L("THE PULSE: WHITE KEYS"); L("THE STEPS, BLACK 1-6"); L("THE LANE"); break;
+    case B_SEQ: L("THE PULSE: WHITE KEYS THE"); L("STEPS, BLACK 1-6 THE LANE"); L("HOLD: THE SEQUENCER"); L("(SELECT: THE BANK)"); break;
     case B_SEL: L("THE NEXT PLANET"); L("(ON PULSE: THE NEXT LANE)"); break;
     case B_FX: L("THE SPACE: ECHO,"); L("REVERB, RADIO, WIDTH"); break;
     case B_GLO: L("SETUP: ROOT, MODE,"); L("TUNE, SYNC"); L("AGAIN: DISPLAY, MIDI OUT"); break;
@@ -1127,7 +1194,10 @@ static void draw_main(void)
         return;
     }
     ui.sig[1] = 0;
-    draw_system();
+    if (ui.view == V_SEQ)
+        draw_seq();
+    else
+        draw_system();
     cv_blit(0, MAIN_Y);
 }
 
@@ -1139,7 +1209,8 @@ static void draw_knobs(void)
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(view_knob(ui.view, (int)i)));
-    h = hash(h, (uint32_t)now_touch | (uint32_t)nplanets() << 1);
+    h = hash(h, (uint32_t)now_touch | (uint32_t)nplanets() << 1 | (uint32_t)proj.par[P_BANK] << 4 | (uint32_t)en_bank << 8 |
+                    (uint32_t)(uint16_t)proj.par[P_PAT_OF(proj.par[P_BANK], ui.lane)] << 12);
     if (ui.view == V_OUT)
         h = hash(h, plat_cpu_pct());
     if (h == ui.sig[2])
@@ -1147,9 +1218,41 @@ static void draw_knobs(void)
     ui.sig[2] = h;
     cv_begin(240, KNB_H, K_BG);
     {
-        char t[16];
+        char t[24];
         int k, nw = walk_len(), at = walk_pos();
         int32_t xd = 237 - nw * 6, xt;
+        if (ui.view == V_SEQ) {                  /* the sequencer: the lane, its planet and year */
+            int l = ui.lane, h = 0;
+            uint32_t b = (uint16_t)proj.par[P_PAT_OF(proj.par[P_BANK], l)];
+            char u[24], *q = u;
+            const char *w = EN_LANE_NAME[l];
+            while (b) {
+                h += (int)(b & 1u);
+                b >>= 1;
+            }
+            while (*w)
+                *q++ = *w++;
+            *q++ = ' ';
+            *q++ = '-';
+            *q++ = ' ';
+            if (l >= nplanets()) {
+                w = "NO PLANET";
+            } else if (!h) {
+                w = "DORMANT";
+            } else {
+                static const char *const YR[17] = {"", "32 BARS", "16 BARS", "10.7 BARS", "8 BARS", "6.4 BARS", "5.3 BARS",
+                                                   "4.6 BARS", "4 BARS", "3.6 BARS", "3.2 BARS", "2.9 BARS", "2.7 BARS",
+                                                   "2.5 BARS", "2.3 BARS", "2.1 BARS", "2 BARS"};
+                w = YR[h];
+            }
+            while (*w)
+                *q++ = *w++;
+            *q = 0;
+            caps(t, u, sizeof t);
+            cv_rect(4, 5, 236 - text_w(&FONT_XS, t) - 8 - 4, 1, K_LINE);
+            cv_text(236 - text_w(&FONT_XS, t), -1, &FONT_XS, t, K_ACC);
+            goto cells;
+        }
         caps(t, VIEW_NAME[ui.view], sizeof t);
         if (ui.view == V_PLANET) {
             int m = 0;
@@ -1165,6 +1268,7 @@ static void draw_knobs(void)
         for (k = 0; k < nw; k++)
             cv_round(xd + k * 6, 3, 4, 4, 2, k == at ? K_ACC : (k >= V_PLANET && k < V_PLANET + nplanets()) ? mix(K_LINE, K_COLD, 6) : K_LINE);
     }
+cells:
     for (i = 0; i < 4; i++) {
         int k = view_knob(ui.view, (int)i), lo, hi, v, hot = now_touch && ui.touched == (int)i;
         int32_t x = (int32_t)i * 60, cx = x + 30;
@@ -1173,24 +1277,27 @@ static void draw_knobs(void)
         if (k == K_NONE)
             continue;
         if (i)
-            cv_rect(x, 16, 1, 46, K_LINE);
+            cv_rect(x, 18, 1, 44, K_LINE);
         if (hot)
-            cv_round(x + 3, 11, 54, 57, 6, K_PANEL);
+            cv_round(x + 3, 12, 54, 56, 6, K_PANEL);
         knob_range(k, &lo, &hi);
         v = knob_get(k);
         caps(t, KNOB_LABEL[ui.view][i], sizeof t);
-        text_c(cx, 12, &FONT_XS, t, hot ? K_TEXT : K_DIM);
+        {   /* the label: bigger where it fits */
+            const felucca_font_t *f = text_w(&FONT_S, t) <= 57 ? &FONT_S : &FONT_XS;
+            text_c(cx, f == &FONT_S ? 12 : 13, f, t, hot ? K_TEXT : K_DIM);
+        }
         if (k != K_CPU && hi - lo < 6) {
             int nn = hi - lo + 1, j, pw = nn > 4 ? 6 : 9, gap = 3, w0 = nn * (pw + gap) - gap;
             for (j = 0; j < nn; j++)
-                cv_round(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, 2, j == v - lo ? fill : K_LINE);
+                cv_round(cx - w0 / 2 + j * (pw + gap), 37, pw, 8, 2, j == v - lo ? fill : K_LINE);
         } else if (k != K_CPU) {
-            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, lo < 0);
+            arc(cx, 40, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, lo < 0);
         }
         knob_text(k, t);
         {
-            const felucca_font_t *f = text_w(&FONT_B, t) > 56 ? &FONT_XS : &FONT_B;
-            text_c(cx, f == &FONT_B ? 50 : 51, f, t, hot ? K_ACC : K_TEXT);
+            const felucca_font_t *f = text_w(&FONT_B, t) <= 57 ? &FONT_B : text_w(&FONT_S, t) <= 57 ? &FONT_S : &FONT_XS;
+            text_c(cx, f == &FONT_XS ? 53 : 52, f, t, hot ? K_ACC : K_TEXT);
         }
     }
     cv_blit(0, KNB_Y);
@@ -1209,11 +1316,11 @@ static void leds(void)
     if (en_pl_glow[ui.sel] > 0.55f)
         b |= 1u << B_ARP;
     if (proj.leds) {
-        if (ui.view == V_PULSE) {
-            uint32_t bits = (uint16_t)proj.par[P_PAT + ui.lane];
+        if (is_seq()) {
+            uint32_t bits = (uint16_t)proj.par[P_PAT_OF(proj.par[P_BANK], ui.lane)];
             for (i = 0; i < 16; i++) {
                 int on = (int)(bits >> i & 1u);
-                if (en_playing && !en_frozen && i == en_step)
+                if (en_playing && !en_frozen && i == en_step && proj.par[P_BANK] == en_bank)
                     on = !on;
                 if (on)
                     k |= 1u << WHITE_KEY[i];

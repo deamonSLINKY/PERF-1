@@ -1,5 +1,5 @@
 # GRAV-1 on MIDI clock: START, two bars of ticks at 120 BPM (the steps follow them), STOP
-expect par60 1
+expect par103 1
 midi FA 0 0
 midi F8 0 0
 wait 20

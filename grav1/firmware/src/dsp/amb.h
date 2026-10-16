@@ -33,6 +33,7 @@
 #define EN_NINST 8                     /* the instrument bank */
 #define EN_NCOLOUR 8                   /* the star's noise colours */
 #define EN_NSTEP 16
+#define EN_NBANK 8                     /* drum banks, each six lanes of 16 steps */
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
 enum { MODE_AEOLIAN, MODE_DORIAN, MODE_PHRYGIAN, MODE_LYDIAN, MODE_PENT_MIN, MODE_PENT_MAJ, MODE_HIRAJOSHI,
@@ -53,15 +54,16 @@ enum {
     P_PL,                                             /* each planet: level, instrument, ellipse, octave: P_PL + 4 * i + 0..3 */
     P_TIDE = P_PL + 4 * EN_NPL, P_REACH, P_WAKE, P_GY,                 /* gravity */
     P_DUST, P_ROCKS, P_COMETS, P_EVENTS,              /* the weather */
-    P_DRUMS, P_EVOLVE,                                /* the Pulse */
+    P_DRUMS, P_EVOLVE, P_BANK,                        /* the Pulse; the bank playing (a new one waits for the bar) */
     P_BIND,                                           /* each lane's binding: P_BIND + lane */
-    P_PAT = P_BIND + EN_NPL,                          /* each lane's 16 steps (bit s: step s): P_PAT + lane */
-    P_ECHO = P_PAT + EN_NPL, P_REVERB, P_RADIO, P_WIDTH,               /* space */
+    P_PAT = P_BIND + EN_NPL,                          /* each bank's lanes' 16 steps (bit s: step s): P_PAT_OF(bank, lane) */
+    P_ECHO = P_PAT + EN_NPL * EN_NBANK, P_REVERB, P_RADIO, P_WIDTH,    /* space */
     P_ROOT, P_TUNE, P_SYNC, P_MODE,                   /* setup; the mode loads a pool */
     P_MIDI, P_MCH,                                    /* MIDI out: what it sends, its first channel */
     P_THEME, P_SKY, P_LINES, P_TLINES,                /* the screen (the engine keeps them only to name them) */
     P_NPARAMS
 };
+#define P_PAT_OF(b, l) (P_PAT + EN_NPL * (b) + (l))
 #define P_PL_LVL(i) (P_PL + 4 * (i))
 #define P_PL_INST(i) (P_PL + 4 * (i) + 1)
 #define P_PL_ECC(i) (P_PL + 4 * (i) + 2)
@@ -121,7 +123,8 @@ extern volatile int8_t en_pl_link[EN_NPL];     /* who swells it most: a planet, 
 extern volatile float en_pl_linkc[EN_NPL];     /* and how much */
 extern volatile uint8_t en_pl_awake[EN_NPL];   /* a dormant planet, woken by a tide */
 extern volatile uint8_t en_pl_notes[EN_NPL];   /* how many points its phrase has on its orbit */
-extern volatile uint16_t en_pat[EN_NPL];       /* the drums' steps as they are now (Evolve changes them) */
+extern volatile uint16_t en_pat[EN_NPL];       /* the playing bank's steps as they are now (Evolve changes them) */
+extern volatile uint8_t en_bank;               /* the bank playing (P_BANK may be waiting for the bar) */
 extern volatile uint8_t en_step;               /* the step playing, 0..15 */
 extern volatile float en_year;                 /* the Great Year: how far round it is, 0..1 */
 extern volatile float en_star;                 /* the star's size: its level, its roar, a flare (0..1.5) */
