@@ -144,8 +144,9 @@ cuts it on and off, Nudge bends its pitch up and back.
 **The star.** Its noise is its colour on screen. It roars now and then, louder and lower with a sub under
 it, and flares in bright bursts. Its Level is the ceiling for both: it never takes over.
 
-**Weather.** A dust cloud lasts 20 seconds to a minute: the whole mix warmer, softer and grainy, the sky
-brown. An asteroid crosses in 20 to 30 seconds, a heavy body swelling the planets it passes (it can wake
+**Weather.** A dust cloud lasts 20 seconds to a minute. Through its first half it thickens: a Mellow (LOF-1's
+master low-pass) closes over the whole mix, warmer, softer and grainy, the sky browning. Through its second
+half it thins and the Mellow opens out again. Called off early, it thins from where it is. An asteroid crosses in 20 to 30 seconds, a heavy body swelling the planets it passes (it can wake
 dormant ones), with a low rumble that pans with it. A comet falls into the star, faster and faster, ringing
 a glass bell from the scale at each step, higher and quicker as it nears, and burns up in a chord of bells,
 a crackle and a flare. Weather holds in an eclipse and while resting.

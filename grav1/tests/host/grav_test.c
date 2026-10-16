@@ -194,8 +194,8 @@ int main(void)
     run(0.2);
     CHECK(en_rock_on, "an asteroid crossing");
     CHECK(en_comet_on, "a comet falling");
-    run(8.0);
-    CHECK(en_dust > 0.4f, "a dust cloud: %.2f", (double)en_dust);
+    run(10.0);
+    CHECK(en_dust > 0.2f, "a dust cloud thickening: %.2f", (double)en_dust);
     {
         uint32_t b0 = 0;
         int k;

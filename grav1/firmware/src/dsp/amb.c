@@ -1043,14 +1043,14 @@ static void render_voices(uint32_t n)
 
 /* ------------------------------------------------------------ the weather --- */
 static struct {
-    float dust, dust_t, dust_left;
+    float dust, dust_t, dust_left, dust_len;     /* the cloud: its peak, the time left, its length */
     uint8_t rock, comet;
     float rx, ry, rvx, rvy, rt, rdur;
     float cr, cang, cdir, cnext;
     int cdeg;
     /* their sounds */
     float rb_l, rb_b, rbr, ramp, rgl, rgr, rf;
-    float crk, dp[7], dlp, dust_l, dust_r, dlo_l, dlo_r;
+    float crk, dp[7], dlp, dust_l, dust_r, dust_l2, dust_r2, dlo_l, dlo_r;
 } wx;
 
 #define NBELL 6
@@ -1664,22 +1664,30 @@ static void tides(float dt)
     }
 }
 
+static void dust_start(void)
+{
+    wx.dust_t = 0.6f + 0.4f * frand();
+    wx.dust_len = wx.dust_left = 20.0f + 40.0f * frand();
+    en_dusts++;
+    event(EV_DUST, 0);
+}
+
 /* the weather, once a chunk */
 static void weather(float dt)
 {
+    /* a dust cloud thickens through its first half and thins through its second: the Mellow (LOF-1's
+     * master low-pass) closing in and opening out again with it */
     if (wx.dust_left > 0.0f) {
         wx.dust_left -= dt;
         if (wx.dust_left <= 0.0f) {
+            wx.dust_left = 0.0f;
             wx.dust_t = 0.0f;
             event(EV_CLEAR, 0);
         }
     } else if (frand() < pct(par[P_DUST]) * 0.012f * dt) {
-        wx.dust_t = 0.6f + 0.4f * frand();
-        wx.dust_left = 20.0f + 40.0f * frand();
-        en_dusts++;
-        event(EV_DUST, 0);
+        dust_start();
     }
-    wx.dust += (wx.dust_t - wx.dust) * fm_minf(dt / 6.0f, 1.0f);
+    wx.dust = wx.dust_left > 0.0f ? wx.dust_t * fm_sin_turns(0.5f * (1.0f - wx.dust_left / wx.dust_len)) : 0.0f;
     if (!wx.rock && frand() < pct(par[P_ROCKS]) * 0.01f * dt) {
         float a0 = frand(), R0 = 1.3f, tx = (frand() - 0.5f) * 0.6f, ty = (frand() - 0.5f) * 0.6f;
         float sx = R0 * fm_cos_turns(a0), sy = R0 * fm_sin_turns(a0), dx = tx - sx, dy = ty - sy;
@@ -1740,12 +1748,12 @@ static void weather(float dt)
  * and a grain under it (crackle and a soft pink) */
 static void render_dust(uint32_t n)
 {
-    const float d = wx.dust, c = onepole(18000.0f - 14500.0f * d), lo = onepole(250.0f), shelf = 0.41f * d;
+    const float d = wx.dust, c = onepole(18000.0f * fm_exp2f(-3.6f * d)), lo = onepole(250.0f), shelf = 0.41f * d;
     const float grain = 0.06f * d * gate, burn = wx.crk;
-    float l = wx.dust_l, r = wx.dust_r, ll = wx.dlo_l, lr = wx.dlo_r, pk = wx.dlp, crk = 0.0f;
+    float l = wx.dust_l, r = wx.dust_r, l2 = wx.dust_l2, r2 = wx.dust_r2, ll = wx.dlo_l, lr = wx.dlo_r, pk = wx.dlp, crk = 0.0f;
     uint32_t j;
     if (d < 0.002f && burn < 0.002f) {
-        wx.dust_l = wx.dust_r = 0.0f;
+        wx.dust_l = wx.dust_r = wx.dust_l2 = wx.dust_r2 = 0.0f;
         return;
     }
     for (j = 0; j < n; j++) {
@@ -1755,12 +1763,14 @@ static void render_dust(uint32_t n)
         pk += 0.15f * (w - pk);
         g = (crk + pk * 0.4f) * grain;
         crk *= 0.85f;
-        l += c * (mixl[j] - l);
+        l += c * (mixl[j] - l);                  /* the Mellow: two gentle poles */
         r += c * (mixr[j] - r);
-        ll += lo * (l - ll);
-        lr += lo * (r - lr);
-        mixl[j] = l + shelf * ll + g;
-        mixr[j] = r + shelf * lr + g;
+        l2 += c * (l - l2);
+        r2 += c * (r - r2);
+        ll += lo * (l2 - ll);
+        lr += lo * (r2 - lr);
+        mixl[j] = l2 + shelf * ll + g;
+        mixr[j] = r2 + shelf * lr + g;
         if (burn > 0.002f) {                     /* the comet's burning: a bright crackle */
             float b = (w - pk) * wx.crk * 0.12f * events_vol;
             mixl[j] += b;
@@ -1769,7 +1779,7 @@ static void render_dust(uint32_t n)
             wx.crk *= 0.99994f;
         }
     }
-    wx.dust_l = fm_flush(l), wx.dust_r = fm_flush(r), wx.dlo_l = fm_flush(ll), wx.dlo_r = fm_flush(lr), wx.dlp = fm_flush(pk);
+    wx.dust_l = fm_flush(l), wx.dust_r = fm_flush(r), wx.dust_l2 = fm_flush(l2), wx.dust_r2 = fm_flush(r2), wx.dlo_l = fm_flush(ll), wx.dlo_r = fm_flush(lr), wx.dlp = fm_flush(pk);
 }
 
 /* ------------------------------------------------------------- once a chunk --- */
@@ -1977,13 +1987,12 @@ static void drain(void)
             break;
         case C_SUMMON:
             if (a == 0) {
-                if (wx.dust_t > 0.0f) {
-                    wx.dust_left = 0.001f;
+                if (wx.dust_left > 0.0f) {       /* called off: it thins from where it is, as fast as it came */
+                    float age = wx.dust_len - wx.dust_left;
+                    if (age < wx.dust_len * 0.5f)
+                        wx.dust_left = age;
                 } else {
-                    wx.dust_t = 0.6f + 0.4f * frand();
-                    wx.dust_left = 20.0f + 40.0f * frand();
-                    en_dusts++;
-                    event(EV_DUST, 0);
+                    dust_start();
                 }
             } else {                             /* the next chunk's weather finds its chance certain */
                 uint8_t keep = a == 1 ? wx.rock : wx.comet;

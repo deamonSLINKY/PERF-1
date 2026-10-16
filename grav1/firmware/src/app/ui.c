@@ -1331,7 +1331,7 @@ static void leds(void)
                 if (ap >> ((5u + i) % 12u) & 1u)
                     k |= 1u << i;
             if (ui.view == V_WEATHER) {
-                uint8_t on[3] = {(uint8_t)(en_dust > 0.05f), en_rock_on, en_comet_on};
+                uint8_t on[3] = {(uint8_t)(en_dust > 0.001f), en_rock_on, en_comet_on};
                 for (i = 0; i < 3; i++)
                     k = on[i] ? k | 1u << BLACK_KEY[i] : k & ~(1u << BLACK_KEY[i]);
             }

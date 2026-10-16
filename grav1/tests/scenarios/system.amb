@@ -70,8 +70,8 @@ tapkey b2
 wait 500
 expect comet 1
 tapkey b0
-wait 9000
-expect dust >30
+wait 15000
+expect dust >20
 shot weather.png
 # eclipse
 tap REC
