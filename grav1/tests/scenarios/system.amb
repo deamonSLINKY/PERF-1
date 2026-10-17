@@ -322,8 +322,10 @@ expect game 0
 expect view 0
 # remote: SEL + GLO, the panel plays the browser (it answers with CC 117); SEL + GLO again, back
 press SEL
-tap GLO
+press GLO
+wait 100
 release SEL
+release GLO
 wait 300
 expect remote 1
 expect playing 0

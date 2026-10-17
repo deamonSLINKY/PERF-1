@@ -382,18 +382,6 @@ static void game_start(void);
 static void button(int b)
 {
     int v;
-#ifndef EN_WEB
-    if (b == B_GLO && (plat_buttons() >> B_SEL & 1u)) {   /* SEL + GLO: remote, the panel plays the browser */
-        ui.btn_used |= 1u << B_SEL;
-        rm_enter();
-        return;
-    }
-#endif
-    if (b == B_EDIT && (plat_buttons() >> B_SEL & 1u)) {  /* SEL + EDIT: the secret */
-        ui.btn_used |= 1u << B_SEL;
-        game_start();
-        return;
-    }
     if (b == B_GLO && (ui.view == V_SETUP || ui.view == V_DISPLAY)) {   /* GLO again: Display, then MIDI out */
         set_view(ui.view + 1);
         return;
@@ -729,6 +717,23 @@ static void input(void)
         if (btn & m) {
             ui.btn_used &= ~m;
             ui.down_t[i] = plat_ms();
+            if ((i == B_GLO || i == B_EDIT) && (btn >> B_SEL & 1u)) {   /* SEL + GLO: remote; SEL + EDIT: the secret */
+                ui.btn_used |= m | 1u << B_SEL;  /* as they go down; letting go does nothing, in any order */
+                ui.btn = btn;
+                ui.keys = keys;
+                ui.help = 0;
+#ifndef EN_WEB
+                if (i == B_GLO) {
+                    rm_enter();
+                    return;
+                }
+#endif
+                if (i == B_EDIT) {
+                    game_start();
+                    return;
+                }
+                continue;
+            }
             if (i == B_SAVE)
                 ui.reset_done = 0;
             if (i == B_PLAY)
