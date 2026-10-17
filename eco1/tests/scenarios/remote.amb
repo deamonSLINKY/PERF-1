@@ -1,0 +1,28 @@
+# Remote (SEL + GLO): the panel plays ECO-1 in the browser over USB MIDI, channel 16, and the FM-1 goes
+# quiet; the browser answers with CC 117. SEL + GLO again (any order of letting go): back, growing again.
+wait 2000
+expect playing 1
+press SEL
+press GLO
+wait 100
+release SEL
+release GLO
+wait 300
+expect remote 1
+expect playing 0
+expect view 0
+midi BF 75 7F
+wait 300
+expect remote 2
+press SEL
+press GLO
+wait 100
+release GLO
+release SEL
+wait 500
+expect remote 0
+expect playing 1
+expect view 0
+tap GLO
+wait 200
+expect view 7

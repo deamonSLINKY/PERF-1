@@ -186,7 +186,9 @@ int en_scale(uint32_t pool, int *steps)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_TOUCH, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW };
+enum { C_SET, C_POOL, C_PLAY, C_TOUCH, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE };
+static uint8_t muted;                           /* remote: the FM-1 is playing the browser */
+static float mute_g = 1.0f;
 #define QN 64u
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
@@ -203,6 +205,7 @@ void en_set(int p, int v) { post(C_SET, p, v); }
 void en_pool(uint32_t pool) { post(C_POOL, 0, (int)(pool & 0xFFFu)); }
 void en_play(int on) { post(C_PLAY, on, 0); }
 void en_touch(void) { post(C_TOUCH, 0, 0); }
+void en_mute(int on) { post(C_MUTE, on, 0); }
 void en_freeze(int on) { post(C_FREEZE, on, 0); }
 void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
@@ -247,7 +250,7 @@ static inline float wnoise(uint32_t *s)         /* white, -1..1 */
 /* a note on part k (0..2 the leaves, 3 the stem), on its channel, when notes go out */
 static void note(int on, int k, uint32_t n, uint32_t vel)
 {
-    if (par[P_MIDI] == EN_MIDI_NOTES || par[P_MIDI] == EN_MIDI_BOTH)
+    if (!muted && (par[P_MIDI] == EN_MIDI_NOTES || par[P_MIDI] == EN_MIDI_BOTH))
         en_midi_out((on ? 0x90u : 0x80u) | (uint32_t)((par[P_MCH] + k) & 15), n, on ? vel : 0u);
 }
 
@@ -1210,6 +1213,7 @@ static void drain(void)
                 play_stop();
             break;
         case C_TOUCH: touch(); break;
+        case C_MUTE: muted = (uint8_t)(a != 0); break;
         case C_FREEZE: en_frozen = (uint8_t)(a != 0); break;
         case C_SEED:
             rng ^= (uint32_t)(b & 0xFFFF) * 2654435761u;
@@ -1298,8 +1302,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain, uint32_t at)
     for (j = 0; j < n; j++) {
         float wl, wr, l, r;
         reverb(rsend[j] * rg * 0.8f, &wl, &wr);
-        l = (mixl[j] + 1.3f * wl) * 1.3f * gain;
-        r = (mixr[j] + 1.3f * wr) * 1.3f * gain;
+        mute_g += ((muted ? 0.0f : 1.0f) - mute_g) * 0.002f;
+        l = (mixl[j] + 1.3f * wl) * 1.3f * gain * mute_g;
+        r = (mixr[j] + 1.3f * wr) * 1.3f * gain * mute_g;
         out[2 * j] = (int32_t)(fm_tanhf(l) * 8300000.0f);
         out[2 * j + 1] = (int32_t)(fm_tanhf(r) * 8300000.0f);
         if (bus_on)
@@ -1318,7 +1323,7 @@ static void cc_out(void)
     static float spark;
     uint8_t v[12];
     int i, sent = 0;
-    if (par[P_MIDI] != EN_MIDI_BOTH && par[P_MIDI] != EN_MIDI_CC)
+    if (muted || (par[P_MIDI] != EN_MIDI_BOTH && par[P_MIDI] != EN_MIDI_CC))
         return;
     spark = fm_maxf(spark * 0.8f, fm_maxf(en_leaf_glow[0], fm_maxf(en_leaf_glow[1], en_leaf_glow[2])));
     for (i = 0; i < EN_NLEAF; i++) {

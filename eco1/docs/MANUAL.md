@@ -270,6 +270,13 @@ The FM-1 itself sends the stereo mix from its output.
 
 ![To your DAW: the MIDI out page](img/eco-device-midi.png)
 
+**Remote: the FM-1 plays the emulator.** Open the [emulator](https://rustypawz.github.io/fm1-HYP1/eco/emu/),
+switch it on and connect MIDI (Chrome or Edge, the FM-1 plugged in by USB). Then hold SEL and press GLO on the
+FM-1: REMOTE shows on its screen, it goes quiet and stops sending MIDI, and its whole panel (every button, key
+and knob, and MASTER) plays the emulator instead, its lights following the emulator's. SEL + GLO again gives
+the FM-1 back. For livestreams, the emulator's **Stream view** shows the FM-1 and its screen large on a 16:9
+stage, with whatever you press on the real one lit up.
+
 ---
 
 ## 9. Saving

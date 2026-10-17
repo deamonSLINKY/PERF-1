@@ -418,6 +418,12 @@ it always does; the emulator's screen is the one to watch. The FM-1 shows PLAYIN
 emulator answers and WAITING FOR THE BROWSER when it doesn't. **SEL** + **GLO** again gives the FM-1 back,
 stopped (PLAY starts it).
 
+**For livestreams:** the emulator's **Stream view** button (or the address with `?stream`) puts the FM-1 and
+its screen, large, on a clean 16:9 stage for OBS or any capture. Whatever is pressed glows, on the real FM-1
+through the remote or clicked here; a knob turning gets a ring; a strip under the screen names the last
+moves; FM-1 LINKED shows while the remote is on. Its small bar (Connect MIDI, Exit) and the pointer hide when
+the mouse rests.
+
 How it talks, for the curious: USB MIDI channel 16. Keys are notes 48–74, buttons CC 102–115 (127 down,
 0 up), the knobs CC 85–91 (64 ± the detents), MASTER CC 7, and CC 116 is a hello each second. The
 emulator sends its lights back the same way, with CC 117 each second.

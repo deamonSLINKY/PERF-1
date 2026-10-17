@@ -358,6 +358,162 @@ static void help_tick(uint32_t btn, uint32_t keys)
         }
 }
 
+static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s, uint16_t c);
+/* REMOTE (SEL + GLO): the panel plays ECO-1 in the browser over USB MIDI, and the FM-1 goes quiet, as on
+ * HYP-1 and LOF-1. On channel 16: the keys are notes 48 + k, the buttons CC 102 + b (127 down, 0 up), the
+ * knobs CC 85 + role (64 + detents), MASTER CC 7, and CC 116 says hello every second. The browser answers
+ * with its lights the same way (notes and CC 102 + b) and CC 117, so the panel lights as the emulator's
+ * does. SEL + GLO again: back, the system growing again if it was. Not in the browser's own build. */
+#define RM_ST_NOTE 0x9Fu
+#define RM_ST_OFF 0x8Fu
+#define RM_ST_CC 0xBFu
+#define RM_KEY0 48u
+#define RM_BTN0 102u
+#define RM_ENC0 85u
+#define RM_MASTER 7u
+#define RM_HELLO 116u
+#define RM_ACK 117u
+static struct {
+    uint8_t on, link, was_playing;
+    uint32_t btn, keys, ign_b, ign_k;            /* sent as down; held at the start, not sent till let go */
+    uint32_t lit_b, lit_k;                       /* the browser's lights */
+    uint32_t hello_t, rx_t;
+    int master;
+} rm;
+int ui_remote(void) { return rm.on; }
+
+static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s, uint16_t c);
+static void rm_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 | st << 8 | d1 << 16 | d2 << 24); }
+
+static void rm_draw(void)
+{
+    lcd_fill(0, 0, 240, 240, K_BG);
+    cv_begin(240, 120, K_BG);
+    text_c(120, 4, &FONT_L, "REMOTE", K_ACC);
+    text_c(120, 44, &FONT_S, rm.link ? "PLAYING THE BROWSER" : "WAITING FOR THE BROWSER", rm.link ? K_SUN : K_DIM);
+    text_c(120, 66, &FONT_XS, "USB MIDI  //  CHANNEL 16", K_DIM);
+    text_c(120, 96, &FONT_S, "SEL + GLO: BACK", K_TEXT);
+    cv_blit(0, 60);
+}
+
+#ifndef EN_WEB
+static void rm_enter(void)
+{
+    int e;
+    memset(&rm, 0, sizeof rm);
+    rm.on = 1;
+    rm.was_playing = en_playing;
+    rm.ign_b = plat_buttons();
+    rm.ign_k = plat_keys();
+    rm.hello_t = plat_ms() - 1000u;
+    rm.master = -1;
+    for (e = 0; e < NE; e++)
+        (void)plat_enc(e);
+    en_play(0);
+    en_mute(1);                                  /* after the rest's note-offs */
+    plat_leds(0, 0);
+    rm_draw();
+}
+#endif
+
+static void rm_leave(void)
+{
+    uint32_t i;
+    for (i = 0; i < NB; i++)                     /* the browser lets go of what was down */
+        if (rm.btn >> i & 1u)
+            rm_out(RM_ST_CC, RM_BTN0 + i, 0);
+    for (i = 0; i < NKEYS; i++)
+        if (rm.keys >> i & 1u)
+            rm_out(RM_ST_OFF, RM_KEY0 + i, 0);
+    rm_out(RM_ST_CC, RM_HELLO, 0);               /* goodbye */
+    rm.on = 0;
+    en_mute(0);
+    if (rm.was_playing)
+        en_play(1);
+    ui.btn = plat_buttons();                     /* what's held now does nothing when let go */
+    ui.keys = plat_keys();
+    ui.btn_used = ui.btn;
+    ui.act_t = plat_ms();
+    ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;       /* everything drawn again */
+    lcd_fill(0, 0, 240, 240, K_BG);
+    say("REMOTE", "OFF");
+}
+
+static void rm_tick(void)
+{
+    uint32_t b = plat_buttons(), k = plat_keys(), now = plat_ms(), ch, i, pkt;
+    int e;
+    while (plat_midi_in(&pkt)) {                 /* the browser's lights (channel 16); the rest, ignored */
+        uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = pkt >> 24;
+        if (st == RM_ST_NOTE || st == RM_ST_OFF) {
+            if (n >= RM_KEY0 && n < RM_KEY0 + NKEYS) {
+                uint32_t m = 1u << (n - RM_KEY0);
+                rm.lit_k = st == RM_ST_NOTE && v ? rm.lit_k | m : rm.lit_k & ~m;
+            }
+        } else if (st == RM_ST_CC) {
+            if (n >= RM_BTN0 && n < RM_BTN0 + NB) {
+                uint32_t m = 1u << (n - RM_BTN0);
+                rm.lit_b = v ? rm.lit_b | m : rm.lit_b & ~m;
+            } else if (n == RM_ACK) {
+                rm.rx_t = now;
+                if (!rm.link) {
+                    rm.link = 1;
+                    rm_draw();
+                }
+                if (!v)
+                    rm.lit_b = rm.lit_k = 0;
+            }
+        }
+    }
+    if (rm.link && now - rm.rx_t > 3000u) {      /* the browser's gone quiet */
+        rm.link = 0;
+        rm.lit_b = rm.lit_k = 0;
+        rm_draw();
+    }
+    if ((b >> B_SEL & 1u) && (b >> B_GLO & 1u) && !((rm.ign_b | rm.btn) >> B_GLO & 1u)) {
+        rm_leave();                              /* SEL + GLO: back (GLO never sent) */
+        return;
+    }
+    rm.ign_b &= b;
+    rm.ign_k &= k;
+    b &= ~rm.ign_b;
+    k &= ~rm.ign_k;
+    if (b >> B_GLO & 1u && b >> B_SEL & 1u)
+        b &= ~(1u << B_GLO);
+    ch = b ^ rm.btn;
+    for (i = 0; i < NB; i++)
+        if (ch >> i & 1u)
+            rm_out(RM_ST_CC, RM_BTN0 + i, b >> i & 1u ? 127u : 0u);
+    rm.btn = b;
+    ch = k ^ rm.keys;
+    for (i = 0; i < NKEYS; i++)
+        if (ch >> i & 1u) {
+            if (k >> i & 1u)
+                rm_out(RM_ST_NOTE, RM_KEY0 + i, 100u);
+            else
+                rm_out(RM_ST_OFF, RM_KEY0 + i, 0u);
+        }
+    rm.keys = k;
+    for (e = 0; e < NE; e++) {
+        int32_t d = plat_enc(e);
+        if (d)
+            rm_out(RM_ST_CC, RM_ENC0 + (uint32_t)e, (uint32_t)(64 + (d > 63 ? 63 : d < -63 ? -63 : d)));
+    }
+    {
+        int m = (int)(plat_master() >> 5);       /* 0 .. 127, sent when it moves by two (the pot's noise) */
+        if (m > 127)
+            m = 127;
+        if (rm.master < 0 || m - rm.master > 1 || rm.master - m > 1 || ((m == 0 || m == 127) && m != rm.master)) {
+            rm.master = m;
+            rm_out(RM_ST_CC, RM_MASTER, (uint32_t)m);
+        }
+    }
+    if (now - rm.hello_t >= 1000u) {
+        rm.hello_t = now;
+        rm_out(RM_ST_CC, RM_HELLO, 127u);
+    }
+}
+
 static int ff_on(void);
 static int ff_input(uint32_t btn, uint32_t keys);
 
@@ -365,6 +521,8 @@ static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+    if (rm.on)                                   /* remote: rm_tick has the panel and the MIDI */
+        return;
     if (ff_on()) {                               /* the fireflies up: a touch only wakes the screen */
         ff_input(btn, keys);
         midi_in();
@@ -379,6 +537,16 @@ static void input(void)
         if (btn & m) {
             ui.btn_used &= ~m;
             ui.down_t[i] = plat_ms();
+#ifndef EN_WEB
+            if (i == B_GLO && (btn >> B_SEL & 1u)) {   /* SEL + GLO: remote, the panel plays the browser */
+                ui.btn_used |= m | 1u << B_SEL;  /* letting go does nothing, in any order */
+                ui.btn = btn;
+                ui.keys = keys;
+                ui.help = 0;
+                rm_enter();
+                return;
+            }
+#endif
             if (i == B_SAVE)
                 ui.reset_done = 0;
             if (i == B_PLAY)                   /* transport on the press */
@@ -749,7 +917,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_SEQ: L("THE WEATHER"); L("RAIN, WIND, GUSTS,"); L("ITS SOUND"); break;
     case B_SEL: L("THE STEM'S DRONE"); L("LEVEL, COLOUR, INTERVAL,"); L("TONE; OCT-/+ ITS OCTAVE"); break;
     case B_FX: L("THE SPACE"); L("REVERB, SIZE, WIND VERB,"); L("STEM VERB"); break;
-    case B_GLO: L("SETUP: ROOT, TUNE,"); L("SYNC TO MIDI CLOCK, GRID"); L("AGAIN: MIDI OUT, LIGHTS"); break;
+    case B_GLO: L("SETUP: ROOT, TUNE,"); L("SYNC TO MIDI CLOCK, GRID"); L("AGAIN: MIDI OUT, LIGHTS"); L("SEL + GLO: REMOTE"); break;
     case B_EDIT: L("TOUCH THE PLANT:"); L("A CHARGE RUNS UP IT"); L("FROM THE SOIL"); break;
     case B_REC: L("FREEZE: THE DAY AND"); L("THE WEATHER STOP,"); L("THE REVERB RINGS ON"); break;
     case B_OCTDN: L("AN OCTAVE DOWN: THE PAGE'S"); L("LEAF OR STEM, ELSE THE PLANT"); L("WITH OCT+, 5 S: UPDATE MODE"); break;
@@ -1045,9 +1213,17 @@ void ui_frame(void)
         if (!en_playing)
             en_play(1);
     }
+    if (rm.on) {                                 /* remote: the browser's lights; the screen says so */
+        rm_tick();
+        if (rm.on) {
+            plat_glow(1);
+            plat_leds(rm.lit_b, rm.lit_k);
+            return;
+        }
+    }
     input();
     autosave();
-    if (!ff.on && ui_flies_ms && !ui.help && plat_ms() - ui.act_t >= ui_flies_ms)
+    if (!ff.on && !rm.on && ui_flies_ms && !ui.help && plat_ms() - ui.act_t >= ui_flies_ms)
         ff_enter();                              /* half an hour untouched: the fireflies */
     if (ff.on) {
         ff_update();

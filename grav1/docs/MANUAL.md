@@ -321,7 +321,7 @@ switch it on and click Connect MIDI (Chrome or Edge, the FM-1 plugged in by USB)
 on the FM-1: REMOTE shows on its screen, it goes quiet and stops sending MIDI, and its whole panel (every
 button, key and knob, and MASTER) plays the emulator instead, its lights following the emulator's. SEL + GLO
 again gives the FM-1 back, playing again if it was. It speaks on channel 16, as HYP-1's and LOF-1's remotes
-do, so the same emulator page can sit beside them.
+do, so the same emulator page can sit beside them. For livestreams, the emulator's **Stream view** shows the FM-1 and its screen large on a 16:9 stage, with whatever you press on the real one lit up.
 
 ![To your DAW: the MIDI out page](img/grav-device-midi.png)
 

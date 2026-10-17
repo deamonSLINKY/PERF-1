@@ -293,7 +293,7 @@ perc 45).
 
 **The emulator** can send the six voices apart, on eight output channels (the mix, then lead, comp, bass,
 answer, drums, dust), for recording into a DAW. **Remote:** with the emulator open and MIDI connected,
-SEL + GLO on the FM-1 makes its panel play the emulator (the FM-1 goes quiet); SEL + GLO again comes back.
+SEL + GLO on the FM-1 makes its panel play the emulator (the FM-1 goes quiet); SEL + GLO again comes back. For livestreams, the emulator's **Stream view** shows the FM-1 and its screen large on a 16:9 stage, with whatever you press on the real one lit up.
 
 ---
 

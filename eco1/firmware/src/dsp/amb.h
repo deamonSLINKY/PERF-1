@@ -76,6 +76,7 @@ void en_init(void);
 void en_set(int param, int value);
 void en_pool(uint32_t pool);                   /* the scale, relative to the root (bit 0 always set) */
 void en_play(int on);                          /* the plant grows / rests (the tails ring on) */
+void en_mute(int on);                          /* remote: silent and no MIDI out (1), or back (0) */
 void en_touch(void);                           /* touch the plant: a charge runs up it from the soil */
 void en_freeze(int on);                        /* the day and the weather stop; the plate rings on */
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
