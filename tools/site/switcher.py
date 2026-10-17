@@ -4,6 +4,8 @@
 HYP-1's pages at the root, LOF-1's under lof/, ECO-1's under eco/, GRAV-1's under grav/. Choosing another firmware goes to its
 matching page (landing, emulator, installer, manual; HYP-1's board has no twin, so the landing), in its own
 colours, text and images. A firmware that didn't build this time isn't offered. The bar is the same neutral strip on both, so it reads as the site's own.
+The front page (tools/site/hub.py, at the root, HYP-1's landing under hyp/) has its own picker, so it gets no bar;
+every other page's bar starts with "All firmwares" to go back to it.
 
   python3 tools/site/switcher.py build/pages"""
 import sys
@@ -44,31 +46,36 @@ def main(root):
     root = Path(root)
     n = 0
     built = {key for key, *_ in PRODUCTS if key == "hyp" or (root / key / "index.html").exists()}
-    idx = root / "index.html"
-    if idx.exists():                                       # a firmware that didn't build: no word of it on the landing
-        t = idx.read_text(encoding="utf-8")
-        for key in EXPERIMENTAL - built:
-            a, b = t.find(f"<!--{key}-->"), t.find(f"<!--/{key}-->")
-            if a >= 0 and b > a:
-                t = t[:a] + t[b + len(f"<!--/{key}-->"):]
-        idx.write_text(t, encoding="utf-8")
+    for idx in (root / "index.html", root / "hyp" / "index.html"):
+        if idx.exists():                                   # a firmware that didn't build: no word of it on the landings
+            t = idx.read_text(encoding="utf-8")
+            for key in EXPERIMENTAL - built:
+                while (a := t.find(f"<!--{key}-->")) >= 0 and (b := t.find(f"<!--/{key}-->", a)) > a:
+                    t = t[:a] + t[b + len(f"<!--/{key}-->"):]
+            idx.write_text(t, encoding="utf-8")
+    hub = (root / "index.html").exists() and "<!--rw-hub-->" in (root / "index.html").read_text(encoding="utf-8")
     for f in sorted(root.rglob("*.html")):
         rel = f.relative_to(root)
+        if hub and rel == Path("index.html"):
+            continue                                       # the front page has its own picker
         prod, section, depth = page_parts(rel)
         if prod not in built:
             continue
         up = "../" * depth
-        opts = []
+        opts = [f'<option value="{up or "./"}">All firmwares · the front page</option>'] if hub else []
         for key, name, what, base in PRODUCTS:
             if key not in built:
                 continue
             sec = section if section != "board" or key == "hyp" else ""
             if key != "hyp" and sec and not (root / key / sec).exists():
                 sec = ""
-            href = (up + base + (sec + "/" if sec else "")) or "./"
+            if hub and key == "hyp" and not sec:
+                href = up + "hyp/"                         # HYP-1's landing, now that the root is the front page
+            else:
+                href = (up + base + (sec + "/" if sec else "")) or "./"
             label = f"{name} · {what}" + (" (experimental)" if key in EXPERIMENTAL else "")
             opts.append(f'<option value="{href}"{" selected" if key == prod else ""}>{label}</option>')
-        if len(opts) < 2:
+        if len(opts) < 2 + hub:
             continue
         bar = BAR.replace("__OPTS__", "".join(opts)).replace(
             "__TAG__", '<span class="tag">Experimental</span>' if prod in EXPERIMENTAL else "")

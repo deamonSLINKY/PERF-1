@@ -3,7 +3,8 @@
 # x86-64, as GitHub's runners are), runs the tests, and publishes the site to this repository's GitHub
 # Pages: the web installer with this build in it, the browser emulator, and the .fwsc to download.
 # LOF-1 (lof1/), ECO-1 (eco1/) and GRAV-1 (grav1/), experimental, versions 0.x, are built alongside, their
-# pages under lof/, eco/ and grav/, and a dropdown on every page switches between them.
+# pages under lof/, eco/ and grav/, and a dropdown on every page switches between them. The root is a front
+# page for all four (tools/site/hub.py); HYP-1's own landing is under hyp/.
 #
 # Once, in the repository's Settings > Pages: Source = "GitHub Actions". Then the installer is at
 #   https://<you>.github.io/<repo>/install/
@@ -171,6 +172,8 @@ jobs:
           python3 tools/gen_manual_figures.py
           EN_VERSION="$GV" sh web/emu/build_clang.sh
           REPO_URL="https://github.com/$GITHUB_REPOSITORY/tree/main/grav1" python3 tools/make_pages.py "build/amb-$GV.fwsc" "$GV" ../build/pages/grav
+      - name: The front page, all four firmwares (HYP-1's landing moves to hyp/)
+        run: REPO_URL="https://github.com/$GITHUB_REPOSITORY" python3 tools/site/hub.py build/pages
       - name: The firmware dropdown on every page
         run: python3 tools/site/switcher.py build/pages
       - uses: actions/upload-artifact@v4
