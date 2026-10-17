@@ -14,6 +14,7 @@ by Charles Vestal. Current version: **1.5.0** (each push to `main` builds the ne
 
 *Five minutes played live on piece 01: [watch on YouTube](https://www.youtube.com/watch?v=0UvGnZE2_VI).*
 
+- **All four firmwares** (HYP-1, LOF-1, ECO-1, GRAV-1) on one page, with the pack's video: <https://rustypawz.github.io/fm1-HYP1/>
 - **Try it in your browser** (no FM-1 needed): <https://rustypawz.github.io/fm1-HYP1/emu/>
 - **Install it** (Chrome or Edge, with the FM-1 plugged in): <https://rustypawz.github.io/fm1-HYP1/install/>
 - **Read the manual**: <https://rustypawz.github.io/fm1-HYP1/manual/>, or the
