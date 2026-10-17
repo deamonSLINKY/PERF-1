@@ -58,7 +58,7 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 1. **Listen.** The first system, Sol, is playing: a yellow star, six planets. Turn MASTER for volume.
 2. **Watch it.** Each planet flashes as it plays. Near the star they glow red and orange, far out blue and
    ice. The thin line along the top of the screen is the Great Year going round.
-3. **Turn SELECT.** It walks every page: System, Star, each planet in turn, Gravity, Weather, Pulse, Drift,
+3. **Turn SELECT.** It walks every page: System, Star, each planet in turn, Gravity, Weather, Pulse, Drift, Kit,
    Space, Setup, Display, MIDI out. The dots at the right of the knob strip show where you are.
 4. **Change a planet's year.** Hold SEQ for the sequencer: six lanes of 16 steps. The white keys are the
    lane's steps, black keys 1–6 (or OCT− / OCT+) pick the lane, SELECT picks one of eight banks. Add a hit:
@@ -79,7 +79,7 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 | **PLAY** | Grow / rest. Resting, everything fades and the tails ring on. |
 | **REC** | Eclipse: the orbits and the weather hold still, the space rings on. Again to let go. |
 | **EDIT** | The Great Year now: the chord moves, the drums evolve (and with Drift on the Great Year, change bank two bars later). |
-| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse (again: Drift), Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
+| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse (again: Drift, then the Kit), Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
 | **SEL** | The next planet (on Pulse, the next lane). Held, with GLO: remote (the panel plays the browser emulator). |
 | **SELECT** | Every page in turn, each planet's page one by one. With HOME held: the tempo. In the sequencer: the drum bank. |
 | **ALGORITHM** | The planet (on Pulse, the lane). |
@@ -264,6 +264,21 @@ Evolve works on the bank playing.
 The rule above the knobs shows the bank playing and what's coming: the bars to go, FILL during the fill
 bar, or GREAT YR while it waits for the Great Year. In the sequencer, a change Drift makes shows as the bank
 on screen; edits you make there stay in the bank.
+
+### Kit (SEQ a third time)
+
+![The Kit](img/grav-screen-kit.png)
+
+- **Kit:** the six drums' sounds, a lane each (the sequencer's lanes take their names):
+  - **Probe:** Kick, Pulsar, Sonar, Geiger, Rim, Shaker: a space probe's instruments.
+  - **Deep Field:** Heart, Static, Chime, Relay, Drip, Breath: soft and dark, far away; the sonar's ping
+    becomes a bell.
+  - **Ritual:** Frame, Block, Log, Shaker, Clave, Rain: a frame drum, a woodblock, a hollow log, seeds.
+- **Tune:** every drum up or down, by up to an octave (semitones).
+- **Decay:** every drum shorter or longer (25–200%).
+- **Reverb:** how much of the drums goes to the plate.
+
+Each system starts on a kit of its own; the change takes from the next hit.
 
 ### Space (FX)
 

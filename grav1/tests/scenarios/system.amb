@@ -41,7 +41,7 @@ shot pulse.png
 press SEQ
 wait 800
 release SEQ
-expect view 11
+expect view 12
 turn SELECT 1
 expect par42 1
 tap OCT+
@@ -63,6 +63,16 @@ tap SEQ
 expect view 6
 expect par111 1
 shot drift.png
+# the Kit (SEQ a third time): Deep Field, its names on the sequencer's lanes
+tap SEQ
+expect view 7
+spin K1 1
+wait 2000
+expect par115 1
+expect hits >0
+shot kit.png
+spin K1 -1
+wait 300
 # the weather: black keys 1-3 call it
 tap LFO
 expect view 3
@@ -94,15 +104,15 @@ wait 10000
 expect hops >0
 # the screen's theme (global), then saving on Setup
 tap GLO
-expect view 8
-tap GLO
 expect view 9
+tap GLO
+expect view 10
 spin K1 2
 expect par107 2
 wait 300
 shot display.png
 tap GLO
-expect view 10
+expect view 11
 tap SAVE
 wait 300
 expect dirty 0

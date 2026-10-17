@@ -45,7 +45,9 @@ extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_INST_NAME[EN_NINST];
 extern const char *const EN_COLOUR_NAME[EN_NCOLOUR];
 extern const char *const EN_STAR_KIND[EN_NCOLOUR];
-extern const char *const EN_LANE_NAME[EN_NPL];
+extern const char *EN_LANE_NAME[EN_NPL];       /* the drums' names in the kit playing */
+#define EN_NKIT 3
+extern const char *const EN_KIT_NAME[EN_NKIT];
 extern const char *const EN_BIND_NAME[5];
 
 /* parameters: value ranges in en_param_info() */
@@ -65,6 +67,8 @@ enum {
     P_HOP, P_HOPWHEN, P_HOPPOOL, P_HOPFILL,           /* Drift: the drums change bank (Off, Next, Random), when
                                                          (the Great Year, or every 4-64 bars), from banks 1..pool,
                                                          with a fill the bar before */
+    P_KIT, P_DTUNE, P_DDECAY, P_DVERB,                /* the drums' kit (Probe, Deep Field, Ritual), their tuning
+                                                         (semitones), decay (%) and reverb */
     P_NPARAMS
 };
 #define P_PAT_OF(b, l) (P_PAT + EN_NPL * (b) + (l))

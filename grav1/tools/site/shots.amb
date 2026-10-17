@@ -45,6 +45,14 @@ wait 400
 shot drift.png
 echo @drift
 leds
+tap SEQ
+spin K1 1
+wait 400
+shot kit.png
+echo @kit
+leds
+spin K1 -1
+wait 200
 press SEQ
 wait 800
 release SEQ

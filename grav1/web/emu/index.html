@@ -209,6 +209,12 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
         </dl>
       </div>
       <div>
+        <h3>Kit <span>SEQ three times</span></h3>
+        <dl>
+          <dt>Kit</dt><dd>The drums' sounds: Probe (kick, pulsar, sonar, geiger, rim, shaker), Deep Field (heart, static, chime, relay, drip, breath), Ritual (frame drum, block, log, shaker, clave, rain).</dd><dt>Tune, Decay</dt><dd>Every drum up or down an octave; shorter or longer.</dd><dt>Reverb</dt><dd>How much of the drums goes to the plate.</dd>
+        </dl>
+      </div>
+      <div>
         <h3>Space <span>FX</span></h3>
         <dl>
           <dt>Echo, Reverb</dt><dd>A dotted-eighth echo; the plate (more, longer). The far planets send most.</dd><dt>Radio, Width</dt><dd>A band of hiss and the odd falling whistler; how wide the planets spread.</dd>
@@ -357,7 +363,7 @@ function hit(c, cls) {
 }
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out); on the FM-1, SEL + GLO plays this emulator",
-  HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (again: Drift; hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
+  HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (again: Drift, then the Kit; hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
   "OCT-": "The planet an octave down", "OCT+": "The planet an octave up", SELECT: "Every page in turn (HOME held: the tempo)", ALGORITHM: "The planet (on Pulse: the lane)", PRESETS: "The system",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

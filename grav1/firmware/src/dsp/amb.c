@@ -24,7 +24,8 @@ const char *const EN_INST_NAME[EN_NINST] = {"Drone", "Glass bell", "Pluck", "Sof
 const char *const EN_COLOUR_NAME[EN_NCOLOUR] = {"White", "Pink", "Brown", "Blue", "Violet", "Grey", "Black", "Yellow"};
 const char *const EN_STAR_KIND[EN_NCOLOUR] = {"White star", "Pink star", "Brown dwarf", "Blue giant", "Violet star",
                                               "Grey dwarf", "Black hole", "Yellow star"};
-const char *const EN_LANE_NAME[EN_NPL] = {"Kick", "Pulsar", "Sonar", "Geiger", "Rim", "Shaker"};
+const char *EN_LANE_NAME[EN_NPL] = {"Kick", "Pulsar", "Sonar", "Geiger", "Rim", "Shaker"};
+const char *const EN_KIT_NAME[EN_NKIT] = {"Probe", "Deep Field", "Ritual"};
 const char *const EN_BIND_NAME[5] = {"Off", "Pump", "Blip", "Flicker", "Nudge"};
 static const char *const THEME_NAME[EN_NTHEMES] = {"Deep space", "Nebula", "Aurora", "Red planet", "Phosphor", "Redtail", "Mono"};
 
@@ -50,6 +51,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"MIDI out", 0, 3, 1},    {"Channel", 0, 8, 0},
     {"Theme", 0, EN_NTHEMES - 1, 0}, {"Starfield", 0, 100, 100}, {"Orbits", 0, 100, 100}, {"Tide lines", 0, 100, 100},
     {"Change", 0, 2, 0},      {"Every", 0, 5, 0},      {"Pool", 2, EN_NBANK, 4}, {"Fill", 0, 100, 50},
+    {"Kit", 0, EN_NKIT - 1, 0}, {"Tune", -12, 12, 0},  {"Decay", 25, 200, 100}, {"Reverb", 0, 100, 50},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -149,6 +151,8 @@ static int16_t pat_bits(const char *s)
 
 /* each system's Drift: change (0 Off, 1 Next, 2 Random), when (0 the Great Year, 1-5 every 4, 8, 16, 32, 64
  * bars), pool (banks 1..n), fill */
+/* each system's kit: 0 Probe, 1 Deep Field, 2 Ritual */
+static const uint8_t KIT_OF[EN_NPIECES] = {0, 1, 2, 1, 0, 2, 2, 1, 1, 0};
 static const uint8_t HOP[EN_NPIECES][4] = {
     {1, 0, 4, 50}, {0, 0, 4, 50}, {2, 3, 4, 40}, {0, 0, 4, 50}, {1, 2, 3, 60},
     {2, 0, 6, 40}, {1, 0, 2, 30}, {2, 0, 3, 20}, {0, 0, 4, 50}, {2, 2, 5, 70}};
@@ -190,6 +194,7 @@ void en_piece(int i, int16_t *p, uint16_t *pool)
     p[P_HOPWHEN] = HOP[i][1];
     p[P_HOPPOOL] = HOP[i][2];
     p[P_HOPFILL] = HOP[i][3];
+    p[P_KIT] = KIT_OF[i];
     p[P_ECHO] = s->echo;
     p[P_REVERB] = s->reverb;
     p[P_RADIO] = s->radio;
@@ -233,6 +238,8 @@ void en_param_text(int i, int v, char *b)
         s = SYNC_NAME[v ? 1 : 0];
     else if (i == P_EVOLVE)
         s = EVOLVE_NAME[(unsigned)v < 3u ? v : 0];
+    else if (i == P_KIT)
+        s = EN_KIT_NAME[(unsigned)v < EN_NKIT ? v : 0];
     else if (i == P_HOP)
         s = HOP_NAME[(unsigned)v < 3u ? v : 0];
     else if (i == P_HOPWHEN)
@@ -299,7 +306,7 @@ void en_param_text(int i, int v, char *b)
         *b = 0;
         return;
     }
-    if (i == P_TUNE || (i >= P_PL && i < P_TIDE && (i - P_PL) % 4 == 3)) {
+    if (i == P_TUNE || i == P_DTUNE || (i >= P_PL && i < P_TIDE && (i - P_PL) % 4 == 3)) {
         if (v > 0)
             *b++ = '+';
         itoa_s(v, b);
@@ -781,37 +788,81 @@ static int outermost(void)
 }
 
 /* ------------------------------------------------------------- the drums --- */
+/* three kits of six voices, a lane each. A voice: a tone (a sine, or a triangle), its pitch falling (or
+ * rising) on its own time to a floor, a second partial at a ratio (bells, hollow wood), and a noise through
+ * a band (Chamberlin), which can swell in rather than start full. Tune moves every pitch and band, Decay
+ * stretches every envelope, Reverb scales each voice's send. */
 typedef struct {
-    float ph, inc, incf, amp, adec, nz, ndec, att, lp, bl, bb, bf, bq;
+    float f, ptau, floor, amp, adec, r2, m2;     /* Hz; the pitch's time (s; < 0 rising; 0 steady); its floor; level, decay (s) */
+    uint8_t tri;                                 /* the tone a triangle (else a sine) */
+    float nz, ndec, band, q, swell, send;        /* noise level, decay (s), band (Hz), damping; its swell (s, 0 none); reverb send */
+} dvoice_t;
+static const dvoice_t KIT[EN_NKIT][EN_NPL] = {
+    {   /* Probe: a space probe's instruments */
+        {110, 0.09f, 42, 0.55f, 0.22f, 0, 0, 0, 0, 0, 0, 1, 0, 0.25f},                     /* Kick */
+        {2200, 0, 0, 0.3f, 0.015f, 0, 0, 0, 0.5f, 0.004f, 5000, 1.2f, 0, 0.25f},           /* Pulsar */
+        {1250, 6.0f, 0, 0.11f, 0.35f, 0, 0, 0, 0, 0, 0, 1, 0, 0.6f},                       /* Sonar */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0.45f, 0.0015f, 4000, 0.8f, 0, 0.25f},                    /* Geiger */
+        {820, 0, 0, 0.2f, 0.025f, 0, 0, 1, 0.12f, 0.02f, 2200, 0.5f, 0, 0.25f},            /* Rim */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0.16f, 0.04f, 5800, 0.6f, 0.012f, 0.25f},                 /* Shaker */
+    },
+    {   /* Deep Field: soft and dark, far away */
+        {68, 0.06f, 38, 0.52f, 0.34f, 0, 0, 0, 0, 0, 0, 1, 0, 0.2f},                       /* Heart */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0.45f, 0.07f, 1400, 1.6f, 0, 0.35f},                      /* Static */
+        {1046, 0, 0, 0.065f, 1.1f, 2.76f, 0.5f, 0, 0, 0, 0, 1, 0, 0.7f},                   /* Chime */
+        {3000, 0, 0, 0.05f, 0.003f, 0, 0, 0, 0.5f, 0.0009f, 7000, 0.7f, 0, 0.2f},          /* Relay */
+        {900, -0.03f, 0, 0.16f, 0.06f, 0, 0, 0, 0, 0, 0, 1, 0, 0.5f},                      /* Drip */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0.35f, 0.25f, 900, 1.0f, 0.06f, 0.5f},                    /* Breath */
+    },
+    {   /* Ritual: wood, skin and seeds */
+        {95, 0.12f, 60, 0.5f, 0.3f, 0, 0, 0, 0.08f, 0.02f, 600, 1.0f, 0, 0.25f},           /* Frame */
+        {1150, 0, 0, 0.25f, 0.03f, 0, 0, 1, 0.05f, 0.005f, 3000, 0.6f, 0, 0.25f},          /* Block */
+        {240, 1.5f, 0, 0.17f, 0.25f, 1.5f, 0.35f, 0, 0, 0, 0, 1, 0, 0.35f},                /* Log */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0.2f, 0.05f, 6500, 0.6f, 0.012f, 0.2f},                   /* Shaker */
+        {2500, 0, 0, 0.2f, 0.02f, 0, 0, 0, 0, 0, 0, 1, 0, 0.3f},                           /* Clave */
+        {0, 0, 0, 0, 0, 0, 0, 0, 0.13f, 0.5f, 3200, 0.5f, 0.1f, 0.5f},                     /* Rain */
+    },
+};
+static const char *const KIT_LANES[EN_NKIT][EN_NPL] = {
+    {"Kick", "Pulsar", "Sonar", "Geiger", "Rim", "Shaker"},
+    {"Heart", "Static", "Chime", "Relay", "Drip", "Breath"},
+    {"Frame", "Block", "Log", "Shaker", "Clave", "Rain"},
+};
+
+typedef struct {
+    float ph, ph2, inc, incf, floor, amp, adec, r2, m2, nz, ndec, att, sw, lp, bl, bb, bf, bq, send;
     int32_t wait;
-    uint8_t on;
+    uint8_t on, tri;
 } drum_t;
 static drum_t dr[EN_NPL];
 static uint8_t drum_noteon;                     /* lanes whose MIDI note is sounding */
-static float drum_vol;
+static float drum_vol, drum_tune = 1.0f, drum_decay = 1.0f, drum_verb = 1.0f;
+
+static float decay_k(float secs) { return secs > 0.0f ? fm_expf(-1.0f / (secs * drum_decay * EN_SR)) : 0.0f; }
 
 static void drum_hit(int l, int32_t wait)
 {
     drum_t *d = &dr[l];
+    const dvoice_t *v = &KIT[(unsigned)par[P_KIT] < EN_NKIT ? par[P_KIT] : 0][l];
+    float band = fm_minf(v->band * drum_tune, 14000.0f);
     d->wait = wait;
-    d->ph = 0.0f;
-    d->att = 1.0f;
+    d->ph = d->ph2 = 0.0f;
     d->lp = d->bl = d->bb = 0.0f;
-    d->nz = 0.0f;
-    d->ndec = 0.0f;
-    d->bq = 1.0f;
-    switch (l) {
-    case 0: d->inc = 110.0f / EN_SR; d->incf = fm_expf(-1.0f / (0.09f * EN_SR)); d->amp = 0.55f; d->adec = fm_expf(-1.0f / (0.22f * EN_SR)); break;
-    case 1: d->inc = 2200.0f / EN_SR; d->incf = 1.0f; d->amp = 0.3f; d->adec = fm_expf(-1.0f / (0.015f * EN_SR));
-            d->nz = 0.5f; d->ndec = fm_expf(-1.0f / (0.004f * EN_SR)); d->bf = 2.0f * fm_sinf(FM_PI * 5000.0f / EN_SR); d->bq = 1.2f; break;
-    case 2: d->inc = 1250.0f / EN_SR; d->incf = fm_expf(-1.0f / (6.0f * EN_SR)); d->amp = 0.11f; d->adec = fm_expf(-1.0f / (0.35f * EN_SR)); break;
-    case 3: d->inc = 0.0f; d->incf = 1.0f; d->amp = 0.0f; d->adec = 0.0f;
-            d->nz = 0.45f; d->ndec = fm_expf(-1.0f / (0.0015f * EN_SR)); d->bf = 2.0f * fm_sinf(FM_PI * 4000.0f / EN_SR); d->bq = 0.8f; break;
-    case 4: d->inc = 820.0f / EN_SR; d->incf = 1.0f; d->amp = 0.2f; d->adec = fm_expf(-1.0f / (0.025f * EN_SR));
-            d->nz = 0.12f; d->ndec = fm_expf(-1.0f / (0.02f * EN_SR)); d->bf = 2.0f * fm_sinf(FM_PI * 2200.0f / EN_SR); d->bq = 0.5f; break;
-    default: d->inc = 0.0f; d->incf = 1.0f; d->amp = 0.0f; d->adec = 0.0f;
-            d->nz = 0.16f; d->ndec = fm_expf(-1.0f / (0.04f * EN_SR)); d->att = 0.0f; d->bf = 2.0f * fm_sinf(FM_PI * 5800.0f / EN_SR); d->bq = 0.6f; break;
-    }
+    d->inc = fm_minf(v->f * drum_tune / EN_SR, 0.24f);
+    d->incf = v->ptau > 0.0f ? fm_expf(-1.0f / (v->ptau * drum_decay * EN_SR)) : v->ptau < 0.0f ? fm_expf(1.0f / (-v->ptau * EN_SR)) : 1.0f;
+    d->floor = v->floor * drum_tune / EN_SR;
+    d->amp = v->f > 0.0f ? v->amp : 0.0f;
+    d->adec = decay_k(v->adec);
+    d->r2 = v->r2;
+    d->m2 = v->m2;
+    d->tri = v->tri;
+    d->nz = v->nz;
+    d->ndec = decay_k(v->ndec);
+    d->bf = band > 0.0f ? 2.0f * fm_sinf(FM_PI * band / EN_SR) : 0.0f;
+    d->bq = v->q;
+    d->sw = v->swell > 0.0f ? 1.0f - fm_expf(-1.0f / (v->swell * EN_SR)) : 0.0f;
+    d->att = v->swell > 0.0f ? 0.0f : 1.0f;
+    d->send = v->send * drum_verb;
     d->on = 1;
     en_hits++;
     en_drum_glow[l] = 1.0f;
@@ -824,7 +875,7 @@ static void render_drums(uint32_t n)
     for (l = 0; l < EN_NPL; l++) {
         drum_t *d = &dr[l];
         uint32_t j = 0;
-        float ph, inc, amp, nz, att, bl, bb, send = l == 2 ? 0.6f : 0.25f;
+        float ph, ph2, inc, amp, nz, att, bl, bb;
         if (!d->on)
             continue;
         if (d->wait > 0) {
@@ -835,20 +886,30 @@ static void render_drums(uint32_t n)
             j = (uint32_t)d->wait;
             d->wait = 0;
         }
-        ph = d->ph, inc = d->inc, amp = d->amp, nz = d->nz, att = d->att, bl = d->bl, bb = d->bb;
+        ph = d->ph, ph2 = d->ph2, inc = d->inc, amp = d->amp, nz = d->nz, att = d->att, bl = d->bl, bb = d->bb;
         for (; j < n; j++) {
             float x = 0.0f;
             if (amp > 0.0f) {
-                x = (l == 4 ? 2.0f * fm_fabsf(2.0f * (ph - (float)(int)ph) - 1.0f) - 1.0f : sine(ph)) * amp;   /* the rim: a triangle */
+                x = d->tri ? 2.0f * fm_fabsf(2.0f * (ph - (float)(int)ph) - 1.0f) - 1.0f : sine(ph);
+                if (d->m2 > 0.0f) {              /* the second partial: a bell's, a hollow log's */
+                    x += d->m2 * sine(ph2);
+                    ph2 += inc * d->r2;
+                    if (ph2 >= 1.0f)
+                        ph2 -= (float)(int)ph2;
+                }
+                x *= amp;
                 ph += inc;
                 inc *= d->incf;
-                if (l == 0 && inc < 42.0f / EN_SR)
-                    inc = 42.0f / EN_SR;
+                if (inc < d->floor)
+                    inc = d->floor;
+                if (inc > 0.24f)
+                    inc = 0.24f;
                 amp *= d->adec;
             }
             if (nz > 0.0f) {                     /* noise through a band */
                 float w = wnoise(&noise_s), hi;
-                att += (1.0f - att) * 0.0019f;   /* the shaker's 12 ms swell; the others start full */
+                if (d->sw > 0.0f)
+                    att += (1.0f - att) * d->sw; /* a swell in (the shaker's, the breath's, the rain's) */
                 bl += d->bf * bb;
                 hi = w - bl - d->bq * bb;
                 bb += d->bf * hi;
@@ -858,12 +919,12 @@ static void render_drums(uint32_t n)
             x *= g;
             mixl[j] += x;
             mixr[j] += x;
-            rsend[j] += x * send;
+            rsend[j] += x * d->send;
             BUS(3, j, x);
         }
         if (ph >= 1.0f)
             ph -= (float)(int)ph;
-        d->ph = ph, d->inc = inc, d->amp = amp, d->nz = nz, d->att = att, d->bl = fm_flush(bl), d->bb = fm_flush(bb);
+        d->ph = ph, d->ph2 = ph2, d->inc = inc, d->amp = amp, d->nz = nz, d->att = att, d->bl = fm_flush(bl), d->bb = fm_flush(bb);
         if (amp < 0.0005f && nz < 0.0005f)
             d->on = 0;
     }
@@ -1405,6 +1466,15 @@ static void apply(int p, int v)
         }
         break;
     case P_DRUMS: drum_vol = lvl(v); break;
+    case P_KIT: {                                /* the kit: its voices from the next hit, its names now */
+        int l, k = (unsigned)v < EN_NKIT ? v : 0;
+        for (l = 0; l < EN_NPL; l++)
+            EN_LANE_NAME[l] = KIT_LANES[k][l];
+        break;
+    }
+    case P_DTUNE: drum_tune = fm_exp2f((float)v * (1.0f / 12.0f)); break;
+    case P_DDECAY: drum_decay = (float)v * 0.01f; break;
+    case P_DVERB: drum_verb = (float)v * 0.02f; break;
     case P_EVENTS: events_vol = lvl(v); break;
     case P_REVERB: rev_send = lvl(v); pl_decay_t = 0.62f + 0.3f * pct(v); break;
     case P_ECHO: echo_vol = lvl(v); break;

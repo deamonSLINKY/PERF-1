@@ -190,7 +190,7 @@ def screens(names, out, cols=None, label=None, scale=2, gap=24):
     print("wrote", out.relative_to(SRC))
 
 
-SCREENS = ["splash", "splash_grav", "system", "star", "planet", "gravity", "weather", "pulse", "drift", "space", "setup", "display",
+SCREENS = ["splash", "splash_grav", "system", "star", "planet", "gravity", "weather", "pulse", "drift", "kit", "space", "setup", "display",
            "midiout", "full", "help", "seq", "storm", "eclipse", "synced", "synced_setup",
            "s_sol", "s_lumen", "s_rosette", "s_ember", "s_rigel", "s_veil", "s_cinder", "s_horizon", "s_kuiper", "s_nova",
            "t_deep", "t_nebula", "t_aurora", "t_redplanet", "t_phosphor", "t_redtail", "t_mono"]
@@ -225,11 +225,11 @@ def main():
     print("wrote docs/img/grav-screen-*.png")
     screens([f"s_{n}" for n in SYSTEMS], OUT / "grav-systems.png", cols=5,
             label=["SOL", "LUMEN", "ROSETTE", "EMBER", "RIGEL", "VEIL", "CINDER", "HORIZON", "KUIPER", "NOVA"])
-    screens(["system", "star", "planet", "gravity", "weather", "pulse", "drift", "seq", "space", "setup", "display", "midiout", "help",
+    screens(["system", "star", "planet", "gravity", "weather", "pulse", "drift", "kit", "seq", "space", "setup", "display", "midiout", "help",
              "full"],
             OUT / "grav-pages.png", cols=4,
             label=["SYSTEM · HOME", "STAR · ENV", "A PLANET · ARP", "GRAVITY · LFO", "WEATHER · LFO TWICE", "PULSE · SEQ",
-                   "DRIFT · SEQ TWICE", "SEQUENCER · SEQ HELD", "SPACE · FX", "SETUP · GLO", "DISPLAY · GLO TWICE", "MIDI OUT · GLO X3", "HOLD A BUTTON: ITS CARD",
+                   "DRIFT · SEQ TWICE", "KIT · SEQ X3", "SEQUENCER · SEQ HELD", "SPACE · FX", "SETUP · GLO", "DISPLAY · GLO TWICE", "MIDI OUT · GLO X3", "HOLD A BUTTON: ITS CARD",
                    "ORBIT VIEW · A MINUTE IDLE"])
     screens(["t_deep", "t_nebula", "t_aurora", "t_redplanet", "t_phosphor", "t_redtail", "t_mono"], OUT / "grav-themes.png", cols=4,
             label=["DEEP SPACE", "NEBULA", "AURORA", "RED PLANET", "PHOSPHOR", "REDTAIL", "MONO"])

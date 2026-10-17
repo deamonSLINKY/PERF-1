@@ -19,11 +19,11 @@
 #include "../dsp/fastmath.h"
 
 /* the pages; SELECT walks them, a planet's page once for each planet */
-enum { V_SYSTEM, V_STAR, V_PLANET, V_GRAVITY, V_WEATHER, V_PULSE, V_DRIFT, V_SPACE, V_SETUP, V_DISPLAY, V_OUT, V_SEQ, NVIEWS };
+enum { V_SYSTEM, V_STAR, V_PLANET, V_GRAVITY, V_WEATHER, V_PULSE, V_DRIFT, V_KIT, V_SPACE, V_SETUP, V_DISPLAY, V_OUT, V_SEQ, NVIEWS };
 #define NWALK (V_OUT + 1)                 /* the pages SELECT walks; the sequencer is SEQ held */
-static const char *const VIEW_NAME[NVIEWS] = {"System", "Star", "Planet", "Gravity", "Weather", "Pulse", "Drift", "Space", "Setup",
+static const char *const VIEW_NAME[NVIEWS] = {"System", "Star", "Planet", "Gravity", "Weather", "Pulse", "Drift", "Kit", "Space", "Setup",
                                               "Display", "MIDI out", "Sequencer"};
-static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_LFO, B_SEQ, B_SEQ, B_FX, B_GLO, B_GLO, B_GLO, B_SEQ};
+static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_LFO, B_SEQ, B_SEQ, B_SEQ, B_FX, B_GLO, B_GLO, B_GLO, B_SEQ};
 enum { K_LEDS = 200, K_CPU, K_LANE, K_NONE };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Planets", "Tempo", "Wander", "Phrase"},
@@ -33,6 +33,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Dust", "Asteroids", "Comets", "Events"},
     {"Lane", "Binding", "Drums", "Evolve"},
     {"Change", "Every", "Pool", "Fill"},
+    {"Kit", "Tune", "Decay", "Reverb"},
     {"Echo", "Reverb", "Radio", "Width"},
     {"Root", "Mode", "Tune", "Sync"},
     {"Theme", "Starfield", "Orbits", "Tide lines"},
@@ -163,7 +164,7 @@ static int view_knob(int v, int i)
     static const uint8_t K[NVIEWS][4] = {
         {P_PLANETS, P_TEMPO, P_WANDER, P_PHRASE}, {P_STAR, P_COLOUR, P_ROAR, P_FLARES}, {0, 0, 0, 0},
         {P_TIDE, P_REACH, P_WAKE, P_GY}, {P_DUST, P_ROCKS, P_COMETS, P_EVENTS}, {0, 0, P_DRUMS, P_EVOLVE},
-        {P_HOP, P_HOPWHEN, P_HOPPOOL, P_HOPFILL}, {P_ECHO, P_REVERB, P_RADIO, P_WIDTH}, {P_ROOT, P_MODE, P_TUNE, P_SYNC}, {P_THEME, P_SKY, P_LINES, P_TLINES},
+        {P_HOP, P_HOPWHEN, P_HOPPOOL, P_HOPFILL}, {P_KIT, P_DTUNE, P_DDECAY, P_DVERB}, {P_ECHO, P_REVERB, P_RADIO, P_WIDTH}, {P_ROOT, P_MODE, P_TUNE, P_SYNC}, {P_THEME, P_SKY, P_LINES, P_TLINES},
         {P_MIDI, P_MCH, 0, 0}, {0, 0, P_DRUMS, P_EVOLVE}};
     if (v == V_PLANET)
         return P_PL + 4 * ui.sel + i;
@@ -392,6 +393,10 @@ static void button(int b)
     }
     if (b == B_SEQ && ui.view == V_PULSE) {      /* SEQ again: Drift */
         set_view(V_DRIFT);
+        return;
+    }
+    if (b == B_SEQ && ui.view == V_DRIFT) {      /* and again: the Kit */
+        set_view(V_KIT);
         return;
     }
     for (v = 0; v < NVIEWS; v++)
@@ -1366,7 +1371,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ENV: L("THE STAR: LEVEL,"); L("COLOUR, ROAR, FLARES"); break;
     case B_ARP: L("A PLANET: LEVEL, INSTRUMENT,"); L("ELLIPSE, OCTAVE"); L("ALGORITHM / SEL: WHICH"); break;
     case B_LFO: L("GRAVITY: TIDE, REACH,"); L("WAKE, GREAT YEAR"); L("AGAIN: THE WEATHER"); break;
-    case B_SEQ: L("THE PULSE: WHITE KEYS THE"); L("STEPS, BLACK 1-6 THE LANE"); L("AGAIN: DRIFT (THE BANKS)"); L("HOLD: THE SEQUENCER"); break;
+    case B_SEQ: L("THE PULSE: WHITE KEYS THE"); L("STEPS, BLACK 1-6 THE LANE"); L("AGAIN: DRIFT, THE KIT"); L("HOLD: THE SEQUENCER"); break;
     case B_SEL: L("THE NEXT PLANET"); L("(ON PULSE: THE NEXT LANE)"); break;
     case B_FX: L("THE SPACE: ECHO,"); L("REVERB, RADIO, WIDTH"); break;
     case B_GLO: L("SETUP: ROOT, MODE,"); L("TUNE, SYNC"); L("AGAIN: DISPLAY, MIDI OUT"); L("SEL + GLO: REMOTE"); break;
