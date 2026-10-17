@@ -390,6 +390,8 @@ static int expect(const char *what, const char *val)
         got = ui.sel;
     else if (!strcmp(what, "lane"))
         got = ui.lane;
+    else if (!strcmp(what, "remote"))             /* SEL + GLO: the panel plays the browser */
+        got = rm.on ? 1 + rm.link : 0;
     else if (!strcmp(what, "game"))               /* the secret game: on, shots, rocks, hits, lives */
         got = gm.on;
     else if (!strcmp(what, "fired"))

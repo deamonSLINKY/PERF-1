@@ -324,7 +324,9 @@ int en_scale(uint32_t pool, int *steps)
 float en_period_bars(int hits) { return hits > 0 ? 32.0f / (float)hits : 64.0f; }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_TOUCH, C_SUMMON, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_STRIKE };
+enum { C_SET, C_POOL, C_PLAY, C_TOUCH, C_SUMMON, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_STRIKE, C_MUTE };
+static uint8_t muted;                           /* remote: the FM-1 is playing the browser */
+static float mute_g = 1.0f;
 #define QN 256u
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
@@ -343,6 +345,7 @@ void en_play(int on) { post(C_PLAY, on, 0); }
 void en_touch(void) { post(C_TOUCH, 0, 0); }
 void en_summon(int what) { post(C_SUMMON, what, 0); }
 void en_strike(int planet) { post(C_STRIKE, planet, 0); }
+void en_mute(int on) { post(C_MUTE, on, 0); }
 void en_freeze(int on) { post(C_FREEZE, on, 0); }
 void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
@@ -417,7 +420,7 @@ static void event(int code, int detail)
 /* MIDI notes out: planet n on MCH + n, the drums on MCH + 6 */
 static void note(int on, int ch, uint32_t n, uint32_t vel)
 {
-    if (par[P_MIDI] == EN_MIDI_NOTES || par[P_MIDI] == EN_MIDI_BOTH)
+    if (!muted && (par[P_MIDI] == EN_MIDI_NOTES || par[P_MIDI] == EN_MIDI_BOTH))
         en_midi_out((on ? 0x90u : 0x80u) | (uint32_t)((par[P_MCH] + ch) & 15), n, on ? vel : 0u);
 }
 
@@ -2130,6 +2133,7 @@ static void drain(void)
             break;
         case C_PANIC: quiet(); break;
         case C_REGROW: regrow(); break;
+        case C_MUTE: muted = (uint8_t)(a != 0); break;
         case C_STRIKE:                           /* a note of its phrase, a little louder than its own */
             if (a < nplanets() && pl[a].n > 0) {
                 int k = irand(pl[a].n);
@@ -2171,8 +2175,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain, uint32_t at)
     for (j = 0; j < n; j++) {
         float wl, wr, l, r, e = echo_step(esend[j] * (en_frozen ? 0.0f : 1.0f)) * echo_vol * 2.2f;
         reverb((rsend[j] + e * 0.3f) * rg * 0.8f, &wl, &wr);
-        l = (mixl[j] + e + 1.3f * wl) * 1.3f * gain;
-        r = (mixr[j] + e + 1.3f * wr) * 1.3f * gain;
+        mute_g += ((muted ? 0.0f : 1.0f) - mute_g) * 0.002f;
+        l = (mixl[j] + e + 1.3f * wl) * 1.3f * gain * mute_g;
+        r = (mixr[j] + e + 1.3f * wr) * 1.3f * gain * mute_g;
         out[2 * j] = (int32_t)(fm_tanhf(l) * 8300000.0f);
         out[2 * j + 1] = (int32_t)(fm_tanhf(r) * 8300000.0f);
 #ifdef EN_HOST
@@ -2195,7 +2200,7 @@ static void cc_out(void)
     static uint32_t turn;
     uint8_t v[10];
     int i, sent = 0;
-    if (par[P_MIDI] != EN_MIDI_BOTH && par[P_MIDI] != EN_MIDI_CC)
+    if (muted || (par[P_MIDI] != EN_MIDI_BOTH && par[P_MIDI] != EN_MIDI_CC))
         return;
     for (i = 0; i < EN_NPL; i++)
         v[i] = (uint8_t)(fm_clampf(pl[i].tide, 0.0f, 1.0f) * 127.0f + 0.5f);

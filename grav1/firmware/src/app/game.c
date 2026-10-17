@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* GRAV-1's secret: ASTEROIDS. Hold OCT- and OCT+ together for two seconds (again, or HOME, to leave).
+/* GRAV-1's secret: ASTEROIDS. Hold SEL and press EDIT (again, or HOME, to leave). Not the two OCT buttons:
+ * held, they count down to the update mode.
  *
  * The ship sits where the star was; SELECT turns it, any key fires. The music sends the rocks: each note a
  * planet plays may throw one in from the dark, in that planet's colour and as big as the planet is loud.
@@ -430,12 +431,11 @@ static void game_draw(int half)
 }
 
 /* ------------------------------------------------------------ input --- */
-/* with the game on, input() hands everything here: SELECT turns, keys fire, HOME (or the secret again)
+/* with the game on, input() hands everything here: SELECT turns, keys fire, HOME (or SEL + EDIT again)
  * leaves, PLAY still grows and rests the system */
 static void game_input(uint32_t btn, uint32_t keys)
 {
     uint32_t press = btn & ~ui.btn, i;
-    const uint32_t both = 1u << B_OCTDN | 1u << B_OCTUP;
     int32_t e;
     int r;
     for (i = 0; i < NB; i++)
@@ -459,17 +459,13 @@ static void game_input(uint32_t btn, uint32_t keys)
         }
     }
     ui.keys = keys;
-    if ((press >> B_HOME & 1u) ||
-        ((btn & both) == both && !(ui.btn_used & both) && plat_ms() - ui.down_t[B_OCTDN] >= 1500u &&
-         plat_ms() - ui.down_t[B_OCTUP] >= 1500u)) {
+    if ((press >> B_HOME & 1u) || ((press >> B_EDIT & 1u) && (btn >> B_SEL & 1u))) {
         ui.btn_used |= btn;                      /* their release does nothing */
         ui.btn = btn;
         game_stop();
         midi_in();
         return;
     }
-    if ((btn & both) != both)
-        ui.btn_used &= ~both;
     ui.btn = btn;
     midi_in();
 }

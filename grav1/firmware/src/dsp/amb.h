@@ -90,6 +90,7 @@ void en_summon(int what);                      /* weather now: 0 a dust cloud (o
 void en_freeze(int on);                        /* ECLIPSE: the orbits and the weather hold, the space rings on */
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_panic(void);                           /* everything quiet, now */
+void en_mute(int on);                          /* remote: silent and no MIDI out (1), or back (0) */
 void en_strike(int planet);                    /* the planet plays a note of its phrase now (the game) */
 void en_regrow(void);                          /* a new start: the planets on fresh orbits, new phrases */
 /* MIDI clock in. With SYNC on, the system follows it while it comes: 24 ticks a beat move the orbits and

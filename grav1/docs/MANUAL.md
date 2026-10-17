@@ -80,7 +80,7 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 | **REC** | Eclipse: the orbits and the weather hold still, the space rings on. Again to let go. |
 | **EDIT** | The Great Year now: the chord moves, the drums evolve (and with Drift on the Great Year, change bank two bars later). |
 | **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse (again: Drift), Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
-| **SEL** | The next planet (on Pulse, the next lane). |
+| **SEL** | The next planet (on Pulse, the next lane). Held, with GLO: remote (the panel plays the browser emulator). |
 | **SELECT** | Every page in turn, each planet's page one by one. With HOME held: the tempo. In the sequencer: the drum bank. |
 | **ALGORITHM** | The planet (on Pulse, the lane). |
 | **PRESETS** | The system: ten of them, each keeping its own settings. |
@@ -313,6 +313,13 @@ clock. When the clock stops, the system goes back to its own tempo.
 1–2, then 3 the star, 4 planets 1–3, 5 planets 4–6, 6 the drums, 7 the weather and the radio, 8 the echo and
 the reverb. The FM-1 itself sends the stereo mix from its output.
 
+**Remote: the FM-1 plays the emulator.** Open the [emulator](https://rustypawz.github.io/fm1-HYP1/grav/emu/),
+switch it on and click Connect MIDI (Chrome or Edge, the FM-1 plugged in by USB). Then hold SEL and press GLO
+on the FM-1: REMOTE shows on its screen, it goes quiet and stops sending MIDI, and its whole panel (every
+button, key and knob, and MASTER) plays the emulator instead, its lights following the emulator's. SEL + GLO
+again gives the FM-1 back, playing again if it was. It speaks on channel 16, as HYP-1's and LOF-1's remotes
+do, so the same emulator page can sit beside them.
+
 ![To your DAW: the MIDI out page](img/grav-device-midi.png)
 
 ---
@@ -348,4 +355,4 @@ reverb is Jon Dattorro's plate. Screen font: Barlow Semi Condensed (SIL OFL). GP
 
 M-VAVE and FM-1 are trademarks of their owners; GRAV-1 is not affiliated with M-VAVE.
 
-<sub>Pilots: hold both octaves until the sky clears.</sub>
+<sub>Pilots: hold the selector and edit the sky.</sub>

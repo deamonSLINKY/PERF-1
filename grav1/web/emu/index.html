@@ -34,6 +34,7 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .hit.knob { cursor: ns-resize; border-radius: 50%; }
 .hit:focus-visible { outline: 2px solid #f28a5a; outline-offset: 2px; }
 .device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.device.remote canvas { box-shadow: 0 0 0 3px #e8873a; }
 .device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
 .ctl { cursor: pointer; }
 .ctl.knob { cursor: ns-resize; }
@@ -112,8 +113,9 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
     <b>MIDI</b>
     <button type="button" id="midi-go">Connect MIDI</button>
     <label>Send to <select id="midi-out" disabled><option value="">none</option></select></label>
-    <label>Clock from <select id="midi-in" disabled><option value="">none</option></select></label>
+    <label>MIDI in from <select id="midi-in" disabled><option value="">none</option></select></label>
   </div>
+  <p class="note" id="remote-note">Remote: with GRAV-1 on your FM-1 and MIDI connected here, hold SEL and press GLO on the FM-1. Its panel plays this emulator (every button, key and knob, and MASTER) and goes quiet itself; its lights follow this one. SEL + GLO again gives it back.</p>
   <p class="note" id="midi-note">MIDI out sends what the MIDI out page asks for (press GLO three times): each planet's notes on its own channel (1–6 by default), the drums on 7 (notes 36–41, a lane each), and the system's signals as CCs on 8: 20–25 each planet's tide, 26 the star's roar, 27 the dust, 28 the Great Year, 29 a flare. Clock from a DAW: Sync on the Setup page (Clock by default); START plays from step one, STOP rests it, and the steps and the orbits follow the clock. To reach a DAW on this computer, use a virtual MIDI port: the IAC Driver (Mac) or loopMIDI (Windows).</p>
 </section>
 
@@ -312,7 +314,7 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out)",
+const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out); on the FM-1, SEL + GLO plays this emulator",
   HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (again: Drift; hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
   "OCT-": "The planet an octave down", "OCT+": "The planet an octave up", SELECT: "Every page in turn (HOME held: the tempo)", ALGORITHM: "The planet (on Pulse: the lane)", PRESETS: "The system",
   MASTER: "Volume" };
@@ -505,6 +507,7 @@ async function switchOn() {
         else if (m.type === "frame") {
           if (m.fb) drawScreen(m.fb);
           drawLights(m.buttons, m.keys);
+          remoteLights(m.buttons, m.keys, false);
           window.ambLast = m;
           if (m.load !== undefined) cpu.textContent = `GRAV-1 uses ${m.load}% of this computer's time`;
           if (m.store) saveStore(m.store);
@@ -566,12 +569,88 @@ function fillPorts() {
 }
 function pickPorts() {
   midiOut = outSel.value ? midiAccess.outputs.get(outSel.value) : null;
-  if (midiIn) midiIn.onmidimessage = null;
   midiIn = inSel.value ? midiAccess.inputs.get(inSel.value) : null;
-  if (midiIn) midiIn.onmidimessage = (e) => {
-    const d = e.data, st = d[0];
-    if (st === 0xF8 || st === 0xFA || st === 0xFB || st === 0xFC || (st & 0xF0) === 0x90) send({ type: "midi", data: [...d] });
-  };
+  for (const input of midiAccess.inputs.values()) input.onmidimessage = (e) => onMidi(e, input);   // every input: the remote may be any
+  if (remote && remote.input.state !== "connected") remoteStop();
+  if (remote && !remote.out) remote.out = outFor(remote.input);
+}
+
+// ---------------------------------------------------------------- the FM-1 as a remote (SEL + GLO on it)
+// As HYP-1's: USB MIDI channel 16. Keys are notes 48 + k, buttons CC 102 + b (127 down, 0 up), knobs CC 85 + role
+// (64 ± detents), MASTER CC 7, CC 116 a hello each second (0: goodbye). We answer with our lights the same way and
+// CC 117 each second, so the FM-1's panel lights as this one does.
+let remote = null, sentB = 0, sentK = 0, ackTimer = 0;
+const remoteNote = document.getElementById("remote-note");
+const knobByRole = (r) => Object.values(knobs).find((k) => k.role === r);
+function outFor(input) {                    // the FM-1's own output: the same port name
+  for (const o of midiAccess.outputs.values()) if (o.name === input.name && o.state === "connected") return o;
+  for (const o of midiAccess.outputs.values()) if (input.manufacturer && o.manufacturer === input.manufacturer && o.state === "connected") return o;
+  return null;
+}
+function remoteLights(b, k, all) {
+  if (!remote || !remote.out) return;
+  const o = remote.out, cb = all ? 0x3FFF : (b ^ sentB), ck = all ? 0x7FFFFFF : (k ^ sentK);
+  try {
+    for (let i = 0; i < 14; i++) if (cb & (1 << i)) o.send([0xBF, 102 + i, b & (1 << i) ? 127 : 0]);
+    for (let i = 0; i < 27; i++) if (ck & (1 << i)) o.send(k & (1 << i) ? [0x9F, 48 + i, 100] : [0x8F, 48 + i, 0]);
+  } catch { /* unplugged mid-send */ }
+  sentB = b; sentK = k;
+}
+function setMaster(v) {
+  const k = knobs.MASTER;
+  master = Math.max(0, Math.min(4096, Math.round(v)));
+  k.angle = -135 + 270 * master / 4096;
+  send({ type: "master", value: master });
+  drawKnob(k);
+}
+function releaseRemote() {
+  for (const id of [...btnHeldBy.keys()]) if (id[0] === "r") btnHeldBy.delete(id);
+  for (const id of [...keyHeldBy.keys()]) if (id[0] === "r") keyHeldBy.delete(id);
+  syncButtons(); syncKeys();
+}
+function remoteText() {
+  remoteNote.textContent = remote ? `${remote.input.name} is playing this emulator${remote.out ? "" : " (its lights: no matching output found)"}. SEL + GLO on the FM-1 gives it back.`
+                                  : "Remote: with GRAV-1 on your FM-1 and MIDI connected here, hold SEL and press GLO on the FM-1. Its panel plays this emulator and goes quiet itself.";
+}
+function remoteStart(input) {
+  remote = { input, out: outFor(input) };
+  document.getElementById("device").classList.add("remote");
+  const ack = () => { try { remote && remote.out && remote.out.send([0xBF, 117, 127]); } catch {} };
+  ack();
+  clearInterval(ackTimer);
+  ackTimer = setInterval(ack, 1000);
+  if (window.ambLast) remoteLights(window.ambLast.buttons, window.ambLast.keys, true);
+  remoteText();
+}
+function remoteStop() {
+  if (!remote) return;
+  clearInterval(ackTimer);
+  try { remote.out && remote.out.send([0xBF, 117, 0]); } catch {}
+  remote = null;
+  releaseRemote();
+  document.getElementById("device").classList.remove("remote");
+  remoteText();
+}
+function onMidi(e, input) {
+  const d = e.data, st = d[0], d1 = d[1] || 0, d2 = d[2] || 0, type = st & 0xF0, ch = st & 15;
+  if (ch === 15 && type === 0xB0 && d1 === 116 && st < 0xF0) {                        // the FM-1's hello / goodbye
+    if (d2) { if (!remote || remote.input !== input) remoteStart(input); } else if (remote && remote.input === input) remoteStop();
+    return;
+  }
+  if (remote && remote.input === input && st < 0xF0 && ch === 15) {                   // its panel
+    if (type === 0xB0) {
+      if (d1 === 7) setMaster(d2 * 4096 / 127);
+      else if (d1 >= 102 && d1 < 116) { const b = d1 - 102; if (d2 >= 64) btnHeldBy.set("rb" + b, b); else btnHeldBy.delete("rb" + b); syncButtons(); }
+      else if (d1 >= 85 && d1 <= 91) { const k = knobByRole(d1 - 85); if (k) turn(k, d2 - 64); }
+    } else if ((type === 0x90 || type === 0x80) && d1 >= 48 && d1 < 75) {
+      const k = d1 - 48;
+      if (type === 0x90 && d2) keyHeldBy.set("rk" + k, k); else keyHeldBy.delete("rk" + k);
+      syncKeys();
+    }
+    return;
+  }
+  if (input !== midiIn) return;                                                        // the chosen input: notes, clock
+  if (st === 0xF8 || st === 0xFA || st === 0xFB || st === 0xFC || type === 0x90 || type === 0x80) send({ type: "midi", data: [...d] });
 }
 outSel.addEventListener("change", pickPorts);
 inSel.addEventListener("change", pickPorts);

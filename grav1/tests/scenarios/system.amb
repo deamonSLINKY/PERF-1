@@ -127,15 +127,10 @@ tapkey w3
 wait 300
 expect full 0
 expect pool 0x6AD
-# the secret: OCT- and OCT+ held two seconds; SELECT turns, keys fire; HOME leaves
-press OCT-
-press OCT+
-wait 1000
-expect game 0
-wait 1200
-expect game 1
-release OCT-
-release OCT+
+# the secret: SEL + EDIT; SELECT turns, keys fire; HOME leaves
+press SEL
+tap EDIT
+release SEL
 wait 300
 expect game 1
 turn SELECT 1
@@ -325,6 +320,24 @@ tap HOME
 wait 300
 expect game 0
 expect view 0
+# remote: SEL + GLO, the panel plays the browser (it answers with CC 117); SEL + GLO again, back
+press SEL
+tap GLO
+release SEL
+wait 300
+expect remote 1
+expect playing 0
+midi BF 75 7F
+wait 300
+expect remote 2
+press SEL
+press GLO
+wait 100
+release GLO
+release SEL
+wait 500
+expect remote 0
+expect playing 1
 # another system
 turn PRESET 3
 wait 4000
