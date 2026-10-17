@@ -1,0 +1,112 @@
+# The secret (SEL + EDIT): KICK RUNNER. A tunnel a ring a beat; the kicks send walls and gates; each gate
+# brings a part of the track back (the mutes lifted), a wall takes one away. SELECT, OCT-/OCT+ steer.
+wait 1500
+expect playing 1
+press SEL
+press EDIT
+wait 100
+release SEL
+release EDIT
+wait 300
+expect runner 1
+expect view 0
+wait 12000
+expect kr_rows >0
+shot runner.png
+turn SELECT 1
+wait 200
+expect kr_lane 1
+tap OCT-
+wait 200
+expect kr_lane 0
+key w3 down
+key w3 up
+wait 100
+expect runner 1
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT 1
+wait 700
+turn SELECT -1
+wait 700
+expect kr_gates >-1
+shot runner2.png
+leds
+tap HOME
+wait 300
+expect runner 0
+expect playing 1

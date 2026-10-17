@@ -361,6 +361,20 @@ static int expect(const char *what, const char *val)
         got = en_frozen;
     else if (!strcmp(what, "view"))
         got = ui.view;
+    else if (!strcmp(what, "runner"))              /* the secret game (SEL + EDIT): on, lane, rows, gates, ... */
+        got = kr.on;
+    else if (!strcmp(what, "kr_lane"))
+        got = kr.lane;
+    else if (!strcmp(what, "kr_rows"))
+        got = (int)kr.rows_born;
+    else if (!strcmp(what, "kr_gates"))
+        got = (int)kr.gates;
+    else if (!strcmp(what, "kr_crashes"))
+        got = (int)kr.crashes;
+    else if (!strcmp(what, "kr_layer"))
+        got = kr.layer;
+    else if (!strcmp(what, "kr_over"))
+        got = kr.over;
     else if (!strcmp(what, "piece"))
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */

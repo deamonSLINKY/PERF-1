@@ -808,10 +808,18 @@ static void rm_tick(void)
         ui.act_t = now;
 }
 
+static int runner_on(void);
+static void runner_input(uint32_t btn, uint32_t keys);
+static void runner_start(void);
+
 static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+    if (runner_on()) {                           /* the secret: the game has the panel */
+        runner_input(btn, keys);
+        return;
+    }
     ch = btn ^ ui.btn;
     ui.btn = btn;
     for (i = 0; i < NB; i++) {
@@ -851,6 +859,13 @@ static void input(void)
                 return;
             }
 #endif
+            if (i == B_EDIT && (btn >> B_SEL & 1u)) {   /* shift: the secret */
+                ui.btn_used |= m | 1u << B_SEL;
+                ui.btn = btn;
+                ui.keys = keys;
+                runner_start();
+                return;
+            }
             if (i == B_ENV && (btn >> B_SEL & 1u)) {
                 /* shift: the voice whose page is on screen off the algorithm (silent but for the keys on its
                  * pages), or back on it */
@@ -1529,6 +1544,9 @@ static void draw_fx(void)
     }
 }
 
+#include "runner.c"
+static int runner_on(void) { return kr.on; }
+
 static void draw_main(void)
 {
     uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)proj.par[P_ROOT] << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
@@ -1952,6 +1970,18 @@ void ui_frame(void)
     }
     input();
     autosave();
+    if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
+        runner_update();
+        if (ui.frame % 3u == 0u) {
+            runner_draw(0);
+            cv_blit(0, 0);
+            runner_draw(1);
+            cv_blit(0, 120);
+        }
+        runner_leds();
+        ui.frame++;
+        return;
+    }
     draw_header();
     draw_main();
     draw_knobs();
