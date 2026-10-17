@@ -115,6 +115,7 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
     <label>Send to <select id="midi-out" disabled><option value="">none</option></select></label>
     <label>MIDI in from <select id="midi-in" disabled><option value="">none</option></select></label>
   </div>
+  <p class="note" id="midi-seen" hidden></p>
   <p class="note" id="remote-note">Remote: with GRAV-1 on your FM-1 and MIDI connected here, hold SEL and press GLO on the FM-1. Its panel plays this emulator (every button, key and knob, and MASTER) and goes quiet itself; its lights follow this one. SEL + GLO again gives it back.</p>
   <p class="note" id="midi-note">MIDI out sends what the MIDI out page asks for (press GLO three times): each planet's notes on its own channel (1–6 by default), the drums on 7 (notes 36–41, a lane each), and the system's signals as CCs on 8: 20–25 each planet's tide, 26 the star's roar, 27 the dust, 28 the Great Year, 29 a flare. Clock from a DAW: Sync on the Setup page (Clock by default); START plays from step one, STOP rests it, and the steps and the orbits follow the clock. To reach a DAW on this computer, use a virtual MIDI port: the IAC Driver (Mac) or loopMIDI (Windows).</p>
 </section>
@@ -570,7 +571,8 @@ function fillPorts() {
 function pickPorts() {
   midiOut = outSel.value ? midiAccess.outputs.get(outSel.value) : null;
   midiIn = inSel.value ? midiAccess.inputs.get(inSel.value) : null;
-  for (const input of midiAccess.inputs.values()) input.onmidimessage = (e) => onMidi(e, input);   // every input: the remote may be any
+  for (const input of midiAccess.inputs.values()) input.onmidimessage = (e) => { heard(e, input); onMidi(e, input); };   // every input: the remote may be any
+  showSeen();
   if (remote && remote.input.state !== "connected") remoteStop();
   if (remote && !remote.out) remote.out = outFor(remote.input);
 }
@@ -630,6 +632,23 @@ function remoteStop() {
   releaseRemote();
   document.getElementById("device").classList.remove("remote");
   remoteText();
+}
+// what each MIDI input last said, on the page: for finding out why the remote doesn't take
+const seen = new Map(), seenEl = document.getElementById("midi-seen");
+const hex = (d) => [...d].map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+function showSeen() {
+  if (!midiAccess) return;
+  const ins = [...midiAccess.inputs.values()];
+  seenEl.hidden = false;
+  seenEl.textContent = ins.length
+    ? "Listening on: " + ins.map((i) => `${i.name} (${i.state}${i.connection === "open" ? ", open" : ""}): ${seen.has(i.id) ? "last " + seen.get(i.id) : "nothing yet"}`).join(" · ")
+    : "No MIDI inputs found. Is the FM-1 plugged in, and not open in another program?";
+}
+let seenTimer = 0;
+function heard(e, input) {
+  if (e.data[0] >= 0xF8) return;                                                       // clock: too many to show
+  seen.set(input.id, hex(e.data));
+  if (!seenTimer) seenTimer = setTimeout(() => { seenTimer = 0; showSeen(); }, 150);
 }
 function onMidi(e, input) {
   const d = e.data, st = d[0], d1 = d[1] || 0, d2 = d[2] || 0, type = st & 0xF0, ch = st & 15;
