@@ -61,7 +61,8 @@ def main(root):
         prod, section, depth = page_parts(rel)
         if prod not in built:
             continue
-        up = "../" * depth
+        page = f.read_text(encoding="utf-8")
+        up = "" if '<base href="../">' in page else "../" * depth   # HYP-1's landing in hyp/ resolves from the root
         opts = [f'<option value="{up or "./"}">All firmwares · the front page</option>'] if hub else []
         for key, name, what, base in PRODUCTS:
             if key not in built:
@@ -79,7 +80,7 @@ def main(root):
             continue
         bar = BAR.replace("__OPTS__", "".join(opts)).replace(
             "__TAG__", '<span class="tag">Experimental</span>' if prod in EXPERIMENTAL else "")
-        s = f.read_text(encoding="utf-8")
+        s = page
         if "rw-switch" in s:
             continue
         i = s.find("<body")
