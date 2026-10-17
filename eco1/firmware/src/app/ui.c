@@ -358,10 +358,18 @@ static void help_tick(uint32_t btn, uint32_t keys)
         }
 }
 
+static int ff_on(void);
+static int ff_input(uint32_t btn, uint32_t keys);
+
 static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+    if (ff_on()) {                               /* the fireflies up: a touch only wakes the screen */
+        ff_input(btn, keys);
+        midi_in();
+        return;
+    }
     ch = btn ^ ui.btn;
     ui.btn = btn;
     for (i = 0; i < NB; i++) {
@@ -679,6 +687,8 @@ static uint16_t sky_colour(float t, int top)  /* t: the day, 0..1 from midnight 
 }
 
 #include "scene.c"
+#include "fireflies.c"
+static int ff_on(void) { return ff.on; }
 
 static void draw_plant(void)
 {
@@ -1037,6 +1047,16 @@ void ui_frame(void)
     }
     input();
     autosave();
+    if (!ff.on && ui_flies_ms && !ui.help && plat_ms() - ui.act_t >= ui_flies_ms)
+        ff_enter();                              /* half an hour untouched: the fireflies */
+    if (ff.on) {
+        ff_update();
+        if (ui.frame % 3u == 0u)
+            ff_draw();
+        ff_leds();
+        ui.frame++;
+        return;
+    }
     draw_header();
     draw_main();
     draw_knobs();

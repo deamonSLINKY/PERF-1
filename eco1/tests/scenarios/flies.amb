@@ -1,0 +1,18 @@
+# The secret: half an hour with nobody touching it and the fireflies come out. The scene fills the
+# screen, they flash with the leaves; a touch (here a key) only wakes the screen: the scale stays.
+wait 4000
+expect flies 0
+wait 1795000
+expect flies 0
+wait 10000
+expect flies >0
+wait 40000
+expect flies >10
+shot flies.png
+leds
+tapkey w2
+wait 300
+expect flies 0
+shot back.png
+wait 1000
+expect flies 0

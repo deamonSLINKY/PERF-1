@@ -358,6 +358,8 @@ static int expect(const char *what, const char *val)
         got = en_frozen;
     else if (!strcmp(what, "view"))
         got = ui.view;
+    else if (!strcmp(what, "flies"))             /* the secret: the fireflies (half an hour untouched) */
+        got = ff.on ? 1 + ff.shown : 0;
     else if (!strcmp(what, "piece"))
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
