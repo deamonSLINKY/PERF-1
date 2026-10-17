@@ -390,6 +390,14 @@ static int expect(const char *what, const char *val)
         got = ui.sel;
     else if (!strcmp(what, "lane"))
         got = ui.lane;
+    else if (!strcmp(what, "game"))               /* the secret game: on, shots, rocks, hits, lives */
+        got = gm.on;
+    else if (!strcmp(what, "fired"))
+        got = gm.fired;
+    else if (!strcmp(what, "spawned"))
+        got = gm.spawned;
+    else if (!strcmp(what, "gamehits"))
+        got = gm.hits;
     else if (!strcmp(what, "hops"))               /* Drift's bank changes */
         got = (double)en_hops;
     else if (!strcmp(what, "full"))               /* the orbit view */

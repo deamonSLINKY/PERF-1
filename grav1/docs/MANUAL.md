@@ -347,3 +347,5 @@ Vestal, by way of HYP-1 and ECO-1. The platform (USB, update loader, storage, in
 reverb is Jon Dattorro's plate. Screen font: Barlow Semi Condensed (SIL OFL). GPL-3.0.
 
 M-VAVE and FM-1 are trademarks of their owners; GRAV-1 is not affiliated with M-VAVE.
+
+<sub>Pilots: hold both octaves until the sky clears.</sub>

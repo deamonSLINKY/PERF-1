@@ -518,10 +518,18 @@ static void help_tick(uint32_t btn, uint32_t keys)
         }
 }
 
+static int game_on(void);
+static void game_input(uint32_t btn, uint32_t keys);
+static void game_start(void);
+
 static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
+    if (game_on()) {
+        game_input(btn, keys);
+        return;
+    }
     if (ui.full) {                               /* the orbit view: any touch only wakes the screen */
         int any = btn != ui.btn || keys != ui.keys, r;
         for (r = 0; r < NE; r++)
@@ -563,6 +571,15 @@ static void input(void)
     if (btn || keys || ch)
         ui.act_t = plat_ms();
     midi_in();
+    {   /* the secret: OCT- and OCT+ held together two seconds */
+        const uint32_t both = 1u << B_OCTDN | 1u << B_OCTUP;
+        if ((btn & both) == both && !(ui.btn_used & both) && plat_ms() - ui.down_t[B_OCTDN] >= 2000u &&
+            plat_ms() - ui.down_t[B_OCTUP] >= 2000u) {
+            ui.btn_used |= both;
+            game_start();
+            return;
+        }
+    }
     if ((btn >> B_SEQ & 1u) && !(ui.btn_used >> B_SEQ & 1u) && plat_ms() - ui.down_t[B_SEQ] >= 600u) {
         ui.btn_used |= 1u << B_SEQ;              /* SEQ held: the sequencer */
         set_view(V_SEQ);
@@ -1206,6 +1223,9 @@ static void draw_help(void)
         text_c(120, 56 + k * 20, &FONT_S, l[k], K_TEXT);
 }
 
+#include "game.c"
+static int game_on(void) { return gm.on; }
+
 static void draw_main(void)
 {
     if (ui.frame % 3u)                           /* 20 frames a second */
@@ -1223,6 +1243,14 @@ static void draw_main(void)
         ui.trail[ui.trail_n][0] = x;
         ui.trail[ui.trail_n][1] = y;
         ui.trail_n++;
+    }
+    if (gm.on) {                                 /* the game: the whole screen, twenty frames a second */
+        game_update();
+        game_draw(0);
+        cv_blit(0, 0);
+        game_draw(1);
+        cv_blit(0, 120);
+        return;
     }
     if (ui.help) {
         uint32_t h = hash(0x48454C50u, ui.help);
@@ -1429,7 +1457,7 @@ static void leds_show(void)
 static void leds(void)
 {
     uint32_t b = 0, k = 0, i, ap = pool_abs();
-    if (ui.full) {
+    if (ui.full || gm.on) {
         leds_show();
         return;
     }
@@ -1626,14 +1654,14 @@ void ui_frame(void)
     engine_news();
     if (ui.sel >= nplanets())
         ui.sel = (uint8_t)(nplanets() - 1);
-    if (!ui.full && ui.view == V_SYSTEM && !ui.help && plat_ms() - ui.act_t >= UI_IDLE_MS) {
+    if (!ui.full && !gm.on && ui.view == V_SYSTEM && !ui.help && plat_ms() - ui.act_t >= UI_IDLE_MS) {
         ui.full = 1;                             /* a minute on the System page untouched: the orbit view */
         lcd_fill(0, 0, 240, 240, K_BG);
     }
-    if (!ui.full)
+    if (!ui.full && !gm.on)
         draw_header();
     draw_main();
-    if (!ui.full)
+    if (!ui.full && !gm.on)
         draw_knobs();
     leds();
     ui.frame++;

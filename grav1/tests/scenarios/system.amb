@@ -127,6 +127,204 @@ tapkey w3
 wait 300
 expect full 0
 expect pool 0x6AD
+# the secret: OCT- and OCT+ held two seconds; SELECT turns, keys fire; HOME leaves
+press OCT-
+press OCT+
+wait 1000
+expect game 0
+wait 1200
+expect game 1
+release OCT-
+release OCT+
+wait 300
+expect game 1
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+turn SELECT 1
+tapkey w4
+wait 400
+turn SELECT 1
+tapkey w5
+wait 400
+turn SELECT 1
+tapkey w6
+wait 400
+turn SELECT 1
+tapkey w0
+wait 400
+turn SELECT 1
+tapkey w1
+wait 400
+turn SELECT 1
+tapkey w2
+wait 400
+turn SELECT 1
+tapkey w3
+wait 400
+expect fired >10
+expect spawned >0
+shot game.png
+tap HOME
+wait 300
+expect game 0
+expect view 0
 # another system
 turn PRESET 3
 wait 4000

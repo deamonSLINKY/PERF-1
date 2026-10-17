@@ -324,7 +324,7 @@ int en_scale(uint32_t pool, int *steps)
 float en_period_bars(int hits) { return hits > 0 ? 32.0f / (float)hits : 64.0f; }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_TOUCH, C_SUMMON, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW };
+enum { C_SET, C_POOL, C_PLAY, C_TOUCH, C_SUMMON, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_STRIKE };
 #define QN 256u
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
@@ -342,6 +342,7 @@ void en_pool(uint32_t pool) { post(C_POOL, 0, (int)(pool & 0xFFFu)); }
 void en_play(int on) { post(C_PLAY, on, 0); }
 void en_touch(void) { post(C_TOUCH, 0, 0); }
 void en_summon(int what) { post(C_SUMMON, what, 0); }
+void en_strike(int planet) { post(C_STRIKE, planet, 0); }
 void en_freeze(int on) { post(C_FREEZE, on, 0); }
 void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
@@ -2129,6 +2130,12 @@ static void drain(void)
             break;
         case C_PANIC: quiet(); break;
         case C_REGROW: regrow(); break;
+        case C_STRIKE:                           /* a note of its phrase, a little louder than its own */
+            if (a < nplanets() && pl[a].n > 0) {
+                int k = irand(pl[a].n);
+                voice_start(a, phrase_note(a, pl[a].ph[k] == REST ? 0 : pl[a].ph[k], pl[a].pho[k]), 0.2f, 1.6f, 0, 0);
+            }
+            break;
         }
     }
 }
