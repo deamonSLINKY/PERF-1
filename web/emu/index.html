@@ -113,11 +113,17 @@ body.stream #stage { display: block; position: fixed; left: 50%; top: 50%; width
 #stage .sv-link { position: absolute; left: 1174px; top: 60px; font: 700 26px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .1em;
   color: #1a1206; background: #ff9a3c; border-radius: 999px; padding: 10px 22px; box-shadow: 0 0 24px #ff9a3c88; display: none; }
 #stage.linked .sv-link { display: block; }
-#stage .sv-moves { position: absolute; left: 1174px; top: 860px; width: 704px; display: flex; flex-wrap: wrap; gap: 10px; }
+#stage .sv-moves { position: absolute; left: 1174px; top: 860px; width: 704px; display: flex; flex-wrap: nowrap; gap: 10px;
+  justify-content: flex-end; overflow: hidden; }
+#stage .sv-moves span { flex: none; white-space: nowrap; }
 #stage .sv-moves span { font: 600 26px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .05em; padding: 9px 16px; border-radius: 10px;
   background: #22202c; border: 2px solid var(--sv-acc); color: #f2eade; transition: opacity .6s; }
 #stage .sv-moves span.old { opacity: .35; }
 #stage .sv-foot { position: absolute; right: 56px; bottom: 34px; font: 600 26px/1 "Barlow Semi Condensed", sans-serif; color: #85799a; letter-spacing: .04em; }
+#stage .sv-kofi { position: absolute; right: 56px; bottom: 78px; display: flex; align-items: center; gap: 12px; padding: 10px 20px 10px 14px;
+  border-radius: 999px; background: #ff5e5b; color: #fff; font: 700 28px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .03em;
+  text-decoration: none; box-shadow: 0 0 22px #ff5e5b55; }
+#stage .sv-kofi b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #fff; color: #ff5e5b; font-size: 22px; }
 #stage .sv-ctl { position: absolute; left: 56px; bottom: 26px; display: flex; gap: 12px; opacity: 0; transition: opacity .25s; }
 #stage:hover .sv-ctl { opacity: 1; }
 #stage.idle .sv-ctl { opacity: 0; }
@@ -823,7 +829,8 @@ document.getElementById("forget").addEventListener("click", () => {
   stage.innerHTML = `<div class="sv-title"><div class="sv-bars"><i style="width:70px;background:${acc}"></i><i style="width:34px;background:#7eccc0"></i></div>
     <div><div class="sv-name">${name}</div><div class="sv-tag">${tag}</div></div></div>
     <div class="sv-link">FM-1 LINKED</div><div class="sv-dev"></div><div class="sv-big"><canvas width="240" height="240"></canvas></div>
-    <div class="sv-moves"></div><div class="sv-foot">${name}  ·  RedtailWorks  ·  rustypawz.github.io/fm1-HYP1</div>
+    <div class="sv-moves"></div><a class="sv-kofi" href="https://ko-fi.com/redtailworks" target="_blank" rel="noopener"><b>☕</b>Support me on ko-fi.com/redtailworks</a>
+    <div class="sv-foot">${name}  ·  RedtailWorks  ·  rustypawz.github.io/fm1-HYP1</div>
     <div class="sv-ctl"><button type="button" data-a="midi">Connect MIDI</button><button type="button" data-a="exit">Exit stream view</button></div>`;
   document.body.appendChild(stage);
   const big = stage.querySelector(".sv-big canvas"), bctx = big.getContext("2d"), screen = document.getElementById("screen");
