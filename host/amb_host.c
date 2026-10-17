@@ -412,6 +412,14 @@ static int expect(const char *what, const char *val)
         got = en_frozen;
     else if (!strcmp(what, "view"))
         got = ui.view;
+    else if (!strcmp(what, "dd_changes"))          /* drum drift: patterns changed, mutations, bars left */
+        got = (int)en_dd_changes;
+    else if (!strcmp(what, "dd_mutations"))
+        got = (int)en_dd_mutations;
+    else if (!strcmp(what, "dd_left"))
+        got = en_dd_left;
+    else if (!strcmp(what, "pattern_synced"))
+        got = proj.par[P_PATTERN] == en_pat_next;
     else if (!strcmp(what, "runner"))              /* the secret game (SEL + EDIT): on, lane, rows, gates, ... */
         got = kr.on;
     else if (!strcmp(what, "kr_lane"))

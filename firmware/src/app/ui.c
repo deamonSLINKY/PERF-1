@@ -38,9 +38,9 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
-       V_DRUMS, V_LINKS, V_KIT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Noise", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Space", "Global",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE };
@@ -60,6 +60,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
+    {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
@@ -80,6 +81,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
+    {"Change", "Every", "Pool", "Mutate"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Level", "Tune", "Decay", "Pattern"},
@@ -88,7 +90,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 3}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 4}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -1494,6 +1496,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
         break;
     }
     case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); break;
+    case B_SEQ: L("DRUMS; AGAIN: LINKS, KIT,"); L("THEN DRUM DRIFT"); L("HOLD: THE SEQUENCER"); break;
     case B_REC: L("FREEZE: THE CHORD HOLDS"); L("AND THE REVERB RINGS ON"); L("AGAIN: THAW"); break;
     case B_OCTDN: L("AN OCTAVE DOWN: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM ABOVE"); break;
     case B_OCTUP: L("AN OCTAVE UP: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM BELOW"); break;
@@ -1960,6 +1963,18 @@ void ui_frame(void)
         lcd_fill(0, 0, 240, 240, K_BG);
     }
     store_tick();
+    {   /* drum drift changed the pattern: the knob follows, and says so */
+        static uint32_t seen;
+        if (en_dd_changes != seen) {
+            char t[12] = "PATTERN ";
+            seen = en_dd_changes;
+            proj.par[P_PATTERN] = (int16_t)en_pat_next;
+            t[8] = (char)('1' + en_pat_next % 10u);
+            t[9] = 0;
+            if (plat_ms() >= ui.msg_until)
+                say("DRUM DRIFT", t);
+        }
+    }
     if (rm.on) {                                 /* remote: the browser's screen, the browser's lights */
         rm_tick();
         if (rm.on) {

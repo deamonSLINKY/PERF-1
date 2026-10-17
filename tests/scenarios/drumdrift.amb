@@ -1,0 +1,25 @@
+# Drum drift (SEQ four times): the patterns change by themselves, a fill the bar before, and mutate.
+wait 1500
+expect playing 1
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+wait 200
+expect view 15
+spin K1 1
+spin K2 -1
+spin K4 2
+wait 300
+shot drumdrift.png
+# Next, every 4 bars, Morph: in 30 s (128 BPM: 1.9 s a bar) four changes or so, each with its mutation
+wait 30000
+expect dd_changes >2
+expect dd_mutations >2
+# the knob follows the pattern drift chose
+expect pattern_synced 1
+# off again: nothing more changes
+spin K1 -1
+spin K4 -2
+wait 2500
+expect dd_left -1

@@ -84,7 +84,7 @@ M-VAVE's own updater, M-UPGRADE, works too.
 | 18 | HOME | The Tempo page. Hold it and turn SELECT for the tempo. |
 | 19 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. In FX, held: lock mode. |
 | 20 | ARP | Acid; again for Acid env, again for Acid line. |
-| 21 | SEQ | Drums; again, Links; again, Kit; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
+| 21 | SEQ | Drums; again, Links; again, Kit; again, Drum drift; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
 | 22 | PLAY | Play and stop. |
 | 23 | REC | Freeze: the chord holds until pressed again. |
 | 24 | White keys | The scale (each key adds or removes its note; the root stays). On the pages of a voice played by hand: that voice. Sequencer: the 16 steps. FX: effects. |
@@ -133,6 +133,7 @@ button again steps through that voice's envelope and LFO (and, for the pad, the 
 | Drums | SEQ | Level | Drive | Swing | Pattern (1–6, on the bar) |
 | Links | SEQ ×2 | K>Drone | S>Pad | H>Acid | P>Clock (off / on) |
 | Kit | SEQ ×3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
+| Drum drift | SEQ ×4 | Change (off, next, random) | Every (the chord, 4–64 bars) | Pool (patterns 1–2 … 1–6) | Mutate (off, shift, morph) |
 | Space | SELECT | Echo | Echo time (1/8 – 1 bar) | Reverb | Size |
 | Global | GLO | Root | Theme | Tune | MIDI out |
 
@@ -346,6 +347,12 @@ doesn't fit at slower tempos plays as a 1/4.
 - **Next chord: EDIT.** Moves on at the next bar.
 - **The scale: the keys.** Each adds or removes its note; the root stays. ALGORITHM picks a mode.
 - **Patterns.** Drums page, knob d, or SEL + white keys 1–6. A change waits for the bar, so turning past patterns plays none of them.
+- **Drum drift: the patterns change by themselves** (SEQ four times). **Change** moves on to the next pattern,
+  or a random one from 1 to the **Pool**, **Every** so many bars, or with each chord change. The bar before a
+  change ends in a fill, the snare and hats rolling in. **Mutate** rewrites a little at the same moments:
+  Shift moves a hit or two a step, Morph also adds or takes one. The kick and clap stay as written, so the
+  floor holds, and what changes stays in the pattern (store the piece to keep it). Mutate works with
+  Change off too, wearing one pattern in slowly. Off by default; each piece keeps its own.
 
 There's no song saving: record the audio (or MIDI out) into your DAW and keep the takes you like.
 

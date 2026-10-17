@@ -61,6 +61,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_KIT_HAT] = {"Hats", 0, EN_NKIT - 1, 0},  [P_KIT_PERC] = {"Perc", 0, EN_NKIT - 1, 0},
     [P_PAD_MAN] = {"Pad hand", 0, 1, 0},     [P_DR_MAN] = {"Drone hand", 0, 1, 0}, [P_AC_MAN] = {"Acid hand", 0, 1, 0},
     [P_CHORD] = {"Chord", 0, EN_NCHORD - 1, 0}, [P_VOICING] = {"Voicing", 0, 1, 0},
+    [P_DD_CHANGE] = {"Change", 0, 2, 0}, [P_DD_EVERY] = {"Every", 0, 5, 2}, [P_DD_POOL] = {"Pool", 2, EN_NPAT, 4},
+    [P_DD_MUTATE] = {"Mutate", 0, 2, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -228,6 +230,9 @@ void en_param_text(int i, int v, char *b)
     case P_LK_PERC: s = v ? "Clock" : "Off"; break;
     case P_CHORD: s = EN_CHORD_NAME[(unsigned)v < EN_NCHORD ? v : 0]; break;
     case P_VOICING: s = v ? "Open" : "Close"; break;
+    case P_DD_CHANGE: { static const char *const C[3] = {"Off", "Next", "Random"}; s = C[(unsigned)v < 3u ? v : 0]; break; }
+    case P_DD_EVERY: { static const char *const E[6] = {"Chord", "4 bars", "8 bars", "16 bars", "32 bars", "64 bars"}; s = E[(unsigned)v < 6u ? v : 0]; break; }
+    case P_DD_MUTATE: { static const char *const M[3] = {"Off", "Shift", "Morph"}; s = M[(unsigned)v < 3u ? v : 0]; break; }
     default: break;
     }
     if (s) {
@@ -262,6 +267,7 @@ void en_param_text(int i, int v, char *b)
     case P_DE_ATK: secs_text(de_atk_s(v), b); return;
     case P_DE_DEC: secs_text(de_dec_s(v), b); return;
     case P_PATTERN: itoa_s(v + 1, b); return;
+    case P_DD_POOL: *b++ = '1'; *b++ = '-'; itoa_s(v, b); return;
     case P_AC_RANGE: b = itoa_s(v, b); *b++ = ' '; *b++ = 'o'; *b++ = 'c'; *b++ = 't'; *b = 0; return;
     case P_SWING: b = itoa_s(50 + v / 4, b); *b++ = '%'; *b = 0; return;
     default: break;
@@ -1184,6 +1190,88 @@ static uint32_t bars;                           /* bars played (the drone's enve
 static uint8_t fill_hold;
 volatile uint8_t en_sec, en_sec_req;
 
+/* DRUM DRIFT, as GRAV-1's Drift and LOF-1's: at each bar, a count to the next change; the bar before it a
+ * fill (the snare and hats rolling in its second half); then the next pattern, or another from 1..Pool.
+ * Mutate, at the same moments: Shift moves a hit or two a step (never the kick's: the floor stays), Morph
+ * also adds or takes one. What it changes stays in the pattern (the UI saves en_pats). With Every on Chord,
+ * a chord change starts the count: the fill next bar, the change the bar after. */
+static int8_t dd_in = -1;                        /* bar lines to the change, -1 none */
+static uint8_t dd_fill;                          /* this bar ends in a fill */
+static uint32_t dd_bars;
+volatile int8_t en_dd_left = -1;
+volatile uint32_t en_dd_changes, en_dd_mutations;
+static int dd_len(void) { static const uint8_t L[6] = {0, 4, 8, 16, 32, 64}; return L[(unsigned)par[P_DD_EVERY] < 6u ? par[P_DD_EVERY] : 0]; }
+static int bits16(uint32_t b) { int n = 0; while (b) { n += (int)(b & 1u); b >>= 1; } return n; }
+
+static void dd_mutate(int p)
+{
+    static const uint8_t LN[4] = {L_SNARE, L_HAT, L_OHAT, L_PERC};   /* the kick and the clap stay as written */
+    int c;
+    for (c = 0; c < 2; c++) {                   /* a hit or two, a step either way */
+        int l = LN[irand(4)], on[16], m = 0, st;
+        uint32_t b = en_pats[p][l];
+        for (st = 0; st < 16; st++)
+            if (b >> st & 1u)
+                on[m++] = st;
+        if (m) {
+            int k = on[irand(m)], to = (k + (frand() < 0.5f ? 15 : 1)) & 15;
+            if (!(b >> to & 1u))
+                en_pats[p][l] = (uint16_t)((b & ~(1u << k)) | 1u << to);
+        }
+    }
+    if (par[P_DD_MUTATE] == 2) {                /* Morph: one more, or one fewer */
+        int l = LN[irand(4)], st;
+        uint32_t b = en_pats[p][l];
+        int h = bits16(b);
+        if ((frand() < 0.5f && h > 1) || h >= 10) {
+            for (st = irand(16); !(b >> st & 1u); st = (st + 1) & 15)
+                ;
+            b &= ~(1u << st);
+        } else if (h < 10) {
+            for (st = irand(16); b >> st & 1u; st = (st + 1) & 15)
+                ;
+            b |= 1u << st;
+        }
+        en_pats[p][l] = (uint16_t)b;
+    }
+    en_dd_mutations++;
+}
+
+static void dd_bar(void)                        /* at each bar line, before the new pattern is taken */
+{
+    int len = dd_len();
+    if (!par[P_DD_CHANGE] && !par[P_DD_MUTATE]) {
+        dd_in = en_dd_left = -1;
+        dd_fill = 0;
+        dd_bars = 0;
+        return;
+    }
+    if (dd_in > 0)
+        dd_in--;
+    if (dd_in == 0) {
+        int pool = par[P_DD_POOL] < 2 ? 2 : par[P_DD_POOL] > EN_NPAT ? EN_NPAT : par[P_DD_POOL], nb = pat_now;
+        if (par[P_DD_CHANGE] == 1)
+            nb = pat_now + 1 >= pool ? 0 : pat_now + 1;
+        else if (par[P_DD_CHANGE] == 2)
+            do
+                nb = irand(pool);
+            while (nb == pat_now);
+        if (par[P_DD_CHANGE]) {
+            pat_next = nb;
+            par[P_PATTERN] = (int16_t)nb;
+            en_dd_changes++;
+        }
+        if (par[P_DD_MUTATE])
+            dd_mutate(pat_next);
+        dd_in = -1;
+        dd_bars = 0;
+    } else if (len && dd_in < 0 && ++dd_bars >= (uint32_t)len - 1u) {
+        dd_in = 1;
+    }
+    dd_fill = dd_in == 1 && par[P_DD_CHANGE];
+    en_dd_left = (int8_t)(dd_in >= 0 ? dd_in : len ? len - (int)dd_bars : -1);
+}
+
 static void drum_publish(void)
 {
     en_pulse_rest = (uint8_t)(sec == SEC_BREAK);
@@ -1336,6 +1424,7 @@ static void tick(void)
             section_cmd(sec_req - 1);
             sec_req = 0;
         }
+        dd_bar();                               /* drum drift: a fill coming, or a change now */
         pat_now = pat_next;                     /* a new pattern: on the bar */
         if (tb && bars % (uint32_t)tb == 0u)
             bass.env_up = 1;                    /* the drone's envelope: every 1 .. 8 bars */
@@ -1356,7 +1445,7 @@ static void tick(void)
                 vel = 0.3f + 0.7f * ((float)(4 - sec_bars) * 16.0f + (float)st) / 64.0f;
             }
         }
-        if (fill_hold && (l == L_SNARE || l == L_HAT)) {   /* the FILL effect */
+        if ((fill_hold || (dd_fill && st >= 8 && sec == SEC_GROOVE)) && (l == L_SNARE || l == L_HAT)) {   /* FILL; drift's */
             hit = 1;
             vel = l == L_SNARE ? 0.35f + 0.04f * (float)st : 0.5f;
         }
@@ -1416,6 +1505,8 @@ static void tick(void)
     if (st == 0 && change_pending && !en_frozen) {   /* chords move on the bar */
         change_pending = 0;
         chord_change();
+        if (!par[P_DD_EVERY] && (par[P_DD_CHANGE] || par[P_DD_MUTATE]) && dd_in < 0)
+            dd_in = 2;                          /* drum drift with the chord: a fill next bar, the change after */
     }
     sixteenth++;
     en_bars = sixteenth;

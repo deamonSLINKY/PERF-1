@@ -224,6 +224,12 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
         </dl>
       </div>
       <div>
+        <h3>Drum drift <span>SEQ four times</span></h3>
+        <dl>
+          <dt>Change, Every</dt><dd>The patterns change by themselves: Off, Next, or Random from the Pool; with each chord change, or every 4–64 bars. A fill rolls in the bar before.</dd><dt>Pool, Mutate</dt><dd>The patterns it uses (1–2 to 1–6); Mutate: Shift moves a hit or two, Morph also adds or takes one (the kick stays put).</dd>
+        </dl>
+      </div>
+      <div>
         <h3>Space <span>SELECT</span></h3>
         <dl>
           <dt>Echo, Echo time</dt><dd>The tape echo's send; its time, an eighth to a bar.</dd><dt>Reverb, Size</dt><dd>The plate's send; how long it rings, and how often the echo returns.</dd>
@@ -393,7 +399,7 @@ function hit(c, cls) {
 }
 // what each control does, on hover (the Buttons list below says the same)
 const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO, chords); with SEL: the voice on screen by hand", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV the voice on screen by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
-  ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links, Kit); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
+  ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links, Kit, Drum drift); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
   "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };
 for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);

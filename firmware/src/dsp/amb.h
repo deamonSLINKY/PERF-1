@@ -83,6 +83,10 @@ enum {
                                                            * silent but for the keys (en_note) */
     P_CHORD, P_VOICING,                                   /* the pad's chords: their kind (EN_CH_*), close or
                                                            * open (drop 2) */
+    P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE,      /* drum drift: the patterns change by themselves (Off,
+                                                           * Next, Random), when (with the chord, or every 4-64
+                                                           * bars), from patterns 1..pool, a fill the bar before;
+                                                           * and mutate (Off, Shift, Morph): hits move, come, go */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -159,7 +163,9 @@ extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
 extern volatile float en_drum_glow[EN_NDRUM];
-extern volatile uint8_t en_pat_now, en_pat_next;      /* the pattern playing; the one waiting for the bar */
+extern volatile uint8_t en_pat_now, en_pat_next;
+extern volatile int8_t en_dd_left;             /* drum drift: bars to the change (1: the fill bar), -1 none */
+extern volatile uint32_t en_dd_changes, en_dd_mutations;   /* changes made and mutations since start */      /* the pattern playing; the one waiting for the bar */
 extern volatile uint16_t en_pats[EN_NPAT][EN_NLANE];   /* the patterns: bit s, a hit on step s (the UI edits) */
 extern volatile uint32_t en_bars;              /* sixteenths played since start (for tests) */
 extern volatile float en_arc;                  /* the arc, -1 sparse .. +1 full (times Motion) */
