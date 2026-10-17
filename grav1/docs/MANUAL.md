@@ -293,6 +293,9 @@ on screen; edits you make there stay in the bank.
 the tempo show top right. START plays from step one, STOP rests it, and the steps and the orbits follow the
 clock. When the clock stops, the system goes back to its own tempo.
 
+On USB the FM-1 shows up as **GRAV-1 FM-1** (by RedtailWorks); each firmware in the pack has its own name.
+(Windows may go on showing a name it saw before until the FM-1 is unplugged and removed in Device Manager.)
+
 **MIDI out** (USB). On the MIDI out page, Sends picks what goes out:
 
 | Channel (default) | What |

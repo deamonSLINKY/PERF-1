@@ -625,9 +625,10 @@ function onMidi(e, input) {
 }
 outSel.addEventListener("change", pickPorts);
 inSel.addEventListener("change", pickPorts);
-document.getElementById("midi-go").addEventListener("click", async () => {
+async function midiConnect(quiet) {
+  if (midiAccess) return;
   if (!navigator.requestMIDIAccess) {
-    midiNote.textContent = "This browser has no Web MIDI. Chrome, Edge, Opera and Firefox do; Safari doesn't.";
+    if (!quiet) midiNote.textContent = "This browser has no Web MIDI. Chrome, Edge, Opera and Firefox do; Safari doesn't.";
     return;
   }
   try {
@@ -636,9 +637,14 @@ document.getElementById("midi-go").addEventListener("click", async () => {
     fillPorts();
     document.getElementById("midi-go").textContent = "MIDI connected";
   } catch (err) {
-    midiNote.textContent = "MIDI isn't allowed here (" + (err && err.name || "refused") + "). Open the emulator on its own page to use MIDI, or allow MIDI for this site in the browser's settings.";
+    midiAccess = null;
+    if (!quiet) midiNote.textContent = "MIDI isn't allowed here (" + (err && err.name || "refused") + "). Open the emulator on its own page to use MIDI, or allow MIDI for this site in the browser's settings.";
   }
-});
+}
+document.getElementById("midi-go").addEventListener("click", () => midiConnect(false));
+if (navigator.permissions && navigator.requestMIDIAccess)                       // allowed before: connect at once, as HYP-1's does
+  navigator.permissions.query({ name: "midi" }).then((p) => { if (p.state === "granted") midiConnect(true); }).catch(() => {});
+
 document.getElementById("reset").addEventListener("click", () => {
   if (document.getElementById("reset").dataset.armed) {
     try { localStorage.removeItem(STORE_KEY); } catch {}

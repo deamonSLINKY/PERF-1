@@ -219,7 +219,7 @@ function setPlaying(on) {
 }
 function mediaSession() {
   if (!navigator.mediaSession || !window.MediaMetadata) return;
-  navigator.mediaSession.metadata = new MediaMetadata({ title: pieceName(S.piece), artist: "AMB-1" });
+  navigator.mediaSession.metadata = new MediaMetadata({ title: pieceName(S.piece), artist: "HYP-1" });
   try {
     navigator.mediaSession.setActionHandler("play", () => setPlaying(true));
     navigator.mediaSession.setActionHandler("pause", () => setPlaying(false));
