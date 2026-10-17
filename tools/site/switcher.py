@@ -25,10 +25,13 @@ BAR = """<style>
 .rw-switch select { font: 600 15px "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; color: #f2f2f4;
                     background: #1c1c22; border: 1px solid #44444e; border-radius: 6px; padding: .2em .5em; max-width: 100%; }
 .rw-switch select:focus-visible { outline: 2px solid #e8873a; outline-offset: 2px; }
+.rw-switch a.rw-all { display: inline-flex; align-items: center; gap: .35em; min-height: 32px; padding: .15em .8em; border-radius: 6px;
+                     background: #e8873a; color: #1a0f05; font-weight: 700; text-decoration: none; }
+.rw-switch a.rw-all:hover, .rw-switch a.rw-all:focus-visible { background: #ffa25a; outline: 2px solid #ffa25a; outline-offset: 2px; }
 .rw-switch .tag { font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #1a0f05;
                   background: #e8873a; border-radius: 999px; padding: .1em .6em; }
 </style>
-<nav class="rw-switch" aria-label="Firmware"><label for="rw-fw">FM-1 firmware by RedtailWorks</label>
+<nav class="rw-switch" aria-label="Firmware">__ALL__<label for="rw-fw">FM-1 firmware by RedtailWorks</label>
 <select id="rw-fw" onchange="location.href=this.value">__OPTS__</select>__TAG__</nav>
 """
 
@@ -78,7 +81,8 @@ def main(root):
             opts.append(f'<option value="{href}"{" selected" if key == prod else ""}>{label}</option>')
         if len(opts) < 2 + hub:
             continue
-        bar = BAR.replace("__OPTS__", "".join(opts)).replace(
+        home = f'<a class="rw-all" href="{up or "./"}"><span aria-hidden="true">&larr;</span> All firmwares</a>' if hub else ""
+        bar = BAR.replace("__ALL__", home).replace("__OPTS__", "".join(opts)).replace(
             "__TAG__", '<span class="tag">Experimental</span>' if prod in EXPERIMENTAL else "")
         s = page
         if "rw-switch" in s:
