@@ -36,11 +36,12 @@ PHASES = [  # name, what happens
 ENGINE = [  # what, OPEN-1 target, the FM-1 today
     ("Processor", "480 MHz Arm Cortex-M7 (STM32H750)", "240 MHz"),
     ("Working memory", "32 MB + 1 MB on the chip", "About 432 KB"),
-    ("Firmware storage", "16 MB, plus a microSD library", "1 MB"),
+    ("Firmware storage", "16 MB of firmware slots, plus one microSD card for firmware, samples and projects", "1 MB"),
     ("Firmwares installed", "Several, swapped from the menu", "One at a time"),
-    ("Audio", "24-bit stereo in and out", "Stereo out"),
-    ("MIDI", "In and out (3.5 mm TRS)", "In"),
-    ("USB-C", "Device and host", "Device"),
+    ("Audio", "4 in and 4 out, 24-bit; also a 4 × 4 USB audio interface", "Stereo out"),
+    ("MIDI", "TRS in and out with an A/B switch, plus USB", "TRS in, USB, Bluetooth"),
+    ("USB-C", "Device (audio, MIDI, charging) and host (keyboards, drives)", "Device"),
+    ("Sync and CV", "Sync in and out, 2 CV outs (0–5 V); rates and roles set by the firmware", "—"),
 ]
 
 INSTRUMENT = [
@@ -49,7 +50,8 @@ INSTRUMENT = [
     ("Buttons", "16 lit buttons in two rows of 8; each firmware names them on screen"),
     ("Controls", "8 endless push encoders, a thumbstick, 2 spring levers, a volume knob"),
     ("Screen", "4.0″ IPS, 480 × 320"),
-    ("Sound out", "Built-in speaker, headphones, line out"),
+    ("Sound out", "Built-in speaker, headphones, two stereo line outs"),
+    ("Pedal", "6.35 mm jack for a sustain or expression pedal"),
     ("Power", "3000 mAh battery, charges over USB-C"),
     ("Connections", "Wired only: no Bluetooth, for low latency"),
     ("Size", "About 320 × 230 mm, a third smaller than the first design; a wedge 34 mm at the back, 18 mm at the front"),
@@ -298,8 +300,8 @@ __GOALS__
 __ENGINE__
         </tbody>
       </table></div>
-      <figure class="ports"><img src="media/open1-ports.jpg" width="1560" height="320" alt="The rear edge: MIDI in, MIDI out, USB-C device, USB-C host, line in, line out and phones; MIDI out, USB-C host and line in are marked in orange as new compared with the FM-1." loading="lazy">
-        <figcaption>The rear edge. Orange marks the connections the FM-1 doesn't have.</figcaption></figure>
+      <figure class="ports"><img src="media/open1-rear.jpg" width="1600" height="470" alt="The rear edge, left to right: power switch, USB-C device and host, microSD slot, MIDI in and out with an A/B switch, sync in and out, CV 1 and 2, a 6.35 mm pedal jack, audio in 1-2 and 3-4, audio out 1-2 and 3-4, and phones." loading="lazy">
+        <figcaption>The port side. Every connection is on the back edge.</figcaption></figure>
     </div>
     <div class="tablewrap">
       <p class="cap">The instrument</p>
@@ -317,7 +319,7 @@ __INSTRUMENT__
 __PRICES__
   </div>
   <div class="costs">
-    <div><b>~$70</b><span>Target parts cost per unit, at 1,000 units</span></div>
+    <div><b>~$73</b><span>Target parts cost per unit, at 1,000 units</span></div>
     <div><b>~$80&ndash;250</b><span>Breadboard prototype, the next phase</span></div>
     <div><b>$100&ndash;120k</b><span>Estimated cost of the first 1,000 units</span></div>
   </div>
