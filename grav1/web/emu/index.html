@@ -86,6 +86,8 @@ body.stream #stage { display: block; position: fixed; left: 50%; top: 50%; width
   transform: translate(-50%, -50%) scale(var(--sv-s, .5)); overflow: hidden; color: #f2eade;
   background: radial-gradient(ellipse 62% 62% at 50% 42%, var(--sv-glow), transparent 70%),
               linear-gradient(#1a1824, #0c0b11); font-family: "Barlow Semi Condensed", Barlow, sans-serif; }
+#stage .sv-bg { position: absolute; inset: 0; width: 1920px; height: 1080px; pointer-events: none; opacity: 0; transition: opacity 2s; }
+#stage .sv-bg.live { opacity: 1; }
 #stage .sv-dev { position: absolute; left: 56px; top: 190px; width: 1100px; }
 #stage .sv-dev .device { width: 1100px; }
 #stage .sv-big { position: absolute; left: 1174px; top: 128px; width: 704px; height: 704px; border-radius: 30px; background: #0b0a0e;
@@ -761,7 +763,7 @@ document.getElementById("reset").addEventListener("click", () => {
   stage.id = "stage";
   stage.style.setProperty("--sv-acc", acc);
   stage.style.setProperty("--sv-glow", "rgba(" + [1, 3, 5].map((i) => parseInt(acc.slice(i, i + 2), 16)).join(",") + ",0.24)");
-  stage.innerHTML = `<div class="sv-title"><div class="sv-bars"><i style="width:70px;background:${acc}"></i><i style="width:34px;background:#7eccc0"></i></div>
+  stage.innerHTML = `<canvas class="sv-bg" width="192" height="108" aria-hidden="true"></canvas><div class="sv-title"><div class="sv-bars"><i style="width:70px;background:${acc}"></i><i style="width:34px;background:#7eccc0"></i></div>
     <div><div class="sv-name">${name}</div><div class="sv-tag">${tag}</div></div></div>
     <div class="sv-link">FM-1 LINKED</div><div class="sv-dev"></div><div class="sv-big"><canvas width="240" height="240"></canvas></div>
     <div class="sv-moves"></div><a class="sv-kofi" href="https://ko-fi.com/redtailworks" target="_blank" rel="noopener"><b>☕</b>Support me on ko-fi.com/redtailworks</a>
@@ -789,10 +791,82 @@ document.getElementById("reset").addEventListener("click", () => {
   }
   stage.addEventListener("pointermove", woke);
   stage.addEventListener("pointerdown", woke);
-  (function tick() {                              // the screen, large; the remote's badge
+  // the background, moving with the music: an analyser on the emulator's output (its first two channels, the
+  // mix), three bands each lighting a slow, drifting glow; their hues lean with the sound's brightness
+  const bg = stage.querySelector(".sv-bg"), gctx = bg.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  const hue0 = (function (h) {                    // the accent's hue, in degrees
+    const r = parseInt(h.slice(1, 3), 16) / 255, g = parseInt(h.slice(3, 5), 16) / 255, b = parseInt(h.slice(5, 7), 16) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (!d) return 0;
+    const x = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return x * 60;
+  })(acc);
+  let an = null, spec = null, binHz = 0, lastBg = 0;
+  const lvl = [0, 0, 0], peak = [1e-4, 1e-4, 1e-4];
+  let bright = 0.5;
+  function listen() {
+    if (an || typeof node === "undefined" || !node) return;
+    try {
+      an = node.context.createAnalyser();
+      an.fftSize = 2048;
+      an.smoothingTimeConstant = 0.6;
+      an.channelCount = 2;
+      an.channelCountMode = "explicit";
+      an.channelInterpretation = "discrete";     // the mix only, never the voices apart (channels 3-8)
+      node.connect(an);
+      spec = new Float32Array(an.frequencyBinCount);
+      binHz = node.context.sampleRate / an.fftSize;
+    } catch { an = null; }
+  }
+  function glow(x, y, r, hue, a) {
+    const g = gctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `hsla(${hue}, 70%, 55%, ${a})`);
+    g.addColorStop(0.5, `hsla(${hue}, 70%, 45%, ${a * 0.35})`);
+    g.addColorStop(1, `hsla(${hue}, 70%, 40%, 0)`);
+    gctx.fillStyle = g;
+    gctx.fillRect(0, 0, 192, 108);
+  }
+  function drawBg(t) {
+    if (t - lastBg < 33) return;                  // 30 a second is plenty for something this slow
+    const dt = Math.min((t - lastBg) / 1000, 0.1);
+    lastBg = t;
+    listen();
+    if (!an) return;
+    an.getFloatFrequencyData(spec);
+    const band = [0, 0, 0];
+    let sum = 0, wsum = 0;
+    for (let i = 1; i < spec.length; i++) {
+      const f = i * binHz, m = Math.pow(10, spec[i] / 20);
+      if (f < 30 || f > 12000) continue;
+      band[f < 250 ? 0 : f < 2000 ? 1 : 2] += m * m;
+      sum += m;
+      wsum += m * Math.log2(f);
+    }
+    if (sum > 1e-6) {                             // brightness: the spectrum's centre, 200 Hz .. 3 kHz -> 0 .. 1
+      const c = Math.min(Math.max((wsum / sum - Math.log2(200)) / Math.log2(15), 0), 1);
+      bright += (c - bright) * Math.min(dt * 0.8, 1);
+    }
+    for (let k = 0; k < 3; k++) {                 // each band against its own recent loudest: quiet music moves too
+      const v = Math.sqrt(band[k]);
+      peak[k] = Math.max(v, peak[k] * Math.pow(0.5, dt / 8), 1e-4);
+      const tgt = Math.min(v / peak[k], 1);
+      lvl[k] += (tgt - lvl[k]) * Math.min(dt * (tgt > lvl[k] ? 5 : 0.9), 1);   // quick to swell, slow to fade
+    }
+    bg.classList.toggle("live", sum > 1e-4);
+    const s = t / 1000, calm = still.matches ? 0 : 1, lean = (bright - 0.5) * 50;
+    gctx.globalCompositeOperation = "source-over";
+    gctx.clearRect(0, 0, 192, 108);
+    gctx.globalCompositeOperation = "lighter";
+    glow(70 + calm * 16 * Math.sin(s * 0.07), 78 + calm * 8 * Math.sin(s * 0.05 + 1), 80 + 18 * lvl[0], hue0 - 25 + lean, 0.06 + 0.22 * lvl[0]);
+    glow(110 + calm * 22 * Math.sin(s * 0.06 + 2), 42 + calm * 12 * Math.sin(s * 0.08), 70 + 14 * lvl[1], hue0 + lean, 0.05 + 0.2 * lvl[1]);
+    glow(150 + calm * 18 * Math.sin(s * 0.09 + 4), 30 + calm * 10 * Math.sin(s * 0.07 + 3), 52 + 12 * lvl[2], hue0 + 40 + lean, 0.04 + 0.16 * lvl[2]);
+  }
+  (function tick(t) {                             // the screen, large; the remote's badge; the background
     if (on) {
       bctx.drawImage(screen, 0, 0);
       stage.classList.toggle("linked", dev.classList.contains("remote"));
+      drawBg(t || 0);
     }
     requestAnimationFrame(tick);
   })();
