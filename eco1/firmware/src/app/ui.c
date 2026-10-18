@@ -16,15 +16,16 @@
 #include "../dsp/fastmath.h"
 
 /* the pages, one a button; SELECT steps through them in this order */
-enum { V_PLANT, V_STEM, V_LOW, V_MID, V_TOP, V_WEATHER, V_SPACE, V_SETUP, V_OUT, NVIEWS };
-static const char *const VIEW_NAME[NVIEWS] = {"Plant", "Stem", "Low leaf", "Mid leaf", "Top leaf", "Weather", "Space", "Setup",
+enum { V_PLANT, V_STEM, V_SAP, V_LOW, V_MID, V_TOP, V_WEATHER, V_SPACE, V_SETUP, V_OUT, NVIEWS };
+static const char *const VIEW_NAME[NVIEWS] = {"Plant", "Stem", "Sap", "Low leaf", "Mid leaf", "Top leaf", "Weather", "Space", "Setup",
                                               "MIDI out"};
-static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_SEL, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_GLO};   /* GLO again: MIDI out */
+static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_SEL, B_SEL, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_GLO};   /* SEL again: Sap; GLO again: MIDI out */
 /* the four knobs of each page: a parameter, or one of these; and what the knob is called there */
 enum { K_LEDS = 100, K_CPU, K_NONE };
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
-    {P_LIGHT, P_SKY, P_WARMTH, P_SPREAD},
+    {P_LIGHT, P_SKY, P_DAY, P_WARMTH},
     {P_STEM, P_STEM_COLOUR, P_STEM_INT, P_STEM_TONE},
+    {P_SPREAD, P_STEM_OCT, P_STEM_VERB, K_NONE},
     {P_LEAF_LVL(0), P_LEAF_VOICE(0), P_LEAF_OCT(0), P_LEAF_TONE(0)},
     {P_LEAF_LVL(1), P_LEAF_VOICE(1), P_LEAF_OCT(1), P_LEAF_TONE(1)},
     {P_LEAF_LVL(2), P_LEAF_VOICE(2), P_LEAF_OCT(2), P_LEAF_TONE(2)},
@@ -34,8 +35,9 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_MIDI, P_MCH, K_LEDS, K_CPU},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
-    {"Light", "Sky", "Warmth", "Spread"},
+    {"Light", "Sky", "Day", "Warmth"},
     {"Level", "Colour", "Interval", "Tone"},
+    {"Spread", "Octave", "Reverb", ""},
     {"Level", "Voice", "Octave", "Tone"},
     {"Level", "Voice", "Octave", "Tone"},
     {"Level", "Voice", "Octave", "Tone"},
@@ -156,9 +158,7 @@ static void knob_range(int k, int *lo, int *hi)
 static void knob_text(int k, char *b)
 {
     int v = knob_get(k);
-    if (k == P_SKY && v == EN_SKY_CYCLE) {       /* cycling: how long a day takes */
-        en_param_text(P_DAY, proj.par[P_DAY], b);
-    } else if (k < P_NPARAMS) {
+    if (k < P_NPARAMS) {
         en_param_text(k, v, b);
     } else if (k == K_LEDS) {                    /* On: the keys, and the unlit buttons glow; Keys: no glow */
         const char *n = v == 2 ? "Keys" : v ? "On" : "Off";
@@ -277,6 +277,10 @@ static void button(int b)
         set_view(V_OUT);
         return;
     }
+    if (b == B_SEL && ui.view == V_STEM) {       /* SEL again: the Sap page (what runs in the stem) */
+        set_view(V_SAP);
+        return;
+    }
     for (v = 0; v < NVIEWS; v++)                 /* a page's button: its page */
         if (VIEW_BTN[v] == b) {
             set_view(v);
@@ -302,7 +306,7 @@ static void button(int b)
         en_freeze(!en_frozen);                   /* the engine takes it at its next block */
         break;
     case B_OCTDN: case B_OCTUP: {             /* the page's voice: a leaf, the stem, else the whole plant */
-        int p = ui.view == V_STEM ? P_STEM_OCT : ui.view >= V_LOW && ui.view <= V_TOP ? P_LEAF_OCT(ui.view - V_LOW) : P_OCT;
+        int p = ui.view == V_STEM || ui.view == V_SAP ? P_STEM_OCT : ui.view >= V_LOW && ui.view <= V_TOP ? P_LEAF_OCT(ui.view - V_LOW) : P_OCT;
         char t[8];
         knob_set(p, proj.par[p] + (b == B_OCTUP ? 1 : -1));
         en_param_text(p, proj.par[p], t);
@@ -569,8 +573,8 @@ static void input(void)
         if (btn >> B_HOME & 1u) {
             turn(EN_SELECT, P_DAY, e);
             ui.btn_used |= 1u << B_HOME;
-            if (ui.view == V_PLANT && proj.par[P_SKY] == EN_SKY_CYCLE) {   /* Sky shows the day's length */
-                ui.touched = 1;
+            if (ui.view == V_PLANT) {            /* Day is the Plant page's third knob */
+                ui.touched = 2;
                 ui.touch_until = plat_ms() + 1200u;
             } else {
                 char t[10];
@@ -912,12 +916,12 @@ static int help_lines(int b, const char *l[HELP_LINES])
     int n = 0;
 #define L(t) (l[n++] = (t))
     switch (b) {
-    case B_HOME: L("THE PLANT AND ITS SKY"); L("LIGHT, SKY, WARMTH, SPREAD"); L("+ SELECT: THE DAY'S LENGTH"); break;
+    case B_HOME: L("THE PLANT AND ITS SKY"); L("LIGHT, SKY, DAY, WARMTH"); L("+ SELECT: THE DAY'S LENGTH"); break;
     case B_ENV: L("THE LOW LEAF"); L("LEVEL, VOICE, OCTAVE, TONE"); break;
     case B_ARP: L("THE MIDDLE LEAF"); L("LEVEL, VOICE, OCTAVE, TONE"); break;
     case B_LFO: L("THE TOP LEAF"); L("LEVEL, VOICE, OCTAVE, TONE"); break;
     case B_SEQ: L("THE WEATHER"); L("RAIN, WIND, GUSTS,"); L("ITS SOUND"); break;
-    case B_SEL: L("THE STEM'S DRONE"); L("LEVEL, COLOUR, INTERVAL,"); L("TONE; OCT-/+ ITS OCTAVE"); break;
+    case B_SEL: L("THE STEM: LEVEL, COLOUR,"); L("INTERVAL, TONE; AGAIN: SAP,"); L("SPREAD, OCTAVE, REVERB"); break;
     case B_FX: L("THE SPACE"); L("REVERB, SIZE, WIND VERB,"); L("STEM VERB"); break;
     case B_GLO: L("SETUP: ROOT, TUNE,"); L("SYNC TO MIDI CLOCK, GRID"); L("AGAIN: MIDI OUT, LIGHTS"); L("SEL + GLO: REMOTE"); break;
     case B_EDIT: L("TOUCH THE PLANT:"); L("A CHARGE RUNS UP IT"); L("FROM THE SOIL"); break;
@@ -983,7 +987,6 @@ static void draw_knobs(void)
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
     h = hash(h, (uint32_t)now_touch | (uint32_t)en_ext << 1);   /* on the clock, Day reads in bars */
-    h = hash(h, (uint32_t)proj.par[P_DAY]);      /* Sky, cycling, reads the day's length */
     if (ui.view == V_OUT)
         h = hash(h, plat_cpu_pct());
     if (h == ui.sig[2])

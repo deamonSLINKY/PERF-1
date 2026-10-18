@@ -119,8 +119,8 @@ void en_param_text(int i, int v, char *b)
         s = MIDI_NAME[(unsigned)v < 4u ? v : 0];
     else if (i == P_SYNC)
         s = SYNC_NAME[v ? 1 : 0];
-    else if (i == P_SKY && v != EN_SKY_CYCLE)
-        s = v == EN_SKY_DAY ? "Day" : "Night";
+    else if (i == P_SKY)
+        s = v == EN_SKY_DAY ? "Day" : v == EN_SKY_NIGHT ? "Night" : "Cycle";
     else if (i == P_GRID)
         s = GRID_NAME[(unsigned)v < 6u ? v : 0];
     else if (i == P_MODE)

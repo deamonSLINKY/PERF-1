@@ -1,7 +1,7 @@
 # ECO-1 on MIDI clock: start, ticks at 120 BPM, a 1/16 grid; notes and CCs out
 tap GLO
 tap GLO
-expect view 8
+expect view 9
 spin K1 1
 wait 2000
 expect par26 2

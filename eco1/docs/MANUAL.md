@@ -80,7 +80,7 @@ ECO-1 starts by itself: the RedtailWorks card, then ECO-1, then the plant wakes.
 | REC | **Freeze**: the day and the weather stop, the reverb rings on. Lit while frozen. |
 | EDIT | **Touch**: a charge runs up the plant from the soil, waking each part in turn. |
 | HOME | The Plant page. Hold it and turn SELECT for the day's length, from any page. |
-| SEL | The Stem page. |
+| SEL | The Stem page; SEL again, the Sap page. |
 | ENV · ARP · LFO | The low, middle and top leaf's pages. Each flashes as its leaf fires. |
 | SEQ · FX | The Weather and Space pages. |
 | GLO | The Setup page; GLO again, the MIDI out page. |
@@ -174,9 +174,9 @@ weather. The weather and the sound settings are each plant's to change; what it 
 | Knob | What it does |
 |---|---|
 | Light | How strong the sun is. |
-| Sky | **Night**, **Cycle** or **Day**. Cycle: the day turns, and the knob shows how long a day and a night take (30 s to 30 min, or 4 to 512 bars on MIDI clock): set it with HOME + SELECT. Night or Day: the sky goes on to midnight or noon (a dusk or a dawn of a few seconds) and stays. |
+| Sky | **Night**, **Cycle** or **Day**. Cycle: the day turns. Night or Day: the sky goes on to midnight or noon (a dusk or a dawn of a few seconds) and stays. |
+| Day | How long a day and a night take on Cycle: 30 s to 30 min (4 to 512 bars on MIDI clock). Also HOME + SELECT, from any page. |
 | Warmth | The plant's metabolism: warmer fires faster and dries the soil sooner. |
-| Spread | How strongly a firing runs down the stem to the other leaves. |
 
 ### Stem (SEL)
 
@@ -190,6 +190,16 @@ weather. The weather and the sound settings are each plant's to change; what it 
 | Tone | Dark to bright; daylight opens it up further. |
 
 OCT− / OCT+ on this page move the stem's octave.
+
+### Sap (SEL again)
+
+What runs in the stem.
+
+| Knob | What it does |
+|---|---|
+| Spread | How strongly a firing runs down the stem to the other leaves (which answer a third above). |
+| Octave | The stem's octave (as OCT− / OCT+ on the Stem page). |
+| Reverb | How much of the drone goes into the reverb (the Space page's Stem verb). |
 
 ### Low, Mid, Top leaf (ENV, ARP, LFO)
 
