@@ -10,7 +10,7 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x314F4345u           /* "ECO1" */
-#define PROJ_FORMAT 4u                   /* 4: sync and MIDI out (older formats: the recipes) */
+#define PROJ_FORMAT 5u                   /* 5: the Sky switch (older formats: the recipes) */
 #define NPIECES EN_NPIECES
 
 typedef struct {

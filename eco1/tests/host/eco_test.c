@@ -137,6 +137,37 @@ int main(void)
         CHECK(cactus > 5u, "a cactus in drought fires only %u a minute", cactus);
         printf("  drought, after 10 min: fern %u fires a minute, cactus %u\n", fern, cactus);
     }
+    /* the Sky switch: always night is mellow, not dead; always day is the busiest; the sky stays put */
+    {
+        uint32_t f[3];
+        double r[3];
+        int sk;
+        for (sk = 0; sk < 3; sk++) {
+            piece(EN_SP_IVY);
+            en_set(P_SKY, sk);
+            en_set(P_RAIN, 60);                       /* water enough: only the light differs */
+            en_regrow();
+            run(20.0);
+            peak = sumsq = 0.0;
+            frames = 0;
+            f[sk] = en_fires;
+            run(180.0);
+            f[sk] = en_fires - f[sk];
+            r[sk] = rms_db();
+        }
+        printf("  sky: night %u fires in 3 min (%.1f dB), cycle %u (%.1f dB), day %u (%.1f dB)\n", f[0], r[0], f[1], r[1], f[2], r[2]);
+        CHECK(f[0] > 40u, "always night: only %u fires in 3 min", f[0]);
+        CHECK(f[0] < f[2], "night (%u) not calmer than day (%u)", f[0], f[2]);
+        CHECK(r[0] < r[2], "night (%.1f dB) not softer than day (%.1f dB)", r[0], r[2]);
+        CHECK(en_sun > 0.5f && en_day > 0.49f && en_day < 0.51f, "always day: noon, sun %.2f", (double)en_sun);
+        en_set(P_SKY, EN_SKY_NIGHT);              /* from noon to midnight: a dusk of a few seconds */
+        run(12.0);
+        CHECK(en_day < 0.001f || en_day > 0.999f, "Night: the sky at %.3f", (double)en_day);
+        CHECK(en_sun < 0.01f, "Night: the sun still %.2f", (double)en_sun);
+        run(30.0);
+        CHECK(en_day < 0.001f || en_day > 0.999f, "Night: the sky moved on to %.3f", (double)en_day);
+    }
+
     /* the lotus never dries: it lives in a pond */
     piece(EN_SP_LOTUS);
     en_set(P_RAIN, 0);

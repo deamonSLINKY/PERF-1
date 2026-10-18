@@ -127,8 +127,14 @@ the most wind; the low leaf drinks first and dries last.
 after answers a third above, so phrases call and answer. The stem also drones, on the root and an
 interval over it, as loud as the soil is wet and brighter in daylight.
 
-**The day.** Night, dawn, noon, dusk on a cycle of Day length. Light charges the leaves, so noon is busy and
+**The day.** Night, dawn, noon, dusk on a cycle of Day length, or always night, or always day (Sky, on the Plant
+page). Light charges the leaves, so noon is busy and
 night sparse; at dawn the leaves wake together. Warmth speeds the plant up and dries the soil faster.
+
+**Night is gentle.** The dark never harms the plant: a moon's worth of light keeps the leaves going, slower
+(about half as often as at noon), softer and darker in tone. Only water decides whether it wilts, so an
+always-night plant plays on mellow for as long as it's watered, and an always-day one is the busiest but
+dries its soil fastest.
 
 **The weather.** Rain sets how often showers come and how heavy they are. While it rains there's a rain
 track, a hiss and the chirps of drops, and drops landing on the leaves give them a charge. Without rain,
@@ -168,7 +174,7 @@ weather. The weather and the sound settings are each plant's to change; what it 
 | Knob | What it does |
 |---|---|
 | Light | How strong the sun is. |
-| Day | How long a day and a night take: 30 s to 30 min (4 to 512 bars on MIDI clock). Also HOME + SELECT. |
+| Sky | **Night**, **Cycle** or **Day**. Cycle: the day turns, and the knob shows how long a day and a night take (30 s to 30 min, or 4 to 512 bars on MIDI clock): set it with HOME + SELECT. Night or Day: the sky goes on to midnight or noon (a dusk or a dawn of a few seconds) and stays. |
 | Warmth | The plant's metabolism: warmer fires faster and dries the soil sooner. |
 | Spread | How strongly a firing runs down the stem to the other leaves. |
 
@@ -236,7 +242,7 @@ Sync, Grid and the MIDI settings belong to you, not the plant: they stay as you 
 ![On MIDI clock](img/eco-device-clock.png)
 
 **Clock in** (USB or the TRS jack). With Sync on Clock, ECO-1 follows MIDI clock whenever it comes: EXT and
-the tempo show top right. START grows the plant from the morning, STOP rests it, and Day counts in bars.
+the tempo show top right. START grows the plant from the morning (the sky stays put on Night or Day), STOP rests it, and the day counts in bars.
 With a Grid, a leaf that's ready waits for the next step, so its notes land on the beat. When the clock
 stops, the plant goes back to its own time.
 

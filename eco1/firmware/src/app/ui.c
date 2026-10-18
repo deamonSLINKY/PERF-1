@@ -23,7 +23,7 @@ static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_SEL, B_ENV, B_ARP, B_LFO, B_S
 /* the four knobs of each page: a parameter, or one of these; and what the knob is called there */
 enum { K_LEDS = 100, K_CPU, K_NONE };
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
-    {P_LIGHT, P_DAY, P_WARMTH, P_SPREAD},
+    {P_LIGHT, P_SKY, P_WARMTH, P_SPREAD},
     {P_STEM, P_STEM_COLOUR, P_STEM_INT, P_STEM_TONE},
     {P_LEAF_LVL(0), P_LEAF_VOICE(0), P_LEAF_OCT(0), P_LEAF_TONE(0)},
     {P_LEAF_LVL(1), P_LEAF_VOICE(1), P_LEAF_OCT(1), P_LEAF_TONE(1)},
@@ -34,7 +34,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_MIDI, P_MCH, K_LEDS, K_CPU},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
-    {"Light", "Day", "Warmth", "Spread"},
+    {"Light", "Sky", "Warmth", "Spread"},
     {"Level", "Colour", "Interval", "Tone"},
     {"Level", "Voice", "Octave", "Tone"},
     {"Level", "Voice", "Octave", "Tone"},
@@ -156,7 +156,9 @@ static void knob_range(int k, int *lo, int *hi)
 static void knob_text(int k, char *b)
 {
     int v = knob_get(k);
-    if (k < P_NPARAMS) {
+    if (k == P_SKY && v == EN_SKY_CYCLE) {       /* cycling: how long a day takes */
+        en_param_text(P_DAY, proj.par[P_DAY], b);
+    } else if (k < P_NPARAMS) {
         en_param_text(k, v, b);
     } else if (k == K_LEDS) {                    /* On: the keys, and the unlit buttons glow; Keys: no glow */
         const char *n = v == 2 ? "Keys" : v ? "On" : "Off";
@@ -567,7 +569,7 @@ static void input(void)
         if (btn >> B_HOME & 1u) {
             turn(EN_SELECT, P_DAY, e);
             ui.btn_used |= 1u << B_HOME;
-            if (ui.view == V_PLANT) {            /* Day is the Plant page's second knob */
+            if (ui.view == V_PLANT && proj.par[P_SKY] == EN_SKY_CYCLE) {   /* Sky shows the day's length */
                 ui.touched = 1;
                 ui.touch_until = plat_ms() + 1200u;
             } else {
@@ -910,7 +912,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     int n = 0;
 #define L(t) (l[n++] = (t))
     switch (b) {
-    case B_HOME: L("THE PLANT AND ITS SKY"); L("LIGHT, DAY, WARMTH, SPREAD"); L("+ SELECT: THE DAY'S LENGTH"); break;
+    case B_HOME: L("THE PLANT AND ITS SKY"); L("LIGHT, SKY, WARMTH, SPREAD"); L("+ SELECT: THE DAY'S LENGTH"); break;
     case B_ENV: L("THE LOW LEAF"); L("LEVEL, VOICE, OCTAVE, TONE"); break;
     case B_ARP: L("THE MIDDLE LEAF"); L("LEVEL, VOICE, OCTAVE, TONE"); break;
     case B_LFO: L("THE TOP LEAF"); L("LEVEL, VOICE, OCTAVE, TONE"); break;
@@ -981,6 +983,7 @@ static void draw_knobs(void)
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
     h = hash(h, (uint32_t)now_touch | (uint32_t)en_ext << 1);   /* on the clock, Day reads in bars */
+    h = hash(h, (uint32_t)proj.par[P_DAY]);      /* Sky, cycling, reads the day's length */
     if (ui.view == V_OUT)
         h = hash(h, plat_cpu_pct());
     if (h == ui.sig[2])

@@ -47,6 +47,7 @@ extern const char *const EN_VOICE_NAME[EN_NVOICE];
 extern const char *const EN_STEMC_NAME[EN_NSTEMC];
 extern const char *const EN_STEMI_NAME[EN_NSTEMI];
 
+enum { EN_SKY_NIGHT, EN_SKY_CYCLE, EN_SKY_DAY };
 /* parameters: value ranges in en_param_info() */
 enum {
     P_LIGHT, P_DAY, P_WARMTH, P_SPREAD,               /* the plant and its sky */
@@ -58,6 +59,7 @@ enum {
     P_SPECIES,                                        /* what the plant is (the piece's; no knob): EN_SP_* */
     P_SYNC, P_GRID, P_MCH,                            /* MIDI clock in: follow it, and the grid the leaves fire on;
                                                        * MIDI out's first channel (P_MIDI: what it sends) */
+    P_SKY,                                            /* the sky: always night, the day's cycle, always day (EN_SKY_*) */
     P_NPARAMS
 };
 #define P_LEAF_LVL(l) (P_LEAF + 4 * (l))

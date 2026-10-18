@@ -51,25 +51,26 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Stem verb", 0, 100, 30},
     {"Species", 0, EN_NSPECIES - 1, 0},
     {"Sync", 0, 1, 1},        {"Grid", 0, 5, 3},       {"Channel", 0, 11, 0},
+    {"Sky", 0, 2, 1},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
 /* the pieces: eight plants (the FM-1's PRESETS). Tune and MIDI out are the player's, not the piece's.
  * Voices: 0 Glass, 1 Wood, 2 Pluck, 3 Chime, 4 Reed, 5 Flute, 6 Swell, 7 Kalimba
  *                       Lig Day War Spr  Low: lvl vce oct ton  Mid: ...           Top: ...
- *                       Ran Wnd Gst Wx   Stm Rev Siz WV   Rt Tu MI Md Oc   Stem: colour interval oct tone verb   Species   Sync Grid Channel */
+ *                       Ran Wnd Gst Wx   Stm Rev Siz WV   Rt Tu MI Md Oc   Stem: colour interval oct tone verb   Species   Sync Grid Channel   Sky */
 static const struct {
     const char *name;
     int8_t v[P_NPARAMS];
 } PIECES[EN_NPIECES] = {
-    {"Fern",       {70, 40, 50, 45,  70, 2, 0, 45,  65, 0, 0, 50,  55, 3, 0, 40,  35, 25, 30, 55,  45, 60, 70, 50,  2, 0, 1, 1, 0,  0, 1, 0, 40, 30, 0,  1, 3, 0}},
-    {"Orchid",     {85, 30, 70, 60,  60, 4, 0, 40,  65, 6, 0, 45,  60, 0, 0, 55,  15, 10, 15, 40,  35, 70, 85, 60,  9, 0, 1, 3, 0,  3, 4, 0, 50, 45, 1,  1, 3, 0}},
-    {"Moss",       {30, 55, 35, 70,  75, 1, 0, 50,  60, 7, 0, 45,  45, 5, 0, 35,  70, 15, 20, 70,  55, 55, 60, 40,  7, 0, 1, 7, 0,  1, 2, 0, 30, 25, 2,  1, 3, 0}},
-    {"Cactus",     {100, 25, 90, 25, 60, 7, -1, 55, 55, 1, 0, 60,  65, 3, 1, 45,  3, 50, 60, 60,   30, 50, 75, 70,  4, 0, 1, 2, 0,  2, 1, 0, 55, 35, 3,  1, 3, 0}},
-    {"Willow",     {60, 60, 45, 55,  55, 5, 0, 40,  60, 6, 0, 45,  50, 0, 0, 50,  40, 65, 55, 65,  50, 75, 90, 85,  0, 0, 1, 5, 0,  3, 1, -1, 35, 50, 4,  1, 3, 0}},
-    {"Lotus",      {75, 50, 60, 50,  65, 6, -1, 35, 55, 3, 0, 45,  60, 0, 1, 50,  20, 20, 20, 45,  40, 80, 95, 50,  5, 0, 1, 6, 0,  0, 3, 0, 45, 40, 5,  1, 3, 0}},
-    {"Ivy",        {55, 35, 55, 80,  70, 2, 0, 50,  70, 2, 0, 55,  60, 7, 0, 45,  50, 40, 40, 50,  40, 55, 65, 55,  10, 0, 1, 4, 0,  1, 1, 0, 40, 30, 6,  1, 3, 0}},
-    {"Bamboo",     {50, 45, 50, 60,  65, 1, 0, 45,  60, 4, 0, 50,  55, 3, 0, 45,  90, 85, 90, 80,  45, 65, 80, 90,  3, 0, 1, 5, 0,  2, 2, -1, 35, 45, 7,  1, 3, 0}},
+    {"Fern",       {70, 40, 50, 45,  70, 2, 0, 45,  65, 0, 0, 50,  55, 3, 0, 40,  35, 25, 30, 55,  45, 60, 70, 50,  2, 0, 1, 1, 0,  0, 1, 0, 40, 30, 0,  1, 3, 0,  1}},
+    {"Orchid",     {85, 30, 70, 60,  60, 4, 0, 40,  65, 6, 0, 45,  60, 0, 0, 55,  15, 10, 15, 40,  35, 70, 85, 60,  9, 0, 1, 3, 0,  3, 4, 0, 50, 45, 1,  1, 3, 0,  1}},
+    {"Moss",       {30, 55, 35, 70,  75, 1, 0, 50,  60, 7, 0, 45,  45, 5, 0, 35,  70, 15, 20, 70,  55, 55, 60, 40,  7, 0, 1, 7, 0,  1, 2, 0, 30, 25, 2,  1, 3, 0,  1}},
+    {"Cactus",     {100, 25, 90, 25, 60, 7, -1, 55, 55, 1, 0, 60,  65, 3, 1, 45,  3, 50, 60, 60,   30, 50, 75, 70,  4, 0, 1, 2, 0,  2, 1, 0, 55, 35, 3,  1, 3, 0,  1}},
+    {"Willow",     {60, 60, 45, 55,  55, 5, 0, 40,  60, 6, 0, 45,  50, 0, 0, 50,  40, 65, 55, 65,  50, 75, 90, 85,  0, 0, 1, 5, 0,  3, 1, -1, 35, 50, 4,  1, 3, 0,  1}},
+    {"Lotus",      {75, 50, 60, 50,  65, 6, -1, 35, 55, 3, 0, 45,  60, 0, 1, 50,  20, 20, 20, 45,  40, 80, 95, 50,  5, 0, 1, 6, 0,  0, 3, 0, 45, 40, 5,  1, 3, 0,  1}},
+    {"Ivy",        {55, 35, 55, 80,  70, 2, 0, 50,  70, 2, 0, 55,  60, 7, 0, 45,  50, 40, 40, 50,  40, 55, 65, 55,  10, 0, 1, 4, 0,  1, 1, 0, 40, 30, 6,  1, 3, 0,  1}},
+    {"Bamboo",     {50, 45, 50, 60,  65, 1, 0, 45,  60, 4, 0, 50,  55, 3, 0, 45,  90, 85, 90, 80,  45, 65, 80, 90,  3, 0, 1, 5, 0,  2, 2, -1, 35, 45, 7,  1, 3, 0,  1}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -118,6 +119,8 @@ void en_param_text(int i, int v, char *b)
         s = MIDI_NAME[(unsigned)v < 4u ? v : 0];
     else if (i == P_SYNC)
         s = SYNC_NAME[v ? 1 : 0];
+    else if (i == P_SKY && v != EN_SKY_CYCLE)
+        s = v == EN_SKY_DAY ? "Day" : "Night";
     else if (i == P_GRID)
         s = GRID_NAME[(unsigned)v < 6u ? v : 0];
     else if (i == P_MODE)
@@ -306,6 +309,7 @@ static const float LEAF_PAN[EN_NLEAF] = {-0.45f, 0.4f, -0.1f};
 static const int LEAF_BASE[EN_NLEAF] = {48, 60, 72};    /* the registers: C3, C4, C5 (plus the root) */
 static float vib_amt;                           /* the wind's vibrato */
 
+static float daylight;                          /* 0..1, the plant step's (below): night softens and darkens a voice */
 static void voice_start(int l, int nn, float vel)
 {
     voice_t *v = &vc[l * VPL + vc_next[l]];
@@ -323,7 +327,7 @@ static void voice_start(int l, int nn, float vel)
     v->mph = 0.0f;
     v->amp = vel;
     v->adec = fm_expf(-6.9f / (VOICE[b].dec_t * (1.15f - 0.3f * tone) * EN_SR));
-    v->idx = VOICE[b].idx * (0.3f + 1.4f * tone) * (0.7f + 0.3f * vel);
+    v->idx = VOICE[b].idx * (0.3f + 1.4f * tone) * (0.7f + 0.3f * vel) * (0.55f + 0.45f * daylight);   /* night: darker */
     v->idec = fm_expf(-1.0f / (VOICE[b].idx_t * EN_SR));
     v->att = 0.0f;
     v->arate = 1.0f - fm_expf(-1.0f / (VOICE[b].att_t * EN_SR));
@@ -341,6 +345,7 @@ static void voice_start(int l, int nn, float vel)
 /* ------------------------------------------------------------- the plant --- */
 /* the sky */
 static float day_ph = 0.3f, day_len = 120.0f, light, metab = 1.0f, daylight, prev_daylight;
+#define MOON 0.3f                               /* the night's light, as the leaves feel it */
 /* the soil and the leaves */
 static float soil = 0.65f;
 typedef struct {
@@ -460,6 +465,7 @@ static void leaf_fire(int l)
     f->walk = s;
     f->hint = -1;
     vel = fm_clampf(0.42f + 0.22f * daylight * light + 2.0f * over + 0.16f * frand(), 0.25f, 1.0f);
+    vel *= 1.0f - 0.35f * (1.0f - daylight);     /* night: softer */
     voice_start(l, step_note(l, s), vel);
     en_leaf_note[l] = (uint8_t)step_note(l, s);
     en_leaf_glow[l] = 1.0f;
@@ -482,8 +488,20 @@ static void plant_step(uint32_t n)
     float sunv, common;
     int l, i;
 
-    /* the day */
-    if (en_playing && !en_frozen && !(par[P_SYNC] && en_ext)) {
+    /* the day. Night or Day on the Sky switch: the sky goes on (forward, a dusk or a dawn of a few
+     * seconds) to midnight or noon and stays there; Cycle: it turns, on its own or on the clock */
+    if (par[P_SKY] != EN_SKY_CYCLE) {
+        float to = par[P_SKY] == EN_SKY_DAY ? 0.5f : 0.0f, d = to - day_ph;
+        if (d < 0.0f)
+            d += 1.0f;
+        if (d > 0.0005f && d < 0.9995f) {
+            day_ph += fm_minf(dt / 8.0f, d);
+            if (day_ph >= 1.0f)
+                day_ph -= 1.0f;
+        } else {
+            day_ph = to;
+        }
+    } else if (en_playing && !en_frozen && !(par[P_SYNC] && en_ext)) {
         day_ph += dt / day_len;
         if (day_ph >= 1.0f)
             day_ph -= 1.0f;
@@ -550,7 +568,9 @@ static void plant_step(uint32_t n)
             f->sway_ph -= 1.0f;
         en_leaf_sway[l] = fm_clampf(wind_now * (0.4f + 0.6f * h) * SPECIES[sp].sway * (0.6f * fm_sin_turns(f->sway_ph) + 0.4f * mod[l].v), -1.5f, 1.5f);
         if (en_playing) {
-            float sun_here = daylight * light * (0.55f + 0.45f * h);
+            /* moonlight: at night the leaves never stop, they slow and soften (a plant isn't harmed by
+             * the dark): the light they work on doesn't fall below a moon's worth */
+            float sun_here = fm_maxf(daylight * light, MOON * (1.0f - daylight)) * (0.55f + 0.45f * h);
             rate = metab * (0.05f + 0.55f * fm_minf(sun_here / SPECIES[sp].sat, 1.2f)) * hyd;
             f->v += dt * (rate - 0.03f * f->v - (hyd < 0.2f ? 0.3f : 0.0f) * f->v);
             /* the wind shakes it: noise shared by the plant and its own, and gusts push */
@@ -1103,8 +1123,8 @@ static void pool_set(uint32_t p)
 static void regrow(void)                        /* a new piece: fresh leaves, damp soil, morning */
 {
     int l, i;
-    day_ph = 0.3f;
-    daylight = prev_daylight = 1.0f;
+    day_ph = par[P_SKY] == EN_SKY_NIGHT ? 0.0f : par[P_SKY] == EN_SKY_DAY ? 0.5f : 0.3f;
+    daylight = prev_daylight = par[P_SKY] == EN_SKY_NIGHT ? 0.0f : 1.0f;
     soil = 0.65f;
     for (l = 0; l < EN_NLEAF; l++) {
         leaf[l].v = 0.15f + 0.6f * frand();
@@ -1235,7 +1255,7 @@ static void drain(void)
                 en_ext = 1;
                 if (en_playing) {
                     clk_ticks++;
-                    if (!en_frozen) {             /* the day: so many bars of 96 ticks */
+                    if (!en_frozen && par[P_SKY] == EN_SKY_CYCLE) {   /* the day: so many bars of 96 ticks */
                         day_ph += 1.0f / (96.0f * (float)day_bars(par[P_DAY]));
                         if (day_ph >= 1.0f)
                             day_ph -= 1.0f;
@@ -1246,7 +1266,8 @@ static void drain(void)
             } else if (a == EN_CLK_START) {       /* from the top: the morning */
                 clk_ticks = 0;
                 en_ext = 1;
-                day_ph = 0.3f;
+                if (par[P_SKY] == EN_SKY_CYCLE)
+                    day_ph = 0.3f;
                 if (!en_playing)
                     play_start();
             } else if (a == EN_CLK_CONTINUE) {
