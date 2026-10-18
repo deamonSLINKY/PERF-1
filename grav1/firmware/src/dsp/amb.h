@@ -69,9 +69,22 @@ enum {
                                                          with a fill the bar before */
     P_KIT, P_DTUNE, P_DDECAY, P_DVERB,                /* the drums' kit (Probe, Deep Field, Ritual), their tuning
                                                          (semitones), decay (%) and reverb */
+    P_MOON,                                           /* three moons: each its planet (-1: none) and its effect:
+                                                         P_MOON_PL(k), P_MOON_FX(k) */
+    P_MOON_END = P_MOON + 2 * 3 - 1,
     P_NPARAMS
 };
 #define P_PAT_OF(b, l) (P_PAT + EN_NPL * (b) + (l))
+/* MOONS: up to three, each orbiting a planet and putting an effect on its voice that ebbs and flows as it
+ * goes round (deepest on the far side of the planet, gone on the near). A bigger planet's moons are slower;
+ * a second or third moon round the same planet orbits further out, slower still. When two planets pass
+ * close, the passing one may capture the other's moon (one chance in twenty an approach). */
+#define EN_NMOON 3
+#define EN_NMFX 8
+enum { MFX_TIDE, MFX_VEIL, MFX_HALO, MFX_ECHO, MFX_SWAY, MFX_CHORUS, MFX_PHASER, MFX_RING };
+extern const char *const EN_MFX_NAME[EN_NMFX];
+#define P_MOON_PL(k) (P_MOON + 2 * (k))
+#define P_MOON_FX(k) (P_MOON + 2 * (k) + 1)
 #define P_PL_LVL(i) (P_PL + 4 * (i))
 #define P_PL_INST(i) (P_PL + 4 * (i) + 1)
 #define P_PL_ECC(i) (P_PL + 4 * (i) + 2)
@@ -139,7 +152,10 @@ extern volatile uint16_t en_pat[EN_NPL];       /* the playing bank's steps as th
 extern volatile uint8_t en_bank;               /* the bank playing (P_BANK may be waiting for the bar) */
 extern volatile uint8_t en_step;               /* the step playing, 0..15 */
 extern volatile int8_t en_hop_left;            /* Drift: bar lines until the bank changes (1: the fill bar), -1 none */
-extern volatile uint32_t en_hops;              /* bank changes since start */
+extern volatile uint32_t en_hops;
+extern volatile float en_moon_ph[EN_NMOON];   /* each moon round its planet, 0..1 (0: the near side) */
+extern volatile float en_moon_a[EN_NMOON];    /* and its effect now, 0..1 */
+extern volatile uint32_t en_captures;          /* moons captured since start */              /* bank changes since start */
 extern volatile float en_year;                 /* the Great Year: how far round it is, 0..1 */
 extern volatile float en_star;                 /* the star's size: its level, its roar, a flare (0..1.5) */
 extern volatile float en_flare, en_roar;
@@ -154,7 +170,7 @@ extern volatile uint32_t en_years, en_greats;  /* years (any planet) and Great Y
 extern volatile uint32_t en_wakes, en_rocks, en_comets, en_dusts;
 
 /* what happened, for the screen's messages: codes in a ring, en_ev_w counts them */
-enum { EV_YEAR = 1, EV_GREAT, EV_DUST, EV_CLEAR, EV_ROCK, EV_COMET, EV_BURN, EV_WAKE, EV_HOP, EV_FILL };
+enum { EV_YEAR = 1, EV_GREAT, EV_DUST, EV_CLEAR, EV_ROCK, EV_COMET, EV_BURN, EV_WAKE, EV_HOP, EV_FILL, EV_CAPTURE };
 #define EN_NEV 16
 extern volatile uint16_t en_ev[EN_NEV];        /* code << 8 | detail (a planet, the chord's root) */
 extern volatile uint32_t en_ev_w;

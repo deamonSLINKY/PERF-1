@@ -400,6 +400,12 @@ static int expect(const char *what, const char *val)
         got = gm.spawned;
     else if (!strcmp(what, "gamehits"))
         got = gm.hits;
+    else if (!strcmp(what, "moonwin"))             /* the moons' window; moons; captures */
+        got = ui.moonwin;
+    else if (!strcmp(what, "moons"))
+        got = moons_count();
+    else if (!strcmp(what, "captures"))
+        got = (double)en_captures;
     else if (!strcmp(what, "hops"))               /* Drift's bank changes */
         got = (double)en_hops;
     else if (!strcmp(what, "full"))               /* the orbit view */

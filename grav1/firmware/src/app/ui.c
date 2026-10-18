@@ -61,6 +61,7 @@ static struct {
     uint32_t boot_t;
     uint8_t splash, splash_step;
     uint8_t full;                      /* the orbit view: a minute untouched on the System page */
+    uint8_t moonwin, moon_sel;         /* the moons' window (FX held); its planet */
     uint32_t ev_r;                     /* the engine's events read so far */
     uint16_t pat_seen[EN_NPL];         /* the playing bank's steps as the engine last had them */
     uint8_t pat_bank;                  /* and which bank that was */
@@ -492,6 +493,55 @@ static void key(int k)
     toggle_note((5 + k) % 12);
 }
 
+/* the moons' window (FX held): black keys 1-6 the planet, white keys 1-8 an effect, its moon on or off */
+static int moons_count(void)
+{
+    int k, n = 0;
+    for (k = 0; k < EN_NMOON; k++)
+        n += proj.par[P_MOON_PL(k)] >= 0;
+    return n;
+}
+static void moon_set(int k, int pl, int fx)
+{
+    proj.par[P_MOON_PL(k)] = (int16_t)pl;
+    proj.par[P_MOON_FX(k)] = (int16_t)fx;
+    en_set(P_MOON_FX(k), fx);
+    en_set(P_MOON_PL(k), pl);
+    mark_dirty();
+}
+static void moon_key(int key_i)
+{
+    int w = white_of(key_i), bk = black_of(key_i), k;
+    char t[12] = "PLANET ";
+    ui.moonwin = 1;
+    if (bk >= 0 && bk < EN_NPL) {
+        ui.moon_sel = (uint8_t)bk;
+        t[7] = (char)('1' + bk);
+        t[8] = 0;
+        say(t, bk < nplanets() ? 0 : "NOT IN THIS SYSTEM");
+        return;
+    }
+    if (w < 0 || w >= EN_NMFX)
+        return;
+    if (ui.moon_sel >= nplanets()) {
+        say("NO PLANET", "PICK ONE: BLACK KEYS");
+        return;
+    }
+    for (k = 0; k < EN_NMOON; k++)              /* this effect's moon here already: it goes */
+        if (proj.par[P_MOON_PL(k)] == ui.moon_sel && proj.par[P_MOON_FX(k)] == w) {
+            moon_set(k, -1, w);
+            say("MOON GONE", EN_MFX_NAME[w]);
+            return;
+        }
+    for (k = 0; k < EN_NMOON; k++)
+        if (proj.par[P_MOON_PL(k)] < 0) {
+            moon_set(k, ui.moon_sel, w);
+            say("NEW MOON", EN_MFX_NAME[w]);
+            return;
+        }
+    say("THREE MOONS", "TAKE ONE AWAY FIRST");
+}
+
 /* MIDI in: notes add or remove their note from the scale; the clock */
 static void midi_in(void)
 {
@@ -520,7 +570,7 @@ static void help_tick(uint32_t btn, uint32_t keys)
     if (!btn || (btn & (btn - 1u)) || keys)
         return;
     for (i = 0; i < NB; i++)
-        if (btn == 1u << i && i != B_PLAY && !(ui.btn_used & btn) && now - ui.down_t[i] >= HELP_HOLD &&
+        if (btn == 1u << i && i != B_PLAY && i != B_FX && !(ui.btn_used & btn) && now - ui.down_t[i] >= HELP_HOLD &&
             (int32_t)(ui.turn_t - ui.down_t[i]) <= 0) {
             ui.help = (uint8_t)(i + 1);
             ui.btn_used |= btn;
@@ -750,11 +800,26 @@ static void input(void)
     ch = keys ^ ui.keys;
     ui.keys = keys;
     for (i = 0; i < NKEYS; i++)
-        if ((ch & keys) >> i & 1u)
-            key((int)i);
+        if ((ch & keys) >> i & 1u) {
+            if (btn >> B_FX & 1u) {              /* FX held: the moons */
+                ui.btn_used |= 1u << B_FX;
+                moon_key((int)i);
+            } else {
+                key((int)i);
+            }
+        }
     if (btn || keys || ch)
         ui.act_t = plat_ms();
     midi_in();
+    if ((btn >> B_FX & 1u) && !ui.moonwin && plat_ms() - ui.down_t[B_FX] >= 350u && !(btn & ~(1u << B_FX))) {
+        ui.moonwin = 1;                          /* FX held: the moons' window */
+        ui.moon_sel = ui.sel;
+        ui.btn_used |= 1u << B_FX;
+    }
+    if (!(btn >> B_FX & 1u) && ui.moonwin) {
+        ui.moonwin = 0;
+        ui.sig[1] = 0;
+    }
     if ((btn >> B_SEQ & 1u) && !(ui.btn_used >> B_SEQ & 1u) && plat_ms() - ui.down_t[B_SEQ] >= 600u) {
         ui.btn_used |= 1u << B_SEQ;              /* SEQ held: the sequencer */
         set_view(V_SEQ);
@@ -852,6 +917,17 @@ static void engine_news(void)
         case EV_COMET: say("COMET", "FALLING"); ui.trail_n = 0; break;
         case EV_BURN: say("COMET", "BURNS UP"); break;
         case EV_WAKE: say(t, "WAKES"); break;
+        case EV_CAPTURE: {                       /* a passing planet took a moon: the project follows */
+            int k = ev & 15, j = (ev >> 4) & 15;
+            char b[12] = "BY PLANET ";
+            if (k < EN_NMOON && j < EN_NPL) {
+                proj.par[P_MOON_PL(k)] = (int16_t)j;
+                b[10] = (char)('1' + j);
+                b[11] = 0;
+                say("MOON CAPTURED", b);
+            }
+            break;
+        }
         case EV_HOP: {                           /* Drift changed the bank: the project follows */
             char b[8] = "BANK ";
             proj.par[P_BANK] = (int16_t)(ev & 0xFFu);
@@ -1168,6 +1244,34 @@ static void draw_star(void)
     }
 }
 
+/* the moons round planet i: behind it (front 0) or in front (1). Each its effect's colour, glowing as it
+ * works (on the far side) */
+static const uint16_t MOON_C[EN_NMFX] = {RGB(110, 214, 200), RGB(170, 140, 255), RGB(255, 236, 190), RGB(110, 170, 255),
+                                         RGB(255, 140, 190), RGB(140, 230, 140), RGB(255, 170, 90), RGB(206, 210, 222)};
+static int moon_of(int k) { int p = proj.par[P_MOON_PL(k)]; return p >= 0 && p < nplanets() ? p : -1; }
+static void draw_moons(int i, float sx, float sy, float s, int front)
+{
+    int k, r = 0;
+    for (k = 0; k < EN_NMOON; k++) {
+        float t, R, mx, my, a;
+        uint16_t c;
+        if (moon_of(k) != i)
+            continue;
+        t = en_moon_ph[k] + 0.25f;               /* 0: the near side, in front */
+        R = s + (6.0f + 4.0f * (float)r) * SC_BIG;
+        r++;
+        if ((fm_sin_turns(t) >= 0.0f) != (front != 0))
+            continue;
+        mx = sx + R * cos_t(t);
+        my = sy + R * 0.45f * fm_sin_turns(t);
+        a = en_moon_a[k];
+        c = MOON_C[(unsigned)proj.par[P_MOON_FX(k)] < EN_NMFX ? proj.par[P_MOON_FX(k)] : 0];
+        if (a > 0.1f)
+            glow(mx, my, 0.5f, (2.5f + 3.5f * a) * SC_BIG, c, 0.35f * a);
+        disc(mx, my, (1.6f + 0.6f * a) * SC_BIG, front ? c : mix(K_BG, c, 10));
+    }
+}
+
 static void draw_planet(int i)
 {
     float sx, sy, lv = (float)proj.par[P_PL_LVL(i)] * 0.01f, depth = 0.85f + 0.15f * (en_pl_y[i] / 0.75f + 1.0f);
@@ -1177,6 +1281,7 @@ static void draw_planet(int i)
     proj_xy(en_pl_x[i], en_pl_y[i], &sx, &sy);
     if (ts > 0.04f)
         ring_px(sx, sy, s + 2.0f + ts * 6.0f, c, fm_minf(0.8f, ts));
+    draw_moons(i, sx, sy, s, 0);                 /* the moons behind it */
     if (dorm && !en_pl_awake[i]) {
         ring_px(sx, sy, s, c, 0.8f);
     } else {
@@ -1190,6 +1295,7 @@ static void draw_planet(int i)
             px_blend((int32_t)(sx + (s + 4.0f) * cos_t(t + 0.02f)), (int32_t)(sy + (s + 4.0f) * fm_sin_turns(t + 0.02f)), K_ACC, 12);
         }
     }
+    draw_moons(i, sx, sy, s, 1);                 /* and in front */
     if (ui.view == V_PLANET || is_seq() || hl) {
         char t[2] = {(char)('1' + i), 0};
         cv_text((int32_t)(sx + s + 2.0f), (int32_t)(sy - s - 13.0f), &FONT_S, t, hl ? K_ACC : K_DIM);
@@ -1373,7 +1479,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_LFO: L("GRAVITY: TIDE, REACH,"); L("WAKE, GREAT YEAR"); L("AGAIN: THE WEATHER"); break;
     case B_SEQ: L("THE PULSE: WHITE KEYS THE"); L("STEPS, BLACK 1-6 THE LANE"); L("AGAIN: DRIFT, THE KIT"); L("HOLD: THE SEQUENCER"); break;
     case B_SEL: L("THE NEXT PLANET"); L("(ON PULSE: THE NEXT LANE)"); break;
-    case B_FX: L("THE SPACE: ECHO,"); L("REVERB, RADIO, WIDTH"); break;
+    case B_FX: L("THE SPACE: ECHO,"); L("REVERB, RADIO, WIDTH"); L("HOLD: THE MOONS"); break;
     case B_GLO: L("SETUP: ROOT, MODE,"); L("TUNE, SYNC"); L("AGAIN: DISPLAY, MIDI OUT"); L("SEL + GLO: REMOTE"); break;
     case B_EDIT: L("THE GREAT YEAR NOW:"); L("THE CHORD MOVES,"); L("THE DRUMS EVOLVE"); break;
     case B_REC: L("ECLIPSE: THE ORBITS"); L("AND THE WEATHER HOLD,"); L("THE SPACE RINGS ON"); break;
@@ -1384,6 +1490,50 @@ static int help_lines(int b, const char *l[HELP_LINES])
     }
 #undef L
     return n;
+}
+
+/* the moons' window (FX held): the planets on the black keys, the eight effects on the white */
+static void draw_moonwin(void)
+{
+    int i, k, n = nplanets(), cnt = moons_count();
+    char t[16];
+    cv_text(8, 3, &FONT_B, "MOONS", K_TEXT);
+    t[0] = (char)('0' + cnt), t[1] = ' ', t[2] = '/', t[3] = ' ', t[4] = '3', t[5] = 0;
+    cv_text(232 - text_w(&FONT_S, t), 7, &FONT_S, t, cnt >= EN_NMOON ? K_ACC : K_DIM);
+    for (i = 0; i < EN_NPL; i++) {               /* the planets, black keys 1-6 */
+        float x = 22.0f + (float)i * 39.0f, y = 44.0f, r = 3.0f + 3.5f * (float)proj.par[P_PL_LVL(i)] * 0.01f;
+        uint16_t c = heat(en_pl_dist[i]);
+        int r2 = 0;
+        char d[2] = {(char)('1' + i), 0};
+        if (i >= n) {
+            ring_px(x, y, r, K_LINE, 0.6f);
+        } else {
+            disc(x, y, r, c);
+            for (k = 0; k < EN_NMOON; k++)       /* its moons, in their colours */
+                if (proj.par[P_MOON_PL(k)] == i) {
+                    float a = en_moon_ph[k] + 0.25f, R = r + 4.0f + 3.0f * (float)r2++;
+                    disc(x + R * cos_t(a), y + R * 0.5f * fm_sin_turns(a), 1.6f, MOON_C[(unsigned)proj.par[P_MOON_FX(k)] % EN_NMFX]);
+                }
+        }
+        if (i == ui.moon_sel)
+            ring_px(x, y, r + 9.0f, K_ACC, 1.0f);
+        text_c((int32_t)x, 58, &FONT_XS, d, i == ui.moon_sel ? K_ACC : K_DIM);
+    }
+    for (i = 0; i < EN_NMFX; i++) {              /* the effects, white keys 1-8 */
+        int32_t x = 4 + (i % 4) * 58, y = 78 + (i / 4) * 30;
+        int on = 0;
+        char d[2] = {(char)('1' + i), 0};
+        for (k = 0; k < EN_NMOON; k++)
+            on |= proj.par[P_MOON_PL(k)] == ui.moon_sel && proj.par[P_MOON_FX(k)] == i;
+        cv_round(x, y, 56, 26, 5, on ? K_PANEL : K_BG);
+        if (on)
+            cv_rect(x, y + 24, 56, 2, K_ACC);
+        cv_rect(x, y + 2, 2, 22, MOON_C[i]);    /* its colour, a stripe */
+        cv_text(x + 5, y + 6, &FONT_XS, d, K_DIM);
+        caps(t, EN_MFX_NAME[i], sizeof t);
+        cv_text(x + 13, y + 6, &FONT_XS, t, on ? K_TEXT : K_DIM);
+    }
+    text_c(120, 125, &FONT_XS, "BLACK: A PLANET   WHITE: A MOON", K_DIM);
 }
 
 static void draw_help(void)
@@ -1425,6 +1575,19 @@ static void draw_main(void)
         cv_blit(0, 0);
         game_draw(1);
         cv_blit(0, 120);
+        return;
+    }
+    if (ui.moonwin) {                            /* FX held: the moons */
+        uint32_t h = hash(0x4D4F4F4Eu, ui.moon_sel | (uint32_t)nplanets() << 4), k;
+        for (k = 0; k < EN_NMOON; k++)
+            h = hash(h, (uint32_t)(uint16_t)proj.par[P_MOON_PL(k)] | (uint32_t)proj.par[P_MOON_FX(k)] << 16 |
+                            (uint32_t)(en_moon_ph[k] * 40.0f) << 24);
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_moonwin();
+            cv_blit(0, MAIN_Y);
+        }
         return;
     }
     if (ui.help) {
@@ -1634,6 +1797,23 @@ static void leds(void)
     uint32_t b = 0, k = 0, i, ap = pool_abs();
     if (ui.full || gm.on) {
         leds_show();
+        return;
+    }
+    if (ui.moonwin) {                            /* the moons: black keys the planets (with moons lit), white the effects here */
+        b = 1u << B_FX;
+        for (i = 0; i < EN_NMOON; i++) {
+            int p = proj.par[P_MOON_PL(i)];
+            if (p >= 0 && p < EN_NPL)
+                k |= 1u << BLACK_KEY[p];
+            if (p == ui.moon_sel && (unsigned)proj.par[P_MOON_FX(i)] < EN_NMFX)
+                k |= 1u << WHITE_KEY[proj.par[P_MOON_FX(i)]];
+        }
+        if ((ui.frame / 15u) % 2u)
+            k |= 1u << BLACK_KEY[ui.moon_sel % EN_NPL];
+        else
+            k &= ~(1u << BLACK_KEY[ui.moon_sel % EN_NPL]);
+        plat_glow(1);
+        plat_leds(b, k);
         return;
     }
     b |= 1u << VIEW_BTN[ui.view];

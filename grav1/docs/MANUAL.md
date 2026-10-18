@@ -79,7 +79,7 @@ GRAV-1 starts by itself: the RedtailWorks card, then GRAV-1, then the system. A 
 | **PLAY** | Grow / rest. Resting, everything fades and the tails ring on. |
 | **REC** | Eclipse: the orbits and the weather hold still, the space rings on. Again to let go. |
 | **EDIT** | The Great Year now: the chord moves, the drums evolve (and with Drift on the Great Year, change bank two bars later). |
-| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse (again: Drift, then the Kit), Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer. |
+| **HOME ENV ARP LFO SEQ FX GLO** | The pages: System, Star, Planet, Gravity (again: Weather), Pulse (again: Drift, then the Kit), Space, Setup (again: Display, then MIDI out). Hold SEQ for the sequencer; hold FX for the moons. |
 | **SEL** | The next planet (on Pulse, the next lane). Held, with GLO: remote (the panel plays the browser emulator). |
 | **SELECT** | Every page in turn, each planet's page one by one. With HOME held: the tempo. In the sequencer: the drum bank. |
 | **ALGORITHM** | The planet (on Pulse, the lane). |
@@ -286,6 +286,38 @@ Each system starts on a kit of its own; the change takes from the next hit.
 - **Reverb:** the plate: more of it, and longer.
 - **Radio:** a band of hiss coming and going, and now and then a falling whistler.
 - **Width:** how wide the planets spread across the stereo field.
+
+### Moons (FX held)
+
+![The moons' window](img/grav-screen-moons.png)
+
+Moons are effects that orbit a planet. **Hold FX** and the moons' window opens; while FX is held, the
+**black keys 1–6** pick a planet and the **white keys 1–8** put an effect's moon round it, or take it away
+again. Up to three moons in the system, on one planet or spread out. A moon stays until you take it away
+(no holding needed): it is there and orbiting, or there is no moon. Let go of FX and the window closes;
+a quick tap of FX is still the Space page.
+
+| White key | Moon | What it does to its planet, as it comes round |
+|---|---|---|
+| 1 | Tide | a slow swell: the planet fades and returns |
+| 2 | Veil | a low-pass closing down to a murmur |
+| 3 | Halo | the planet drifts into the reverb |
+| 4 | Echo | the planet's notes repeat into the distance |
+| 5 | Sway | the planet follows the moon across the stereo field |
+| 6 | Chorus | a second, wavering voice beside it |
+| 7 | Phaser | slow notches sweeping through it |
+| 8 | Ring | a soft metallic shimmer |
+
+**Ebb and flow.** A moon's effect is gone while it's on the near side of its planet and deepest on the far
+side, so each one breathes in and out once an orbit. A big planet's moons are slow (about a minute round);
+a small one's quick (ten seconds or so); a second or third moon round the same planet orbits further out,
+slower still. The moons hold still in an eclipse and while the system rests. On screen each moon is a dot
+in its effect's colour, glowing as its effect deepens.
+
+**Capture.** When two planets pass close, the passing one may take the other's moon (one chance in twenty
+an approach), and its effect moves with it: MOON CAPTURED, BY PLANET 4. Over a long session the moons
+wander the system by themselves. Several systems start with moons of their own; they're stored with the
+system.
 
 ### Setup (GLO), Display (GLO again), MIDI out (GLO a third time)
 

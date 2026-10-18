@@ -220,6 +220,12 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
         </dl>
       </div>
       <div>
+        <h3>Moons <span>FX held</span></h3>
+        <dl>
+          <dt>Black keys 1–6, white keys 1–8</dt><dd>While FX is held: a planet, then an effect's moon round it, on or off (three at most): Tide, Veil, Halo, Echo, Sway, Chorus, Phaser, Ring.</dd><dt>As they orbit</dt><dd>Each effect ebbs and flows once round its planet, slower round bigger planets. A planet passing close may capture another's moon.</dd>
+        </dl>
+      </div>
+      <div>
         <h3>Space <span>FX</span></h3>
         <dl>
           <dt>Echo, Reverb</dt><dd>A dotted-eighth echo; the plate (more, longer). The far planets send most.</dd><dt>Radio, Width</dt><dd>A band of hiss and the odd falling whistler; how wide the planets spread.</dd>
@@ -367,7 +373,7 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out); on the FM-1, SEL + GLO plays this emulator",
+const TIP = { SEL: "Next planet (on Pulse: next lane)", FX: "Space page; hold: the moons (black keys a planet, white keys an effect)", ENV: "Star page", ARP: "Planet page", LFO: "Gravity page (again: Weather)", EDIT: "The Great Year now", GLO: "Setup page (again: Display, MIDI out); on the FM-1, SEL + GLO plays this emulator",
   HOME: "System page", SAVE: "On Setup: save; elsewhere: start again; hold: back to the recipe", SEQ: "Pulse page: the keys are the steps (again: Drift, then the Kit; hold: the sequencer)", PLAY: "Grow / rest", REC: "Eclipse: the orbits and the weather hold",
   "OCT-": "The planet an octave down", "OCT+": "The planet an octave up", SELECT: "Every page in turn (HOME held: the tempo)", ALGORITHM: "The planet (on Pulse: the lane)", PRESETS: "The system",
   MASTER: "Volume" };

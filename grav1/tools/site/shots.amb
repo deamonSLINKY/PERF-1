@@ -53,6 +53,17 @@ echo @kit
 leds
 spin K1 -1
 wait 200
+press FX
+wait 500
+tapkey b2
+tapkey w5
+wait 300
+shot moons.png
+echo @moons
+leds
+tapkey w5
+release FX
+wait 200
 press SEQ
 wait 800
 release SEQ

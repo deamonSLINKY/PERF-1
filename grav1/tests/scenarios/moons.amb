@@ -1,0 +1,43 @@
+# Moons: FX held opens their window; black keys a planet, white keys an effect's moon on or off; three at most.
+# Sol starts with one (Halo, round planet 1). A quick tap of FX is still the Space page.
+wait 3000
+expect moons 1
+press FX
+wait 500
+expect moonwin 1
+tapkey b2
+tapkey w4
+wait 100
+expect moons 2
+expect par121 2
+expect par122 4
+shot moonwin.png
+tapkey w4
+wait 100
+expect moons 1
+expect par121 -1
+tapkey w5
+tapkey b4
+tapkey w6
+wait 100
+expect moons 3
+tapkey w1
+wait 100
+expect moons 3
+release FX
+wait 200
+expect moonwin 0
+expect view 0
+wait 20000
+shot moons.png
+peakreset
+wait 10000
+expect peak_db_min -40
+tap FX
+wait 200
+expect view 8
+# a long run: planets pass close, and now and then one takes another's moon
+tap HOME
+wait 1200000
+expect captures >0
+expect moons 3

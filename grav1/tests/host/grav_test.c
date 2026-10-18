@@ -135,6 +135,8 @@ int main(void)
 
     /* the orbits: more hits, a faster year, closer in */
     piece(0);
+    set(P_HOP, 0);                               /* the drums held still: no bank changes, no evolving */
+    set(P_EVOLVE, 0);
     en_play(1);
     run(8.0);                                    /* the orbits settle */
     CHECK(en_pl_a[5] < en_pl_a[0], "Sol: the shaker's planet (8 hits) inside the kick's (2): %.2f vs %.2f", (double)en_pl_a[5], (double)en_pl_a[0]);

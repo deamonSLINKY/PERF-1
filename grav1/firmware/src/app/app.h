@@ -10,7 +10,7 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31565247u           /* "GRV1" */
-#define PROJ_FORMAT 4u                   /* 2: eight drum banks; 3: Drift; 4: the kits */
+#define PROJ_FORMAT 5u                   /* 2: eight drum banks; 3: Drift; 4: the kits; 5: the moons */
 #define NPIECES EN_NPIECES
 
 typedef struct {

@@ -26,6 +26,7 @@ const char *const EN_STAR_KIND[EN_NCOLOUR] = {"White star", "Pink star", "Brown 
                                               "Grey dwarf", "Black hole", "Yellow star"};
 const char *EN_LANE_NAME[EN_NPL] = {"Kick", "Pulsar", "Sonar", "Geiger", "Rim", "Shaker"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Probe", "Deep Field", "Ritual"};
+const char *const EN_MFX_NAME[EN_NMFX] = {"Tide", "Veil", "Halo", "Echo", "Sway", "Chorus", "Phaser", "Ring"};
 const char *const EN_BIND_NAME[5] = {"Off", "Pump", "Blip", "Flicker", "Nudge"};
 static const char *const THEME_NAME[EN_NTHEMES] = {"Deep space", "Nebula", "Aurora", "Red planet", "Phosphor", "Redtail", "Mono"};
 
@@ -52,6 +53,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Theme", 0, EN_NTHEMES - 1, 0}, {"Starfield", 0, 100, 100}, {"Orbits", 0, 100, 100}, {"Tide lines", 0, 100, 100},
     {"Change", 0, 2, 0},      {"Every", 0, 5, 0},      {"Pool", 2, EN_NBANK, 4}, {"Fill", 0, 100, 50},
     {"Kit", 0, EN_NKIT - 1, 0}, {"Tune", -12, 12, 0},  {"Decay", 25, 200, 100}, {"Reverb", 0, 100, 50},
+    {"Moon 1", -1, EN_NPL - 1, -1}, {"Moon 1 fx", 0, EN_NMFX - 1, 0}, {"Moon 2", -1, EN_NPL - 1, -1},
+    {"Moon 2 fx", 0, EN_NMFX - 1, 0}, {"Moon 3", -1, EN_NPL - 1, -1}, {"Moon 3 fx", 0, EN_NMFX - 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -151,6 +154,11 @@ static int16_t pat_bits(const char *s)
 
 /* each system's Drift: change (0 Off, 1 Next, 2 Random), when (0 the Great Year, 1-5 every 4, 8, 16, 32, 64
  * bars), pool (banks 1..n), fill */
+/* each system's moons, three pairs: the planet + 1 (0: none) and the effect (MFX_*) */
+static const uint8_t MOONS_OF[EN_NPIECES][6] = {
+    {1, MFX_HALO, 0, 0, 0, 0}, {2, MFX_SWAY, 0, 0, 0, 0}, {1, MFX_CHORUS, 3, MFX_VEIL, 0, 0}, {1, MFX_TIDE, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0}, {2, MFX_PHASER, 0, 0, 0, 0}, {1, MFX_RING, 0, 0, 0, 0}, {6, MFX_VEIL, 1, MFX_HALO, 0, 0},
+    {3, MFX_ECHO, 0, 0, 0, 0}, {1, MFX_SWAY, 2, MFX_CHORUS, 4, MFX_HALO}};
 /* each system's kit: 0 Probe, 1 Deep Field, 2 Ritual */
 static const uint8_t KIT_OF[EN_NPIECES] = {0, 1, 2, 1, 0, 2, 2, 1, 1, 0};
 static const uint8_t HOP[EN_NPIECES][4] = {
@@ -195,6 +203,10 @@ void en_piece(int i, int16_t *p, uint16_t *pool)
     p[P_HOPPOOL] = HOP[i][2];
     p[P_HOPFILL] = HOP[i][3];
     p[P_KIT] = KIT_OF[i];
+    for (k = 0; k < EN_NMOON; k++) {            /* its moons: planet + 1 (0 none), effect */
+        p[P_MOON_PL(k)] = (int16_t)(MOONS_OF[i][2 * k] - 1);
+        p[P_MOON_FX(k)] = MOONS_OF[i][2 * k + 1];
+    }
     p[P_ECHO] = s->echo;
     p[P_REVERB] = s->reverb;
     p[P_RADIO] = s->radio;
@@ -238,6 +250,10 @@ void en_param_text(int i, int v, char *b)
         s = SYNC_NAME[v ? 1 : 0];
     else if (i == P_EVOLVE)
         s = EVOLVE_NAME[(unsigned)v < 3u ? v : 0];
+    else if (i >= P_MOON && i <= P_MOON_END && (i - P_MOON) % 2 == 1)
+        s = EN_MFX_NAME[(unsigned)v < EN_NMFX ? v : 0];
+    else if (i >= P_MOON && i <= P_MOON_END && v < 0)
+        s = "None";
     else if (i == P_KIT)
         s = EN_KIT_NAME[(unsigned)v < EN_NKIT ? v : 0];
     else if (i == P_HOP)
@@ -1047,6 +1063,184 @@ static void render_star(uint32_t n)
 }
 
 /* ------------------------------------------------------------- the voices --- */
+/* ------------------------------------------------------------- the moons --- */
+static struct {
+    float ph, a, a0;                            /* round its planet (turns); its effect now, and a chunk ago */
+    float lp, ap[4], ring, lfo;                 /* the veil's filter; the phaser's stages; the ring's carrier; a slow LFO */
+    uint32_t dw;                                /* the chorus's delay: where it writes */
+    uint8_t near;                               /* planets it is passing close to now (bit each) */
+} mo[EN_NMOON];
+#define MOON_DL 1024
+static float mo_dl[EN_NMOON][MOON_DL] EN_POOL;   /* the chorus's delays */
+static float pbuf[EN_NPL][BLK] EN_POOL;          /* a mooned planet's voice, apart, before its moons */
+static uint8_t moon_mask;                        /* planets with a moon this chunk */
+volatile float en_moon_ph[EN_NMOON], en_moon_a[EN_NMOON];
+volatile uint32_t en_captures;
+
+static int moon_pl(int k) { int p = par[P_MOON_PL(k)]; return p >= 0 && p < nplanets() ? p : -1; }
+
+/* the moons go round (once a chunk, while the system plays); a close pass may hand one to the other planet */
+static void moons(float dt)
+{
+    int k, j;
+    moon_mask = 0;
+    for (k = 0; k < EN_NMOON; k++) {
+        int p = moon_pl(k), r = 0, q;
+        float size, period;
+        mo[k].a0 = mo[k].a;
+        if (p < 0) {
+            mo[k].a = 0.0f;
+            mo[k].near = 0;
+            continue;
+        }
+        for (q = 0; q < k; q++)                 /* the moons before it round the same planet: it's further out */
+            r += moon_pl(q) == p;
+        size = pct(par[P_PL_LVL(p)]);
+        period = (10.0f + 50.0f * size) * (1.0f + 0.6f * (float)r);
+        if (en_playing && !en_frozen) {
+            mo[k].ph += dt / period;
+            if (mo[k].ph >= 1.0f)
+                mo[k].ph -= 1.0f;
+        }
+        mo[k].a = 0.5f - 0.5f * fm_sin_turns(mo[k].ph + 0.25f);   /* 0 on the near side, 1 on the far */
+        moon_mask |= (uint8_t)(1u << p);
+        for (j = 0; j < nplanets(); j++) {      /* capture: a close pass, one chance in twenty */
+            float dx, dy;
+            int close;
+            if (j == p)
+                continue;
+            dx = pl[j].x - pl[p].x;
+            dy = pl[j].y - pl[p].y;
+            close = dx * dx + dy * dy < 0.16f * 0.16f;
+            if (close && !(mo[k].near >> j & 1u)) {
+                mo[k].near |= (uint8_t)(1u << j);
+                if (en_playing && !en_frozen && frand() < 0.05f) {
+                    par[P_MOON_PL(k)] = (int16_t)j;
+                    mo[k].near = (uint8_t)(1u << p);   /* the old planet still close: no capturing it straight back */
+                    en_captures++;
+                    event(EV_CAPTURE, k | j << 4);
+                    break;
+                }
+            } else if (!close) {
+                mo[k].near &= (uint8_t)~(1u << j);
+            }
+        }
+        en_moon_ph[k] = mo[k].ph;
+        en_moon_a[k] = mo[k].a;
+    }
+}
+
+/* a mooned planet's voice, through its moons, into the mix */
+static void render_moons(uint32_t n)
+{
+    int p, k;
+    uint32_t j;
+    for (p = 0; p < EN_NPL; p++) {
+        float *x = pbuf[p], gl = pl[p].gl, gr = pl[p].gr, sr = pl[p].s_rev, se = pl[p].s_echo;
+        int b = p < 3 ? 1 : 2;
+        if (!(moon_mask >> p & 1u))
+            continue;
+        for (k = 0; k < EN_NMOON; k++) {
+            float a0 = mo[k].a0, da = (mo[k].a - a0) / (float)n;
+            if (moon_pl(k) != p)
+                continue;
+            switch (par[P_MOON_FX(k)]) {
+            case MFX_TIDE:                      /* a slow swell: the voice breathes with the moon */
+                for (j = 0; j < n; j++)
+                    x[j] *= 1.0f - 0.8f * (a0 + da * (float)j);
+                break;
+            case MFX_VEIL: {                    /* a low-pass closing to 400 Hz as the moon goes behind */
+                float c = onepole(14000.0f * fm_exp2f(-5.1f * mo[k].a)), lp = mo[k].lp;
+                for (j = 0; j < n; j++) {
+                    lp += c * (x[j] - lp);
+                    x[j] = lp;
+                }
+                mo[k].lp = fm_flush(lp);
+                break;
+            }
+            case MFX_HALO:                      /* into the reverb, drier dry */
+                sr *= 1.0f + 3.0f * mo[k].a;
+                gl *= 1.0f - 0.4f * mo[k].a;
+                gr *= 1.0f - 0.4f * mo[k].a;
+                break;
+            case MFX_ECHO:
+                se *= 1.0f + 4.0f * mo[k].a;
+                break;
+            case MFX_SWAY: {                    /* the voice follows the moon across the stereo field */
+                float t = gl + gr, po = 0.85f * fm_sin_turns(mo[k].ph) * (0.4f + 0.6f * mo[k].a);
+                gl = t * 0.5f * (1.0f - po);
+                gr = t * 0.5f * (1.0f + po);
+                break;
+            }
+            case MFX_CHORUS: {                  /* a second voice a few ms behind, wavering */
+                float *dl = mo_dl[k];
+                uint32_t w = mo[k].dw;
+                for (j = 0; j < n; j++) {
+                    float a = a0 + da * (float)j, d = 330.0f + 180.0f * fm_sin_turns(mo[k].lfo), rp, fr, y;
+                    uint32_t i0;
+                    dl[w & (MOON_DL - 1)] = x[j];
+                    rp = (float)w - d;
+                    if (rp < 0.0f)
+                        rp += (float)MOON_DL;
+                    i0 = (uint32_t)rp;
+                    fr = rp - (float)i0;
+                    y = dl[i0 & (MOON_DL - 1)] * (1.0f - fr) + dl[(i0 + 1u) & (MOON_DL - 1)] * fr;
+                    x[j] = x[j] * (1.0f - 0.35f * a) + y * 0.75f * a;
+                    w++;
+                    mo[k].lfo += 0.27f / EN_SR;
+                    if (mo[k].lfo >= 1.0f)
+                        mo[k].lfo -= 1.0f;
+                }
+                mo[k].dw = w;
+                break;
+            }
+            case MFX_PHASER: {                  /* four all-passes swept slowly; notches that come and go */
+                float g = -0.25f - 0.6f * (0.5f + 0.5f * fm_sin_turns(mo[k].lfo)), *ap = mo[k].ap;
+                for (j = 0; j < n; j++) {
+                    float a = a0 + da * (float)j, y = x[j];
+                    int s;
+                    for (s = 0; s < 4; s++) {
+                        float o = -g * y + ap[s];
+                        ap[s] = y + g * o;
+                        y = o;
+                    }
+                    x[j] = x[j] + 0.85f * a * y;
+                }
+                for (j = 0; j < 4; j++)
+                    ap[j] = fm_flush(ap[j]);
+                mo[k].lfo += (float)n * 0.11f / EN_SR;
+                if (mo[k].lfo >= 1.0f)
+                    mo[k].lfo -= 1.0f;
+                break;
+            }
+            case MFX_RING: {                    /* a slow ring: a metallic shimmer that comes and goes */
+                float f = (70.0f + 160.0f * mo[k].a) / EN_SR, rc = mo[k].ring;
+                for (j = 0; j < n; j++) {
+                    float a = a0 + da * (float)j;
+                    x[j] = x[j] * (1.0f - 0.5f * a) + x[j] * sine(rc) * 0.7f * a;
+                    rc += f;
+                    if (rc >= 1.0f)
+                        rc -= 1.0f;
+                }
+                mo[k].ring = rc;
+                break;
+            }
+            default:
+                break;
+            }
+        }
+        for (j = 0; j < n; j++) {
+            float y = x[j];
+            mixl[j] += y * gl;
+            mixr[j] += y * gr;
+            rsend[j] += y * sr;
+            esend[j] += y * se;
+            BUS(b, j, y * (gl + gr) * 0.7f);
+            x[j] = 0.0f;
+        }
+    }
+}
+
 static void render_voices(uint32_t n)
 {
     int k;
@@ -1055,7 +1249,7 @@ static void render_voices(uint32_t n)
         planet_t *p;
         uint32_t j = 0;
         float cph, mph, c2ph, sph, amp, att, idx, sweep, lp, hp, bl, bb, gl, gr, sr, se, fac;
-        int ins, b;
+        int ins, b, mooned;
         if (!v->on)
             continue;
         if (v->wait > 0) {
@@ -1069,6 +1263,7 @@ static void render_voices(uint32_t n)
         p = &pl[v->pl];
         ins = v->inst;
         b = v->pl < 3 ? 1 : 2;
+        mooned = moon_mask >> v->pl & 1u;
         /* the slow things, once a chunk: the glide, the vibrato, the nudge */
         v->cinc += (v->inc_t - v->cinc) * 0.08f;
         v->vibd += (v->vibd_t - v->vibd) * (INST[ins].att >= 0.5f ? 0.005f : 1.0f);   /* the slow ones grow into it */
@@ -1122,6 +1317,10 @@ static void render_voices(uint32_t n)
                 lp += clp * (x - lp);            /* the planet's distance: its band */
                 hp += chp * (lp - hp);
                 x = lp - hp;
+                if (mooned) {                    /* a moon on its planet: the voice apart, for its effects */
+                    pbuf[v->pl][j] += x * v->gain;
+                    continue;
+                }
                 mixl[j] += x * gl;
                 mixr[j] += x * gr;
                 rsend[j] += x * sr;
@@ -1993,6 +2192,7 @@ static void control(uint32_t n)
     if (run)                                     /* the weather holds in an eclipse, and while resting */
         weather(dt);
     tides(dt);
+    moons(dt);
 
     /* each planet's sound: its distance, its tide, its binding */
     for (i = 0; i < EN_NPL; i++) {
@@ -2237,6 +2437,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain, uint32_t at)
 #endif
     render_star(n);
     render_voices(n);
+    render_moons(n);
     render_drums(n);
     render_bells(n);
     render_rock(n);
