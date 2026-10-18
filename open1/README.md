@@ -37,7 +37,7 @@ The `tag` is a free label shown as a chip, such as Milestone, Design, Prototype,
 Until `buttondown` is set, sign-ups arrive as emails to itsme@redtail.works. To collect them properly:
 
 1. Make a free account at buttondown.com and note your username.
-2. Put it in `site.json` as `"buttondown": "yourname"`. The form then sends sign-ups straight to your Buttondown list, tagged `open-1`.
+2. Put it in `site.json` as `"buttondown": "yourname"`. The form then sends sign-ups straight to your Buttondown list. The list is set to `open1`.
 3. Optional: in Buttondown, connect the RSS feed (`https://rustypawz.github.io/fm1-HYP1/open1/feed.xml`) so every update you post can also go out as an email.
 
 ## Goals, specs and prices

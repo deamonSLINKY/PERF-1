@@ -358,7 +358,6 @@ FORM_BUTTONDOWN = """  <form id="join-form" action="https://buttondown.com/api/e
         onsubmit="window.open('https://buttondown.com/__BD__', 'bd-popup'); document.getElementById('join-msg').textContent = 'Check your inbox to confirm.'; return true">
     <label for="join-email">Your email</label>
     <input type="email" name="email" id="join-email" placeholder="you@example.com" autocomplete="email" required>
-    <input type="hidden" name="tag" value="open-1">
     <button class="btn primary" type="submit">Join the list</button>
     <p class="msg" id="join-msg" aria-live="polite"></p>
   </form>"""

@@ -2,7 +2,7 @@
   "_help": "Settings for the OPEN-1 page (built by tools/site/open1.py). See open1/README.md.",
   "phase": 0,
   "youtube": "",
-  "buttondown": "",
+  "buttondown": "open1",
   "email": "itsme@redtail.works",
   "kofi": "https://ko-fi.com/redtailworks",
   "site_url": "https://rustypawz.github.io/fm1-HYP1/open1/"
