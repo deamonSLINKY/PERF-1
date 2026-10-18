@@ -122,17 +122,26 @@ figure { margin: 0; }
 .support p b { color: var(--ink); font-weight: 600; }
 .support a.kofi { font-size: 1.05rem; padding: .5em 1.2em; }
 p.small { color: var(--muted); font-size: .95rem; }
+a.open1 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; text-decoration: none;
+          background: var(--card); border: 1px solid var(--rule); border-left: 4px solid var(--orange); border-radius: 12px; padding: 14px 18px 14px 14px; }
+a.open1:hover, a.open1:focus-visible { border-color: var(--orange); color: var(--ink); outline: none; }
+a.open1 img { width: 100%; height: auto; display: block; border-radius: 8px; }
+a.open1 span { color: var(--muted); }
+a.open1 b { font: 700 1.6rem "Chakra Petch", sans-serif; color: var(--orange); letter-spacing: .04em; }
+a.open1 em { font: 700 .72rem "Chakra Petch", sans-serif; font-style: normal; letter-spacing: .1em; text-transform: uppercase; color: var(--orange);
+             border: 1px solid var(--orange); border-radius: 999px; padding: .15em .7em; vertical-align: middle; margin-left: .4rem; }
+a.open1 u { color: var(--ink); text-decoration-color: var(--orange); text-decoration-thickness: 2px; text-underline-offset: 3px; font-weight: 600; }
 footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; align-items: center; }
 footer .rw { font: 700 1.05rem "Chakra Petch", sans-serif; letter-spacing: .08em; text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
 footer .rw span:nth-of-type(1) { color: var(--purple-2); } footer .rw span:nth-of-type(2) { color: var(--orange); }
-@media (max-width: 760px) { .intro, .fws { grid-template-columns: 1fr; } h1 { font-size: 1.8rem; } }
+@media (max-width: 760px) { .intro, .fws, a.open1 { grid-template-columns: 1fr; } h1 { font-size: 1.8rem; } }
 </style>
 </head>
 <body>
 <!--rw-hub-->
 <main>
 <header class="site"><a class="home" href="./"><img class="panda" src="img/panda.png" width="64" height="50" alt=""><span>REDTAIL</span><span>WORKS</span></a>
-  <nav><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks">__KOFI__Support</a></nav></header>
+  <nav><a href="open1/">OPEN-1</a><a href="__REPO__">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks">__KOFI__Support</a></nav></header>
 
 <section class="intro">
   <img src="img/fw-scene.png" width="2000" height="2000" alt="Four M-VAVE FM-1s on a dark desk, each running a RedtailWorks firmware: HYP-1 with purple keys, LOF-1 with peach keys and a turning record, ECO-1 with green keys and a fern, GRAV-1 with gold keys and a star and its planets.">
@@ -159,6 +168,10 @@ __OPTIONS__
 <div class="fws">
 __CARDS__
 </div>
+
+<h2>What's next: OPEN-1</h2>
+<a class="open1" href="open1/"><img src="open1/media/open1-hyp1.jpg" width="1260" height="600" alt="Concept render of OPEN-1, a 37-key synth, running HYP-1" loading="lazy">
+  <span><b>OPEN-1</b> <em>Ideas phase</em><br>An idea for an open-firmware synth under $200: 37 keys, pads, audio in and out, and a microSD library of firmware. Goals, target specs, the pitch video and the build log. <u>Follow along</u></span></a>
 
 <div class="support">
   <p><b>All four are free.</b> If they're useful to you, a coffee keeps new firmware coming, and the videos too.</p>

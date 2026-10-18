@@ -61,6 +61,8 @@ def main(root):
         rel = f.relative_to(root)
         if hub and rel == Path("index.html"):
             continue                                       # the front page has its own picker
+        if rel.parts[0] == "open1":
+            continue                                       # OPEN-1's page isn't a firmware (tools/site/open1.py)
         prod, section, depth = page_parts(rel)
         if prod not in built:
             continue
