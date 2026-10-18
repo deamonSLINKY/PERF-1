@@ -28,11 +28,15 @@ BAR = """<style>
 .rw-switch a.rw-all { display: inline-flex; align-items: center; gap: .35em; min-height: 32px; padding: .15em .8em; border-radius: 6px;
                      background: #e8873a; color: #1a0f05; font-weight: 700; text-decoration: none; }
 .rw-switch a.rw-all:hover, .rw-switch a.rw-all:focus-visible { background: #ffa25a; outline: 2px solid #ffa25a; outline-offset: 2px; }
+.rw-switch a.rw-open1 { margin-left: auto; display: inline-flex; align-items: center; gap: .4em; min-height: 32px; padding: .15em .8em;
+                       border-radius: 6px; border: 1px solid #e8873a; color: #ffb27a; font-weight: 700; text-decoration: none; }
+.rw-switch a.rw-open1 small { font: 600 11px "Barlow Semi Condensed", sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #b9b9c3; }
+.rw-switch a.rw-open1:hover, .rw-switch a.rw-open1:focus-visible { background: #2a1b10; outline: 2px solid #e8873a; outline-offset: 2px; }
 .rw-switch .tag { font-weight: 700; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #1a0f05;
                   background: #e8873a; border-radius: 999px; padding: .1em .6em; }
 </style>
 <nav class="rw-switch" aria-label="Firmware">__ALL__<label for="rw-fw">FM-1 firmware by RedtailWorks</label>
-<select id="rw-fw" onchange="location.href=this.value">__OPTS__</select>__TAG__</nav>
+<select id="rw-fw" onchange="location.href=this.value">__OPTS__</select>__TAG____OPEN1__</nav>
 """
 
 
@@ -56,6 +60,7 @@ def main(root):
                 while (a := t.find(f"<!--{key}-->")) >= 0 and (b := t.find(f"<!--/{key}-->", a)) > a:
                     t = t[:a] + t[b + len(f"<!--/{key}-->"):]
             idx.write_text(t, encoding="utf-8")
+    open1 = (root / "open1" / "index.html").exists()       # OPEN-1's page (tools/site/open1.py): a link to it on every bar
     hub = (root / "index.html").exists() and "<!--rw-hub-->" in (root / "index.html").read_text(encoding="utf-8")
     for f in sorted(root.rglob("*.html")):
         rel = f.relative_to(root)
@@ -85,7 +90,8 @@ def main(root):
             continue
         home = f'<a class="rw-all" href="{up or "./"}"><span aria-hidden="true">&larr;</span> All firmwares</a>' if hub else ""
         bar = BAR.replace("__ALL__", home).replace("__OPTS__", "".join(opts)).replace(
-            "__TAG__", '<span class="tag">Experimental</span>' if prod in EXPERIMENTAL else "")
+            "__TAG__", '<span class="tag">Experimental</span>' if prod in EXPERIMENTAL else "").replace(
+            "__OPEN1__", f'<a class="rw-open1" href="{up}open1/">OPEN-1 <small>what\'s next</small></a>' if open1 else "")
         s = page
         if "rw-switch" in s:
             continue
