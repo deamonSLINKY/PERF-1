@@ -97,3 +97,21 @@ __attribute__((used, visibility("default"))) void web_store_set_len(uint32_t obj
 __attribute__((used, visibility("default"))) uint32_t web_store_writes(void) { return store_writes; }
 __attribute__((used, visibility("default"))) uint32_t web_nobj(void) { return OBJ_NOBJ; }
 __attribute__((used, visibility("default"))) uint32_t web_store_max(void) { return PLAT_STORE_MAX; }
+
+static float bg_out[12];                         /* for the stream view's background: what the screen shows */
+static void bg_rgb(int at, uint16_t c)
+{
+    bg_out[at] = (float)(c >> 11) / 31.0f;
+    bg_out[at + 1] = (float)((c >> 5) & 63u) / 63.0f;
+    bg_out[at + 2] = (float)(c & 31u) / 31.0f;
+}
+/* the stream view's background: the star's colour (a black hole: its ring's), its size, a flare */
+__attribute__((used, visibility("default"))) float *web_bg(void)
+{
+    int k = proj.par[P_COLOUR];
+    bg_rgb(0, k == 6 ? RGB(255, 170, 90) : STAR_C[(unsigned)k < EN_NCOLOUR ? k : 0]);
+    bg_out[3] = en_star;
+    bg_out[4] = en_flare;
+    bg_out[5] = (float)(k == 6);
+    return bg_out;
+}

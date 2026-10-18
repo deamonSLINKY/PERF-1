@@ -3,10 +3,14 @@
 """Stream view, for livestreams, put into every emulator of the pack (web/emu, lof1, eco1, grav1):
 
   the page's emulator on a 16:9 stage (1920 x 1080, scaled to the window): the FM-1 on the left, its screen
-  large and sharp on the right, the firmware's name above. Behind it all, the background breathes with the
-  music: three soft glows in the firmware's colours, each following a band of what it plays (lows, mids,
-  highs), their hues leaning warmer or cooler as the sound darkens or brightens. Subtle, slow, and still
-  for those who ask their system for reduced motion. Whatever is pressed glows, whether clicked here
+  large and sharp on the right, the firmware's name above. Behind it all, a background of each firmware's own,
+  following what it plays and shows (the firmware reports its sky, star or theme to the page: web_bg):
+    HYP-1   pixel EQ bars and a faint scrolling heatmap of the song, in the screen theme's colours
+    LOF-1   soft glows shifting with the music: lows, mids and highs, leaning warmer or cooler with its brightness
+    ECO-1   the emulator's sky, its time of day; after a minute untouched, pixel grass fades in, waving in its wind,
+            and at night fireflies
+    GRAV-1  the star's colour glowing from the centre, vignetting to black; pixel stars drift across
+  Subtle, and still (no drift, no scrolling) for those who ask their system for reduced motion. Whatever is pressed glows, whether clicked here
   or played on the real FM-1 through its remote (SEL + GLO); a knob turning gets a ring; a strip under the
   screen names the last few moves. 'FM-1 LINKED' shows while the remote is on.
 
@@ -31,8 +35,11 @@ body.stream #stage { display: block; position: fixed; left: 50%; top: 50%; width
   transform: translate(-50%, -50%) scale(var(--sv-s, .5)); overflow: hidden; color: #f2eade;
   background: radial-gradient(ellipse 62% 62% at 50% 42%, var(--sv-glow), transparent 70%),
               linear-gradient(#1a1824, #0c0b11); font-family: "Barlow Semi Condensed", Barlow, sans-serif; }
-#stage .sv-bg { position: absolute; inset: 0; width: 1920px; height: 1080px; pointer-events: none; opacity: 0; transition: opacity 2s; }
-#stage .sv-bg.live { opacity: 1; }
+#stage .sv-bg, #stage .sv-px, #stage .sv-vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+#stage .sv-px { image-rendering: pixelated; }
+#stage .sv-vig { display: none; background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, rgba(0, 0, 0, .92) 100%); }
+#stage.grav .sv-vig { display: block; }
+#stage.grav { background: #000; }
 #stage .sv-dev { position: absolute; left: 56px; top: 190px; width: 1100px; }
 #stage .sv-dev .device { width: 1100px; }
 #stage .sv-big { position: absolute; left: 1174px; top: 128px; width: 704px; height: 704px; border-radius: 30px; background: #0b0a0e;
@@ -79,7 +86,7 @@ JS = JA + r"""
   stage.id = "stage";
   stage.style.setProperty("--sv-acc", acc);
   stage.style.setProperty("--sv-glow", "rgba(" + [1, 3, 5].map((i) => parseInt(acc.slice(i, i + 2), 16)).join(",") + ",0.24)");
-  stage.innerHTML = `<canvas class="sv-bg" width="192" height="108" aria-hidden="true"></canvas><div class="sv-title"><div class="sv-bars"><i style="width:70px;background:${acc}"></i><i style="width:34px;background:#7eccc0"></i></div>
+  stage.innerHTML = `<canvas class="sv-bg" width="192" height="108" aria-hidden="true"></canvas><canvas class="sv-px" width="320" height="180" aria-hidden="true"></canvas><div class="sv-vig"></div><div class="sv-title"><div class="sv-bars"><i style="width:70px;background:${acc}"></i><i style="width:34px;background:#7eccc0"></i></div>
     <div><div class="sv-name">${name}</div><div class="sv-tag">${tag}</div></div></div>
     <div class="sv-link">FM-1 LINKED</div><div class="sv-dev"></div><div class="sv-big"><canvas width="240" height="240"></canvas></div>
     <div class="sv-moves"></div><a class="sv-kofi" href="https://ko-fi.com/redtailworks" target="_blank" rel="noopener"><b>☕</b>Support me on ko-fi.com/redtailworks</a>
@@ -107,20 +114,23 @@ JS = JA + r"""
   }
   stage.addEventListener("pointermove", woke);
   stage.addEventListener("pointerdown", woke);
-  // the background, moving with the music: an analyser on the emulator's output (its first two channels, the
-  // mix), three bands each lighting a slow, drifting glow; their hues lean with the sound's brightness
+  // THE BACKGROUND: an analyser on the emulator's output (the mix: its first two channels) for the music, and
+  // what the firmware reports of its sky, star or theme (window.ambLast.bg, from web_bg). Two canvases: soft
+  // (192 x 108, smoothed up) and pixel (320 x 180, kept sharp).
   const bg = stage.querySelector(".sv-bg"), gctx = bg.getContext("2d");
+  const px = stage.querySelector(".sv-px"), pctx = px.getContext("2d");
   const still = matchMedia("(prefers-reduced-motion: reduce)");
-  const hue0 = (function (h) {                    // the accent's hue, in degrees
+  stage.classList.toggle("grav", name === "GRAV-1");
+  function hueOf(h) {
     const r = parseInt(h.slice(1, 3), 16) / 255, g = parseInt(h.slice(3, 5), 16) / 255, b = parseInt(h.slice(5, 7), 16) / 255;
     const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
     if (!d) return 0;
-    const x = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
-    return x * 60;
-  })(acc);
-  let an = null, spec = null, binHz = 0, lastBg = 0;
-  const lvl = [0, 0, 0], peak = [1e-4, 1e-4, 1e-4];
-  let bright = 0.5;
+    return (mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+  }
+  const hue0 = hueOf(acc);
+  let an = null, spec = null, binHz = 0, lastBg = 0, lastMove = performance.now();
+  const lvl = [0, 0, 0], peak = [1e-4, 1e-4, 1e-4], NB = 40, eq = new Float32Array(NB), eqPeak = new Float32Array(NB);
+  let bright = 0.5, loud = 0, topDb = -40;
   function listen() {
     if (an || typeof node === "undefined" || !node) return;
     try {
@@ -135,31 +145,21 @@ JS = JA + r"""
       binHz = node.context.sampleRate / an.fftSize;
     } catch { an = null; }
   }
-  function glow(x, y, r, hue, a) {
-    const g = gctx.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `hsla(${hue}, 70%, 55%, ${a})`);
-    g.addColorStop(0.5, `hsla(${hue}, 70%, 45%, ${a * 0.35})`);
-    g.addColorStop(1, `hsla(${hue}, 70%, 40%, 0)`);
-    gctx.fillStyle = g;
-    gctx.fillRect(0, 0, 192, 108);
-  }
-  function drawBg(t) {
-    if (t - lastBg < 33) return;                  // 30 a second is plenty for something this slow
-    const dt = Math.min((t - lastBg) / 1000, 0.1);
-    lastBg = t;
-    listen();
-    if (!an) return;
+  function hear(dt) {                             // the music: three bands, brightness, loudness, 40 EQ bands
     an.getFloatFrequencyData(spec);
-    const band = [0, 0, 0];
-    let sum = 0, wsum = 0;
+    const band = [0, 0, 0], eb = new Float32Array(NB).fill(-300);
+    let sum = 0, wsum = 0, top = -200;
     for (let i = 1; i < spec.length; i++) {
-      const f = i * binHz, m = Math.pow(10, spec[i] / 20);
-      if (f < 30 || f > 12000) continue;
+      const f = i * binHz, db = spec[i], m = Math.pow(10, db / 20);
+      if (f < 30 || f > 14000) continue;
       band[f < 250 ? 0 : f < 2000 ? 1 : 2] += m * m;
       sum += m;
       wsum += m * Math.log2(f);
+      const k = Math.min(NB - 1, Math.max(0, Math.floor(NB * Math.log2(f / 40) / Math.log2(14000 / 40))));
+      if (db > -200) eb[k] = Math.max(eb[k], db);
+      top = Math.max(top, db);
     }
-    if (sum > 1e-6) {                             // brightness: the spectrum's centre, 200 Hz .. 3 kHz -> 0 .. 1
+    if (sum > 1e-6) {
       const c = Math.min(Math.max((wsum / sum - Math.log2(200)) / Math.log2(15), 0), 1);
       bright += (c - bright) * Math.min(dt * 0.8, 1);
     }
@@ -167,16 +167,169 @@ JS = JA + r"""
       const v = Math.sqrt(band[k]);
       peak[k] = Math.max(v, peak[k] * Math.pow(0.5, dt / 8), 1e-4);
       const tgt = Math.min(v / peak[k], 1);
-      lvl[k] += (tgt - lvl[k]) * Math.min(dt * (tgt > lvl[k] ? 5 : 0.9), 1);   // quick to swell, slow to fade
+      lvl[k] += (tgt - lvl[k]) * Math.min(dt * (tgt > lvl[k] ? 5 : 0.9), 1);
     }
-    bg.classList.toggle("live", sum > 1e-4);
-    const s = t / 1000, calm = still.matches ? 0 : 1, lean = (bright - 0.5) * 50;
+    topDb = Math.max(top, topDb - dt * 3);        // the EQ's scale: 50 dB under its recent loudest
+    const calm = still.matches ? 0.25 : 1;
+    for (let k = 0; k < NB; k++) {
+      const v = eb[k] > -250 ? Math.min(Math.max((eb[k] - (topDb - 50)) / 50, 0), 1) : 0;
+      eq[k] += (v - eq[k]) * Math.min(dt * (v > eq[k] ? 18 : 4) * calm, 1);
+      eqPeak[k] = Math.max(eq[k], eqPeak[k] - dt * 0.35);
+    }
+    loud += ((sum > 1e-4 ? (lvl[0] + lvl[1] + lvl[2]) / 3 : 0) - loud) * Math.min(dt * 2, 1);
+    return sum > 1e-4;
+  }
+  function glow(x, y, r, col, a) {                // col: [r, g, b] 0..255
+    const g = gctx.createRadialGradient(x, y, 0, x, y, r), c = col.join(",");
+    g.addColorStop(0, `rgba(${c},${a})`);
+    g.addColorStop(0.5, `rgba(${c},${a * 0.35})`);
+    g.addColorStop(1, `rgba(${c},0)`);
+    gctx.fillStyle = g;
+    gctx.fillRect(0, 0, 192, 108);
+  }
+  function hsl(h, s, l) {                         // -> [r, g, b] 0..255
+    h = ((h % 360) + 360) % 360 / 360;
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    const f = (t) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    return [f(h + 1 / 3), f(h), f(h - 1 / 3)].map((v) => Math.round(v * 255));
+  }
+  const mixc = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const rgb255 = (b, i) => [b[i] * 255, b[i + 1] * 255, b[i + 2] * 255].map(Math.round);
+
+  // LOF-1: soft glows shifting with the music
+  function paintLof(s) {
+    const calm = still.matches ? 0 : 1, lean = (bright - 0.5) * 50;
+    gctx.globalCompositeOperation = "lighter";
+    glow(70 + calm * 16 * Math.sin(s * 0.07), 78 + calm * 8 * Math.sin(s * 0.05 + 1), 80 + 18 * lvl[0], hsl(hue0 - 25 + lean, 0.7, 0.55), 0.06 + 0.22 * lvl[0]);
+    glow(110 + calm * 22 * Math.sin(s * 0.06 + 2), 42 + calm * 12 * Math.sin(s * 0.08), 70 + 14 * lvl[1], hsl(hue0 + lean, 0.7, 0.55), 0.05 + 0.2 * lvl[1]);
+    glow(150 + calm * 18 * Math.sin(s * 0.09 + 4), 30 + calm * 10 * Math.sin(s * 0.07 + 3), 52 + 12 * lvl[2], hsl(hue0 + 40 + lean, 0.7, 0.55), 0.04 + 0.16 * lvl[2]);
+  }
+
+  // HYP-1: EQ bars and a scrolling heatmap, in the screen theme's colours
+  const heat = document.createElement("canvas");
+  heat.width = 320;
+  heat.height = 120;
+  const hctx = heat.getContext("2d");
+  function paintHyp(look) {
+    const pad = look ? rgb255(look, 0) : [164, 76, 255], hot = look ? rgb255(look, 3) : [255, 128, 32];
+    const mid = look ? rgb255(look, 9) : [214, 128, 255], base = look ? rgb255(look, 6) : [22, 21, 27];
+    const ramp = (v) => v < 0.5 ? mixc(base, pad, v * 2) : v < 0.8 ? mixc(pad, mid, (v - 0.5) / 0.3) : mixc(mid, hot, (v - 0.8) / 0.2);
+    if (!still.matches) hctx.drawImage(heat, -1, 0);   // the heatmap: one column a frame, the newest at the right
+    for (let k = 0; k < NB; k++) {
+      const y0 = 120 - Math.round((k + 1) * 120 / NB), h = Math.round((k + 1) * 120 / NB) - Math.round(k * 120 / NB);
+      hctx.fillStyle = `rgb(${ramp(eq[k]).join(",")})`;
+      hctx.fillRect(319, y0, 1, h);
+    }
+    pctx.globalAlpha = 0.22;
+    pctx.drawImage(heat, 0, 0);
+    pctx.globalAlpha = 1;
+    const bw = 8, segH = 3, maxSeg = 20;          // the bars: LED segments, bottom up
+    for (let k = 0; k < NB; k++) {
+      const x = k * bw + 1, n = Math.round(eq[k] * maxSeg), pk = Math.round(eqPeak[k] * maxSeg);
+      for (let j = 0; j < n; j++) {
+        const v = j / maxSeg;
+        pctx.fillStyle = `rgba(${ramp(0.35 + v * 0.65).join(",")},${0.2 + 0.2 * v})`;
+        pctx.fillRect(x, 178 - (j + 1) * (segH + 1), bw - 2, segH);
+      }
+      if (pk > 0) {
+        pctx.fillStyle = `rgba(${hot.join(",")},0.45)`;
+        pctx.fillRect(x, 178 - pk * (segH + 1) - 2, bw - 2, 1);
+      }
+    }
+  }
+
+  // ECO-1: the sky of the emulator's day; grass after a minute untouched; fireflies at night
+  const FLIES = Array.from({ length: 26 }, (_, i) => ({ x: Math.random() * 320, y: 120 + Math.random() * 50, ph: Math.random() * 6.28,
+    sp: 0.4 + Math.random() * 0.8, dx: Math.random() * 6.28 }));
+  const BLADES = Array.from({ length: 160 }, (_, i) => ({ x: i * 2 + (Math.random() * 2 | 0), h: 6 + Math.random() * 16,
+    ph: Math.random() * 6.28, c: Math.random() }));
+  let idleFade = 0;
+  function skyCol(day, top, rain) {               // as the firmware's sky_colour
+    const sn = Math.sin((day - 0.25) * 6.2832), d = Math.min(Math.max((sn + 0.12) * 1.6, 0), 1);
+    const tw = Math.min(Math.max(1 - Math.abs(sn) * 5, 0), 1);
+    let c = top ? mixc([10, 14, 34], [72, 132, 196], d) : mixc([26, 32, 60], [170, 206, 226], d);
+    c = top ? mixc(c, [110, 80, 120], tw * 0.4) : mixc(c, [236, 142, 92], tw * 0.75);
+    return mixc(c, top ? [70, 76, 86] : [120, 126, 134], rain * 0.7 * d + rain * 0.25);
+  }
+  function paintEco(look, s, dt, now) {
+    const day = look ? look[0] : 0.3, sun = look ? look[1] : 1, rain = look ? look[2] : 0, wind = look ? look[3] : 0.2;
+    const top = skyCol(day, 1, rain), hor = skyCol(day, 0, rain);
+    const g = gctx.createLinearGradient(0, 0, 0, 108);    // the sky, dimmed: the stage stays the stage
+    g.addColorStop(0, `rgba(${top.join(",")},0.42)`);
+    g.addColorStop(0.75, `rgba(${hor.join(",")},0.36)`);
+    g.addColorStop(1, `rgba(${mixc(hor, [20, 30, 18], 0.6).join(",")},0.5)`);
+    gctx.fillStyle = g;
+    gctx.fillRect(0, 0, 192, 108);
+    const idle = (now - lastMove) / 1000 > 60;    // a minute untouched: the grass grows in (a touch: it goes)
+    idleFade = Math.min(Math.max(idleFade + (idle ? dt / 10 : -dt / 1.5), 0), 1);
+    if (idleFade <= 0) return;
+    const calm = still.matches ? 0 : 1, lit = 0.25 + 0.75 * sun, ga = idleFade * 0.75;
+    for (const b of BLADES) {                     // grass, waving in the emulator's wind
+      const sway = calm * (0.6 + 3.2 * wind) * Math.sin(s * (0.9 + 2.2 * wind) + b.ph + b.x * 0.04);
+      const col = mixc([28, 60, 24], [84, 150, 62], b.c * 0.8);
+      pctx.fillStyle = `rgba(${col.map((v) => Math.round(v * lit)).join(",")},${ga})`;
+      const h = Math.round(b.h);
+      for (let j = 0; j < h; j++) pctx.fillRect(Math.round(b.x + sway * (j / h) * (j / h)), 179 - j, 1, 1);
+    }
+    const night = Math.min(Math.max((0.25 - sun) / 0.2, 0), 1) * idleFade;
+    if (night <= 0) return;
+    for (const f of FLIES) {                      // fireflies: drifting low, glowing on and off
+      if (calm) {
+        f.dx += dt * 0.3 * f.sp;
+        f.x = (f.x + Math.cos(f.dx) * dt * 6 * f.sp + 320) % 320;
+        f.y = Math.min(Math.max(f.y + Math.sin(f.dx * 1.3) * dt * 4, 110), 172);
+      }
+      const on = Math.max(0, Math.sin(s * f.sp * 1.4 + f.ph)) ** 3 * night;
+      if (on < 0.02) continue;
+      const x = Math.round(f.x), y = Math.round(f.y);
+      pctx.fillStyle = `rgba(214,255,120,${on})`;
+      pctx.fillRect(x, y, 1, 1);
+      pctx.fillStyle = `rgba(180,240,90,${on * 0.35})`;
+      pctx.fillRect(x - 1, y, 1, 1); pctx.fillRect(x + 1, y, 1, 1); pctx.fillRect(x, y - 1, 1, 1); pctx.fillRect(x, y + 1, 1, 1);
+      gctx.globalCompositeOperation = "lighter";
+      glow(x * 0.6, y * 0.6, 7, [190, 250, 100], on * 0.25);
+      gctx.globalCompositeOperation = "source-over";
+    }
+  }
+
+  // GRAV-1: the star's colour from the centre, vignetting to black; pixel stars drifting across
+  const STARS = Array.from({ length: 150 }, () => ({ x: Math.random() * 320, y: Math.random() * 180, z: Math.random(),
+    ph: Math.random() * 6.28, c: Math.random() }));
+  let starSize = 0.5;
+  function paintGrav(look, s, dt) {
+    const col = look ? rgb255(look, 0) : [255, 213, 106], sz = look ? look[3] : 0.6, flare = look ? look[4] : 0;
+    starSize += (sz - starSize) * Math.min(dt * 2, 1);
+    const r = 46 + 22 * starSize + 10 * loud + 12 * flare;
+    gctx.globalCompositeOperation = "lighter";
+    glow(96, 54, r, col, 0.22 + 0.12 * loud + 0.15 * flare);
+    glow(96, 54, r * 0.45, mixc(col, [255, 255, 255], 0.3), 0.1 + 0.08 * starSize);
+    const calm = still.matches ? 0 : 1;
+    for (const st of STARS) {                     // three depths, the far ones slow and dim
+      if (calm) st.x -= dt * (1.2 + st.z * 5);
+      if (st.x < 0) { st.x += 320; st.y = Math.random() * 180; }
+      const tw = 0.55 + 0.45 * Math.sin(s * (0.6 + st.z) + st.ph), a = (0.15 + 0.55 * st.z) * tw;
+      const c = st.c < 0.7 ? [230, 235, 255] : st.c < 0.85 ? mixc(col, [255, 255, 255], 0.4) : [170, 190, 255];
+      pctx.fillStyle = `rgba(${c.join(",")},${a})`;
+      pctx.fillRect(Math.round(st.x), Math.round(st.y), 1, 1);
+      if (st.z > 0.92) { pctx.fillStyle = `rgba(${c.join(",")},${a * 0.3})`; pctx.fillRect(Math.round(st.x) - 1, Math.round(st.y), 3, 1); }
+    }
+  }
+
+  function drawBg(t) {
+    if (t - lastBg < 33) return;                  // 30 a second
+    const dt = Math.min((t - lastBg) / 1000, 0.1), s = t / 1000;
+    lastBg = t;
+    listen();
+    if (an) hear(dt);
+    const look = window.ambLast && window.ambLast.bg;
     gctx.globalCompositeOperation = "source-over";
     gctx.clearRect(0, 0, 192, 108);
-    gctx.globalCompositeOperation = "lighter";
-    glow(70 + calm * 16 * Math.sin(s * 0.07), 78 + calm * 8 * Math.sin(s * 0.05 + 1), 80 + 18 * lvl[0], hue0 - 25 + lean, 0.06 + 0.22 * lvl[0]);
-    glow(110 + calm * 22 * Math.sin(s * 0.06 + 2), 42 + calm * 12 * Math.sin(s * 0.08), 70 + 14 * lvl[1], hue0 + lean, 0.05 + 0.2 * lvl[1]);
-    glow(150 + calm * 18 * Math.sin(s * 0.09 + 4), 30 + calm * 10 * Math.sin(s * 0.07 + 3), 52 + 12 * lvl[2], hue0 + 40 + lean, 0.04 + 0.16 * lvl[2]);
+    pctx.clearRect(0, 0, 320, 180);
+    if (name === "HYP-1") paintHyp(look);
+    else if (name === "ECO-1") paintEco(look, s, dt, t);
+    else if (name === "GRAV-1") paintGrav(look, s, dt);
+    else paintLof(s);
+    gctx.globalCompositeOperation = "source-over";
   }
   (function tick(t) {                             // the screen, large; the remote's badge; the background
     if (on) {
@@ -188,6 +341,7 @@ JS = JA + r"""
   })();
   // the last few moves, under the screen
   function say(s, same) {
+    lastMove = performance.now();               // a move: ECO-1's grass goes, and comes back a minute later
     const last = moves.lastElementChild;
     if (same && last && last.dataset.k === same && Date.now() - last.dataset.t < 900) {
       last.dataset.n = +last.dataset.n + 1;

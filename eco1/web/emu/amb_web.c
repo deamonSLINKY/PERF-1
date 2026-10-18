@@ -96,3 +96,22 @@ __attribute__((used, visibility("default"))) void web_store_set_len(uint32_t obj
 __attribute__((used, visibility("default"))) uint32_t web_store_writes(void) { return store_writes; }
 __attribute__((used, visibility("default"))) uint32_t web_nobj(void) { return OBJ_NOBJ; }
 __attribute__((used, visibility("default"))) uint32_t web_store_max(void) { return PLAT_STORE_MAX; }
+
+static float bg_out[12];                         /* for the stream view's background: what the screen shows */
+static void bg_rgb(int at, uint16_t c)
+{
+    bg_out[at] = (float)(c >> 11) / 31.0f;
+    bg_out[at + 1] = (float)((c >> 5) & 63u) / 63.0f;
+    bg_out[at + 2] = (float)(c & 31u) / 31.0f;
+}
+/* the stream view's background: the time of day, the sun, the rain, the wind, the soil, the species */
+__attribute__((used, visibility("default"))) float *web_bg(void)
+{
+    bg_out[0] = en_day;
+    bg_out[1] = en_sun;
+    bg_out[2] = en_rain;
+    bg_out[3] = en_wind;
+    bg_out[4] = en_soil;
+    bg_out[5] = (float)proj.par[P_SPECIES];
+    return bg_out;
+}
