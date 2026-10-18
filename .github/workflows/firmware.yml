@@ -178,6 +178,8 @@ jobs:
         run: python3 tools/site/open1.py build/pages
       - name: The firmware dropdown on every page
         run: python3 tools/site/switcher.py build/pages
+      - name: The "not found" page, and a download link per firmware that never changes
+        run: SITE_ROOT="/${GITHUB_REPOSITORY#*/}/" python3 tools/site/notfound.py build/pages
       - uses: actions/upload-artifact@v4
         with:
           name: hyp1-firmware-${{ env.V }}
