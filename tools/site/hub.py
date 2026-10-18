@@ -170,8 +170,8 @@ __CARDS__
 </div>
 
 <h2>What's next: OPEN-1</h2>
-<a class="open1" href="open1/"><img src="open1/media/open1-hyp1.jpg" width="1260" height="600" alt="Concept render of OPEN-1, a 37-key synth, running HYP-1" loading="lazy">
-  <span><b>OPEN-1</b> <em>Ideas phase</em><br>An idea for an open-firmware synth under $200: 37 keys, pads, audio in and out, and a microSD library of firmware. Goals, target specs, the pitch video and the build log. <u>Follow along</u></span></a>
+<a class="open1" href="open1/"><img src="open1/media/open1-v2.jpg" width="1340" height="980" alt="Concept render of OPEN-1, a compact 27-key synth with 16 pads, running HYP-1" loading="lazy">
+  <span><b>OPEN-1</b> <em>Ideas phase</em><br>An idea for an open-firmware synth under $200: 27 keys, 16 pads, 16 buttons, audio in and out, and a microSD library of firmware. Goals, target specs, the pitch video and the build log. <u>Follow along</u></span></a>
 
 <div class="support">
   <p><b>All four are free.</b> If they're useful to you, a coffee keeps new firmware coming, and the videos too.</p>

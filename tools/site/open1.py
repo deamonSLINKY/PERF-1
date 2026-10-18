@@ -44,19 +44,20 @@ ENGINE = [  # what, OPEN-1 target, the FM-1 today
 ]
 
 INSTRUMENT = [
-    ("Keys", "37 silicone keys, each lit by its own RGB LED (no velocity)"),
-    ("Pads", "8 velocity-sensitive RGB pads"),
-    ("Controls", "8 endless encoders, a thumbstick, 2 spring levers, 14 lit buttons"),
+    ("Keys", "27 silicone keys like the FM-1's, each lit by its own RGB LED (no velocity)"),
+    ("Pads", "16 velocity-sensitive RGB pads, 4 × 4"),
+    ("Buttons", "16 lit buttons in two rows of 8; each firmware names them on screen"),
+    ("Controls", "8 endless push encoders, a thumbstick, 2 spring levers, a volume knob"),
     ("Screen", "4.0″ IPS, 480 × 320"),
     ("Sound out", "Built-in speaker, headphones, line out"),
     ("Power", "3000 mAh battery, charges over USB-C"),
     ("Connections", "Wired only: no Bluetooth, for low latency"),
-    ("Size", "About 500 × 220 mm, a wedge 34 mm at the back and 18 mm at the front"),
+    ("Size", "About 320 × 230 mm, a third smaller than the first design; a wedge 34 mm at the back, 18 mm at the front"),
     ("For tinkerers", "A 2 × 5 expansion header"),
 ]
 
 GOALS = [
-    ("Under $200", "An instrument a beginner can buy as their first synth: keys, sounds and effects in one box."),
+    ("Under $200, easy to carry", "An instrument a beginner can buy as their first synth and take anywhere: keys, pads, sounds and effects in one compact box."),
     ("Open firmware", "A documented chip, an open SDK and a free toolchain. Anyone can write firmware for it, and anyone can install it."),
     ("Many machines in one", "Keep several firmwares on the device and a library on the SD card. Techno box tonight, plant simulator tomorrow."),
     ("Room to grow", "Twice the clock speed and about 75 times the working memory of the FM-1, for longer delays, samples and bigger engines."),
@@ -76,7 +77,7 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OPEN-1 by RedtailWorks</title>
-<meta name="description" content="OPEN-1 is RedtailWorks' idea for an open-firmware synth under $200: 37 keys, pads, a microSD firmware library, audio in and out. Ideas phase: follow along.">
+<meta name="description" content="OPEN-1 is RedtailWorks' idea for an open-firmware synth under $200: 27 keys, 16 pads, a microSD firmware library, audio in and out. Ideas phase: follow along.">
 <meta name="theme-color" content="#121116">
 <link rel="icon" type="image/png" href="../img/favicon.png">
 <link rel="alternate" type="application/rss+xml" title="OPEN-1 updates" href="feed.xml">
@@ -256,10 +257,10 @@ footer .rw span:nth-of-type(1) { color: var(--purple); } footer .rw span:nth-of-
     <span class="badge"><i></i>Concept &middot; ideas phase</span>
     <h1>OPEN<span>-1</span></h1>
     <p class="line">One synth, every firmware.</p>
-    <p class="lede">An open, entry-level synth you rewrite from an SD card. 37 keys, 8 pads, audio in and out, and a library of firmware you swap from the menu. Target price: under $200.</p>
+    <p class="lede">An open, entry-level synth you rewrite from an SD card. 27 keys, 16 pads, 16 buttons, audio in and out, and a library of firmware you swap from the menu, in a body small enough to carry. Target price: under $200.</p>
     <div class="ctas"><a class="btn primary" href="#join">Get updates</a><a class="btn" href="#video">Watch the pitch</a></div>
   </div>
-  <img src="media/open1-hyp1.jpg" width="1260" height="600" alt="Concept render of OPEN-1: a dark synth with a screen, eight knobs, eight pads lit purple, a speaker grille, two levers and 37 keys with a chord lit in purple, running HYP-1.">
+  <img src="media/open1-v2.jpg" width="1340" height="980" alt="Concept render of OPEN-1 design 2: a squarish dark synth with a 4-inch screen, eight knobs, sixteen pads and sixteen buttons, a thumbstick, two levers and 27 keys with a chord lit in purple, running HYP-1.">
 </div>
 <p class="disclaimer"><b>Not a product yet.</b> OPEN-1 is an idea I'm sharing early. Nothing is for sale; the renders are concept art, and every spec and price on this page is a target, not a promise.</p>
 
@@ -316,7 +317,7 @@ __INSTRUMENT__
 __PRICES__
   </div>
   <div class="costs">
-    <div><b>$69</b><span>Target parts cost per unit, at 1,000 units</span></div>
+    <div><b>~$70</b><span>Target parts cost per unit, at 1,000 units</span></div>
     <div><b>~$80&ndash;250</b><span>Breadboard prototype, the next phase</span></div>
     <div><b>$100&ndash;120k</b><span>Estimated cost of the first 1,000 units</span></div>
   </div>
@@ -425,12 +426,12 @@ def main(root):
     if yt:
         video = (f'    <iframe src="https://www.youtube-nocookie.com/embed/{esc(yt)}?rel=0" title="OPEN-1 concept pitch" loading="lazy" '
                  'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n'
-                 f'    <figcaption><span>OPEN-1 running a simulated HYP-1, in time with a real HYP-1 take on the FM-1.</span>'
+                 f'    <figcaption><span>OPEN-1 running a simulated HYP-1, in time with a real HYP-1 take on the FM-1. It shows the first, 37-key design; design 2 is in the updates below.</span>'
                  f'<a href="https://www.youtube.com/watch?v={esc(yt)}">Watch on YouTube</a></figcaption>')
     else:
         video = ('    <video controls preload="metadata" playsinline poster="media/pitch-poster.jpg" width="1920" height="1080">'
                  '<source src="media/open1-pitch.mp4" type="video/mp4"></video>\n'
-                 '    <figcaption><span>OPEN-1 running a simulated HYP-1, in time with a real HYP-1 take on the FM-1. 55 seconds, with sound.</span>'
+                 '    <figcaption><span>OPEN-1 running a simulated HYP-1, in time with a real HYP-1 take on the FM-1. 55 seconds, with sound. It shows the first, 37-key design; design 2 is in the updates below.</span>'
                  '<a href="https://www.youtube.com/@RedtailWorks">More on YouTube</a></figcaption>')
 
     phases = []
