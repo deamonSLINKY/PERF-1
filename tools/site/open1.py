@@ -33,37 +33,37 @@ PHASES = [  # name, what happens
     ("Manufacturing and shipping", "The first 1,000 units, with the community firmware pack preloaded."),
 ]
 
-ENGINE = [  # what, OPEN-1 target, the FM-1 today
-    ("Processor", "480 MHz Arm Cortex-M7 (STM32H750)", "240 MHz"),
-    ("Working memory", "32 MB + 1 MB on the chip", "About 432 KB"),
-    ("Firmware storage", "16 MB of firmware slots, plus one microSD card for firmware, samples and projects", "1 MB"),
+ENGINE = [  # what, OPEN-1 v0.4 beta, the FM-1 today
+    ("Processor", "480 MHz Arm Cortex-M7 (STM32H750, on a Daisy Seed)", "240 MHz"),
+    ("Working memory", "64 MB + 1 MB on the chip", "About 432 KB"),
+    ("Firmware storage", "8 MB built in, plus one microSD card for firmware, samples and projects", "1 MB"),
     ("Firmwares installed", "Several, swapped from the menu", "One at a time"),
-    ("Audio", "4 in and 4 out, 24-bit; also a 4 × 4 USB audio interface", "Stereo out"),
-    ("MIDI", "TRS in and out with an A/B switch, plus USB", "TRS in, USB, Bluetooth"),
-    ("USB-C", "Device (audio, MIDI, charging) and host (keyboards, drives)", "Device"),
-    ("Sync and CV", "Sync in and out, 2 CV outs (0–5 V); rates and roles set by the firmware", "—"),
+    ("Keys", "Bring your own: an FM-1 or any USB or TRS MIDI controller", "Built in"),
+    ("Audio", "Stereo line in; stereo out and headphones, 24-bit; built-in speaker", "Stereo out"),
+    ("MIDI", "TRS in and out (type A), plus USB", "TRS in, USB, Bluetooth"),
+    ("USB", "USB-A host for your controller, USB-C for your computer and charging (one at a time)", "USB-C device"),
 ]
 
 INSTRUMENT = [
-    ("Keys", "27 silicone keys like the FM-1's, each lit by its own RGB LED (no velocity)"),
-    ("Pads", "16 velocity-sensitive RGB pads, 4 × 4"),
-    ("Buttons", "16 lit buttons in two rows of 8; each firmware names them on screen"),
-    ("Controls", "8 endless push encoders, a thumbstick, 2 spring levers, a volume knob"),
-    ("Screen", "4.0″ IPS, 480 × 320"),
-    ("Sound out", "Built-in speaker, headphones, two stereo line outs"),
-    ("Pedal", "6.35 mm jack for a sustain or expression pedal"),
-    ("Power", "3000 mAh battery, charges over USB-C"),
+    ("Keys", "None built in: plug in the keys you already own"),
+    ("Pads", "16 RGB pads in two rows of 8 on Cherry MX switches, so they also play as a keyboard"),
+    ("Menu keys", "8 Cherry MX keys; each firmware names them on screen"),
+    ("Controls", "4 knobs and 2 touch strips (pitch and mod by default)"),
+    ("Screen", "2.0″ colour IPS, 320 × 240"),
+    ("Sound out", "Built-in speaker and a stereo out / headphones jack"),
+    ("Sound in", "Stereo line in, for sampling and effects"),
+    ("Power", "Rechargeable LiPo battery, charges over USB-C"),
     ("Connections", "Wired only: no Bluetooth, for low latency"),
-    ("Size", "About 320 × 230 mm, a third smaller than the first design; a wedge 34 mm at the back, 18 mm at the front"),
-    ("For tinkerers", "A 2 × 5 expansion header"),
+    ("Two boards", "A main board that carries everything, and a faceplate PCB that is the switch plate and holds the touch strips"),
+    ("Size", "About 161 × 96 mm, close to the FM-1's footprint, a little taller to fit Cherry MX"),
 ]
 
 GOALS = [
-    ("Under $200, easy to carry", "An instrument a beginner can buy as their first synth and take anywhere: keys, pads, sounds and effects in one compact box."),
+    ("Cheap and easy to carry", "No keybed to pay for: pads, sounds and effects in a box about the size of an FM-1, played from the keys you already own."),
     ("Open firmware", "A documented chip, an open SDK and a free toolchain. Anyone can write firmware for it, and anyone can install it."),
     ("Many machines in one", "Keep several firmwares on the device and a library on the SD card. Techno box tonight, plant simulator tomorrow."),
-    ("Room to grow", "Twice the clock speed and about 75 times the working memory of the FM-1, for longer delays, samples and bigger engines."),
-    ("More ways in and out", "Stereo audio in turns it into an effects box. MIDI out and USB host let it drive and be driven by other gear."),
+    ("Room to grow", "Twice the clock speed and about 150 times the working memory of the FM-1, for longer delays, samples and bigger engines."),
+    ("Bring your own keys", "USB-A host and TRS MIDI in mean an FM-1, a MIDI keyboard or a pad controller can all play it. All the compute happens on OPEN-1."),
     ("Firmware before hardware", "A browser emulator and a firmware jam before launch, so it ships with a library already full."),
 ]
 
@@ -289,19 +289,19 @@ __GOALS__
 </section>
 
 <section id="specs">
-  <h2>Target specs</h2>
-  <p class="sub">These targets come from design 2, the keyboard version. The v0.4 beta drops the built-in keys (see the updates below), so expect this table to change as the beta settles.</p>
+  <h2>The beta design</h2>
+  <p class="sub">The v0.4 beta design: two boards, no built-in keys. It's an early design for testing, so expect some of it to change once it's on the bench.</p>
   <div class="specs">
     <div>
       <div class="tablewrap"><table>
-        <caption>The engine, next to the FM-1</caption>
-        <thead><tr><th scope="col">&nbsp;</th><th scope="col" class="open">OPEN-1 target</th><th scope="col">FM-1 today</th></tr></thead>
+        <caption>v0.4 beta, next to the FM-1</caption>
+        <thead><tr><th scope="col">&nbsp;</th><th scope="col" class="open">OPEN-1 v0.4</th><th scope="col">FM-1 today</th></tr></thead>
         <tbody>
 __ENGINE__
         </tbody>
       </table></div>
-      <figure class="ports"><img src="media/open1-rear.jpg" width="1600" height="470" alt="The rear edge, left to right: power switch, USB-C device and host, microSD slot, MIDI in and out with an A/B switch, sync in and out, CV 1 and 2, a 6.35 mm pedal jack, audio in 1-2 and 3-4, audio out 1-2 and 3-4, and phones." loading="lazy">
-        <figcaption>The port side. Every connection is on the back edge.</figcaption></figure>
+      <figure class="ports"><img src="media/open1-v04-faceplate.jpg" width="1400" height="865" alt="The faceplate PCB layout: a window for the screen, holes for four knobs, cutouts for eight menu keys and sixteen pads, and two touch strips of four slanted copper segments labelled PITCH and MOD." loading="lazy">
+        <figcaption>Board 2, the faceplate: it's the Cherry MX plate, and the touch strips are copper pads on it. Board 1, underneath, carries the Seed, the ports and everything else.</figcaption></figure>
     </div>
     <div class="tablewrap">
       <p class="cap">The instrument</p>
@@ -314,12 +314,12 @@ __INSTRUMENT__
 
 <section id="price">
   <h2>Price targets</h2>
-  <p class="sub">The goal is an entry instrument, so the price is a design constraint from the first sketch.</p>
+  <p class="sub">The goal is an entry instrument, so the price is a design constraint from the first sketch. These targets were set for the keyboard design; the keyless beta is being re-costed and they'll be updated here.</p>
   <div class="prices">
 __PRICES__
   </div>
   <div class="costs">
-    <div><b>~$73</b><span>Target parts cost per unit, at 1,000 units</span></div>
+    <div><b>TBD</b><span>Parts cost per unit for the beta design, being re-costed</span></div>
     <div><b>~$80&ndash;250</b><span>Breadboard prototype, the current phase</span></div>
     <div><b>$100&ndash;120k</b><span>Estimated cost of the first 1,000 units</span></div>
   </div>

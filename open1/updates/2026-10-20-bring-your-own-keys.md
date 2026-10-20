@@ -22,6 +22,6 @@ OPEN-1 is out of the ideas phase and onto the bench. Here's the beta prototype d
 
 The schematics are done and checked, the main board is laid out for autorouting, and the faceplate (which doubles as the switch plate) is drawn in KiCad.
 
-**Very early, on purpose.** This beta exists to work out the product and test it. Layouts, parts, size and price can and will change, and the specs and prices further up this page are still from the keyboard design. I'll update them once the beta settles.
+**Very early, on purpose.** This beta exists to work out the product and test it. Layouts, parts, size and price can and will change, and the specs further up this page now describe this beta design. The price targets are still from the keyboard design while I re-cost it.
 
 **I'm looking for help.** If you know your way around PCB layout, embedded audio firmware (C++ on the Daisy), enclosures, or small-batch manufacturing, and you'd like to help: partners, henchmen and femboys all welcome. Come say hi in the [OPEN-1 Discord](https://discord.gg/dpgSDDBVb).
