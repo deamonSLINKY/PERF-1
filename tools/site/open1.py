@@ -26,7 +26,7 @@ CONTENT = SRC / "open1"
 
 PHASES = [  # name, what happens
     ("Idea and pitch", "The spec, the parts list, drawings of the board, a pitch deck and the concept video."),
-    ("Breadboard prototype", "A Daisy Seed (the same chip as OPEN-1), a Pico for the panel and a borrowed MIDI keyboard, so HYP-1 runs on the real processor."),
+    ("Breadboard prototype", "A Daisy Seed (the same chip as OPEN-1) on the bench, and the beta board design in KiCad, to work out the product and test it."),
     ("First boards", "The first custom circuit boards and a hand-built case, to test the real keys, pads, screen and audio."),
     ("Emulator, SDK and firmware jam", "Developers build firmware in the browser before the hardware ships; the community votes on the pack that comes with it."),
     ("Crowdfunding", "Early-bird and backer pricing for the first production run."),
@@ -79,12 +79,12 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OPEN-1 by RedtailWorks</title>
-<meta name="description" content="OPEN-1 is RedtailWorks' idea for an open-firmware synth under $200: 27 keys, 16 pads, a microSD firmware library, audio in and out. Ideas phase: follow along.">
+<meta name="description" content="OPEN-1 is RedtailWorks' idea for an open-firmware synth: bring your own keys, 16 pads, a microSD firmware library, all the compute on board. Breadboard prototype phase: follow along.">
 <meta name="theme-color" content="#121116">
 <link rel="icon" type="image/png" href="../img/favicon.png">
 <link rel="alternate" type="application/rss+xml" title="OPEN-1 updates" href="feed.xml">
 <meta property="og:title" content="OPEN-1: one synth, every firmware">
-<meta property="og:description" content="An open, entry-level synth you rewrite from an SD card. Ideas phase, targets not promises.">
+<meta property="og:description" content="An open synth you rewrite from an SD card. Bring your own keys. Early prototype, targets not promises.">
 <meta property="og:image" content="__SITE__media/pitch-poster.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -256,18 +256,18 @@ footer .rw span:nth-of-type(1) { color: var(--purple); } footer .rw span:nth-of-
 
 <div class="hero">
   <div>
-    <span class="badge"><i></i>Concept &middot; ideas phase</span>
+    <span class="badge"><i></i>Beta design &middot; breadboard phase</span>
     <h1>OPEN<span>-1</span></h1>
     <p class="line">One synth, every firmware.</p>
-    <p class="lede">An open, entry-level synth you rewrite from an SD card. 27 keys, 16 pads, 16 buttons, audio in and out, and a library of firmware you swap from the menu, in a body small enough to carry. Target price: under $200.</p>
-    <div class="ctas"><a class="btn primary" href="#join">Get updates</a><a class="btn" href="#video">Watch the pitch</a></div>
+    <p class="lede">An open synth you rewrite from an SD card. Bring your own keys: plug in an FM-1 or any USB or MIDI controller, and OPEN-1 does the rest, with 16 RGB pads, touch strips, knobs, a screen and a library of firmware you swap from the menu.</p>
+    <div class="ctas"><a class="btn primary" href="#join">Get updates</a><a class="btn" href="#video">Watch the video</a></div>
   </div>
-  <img src="media/open1-v2.jpg" width="1340" height="980" alt="Concept render of OPEN-1 design 2: a squarish dark synth with a 4-inch screen, eight knobs, sixteen pads and sixteen buttons, a thumbstick, two levers and 27 keys with a chord lit in purple, running HYP-1.">
+  <img src="media/open1-v04.jpg" width="1600" height="1025" alt="Render of the OPEN-1 v0.4 beta design: a screen and four knobs top left, eight Cherry MX menu keys, two touch strips across the middle and sixteen RGB pads in two rows of eight.">
 </div>
-<p class="disclaimer"><b>Not a product yet.</b> OPEN-1 is an idea I'm sharing early. Nothing is for sale; the renders are concept art, and every spec and price on this page is a target, not a promise.</p>
+<p class="disclaimer"><b>Not a product yet.</b> OPEN-1 is a very early design I'm sharing to work out the product and test it. Nothing is for sale; the renders are design previews, and every spec and price on this page is a target, not a promise.</p>
 
 <section id="video">
-  <h2>The pitch</h2>
+  <h2>The latest video</h2>
   <figure class="video">
 __VIDEO__
   </figure>
@@ -290,7 +290,7 @@ __GOALS__
 
 <section id="specs">
   <h2>Target specs</h2>
-  <p class="sub">The plan for the first production design. Expect some of it to change once there's a prototype on the bench.</p>
+  <p class="sub">These targets come from design 2, the keyboard version. The v0.4 beta drops the built-in keys (see the updates below), so expect this table to change as the beta settles.</p>
   <div class="specs">
     <div>
       <div class="tablewrap"><table>
@@ -320,7 +320,7 @@ __PRICES__
   </div>
   <div class="costs">
     <div><b>~$73</b><span>Target parts cost per unit, at 1,000 units</span></div>
-    <div><b>~$80&ndash;250</b><span>Breadboard prototype, the next phase</span></div>
+    <div><b>~$80&ndash;250</b><span>Breadboard prototype, the current phase</span></div>
     <div><b>$100&ndash;120k</b><span>Estimated cost of the first 1,000 units</span></div>
   </div>
   <p class="small">Prices in US dollars, before tax and shipping. Estimates from the current parts list; they'll be updated here as quotes come in.</p>
@@ -426,9 +426,9 @@ def main(root):
     shutil.copytree(CONTENT / "media", out / "media")
 
     if yt:
-        video = (f'    <iframe src="https://www.youtube-nocookie.com/embed/{esc(yt)}?rel=0" title="OPEN-1 concept pitch" loading="lazy" '
+        video = (f'    <iframe src="https://www.youtube-nocookie.com/embed/{esc(yt)}?rel=0" title="OPEN-1 beta prototype design" loading="lazy" '
                  'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>\n'
-                 f'    <figcaption><span>OPEN-1 running a simulated HYP-1, in time with a real HYP-1 take on the FM-1. It shows the first, 37-key design; design 2 is in the updates below.</span>'
+                 f'    <figcaption><span>The v0.4 beta prototype design: why the built-in keys went, what&rsquo;s on the board, and the KiCad files so far. A very early design, for working out the product.</span>'
                  f'<a href="https://www.youtube.com/watch?v={esc(yt)}">Watch on YouTube</a></figcaption>')
     else:
         video = ('    <video controls preload="metadata" playsinline poster="media/pitch-poster.jpg" width="1920" height="1080">'
