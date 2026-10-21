@@ -39,7 +39,7 @@
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
-static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Noise", "Drone", "Drone env",
+static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Vinyl", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
@@ -72,7 +72,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Chord", "Voicing", "Drift", "Root"},
-    {"Level", "Colour", "Tone", "Pump"},
+    {"Level", "Wear", "Tone", "Pump"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -97,21 +97,32 @@ static const struct {
 
 static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT", "OPEN", "PERC"};
 
-/* the FX menu (FX on): each key an effect while it is held. White keys: the beat repeats, reverse,
- * tape stop, the mutes, the filters; black keys: the gates, the throw, the crusher, the fill, the solos
- * (each solo the black key beside its track's mute). */
+/* the FX menu (FX on): each key an effect while it is held. White keys: the beat repeats, reverse, tape stop,
+ * the drums' mutes (kick, hats, snare, perc), the throw, the fill, the filters; black keys: the gates (1/16,
+ * 1/8, a pattern), the phaser, the flanger, the tape; the rest are spare. The other tracks' mutes and every
+ * solo are on GLO held (MIXK). */
+#define FX_NONE 31                     /* a spare key: no effect (the engine's bit 31 is never used) */
 static const uint8_t KEY_FX[NKEYS] = {
-    FX_RPT2, FX_GATE16, FX_RPT4, FX_GATE8, FX_RPT6, FX_THROW, FX_RPT8,                /* F3 F#3 G3 G#3 A3 A#3 B3 */
-    FX_RPT16, FX_CRUSH, FX_RPT32, FX_FILL, FX_REV,                                    /* C4 C#4 D4 D#4 E4 */
-    FX_STOP, FX_SOLO0, FX_MUTE0, FX_SOLO1, FX_MUTE1, FX_SOLO2, FX_MUTE2,              /* F4 F#4 G4 G#4 A4 A#4 B4 */
-    FX_MUTE3, FX_SOLO3, FX_MUTE4, FX_SOLO4, FX_MUTE5,                                 /* C5 C#5 D5 D#5 E5 */
-    FX_LP, FX_SOLO5, FX_HP};                                                          /* F5 F#5 G5 */
-static const char *const FX_LABEL[EN_NFX] = {      /* M: mute, S: solo (the menu's title says so) */
-    "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
-    "M:KICK", "M:HATS", "M:SNARE", "M:DRONE", "M:ACID", "M:PAD", "LOWPASS", "HIPASS",
-    "GATE 16", "GATE 8", "THROW", "CRUSH", "FILL",
-    "S:KICK", "S:HATS", "S:SNARE", "S:DRONE", "S:ACID", "S:PAD"};
-/* the white keys, in order: the sequencer's steps; the black keys, in order */
+    FX_RPT2, FX_GATE16, FX_RPT4, FX_GATE8, FX_RPT6, FX_GATEX, FX_RPT8,                /* F3 F#3 G3 G#3 A3 A#3 B3 */
+    FX_RPT16, FX_PHASER, FX_RPT32, FX_FLANGER, FX_REV,                                /* C4 C#4 D4 D#4 E4 */
+    FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
+    FX_MUTE_PERC, FX_NONE, FX_THROW, FX_NONE, FX_FILL,                                /* C5 C#5 D5 D#5 E5 */
+    FX_LP, FX_NONE, FX_HP};                                                           /* F5 F#5 G5 */
+static const char *const FX_LABEL[EN_NFX] = {
+    [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
+    "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
+    "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE",
+    [FX_NONE] = ""};
+static inline uint32_t fxbit(int k) { return KEY_FX[k] == FX_NONE ? 0u : 1u << KEY_FX[k]; }
+
+/* GLO held, the keys: every track's mute and solo, latched (en_trk). A code: 0..6 mute a track (EN_TR_*),
+ * 8..14 solo it, 16 / 17 mute / solo the four drums together, 18 everything back; -1 nothing. */
+static const int8_t MIXK[NKEYS] = {
+    0, 8, 1, 9, 2, 10, -1,                 /* F3 .. B3: kick, hats, snare (mute, the black key above it solos) */
+    3, 11, 4, 12, -1,                      /* C4 .. E4: perc, drone */
+    5, 13, 6, 14, 16, 17, 18,              /* F4 .. B4: acid, pad, the drums, clear */
+    -1, -1, -1, -1, -1, -1, -1, -1};
+static const char *const MIX_NAME[7] = {"KICK", "HATS", "SNARE", "PERC", "DRONE", "ACID", "PAD"};/* the white keys, in order: the sequencer's steps; the black keys, in order */
 static const uint8_t WHITE_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 #define SEQ_HOLD 400u                  /* SEQ held this long: the sequencer */
@@ -181,6 +192,7 @@ static struct {
     uint8_t seq_held;                  /* SEQ held long enough: the sequencer opened this hold */
     uint8_t fx_menu;                   /* the FX menu is on: the keys are effects, the knobs the FX knobs */
     int8_t fxk[4];                     /* the FX knobs' values (filter -50..50, crush, throw, wash): not stored */
+    uint8_t trk_m, trk_s;              /* the tracks muted and soloed (GLO held, the keys): a bit a track, not stored */
     uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
     uint32_t fx_lock;                  /* the effects locked on (lock mode: SAVE held in FX) */
     uint8_t lock_mode;                 /* SAVE held in the FX menu: keys tapped lock and unlock */
@@ -251,6 +263,46 @@ static uint32_t pool_abs(void)                 /* the pool as absolute pitch cla
 static const char *mode_name(void)
 {
     return proj.pool == EN_MODE_POOL[proj.par[P_MODE]] ? EN_MODE_NAME[proj.par[P_MODE]] : "Custom";
+}
+
+/* GLO held (not with SEL): the keys mute and solo the tracks. Shown from a short hold, or at once on a key. */
+static int mix_show(void)
+{
+    return (ui.btn >> B_GLO & 1u) && !(ui.btn >> B_SEL & 1u) &&
+           ((ui.btn_used >> B_GLO & 1u) || plat_ms() - ui.down_t[B_GLO] >= 350u);
+}
+static int mix_state(int k)
+{
+    int c = MIXK[k];
+    if (c < 0)
+        return 0;
+    if (c < 7)
+        return ui.trk_m >> c & 1u;
+    if (c < 15)
+        return ui.trk_s >> (c - 8) & 1u;
+    return c == 16 ? (ui.trk_m & 15u) == 15u : c == 17 ? (ui.trk_s & 15u) == 15u : 0;
+}
+static void mix_key(int k)
+{
+    int c = MIXK[k];
+    uint8_t *m = &ui.trk_m, *s = &ui.trk_s;
+    if (c < 0)
+        return;
+    if (c < 7) {
+        *m ^= (uint8_t)(1u << c);
+        say(*m >> c & 1u ? "MUTE" : "UNMUTE", MIX_NAME[c]);
+    } else if (c < 15) {
+        *s ^= (uint8_t)(1u << (c - 8));
+        say(*s >> (c - 8) & 1u ? "SOLO" : "UNSOLO", MIX_NAME[c - 8]);
+    } else if (c == 16 || c == 17) {          /* the four drums together: all on, or (all on already) all off */
+        uint8_t *x = c == 16 ? m : s;
+        *x = (*x & 15u) == 15u ? (uint8_t)(*x & ~15u) : (uint8_t)(*x | 15u);
+        say(c == 16 ? ((*x & 15u) ? "MUTE" : "UNMUTE") : ((*x & 15u) ? "SOLO" : "UNSOLO"), "ALL DRUMS");
+    } else {
+        *m = *s = 0;
+        say("ALL TRACKS", "BACK");
+    }
+    en_trk(*m, *s);
 }
 
 /* the knobs now: the page's, or with the FX menu on, the FX knobs */
@@ -887,7 +939,7 @@ static void input(void)
                 ui.save_held = 1;              /* no drop while it's held */
                 for (k = 0; k < NKEYS; k++)    /* keys already held: locked */
                     if (held >> k & 1u)
-                        ui.fx_lock |= 1u << KEY_FX[k];
+                        ui.fx_lock |= fxbit(k);
                 if (held) {
                     ui.lock_keys |= held;
                     ui.btn_used |= m;          /* not a breakdown */
@@ -969,12 +1021,23 @@ static void input(void)
             if ((ch & keys) >> i & 1u)
                 shift_key((int)i);
     }
+    if ((btn >> B_GLO & 1u) && !(btn >> B_SEL & 1u) && (ch & keys & ~ui.shift_keys)) {   /* GLO held: the track mix */
+        uint32_t p = ch & keys & ~ui.shift_keys;
+        ui.shift_keys |= p;
+        ui.btn_used |= 1u << B_GLO;            /* not a trip to the Global page */
+        for (i = 0; i < NKEYS; i++)
+            if (p >> i & 1u)
+                mix_key((int)i);
+    }
+    if ((btn >> B_GLO & 1u) && !(btn >> B_SEL & 1u) && !(ui.btn_used >> B_GLO & 1u) &&
+        plat_ms() - ui.down_t[B_GLO] >= 350u)
+        ui.btn_used |= 1u << B_GLO;            /* held for the mix: letting go does nothing either */
     ui.lock_keys &= keys;
     if (ui.fx_menu && ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* lock mode: a key tapped, its effect */
         uint32_t p = ch & keys & ~ui.shift_keys;                         /* locked, or unlocked */
         for (i = 0; i < NKEYS; i++)
             if (p >> i & 1u)
-                ui.fx_lock ^= 1u << KEY_FX[i];
+                ui.fx_lock ^= fxbit(i);
         ui.lock_keys |= p;
         ui.btn_used |= 1u << B_SAVE;
     }
@@ -982,7 +1045,7 @@ static void input(void)
         uint32_t p = ch & keys & ~ui.shift_keys;                         /* one off, the others stay locked */
         for (i = 0; i < NKEYS; i++)
             if ((p >> i & 1u) && (ui.fx_lock >> KEY_FX[i] & 1u)) {
-                ui.fx_lock &= ~(1u << KEY_FX[i]);
+                ui.fx_lock &= ~(fxbit(i));
                 ui.lock_keys |= 1u << i;       /* and not played while it's held */
             }
     }
@@ -994,7 +1057,7 @@ static void input(void)
         if (ui.fx_menu) {
             for (i = 0; i < NKEYS; i++)
                 if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
-                    m |= 1u << KEY_FX[i];
+                    m |= fxbit(i);
         }
         if (m != ui.fx_mask) {
             ui.fx_mask = m;
@@ -1568,7 +1631,7 @@ static void draw_fx(void)
     else if (ui.fx_lock)
         cv_text(118, 1, &FONT_XS, "LOCKED: SAVE+KEY", K_PAD);
     else
-        cv_text(118, 1, &FONT_XS, "M: MUTE  S: SOLO", K_DIM);
+        cv_text(118, 1, &FONT_XS, "GLO+KEY: MUTE/SOLO", K_DIM);
     for (k = 0; k < NKEYS; k++) {
         int32_t x = 2 + (k / 9) * 79, y = 16 + (k % 9) * 14;
         int pc = (5 + k) % 12, oct = 3 + (5 + k) / 12, on = (int)(ui.fx_mask >> KEY_FX[k] & 1u),
@@ -1588,6 +1651,52 @@ static void draw_fx(void)
     }
 }
 
+/* the track mix (GLO held): the keys, as the FX menu's, each its track's mute (M:) or solo (S:), lit while on */
+static void draw_mix(void)
+{
+    int k;
+    char c[8] = "CPU ";
+    cv_text(4, 1, &FONT_XS, "MIX: GLO + KEY", K_ACC);
+    itoa_u(plat_cpu_pct(), c + 4);
+    cv_text(118, 1, &FONT_XS, c, K_DIM);
+    for (k = 0; k < NKEYS; k++) {
+        int code = MIXK[k], on = mix_state(k);
+        int32_t x = 2 + (k / 9) * 79, y = 16 + (k % 9) * 14;
+        int pc = (5 + k) % 12, oct = 3 + (5 + k) / 12, black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10;
+        char t[24], lb[12];
+        int n = 0, j = 0;
+        const char *nm = EN_NOTE_NAME[pc];
+        if (code < 0)
+            continue;
+        while (*nm)
+            t[n++] = *nm++;
+        t[n++] = (char)('0' + oct);
+        t[n] = 0;
+        if (code < 7 || (code >= 8 && code < 15)) {
+            const char *q = MIX_NAME[code < 7 ? code : code - 8];
+            lb[j++] = code < 7 ? 'M' : 'S';
+            lb[j++] = ':';
+            while (*q && j < 11)
+                lb[j++] = *q++;
+            lb[j] = 0;
+        } else if (code == 16 || code == 17) {
+            const char *q = code == 16 ? "M:DRUMS" : "S:DRUMS";
+            while (*q)
+                lb[j++] = *q++;
+            lb[j] = 0;
+        } else {
+            const char *q = "CLEAR";
+            while (*q)
+                lb[j++] = *q++;
+            lb[j] = 0;
+        }
+        if (on)
+            cv_rect(x - 1, y - 1, 77, 14, (code >= 8 && code < 15) || code == 17 ? K_PAD : K_ACC);   /* solos in the primary, mutes in the accent */
+        cv_text(x, y, &FONT_XS, t, on ? K_BG : black ? K_DIM : K_TEXT);
+        cv_text(x + 24, y, &FONT_XS, lb, on ? K_BG : K_TEXT);
+    }
+}
+
 #include "runner.c"
 static int runner_on(void) { return kr.on; }
 
@@ -1598,6 +1707,16 @@ static void draw_main(void)
     if (ui.frame % 2u)                           /* 30 frames a second is plenty */
         return;
     h = hash(h, ui.theme);
+    if (mix_show()) {                            /* GLO held: the track mix */
+        h = hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct());
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_mix();
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (ui.fx_menu) {
         h = hash(hash(0x46584D4Eu, ui.fx_mask ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), ui.fx_lock);
         if (h != ui.sig[1]) {
@@ -1816,6 +1935,10 @@ static void leds(void)
             for (i = 0; i < EN_NPAT; i++)
                 if ((int)i != seq_pat())
                     k |= 1u << BLACK_KEY[i];
+    } else if (mix_show()) {                     /* GLO held: the keys muted and soloed */
+        for (i = 0; i < NKEYS; i++)
+            if (mix_state((int)i))
+                k |= 1u << i;
     } else if (ui.fx_menu) {                     /* FX: lit; the keys held */
         b |= 1u << B_FX;
         for (i = 0; i < NKEYS; i++)

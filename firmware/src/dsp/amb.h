@@ -124,21 +124,24 @@ extern volatile uint8_t en_sec;                /* the section now: EN_SEC_* (UI)
 extern volatile uint8_t en_sec_req;            /* a command waiting for the bar: EN_CMD_* + 1, or 0 (UI) */
 
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
- * tracks, for mute and solo: kick; hats (closed and open); snare (snare, clap, perc); drone; acid;
- * pad (with the noise). */
+ * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
+ * pad (with the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
+ * is en_trk (GLO held, on the keys). Bits 19..31 are spare. */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
-    FX_MUTE0, FX_MUTE1, FX_MUTE2, FX_MUTE3, FX_MUTE4, FX_MUTE5,
+    FX_MUTE_KICK, FX_MUTE_HATS, FX_MUTE_SNARE, FX_MUTE_PERC,  /* the drums' mutes (momentary) */
     FX_LP, FX_HP,                                             /* the filters closing in */
-    FX_GATE16, FX_GATE8,                                      /* a trance gate on the synths */
-    FX_THROW, FX_CRUSH, FX_FILL,                              /* an echo throw; a bit crusher; a drum fill */
-    FX_SOLO0, FX_SOLO1, FX_SOLO2, FX_SOLO3, FX_SOLO4, FX_SOLO5,
-    EN_NFX
+    FX_GATE16, FX_GATE8, FX_GATEX,                            /* a trance gate on the synths: 1/16, 1/8, a pattern */
+    FX_THROW, FX_FILL,                                        /* an echo throw; a drum fill */
+    FX_PHASER, FX_FLANGER, FX_TAPE,                           /* a phaser; a flanger; tape wow and flutter */
+    EN_NFX = 32
 };
-#define EN_NTRACK 6
+enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID, EN_TR_PAD, EN_NTRACK };
 extern const char *const EN_FX_NAME[EN_NFX];   /* short names, for the screen */
 void en_fx(uint32_t mask);
+void en_trk(uint32_t mute, uint32_t solo);     /* the tracks' mutes and solos, a bit a track (EN_TR_*), latched */
+void en_gate_pat(uint32_t steps);              /* the pattern gate (FX_GATEX): bit s, the sixteenth s of the bar open */
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */
 enum { EN_FXK_FILTER, EN_FXK_CRUSH, EN_FXK_THROW, EN_FXK_WASH, EN_NFXK };
 void en_fxk(int k, int v);

@@ -1,0 +1,70 @@
+# The track mix: GLO held, the keys mute and solo the tracks (latched), whatever page it is on. A tap of
+# GLO is still the Global page; a hold with a key is not. Tracks: kick 0, hats 1, snare 2, perc 3, drone 4,
+# acid 5, pad 6. Keys: F3 mute kick, F#3 solo kick, G3 hats, A3 snare, C4 perc, D4 drone, F4 acid, G4 pad,
+# A4 / A#4 mute / solo all four drums, B4 clear.
+wait 3000
+expect trkmute 0
+expect trksolo 0
+# GLO tapped: the Global page, as ever
+tap GLO
+wait 100
+expect view 17
+tap HOME
+wait 100
+# GLO held, F3: the kick muted; the page stays where it was
+press GLO
+wait 100
+tapkey 0
+wait 100
+shot mix_kick.png
+release GLO
+wait 100
+expect trkmute 1
+expect view 0
+# held again, G3 and C4: the hats and perc muted too (latched: they stay after letting go)
+press GLO
+tapkey 2
+tapkey 7
+release GLO
+wait 100
+expect trkmute 11
+# F3 again: the kick back
+press GLO
+tapkey 0
+release GLO
+expect trkmute 10
+# solo the pad (G#4)
+press GLO
+tapkey 15
+wait 100
+shot mix_solo.png
+release GLO
+expect trksolo 64
+# clear (B4)
+press GLO
+tapkey 18
+release GLO
+expect trkmute 0
+expect trksolo 0
+# all four drums muted (A4), and again: back
+press GLO
+tapkey 16
+release GLO
+expect trkmute 15
+press GLO
+tapkey 16
+release GLO
+expect trkmute 0
+# the keys are still the scale with GLO let go
+tapkey 1
+expect pool 0x7AD
+tapkey 1
+# FX menu: the drums' mutes are there too (momentary, G4 = kick), not latched
+tap FX
+key 14 down
+wait 200
+expect fxmask 256
+expect trkmute 0
+key 14 up
+tap FX
+wait 100

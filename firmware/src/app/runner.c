@@ -19,7 +19,7 @@
 #define KR_CX 120.0f
 #define KR_CY 108.0f
 
-static const uint8_t KR_ORDER[5] = {1, 2, 4, 3, 5};   /* the parts that come back: hats, snare, acid, drone, pad */
+static const uint8_t KR_ORDER[5] = {EN_TR_HATS, EN_TR_SNARE, EN_TR_ACID, EN_TR_DRONE, EN_TR_PAD};   /* the parts that come back */
 static const char *const KR_PART[5] = {"HATS", "SNARE", "ACID", "DRONE", "PAD"};
 
 static struct {
@@ -61,15 +61,16 @@ static void kr_say(const char *s, uint32_t ms)
 /* the mask: every part not yet back muted; the filters closed after a crash */
 static void kr_fx(void)
 {
-    uint32_t m = 0;
+    uint32_t m = 0, tm = 0;
     int k;
     if (kr.on && !kr.over) {
         for (k = kr.layer; k < 5; k++)
-            m |= 1u << (FX_MUTE0 + KR_ORDER[k]);
+            tm |= 1u << KR_ORDER[k];
         if (kr.beat < kr.lp_until)
             m |= 1u << FX_LP;
     }
     en_fx(kr.on ? m : ui.fx_mask);
+    en_trk(kr.on ? tm : ui.trk_m, kr.on ? 0u : ui.trk_s);
 }
 
 static void kr_reset(void)

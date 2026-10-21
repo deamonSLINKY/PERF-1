@@ -485,6 +485,10 @@ static int expect(const char *what, const char *val)
         got = en_sec;
     else if (!strcmp(what, "fxmask"))             /* the effects held (FX menu) */
         got = (int)ui.fx_mask;
+    else if (!strcmp(what, "trkmute"))            /* the tracks muted (GLO held, the keys): a bit a track */
+        got = ui.trk_m;
+    else if (!strcmp(what, "trksolo"))
+        got = ui.trk_s;
     else if (!strcmp(what, "tempo"))
         got = proj.par[P_TEMPO];
     else if (!strcmp(what, "pat"))                /* the drum pattern playing (0..5) */

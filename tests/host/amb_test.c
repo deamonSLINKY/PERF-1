@@ -154,7 +154,7 @@ int main(void)
         en_param_text(P_PATTERN, 0, t);
         CHECK(!strcmp(t, "1"), "pattern: %s", t);
         en_param_text(P_NZ_COLOR, 1, t);
-        CHECK(!strcmp(t, "Pink"), "noise colour: %s", t);
+        CHECK(!strcmp(t, "Clean"), "vinyl wear: %s", t);
         en_param_text(P_DL_RATE, 6, t);
         CHECK(!strcmp(t, "16 bars"), "lfo rate: %s", t);
         en_param_text(P_PE_ATK, 0, t);
@@ -404,9 +404,9 @@ int main(void)
         CHECK(!bad, "all at min: NaN");
     }
 
-    /* the acid's cutoff and octave, and the noise's colour, are heard (zero crossings: brightness, pitch) */
+    /* the acid's cutoff and octave, and the vinyl's wear, are heard (zero crossings: brightness, pitch) */
     {
-        float zc[5], hf[5];
+        float zc[5], hf[5], ee[5];
         int k;
         for (k = 0; k < 5; k++) {
             int b2, j;
@@ -425,11 +425,11 @@ int main(void)
                 en_set(P_AC_ENV, 0);
                 en_set(P_AC_CUT, k == 1 ? 100 : 20);
                 en_set(P_AC_OCT, k == 2 ? 2 : 0);
-            } else {                             /* the noise alone: brown, white */
+            } else {                             /* the vinyl alone: mint, trashed */
                 en_set(P_ACID, 0);
                 en_set(P_NOISE, 80);
                 en_set(P_NZ_TONE, 100);
-                en_set(P_NZ_COLOR, k == 3 ? 2 : 0);
+                en_set(P_NZ_COLOR, k == 3 ? 0 : 7);
             }
             en_play(1);
             for (b2 = 0; b2 < 10 * 44100 / 256; b2++) {
@@ -444,10 +444,11 @@ int main(void)
             }
             zc[k] = (float)z;
             hf[k] = (float)(d / e);
+            ee[k] = (float)e;
         }
         CHECK(hf[1] > 3.0f * hf[0], "acid cutoff 100 not brighter: %.4f vs %.4f", (double)hf[1], (double)hf[0]);
         CHECK(zc[2] > 1.5f * zc[0], "acid oct +2 not higher: %.0f vs %.0f", (double)zc[2], (double)zc[0]);
-        CHECK(zc[4] > 3.0f * zc[3], "white noise not brighter than brown: %.0f vs %.0f", (double)zc[4], (double)zc[3]);
+        CHECK(ee[4] > 2.0f * ee[3], "trashed vinyl not louder than mint: %.4f vs %.4f", (double)ee[4], (double)ee[3]);
         en_init();
         en_play(1);
     }

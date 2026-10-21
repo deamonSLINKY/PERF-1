@@ -34,17 +34,22 @@ key 24 up
 key 1 down
 wait 3000
 key 1 up
-# 24.1 s: echo throw (A#3), 2 s; 26.1 s: crush (C#4), 2 s; 28.1 s: fill (D#4), 2 s
+# 24.1 s: echo throw (D5), 2 s; 26.1 s: fill (E5), 2 s; 28.1 s: gate pattern (A#3), 3 s\nkey 21 down
+wait 2000
+key 21 up
+key 23 down
+wait 2000
+key 23 up
 key 5 down
-wait 2000
+wait 3000
 key 5 up
+# 31.1 s: phaser (C#4), flanger (D#4), tape (F#4), 3 s each
 key 8 down
-wait 2000
+wait 3000
 key 8 up
 key 10 down
-wait 2000
+wait 3000
 key 10 up
-# 30.1 s: the kick alone (solo, F#4), 3 s
 key 13 down
 wait 3000
 key 13 up
@@ -55,19 +60,19 @@ wait 100
 tapkey 24
 release SAVE
 wait 2500
-expect fxlock 16384
-expect fxmask 16384
+expect fxlock 4096
+expect fxmask 4096
 expect sec 0
 shot fx_locked.png
 # another key, played: it plays while held, the lock stays
 key 2 down
 wait 300
-expect fxlock 16384
-expect fxmask 16386
+expect fxlock 4096
+expect fxmask 4098
 key 2 up
 wait 100
-expect fxmask 16384
-# lock mode again, one at a time: the gate 1/8 (G#3), the crush (C#4); the low-pass tapped again: off
+expect fxmask 4096
+# lock mode again, one at a time: the gate 1/8 (G#3), the phaser (C#4); the low-pass tapped again: off
 press SAVE
 wait 600
 shot fx_lockmode.png
@@ -76,25 +81,25 @@ tapkey 8
 tapkey 24
 release SAVE
 wait 100
-expect fxlock 655360
-expect fxmask 655360
+expect fxlock 557056
+expect fxmask 557056
 expect sec 0
-# a locked effect's key tapped, no SAVE: that one off (the crush), the gate 1/8 stays locked
+# a locked effect's key tapped, no SAVE: that one off (the phaser), the gate 1/8 stays locked
 tapkey 8
 wait 50
-expect fxlock 131072
-expect fxmask 131072
+expect fxlock 32768
+expect fxmask 32768
 # and the last one locked, tapped: none locked
 tapkey 3
 wait 50
 expect fxlock 0
 expect fxmask 0
-# lock mode once more: the gate 1/8 and the crush
+# lock mode once more: the gate 1/8 and the phaser
 press SAVE
 tapkey 3
 tapkey 8
 release SAVE
-expect fxlock 655360
+expect fxlock 557056
 # keys held as SAVE goes down lock too (the low-pass and the gate 1/16)
 key 24 down
 key 1 down
@@ -103,19 +108,19 @@ tap SAVE
 key 24 up
 key 1 up
 wait 100
-expect fxmask 737280
+expect fxmask 577536
 # FX closed: the locked ones play on (the keys are the scale again, the locks untouched)
 tap FX
 wait 100
 expect fxon 0
-expect fxmask 737280
-expect fxlock 737280
+expect fxmask 577536
+expect fxlock 577536
 shot fx_closed_locked.png
 tapkey 1
 expect pool 0x7AD
 tapkey 1
 expect pool 0x5AD
-expect fxlock 737280
+expect fxlock 577536
 # FX again: a locked effect's key turns that one off; all four, none locked
 tap FX
 tapkey 3
