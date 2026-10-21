@@ -404,7 +404,7 @@ int main(void)
         CHECK(!bad, "all at min: NaN");
     }
 
-    /* the acid's cutoff and octave, and the vinyl's wear, are heard (zero crossings: brightness, pitch) */
+    /* the acid's cutoff and octave, and the vinyl's crackle, are heard (zero crossings: brightness, pitch) */
     {
         float zc[5], hf[5], ee[5];
         int k;
@@ -425,10 +425,10 @@ int main(void)
                 en_set(P_AC_ENV, 0);
                 en_set(P_AC_CUT, k == 1 ? 100 : 20);
                 en_set(P_AC_OCT, k == 2 ? 2 : 0);
-            } else {                             /* the vinyl alone: mint, trashed */
+            } else {                             /* the vinyl alone: its default crackle, its densest */
                 en_set(P_ACID, 0);
-                en_fx(1u << FX_VINYL);               /* (the key; its settings: the crackle low, then high, the hiss off) */
-                en_fxs(EN_FXS_VN_CRACK, k == 3 ? 0 : 100);
+                en_fx(1u << FX_VINYL);               /* (the key; its settings: the crackle at its default, then at its densest, the hiss off) */
+                en_fxs(EN_FXS_VN_CRACK, k == 3 ? 45 : 100);
                 en_fxs(EN_FXS_VN_HISS, 0);
                 en_fxs(EN_FXS_VN_LEVEL, 100);
             }
@@ -449,7 +449,7 @@ int main(void)
         }
         CHECK(hf[1] > 3.0f * hf[0], "acid cutoff 100 not brighter: %.4f vs %.4f", (double)hf[1], (double)hf[0]);
         CHECK(zc[2] > 1.5f * zc[0], "acid oct +2 not higher: %.0f vs %.0f", (double)zc[2], (double)zc[0]);
-        CHECK(ee[4] > 2.0f * ee[3], "trashed vinyl not louder than mint: %.4f vs %.4f", (double)ee[4], (double)ee[3]);
+        CHECK(ee[4] < 3.0f * ee[3] && ee[4] > ee[3] / 3.0f, "denser crackle is louder (or silent): %.4f vs %.4f", (double)ee[4], (double)ee[3]);
         en_init();
         en_play(1);
     }

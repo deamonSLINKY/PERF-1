@@ -2216,6 +2216,8 @@ static int crush_n;
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
 static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
+static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
+static float vn_amp = 1.0f;
 static float ph_fbk, ph_wet, fl_inc, fl_rng, fl_fbk, fl_wet, vn_g, vn_pop, vn_hiss;   /* the settings, as the render uses them */
 static float tp_m, fl_m, ph_m, tp_ph, tp_ph2, fl_ph, ph_ph, tp_lp[2], ph_z[2][4], ph_fb[2], ph_a[2];
 /* the FX knobs (en_fxk): filter -50..50 (a DJ filter: low-pass to the left, high-pass to the right), crush,
@@ -2289,6 +2291,16 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         const float closed = 1.0f - fm_clampf((float)fxs_v[EN_FXS_GX_DEPTH] * 0.01f, 0.0f, 1.0f);
         for (t = 0; t < EN_NTRACK; t++)
             gate_f[t] = (m >> FX_GATEX & 1u) && (tg >> t & 1u) && !open ? closed : 1.0f;
+        if (m >> FX_PUMP & 1u) {                /* the pump: down on each period, back up over its release, on its tracks */
+            static const uint8_t PER[4] = {8, 4, 2, 1};   /* sixteenths: 1/2 note, 1/4, 1/8, 1/16 */
+            const uint32_t per = PER[(int)fm_clampf((float)fxs_v[EN_FXS_PM_RATE], 0.0f, 3.0f)], pt = (uint32_t)fxs_v[EN_FXS_PM_TGT];
+            const float ph = ((float)((sixteenth - 1u) % per) * step_len + (float)step_t) / ((float)per * step_len),
+                        rel = 0.15f + 0.0085f * (float)fxs_v[EN_FXS_PM_REL], dp = (float)fxs_v[EN_FXS_PM_DEPTH] * 0.01f,
+                        f = (1.0f - dp) + dp * fm_minf(ph / rel, 1.0f);
+            for (t = 0; t < EN_NTRACK; t++)
+                if (pt >> t & 1u)
+                    gate_f[t] *= f;
+        }
     }
     for (t = 0; t < EN_NTRACK; t++) {           /* mute and solo: 5 ms ramps */
         float tgt = (!(mute >> t & 1u) && (!solo || (solo >> t & 1u))) ? gate_f[t] : 0.0f, d = (float)n * (1.0f / 220.0f);
@@ -2300,7 +2312,11 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     hp_amt = fm_clampf(hp_amt + (m >> FX_HP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);
     throw_key = fm_clampf(throw_key + (m >> FX_THROW & 1u ? dt * 60.0f : -dt * 60.0f), 0.0f, 1.0f);
     vin_m += ((float)(m >> FX_VINYL & 1u) - vin_m) * fm_minf(dt * 8.0f, 1.0f);   /* the vinyl: ~0.15 s */
-    riser_amt = fm_clampf(riser_amt + (m >> FX_RISER & 1u ? dt * 0.25f : -dt * 2.0f), 0.0f, 1.0f);   /* 4 s up, 0.5 s down */
+    rs_inv = 1.0f / (fm_exp2f((float)fxs_v[EN_FXS_RS_TIME] * 0.036f));          /* 1 .. 12 s to the top (rises a second at a time) */
+    riser_amt = fm_clampf(riser_amt + (m >> FX_RISER & 1u ? dt * rs_inv : -dt * 2.0f), 0.0f, 1.0f);   /* (and 0.5 s down) */
+    rs_filt = (float)fxs_v[EN_FXS_RS_FILT] * 0.009f;                             /* the high-pass: up to 0.9 */
+    rs_wash = (float)fxs_v[EN_FXS_RS_WASH] * 0.005f;                             /* the reverb: up to 0.5 */
+    rs_echo = (float)fxs_v[EN_FXS_RS_ECHO] * 0.007f;                             /* the echo: up to 0.7 */
     roll_t = m >> FX_ROLL & 1u ? roll_t + dt * EN_SR / (4.0f * step_len) : 0.0f;   /* beats held */
     {   /* tape, flanger, phaser: in and out over ~80 ms; the phaser's all-pass corners (left, right), swept */
         const float sm = fm_minf(dt * 12.0f, 1.0f);
@@ -2328,8 +2344,16 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         fl_rng = (float)fxs_v[EN_FXS_FL_DEPTH] * 1.1f;                                  /* the sweep: 0 .. 110 samples */
         fl_fbk = (float)fxs_v[EN_FXS_FL_FB] * 0.0095f;                                  /* 0 .. 0.95 */
         fl_wet = (float)fxs_v[EN_FXS_FL_MIX] * 0.009f;                                  /* 0 .. 0.9 */
-        vn_g = (float)fxs_v[EN_FXS_VN_LEVEL] * 0.1f;   /* (the pops are small and the master's gain low: 100 gives peaks near -21 dBFS) */
-        vn_pop = 0.5f * fm_exp2f((float)fxs_v[EN_FXS_VN_CRACK] * 0.0633f) * (1.0f / EN_SR);   /* 0.5 .. 40 pops a second */
+        tp_wd = (float)fxs_v[EN_FXS_TP_WOW];                                           /* wow: 0 .. 100 samples either way (0.7 Hz) */
+        tp_fd = (float)fxs_v[EN_FXS_TP_FLUT] * 0.2f;                                    /* flutter: 0 .. 20 (8 Hz) */
+        tp_drive = 1.0f + (float)fxs_v[EN_FXS_TP_DRIVE] * 0.025f;                       /* saturation: 1 .. 3.5 */
+        tp_k = 1.0f - (float)fxs_v[EN_FXS_TP_DULL] * 0.009f;                            /* the top: 1 (open) .. 0.1 (dull) */
+        vn_g = (float)fxs_v[EN_FXS_VN_LEVEL] * 0.0012f;   /* (the loudest pops at 50 are near -24 dBFS, at 100 near -18) */
+        {   /* 1 .. 128 pops a second; above 10 a second each pop is quieter, by the square root, so the level stays: Crackle is how many */
+            const float pps = fm_exp2f((float)fxs_v[EN_FXS_VN_CRACK] * 0.07f);
+            vn_pop = pps * (1.0f / EN_SR);
+            vn_amp = pps > 10.0f ? fm_sqrtf(10.0f / pps) : 1.0f;
+        }
         vn_hiss = (float)fxs_v[EN_FXS_VN_HISS] * 0.0012f;
         nz_lp_k = 1.0f - fm_expf(-FM_TWO_PI * 300.0f * fm_exp2f((float)fxs_v[EN_FXS_VN_TONE] * 0.06f) * (1.0f / EN_SR));
     }
@@ -2347,15 +2371,15 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         crk_s = fm_flush(crk_s);
         thk_s = fm_flush(thk_s);
         wash_s = fm_flush(wash_s);
-        throw_amt = fm_maxf(throw_key, thk_s);
-        wash_e = fm_maxf(wash_s, 0.5f * riser_amt);
+        throw_amt = fm_maxf(fm_maxf(throw_key, thk_s), rs_echo * riser_amt);
+        wash_e = fm_maxf(wash_s, rs_wash * riser_amt);
         /* the crusher: its key is a gentle 0.6; the knob goes on to 1 (5.5 kHz, 5 bits, as the key was) */
         ca = crk_s;
         cr_hold = 1 + (int)(7.0f * ca);
         cr_lv = fm_exp2f(11.0f - 7.0f * ca);
         cr_wet = fm_minf(ca * 3.0f, 1.0f);
         lp_amt_e = fm_maxf(lp_amt, lpk_s);
-        hp_amt_e = fm_maxf(fm_maxf(hp_amt, hpk_s), 0.9f * riser_amt);   /* the build: a high-pass rising */
+        hp_amt_e = fm_maxf(fm_maxf(hp_amt, hpk_s), rs_filt * riser_amt);   /* the build: a high-pass rising */
     }
     echo_fbx = echo_fb + (0.86f - echo_fb) * throw_amt;
     if (fill_hold != (uint8_t)(m >> FX_FILL & 1u)) {
@@ -2375,10 +2399,16 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             want = t;
             break;
         }
-    if (roll_t > 0.0f) {                        /* a roll: 1/8 for a beat, 1/16 for the next, then 1/32 (a repeat held beats it) */
-        const int r = roll_t < 1.0f ? FX_RPT8 : roll_t < 2.0f ? FX_RPT16 : FX_RPT32;
+    if (roll_t > 0.0f) {                        /* a roll: from its first rate toward its last, a stage of its time at each (a repeat held beats it) */
+        static const float RL_BEATS[4] = {0.5f, 1.0f, 2.0f, 4.0f};
+        const int s = (int)fm_clampf((float)fxs_v[EN_FXS_RL_START], 0.0f, 5.0f), e = (int)fm_clampf((float)fxs_v[EN_FXS_RL_END], 0.0f, 5.0f),
+                  tm = (int)fm_clampf((float)fxs_v[EN_FXS_RL_TIME], 0.0f, 3.0f), stage = (int)(roll_t / RL_BEATS[tm]);
+        const int r = FX_RPT2 + (s < e ? (s + stage < e ? s + stage : e) : (s - stage > e ? s - stage : e));
         if (r > want)
             want = r;
+        rl_gain = 1.0f + (float)fxs_v[EN_FXS_RL_SWELL] * 0.008f * fm_minf(roll_t * 0.25f, 1.0f);   /* a swell, to +80% over four beats */
+    } else {
+        rl_gain = 1.0f;
     }
     if (m >> FX_STOP & 1u) {
         rpt_arm = 0;
@@ -2435,8 +2465,8 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             bm_speed -= 1.0f / (4.0f * step_len);
         }
         bm_mix += (bm_tgt - bm_mix) * 0.02f;    /* ~1 ms */
-        l += (bl * w - l) * bm_mix;
-        r += (br * w - r) * bm_mix;
+        l += (bl * w * rl_gain - l) * bm_mix;
+        r += (br * w * rl_gain - r) * bm_mix;
         if (bm_tgt <= 0.0f && bm_mix < 0.0005f) {
             bm_mix = 0.0f;
             bmode = BM_LIVE;
@@ -2461,7 +2491,7 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             tp_ph2 += 8.0f * (1.0f / EN_SR);
             tp_ph -= (float)(int)tp_ph;
             tp_ph2 -= (float)(int)tp_ph2;
-            d = 150.0f + 70.0f * fm_sin_turns(tp_ph) + 9.0f * fm_sin_turns(tp_ph2);
+            d = 150.0f + tp_wd * fm_sin_turns(tp_ph) + tp_fd * fm_sin_turns(tp_ph2);
             for (c = 0; c < 2; c++) {
                 float rd = (float)w - d, y;
                 uint32_t i0, i1;
@@ -2472,8 +2502,8 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                 fr = rd - (float)(int)rd;
                 tp_buf[c][w] = in[c];
                 y = tp_buf[c][i0] + (tp_buf[c][i1] - tp_buf[c][i0]) * fr;
-                tp_lp[c] += 0.55f * (y - tp_lp[c]);     /* a duller top (~5 kHz) */
-                y = fm_tanhf(tp_lp[c] * 1.5f) * (1.0f / 1.5f);   /* and a little saturation */
+                tp_lp[c] += tp_k * (y - tp_lp[c]);      /* a duller top */
+                y = fm_tanhf(tp_lp[c] * tp_drive) * (1.0f / tp_drive);   /* and saturation */
                 in[c] += (y - in[c]) * tp_m;
             }
         }
@@ -3054,10 +3084,13 @@ static inline float nz_sample(nz_t *z, int unused)
     z->rng = z->rng * 1664525u + 1013904223u;
     u = (float)(z->rng >> 8) * (1.0f / 16777216.0f);      /* 0 .. 1 */
     if (u < vn_pop) {                           /* a pop */
-        float a = (float)(int32_t)(z->rng << 8 | 1u) * (1.0f / 2147483648.0f), m = a < 0.0f ? -a : a;   /* -1 .. 1 */
-        ex = a * (0.15f + 1.2f * m * m);
+        float a, m;
+        z->rng = z->rng * 1664525u + 1013904223u;   /* a fresh draw: the one that chose the pop was a small number */
+        a = (float)(int32_t)z->rng * (1.0f / 2147483648.0f);   /* -1 .. 1 */
+        m = a < 0.0f ? -a : a;
+        ex = a * (0.15f + 1.2f * m * m) * vn_amp;
         if (m > 0.8f)
-            ex2 = a * 0.9f;                     /* the thump */
+            ex2 = a * 0.9f * vn_amp;            /* the thump */
     }
     y = ex + 1.760f * z->r1 - 0.912f * z->r2;   /* a click: the resonator rung by the pop */
     z->r2 = z->r1;
@@ -3307,7 +3340,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
-    const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : fx_on >> FX_PUMP & 1u ? 4 : 0;
+    const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : 0;
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
@@ -3321,10 +3354,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             gt = (float)(step_t + (int32_t)j) < 0.5f * step_len ? 1.0f : 0.0f;
         else if (gate == 2)                     /* or of each eighth */
             gt = odd ? 0.0f : 1.0f;
-        else if (gate == 4) {                   /* or a pump: down on each beat, back up over its first half */
-            const float ph = ((float)((sixteenth - 1u) & 3u) * step_len + (float)(step_t + (int32_t)j)) / (4.0f * step_len);
-            gt = 0.12f + 0.88f * fm_minf(ph * 2.2f, 1.0f);
-        }
+
         gg += (gt - gg) * 0.04f;
         dk[j] = 1.0f - depth * de;
         de *= duck_dec;

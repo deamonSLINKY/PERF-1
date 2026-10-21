@@ -50,28 +50,42 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * the four knobs, the effect itself held on while the page is up, so it is heard as it is edited. K_FXP + 4 *
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
-enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT };
-#define NFXP 4
+enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC };
+#define NFXP 8
+static const char *const RATE_NAME[6] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32"};          /* the roll's rates */
+static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
+static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
 static const struct {
     const char *name;
     uint8_t bit;                        /* the effect (FX_*) held on while the page is up */
+    uint8_t hold;                       /* it is heard only while a key is held (a roll and a riser go on and on) */
     struct {
         const char *label;
         uint8_t kind, idx;              /* KN_*; the setting (EN_FXS_*) */
+        const char *const *names;       /* KN_NAME: its names (a setting 0 .. n - 1) */
+        uint8_t n;
     } c[4];
 } FXP[NFXP] = {
-    {"GATE", FX_GATEX, {{"Pattern", KN_PRESET, 0}, {"Length", KN_LEN, EN_FXS_GX_LEN}, {"Targets", KN_TGT, 0},
-                        {"Depth", KN_PLAIN, EN_FXS_GX_DEPTH}}},
-    {"PHASER", FX_PHASER, {{"Rate", KN_PLAIN, EN_FXS_PH_RATE}, {"Depth", KN_PLAIN, EN_FXS_PH_DEPTH},
-                           {"Feedbk", KN_PLAIN, EN_FXS_PH_FB}, {"Mix", KN_PLAIN, EN_FXS_PH_MIX}}},
-    {"FLANGER", FX_FLANGER, {{"Rate", KN_PLAIN, EN_FXS_FL_RATE}, {"Depth", KN_PLAIN, EN_FXS_FL_DEPTH},
-                             {"Feedbk", KN_PLAIN, EN_FXS_FL_FB}, {"Mix", KN_PLAIN, EN_FXS_FL_MIX}}},
-    {"VINYL", FX_VINYL, {{"Level", KN_PLAIN, EN_FXS_VN_LEVEL}, {"Crackle", KN_PLAIN, EN_FXS_VN_CRACK},
-                         {"Hiss", KN_PLAIN, EN_FXS_VN_HISS}, {"Tone", KN_PLAIN, EN_FXS_VN_TONE}}},
-};
-/* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
+    {"GATE", FX_GATEX, 0, {{"Pattern", KN_PRESET, 0, 0, 0}, {"Length", KN_LEN, EN_FXS_GX_LEN, 0, 0},
+                           {"Targets", KN_TGT, 0, 0, 0}, {"Depth", KN_PLAIN, EN_FXS_GX_DEPTH, 0, 0}}},
+    {"PHASER", FX_PHASER, 0, {{"Rate", KN_PLAIN, EN_FXS_PH_RATE, 0, 0}, {"Depth", KN_PLAIN, EN_FXS_PH_DEPTH, 0, 0},
+                              {"Feedbk", KN_PLAIN, EN_FXS_PH_FB, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_PH_MIX, 0, 0}}},
+    {"FLANGER", FX_FLANGER, 0, {{"Rate", KN_PLAIN, EN_FXS_FL_RATE, 0, 0}, {"Depth", KN_PLAIN, EN_FXS_FL_DEPTH, 0, 0},
+                                {"Feedbk", KN_PLAIN, EN_FXS_FL_FB, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_FL_MIX, 0, 0}}},
+    {"VINYL", FX_VINYL, 0, {{"Level", KN_PLAIN, EN_FXS_VN_LEVEL, 0, 0}, {"Crackle", KN_PLAIN, EN_FXS_VN_CRACK, 0, 0},
+                            {"Hiss", KN_PLAIN, EN_FXS_VN_HISS, 0, 0}, {"Tone", KN_PLAIN, EN_FXS_VN_TONE, 0, 0}}},
+    {"TAPE", FX_TAPE, 0, {{"Wow", KN_PLAIN, EN_FXS_TP_WOW, 0, 0}, {"Flutter", KN_PLAIN, EN_FXS_TP_FLUT, 0, 0},
+                          {"Drive", KN_PLAIN, EN_FXS_TP_DRIVE, 0, 0}, {"Dull", KN_PLAIN, EN_FXS_TP_DULL, 0, 0}}},
+    {"ROLL", FX_ROLL, 1, {{"From", KN_NAME, EN_FXS_RL_START, RATE_NAME, 6}, {"To", KN_NAME, EN_FXS_RL_END, RATE_NAME, 6},
+                          {"Each", KN_NAME, EN_FXS_RL_TIME, RTIME_NAME, 4}, {"Swell", KN_PLAIN, EN_FXS_RL_SWELL, 0, 0}}},
+    {"PUMP", FX_PUMP, 0, {{"Depth", KN_PLAIN, EN_FXS_PM_DEPTH, 0, 0}, {"Release", KN_PLAIN, EN_FXS_PM_REL, 0, 0},
+                          {"Every", KN_NAME, EN_FXS_PM_RATE, PRATE_NAME, 4}, {"Targets", KN_PTGT, 0, 0, 0}}},
+    {"RISER", FX_RISER, 1, {{"Time", KN_SEC, EN_FXS_RS_TIME, 0, 0}, {"Filter", KN_PLAIN, EN_FXS_RS_FILT, 0, 0},
+                            {"Wash", KN_PLAIN, EN_FXS_RS_WASH, 0, 0}, {"Echo", KN_PLAIN, EN_FXS_RS_ECHO, 0, 0}}},
+};/* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
 #define NGXP 13
+#define NTGT 10
 static const struct {
     const char *name;
     uint16_t pat;
@@ -84,8 +98,8 @@ static const struct {
 static const struct {
     const char *name;
     uint8_t mask;                       /* a bit a track (EN_TR_*) */
-} GX_TGT[8] = {{"SYNTHS", 0x70}, {"PAD", 0x40}, {"DRONE", 0x10}, {"ACID", 0x20},
-               {"DRUMS", 0x0F}, {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0x7F}};
+} GX_TGT[NTGT] = {{"NO DRUMS", 0x70}, {"PAD", 0x40}, {"DRONE", 0x10}, {"ACID", 0x20}, {"DRUMS", 0x0F},
+                    {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0x7F}, {"NO KICK", 0x7E}, {"KICK+DRN", 0x11}};
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
@@ -235,7 +249,7 @@ static struct {
     int8_t fxk[4];                     /* the FX knobs' values (filter -50..50, crush, throw, wash): not stored */
     uint8_t fx_page;                   /* with the FX menu on: 0 the keys, 1.. an effect's edit page (FXP) */
     uint8_t fxs[EN_NFXS];              /* the effects' settings (en_fxs), mirrored; not stored */
-    uint8_t gx_preset, gx_tgt;         /* the gate: its pattern's name (NGXP - 1: the keys' own); its targets */
+    uint8_t gx_preset, gx_tgt, pm_tgt; /* the gate: its pattern's name (NGXP - 1: the keys' own); its targets; the pump's */
     uint16_t gx_pat;                   /* the gate's pattern: bit s, step s open */
     uint8_t trk_m, trk_s;              /* the tracks muted and soloed (GLO held, the keys): a bit a track, not stored */
     uint32_t scene_lock[4];            /* the four scenes: the effects locked on, the mutes, the solos, the FX knobs; */
@@ -432,6 +446,7 @@ static int fxp_get(int k)
     switch (FXP_CTL(k).kind) {
     case KN_PRESET: return ui.gx_preset;
     case KN_TGT: return ui.gx_tgt;
+    case KN_PTGT: return ui.pm_tgt;
     default: return ui.fxs[FXP_CTL(k).idx];
     }
 }
@@ -439,7 +454,8 @@ static void fxp_range(int k, int *lo, int *hi)
 {
     const int kind = FXP_CTL(k).kind;
     *lo = kind == KN_LEN ? 2 : 0;
-    *hi = kind == KN_PRESET ? NGXP - 1 : kind == KN_LEN ? 16 : kind == KN_TGT ? 7 : 100;
+    *hi = kind == KN_PRESET ? NGXP - 1 : kind == KN_LEN ? 16 : kind == KN_TGT || kind == KN_PTGT ? NTGT - 1 :
+          kind == KN_NAME ? FXP_CTL(k).n - 1 : 100;
 }
 static void fxp_set(int k, int v)
 {
@@ -459,6 +475,12 @@ static void fxp_set(int k, int v)
             en_fxs(EN_FXS_GX_TGT, GX_TGT[v].mask);
         }
         break;
+    case KN_PTGT:
+        if (v != ui.pm_tgt) {
+            ui.pm_tgt = (uint8_t)v;
+            en_fxs(EN_FXS_PM_TGT, GX_TGT[v].mask);
+        }
+        break;
     default:
         if (v != ui.fxs[FXP_CTL(k).idx]) {
             ui.fxs[FXP_CTL(k).idx] = (uint8_t)v;
@@ -474,13 +496,24 @@ static void fxp_text(int k, char *b)
     const int v = fxp_get(k);
     if (FXP_CTL(k).kind == KN_PRESET)
         s = GX_PRE[v].name;
-    else if (FXP_CTL(k).kind == KN_TGT)
+    else if (FXP_CTL(k).kind == KN_TGT || FXP_CTL(k).kind == KN_PTGT)
         s = GX_TGT[v].name;
+    else if (FXP_CTL(k).kind == KN_NAME)
+        s = FXP_CTL(k).names[v];
     if (s) {
         int n = 0;
         while (*s && n < 9)
             b[n++] = *s++;
         b[n] = 0;
+    } else if (FXP_CTL(k).kind == KN_SEC) {       /* seconds: 2 ^ (v * 0.036) */
+        itoa_u((uint32_t)(fm_exp2f((float)v * 0.036f) + 0.5f), b);
+        {
+            int n = 0;
+            while (b[n])
+                n++;
+            b[n] = 'S';
+            b[n + 1] = 0;
+        }
     } else {
         itoa_u((uint32_t)v, b);
     }
@@ -1359,8 +1392,8 @@ static void input(void)
         if (!ui.fx_menu)
             ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
         m = ui.fx_lock;
-        if (ui.fx_menu && ui.fx_page)           /* an edit page: its effect on, to be heard as it is edited */
-            m |= 1u << FXP[ui.fx_page - 1].bit;
+        if (ui.fx_menu && ui.fx_page && (!FXP[ui.fx_page - 1].hold || (keys & ~ui.shift_keys)))   /* an edit page: its effect on, */
+            m |= 1u << FXP[ui.fx_page - 1].bit;                                                 /* to be heard as it is edited (a roll or riser: with a key held) */
         if (ui.fx_menu && !ui.fx_page) {
             for (i = 0; i < NKEYS; i++)
                 if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
@@ -1414,7 +1447,13 @@ static void input(void)
         set_view(V_SEQ);
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {        /* SELECT: the pages (the steps); with HOME held, the tempo */
-        if (btn >> B_HOME & 1u) {
+        if (ui.fx_menu && ui.fx_page) {          /* the FX edit pages: the dial walks them */
+            const int p = ui.fx_page + (e > 0 ? 1 : -1);
+            if (p >= 1 && p <= NFXP) {
+                ui.fx_page = (uint8_t)p;
+                say(FXP[p - 1].name, "EDIT");
+            }
+        } else if (btn >> B_HOME & 1u) {
             turn(EN_SELECT, P_TEMPO, e);
             ui.btn_used |= 1u << B_HOME;
             if (ui.view == V_TEMPO) {
@@ -1989,7 +2028,7 @@ static void draw_fxedit(void)
     const int p = ui.fx_page - 1;
     const int32_t cw = 14;
     int s;
-    cv_text(4, 1, &FONT_XS, "FX EDIT: SEL + FX FOR THE NEXT", K_ACC);
+    cv_text(4, 1, &FONT_XS, "FX EDIT: DIAL OR SEL + FX", K_ACC);
     if (p == 0) {
         const int len = ui.fxs[EN_FXS_GX_LEN], head = gx_head();
         cv_text(4, 18, &FONT_B, "GATE", K_TEXT);
@@ -2018,8 +2057,8 @@ static void draw_fxedit(void)
         cv_text(52, 112, &FONT_XS, GX_TGT[ui.gx_tgt].name, K_TEXT);
     } else {
         cv_text(4, 18, &FONT_B, FXP[p].name, K_TEXT);
-        cv_text(4, 50, &FONT_XS, "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
-        cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT.", K_DIM);
+        cv_text(4, 50, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
+        cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT. THE DIAL: NEXT PAGE.", K_DIM);
     }
 }
 
