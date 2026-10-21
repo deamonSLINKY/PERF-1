@@ -1,0 +1,81 @@
+# The beat effects: the FX menu's second bank (the SELECT dial in the FX menu): scatter F3, brake G3, spin-back A3,
+# half time B3 (keys 0, 2, 4, 6), the drums' mutes where they were. And the small shortcuts: FX + OCT- everything
+# back, GLO + B3 undo, GLO + E4 tap tempo.
+wait 3000
+tap FX
+wait 100
+expect fxbank 0
+spin SELECT 1
+wait 100
+expect fxbank 1
+shot beatfx_bank.png
+key 0 down
+wait 600
+expect fxmask 67108864
+key 0 up
+wait 200
+key 2 down
+wait 600
+expect fxmask 134217728
+key 2 up
+wait 300
+key 4 down
+wait 600
+expect fxmask 268435456
+key 4 up
+wait 300
+key 6 down
+wait 600
+expect fxmask 536870912
+key 6 up
+wait 300
+# the mutes are there too
+key 14 down
+wait 100
+expect fxmask 256
+key 14 up
+# back to the first bank
+spin SELECT -1
+wait 100
+expect fxbank 0
+key 2 down
+wait 100
+expect fxmask 2
+key 2 up
+# FX + OCT-: everything back. The kick muted first (GLO held, F3), the crush up (FX knob 2)
+press GLO
+tapkey 0
+release GLO
+spin K2 30
+wait 100
+expect trkmute 1
+expect fxk1 30
+tap OCT-
+wait 100
+expect trkmute 0
+expect fxk1 0
+# undo (GLO + B3): the kick muted and the crush back; again: redo
+press GLO
+tapkey 6
+release GLO
+wait 100
+expect trkmute 1
+expect fxk1 30
+press GLO
+tapkey 6
+release GLO
+wait 100
+expect trkmute 0
+tap FX
+# tap tempo (GLO + E4, key 11): half a second apart (the taps take a little themselves), 120 bpm
+press GLO
+tapkey 11
+wait 410
+tapkey 11
+wait 410
+tapkey 11
+wait 410
+tapkey 11
+release GLO
+wait 100
+expect tempo 120

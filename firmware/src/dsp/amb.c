@@ -1406,7 +1406,10 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
 static uint32_t sixteenth;
 static int32_t step_t;                          /* samples into this sixteenth (the gate's clock) */
 static uint8_t rpt_arm;                         /* a beat repeat waiting for the next sixteenth: its rate + 1 */
+static uint8_t scat_arm, var_exit;              /* a scatter waiting for the sixteenth; a brake or spin-back let go, leaving on the next */
 static void rpt_engage(int r);
+static void scat_engage(void);
+static void var_leave(void);
 static void tick(void)
 {
     static const uint8_t TRIG_BARS[6] = {0, 1, 2, 4, 8, 0};
@@ -1416,6 +1419,14 @@ static void tick(void)
     const float chop = KK->chop * (0.4f + 0.6f * evolve);   /* breakcore: how much the drums are chopped */
     int perc_hit = 0;
     step_t = 0;
+    if (scat_arm) {                             /* the scatter too */
+        scat_engage();
+        scat_arm = 0;
+    }
+    if (var_exit) {                             /* a brake let go, spun up: back to the live mix on the grid */
+        var_leave();
+        var_exit = 0;
+    }
     if (rpt_arm) {                              /* the beat repeat starts on the sixteenth */
         rpt_engage(rpt_arm - 1);
         rpt_arm = 0;
@@ -2186,7 +2197,7 @@ static uint32_t rb_w;                            /* frames written (they wrap: a
 static uint8_t rb_odd;
 static float rb_hl, rb_hr;                       /* the first sample of each pair, waiting for the second */
 static uint32_t fx_req, fx_on;
-enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP };
+enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR };
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
 static uint32_t bm_start;                        /* the frame the reading counts from */
 static float bm_off, bm_len, bm_speed, bm_mix, bm_tgt;   /* samples from bm_start; the slice; 0 live .. 1 ring */
@@ -2232,7 +2243,7 @@ static const float RPT_BEATS[6] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f}
 const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
-    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl"};
+    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -2249,12 +2260,18 @@ static void rpt_engage(int r)                   /* the slice that just ended, lo
     bm_tgt = 1.0f;
 }
 
-static inline void rb_read(float off, float *l, float *r)   /* off samples (44.1 kHz) after bm_start */
+static inline void rb_read(float off, float *l, float *r)   /* off samples (44.1 kHz) after bm_start (before it, if negative) */
 {
     float f = off * 0.5f, t;
-    uint32_t k = (uint32_t)f, i0, i1;
+    int32_t k = (int32_t)f, i;
+    uint32_t i0, i1;
+    if (f < 0.0f && (float)k != f)
+        k--;
     t = f - (float)k;
-    i0 = (bm_start + k) % RB_N;
+    i = (int32_t)(bm_start % RB_N) + k;
+    i %= (int32_t)RB_N;
+    i += i < 0 ? (int32_t)RB_N : 0;
+    i0 = (uint32_t)i;
     i1 = (i0 + 1u) % RB_N;
     *l = ((float)rb[2 * i0] + ((float)rb[2 * i1] - (float)rb[2 * i0]) * t) * (1.0f / 12000.0f);
     *r = ((float)rb[2 * i0 + 1] + ((float)rb[2 * i1 + 1] - (float)rb[2 * i0 + 1]) * t) * (1.0f / 12000.0f);
@@ -2274,6 +2291,71 @@ static inline void rb_write(float l, float r)
         rb[2 * i] = s16(0.5f * (rb_hl + l));
         rb[2 * i + 1] = s16(0.5f * (rb_hr + r));
         rb_w++;
+    }
+}
+
+/* the scatter: the last few slices (a sixteenth each, or a half or a double) of the ring, played again slice by
+ * slice: the first as it was, the rest by chance another, some backwards. It starts on the sixteenth. */
+static float sc_pos, sc_len, sc_off;
+static int sc_n, sc_rev;
+static uint32_t sc_k;
+static void scat_pick(void)
+{
+    const float chaos = (float)fxs_v[EN_FXS_SC_CHAOS] * 0.01f, rev = (float)fxs_v[EN_FXS_SC_REV] * 0.01f;
+    int src = (int)(sc_k % (uint32_t)sc_n);
+    if (src && frand() < chaos)
+        src = (int)(frand() * (float)sc_n) % sc_n;
+    sc_rev = src && frand() < rev;
+    sc_off = (float)src * sc_len;
+    sc_pos = 0.0f;
+    sc_k++;
+}
+static void scat_engage(void)
+{
+    static const float SZ[3] = {0.5f, 1.0f, 2.0f};
+    const float sl = fm_maxf(step_len * SZ[(int)fm_clampf((float)fxs_v[EN_FXS_SC_SIZE], 0.0f, 2.0f)], 64.0f), avail = (float)(RB_N - 8) * 2.0f;
+    int n = (int)fm_clampf((float)fxs_v[EN_FXS_SC_LEN], 2.0f, 8.0f);
+    while (n > 2 && (float)n * sl > avail)
+        n--;
+    sc_n = n;
+    sc_len = sl;
+    sc_k = 0;
+    bmode = BM_SCAT;
+    bm_start = rb_w - (uint32_t)((float)n * sl * 0.5f + 0.5f);
+    bm_tgt = 1.0f;
+    scat_pick();
+}
+/* a brake, a spin-back, half time: the ring read at a rate that slides to its target (0; backwards; a half or less)
+ * while the live mix goes on being written; a low-pass follows the rate down. Let go: the rate slides back to 1 and
+ * the live mix returns on the next sixteenth. It lets go by itself when the ring is used up. */
+static float vr_rate, vr_tgt, vr_c, vr_lp[2], vr_dull;
+static void var_leave(void) { bm_tgt = 0.0f; }
+static int vr_which;
+static float vr_time(float v, float base)       /* base * 2 ^ (v * 0.06) seconds, as a slide's coefficient */
+{
+    return 1.0f - fm_expf(-3.0f / (base * fm_exp2f(v * 0.06f) * EN_SR));
+}
+static void var_engage(int wh)
+{
+    bmode = BM_VAR;
+    bm_start = rb_w - 2u;
+    bm_off = 0.0f;
+    bm_tgt = 1.0f;
+    vr_rate = 1.0f;
+    vr_which = wh;
+    vr_lp[0] = vr_lp[1] = 0.0f;
+}
+static void var_params(int wh)
+{
+    static const float HS[3] = {0.667f, 0.5f, 0.25f};
+    if (wh == FX_HALF) {
+        vr_tgt = HS[(int)fm_clampf((float)fxs_v[EN_FXS_HF_SPEED], 0.0f, 2.0f)];
+        vr_c = vr_time((float)fxs_v[EN_FXS_HF_SLIDE], 0.02f);
+        vr_dull = 0.0f;
+    } else {
+        vr_tgt = wh == FX_SPIN ? -(float)fxs_v[EN_FXS_BR_BACK] * 0.04f : 0.0f;
+        vr_c = vr_time((float)fxs_v[EN_FXS_BR_TIME], 0.03f);
+        vr_dull = (float)fxs_v[EN_FXS_BR_DULL] * 0.009f;
     }
 }
 
@@ -2428,6 +2510,30 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             bm_off = bm_len - 1.0f;
             bm_tgt = 1.0f;
         }
+    } else if (m >> FX_SCATTER & 1u) {
+        rpt_arm = 0;
+        var_exit = 0;
+        if (bmode != BM_SCAT || bm_tgt < 1.0f) {
+            if (!en_playing || en_ext)
+                scat_engage();
+            else
+                scat_arm = 1;
+        }
+    } else if (m & (1u << FX_BRAKE | 1u << FX_SPIN | 1u << FX_HALF)) {
+        const int wh = m >> FX_BRAKE & 1u ? FX_BRAKE : m >> FX_SPIN & 1u ? FX_SPIN : FX_HALF;
+        rpt_arm = 0;
+        scat_arm = 0;
+        var_exit = 0;
+        if (bmode != BM_VAR || bm_tgt < 1.0f || vr_which != wh)
+            var_engage(wh);
+        var_params(wh);
+    } else if (bmode == BM_VAR && bm_tgt >= 1.0f) {   /* let go: spin back up, and out on the grid */
+        vr_tgt = 1.0f;
+        vr_c = vr_time((float)fxs_v[EN_FXS_BR_RET], 0.02f);
+        if (!en_playing || en_ext)
+            bm_tgt = 0.0f;
+        else
+            var_exit = 1;
     } else if (want >= 0) {
         if (bmode != BM_RPT || brate != want || bm_tgt < 1.0f) {
             if (!en_playing || en_ext)
@@ -2444,7 +2550,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
 {
     float l = *pl, r = *pr;
-    if (bmode == BM_LIVE || bmode == BM_STOP)
+    if (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR)
         rb_write(l, r);
     if (bmode != BM_LIVE) {
         float bl = 0.0f, br = 0.0f, w = 1.0f;
@@ -2458,6 +2564,26 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             w = fm_minf(fm_minf(bm_off, bm_len - bm_off) * (1.0f / 64.0f), 1.0f);
             if ((bm_off -= 1.0f) < 0.0f)
                 bm_off += bm_len;
+        } else if (bmode == BM_SCAT) {
+            rb_read(sc_off + (sc_rev ? sc_len - 1.0f - sc_pos : sc_pos), &bl, &br);
+            w = fm_minf(fm_minf(sc_pos, sc_len - 1.0f - sc_pos) * (1.0f / 48.0f), 1.0f);
+            if ((sc_pos += 1.0f) >= sc_len)
+                scat_pick();
+        } else if (bmode == BM_VAR) {
+            float k, ar, lag;
+            vr_rate += (vr_tgt - vr_rate) * vr_c;
+            rb_read(bm_off, &bl, &br);
+            bm_off += vr_rate;
+            ar = vr_rate < 0.0f ? -vr_rate : vr_rate;
+            k = fm_clampf(1.0f - vr_dull * (1.0f - fm_minf(ar, 1.0f)), 0.04f, 1.0f);
+            vr_lp[0] += k * (bl - vr_lp[0]);
+            vr_lp[1] += k * (br - vr_lp[1]);
+            bl = vr_lp[0];
+            br = vr_lp[1];
+            w = fm_minf(ar * 8.0f, 1.0f);
+            lag = 2.0f * (float)(rb_w - bm_start) - bm_off;      /* how far behind the live mix it is */
+            if (lag > (float)(RB_N - 16) * 2.0f)
+                bm_tgt = 0.0f;                  /* the ring is used up: back to the live mix */
         } else if (bm_speed > 0.0f) {          /* the tape slowing: a beat to a stop */
             rb_read(bm_off, &bl, &br);
             w = bm_speed;

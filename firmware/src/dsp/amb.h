@@ -126,7 +126,7 @@ extern volatile uint8_t en_sec_req;            /* a command waiting for the bar:
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
  * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
  * pad (and the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
- * is en_trk (GLO held, on the keys). Bits 26..31 are spare. */
+ * is en_trk (GLO held, on the keys). Bits 30..31 are spare. */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
@@ -136,6 +136,7 @@ enum {
     FX_THROW, FX_FILL,                                        /* an echo throw; a drum fill */
     FX_PHASER, FX_FLANGER, FX_TAPE,                           /* a phaser; a flanger; tape wow and flutter */
     FX_ROLL, FX_PUMP, FX_RISER, FX_VINYL,                     /* a roll that speeds up; a sidechain pump; a build; vinyl dust */
+    FX_SCATTER, FX_BRAKE, FX_SPIN, FX_HALF,                   /* the last slices shuffled; a vinyl brake; a spin-back; half time */
     EN_NFX = 32
 };
 enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID, EN_TR_PAD, EN_NTRACK };
@@ -159,10 +160,16 @@ enum {
     EN_FXS_PM_DEPTH, EN_FXS_PM_REL, EN_FXS_PM_RATE, EN_FXS_PM_TGT,       /* the pump: depth, release, its period (0..3: 1/2 note,
                                                                           * 1/4, 1/8, 1/16), the tracks (a bit a track) */
     EN_FXS_RS_TIME, EN_FXS_RS_FILT, EN_FXS_RS_WASH, EN_FXS_RS_ECHO,      /* the riser: time to the top, high-pass, reverb, echo */
+    EN_FXS_SC_CHAOS, EN_FXS_SC_REV, EN_FXS_SC_SIZE, EN_FXS_SC_LEN,       /* the scatter: how many slices move, how many play backwards,
+                                                                          * the slice (0..2: 1/32, 1/16, 1/8), how many slices (2..8) */
+    EN_FXS_BR_TIME, EN_FXS_BR_BACK, EN_FXS_BR_RET, EN_FXS_BR_DULL,       /* the brake and the spin-back: time to stop, the spin-back's speed,
+                                                                          * time to spin back up, how dull it goes as it slows */
+    EN_FXS_HF_SPEED, EN_FXS_HF_SLIDE,                                    /* half time: its speed (0..2: x1.5, x2, x4), the slide into it */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0x70, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 15, 70, \
-                         70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0x70, 56, 100, 100, 0}
+                         70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0x70, 56, 100, 100, 0, \
+                         60, 25, 1, 4, 55, 50, 30, 50, 1, 30}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */

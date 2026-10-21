@@ -491,6 +491,10 @@ static int expect(const char *what, const char *val)
         got = ui.fxk[atoi(what + 3) & 3];
     else if (!strcmp(what, "fxpage"))             /* the FX menu's page: 0 the keys, 1.. an effect's edit page */
         got = ui.fx_menu ? ui.fx_page : -1;
+    else if (!strcmp(what, "fxbank"))             /* the FX keys' bank (the dial in the FX menu) */
+        got = fx_bank;
+    else if (!strcmp(what, "undook"))
+        got = ui.undo_ok;
     else if (!strcmp(what, "gxpat"))              /* the gate's pattern (bit s: step s open) */
         got = ui.gx_pat;
     else if (!strcmp(what, "gxpreset"))

@@ -96,16 +96,39 @@ spin SELECT 1
 wait 100
 expect fxpage 8
 expect fxmask 0
+# the beat effects' pages: scatter, brake, half time (heard with a key held)
+spin SELECT 1
+wait 100
+expect fxpage 9
+key 3 down
+wait 200
+expect fxmask 67108864
+key 3 up
+spin SELECT 1
+wait 100
+expect fxpage 10
+key 3 down
+wait 200
+expect fxmask 134217728
+key 3 up
+spin SELECT 1
+wait 100
+expect fxpage 11
+key 3 down
+wait 200
+expect fxmask 536870912
+key 3 up
+# the dial stops at the last page
+spin SELECT 1
+wait 100
+expect fxpage 11
 # the dial back down one page
 spin SELECT -1
 wait 100
-expect fxpage 7
-# and the keys again with SEL + FX; FX alone closes
-press SEL
-tap FX
-release SEL
-wait 200
-expect fxpage 8
+expect fxpage 10
+# and the keys again with SEL + FX (from the last page); FX alone closes
+spin SELECT 1
+wait 100
 press SEL
 tap FX
 release SEL
