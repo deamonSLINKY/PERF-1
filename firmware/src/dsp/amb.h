@@ -125,8 +125,8 @@ extern volatile uint8_t en_sec_req;            /* a command waiting for the bar:
 
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
  * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
- * pad (with the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
- * is en_trk (GLO held, on the keys). Bits 19..31 are spare. */
+ * pad (and the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
+ * is en_trk (GLO held, on the keys). Bits 26..31 are spare. */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
@@ -135,6 +135,7 @@ enum {
     FX_GATE16, FX_GATE8, FX_GATEX,                            /* a trance gate on the synths: 1/16, 1/8, a pattern */
     FX_THROW, FX_FILL,                                        /* an echo throw; a drum fill */
     FX_PHASER, FX_FLANGER, FX_TAPE,                           /* a phaser; a flanger; tape wow and flutter */
+    FX_ROLL, FX_PUMP, FX_RISER, FX_VINYL,                     /* a roll that speeds up; a sidechain pump; a build; vinyl dust */
     EN_NFX = 32
 };
 enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID, EN_TR_PAD, EN_NTRACK };

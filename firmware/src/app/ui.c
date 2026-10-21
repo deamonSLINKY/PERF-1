@@ -9,7 +9,7 @@
  *   ARP            Acid, then Acid env, Acid line
  *   SEQ            Drums, then Links; held, the sequencer (six lanes, sixteen steps); with SEL held, the
  *                  links (the drums into the voices) on and off
- *   GLO            Global (root, theme, tune, MIDI out); Noise and Space are on the SELECT dial only.
+ *   GLO            Global (root, theme, tune, MIDI out); Mixer and Space are on the SELECT dial only.
  *                  On Global, SAVE stores the piece as it is (patterns and all); held, the piece goes
  *                  back to its factory settings and out of the store
  *   KNOB 1-4       the page's four values (in the sequencer: the lane's level, tune, decay; the pattern)
@@ -39,7 +39,7 @@
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
-static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Vinyl", "Drone", "Drone env",
+static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
@@ -51,7 +51,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
     {P_CHORD, P_VOICING, P_DRIFT, P_ROOT},         /* the harmony together (Drift is also on Tempo, Root on Global) */
-    {P_NOISE, P_NZ_COLOR, P_NZ_TONE, P_NZ_PUMP},
+    {P_PAD, P_BASS, P_ACID, P_PULSE},              /* the mixer: the layers' levels together (each is also on its voice's page) */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
@@ -72,7 +72,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Chord", "Voicing", "Drift", "Root"},
-    {"Level", "Wear", "Tone", "Pump"},
+    {"Pad", "Drone", "Acid", "Drums"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -99,19 +99,19 @@ static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT",
 
 /* the FX menu (FX on): each key an effect while it is held. White keys: the beat repeats, reverse, tape stop,
  * the drums' mutes (kick, hats, snare, perc), the throw, the fill, the filters; black keys: the gates (1/16,
- * 1/8, a pattern), the phaser, the flanger, the tape; the rest are spare. The other tracks' mutes and every
+ * 1/8, a pattern), the phaser, the flanger, the tape, the roll (it speeds up), the pump, the riser (a build), vinyl; one spare. The other tracks' mutes and every
  * solo are on GLO held (MIXK). */
 #define FX_NONE 31                     /* a spare key: no effect (the engine's bit 31 is never used) */
 static const uint8_t KEY_FX[NKEYS] = {
     FX_RPT2, FX_GATE16, FX_RPT4, FX_GATE8, FX_RPT6, FX_GATEX, FX_RPT8,                /* F3 F#3 G3 G#3 A3 A#3 B3 */
     FX_RPT16, FX_PHASER, FX_RPT32, FX_FLANGER, FX_REV,                                /* C4 C#4 D4 D#4 E4 */
-    FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
-    FX_MUTE_PERC, FX_NONE, FX_THROW, FX_NONE, FX_FILL,                                /* C5 C#5 D5 D#5 E5 */
+    FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_ROLL, FX_MUTE_HATS, FX_PUMP, FX_MUTE_SNARE,        /* F4 F#4 G4 G#4 A4 A#4 B4 */
+    FX_MUTE_PERC, FX_RISER, FX_THROW, FX_VINYL, FX_FILL,                              /* C5 C#5 D5 D#5 E5 */
     FX_LP, FX_NONE, FX_HP};                                                           /* F5 F#5 G5 */
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
-    "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE",
+    "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     [FX_NONE] = ""};
 static inline uint32_t fxbit(int k) { return KEY_FX[k] == FX_NONE ? 0u : 1u << KEY_FX[k]; }
 

@@ -2211,6 +2211,7 @@ static int crush_n;
 #define MOD_N 512
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
+static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
 static float tp_m, fl_m, ph_m, tp_ph, tp_ph2, fl_ph, ph_ph, tp_lp[2], ph_z[2][4], ph_fb[2], ph_a[2];
 /* the FX knobs (en_fxk): filter -50..50 (a DJ filter: low-pass to the left, high-pass to the right), crush,
  * throw (the whole mix into the echo), wash (the whole mix into the reverb), each 0..100. They are the
@@ -2224,7 +2225,7 @@ static const float RPT_BEATS[6] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f}
 const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
-    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape"};
+    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -2286,6 +2287,9 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     lp_amt = fm_clampf(lp_amt + (m >> FX_LP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);   /* in 0.5 s, out in 0.17 */
     hp_amt = fm_clampf(hp_amt + (m >> FX_HP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);
     throw_key = fm_clampf(throw_key + (m >> FX_THROW & 1u ? dt * 60.0f : -dt * 60.0f), 0.0f, 1.0f);
+    vin_m += ((float)(m >> FX_VINYL & 1u) - vin_m) * fm_minf(dt * 8.0f, 1.0f);   /* the vinyl: ~0.15 s */
+    riser_amt = fm_clampf(riser_amt + (m >> FX_RISER & 1u ? dt * 0.25f : -dt * 2.0f), 0.0f, 1.0f);   /* 4 s up, 0.5 s down */
+    roll_t = m >> FX_ROLL & 1u ? roll_t + dt * EN_SR / (4.0f * step_len) : 0.0f;   /* beats held */
     {   /* tape, flanger, phaser: in and out over ~80 ms; the phaser's all-pass corners (left, right), swept */
         const float sm = fm_minf(dt * 12.0f, 1.0f);
         int c;
@@ -2320,13 +2324,14 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         thk_s = fm_flush(thk_s);
         wash_s = fm_flush(wash_s);
         throw_amt = fm_maxf(throw_key, thk_s);
+        wash_e = fm_maxf(wash_s, 0.5f * riser_amt);
         /* the crusher: its key is a gentle 0.6; the knob goes on to 1 (5.5 kHz, 5 bits, as the key was) */
         ca = crk_s;
         cr_hold = 1 + (int)(7.0f * ca);
         cr_lv = fm_exp2f(11.0f - 7.0f * ca);
         cr_wet = fm_minf(ca * 3.0f, 1.0f);
         lp_amt_e = fm_maxf(lp_amt, lpk_s);
-        hp_amt_e = fm_maxf(hp_amt, hpk_s);
+        hp_amt_e = fm_maxf(fm_maxf(hp_amt, hpk_s), 0.9f * riser_amt);   /* the build: a high-pass rising */
     }
     echo_fbx = echo_fb + (0.86f - echo_fb) * throw_amt;
     if (fill_hold != (uint8_t)(m >> FX_FILL & 1u)) {
@@ -2346,6 +2351,11 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             want = t;
             break;
         }
+    if (roll_t > 0.0f) {                        /* a roll: 1/8 for a beat, 1/16 for the next, then 1/32 (a repeat held beats it) */
+        const int r = roll_t < 1.0f ? FX_RPT8 : roll_t < 2.0f ? FX_RPT16 : FX_RPT32;
+        if (r > want)
+            want = r;
+    }
     if (m >> FX_STOP & 1u) {
         rpt_arm = 0;
         if (bmode != BM_STOP || bm_tgt < 1.0f) {
@@ -3032,7 +3042,7 @@ static float nzl[BLK], nzr[BLK];
 static void render_noise(uint32_t n)            /* into its own buffer: the pump ducks it on its own */
 {
     uint32_t j;
-    const float g = noise_vol * 1.1f, k = nz_lp_k;
+    const float g = vin_m * 0.8f, k = nz_lp_k;   /* the vinyl key fades it in; wear, tone and pump are the piece's */
     float lvl = 0.0f;
     if (g <= 0.0f || !en_playing) {
         for (j = 0; j < n; j++)
@@ -3265,7 +3275,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
-    const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : fx_on >> FX_GATEX & 1u ? 3 : 0;
+    const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : fx_on >> FX_GATEX & 1u ? 3 : fx_on >> FX_PUMP & 1u ? 4 : 0;
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
@@ -3279,7 +3289,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             gt = (float)(step_t + (int32_t)j) < 0.5f * step_len ? 1.0f : 0.0f;
         else if (gate == 2)                     /* or of each eighth */
             gt = odd ? 0.0f : 1.0f;
-        else if (gate == 3)                     /* or the sixteenths the pattern opens (gx_pat) */
+        else if (gate == 4) {                   /* or a pump: down on each beat, back up over its first half */
+            const float ph = ((float)((sixteenth - 1u) & 3u) * step_len + (float)(step_t + (int32_t)j)) / (4.0f * step_len);
+            gt = 0.12f + 0.88f * fm_minf(ph * 2.2f, 1.0f);
+        } else if (gate == 3)                   /* or the sixteenths the pattern opens (gx_pat) */
             gt = (gx_pat >> ((sixteenth - 1u) & 15u) & 1u) ? 1.0f : 0.0f;
         gg += (gt - gg) * 0.04f;
         dk[j] = 1.0f - depth * de;
@@ -3324,7 +3337,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     for (j = 0; j < n; j++) {
         float wl, wr, l, r, el, er, xl, xr;
         echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]), &el, &er, &xl, &xr);
-        reverb((rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_s * 0.2f * (mixl[j] + mixr[j])) * 0.8f, &wl, &wr);
+        reverb((rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f, &wl, &wr);
         l = (mixl[j] + (0.75f * el + 0.15f * xl + 1.3f * wl) * dk[j]) * 0.36f;
         r = (mixr[j] + (0.75f * er + 0.15f * xr + 1.3f * wr) * dk[j]) * 0.36f;
         fx_master(&l, &r);

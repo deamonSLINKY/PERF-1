@@ -427,7 +427,7 @@ int main(void)
                 en_set(P_AC_OCT, k == 2 ? 2 : 0);
             } else {                             /* the vinyl alone: mint, trashed */
                 en_set(P_ACID, 0);
-                en_set(P_NOISE, 80);
+                en_fx(1u << FX_VINYL);               /* (the key: the piece's wear, tone and pump) */
                 en_set(P_NZ_TONE, 100);
                 en_set(P_NZ_COLOR, k == 3 ? 0 : 7);
             }

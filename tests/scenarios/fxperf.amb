@@ -1,0 +1,30 @@
+# The performance FX: roll (it speeds up while held), pump (a sidechain on the synths, in time), riser (a build:
+# a rising high-pass and wash), vinyl (dust and hiss, faded in). Keys: G#4 roll, A#4 pump, C#5 riser, D#5 vinyl.
+# fxperf.wav has each in its own stretch for listening: 4 s roll (4 s), 9 s pump (4 s), 14 s riser (5 s), 20 s vinyl (4 s)
+wait 4000
+wav fxperf.wav
+tap FX
+wait 100
+key 15 down
+wait 4000
+expect fxmask 4194304
+key 15 up
+wait 1000
+key 17 down
+wait 4000
+expect fxmask 8388608
+key 17 up
+wait 1000
+key 20 down
+wait 5000
+expect fxmask 16777216
+shot fxperf_riser.png
+key 20 up
+wait 1000
+key 22 down
+wait 4000
+expect fxmask 33554432
+key 22 up
+wait 1000
+tap FX
+wavstop
