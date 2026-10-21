@@ -99,7 +99,7 @@ static const struct {
     {"SWEEP", FX_SWEEP, 0, {{"Every", KN_NAME, EN_FXS_SW_RATE, SWRATE_NAME, 5}, {"Depth", KN_PLAIN, EN_FXS_SW_DEPTH, 0, 0},
                             {"Reso", KN_PLAIN, EN_FXS_SW_RESO, 0, 0}, {"Type", KN_NAME, EN_FXS_SW_TYPE, SWTYPE_NAME, 3}}},
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
-    {"PERFORM", 31, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
+    {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -179,7 +179,7 @@ static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT",
  * gates (1/16, 1/8, a pattern), the phaser, the flanger, the tape, the roll (it speeds up), the pump, the riser,
  * vinyl; one spare. The second, the beat effects: the scatter, the brake, the spin-back, half time (and the mutes
  * again). The other tracks' mutes and every solo are on GLO held (MIXK). */
-#define FX_NONE 31                     /* a spare key: no effect (the engine's bit 31 is never used) */
+#define FX_NONE 63                     /* a spare key: no effect (the engine's bit 63 is never used) */
 static uint8_t fx_bank;                /* 0 or 1 */
 static const uint8_t KEY_FX[2][NKEYS] = {
     {FX_RPT2, FX_GATE16, FX_RPT4, FX_GATE8, FX_RPT6, FX_GATEX, FX_RPT8,                /* F3 F#3 G3 G#3 A3 A#3 B3 */
@@ -191,13 +191,15 @@ static const uint8_t KEY_FX[2][NKEYS] = {
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
      FX_SWEEP, FX_NONE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,
      FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
-     FX_NONE, FX_NONE, FX_NONE}};static const char *const FX_LABEL[EN_NFX] = {
+     FX_NONE, FX_NONE, FX_NONE}};
+static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP",
     [FX_NONE] = ""};
-static inline uint32_t fxbit(int k) { return KEY_FX[fx_bank][k] == FX_NONE ? 0u : 1u << KEY_FX[fx_bank][k]; }
+static inline uint64_t fxbit(int k) { return KEY_FX[fx_bank][k] == FX_NONE ? 0u : FXB(KEY_FX[fx_bank][k]); }
+static inline uint32_t h32(uint64_t x) { return (uint32_t)(x ^ x >> 32); }   /* a 64-bit mask, for the hashes */
 
 /* GLO held, the keys: every track's mute and solo, latched (en_trk). A code: 0..6 mute a track (EN_TR_*),
  * 8..14 solo it, 16 / 17 mute / solo the four drums together, 18 mutes and solos back; 20..23 a scene (tap: recall,\n * hold: store), 24 everything back (effects, knobs, mutes), 25 the auto-DJ on / off, 26 its length, 27 its new pieces, 28 undo
@@ -284,12 +286,13 @@ static struct {
     uint8_t gx_preset, gx_tgt, pm_tgt; /* the gate: its pattern's name (NGXP - 1: the keys' own); its targets; the pump's */
     uint16_t gx_pat;                   /* the gate's pattern: bit s, step s open */
     uint8_t trk_m, trk_s;              /* the tracks muted and soloed (GLO held, the keys): a bit a track, not stored */
-    uint32_t scene_lock[4];            /* the four scenes: the effects locked on, the mutes, the solos, the FX knobs; */
+    uint64_t scene_lock[4];            /* the four scenes: the effects locked on, the mutes, the solos, the FX knobs; */
     uint8_t scene_m[4], scene_s[4];    /* kept until power-off (not stored) */
     int8_t scene_k[4][4];
     uint8_t scene_set, scene_pend;     /* the slots stored; the keys down that may be a tap (recall) or a hold (store) */
     uint32_t scene_t[4];
-    uint32_t undo_lock, tap_t[4];      /* UNDO: what the last big change (a scene, reset, clear, the drums' group) left behind; tap tempo */
+    uint64_t undo_lock;                /* UNDO: what the last big change (a scene, reset, clear, the drums' group) left behind */
+    uint32_t tap_t[4];                 /* tap tempo: the last taps */
     uint8_t undo_m, undo_s, undo_ok, tap_n;
     int8_t undo_k[4];
     uint8_t dj_on, dj_len, dj_piece;   /* the auto-DJ: on; its groove length (8, 16, 32, 64 bars); a new piece each round */
@@ -297,8 +300,8 @@ static struct {
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
     uint16_t dj_n;                     /* bars in the phase */
-    uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
-    uint32_t fx_lock;                  /* the effects locked on (lock mode: SAVE held in FX) */
+    uint64_t fx_mask;                  /* the effects held (and locked), as last sent */
+    uint64_t fx_lock;                  /* the effects latched on */
     uint8_t lock_mode;                 /* (the old SAVE lock mode: gone, kept off) */
     uint32_t lock_keys;                /* keys that turned a latched effect off: not played while they're held */
     uint32_t fx_tap;                   /* FX keys down that may yet be a tap (a latch) */
@@ -410,7 +413,7 @@ static void undo_save(void)                    /* before a big change: what it w
 }
 static void undo_swap(void)                    /* UNDO: the state before the last big change, and (again) back */
 {
-    uint32_t l = ui.fx_lock;
+    uint64_t l = ui.fx_lock;
     uint8_t m = ui.trk_m, s = ui.trk_s;
     int8_t kk[4];
     int k;
@@ -553,7 +556,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : &ui.dj_fillon;
 }
-#define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 31)   /* the PERFORM page: no effect, the UI's own settings */
+#define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
 {
     switch (FXP_CTL(k).kind) {
@@ -1527,13 +1530,13 @@ static void input(void)
             }
         }
     }    {   /* the effects: each key held while the FX menu is on, and those locked */
-        uint32_t m = 0;
+        uint64_t m = 0;
         if (!ui.fx_menu)
             ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
         m = ui.fx_lock;
-        if (ui.fx_menu && ui.fx_page && FXP[ui.fx_page - 1].bit != 31 &&
+        if (ui.fx_menu && ui.fx_page && FXP[ui.fx_page - 1].bit != 63 &&
             (!FXP[ui.fx_page - 1].hold || (keys & ~ui.shift_keys)))   /* an edit page: its effect on, */
-            m |= 1u << FXP[ui.fx_page - 1].bit;                                                 /* to be heard as it is edited (a roll or riser: with a key held) */
+            m |= FXB(FXP[ui.fx_page - 1].bit);                                                 /* to be heard as it is edited (a roll or riser: with a key held) */
         if (ui.fx_menu && !ui.fx_page) {
             for (i = 0; i < NKEYS; i++)
                 if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
@@ -1541,9 +1544,9 @@ static void input(void)
         }
         if (ui.dj_on && en_playing) {              /* the auto-DJ: a fill before the breakdown, the riser in the build */
             if (ui.dj_fill)
-                m |= 1u << FX_FILL;
+                m |= FXB(FX_FILL);
             if (en_sec == EN_SEC_BUILD)
-                m |= 1u << FX_RISER;
+                m |= FXB(FX_RISER);
         }
         if (m != ui.fx_mask) {
             ui.fx_mask = m;
@@ -2269,9 +2272,11 @@ static void draw_perf(void)
         int n = 0, bit;
         cv_text(6, 110, &FONT_XS, "FX", K_DIM);
         x = 26;
-        for (bit = 0; bit < 30; bit++)
+        for (bit = 0; bit < 63; bit++)
             if (ui.fx_mask >> bit & 1u) {
                 const char *s = FX_LABEL[bit];
+                if (!s || !s[0])
+                    continue;
                 if (x + text_w(&FONT_XS, s) > 232) {
                     cv_text(x, 110, &FONT_XS, "+", K_DIM);
                     break;
@@ -2410,7 +2415,7 @@ static void draw_main(void)
         return;
     }
     if (ui.fx_menu) {
-        h = hash(hash(0x46584D4Eu, ui.fx_mask ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), ui.fx_lock);
+        h = hash(hash(0x46584D4Eu, h32(ui.fx_mask) ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), h32(ui.fx_lock));
         h = hash(h, (uint32_t)fx_bank << 30);
         h = hash(h, ui.fx_page | (uint32_t)ui.gx_pat << 4 | (uint32_t)ui.fxs[EN_FXS_GX_LEN] << 20 | (uint32_t)ui.gx_tgt << 25);
         if (ui.fx_page == 1)
@@ -2441,8 +2446,8 @@ static void draw_main(void)
     if (ui.view == V_PERF) {
         h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.scene_set << 14 | (uint32_t)ui.dj_on << 18 |
                         (uint32_t)ui.dj_phase << 19 | (uint32_t)ui.dj_len << 21 | (uint32_t)en_sec << 23 | (uint32_t)en_sec_req << 25);
-        h = hash(h, ui.fx_mask | (uint32_t)ui.scene_q << 28);
-        h = hash(h, ui.fx_lock ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
+        h = hash(h, h32(ui.fx_mask) | (uint32_t)ui.scene_q << 28);
+        h = hash(h, h32(ui.fx_lock) ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
         for (i = 0; i < EN_NLANE; i++)
             h = hash(h, (uint32_t)q16(en_drum_glow[i]));
         h = hash(h, (uint32_t)q16(en_pad_level) | (uint32_t)q16(en_bass_level) << 5 | (uint32_t)q16(en_acid_level) << 10 | (uint32_t)en_playing << 15);

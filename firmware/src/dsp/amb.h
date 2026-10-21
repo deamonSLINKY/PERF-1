@@ -126,7 +126,7 @@ extern volatile uint8_t en_sec_req;            /* a command waiting for the bar:
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
  * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
  * pad (and the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
- * is en_trk (GLO held, on the keys). Bit 31 is spare (the UI's "no effect"). */
+ * is en_trk (GLO held, on the keys). Bits 31..62 are spare; 63 is the UI's "no effect". */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
@@ -138,11 +138,12 @@ enum {
     FX_ROLL, FX_PUMP, FX_RISER, FX_VINYL,                     /* a roll that speeds up; a sidechain pump; a build; vinyl dust */
     FX_SCATTER, FX_BRAKE, FX_SPIN, FX_HALF,                   /* the last slices shuffled; a vinyl brake; a spin-back; half time */
     FX_SWEEP,                                                 /* a filter swept in time with the tempo */
-    EN_NFX = 32
+    EN_NFX = 64                                               /* the mask is 64 bits: FXB(bit) */
 };
+#define FXB(x) (1ull << (x))
 enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID, EN_TR_PAD, EN_NTRACK };
 extern const char *const EN_FX_NAME[EN_NFX];   /* short names, for the screen */
-void en_fx(uint32_t mask);
+void en_fx(uint64_t mask);
 void en_trk(uint32_t mute, uint32_t solo);     /* the tracks' mutes and solos, a bit a track (EN_TR_*), latched */
 void en_gate_pat(uint32_t steps);              /* the pattern gate (FX_GATEX): bit s, step s of its loop open */
 /* the effects'' settings (the player''s, not a piece''s; not stored): en_fxs(i, v). Gate: the loop''s length in

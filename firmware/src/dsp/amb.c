@@ -469,10 +469,11 @@ void en_note(int voice, int note, int on) { post(C_NOTE, voice, (note & 0x7F) | 
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_section(int cmd) { post(C_SECTION, cmd, 0); }
-void en_fx(uint32_t mask)                       /* in two halves: the queue carries 16 bits */
+void en_fx(uint64_t mask)                       /* in four quarters: the queue carries 16 bits */
 {
-    post(C_FX, 0, (int)(mask & 0xFFFFu));
-    post(C_FX, 1, (int)(mask >> 16 & 0xFFFFu));
+    int q;
+    for (q = 0; q < 4; q++)
+        post(C_FX, q, (int)(mask >> (16 * q) & 0xFFFFu));
 }
 void en_fxk(int k, int v) { post(C_FXK, k, v); }
 void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0x7Fu) | (solo & 0x7Fu) << 7)); }
@@ -2196,7 +2197,7 @@ static int16_t rb[RB_N * 2] EN_POOL;
 static uint32_t rb_w;                            /* frames written (they wrap: an index is taken mod RB_N) */
 static uint8_t rb_odd;
 static float rb_hl, rb_hr;                       /* the first sample of each pair, waiting for the second */
-static uint32_t fx_req, fx_on;
+static uint64_t fx_req, fx_on;
 enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR };
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
 static uint32_t bm_start;                        /* the frame the reading counts from */
@@ -2362,9 +2363,10 @@ static void var_params(int wh)
 
 static void fx_control(uint32_t n)              /* once a chunk: what the held effects ask for */
 {
-    uint32_t m = fx_req, solo = trk_solo,
-             mute = trk_mute | (m >> FX_MUTE_KICK & 1u) << EN_TR_KICK | (m >> FX_MUTE_HATS & 1u) << EN_TR_HATS |
-                    (m >> FX_MUTE_SNARE & 1u) << EN_TR_SNARE | (m >> FX_MUTE_PERC & 1u) << EN_TR_PERC;
+    const uint64_t m = fx_req;
+    uint32_t solo = trk_solo,
+             mute = trk_mute | (uint32_t)(m >> FX_MUTE_KICK & 1u) << EN_TR_KICK | (uint32_t)(m >> FX_MUTE_HATS & 1u) << EN_TR_HATS |
+                    (uint32_t)(m >> FX_MUTE_SNARE & 1u) << EN_TR_SNARE | (uint32_t)(m >> FX_MUTE_PERC & 1u) << EN_TR_PERC;
     float dt = (float)n * (1.0f / EN_SR);
     int t, want = -1;
     fx_on = m;
@@ -2394,7 +2396,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     lp_amt = fm_clampf(lp_amt + (m >> FX_LP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);   /* in 0.5 s, out in 0.17 */
     hp_amt = fm_clampf(hp_amt + (m >> FX_HP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);
     throw_key = fm_clampf(throw_key + (m >> FX_THROW & 1u ? dt * 60.0f : -dt * 60.0f), 0.0f, 1.0f);
-    vin_m += ((float)(m >> FX_VINYL & 1u) - vin_m) * fm_minf(dt * 8.0f, 1.0f);   /* the vinyl: ~0.15 s */
+    vin_m += ((float)(uint32_t)(m >> FX_VINYL & 1u) - vin_m) * fm_minf(dt * 8.0f, 1.0f);   /* the vinyl: ~0.15 s */
     rs_inv = 1.0f / (fm_exp2f((float)fxs_v[EN_FXS_RS_TIME] * 0.036f));          /* 1 .. 12 s to the top (rises a second at a time) */
     riser_amt = fm_clampf(riser_amt + (m >> FX_RISER & 1u ? dt * rs_inv : -dt * 2.0f), 0.0f, 1.0f);   /* (and 0.5 s down) */
     rs_filt = (float)fxs_v[EN_FXS_RS_FILT] * 0.009f;                             /* the high-pass: up to 0.9 */
@@ -2404,7 +2406,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     {   /* tape, flanger, phaser: in and out over ~80 ms; the phaser's all-pass corners (left, right), swept */
         const float sm = fm_minf(dt * 12.0f, 1.0f);
         int c;
-        sw_m += ((float)(m >> FX_SWEEP & 1u) - sw_m) * sm;
+        sw_m += ((float)(uint32_t)(m >> FX_SWEEP & 1u) - sw_m) * sm;
         sw_m = sw_m < 0.002f && !(m >> FX_SWEEP & 1u) ? 0.0f : sw_m;
         if (sw_m > 0.0f) {                      /* the cutoff: a triangle over its period (2 bars .. 1/8 note), 120 Hz up by its depth */
             static const uint8_t SWP[5] = {32, 16, 8, 4, 2};   /* sixteenths */
@@ -2413,9 +2415,9 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
                         tri = ph < 0.5f ? ph * 2.0f : 2.0f - ph * 2.0f;
             svf_coefs(sw_c, 120.0f * fm_exp2f((float)fxs_v[EN_FXS_SW_DEPTH] * 0.07f * tri), 1.4f - 0.0128f * (float)fxs_v[EN_FXS_SW_RESO]);
         }
-        tp_m += ((float)(m >> FX_TAPE & 1u) - tp_m) * sm;
-        fl_m += ((float)(m >> FX_FLANGER & 1u) - fl_m) * sm;
-        ph_m += ((float)(m >> FX_PHASER & 1u) - ph_m) * sm;
+        tp_m += ((float)(uint32_t)(m >> FX_TAPE & 1u) - tp_m) * sm;
+        fl_m += ((float)(uint32_t)(m >> FX_FLANGER & 1u) - fl_m) * sm;
+        ph_m += ((float)(uint32_t)(m >> FX_PHASER & 1u) - ph_m) * sm;
         tp_m = tp_m < 0.002f && !(m >> FX_TAPE & 1u) ? 0.0f : tp_m;
         fl_m = fl_m < 0.002f && !(m >> FX_FLANGER & 1u) ? 0.0f : fl_m;
         ph_m = ph_m < 0.002f && !(m >> FX_PHASER & 1u) ? 0.0f : ph_m;
@@ -2529,7 +2531,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             else
                 scat_arm = 1;
         }
-    } else if (m & (1u << FX_BRAKE | 1u << FX_SPIN | 1u << FX_HALF)) {
+    } else if (m & (FXB(FX_BRAKE) | FXB(FX_SPIN) | FXB(FX_HALF))) {
         const int wh = m >> FX_BRAKE & 1u ? FX_BRAKE : m >> FX_SPIN & 1u ? FX_SPIN : FX_HALF;
         rpt_arm = 0;
         scat_arm = 0;
@@ -2786,7 +2788,7 @@ static void drain(void)
                 fxs_v[a] = (int16_t)b;
             break;
         case C_FX:
-            fx_req = a ? (fx_req & 0xFFFFu) | (uint32_t)(b & 0xFFFF) << 16 : (fx_req & 0xFFFF0000u) | (uint32_t)(b & 0xFFFF);
+            fx_req = (fx_req & ~(0xFFFFull << (16 * (a & 3)))) | (uint64_t)(b & 0xFFFF) << (16 * (a & 3));
             break;
         }
     }

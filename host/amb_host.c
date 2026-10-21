@@ -484,13 +484,15 @@ static int expect(const char *what, const char *val)
     else if (!strcmp(what, "sec"))                /* the section: 0 groove, 1 breakdown, 2 build */
         got = en_sec;
     else if (!strcmp(what, "fxmask"))             /* the effects held (FX menu) */
-        got = (int)ui.fx_mask;
+        got = (int)(uint32_t)ui.fx_mask;
     else if (!strcmp(what, "trkmute"))            /* the tracks muted (GLO held, the keys): a bit a track */
         got = ui.trk_m;
     else if (!strncmp(what, "fxk", 3))           /* fxkN: the FX knobs' values (filter, crush, throw, wash) */
         got = ui.fxk[atoi(what + 3) & 3];
     else if (!strcmp(what, "fxpage"))             /* the FX menu's page: 0 the keys, 1.. an effect's edit page */
         got = ui.fx_menu ? ui.fx_page : -1;
+    else if (!strcmp(what, "fxmaskhi"))           /* the effects held: bits 32 and up */
+        got = (int)(uint32_t)(ui.fx_mask >> 32);
     else if (!strcmp(what, "scenequant"))         /* scenes on the next bar (1) or at once (0) */
         got = ui.scene_quant;
     else if (!strcmp(what, "djlen"))              /* the auto-DJ's groove length: 0 .. 3 (8, 16, 32, 64 bars) */
