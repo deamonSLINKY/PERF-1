@@ -53,62 +53,48 @@ key 10 up
 key 13 down
 wait 3000
 key 13 up
-# 33.1 s: lock mode: SAVE held, a key tapped locks its effect (the low-pass, F5); SAVE so used
-# brings no breakdown
-press SAVE
-wait 100
+# 33.1 s: a key tapped (let go quickly) latches its effect: the low-pass (F5). Held, it is only played.
 tapkey 24
-release SAVE
 wait 2500
 expect fxlock 4096
 expect fxmask 4096
 expect sec 0
 shot fx_locked.png
-# another key, played: it plays while held, the lock stays
+# another key, held: it plays while held (a hold is not a latch), the latch stays
 key 2 down
-wait 300
+wait 400
 expect fxlock 4096
 expect fxmask 4098
 key 2 up
 wait 100
 expect fxmask 4096
-# lock mode again, one at a time: the gate 1/8 (G#3), the phaser (C#4); the low-pass tapped again: off
-press SAVE
-wait 600
-shot fx_lockmode.png
+expect fxlock 4096
+# more taps: the gate 1/8 (G#3), the phaser (C#4); the low-pass tapped again: off
 tapkey 3
 tapkey 8
 tapkey 24
-release SAVE
 wait 100
 expect fxlock 557056
 expect fxmask 557056
-expect sec 0
-# a locked effect's key tapped, no SAVE: that one off (the phaser), the gate 1/8 stays locked
+# a latched effect's key tapped: that one off (the phaser), the gate 1/8 stays latched
 tapkey 8
 wait 50
 expect fxlock 32768
 expect fxmask 32768
-# and the last one locked, tapped: none locked
+# and the last one: none latched
 tapkey 3
 wait 50
 expect fxlock 0
 expect fxmask 0
-# lock mode once more: the gate 1/8 and the phaser
-press SAVE
+# four latched: the gate 1/8, the phaser, the low-pass, the gate 1/16
 tapkey 3
 tapkey 8
-release SAVE
-expect fxlock 557056
-# keys held as SAVE goes down lock too (the low-pass and the gate 1/16)
-key 24 down
-key 1 down
+tapkey 24
+tapkey 1
 wait 100
-tap SAVE
-key 24 up
-key 1 up
-wait 100
+expect fxlock 577536
 expect fxmask 577536
+shot fx_latched.png
 # FX closed: the locked ones play on (the keys are the scale again, the locks untouched)
 tap FX
 wait 100

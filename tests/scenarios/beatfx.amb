@@ -31,9 +31,11 @@ key 6 up
 wait 300
 # the mutes are there too
 key 14 down
-wait 100
+wait 400
 expect fxmask 256
 key 14 up
+wait 100
+expect fxmask 0
 # back to the first bank
 spin SELECT -1
 wait 100

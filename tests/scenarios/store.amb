@@ -66,6 +66,8 @@ reboot
 wait 300
 expect piece 7
 expect tempo 123
+# (HOME on the tempo page is the perform screen now: to the tempo page by way of Global)
+tap GLO
 tap HOME
 spin K1 5
 expect tempo 128

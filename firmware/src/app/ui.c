@@ -38,10 +38,10 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, NVIEWS };
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, V_PERF, NVIEWS };   /* V_PERF: the second home screen */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
-                                              "Sequencer"};
+                                              "Sequencer", "Perform"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
@@ -128,6 +128,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
+    {K_FXF, K_FXF + 1, K_FXF + 2, K_FXF + 3},      /* perform: the FX knobs, without the FX menu */
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tempo", "Evolve", "Motion", "Drift"},
@@ -149,6 +150,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Level", "Tune", "Decay", "Pattern"},
+    {"Filter", "Crush", "Throw", "Wash"},
 };
 /* the buttons that lead to pages: each to a group, pressed again the next page in it */
 static const struct {
@@ -197,6 +199,7 @@ static const char *const MIX_NAME[7] = {"KICK", "HATS", "SNARE", "PERC", "DRONE"
 /* the white keys, in order: the sequencer's steps; the black keys, in order */
 static const uint8_t WHITE_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
+#define TAP_MS 250u                    /* an FX key let go within this: latched; held longer: only played */
 #define SEQ_HOLD 400u                  /* SEQ held this long: the sequencer */
 #define DROP_HOLD 500u                 /* SAVE held this long: the drop, on the next bar */
 #define HELP_HOLD 900u
@@ -282,8 +285,10 @@ static struct {
     uint16_t dj_n;                     /* bars in the phase */
     uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
     uint32_t fx_lock;                  /* the effects locked on (lock mode: SAVE held in FX) */
-    uint8_t lock_mode;                 /* SAVE held in the FX menu: keys tapped lock and unlock */
-    uint32_t lock_keys;                /* keys pressed in lock mode: not effects while they're held */
+    uint8_t lock_mode;                 /* (the old SAVE lock mode: gone, kept off) */
+    uint32_t lock_keys;                /* keys that turned a latched effect off: not played while they're held */
+    uint32_t fx_tap;                   /* FX keys down that may yet be a tap (a latch) */
+    uint32_t fx_down_t[NKEYS];
     uint8_t lane;                      /* the sequencer's lane (OCT- / OCT+) */
     uint8_t save_global;               /* SAVE went down on Global: the piece is stored when it comes up */
     uint8_t store_wait;                /* a store while playing: the music fading out to write it (store_tick) */
@@ -355,7 +360,7 @@ static const char *mode_name(void)
 /* GLO held (not with SEL): the keys mute and solo the tracks. Shown from a short hold, or at once on a key. */
 static int mix_show(void)
 {
-    return (ui.btn >> B_GLO & 1u) && !(ui.btn >> B_SEL & 1u) &&
+    return ui.view != V_PERF && (ui.btn >> B_GLO & 1u) && !(ui.btn >> B_SEL & 1u) &&
            ((ui.btn_used >> B_GLO & 1u) || plat_ms() - ui.down_t[B_GLO] >= 350u);
 }
 static int mix_state(int k)
@@ -1064,6 +1069,10 @@ static int group_of(int v)
 static void button(int b)
 {
     int g;
+    if (b == B_HOME) {                           /* HOME: the tempo page; again, the perform screen; and back */
+        set_view(ui.view == V_TEMPO ? V_PERF : V_TEMPO);
+        return;
+    }
     for (g = 0; g < NGROUP; g++)                 /* a page's button: its page, or the next in its group */
         if (GROUP[g].btn == b) {
             int v = ui.view;
@@ -1077,7 +1086,7 @@ static void button(int b)
     case B_FX:
         ui.fx_menu = (uint8_t)!ui.fx_menu;
         ui.fx_page = 0;                          /* (from an edit page too: closed) */
-        say("FX", ui.fx_menu ? "HOLD A KEY" : ui.fx_lock ? "LOCKED ONES STAY ON" : "OFF");
+        say("FX", ui.fx_menu ? "TAP: LATCH  HOLD: PLAY" : ui.fx_lock ? "LATCHED ONES STAY ON" : "OFF");
         break;
     case B_EDIT:
         en_next();
@@ -1355,18 +1364,6 @@ static void input(void)
                 ui.factory_done = 0;
                 ui.btn_used |= m;              /* not a breakdown */
                 ui.save_held = 1;              /* nor a drop */
-            } else if (i == B_SAVE && ui.fx_menu && !ui.fx_page) {   /* FX: SAVE held is lock mode */
-                uint32_t k, held = keys & ~ui.shift_keys;
-                ui.lock_mode = 1;
-                ui.save_held = 1;              /* no drop while it's held */
-                for (k = 0; k < NKEYS; k++)    /* keys already held: locked */
-                    if (held >> k & 1u)
-                        ui.fx_lock |= fxbit(k);
-                if (held) {
-                    ui.lock_keys |= held;
-                    ui.btn_used |= m;          /* not a breakdown */
-                }
-                say("LOCK MODE", "TAP EFFECTS");
             }
             if (i == B_FX && (btn >> B_SEL & 1u)) {   /* shift: the effects' edit pages, one by one, then the keys again */
                 ui.fx_page = ui.fx_menu ? (uint8_t)((ui.fx_page + 1) % (NFXP + 1)) : 1;
@@ -1423,12 +1420,6 @@ static void input(void)
             }
             if (i == B_PLAY)                   /* transport on the press */
                 button((int)i);
-        } else if (i == B_SAVE && ui.lock_mode) {
-            ui.lock_mode = 0;                  /* lock mode over; SAVE tapped alone: the breakdown, as ever */
-            if (!(ui.btn_used & m))
-                button((int)i);
-            else
-                say("FX", ui.fx_lock ? "LOCKED" : "NONE LOCKED");
         } else if (i == B_SAVE && ui.save_global) {
             ui.save_global = 0;                /* Global: SAVE let go, the piece stored (unless held to factory) */
             if (!ui.factory_done)
@@ -1450,10 +1441,12 @@ static void input(void)
             if ((ch & keys) >> i & 1u)
                 shift_key((int)i);
     }
-    if ((btn >> B_GLO & 1u) && !(btn >> B_SEL & 1u) && (ch & keys & ~ui.shift_keys)) {   /* GLO held: the track mix */
+    if (!(btn >> B_SEL & 1u) && ((btn >> B_GLO & 1u) || (ui.view == V_PERF && !ui.fx_menu)) &&
+        (ch & keys & ~ui.shift_keys)) {        /* GLO held, or the perform screen: the track mix on the keys */
         uint32_t p = ch & keys & ~ui.shift_keys;
         ui.shift_keys |= p;
-        ui.btn_used |= 1u << B_GLO;            /* not a trip to the Global page */
+        if (btn >> B_GLO & 1u)
+            ui.btn_used |= 1u << B_GLO;        /* not a trip to the Global page */
         for (i = 0; i < NKEYS; i++)
             if (p >> i & 1u)
                 mix_key((int)i);
@@ -1462,23 +1455,30 @@ static void input(void)
         plat_ms() - ui.down_t[B_GLO] >= 350u)
         ui.btn_used |= 1u << B_GLO;            /* held for the mix: letting go does nothing either */
     ui.lock_keys &= keys;
-    if (ui.fx_menu && !ui.fx_page && ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* lock mode: a key tapped, its effect */
-        uint32_t p = ch & keys & ~ui.shift_keys;                         /* locked, or unlocked */
-        for (i = 0; i < NKEYS; i++)
-            if (p >> i & 1u)
-                ui.fx_lock ^= fxbit(i);
-        ui.lock_keys |= p;
-        ui.btn_used |= 1u << B_SAVE;
-    }
-    if (ui.fx_menu && !ui.fx_page && !ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* a locked effect's key tapped: that */
-        uint32_t p = ch & keys & ~ui.shift_keys;                         /* one off, the others stay locked */
-        for (i = 0; i < NKEYS; i++)
-            if ((p >> i & 1u) && (ui.fx_lock >> KEY_FX[fx_bank][i] & 1u)) {
-                ui.fx_lock &= ~(fxbit(i));
-                ui.lock_keys |= 1u << i;       /* and not played while it's held */
+    if (!ui.fx_menu || ui.fx_page)
+        ui.fx_tap = 0;
+    if (ui.fx_menu && !ui.fx_page) {           /* the FX keys: tapped, latched; held, played; a latched one tapped, off */
+        const uint32_t down = ch & keys & ~ui.shift_keys, up = ch & ~keys;
+        for (i = 0; i < NKEYS; i++) {
+            const uint32_t bit = fxbit((int)i);
+            if (!bit)
+                continue;
+            if (down >> i & 1u) {
+                if (ui.fx_lock & bit) {
+                    ui.fx_lock &= ~bit;        /* off at once, and not played while it's held */
+                    ui.lock_keys |= 1u << i;
+                } else {
+                    ui.fx_down_t[i] = plat_ms();
+                    ui.fx_tap |= 1u << i;
+                }
             }
-    }
-    {   /* the effects: each key held while the FX menu is on, and those locked */
+            if ((up >> i & 1u) && (ui.fx_tap >> i & 1u)) {
+                ui.fx_tap &= ~(1u << i);
+                if (plat_ms() - ui.fx_down_t[i] < TAP_MS)
+                    ui.fx_lock |= bit;         /* let go quickly: latched */
+            }
+        }
+    }    {   /* the effects: each key held while the FX menu is on, and those locked */
         uint32_t m = 0;
         if (!ui.fx_menu)
             ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
@@ -1559,7 +1559,7 @@ static void input(void)
                 say("TEMPO", t);
             }
         } else {
-            int v = (ui.view == V_SEQ ? V_DRUMS : (int)ui.view) + (e > 0 ? 1 : -1);   /* (out of the sequencer too) */
+            int v = (ui.view == V_SEQ ? V_DRUMS : ui.view == V_PERF ? V_TEMPO : (int)ui.view) + (e > 0 ? 1 : -1);   /* (out of the sequencer and the perform screen too) */
             if (v >= 0 && v < NDIAL)
                 set_view(v);
         }
@@ -2084,13 +2084,8 @@ static void draw_help(void)
 static void draw_fx(void)
 {
     int k;
-    cv_text(4, 1, &FONT_XS, ui.lock_mode ? "LOCK: TAP KEYS" : fx_bank ? "BEAT FX: HOLD A KEY" : "FX: HOLD A KEY", ui.lock_mode ? K_PAD : K_ACC);
-    if (ui.lock_mode)
-        cv_text(118, 1, &FONT_XS, "TAP AGAIN: OFF", K_PAD);
-    else if (ui.fx_lock)
-        cv_text(118, 1, &FONT_XS, "LOCKED: SAVE+KEY", K_PAD);
-    else
-        cv_text(fx_bank ? 136 : 118, 1, &FONT_XS, fx_bank ? "DIAL: FX 1" : "DIAL: BEAT FX", K_DIM);
+    cv_text(4, 1, &FONT_XS, fx_bank ? "BEAT: TAP LATCHES" : "FX: TAP LATCHES", K_ACC);
+    cv_text(fx_bank ? 136 : 118, 1, &FONT_XS, fx_bank ? "DIAL: FX 1" : "DIAL: BEAT FX", K_DIM);
     for (k = 0; k < NKEYS; k++) {
         int32_t x = 2 + (k / 9) * 79, y = 16 + (k % 9) * 14;
         int pc = (5 + k) % 12, oct = 3 + (5 + k) / 12, on = (int)(ui.fx_mask >> KEY_FX[fx_bank][k] & 1u),
@@ -2154,6 +2149,85 @@ static void draw_fxedit(void)
         cv_text(4, 50, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
         cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT. THE DIAL: NEXT PAGE.", K_DIM);
     }
+}
+
+/* the second home screen, PERFORM (HOME again): the section and the auto-DJ, the beat, the seven tracks (muted,
+ * soloed, playing), the four scenes, what is latched or held in FX. Its keys are the track mix (the GLO layer);
+ * its knobs, the FX knobs. */
+static void draw_perf(void)
+{
+    static const char *const TN[7] = {"KCK", "HAT", "SNR", "PRC", "DRN", "ACD", "PAD"};
+    const int g = DJ_LEN[ui.dj_len % 3], b = g / 2 < 4 ? 4 : g / 2;
+    int i;
+    {   /* the section, and the auto-DJ's place in it */
+        const char *sn = en_sec == EN_SEC_BREAK ? "BREAK" : en_sec == EN_SEC_BUILD ? "BUILD" : "GROOVE";
+        int32_t x = cv_text(6, 1, &FONT_B, sn, en_sec == EN_SEC_GROOVE ? K_TEXT : K_FROST);
+        char t[24] = "DJ ";
+        int n = 3, len = ui.dj_phase == 0 ? g : ui.dj_phase == 1 ? b : 4;
+        if (en_sec_req)
+            cv_text(x + 6, 4, &FONT_XS, en_sec_req == EN_CMD_BREAK + 1 ? "BREAK>" : en_sec_req == EN_CMD_BUILD + 1 ? "BUILD>" : "DROP>", K_ACC);
+        if (ui.dj_on) {
+            itoa_u(ui.dj_n, t + n);
+            while (t[n])
+                n++;
+            t[n++] = '/';
+            itoa_u((uint32_t)len, t + n);
+            cv_text(232 - text_w(&FONT_XS, t), 4, &FONT_XS, t, K_ACC);
+        } else {
+            cv_text(232 - text_w(&FONT_XS, "DJ OFF"), 4, &FONT_XS, "DJ OFF", K_DIM);
+        }
+        if (ui.dj_on) {                           /* how far through the phase */
+            const int32_t w = 228, f = len > 0 ? (int32_t)ui.dj_n * w / len : 0;
+            cv_rect(6, 36, w, 3, K_LINE);
+            cv_rect(6, 36, f > w ? w : f, 3, ui.dj_phase == 0 ? K_PAD : K_FROST);
+        }
+    }
+    for (i = 0; i < 16; i++)                      /* the bar: its sixteen steps, the one playing lit */
+        cv_rect(6 + i * 14, 24, 12, 8, en_playing && (int)en_drum_pos == i ? K_ACC : (i & 3) ? K_LINE : K_DIM);
+    for (i = 0; i < 7; i++) {                     /* the tracks */
+        static const uint8_t LN[7] = {0, 3, 1, 5, 6, 6, 6};   /* the drum lane that shows its hits (6: not a lane) */
+        const int32_t x = 4 + i * 33;
+        const int muted = (ui.trk_m >> i & 1u) || (i < 4 && (ui.fx_mask >> (FX_MUTE_KICK + i) & 1u));
+        const int soloed = ui.trk_s >> i & 1u, dim = muted || (ui.trk_s && !soloed);
+        float lvl = i == EN_TR_DRONE ? en_bass_level : i == EN_TR_ACID ? en_acid_level : i == EN_TR_PAD ? en_pad_level :
+                                                                                               en_drum_glow[LN[i]];
+        int32_t h;
+        lvl = lvl > 1.0f ? 1.0f : lvl;
+        h = (int32_t)(lvl * 24.0f);
+        cv_round(x, 46, 31, 38, 3, soloed ? K_PAD : K_PANEL);
+        if (!dim && h > 0)
+            cv_rect(x + 4, 78 - h, 23, h, soloed ? K_BG : K_PAD);
+        text_c(x + 15, 48, &FONT_XS, TN[i], soloed ? K_BG : dim ? K_DIM : K_TEXT);
+        if (muted)
+            cv_rect(x + 3, 62, 25, 2, K_ACC);   /* struck through */
+    }
+    for (i = 0; i < 4; i++) {                     /* the scenes */
+        const int32_t x = 4 + i * 58;
+        const int set = ui.scene_set >> i & 1u;
+        char t[8] = "SCENE 1";
+        t[6] = (char)('1' + i);
+        cv_round(x, 88, 54, 20, 3, set ? K_PAD : K_PANEL);
+        text_c(x + 27, 91, &FONT_XS, t, set ? K_BG : K_DIM);
+    }
+    {   /* in FX: what is on (latched ones in the primary, held ones in the accent) */
+        int32_t x = 6;
+        int n = 0, bit;
+        cv_text(6, 110, &FONT_XS, "FX", K_DIM);
+        x = 26;
+        for (bit = 0; bit < 30; bit++)
+            if (ui.fx_mask >> bit & 1u) {
+                const char *s = FX_LABEL[bit];
+                if (x + text_w(&FONT_XS, s) > 232) {
+                    cv_text(x, 110, &FONT_XS, "+", K_DIM);
+                    break;
+                }
+                x = cv_text(x, 110, &FONT_XS, s, (ui.fx_lock >> bit & 1u) ? K_PAD : K_ACC) + 8;
+                n++;
+            }
+        if (!n)
+            cv_text(26, 110, &FONT_XS, "NONE", K_DIM);
+    }
+    cv_text(6, 126, &FONT_XS, "KEYS: MUTE / SOLO / SCENES / DJ", K_DIM);
 }
 
 /* the track mix (GLO held): the keys, as the FX menu's, each its track's mute (M:) or solo (S:), lit while on */
@@ -2277,6 +2351,22 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_help();
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
+    if (ui.view == V_PERF) {
+        h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.scene_set << 14 | (uint32_t)ui.dj_on << 18 |
+                        (uint32_t)ui.dj_phase << 19 | (uint32_t)ui.dj_len << 21 | (uint32_t)en_sec << 23 | (uint32_t)en_sec_req << 25);
+        h = hash(h, ui.fx_mask);
+        h = hash(h, ui.fx_lock ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
+        for (i = 0; i < EN_NLANE; i++)
+            h = hash(h, (uint32_t)q16(en_drum_glow[i]));
+        h = hash(h, (uint32_t)q16(en_pad_level) | (uint32_t)q16(en_bass_level) << 5 | (uint32_t)q16(en_acid_level) << 10 | (uint32_t)en_playing << 15);
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_perf();
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -2477,7 +2567,7 @@ static void leds(void)
             for (i = 0; i < EN_NPAT; i++)
                 if ((int)i != seq_pat())
                     k |= 1u << BLACK_KEY[i];
-    } else if (mix_show()) {                     /* GLO held: the keys muted and soloed */
+    } else if (mix_show() || (ui.view == V_PERF && !ui.fx_menu)) {   /* GLO held, or the perform screen: the keys muted and soloed */
         for (i = 0; i < NKEYS; i++)
             if (mix_state((int)i))
                 k |= 1u << i;

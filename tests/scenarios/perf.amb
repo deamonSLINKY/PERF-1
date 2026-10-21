@@ -1,0 +1,63 @@
+# The second home screen, PERFORM: HOME again from the tempo page; HOME once more, back. Its keys are the track mix (the
+# GLO layer) without GLO; its knobs the FX knobs; the keys are the scale again on any other page.
+wait 3000
+expect view 0
+tap HOME
+wait 100
+expect view 19
+# the keys: F3 mutes the kick, G3 the hats; the scale is not touched
+tapkey 0
+tapkey 2
+wait 100
+expect trkmute 3
+expect pool 0x5AD
+# G#3 solo of the hats track (key 3), A#3... (key 5: solo snare), then clear (B4, key 18)
+tapkey 3
+wait 100
+expect trksolo 2
+tapkey 18
+wait 100
+expect trkmute 0
+expect trksolo 0
+# a scene: stored by a hold, recalled by a tap, as on the GLO layer (C5, key 19)
+tapkey 0
+key 19 down
+wait 800
+key 19 up
+wait 100
+expect scenes 1
+tapkey 0
+wait 100
+expect trkmute 0
+tapkey 19
+wait 100
+expect trkmute 1
+# the knobs: the FX knobs (crush up)
+spin K2 25
+wait 100
+expect fxk1 25
+shot perf_screen.png
+# the DJ on (F5, key 24), its length (F#5), and the screen follows
+tapkey 24
+wait 3000
+shot perf_dj.png
+expect djon 1
+# HOME again: back to the tempo page, where the keys are the scale
+tap HOME
+wait 100
+expect view 0
+tapkey 1
+expect pool 0x7AD
+tapkey 1
+# the dial from the perform screen goes on to the next page
+tap HOME
+wait 100
+expect view 19
+spin SELECT 1
+wait 100
+expect view 1
+# and from the Global page HOME is the tempo page
+tap GLO
+tap HOME
+wait 100
+expect view 0
