@@ -1,0 +1,46 @@
+# Auto-DJ: GLO held, F5 (key 24) on, F#5 (key 25) its groove length (8, 16, 32 bars; three taps from 8: 8), G5 (key 26)
+# a new piece each round. A groove, a drum fill in its last bar, a breakdown, a build (the riser held), the drop,
+# and the groove again, on the bar clock. The timings below are for the first piece (seed 0).
+seed 0
+wait 1500
+press GLO
+tapkey 24
+tapkey 25
+tapkey 25
+tapkey 25
+release GLO
+expect djon 1
+expect piece 0
+wait 10500
+# 12 s: the groove, bars counting
+expect djphase 0
+expect sec 0
+wait 6000
+# 18 s: the breakdown
+expect djphase 1
+expect sec 1
+wait 7500
+# 25 s: the build, the riser held by the DJ
+expect djphase 2
+expect sec 2
+expect fxmask 16777216
+wait 11000
+# 36 s: the groove again, the riser let go
+expect djphase 0
+expect sec 0
+expect fxmask 0
+# off: it stops running the sections
+press GLO
+tapkey 24
+release GLO
+expect djon 0
+wait 22000
+expect sec 0
+# new pieces on: one round later the next piece plays
+press GLO
+tapkey 24
+tapkey 26
+release GLO
+expect djon 1
+wait 24000
+expect piece 1

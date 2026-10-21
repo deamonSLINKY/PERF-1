@@ -1,0 +1,83 @@
+# Scenes: GLO held, C5 .. D#5 (keys 19 .. 22). A tap recalls, a hold of 0.6 s stores. A scene keeps the mutes and
+# solos, the effects locked on, the FX knobs. E5 (23) is everything back.
+wait 3000
+expect scenes 0
+# an empty scene: a tap says so, nothing changes
+press GLO
+wait 100
+tapkey 19
+wait 100
+release GLO
+expect trkmute 0
+# the kick and the hats muted, and the FX knobs set: the crush up, the filter to the left
+press GLO
+tapkey 0
+tapkey 2
+release GLO
+tap FX
+spin K2 40
+spin K1 -20
+tap FX
+wait 300
+expect trkmute 3
+expect fxk1 40
+expect fxk0 -20
+# stored in scene 2 (C#5): held for 0.8 s
+press GLO
+wait 100
+key 20 down
+wait 800
+key 20 up
+release GLO
+wait 100
+expect scenes 2
+shot scene_stored.png
+# everything back (E5)
+press GLO
+tapkey 23
+release GLO
+wait 100
+expect trkmute 0
+expect fxk1 0
+expect fxk0 0
+# scene 2 recalled: a tap
+press GLO
+wait 100
+key 20 down
+wait 150
+key 20 up
+wait 100
+release GLO
+wait 300
+expect trkmute 3
+expect fxk1 40
+expect fxk0 -20
+# scene 1 is still empty
+press GLO
+key 19 down
+wait 150
+key 19 up
+release GLO
+wait 100
+expect trkmute 3
+expect scenes 2
+# a scene stored over: the hats unmuted first (G3), then scene 2 again
+press GLO
+tapkey 2
+wait 100
+key 20 down
+wait 800
+key 20 up
+release GLO
+wait 100
+press GLO
+tapkey 23
+tapkey 0
+release GLO
+press GLO
+key 20 down
+wait 150
+key 20 up
+release GLO
+wait 200
+expect trkmute 1

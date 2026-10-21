@@ -487,6 +487,16 @@ static int expect(const char *what, const char *val)
         got = (int)ui.fx_mask;
     else if (!strcmp(what, "trkmute"))            /* the tracks muted (GLO held, the keys): a bit a track */
         got = ui.trk_m;
+    else if (!strncmp(what, "fxk", 3))           /* fxkN: the FX knobs' values (filter, crush, throw, wash) */
+        got = ui.fxk[atoi(what + 3) & 3];
+    else if (!strcmp(what, "scenes"))             /* the scenes stored (a bit a slot) */
+        got = ui.scene_set;
+    else if (!strcmp(what, "djon"))               /* the auto-DJ: on */
+        got = ui.dj_on;
+    else if (!strcmp(what, "djphase"))            /* groove 0, breakdown 1, build 2 */
+        got = ui.dj_phase;
+    else if (!strcmp(what, "djn"))                /* bars in the phase */
+        got = ui.dj_n;
     else if (!strcmp(what, "trksolo"))
         got = ui.trk_s;
     else if (!strcmp(what, "tempo"))

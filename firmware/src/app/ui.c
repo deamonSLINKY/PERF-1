@@ -116,12 +116,12 @@ static const char *const FX_LABEL[EN_NFX] = {
 static inline uint32_t fxbit(int k) { return KEY_FX[k] == FX_NONE ? 0u : 1u << KEY_FX[k]; }
 
 /* GLO held, the keys: every track's mute and solo, latched (en_trk). A code: 0..6 mute a track (EN_TR_*),
- * 8..14 solo it, 16 / 17 mute / solo the four drums together, 18 everything back; -1 nothing. */
+ * 8..14 solo it, 16 / 17 mute / solo the four drums together, 18 mutes and solos back; 20..23 a scene (tap: recall,\n * hold: store), 24 everything back (effects, knobs, mutes), 25 the auto-DJ on / off, 26 its length, 27 its new pieces; -1 nothing. */
 static const int8_t MIXK[NKEYS] = {
     0, 8, 1, 9, 2, 10, -1,                 /* F3 .. B3: kick, hats, snare (mute, the black key above it solos) */
     3, 11, 4, 12, -1,                      /* C4 .. E4: perc, drone */
     5, 13, 6, 14, 16, 17, 18,              /* F4 .. B4: acid, pad, the drums, clear */
-    -1, -1, -1, -1, -1, -1, -1, -1};
+    20, 21, 22, 23, 24, 25, 26, 27};       /* C5 .. G5: scenes 1-4, reset all, the auto-DJ (on, length, new pieces) */
 static const char *const MIX_NAME[7] = {"KICK", "HATS", "SNARE", "PERC", "DRONE", "ACID", "PAD"};/* the white keys, in order: the sequencer's steps; the black keys, in order */
 static const uint8_t WHITE_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
@@ -193,6 +193,14 @@ static struct {
     uint8_t fx_menu;                   /* the FX menu is on: the keys are effects, the knobs the FX knobs */
     int8_t fxk[4];                     /* the FX knobs' values (filter -50..50, crush, throw, wash): not stored */
     uint8_t trk_m, trk_s;              /* the tracks muted and soloed (GLO held, the keys): a bit a track, not stored */
+    uint32_t scene_lock[4];            /* the four scenes: the effects locked on, the mutes, the solos, the FX knobs; */
+    uint8_t scene_m[4], scene_s[4];    /* kept until power-off (not stored) */
+    int8_t scene_k[4][4];
+    uint8_t scene_set, scene_pend;     /* the slots stored; the keys down that may be a tap (recall) or a hold (store) */
+    uint32_t scene_t[4];
+    uint8_t dj_on, dj_len, dj_piece;   /* the auto-DJ: on; its groove length (8, 16, 32 bars); a new piece each round */
+    uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
+    uint16_t dj_n;                     /* bars in the phase */
     uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
     uint32_t fx_lock;                  /* the effects locked on (lock mode: SAVE held in FX) */
     uint8_t lock_mode;                 /* SAVE held in the FX menu: keys tapped lock and unlock */
@@ -280,8 +288,17 @@ static int mix_state(int k)
         return ui.trk_m >> c & 1u;
     if (c < 15)
         return ui.trk_s >> (c - 8) & 1u;
+    if (c >= 20 && c <= 23)
+        return ui.scene_set >> (c - 20) & 1u;
+    if (c == 25)
+        return ui.dj_on;
+    if (c == 27)
+        return ui.dj_piece;
     return c == 16 ? (ui.trk_m & 15u) == 15u : c == 17 ? (ui.trk_s & 15u) == 15u : 0;
 }
+static void knob_set(int k, int v);
+static void scene_reset(void);
+static const uint8_t DJ_LEN[3] = {8, 16, 32};
 static void mix_key(int k)
 {
     int c = MIXK[k];
@@ -298,9 +315,38 @@ static void mix_key(int k)
         uint8_t *x = c == 16 ? m : s;
         *x = (*x & 15u) == 15u ? (uint8_t)(*x & ~15u) : (uint8_t)(*x | 15u);
         say(c == 16 ? ((*x & 15u) ? "MUTE" : "UNMUTE") : ((*x & 15u) ? "SOLO" : "UNSOLO"), "ALL DRUMS");
-    } else {
+    } else if (c == 18) {
         *m = *s = 0;
         say("ALL TRACKS", "BACK");
+    } else if (c >= 20 && c <= 23) {            /* a scene: a tap recalls it, a hold stores (scene_tick) */
+        ui.scene_pend |= (uint8_t)(1u << (c - 20));
+        ui.scene_t[c - 20] = plat_ms();
+    } else if (c == 24) {
+        scene_reset();
+    } else if (c == 25) {
+        ui.dj_on = (uint8_t)!ui.dj_on;
+        ui.dj_phase = 0;
+        ui.dj_n = 0;
+        ui.dj_fill = 0;
+        say("AUTO-DJ", ui.dj_on ? "ON" : "OFF");
+    } else if (c == 26) {
+        char t[12];
+        ui.dj_len = (uint8_t)((ui.dj_len + 1) % 3);
+        itoa_u(DJ_LEN[ui.dj_len], t);
+        {   /* " BARS" after the number */
+            int n = 0;
+            const char *q = " BARS";
+            while (t[n])
+                n++;
+            while (*q)
+                t[n++] = *q++;
+            t[n] = 0;
+        }
+        say("DJ GROOVE", t);
+        ui.dj_n = 0;
+    } else if (c == 27) {
+        ui.dj_piece = (uint8_t)!ui.dj_piece;
+        say("DJ NEW PIECES", ui.dj_piece ? "ON" : "OFF");
     }
     en_trk(*m, *s);
 }
@@ -420,6 +466,112 @@ static void turn(int role, int k, int32_t e)
         return;
     knob_range(k, &lo, &hi);
     knob_set(k, knob_get(k) + accel(role, e, hi - lo));
+}
+
+/* ------------------------------------------------------------ scenes --- */
+/* Four scenes (GLO held, C5 .. D#5): what is locked on in FX, the mutes and solos, the FX knobs. A tap
+ * recalls one, a hold of 0.6 s stores the state as it is now. They are kept until power-off. */
+#define SCENE_HOLD 600u
+static void scene_store(int s)
+{
+    int k;
+    ui.scene_lock[s] = ui.fx_lock;
+    ui.scene_m[s] = ui.trk_m;
+    ui.scene_s[s] = ui.trk_s;
+    for (k = 0; k < 4; k++)
+        ui.scene_k[s][k] = ui.fxk[k];
+    ui.scene_set |= (uint8_t)(1u << s);
+    {
+        char t[12] = "SCENE 1";
+        t[6] = (char)('1' + s);
+        say(t, "STORED");
+    }
+}
+static void scene_recall(int s)
+{
+    char t[12] = "SCENE 1";
+    int k;
+    t[6] = (char)('1' + s);
+    if (!(ui.scene_set >> s & 1u)) {
+        say(t, "EMPTY: HOLD TO STORE");
+        return;
+    }
+    ui.fx_lock = ui.scene_lock[s];             /* (the effects follow from the lock, in the next frame) */
+    ui.trk_m = ui.scene_m[s];
+    ui.trk_s = ui.scene_s[s];
+    en_trk(ui.trk_m, ui.trk_s);
+    for (k = 0; k < 4; k++)
+        knob_set(K_FXF + k, ui.scene_k[s][k]);
+    say(t, 0);
+}
+static void scene_reset(void)                  /* everything back: no effects locked, no mutes or solos, the FX knobs home */
+{
+    int k;
+    ui.fx_lock = 0;
+    ui.trk_m = ui.trk_s = 0;
+    en_trk(0, 0);
+    for (k = 0; k < 4; k++)
+        knob_set(K_FXF + k, 0);
+    say("RESET", "ALL CLEAR");
+}
+static void scene_tick(void)                   /* a scene key down: held long enough, stored; let go first, recalled */
+{
+    int s;
+    for (s = 0; s < 4; s++)
+        if (ui.scene_pend >> s & 1u) {
+            if (!(ui.keys >> (19 + s) & 1u)) {
+                ui.scene_pend &= (uint8_t)~(1u << s);
+                scene_recall(s);
+            } else if (plat_ms() - ui.scene_t[s] >= SCENE_HOLD) {
+                ui.scene_pend &= (uint8_t)~(1u << s);
+                scene_store(s);
+            }
+        }
+}
+
+/* --------------------------------------------------------------- auto-DJ --- */
+/* On (GLO held, F5): the sections run by themselves, on the bar clock. A groove (8, 16 or 32 bars, F#5); the
+ * bar before it ends a drum fill; then a breakdown (half as long, 4 bars at least), a build (four bars, the
+ * riser rising, and the engine drops by itself), and the groove again. With new pieces on (G5), the next piece
+ * comes in on that fill's bar, so the breakdown and the drop belong to it. It follows the engine's section, so
+ * SAVE pressed by hand just moves it on from there. */
+static void dj_bar(void)                       /* a new bar (while playing) */
+{
+    const int g = DJ_LEN[ui.dj_len % 3], b = g / 2 < 4 ? 4 : g / 2;
+    const int ph = en_sec == EN_SEC_GROOVE ? 0 : en_sec == EN_SEC_BREAK ? 1 : 2;
+    if (ph != ui.dj_phase) {                   /* the engine moved on (the DJ's request, or SAVE): so does the count */
+        ui.dj_phase = (uint8_t)ph;
+        ui.dj_n = 0;
+    }
+    ui.dj_fill = 0;
+    ui.dj_n++;
+    if (ph == 0) {
+        if (ui.dj_n == (uint16_t)(g - 1)) {
+            ui.dj_fill = 1;
+            if (ui.dj_piece && !ui.piece_q)
+                ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
+        }
+        if (ui.dj_n >= (uint16_t)g && !en_sec_req)
+            en_section(EN_CMD_BREAK);
+    } else if (ph == 1) {
+        if (ui.dj_n >= (uint16_t)b && !en_sec_req)
+            en_section(EN_CMD_BUILD);
+    }
+}
+static void dj_tick(void)
+{
+    static uint8_t last = 255;
+    uint8_t p = en_drum_pos;
+    if (!ui.dj_on || !en_playing) {
+        last = 255;
+        ui.dj_fill = 0;
+        return;
+    }
+    if (p != last) {
+        if (p == 0 && last != 255)
+            dj_bar();
+        last = p;
+    }
 }
 
 /* ------------------------------------------------------------- the pool --- */
@@ -1059,6 +1211,12 @@ static void input(void)
                 if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
                     m |= fxbit(i);
         }
+        if (ui.dj_on && en_playing) {              /* the auto-DJ: a fill before the breakdown, the riser in the build */
+            if (ui.dj_fill)
+                m |= 1u << FX_FILL;
+            if (en_sec == EN_SEC_BUILD)
+                m |= 1u << FX_RISER;
+        }
         if (m != ui.fx_mask) {
             ui.fx_mask = m;
             en_fx(m);
@@ -1358,7 +1516,7 @@ static void draw_header(void)
                            en_playing | (uint32_t)en_sec << 2 | (uint32_t)en_sec_req << 9 | (uint32_t)msg << 5 |
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
-                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12);
+                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     if (en_playing)
@@ -1388,6 +1546,11 @@ static void draw_header(void)
                 cv_text(x, 8, &FONT_XS, sn, K_FROST);
                 x -= 10;
             }
+        }
+        if (ui.dj_on) {                           /* the auto-DJ is running */
+            x -= text_w(&FONT_XS, "DJ");
+            cv_text(x, 8, &FONT_XS, "DJ", K_ACC);
+            x -= 10;
         }
         if (ui.fx_lock && !ui.fx_menu) {          /* effects locked on, the menu closed: they play on */
             x -= text_w(&FONT_XS, "FX");
@@ -1655,9 +1818,17 @@ static void draw_fx(void)
 static void draw_mix(void)
 {
     int k;
-    char c[8] = "CPU ";
+    char c[24] = "CPU ";
     cv_text(4, 1, &FONT_XS, "MIX: GLO + KEY", K_ACC);
-    itoa_u(plat_cpu_pct(), c + 4);
+    if (ui.dj_on) {                            /* the auto-DJ: where it is */
+        const char *pn = ui.dj_phase == 0 ? "DJ GROOVE " : ui.dj_phase == 1 ? "DJ BREAK " : "DJ BUILD ";
+        int n = 0;
+        while (*pn)
+            c[n++] = *pn++;
+        itoa_u(ui.dj_n, c + n);
+    } else {
+        itoa_u(plat_cpu_pct(), c + 4);
+    }
     cv_text(118, 1, &FONT_XS, c, K_DIM);
     for (k = 0; k < NKEYS; k++) {
         int code = MIXK[k], on = mix_state(k);
@@ -1684,6 +1855,26 @@ static void draw_mix(void)
             while (*q)
                 lb[j++] = *q++;
             lb[j] = 0;
+        } else if (code >= 20 && code <= 23) {
+            const char *q = "SCENE ";
+            while (*q)
+                lb[j++] = *q++;
+            lb[j++] = (char)('1' + code - 20);
+            lb[j] = 0;
+        } else if (code == 24 || code == 25 || code == 27) {
+            const char *q = code == 24 ? "RESET ALL" : code == 25 ? "AUTO DJ" : "DJ PIECE";
+            while (*q)
+                lb[j++] = *q++;
+            lb[j] = 0;
+        } else if (code == 26) {
+            lb[j++] = 'D';
+            lb[j++] = 'J';
+            lb[j++] = ' ';
+            itoa_u(DJ_LEN[ui.dj_len % 3], lb + j);
+            while (lb[j])
+                j++;
+            lb[j++] = 'B';
+            lb[j] = 0;
         } else {
             const char *q = "CLEAR";
             while (*q)
@@ -1708,7 +1899,9 @@ static void draw_main(void)
         return;
     h = hash(h, ui.theme);
     if (mix_show()) {                            /* GLO held: the track mix */
-        h = hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct());
+        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct()),
+                 (uint32_t)ui.scene_set | (uint32_t)ui.dj_on << 4 | (uint32_t)ui.dj_len << 5 | (uint32_t)ui.dj_piece << 7 |
+                     (uint32_t)ui.dj_phase << 8 | (uint32_t)ui.dj_n << 12);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
@@ -2150,6 +2343,8 @@ void ui_frame(void)
         }
     }
     input();
+    scene_tick();
+    dj_tick();
     autosave();
     if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
         runner_update();
