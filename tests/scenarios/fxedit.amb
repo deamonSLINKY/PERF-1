@@ -1,0 +1,87 @@
+# The FX edit pages: SEL + FX walks them (the gate, the phaser, the flanger, the vinyl, then the keys again); FX alone
+# closes. The page's effect is on while it is up. The gate's page: the white keys are the pattern's steps, the knobs
+# the pattern (a name), the loop's length, the targets, the depth.
+wait 3000
+expect fxpage -1
+# SEL + FX: the first edit page, the gate
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 1
+expect fxmask 65536
+expect gxpreset 0
+expect gxpat 0x5249
+expect fxs0 16
+shot gate_page.png
+# a white key: step 1 (G3, key 2) opens; the pattern is then the keys' own (CUSTOM, 12)
+tapkey 2
+wait 100
+expect gxpat 0x524B
+expect gxpreset 12
+# the keys are not the scale, not effects
+expect pool 0x5AD
+# the pattern knob back to the first, then one on: TRES (steps 0 3 6, a loop of 8)
+spin K1 -12
+wait 100
+expect gxpreset 0
+expect gxpat 0x5249
+spin K1 1
+wait 100
+expect gxpreset 1
+expect gxpat 0x49
+expect fxs0 8
+shot gate_tres.png
+# the loop's length (knob 2): 12 steps; the pattern is then CUSTOM
+spin K2 4
+wait 100
+expect fxs0 12
+expect gxpreset 12
+# the Euclidean ones: E 5 is five hits in sixteen
+spin K1 -12
+spin K1 3
+wait 100
+expect gxpreset 3
+expect fxs0 16
+# the targets (knob 3: the drums) and the depth (knob 4: half)
+spin K3 4
+spin K4 -50
+wait 100
+expect fxs2 50
+wait 3000
+# the next page: the phaser (its effect on), its rate up
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 2
+expect fxmask 524288
+spin K1 10
+wait 100
+expect fxs3 50
+# the flanger, then the vinyl
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 3
+expect fxmask 1048576
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 4
+expect fxmask 33554432
+# and the keys again, FX alone closes
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 0
+expect fxmask 0
+tap FX
+wait 100
+expect fxon 0
+# the keys are the scale again
+tapkey 1
+expect pool 0x7AD

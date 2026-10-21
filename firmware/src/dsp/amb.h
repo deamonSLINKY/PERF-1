@@ -142,7 +142,22 @@ enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID,
 extern const char *const EN_FX_NAME[EN_NFX];   /* short names, for the screen */
 void en_fx(uint32_t mask);
 void en_trk(uint32_t mute, uint32_t solo);     /* the tracks' mutes and solos, a bit a track (EN_TR_*), latched */
-void en_gate_pat(uint32_t steps);              /* the pattern gate (FX_GATEX): bit s, the sixteenth s of the bar open */
+void en_gate_pat(uint32_t steps);              /* the pattern gate (FX_GATEX): bit s, step s of its loop open */
+/* the effects'' settings (the player''s, not a piece''s; not stored): en_fxs(i, v). Gate: the loop''s length in
+ * sixteenths (2..16; the pattern, en_gate_pat, repeats every that many: 12 or 10 against a bar of 16 is a
+ * polymeter), the tracks it closes (a bit a track, EN_TR_*), how far it closes them (0..100); the rest 0..100:
+ * the phaser''s rate, depth, feedback and mix; the flanger''s; the vinyl''s level, crackle (pops a second),
+ * hiss and tone. */
+enum {
+    EN_FXS_GX_LEN, EN_FXS_GX_TGT, EN_FXS_GX_DEPTH,
+    EN_FXS_PH_RATE, EN_FXS_PH_DEPTH, EN_FXS_PH_FB, EN_FXS_PH_MIX,
+    EN_FXS_FL_RATE, EN_FXS_FL_DEPTH, EN_FXS_FL_FB, EN_FXS_FL_MIX,
+    EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE,
+    EN_NFXS
+};
+#define EN_FXS_DEFAULTS {16, 0x70, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 15, 70}
+extern const int16_t EN_FXS_DEF[EN_NFXS];
+void en_fxs(int i, int v);
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */
 enum { EN_FXK_FILTER, EN_FXK_CRUSH, EN_FXK_THROW, EN_FXK_WASH, EN_NFXK };
 void en_fxk(int k, int v);

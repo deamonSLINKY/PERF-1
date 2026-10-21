@@ -489,6 +489,14 @@ static int expect(const char *what, const char *val)
         got = ui.trk_m;
     else if (!strncmp(what, "fxk", 3))           /* fxkN: the FX knobs' values (filter, crush, throw, wash) */
         got = ui.fxk[atoi(what + 3) & 3];
+    else if (!strcmp(what, "fxpage"))             /* the FX menu's page: 0 the keys, 1.. an effect's edit page */
+        got = ui.fx_menu ? ui.fx_page : -1;
+    else if (!strcmp(what, "gxpat"))              /* the gate's pattern (bit s: step s open) */
+        got = ui.gx_pat;
+    else if (!strcmp(what, "gxpreset"))
+        got = ui.gx_preset;
+    else if (!strncmp(what, "fxs", 3))            /* fxsN: the effects' setting N (EN_FXS_*) */
+        got = ui.fxs[atoi(what + 3) % EN_NFXS];
     else if (!strcmp(what, "scenes"))             /* the scenes stored (a bit a slot) */
         got = ui.scene_set;
     else if (!strcmp(what, "djon"))               /* the auto-DJ: on */

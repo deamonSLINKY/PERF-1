@@ -439,7 +439,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -477,6 +477,7 @@ void en_fx(uint32_t mask)                       /* in two halves: the queue carr
 void en_fxk(int k, int v) { post(C_FXK, k, v); }
 void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0x7Fu) | (solo & 0x7Fu) << 7)); }
 void en_gate_pat(uint32_t steps) { post(C_GATEPAT, 0, (int)(steps & 0xFFFFu)); }
+void en_fxs(int i, int v) { post(C_FXS, i, v); }
 
 /* -------------------------------------------------------------- state --- */
 volatile uint8_t en_playing, en_frozen, en_ext;
@@ -960,7 +961,7 @@ static float acid_vol;
  * a band-pass at ~1.8 kHz: a radio's hiss). TONE closes a low-pass on it; PUMP ducks it with the kick,
  * harder than the rest. Two generators, left and right. */
 typedef struct {
-    float b0, b1, b2, br, pw, pp, y1, y2, crack, lp;
+    float b0, b1, b2, br, pw, pp, y1, y2, crack, lp, r1, r2;
     uint32_t rng;
 } nz_t;
 static nz_t nz[2] = {{.rng = 0x1234567u}, {.rng = 0x89ABCDEu}};
@@ -1779,7 +1780,7 @@ static void apply(int p, int v)
     case P_NOISE: noise_vol = (float)(v * v) * 0.0001f; break;
     case P_DETUNE: detune = 0.00144f * fm_exp2f((float)v * 0.0332f); break;   /* 2.5 .. 25 cents */
     case P_NZ_COLOR: nz_color = v; break;
-    case P_NZ_TONE: nz_lp_k = 1.0f - fm_expf(-FM_TWO_PI * 300.0f * fm_exp2f((float)v * 0.06f) * (1.0f / EN_SR)); break;
+    case P_NZ_TONE: break;                      /* (the old noise's: unused, kept for the bank's layout) */
     case P_NZ_PUMP: nz_pump = (float)v * 0.01f; break;
     case P_BASSOCT:
         if (nsteps)
@@ -2201,7 +2202,10 @@ static float tg_inv = 1.0f / 256.0f;             /* 1 / the chunk: the tracks' g
 #define TR_ACID EN_TR_ACID
 #define TR_PAD EN_TR_PAD                         /* pad and vinyl */
 static uint8_t trk_mute, trk_solo;               /* latched (en_trk), a bit a track */
-static uint16_t gx_pat = 0x5249;                 /* the pattern gate: sixteenths 0 3 6 9 12 14 open (3+3+3+3+2+2) */
+static uint16_t gx_pat = 0x5249;                 /* the pattern gate: steps 0 3 6 9 12 14 open (3+3+3+3+2+2) */
+const int16_t EN_FXS_DEF[EN_NFXS] = EN_FXS_DEFAULTS;
+static volatile int16_t fxs_v[EN_NFXS] = EN_FXS_DEFAULTS;   /* the effects' settings (en_fxs) */
+static float gate_f[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the pattern gate's gain a track */
 static float lp_amt, hp_amt, lp_s[4], hp_s[4], lp_c[4], hp_c[4], throw_amt, throw_key, crush_l, crush_r, gate_g = 1.0f;
 static int crush_n;
 /* tape, flanger and phaser, on the master after the filters: a tape's wow and flutter (a short delay, its
@@ -2212,6 +2216,7 @@ static int crush_n;
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
 static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
+static float ph_fbk, ph_wet, fl_inc, fl_rng, fl_fbk, fl_wet, vn_g, vn_pop, vn_hiss;   /* the settings, as the render uses them */
 static float tp_m, fl_m, ph_m, tp_ph, tp_ph2, fl_ph, ph_ph, tp_lp[2], ph_z[2][4], ph_fb[2], ph_a[2];
 /* the FX knobs (en_fxk): filter -50..50 (a DJ filter: low-pass to the left, high-pass to the right), crush,
  * throw (the whole mix into the echo), wash (the whole mix into the reverb), each 0..100. They are the
@@ -2278,8 +2283,15 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     float dt = (float)n * (1.0f / EN_SR);
     int t, want = -1;
     fx_on = m;
+    {   /* the pattern gate: its loop's step now, open or closed, for each track it is on (gx_pat, the settings) */
+        const uint32_t len = (uint32_t)fm_clampf((float)fxs_v[EN_FXS_GX_LEN], 2.0f, 16.0f), tg = (uint32_t)fxs_v[EN_FXS_GX_TGT];
+        const int open = (int)(gx_pat >> ((sixteenth - 1u) % len) & 1u);
+        const float closed = 1.0f - fm_clampf((float)fxs_v[EN_FXS_GX_DEPTH] * 0.01f, 0.0f, 1.0f);
+        for (t = 0; t < EN_NTRACK; t++)
+            gate_f[t] = (m >> FX_GATEX & 1u) && (tg >> t & 1u) && !open ? closed : 1.0f;
+    }
     for (t = 0; t < EN_NTRACK; t++) {           /* mute and solo: 5 ms ramps */
-        float tgt = (!(mute >> t & 1u) && (!solo || (solo >> t & 1u))) ? 1.0f : 0.0f, d = (float)n * (1.0f / 220.0f);
+        float tgt = (!(mute >> t & 1u) && (!solo || (solo >> t & 1u))) ? gate_f[t] : 0.0f, d = (float)n * (1.0f / 220.0f);
         trk_g[t] = trk_g1[t];
         trk_g1[t] = trk_g[t] + fm_clampf(tgt - trk_g[t], -d, d);
     }
@@ -2299,15 +2311,27 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         tp_m = tp_m < 0.002f && !(m >> FX_TAPE & 1u) ? 0.0f : tp_m;
         fl_m = fl_m < 0.002f && !(m >> FX_FLANGER & 1u) ? 0.0f : fl_m;
         ph_m = ph_m < 0.002f && !(m >> FX_PHASER & 1u) ? 0.0f : ph_m;
-        if (ph_m > 0.0f) {
-            ph_ph += dt * 0.3f;                 /* 0.3 Hz */
+        ph_fbk = (float)fxs_v[EN_FXS_PH_FB] * 0.009f;     /* 0 .. 0.9 */
+        ph_wet = (float)fxs_v[EN_FXS_PH_MIX] * 0.005f;    /* the wet's share: 0 .. 0.5 (half and half: the deepest notches) */
+        if (ph_m > 0.0f) {                      /* rate 0.08 .. 2.6 Hz; the sweep 0 .. 4.5 octaves up from 250 Hz */
+            const float oct = (float)fxs_v[EN_FXS_PH_DEPTH] * 0.045f;
+            ph_ph += dt * 0.08f * fm_exp2f((float)fxs_v[EN_FXS_PH_RATE] * 0.05f);
             ph_ph -= (float)(int)ph_ph;
             for (c = 0; c < 2; c++) {
                 float x = fm_sin_turns(ph_ph + 0.25f * (float)c) * 0.5f + 0.5f;        /* 0..1 */
-                float w = 3.14159265f * 250.0f * fm_exp2f(3.5f * x) * (1.0f / EN_SR);   /* 250 Hz .. 2.8 kHz */
+                float w = 3.14159265f * 250.0f * fm_exp2f(oct * x) * (1.0f / EN_SR);
+                w = fm_minf(w, 0.9f);
                 ph_a[c] = (1.0f - w) / (1.0f + w);
             }
         }
+        fl_inc = 0.05f * fm_exp2f((float)fxs_v[EN_FXS_FL_RATE] * 0.06f) * (1.0f / EN_SR);   /* 0.05 .. 3.2 Hz */
+        fl_rng = (float)fxs_v[EN_FXS_FL_DEPTH] * 1.1f;                                  /* the sweep: 0 .. 110 samples */
+        fl_fbk = (float)fxs_v[EN_FXS_FL_FB] * 0.0095f;                                  /* 0 .. 0.95 */
+        fl_wet = (float)fxs_v[EN_FXS_FL_MIX] * 0.009f;                                  /* 0 .. 0.9 */
+        vn_g = (float)fxs_v[EN_FXS_VN_LEVEL] * 0.1f;   /* (the pops are small and the master's gain low: 100 gives peaks near -21 dBFS) */
+        vn_pop = 0.5f * fm_exp2f((float)fxs_v[EN_FXS_VN_CRACK] * 0.0633f) * (1.0f / EN_SR);   /* 0.5 .. 40 pops a second */
+        vn_hiss = (float)fxs_v[EN_FXS_VN_HISS] * 0.0012f;
+        nz_lp_k = 1.0f - fm_expf(-FM_TWO_PI * 300.0f * fm_exp2f((float)fxs_v[EN_FXS_VN_TONE] * 0.06f) * (1.0f / EN_SR));
     }
     {   /* the FX knobs, smoothed (~50 ms); each takes over from its key when it is the higher */
         const float sm = fm_minf(dt * 20.0f, 1.0f);
@@ -2453,11 +2477,11 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                 in[c] += (y - in[c]) * tp_m;
             }
         }
-        if (fl_m > 0.0f) {                      /* flanger: 0.5 .. 4 ms, 0.25 Hz, feedback 0.45 */
+        if (fl_m > 0.0f) {                      /* flanger: a short delay (0.2 ms and up), swept, with feedback */
             float d;
-            fl_ph += 0.25f * (1.0f / EN_SR);
+            fl_ph += fl_inc;
             fl_ph -= (float)(int)fl_ph;
-            d = 24.0f + 76.0f * (0.5f + 0.5f * fm_sin_turns(fl_ph));
+            d = 10.0f + fl_rng * (0.5f + 0.5f * fm_sin_turns(fl_ph));
             for (c = 0; c < 2; c++) {
                 float rd = (float)w - d, y;
                 uint32_t i0, i1;
@@ -2467,15 +2491,15 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                 i1 = (i0 + 1u) & (MOD_N - 1u);
                 fr = rd - (float)(int)rd;
                 y = fl_buf[c][i0] + (fl_buf[c][i1] - fl_buf[c][i0]) * fr;
-                fl_buf[c][w] = fm_flush(in[c] + 0.45f * (c ? -y : y));   /* the right side's feedback inverted: wider */
-                in[c] = (in[c] + 0.5f * y * fl_m) * (1.0f - 0.3f * fl_m);
+                fl_buf[c][w] = fm_flush(in[c] + fl_fbk * (c ? -y : y));   /* the right side's feedback inverted: wider */
+                in[c] = (in[c] + fl_wet * y * fl_m) * (1.0f / (1.0f + 0.85f * fl_wet * fl_m));
             }
         }
         out[0] = in[0];
         out[1] = in[1];
-        if (ph_m > 0.0f) {                      /* phaser: four all-passes, feedback 0.4, half dry and half wet */
+        if (ph_m > 0.0f) {                      /* phaser: four all-passes, with feedback, mixed with the dry */
             for (c = 0; c < 2; c++) {
-                float x = in[c] + 0.4f * ph_fb[c], y = x;
+                float x = in[c] + ph_fbk * ph_fb[c], y = x;
                 int s;
                 for (s = 0; s < 4; s++) {
                     float v = ph_a[c] * y + ph_z[c][s];
@@ -2483,7 +2507,8 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                     y = v;
                 }
                 ph_fb[c] = fm_flush(y);
-                out[c] = in[c] + (0.375f * (in[c] + y) - in[c]) * ph_m;   /* (0.75 of half and half: the feedback adds level) */
+                y *= 1.0f / (1.0f + 0.6f * ph_fbk);          /* (the feedback adds level) */
+                out[c] = in[c] + ((in[c] * (1.0f - ph_wet) + y * ph_wet) * 0.88f - in[c]) * ph_m;
             }
         }
         mod_w++;
@@ -2575,6 +2600,10 @@ static void drain(void)
             trk_solo = (uint8_t)(b >> 7 & 0x7F);
             break;
         case C_GATEPAT: gx_pat = (uint16_t)b; break;
+        case C_FXS:
+            if (a < EN_NFXS)
+                fxs_v[a] = (int16_t)b;
+            break;
         case C_FX:
             fx_req = a ? (fx_req & 0xFFFFu) | (uint32_t)(b & 0xFFFF) << 16 : (fx_req & 0xFFFF0000u) | (uint32_t)(b & 0xFFFF);
             break;
@@ -3011,38 +3040,41 @@ static inline float nz_white(nz_t *z)
     z->rng = z->rng * 1664525u + 1013904223u;
     return (float)(int32_t)z->rng * (1.0f / 2147483648.0f);
 }
-/* the vinyl, in eight wears (Wear, the old Colour): a record's surface noise (pink, quiet on a clean one) and
- * its pops: a few a second on the cleanest, about thirty on the most worn; most small, now and then a loud
- * one, each a click that dies in a third of a millisecond; the loud ones with a low thump behind. */
-static inline float nz_sample(nz_t *z, int c)
+/* the vinyl (the VINYL key; its settings en_fxs VN_*): a few pops a second to forty, each a click that rings
+ * a moment (a 2.8 kHz resonator, about a millisecond), most small and now and then a loud one, the loud ones
+ * with a duller thump (a 700 Hz one); under them the faintest surface hiss (pink). Left and right pop apart. */
+static inline float nz_sample(nz_t *z, int unused)
 {
-    float w = nz_white(z), pk, o, u;
+    float w = nz_white(z), pk, u, ex = 0.0f, ex2 = 0.0f, y, y2;
+    (void)unused;
     z->b0 = 0.99765f * z->b0 + w * 0.0990460f;  /* pink: Paul Kellet's economy filter */
     z->b1 = 0.96300f * z->b1 + w * 0.2965164f;
     z->b2 = 0.57000f * z->b2 + w * 1.0526913f;
     pk = (z->b0 + z->b1 + z->b2 + w * 0.1848f) * 0.22f;
     z->rng = z->rng * 1664525u + 1013904223u;
     u = (float)(z->rng >> 8) * (1.0f / 16777216.0f);      /* 0 .. 1 */
-    if (u < (3.0f + 4.0f * (float)c) * (1.0f / EN_SR)) {  /* a pop */
-        float a = (float)(int32_t)(z->rng << 8 | 1u) * (1.0f / 2147483648.0f);   /* -1 .. 1, from other bits */
-        float m = a < 0.0f ? -a : a;
-        z->crack = a * (0.25f + 1.3f * m * m);
-        if (m > 0.85f)
-            z->y2 = a * 0.7f;                   /* the thump */
+    if (u < vn_pop) {                           /* a pop */
+        float a = (float)(int32_t)(z->rng << 8 | 1u) * (1.0f / 2147483648.0f), m = a < 0.0f ? -a : a;   /* -1 .. 1 */
+        ex = a * (0.15f + 1.2f * m * m);
+        if (m > 0.8f)
+            ex2 = a * 0.9f;                     /* the thump */
     }
-    o = z->crack + z->y2 + pk * (0.18f + 0.06f * (float)c);
-    z->crack *= 0.86f;
-    z->y2 *= 0.9985f;
+    y = ex + 1.760f * z->r1 - 0.912f * z->r2;   /* a click: the resonator rung by the pop */
+    z->r2 = z->r1;
+    z->r1 = fm_flush(y);
+    y2 = ex2 + 1.9100f * z->y1 - 0.9640f * z->y2;   /* a thump: 700 Hz, slower to die */
+    z->y2 = z->y1;
+    z->y1 = fm_flush(y2);
     z->pw = w;
     z->pp = pk;
-    return o;
+    return y * 0.7f + y2 * 0.5f + pk * vn_hiss;
 }
 
 static float nzl[BLK], nzr[BLK];
 static void render_noise(uint32_t n)            /* into its own buffer: the pump ducks it on its own */
 {
     uint32_t j;
-    const float g = vin_m * 0.8f, k = nz_lp_k;   /* the vinyl key fades it in; wear, tone and pump are the piece's */
+    const float g = vin_m * vn_g, k = nz_lp_k;   /* the vinyl key fades it in; its settings are en_fxs's */
     float lvl = 0.0f;
     if (g <= 0.0f || !en_playing) {
         for (j = 0; j < n; j++)
@@ -3275,7 +3307,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
-    const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : fx_on >> FX_GATEX & 1u ? 3 : fx_on >> FX_PUMP & 1u ? 4 : 0;
+    const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : fx_on >> FX_PUMP & 1u ? 4 : 0;
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
@@ -3292,8 +3324,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         else if (gate == 4) {                   /* or a pump: down on each beat, back up over its first half */
             const float ph = ((float)((sixteenth - 1u) & 3u) * step_len + (float)(step_t + (int32_t)j)) / (4.0f * step_len);
             gt = 0.12f + 0.88f * fm_minf(ph * 2.2f, 1.0f);
-        } else if (gate == 3)                   /* or the sixteenths the pattern opens (gx_pat) */
-            gt = (gx_pat >> ((sixteenth - 1u) & 15u) & 1u) ? 1.0f : 0.0f;
+        }
         gg += (gt - gg) * 0.04f;
         dk[j] = 1.0f - depth * de;
         de *= duck_dec;

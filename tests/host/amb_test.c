@@ -427,9 +427,10 @@ int main(void)
                 en_set(P_AC_OCT, k == 2 ? 2 : 0);
             } else {                             /* the vinyl alone: mint, trashed */
                 en_set(P_ACID, 0);
-                en_fx(1u << FX_VINYL);               /* (the key: the piece's wear, tone and pump) */
-                en_set(P_NZ_TONE, 100);
-                en_set(P_NZ_COLOR, k == 3 ? 0 : 7);
+                en_fx(1u << FX_VINYL);               /* (the key; its settings: the crackle low, then high, the hiss off) */
+                en_fxs(EN_FXS_VN_CRACK, k == 3 ? 0 : 100);
+                en_fxs(EN_FXS_VN_HISS, 0);
+                en_fxs(EN_FXS_VN_LEVEL, 100);
             }
             en_play(1);
             for (b2 = 0; b2 < 10 * 44100 / 256; b2++) {

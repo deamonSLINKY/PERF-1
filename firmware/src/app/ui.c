@@ -45,6 +45,47 @@ static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LF
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
+
+/* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
+ * the four knobs, the effect itself held on while the page is up, so it is heard as it is edited. K_FXP + 4 *
+ * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
+enum { K_FXP = 220 };
+enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT };
+#define NFXP 4
+static const struct {
+    const char *name;
+    uint8_t bit;                        /* the effect (FX_*) held on while the page is up */
+    struct {
+        const char *label;
+        uint8_t kind, idx;              /* KN_*; the setting (EN_FXS_*) */
+    } c[4];
+} FXP[NFXP] = {
+    {"GATE", FX_GATEX, {{"Pattern", KN_PRESET, 0}, {"Length", KN_LEN, EN_FXS_GX_LEN}, {"Targets", KN_TGT, 0},
+                        {"Depth", KN_PLAIN, EN_FXS_GX_DEPTH}}},
+    {"PHASER", FX_PHASER, {{"Rate", KN_PLAIN, EN_FXS_PH_RATE}, {"Depth", KN_PLAIN, EN_FXS_PH_DEPTH},
+                           {"Feedbk", KN_PLAIN, EN_FXS_PH_FB}, {"Mix", KN_PLAIN, EN_FXS_PH_MIX}}},
+    {"FLANGER", FX_FLANGER, {{"Rate", KN_PLAIN, EN_FXS_FL_RATE}, {"Depth", KN_PLAIN, EN_FXS_FL_DEPTH},
+                             {"Feedbk", KN_PLAIN, EN_FXS_FL_FB}, {"Mix", KN_PLAIN, EN_FXS_FL_MIX}}},
+    {"VINYL", FX_VINYL, {{"Level", KN_PLAIN, EN_FXS_VN_LEVEL}, {"Crackle", KN_PLAIN, EN_FXS_VN_CRACK},
+                         {"Hiss", KN_PLAIN, EN_FXS_VN_HISS}, {"Tone", KN_PLAIN, EN_FXS_VN_TONE}}},
+};
+/* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
+ * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
+#define NGXP 13
+static const struct {
+    const char *name;
+    uint16_t pat;
+    uint8_t len, euc;
+} GX_PRE[NGXP] = {
+    {"3-3-3", 0x5249, 16, 0}, {"TRES", 0x0049, 8, 0}, {"OFFBT", 0x4444, 16, 0}, {"EUC 5", 0, 16, 5},
+    {"EUC 7", 0, 16, 7},      {"EUC 9", 0, 16, 9},    {"WALTZ", 0x0111, 12, 0}, {"CHOP", 0x0F0F, 16, 0},
+    {"SPARSE", 0x0101, 16, 0}, {"DENSE", 0xEEEE, 16, 0}, {"DOTTED", 0x0249, 12, 0}, {"5 / 10", 0x0155, 10, 0},
+    {"CUSTOM", 0, 16, 0}};
+static const struct {
+    const char *name;
+    uint8_t mask;                       /* a bit a track (EN_TR_*) */
+} GX_TGT[8] = {{"SYNTHS", 0x70}, {"PAD", 0x40}, {"DRONE", 0x10}, {"ACID", 0x20},
+               {"DRUMS", 0x0F}, {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0x7F}};
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
@@ -192,6 +233,10 @@ static struct {
     uint8_t seq_held;                  /* SEQ held long enough: the sequencer opened this hold */
     uint8_t fx_menu;                   /* the FX menu is on: the keys are effects, the knobs the FX knobs */
     int8_t fxk[4];                     /* the FX knobs' values (filter -50..50, crush, throw, wash): not stored */
+    uint8_t fx_page;                   /* with the FX menu on: 0 the keys, 1.. an effect's edit page (FXP) */
+    uint8_t fxs[EN_NFXS];              /* the effects' settings (en_fxs), mirrored; not stored */
+    uint8_t gx_preset, gx_tgt;         /* the gate: its pattern's name (NGXP - 1: the keys' own); its targets */
+    uint16_t gx_pat;                   /* the gate's pattern: bit s, step s open */
     uint8_t trk_m, trk_s;              /* the tracks muted and soloed (GLO held, the keys): a bit a track, not stored */
     uint32_t scene_lock[4];            /* the four scenes: the effects locked on, the mutes, the solos, the FX knobs; */
     uint8_t scene_m[4], scene_s[4];    /* kept until power-off (not stored) */
@@ -352,8 +397,94 @@ static void mix_key(int k)
 }
 
 /* the knobs now: the page's, or with the FX menu on, the FX knobs */
-static int view_knob(int i) { return ui.fx_menu ? K_FXF + i : VIEW_KNOB[ui.view][i]; }
-static const char *view_label(int i) { return ui.fx_menu ? FXK_LABEL[i] : KNOB_LABEL[ui.view][i]; }
+static int view_knob(int i)
+{
+    if (ui.fx_menu)
+        return ui.fx_page ? K_FXP + 4 * (ui.fx_page - 1) + i : K_FXF + i;
+    return VIEW_KNOB[ui.view][i];
+}
+static const char *view_label(int i)
+{
+    if (ui.fx_menu)
+        return ui.fx_page ? FXP[ui.fx_page - 1].c[i].label : FXK_LABEL[i];
+    return KNOB_LABEL[ui.view][i];
+}
+
+/* the FX edit pages' values: a setting, or the gate's pattern / targets (a name), kept here and sent (en_fxs) */
+#define FXP_CTL(k) (FXP[((k) - K_FXP) / 4].c[((k) - K_FXP) % 4])
+static void gx_load(int p)                     /* a pattern, and its natural length */
+{
+    const uint16_t pat = GX_PRE[p].euc ? (uint16_t)en_euclid(GX_PRE[p].euc, GX_PRE[p].len, 0) : GX_PRE[p].pat;
+    ui.gx_preset = (uint8_t)p;
+    ui.gx_pat = pat;
+    ui.fxs[EN_FXS_GX_LEN] = GX_PRE[p].len;
+    en_gate_pat(pat);
+    en_fxs(EN_FXS_GX_LEN, GX_PRE[p].len);
+}
+static void gx_step(int s)                     /* a step of the gate's pattern on or off: the pattern is then the keys' own */
+{
+    ui.gx_pat ^= (uint16_t)(1u << s);
+    ui.gx_preset = NGXP - 1;
+    en_gate_pat(ui.gx_pat);
+}
+static int fxp_get(int k)
+{
+    switch (FXP_CTL(k).kind) {
+    case KN_PRESET: return ui.gx_preset;
+    case KN_TGT: return ui.gx_tgt;
+    default: return ui.fxs[FXP_CTL(k).idx];
+    }
+}
+static void fxp_range(int k, int *lo, int *hi)
+{
+    const int kind = FXP_CTL(k).kind;
+    *lo = kind == KN_LEN ? 2 : 0;
+    *hi = kind == KN_PRESET ? NGXP - 1 : kind == KN_LEN ? 16 : kind == KN_TGT ? 7 : 100;
+}
+static void fxp_set(int k, int v)
+{
+    int lo, hi;
+    fxp_range(k, &lo, &hi);
+    v = v < lo ? lo : v > hi ? hi : v;
+    switch (FXP_CTL(k).kind) {
+    case KN_PRESET:
+        if (v != ui.gx_preset && v < NGXP - 1)
+            gx_load(v);
+        else
+            ui.gx_preset = (uint8_t)v;           /* (the end: the keys' own, kept as they are) */
+        break;
+    case KN_TGT:
+        if (v != ui.gx_tgt) {
+            ui.gx_tgt = (uint8_t)v;
+            en_fxs(EN_FXS_GX_TGT, GX_TGT[v].mask);
+        }
+        break;
+    default:
+        if (v != ui.fxs[FXP_CTL(k).idx]) {
+            ui.fxs[FXP_CTL(k).idx] = (uint8_t)v;
+            en_fxs(FXP_CTL(k).idx, v);
+            if (FXP_CTL(k).kind == KN_LEN)
+                ui.gx_preset = NGXP - 1;
+        }
+    }
+}
+static void fxp_text(int k, char *b)
+{
+    const char *s = 0;
+    const int v = fxp_get(k);
+    if (FXP_CTL(k).kind == KN_PRESET)
+        s = GX_PRE[v].name;
+    else if (FXP_CTL(k).kind == KN_TGT)
+        s = GX_TGT[v].name;
+    if (s) {
+        int n = 0;
+        while (*s && n < 9)
+            b[n++] = *s++;
+        b[n] = 0;
+    } else {
+        itoa_u((uint32_t)v, b);
+    }
+}
 
 /* ------------------------------------------------------------ values --- */
 static int knob_par(int k)                     /* a knob's parameter (the sequencer's: its lane's) */
@@ -369,6 +500,8 @@ static int knob_par(int k)                     /* a knob's parameter (the sequen
 static int knob_get(int k)
 {
     int p = knob_par(k);
+    if (k >= K_FXP)
+        return fxp_get(k);
     if (k >= K_FXF)
         return ui.fxk[k - K_FXF];
     return p >= 0 ? proj.par[p] : 0;
@@ -376,6 +509,10 @@ static int knob_get(int k)
 static void knob_range(int k, int *lo, int *hi)
 {
     int p = knob_par(k);
+    if (k >= K_FXP) {
+        fxp_range(k, lo, hi);
+        return;
+    }
     if (k >= K_FXF) {                            /* the filter is bipolar, the rest 0..100 */
         *lo = k == K_FXF ? -50 : 0;
         *hi = k == K_FXF ? 50 : 100;
@@ -387,6 +524,10 @@ static void knob_range(int k, int *lo, int *hi)
 static void knob_text(int k, char *b)
 {
     int p = knob_par(k);
+    if (k >= K_FXP) {
+        fxp_text(k, b);
+        return;
+    }
     if (k >= K_FXF) {
         int v = ui.fxk[k - K_FXF], n = 0;
         if (k == K_FXF) {                        /* "LP 40", "HP 40", or off in the dead zone */
@@ -415,6 +556,10 @@ static void knob_text(int k, char *b)
 static void knob_set(int k, int v)
 {
     int lo, hi, p = knob_par(k);
+    if (k >= K_FXP) {
+        fxp_set(k, v);
+        return;
+    }
     if (k >= K_FXF) {                            /* the FX knobs: the engine's, never stored */
         knob_range(k, &lo, &hi);
         v = v < lo ? lo : v > hi ? hi : v;
@@ -811,6 +956,7 @@ static void button(int b)
     switch (b) {
     case B_FX:
         ui.fx_menu = (uint8_t)!ui.fx_menu;
+        ui.fx_page = 0;                          /* (from an edit page too: closed) */
         say("FX", ui.fx_menu ? "HOLD A KEY" : ui.fx_lock ? "LOCKED ONES STAY ON" : "OFF");
         break;
     case B_EDIT:
@@ -1085,7 +1231,7 @@ static void input(void)
                 ui.factory_done = 0;
                 ui.btn_used |= m;              /* not a breakdown */
                 ui.save_held = 1;              /* nor a drop */
-            } else if (i == B_SAVE && ui.fx_menu) {   /* FX: SAVE held is lock mode */
+            } else if (i == B_SAVE && ui.fx_menu && !ui.fx_page) {   /* FX: SAVE held is lock mode */
                 uint32_t k, held = keys & ~ui.shift_keys;
                 ui.lock_mode = 1;
                 ui.save_held = 1;              /* no drop while it's held */
@@ -1097,6 +1243,13 @@ static void input(void)
                     ui.btn_used |= m;          /* not a breakdown */
                 }
                 say("LOCK MODE", "TAP EFFECTS");
+            }
+            if (i == B_FX && (btn >> B_SEL & 1u)) {   /* shift: the effects' edit pages, one by one, then the keys again */
+                ui.fx_page = ui.fx_menu ? (uint8_t)((ui.fx_page + 1) % (NFXP + 1)) : 1;
+                ui.fx_menu = 1;
+                ui.lock_mode = 0;
+                say(ui.fx_page ? FXP[ui.fx_page - 1].name : "FX", ui.fx_page ? "EDIT" : "HOLD A KEY");
+                ui.btn_used |= m | 1u << B_SEL;
             }
             if (i == B_SEQ)
                 ui.seq_held = 0;
@@ -1185,7 +1338,7 @@ static void input(void)
         plat_ms() - ui.down_t[B_GLO] >= 350u)
         ui.btn_used |= 1u << B_GLO;            /* held for the mix: letting go does nothing either */
     ui.lock_keys &= keys;
-    if (ui.fx_menu && ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* lock mode: a key tapped, its effect */
+    if (ui.fx_menu && !ui.fx_page && ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* lock mode: a key tapped, its effect */
         uint32_t p = ch & keys & ~ui.shift_keys;                         /* locked, or unlocked */
         for (i = 0; i < NKEYS; i++)
             if (p >> i & 1u)
@@ -1193,7 +1346,7 @@ static void input(void)
         ui.lock_keys |= p;
         ui.btn_used |= 1u << B_SAVE;
     }
-    if (ui.fx_menu && !ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* a locked effect's key tapped: that */
+    if (ui.fx_menu && !ui.fx_page && !ui.lock_mode && (ch & keys & ~ui.shift_keys)) {   /* a locked effect's key tapped: that */
         uint32_t p = ch & keys & ~ui.shift_keys;                         /* one off, the others stay locked */
         for (i = 0; i < NKEYS; i++)
             if ((p >> i & 1u) && (ui.fx_lock >> KEY_FX[i] & 1u)) {
@@ -1206,7 +1359,9 @@ static void input(void)
         if (!ui.fx_menu)
             ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
         m = ui.fx_lock;
-        if (ui.fx_menu) {
+        if (ui.fx_menu && ui.fx_page)           /* an edit page: its effect on, to be heard as it is edited */
+            m |= 1u << FXP[ui.fx_page - 1].bit;
+        if (ui.fx_menu && !ui.fx_page) {
             for (i = 0; i < NKEYS; i++)
                 if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
                     m |= fxbit(i);
@@ -1222,6 +1377,14 @@ static void input(void)
             en_fx(m);
         }
     }
+    if (ui.fx_menu && ui.fx_page == 1)           /* the gate's page: the white keys are the pattern's steps */
+        for (i = 0; i < NKEYS; i++)
+            if ((ch & keys & ~ui.shift_keys) >> i & 1u) {
+                int s;
+                for (s = 0; s < 16; s++)
+                    if (WHITE_KEY[s] == i)
+                        gx_step(s);
+            }
     if (!ui.fx_menu)
         for (i = 0; i < NKEYS; i++)
             if ((ch & keys & ~ui.shift_keys) >> i & 1u) {
@@ -1814,6 +1977,52 @@ static void draw_fx(void)
     }
 }
 
+/* an FX edit page: the gate's steps (the white keys: lit where it opens, the loop's end marked, the step playing
+ * outlined), or the effect's name; the knobs are under it */
+static int gx_head(void)                       /* the gate's step playing now */
+{
+    const uint32_t len = ui.fxs[EN_FXS_GX_LEN] < 2u ? 2u : ui.fxs[EN_FXS_GX_LEN];
+    return en_playing ? (int)((en_bars - 1u) % len) : -1;
+}
+static void draw_fxedit(void)
+{
+    const int p = ui.fx_page - 1;
+    const int32_t cw = 14;
+    int s;
+    cv_text(4, 1, &FONT_XS, "FX EDIT: SEL + FX FOR THE NEXT", K_ACC);
+    if (p == 0) {
+        const int len = ui.fxs[EN_FXS_GX_LEN], head = gx_head();
+        cv_text(4, 18, &FONT_B, "GATE", K_TEXT);
+        cv_text(60, 20, &FONT_XS, "WHITE KEYS: STEPS", K_DIM);
+        for (s = 0; s < 16; s++) {
+            const int32_t x = 8 + s * cw, on = ui.gx_pat >> s & 1u, live = s < len;
+            if (live) {
+                cv_rect(x, 42, cw - 2, 40, on ? K_PAD : K_LINE);
+                if (!on)
+                    cv_rect(x + 1, 43, cw - 4, 38, K_BG);
+            } else {
+                cv_rect(x, 62, cw - 2, 2, K_LINE);       /* past the loop's end: a dash */
+            }
+            if (s == head)
+                cv_rect(x, 86, cw - 2, 3, K_ACC);        /* the step playing */
+        }
+        cv_text(8, 96, &FONT_XS, "LOOP", K_DIM);
+        {
+            char t[12];
+            int32_t x;
+            itoa_u((uint32_t)len, t);
+            x = cv_text(40, 96, &FONT_XS, t, K_TEXT);
+            cv_text(x + 3, 96, &FONT_XS, len == 16 ? "STEPS: A BAR" : 16 % len == 0 ? "STEPS: IN A BAR" : "STEPS: AGAINST THE BAR", K_DIM);
+        }
+        cv_text(8, 112, &FONT_XS, "CLOSES", K_DIM);
+        cv_text(52, 112, &FONT_XS, GX_TGT[ui.gx_tgt].name, K_TEXT);
+    } else {
+        cv_text(4, 18, &FONT_B, FXP[p].name, K_TEXT);
+        cv_text(4, 50, &FONT_XS, "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
+        cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT.", K_DIM);
+    }
+}
+
 /* the track mix (GLO held): the keys, as the FX menu's, each its track's mute (M:) or solo (S:), lit while on */
 static void draw_mix(void)
 {
@@ -1912,10 +2121,16 @@ static void draw_main(void)
     }
     if (ui.fx_menu) {
         h = hash(hash(0x46584D4Eu, ui.fx_mask ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), ui.fx_lock);
+        h = hash(h, ui.fx_page | (uint32_t)ui.gx_pat << 4 | (uint32_t)ui.fxs[EN_FXS_GX_LEN] << 20 | (uint32_t)ui.gx_tgt << 25);
+        if (ui.fx_page == 1)
+            h = hash(h, (uint32_t)(gx_head() + 1));
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
-            draw_fx();
+            if (ui.fx_page)
+                draw_fxedit();
+            else
+                draw_fx();
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -1990,7 +2205,7 @@ static void draw_knobs(void)
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
-    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1);
+    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1 | (uint32_t)ui.fx_page << 2);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -2004,7 +2219,7 @@ static void draw_knobs(void)
             caps(u + 5, EN_LANE_NAME[ui.lane], (int)sizeof u - 5);
             caps(t, u, sizeof t);
         } else if (ui.fx_menu) {
-            caps(t, "FX", sizeof t);
+            caps(t, ui.fx_page ? FXP[ui.fx_page - 1].name : "FX", sizeof t);
         } else {
             caps(t, VIEW_NAME[ui.view], sizeof t);
         }
@@ -2132,6 +2347,14 @@ static void leds(void)
         for (i = 0; i < NKEYS; i++)
             if (mix_state((int)i))
                 k |= 1u << i;
+    } else if (ui.fx_menu && ui.fx_page == 1) {  /* the gate's page: the steps open, the one playing blinking */
+        const int len = ui.fxs[EN_FXS_GX_LEN], head = gx_head();
+        b |= 1u << B_FX;
+        for (i = 0; i < 16; i++)
+            if (((int)i < len && (ui.gx_pat >> i & 1u)) ^ (int)((int)i == head))
+                k |= 1u << WHITE_KEY[i];
+    } else if (ui.fx_menu && ui.fx_page) {       /* another effect's page: FX lit */
+        b |= 1u << B_FX;
     } else if (ui.fx_menu) {                     /* FX: lit; the keys held */
         b |= 1u << B_FX;
         for (i = 0; i < NKEYS; i++)
@@ -2284,6 +2507,14 @@ void ui_init(void)
         en_mute(0);
     memset(&rm, 0, sizeof rm);
     memset(&ui, 0, sizeof ui);
+    {   /* the effects' settings start at the engine's defaults; the gate at its first pattern, on the synths */
+        int i;
+        for (i = 0; i < EN_NFXS; i++)
+            ui.fxs[i] = (uint8_t)EN_FXS_DEF[i];
+        ui.gx_pat = GX_PRE[0].pat;
+        ui.gx_preset = 0;
+        ui.gx_tgt = 0;
+    }
     ui.touched = -1;
     ui.boot_t = plat_ms();
     ui.theme = (uint8_t)proj.par[P_THEME];
