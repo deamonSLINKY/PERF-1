@@ -491,6 +491,14 @@ static int expect(const char *what, const char *val)
         got = ui.fxk[atoi(what + 3) & 3];
     else if (!strcmp(what, "fxpage"))             /* the FX menu's page: 0 the keys, 1.. an effect's edit page */
         got = ui.fx_menu ? ui.fx_page : -1;
+    else if (!strcmp(what, "scenequant"))         /* scenes on the next bar (1) or at once (0) */
+        got = ui.scene_quant;
+    else if (!strcmp(what, "djlen"))              /* the auto-DJ's groove length: 0 .. 3 (8, 16, 32, 64 bars) */
+        got = ui.dj_len;
+    else if (!strcmp(what, "djbreak"))
+        got = ui.dj_break;
+    else if (!strcmp(what, "sceneq"))             /* the scene waiting for the bar: slot + 1 */
+        got = ui.scene_q;
     else if (!strcmp(what, "fxbank"))             /* the FX keys' bank (the dial in the FX menu) */
         got = fx_bank;
     else if (!strcmp(what, "undook"))

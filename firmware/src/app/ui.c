@@ -51,7 +51,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 12
+#define NFXP 13
 static const char *const RATE_NAME[6] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
@@ -59,6 +59,10 @@ static const char *const SSIZE_NAME[3] = {"1/32", "1/16", "1/8"};               
 static const char *const HSPEED_NAME[3] = {"X1.5", "X2", "X4"};                                 /* half time: how much slower */
 static const char *const SWRATE_NAME[5] = {"2 BARS", "1 BAR", "1/2", "1/4", "1/8"};              /* the sweep's period */
 static const char *const SWTYPE_NAME[3] = {"LOW", "HIGH", "BAND"};
+static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
+static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
+static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
+static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const struct {
     const char *name;
     uint8_t bit;                        /* the effect (FX_*) held on while the page is up */
@@ -94,7 +98,11 @@ static const struct {
                               {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SWEEP", FX_SWEEP, 0, {{"Every", KN_NAME, EN_FXS_SW_RATE, SWRATE_NAME, 5}, {"Depth", KN_PLAIN, EN_FXS_SW_DEPTH, 0, 0},
                             {"Reso", KN_PLAIN, EN_FXS_SW_RESO, 0, 0}, {"Type", KN_NAME, EN_FXS_SW_TYPE, SWTYPE_NAME, 3}}},
-};/* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
+    /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
+    {"PERFORM", 31, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
+                        {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
+};
+/* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
 #define NGXP 13
 #define NTGT 10
@@ -284,7 +292,9 @@ static struct {
     uint32_t undo_lock, tap_t[4];      /* UNDO: what the last big change (a scene, reset, clear, the drums' group) left behind; tap tempo */
     uint8_t undo_m, undo_s, undo_ok, tap_n;
     int8_t undo_k[4];
-    uint8_t dj_on, dj_len, dj_piece;   /* the auto-DJ: on; its groove length (8, 16, 32 bars); a new piece each round */
+    uint8_t dj_on, dj_len, dj_piece;   /* the auto-DJ: on; its groove length (8, 16, 32, 64 bars); a new piece each round */
+    uint8_t dj_break, dj_fillon;       /* its breakdown (0 short: 4 bars, 1 half the groove, 2 as long); a drum fill before it */
+    uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
     uint16_t dj_n;                     /* bars in the phase */
     uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
@@ -442,7 +452,11 @@ static void tap_tempo(void)                    /* four taps or so: the tempo fro
         say("TAP TEMPO", "TAP AGAIN");
     }
 }
-static const uint8_t DJ_LEN[3] = {8, 16, 32};
+static const uint8_t DJ_LEN[4] = {8, 16, 32, 64};
+static int dj_break_len(int g)
+{
+    return ui.dj_break == 0 ? 4 : ui.dj_break == 1 ? (g / 2 < 4 ? 4 : g / 2) : g;
+}
 static void mix_key(int k)
 {
     int c = MIXK[k];
@@ -481,7 +495,7 @@ static void mix_key(int k)
         say("AUTO-DJ", ui.dj_on ? "ON" : "OFF");
     } else if (c == 26) {
         char t[12];
-        ui.dj_len = (uint8_t)((ui.dj_len + 1) % 3);
+        ui.dj_len = (uint8_t)((ui.dj_len + 1) % 4);
         itoa_u(DJ_LEN[ui.dj_len], t);
         {   /* " BARS" after the number */
             int n = 0;
@@ -535,13 +549,18 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
     ui.gx_preset = NGXP - 1;
     en_gate_pat(ui.gx_pat);
 }
+static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
+{
+    return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : &ui.dj_fillon;
+}
+#define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 31)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
 {
     switch (FXP_CTL(k).kind) {
     case KN_PRESET: return ui.gx_preset;
     case KN_TGT: return ui.gx_tgt;
     case KN_PTGT: return ui.pm_tgt;
-    default: return ui.fxs[FXP_CTL(k).idx];
+    default: return FXP_UI(k) ? *uiv(FXP_CTL(k).idx) : ui.fxs[FXP_CTL(k).idx];
     }
 }
 static void fxp_range(int k, int *lo, int *hi)
@@ -576,6 +595,10 @@ static void fxp_set(int k, int v)
         }
         break;
     default:
+        if (FXP_UI(k)) {
+            *uiv(FXP_CTL(k).idx) = (uint8_t)v;
+            break;
+        }
         if (v != ui.fxs[FXP_CTL(k).idx]) {
             ui.fxs[FXP_CTL(k).idx] = (uint8_t)v;
             en_fxs(FXP_CTL(k).idx, v);
@@ -759,15 +782,11 @@ static void scene_store(int s)
         say(t, "STORED");
     }
 }
-static void scene_recall(int s)
+static void scene_apply(int s)
 {
     char t[12] = "SCENE 1";
     int k;
     t[6] = (char)('1' + s);
-    if (!(ui.scene_set >> s & 1u)) {
-        say(t, "EMPTY: HOLD TO STORE");
-        return;
-    }
     undo_save();
     ui.fx_lock = ui.scene_lock[s];             /* (the effects follow from the lock, in the next frame) */
     ui.trk_m = ui.scene_m[s];
@@ -776,6 +795,22 @@ static void scene_recall(int s)
     for (k = 0; k < 4; k++)
         knob_set(K_FXF + k, ui.scene_k[s][k]);
     say(t, 0);
+}
+static void scene_recall(int s)                /* a scene: on the next bar while playing (a setting), else at once */
+{
+    char t[12] = "SCENE 1";
+    t[6] = (char)('1' + s);
+    if (!(ui.scene_set >> s & 1u)) {
+        say(t, "EMPTY: HOLD TO STORE");
+        return;
+    }
+    if (ui.scene_quant && en_playing) {
+        ui.scene_q = (uint8_t)(s + 1);          /* (another tapped before the bar replaces it) */
+        say(t, "NEXT BAR");
+    } else {
+        ui.scene_q = 0;
+        scene_apply(s);
+    }
 }
 static void scene_reset(void)                  /* everything back: no effects locked, no mutes or solos, the FX knobs home */
 {
@@ -811,7 +846,7 @@ static void scene_tick(void)                   /* a scene key down: held long en
  * SAVE pressed by hand just moves it on from there. */
 static void dj_bar(void)                       /* a new bar (while playing) */
 {
-    const int g = DJ_LEN[ui.dj_len % 3], b = g / 2 < 4 ? 4 : g / 2;
+    const int g = DJ_LEN[ui.dj_len % 4], b = dj_break_len(g);
     const int ph = en_sec == EN_SEC_GROOVE ? 0 : en_sec == EN_SEC_BREAK ? 1 : 2;
     if (ph != ui.dj_phase) {                   /* the engine moved on (the DJ's request, or SAVE): so does the count */
         ui.dj_phase = (uint8_t)ph;
@@ -821,7 +856,7 @@ static void dj_bar(void)                       /* a new bar (while playing) */
     ui.dj_n++;
     if (ph == 0) {
         if (ui.dj_n == (uint16_t)(g - 1)) {
-            ui.dj_fill = 1;
+            ui.dj_fill = (uint8_t)(ui.dj_fillon != 0);
             if (ui.dj_piece && !ui.piece_q)
                 ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
         }
@@ -832,18 +867,27 @@ static void dj_bar(void)                       /* a new bar (while playing) */
             en_section(EN_CMD_BUILD);
     }
 }
-static void dj_tick(void)
+static void dj_tick(void)                    /* each new bar while playing: a scene waiting, the auto-DJ's count */
 {
     static uint8_t last = 255;
     uint8_t p = en_drum_pos;
-    if (!ui.dj_on || !en_playing) {
-        last = 255;
+    if (!ui.dj_on)
         ui.dj_fill = 0;
+    if (!en_playing) {
+        last = 255;
+        ui.scene_q = 0;
         return;
     }
     if (p != last) {
-        if (p == 0 && last != 255)
-            dj_bar();
+        if (p == 0 && last != 255) {
+            if (ui.scene_q) {
+                const int s = ui.scene_q - 1;
+                ui.scene_q = 0;
+                scene_apply(s);
+            }
+            if (ui.dj_on)
+                dj_bar();
+        }
         last = p;
     }
 }
@@ -1487,7 +1531,8 @@ static void input(void)
         if (!ui.fx_menu)
             ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
         m = ui.fx_lock;
-        if (ui.fx_menu && ui.fx_page && (!FXP[ui.fx_page - 1].hold || (keys & ~ui.shift_keys)))   /* an edit page: its effect on, */
+        if (ui.fx_menu && ui.fx_page && FXP[ui.fx_page - 1].bit != 31 &&
+            (!FXP[ui.fx_page - 1].hold || (keys & ~ui.shift_keys)))   /* an edit page: its effect on, */
             m |= 1u << FXP[ui.fx_page - 1].bit;                                                 /* to be heard as it is edited (a roll or riser: with a key held) */
         if (ui.fx_menu && !ui.fx_page) {
             for (i = 0; i < NKEYS; i++)
@@ -1815,7 +1860,7 @@ static void draw_header(void)
                            en_playing | (uint32_t)en_sec << 2 | (uint32_t)en_sec_req << 9 | (uint32_t)msg << 5 |
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
-                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13);
+                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     if (en_playing)
@@ -1845,6 +1890,13 @@ static void draw_header(void)
                 cv_text(x, 8, &FONT_XS, sn, K_FROST);
                 x -= 10;
             }
+        }
+        if (ui.scene_q) {                         /* a scene waiting for the bar */
+            char q[4] = "S1>";
+            q[1] = (char)('0' + ui.scene_q);
+            x -= text_w(&FONT_XS, q);
+            cv_text(x, 8, &FONT_XS, q, K_ACC);
+            x -= 10;
         }
         if (ui.dj_on) {                           /* the auto-DJ is running */
             x -= text_w(&FONT_XS, "DJ");
@@ -2160,7 +2212,7 @@ static void draw_fxedit(void)
 static void draw_perf(void)
 {
     static const char *const TN[7] = {"KCK", "HAT", "SNR", "PRC", "DRN", "ACD", "PAD"};
-    const int g = DJ_LEN[ui.dj_len % 3], b = g / 2 < 4 ? 4 : g / 2;
+    const int g = DJ_LEN[ui.dj_len % 4], b = dj_break_len(g);
     int i;
     {   /* the section, and the auto-DJ's place in it */
         const char *sn = en_sec == EN_SEC_BREAK ? "BREAK" : en_sec == EN_SEC_BUILD ? "BUILD" : "GROOVE";
@@ -2206,11 +2258,11 @@ static void draw_perf(void)
     }
     for (i = 0; i < 4; i++) {                     /* the scenes */
         const int32_t x = 4 + i * 58;
-        const int set = ui.scene_set >> i & 1u;
+        const int set = ui.scene_set >> i & 1u, wait = ui.scene_q == i + 1;
         char t[8] = "SCENE 1";
         t[6] = (char)('1' + i);
-        cv_round(x, 88, 54, 20, 3, set ? K_PAD : K_PANEL);
-        text_c(x + 27, 91, &FONT_XS, t, set ? K_BG : K_DIM);
+        cv_round(x, 88, 54, 20, 3, wait ? K_ACC : set ? K_PAD : K_PANEL);
+        text_c(x + 27, 91, &FONT_XS, wait ? "NEXT BAR" : t, wait || set ? K_BG : K_DIM);
     }
     {   /* in FX: what is on (latched ones in the primary, held ones in the accent) */
         int32_t x = 6;
@@ -2307,7 +2359,7 @@ static void draw_mix(void)
             lb[j++] = 'D';
             lb[j++] = 'J';
             lb[j++] = ' ';
-            itoa_u(DJ_LEN[ui.dj_len % 3], lb + j);
+            itoa_u(DJ_LEN[ui.dj_len % 4], lb + j);
             while (lb[j])
                 j++;
             lb[j++] = 'B';
@@ -2389,7 +2441,7 @@ static void draw_main(void)
     if (ui.view == V_PERF) {
         h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.scene_set << 14 | (uint32_t)ui.dj_on << 18 |
                         (uint32_t)ui.dj_phase << 19 | (uint32_t)ui.dj_len << 21 | (uint32_t)en_sec << 23 | (uint32_t)en_sec_req << 25);
-        h = hash(h, ui.fx_mask);
+        h = hash(h, ui.fx_mask | (uint32_t)ui.scene_q << 28);
         h = hash(h, ui.fx_lock ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
         for (i = 0; i < EN_NLANE; i++)
             h = hash(h, (uint32_t)q16(en_drum_glow[i]));
@@ -2769,6 +2821,10 @@ void ui_init(void)
         ui.gx_pat = GX_PRE[0].pat;
         ui.gx_preset = 0;
         ui.gx_tgt = 0;
+        ui.scene_quant = 1;                    /* a scene on the next bar */
+        ui.dj_len = 1;                         /* the auto-DJ: 16 bars of groove, a half-length breakdown, a fill before it */
+        ui.dj_break = 1;
+        ui.dj_fillon = 1;
     }
     ui.touched = -1;
     ui.boot_t = plat_ms();

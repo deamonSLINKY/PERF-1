@@ -123,14 +123,36 @@ spin SELECT 1
 wait 100
 expect fxpage 12
 expect fxmask 1073741824
+# the performing settings page: no effect on; when scenes come, the auto-DJ's groove and breakdown
+spin SELECT 1
+wait 100
+expect fxpage 13
+expect fxmask 0
+expect scenequant 1
+spin K1 -1
+wait 50
+expect scenequant 0
+spin K1 1
+wait 50
+expect scenequant 1
+spin K2 1
+wait 50
+expect djlen 2
+spin K2 -1
+wait 50
+expect djlen 1
+spin K3 1
+wait 50
+expect djbreak 2
+spin K3 -1
 # the dial stops at the last page
 spin SELECT 1
 wait 100
-expect fxpage 12
+expect fxpage 13
 # the dial back down one page
 spin SELECT -1
 wait 100
-expect fxpage 11
+expect fxpage 12
 # and the keys again with SEL + FX (from the last page); FX alone closes
 spin SELECT 1
 wait 100

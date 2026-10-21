@@ -40,7 +40,7 @@ wait 100
 expect trkmute 0
 expect fxk1 0
 expect fxk0 0
-# scene 2 recalled: a tap
+# scene 2 recalled: a tap (it waits for the next bar)
 press GLO
 wait 100
 key 20 down
@@ -48,7 +48,8 @@ wait 150
 key 20 up
 wait 100
 release GLO
-wait 300
+wait 3000
+expect sceneq 0
 expect trkmute 3
 expect fxk1 40
 expect fxk0 -20
@@ -79,5 +80,5 @@ key 20 down
 wait 150
 key 20 up
 release GLO
-wait 200
+wait 3000
 expect trkmute 1

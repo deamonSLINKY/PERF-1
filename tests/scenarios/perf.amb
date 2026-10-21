@@ -31,6 +31,8 @@ wait 100
 expect trkmute 0
 tapkey 19
 wait 100
+shot perf_queued.png
+wait 3000
 expect trkmute 1
 # the knobs: the FX knobs (crush up)
 spin K2 25
