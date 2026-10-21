@@ -360,7 +360,7 @@ static const char *mode_name(void)
 /* GLO held (not with SEL): the keys mute and solo the tracks. Shown from a short hold, or at once on a key. */
 static int mix_show(void)
 {
-    return ui.view != V_PERF && (ui.btn >> B_GLO & 1u) && !(ui.btn >> B_SEL & 1u) &&
+    return (ui.btn >> B_GLO & 1u) && !(ui.btn >> B_SEL & 1u) &&
            ((ui.btn_used >> B_GLO & 1u) || plat_ms() - ui.down_t[B_GLO] >= 350u);
 }
 static int mix_state(int k)
@@ -1603,8 +1603,7 @@ static void input(void)
     }
     if ((btn >> B_SEL & 1u) && !(ui.btn_used >> B_SEL & 1u) && !ui.shift_hint &&
         plat_ms() - ui.down_t[B_SEL] >= 400u) {
-        ui.shift_hint = 1;                     /* SEL held alone: what the shift does */
-        say("SHIFT", ui.view == V_SEQ ? "COPY / CLEAR" : "ALGO: SOUND");
+        ui.shift_hint = 1;                     /* SEL held alone: what the shift does (draw_shift) */
     }
     if (ui.save_global && !ui.factory_done && (btn >> B_SAVE & 1u)) {
         uint32_t held = plat_ms() - ui.down_t[B_SAVE];
@@ -2227,7 +2226,25 @@ static void draw_perf(void)
         if (!n)
             cv_text(26, 110, &FONT_XS, "NONE", K_DIM);
     }
-    cv_text(6, 126, &FONT_XS, "KEYS: MUTE / SOLO / SCENES / DJ", K_DIM);
+    cv_text(6, 126, &FONT_XS, "KEYS: MIX   HOLD GLO: KEY MAP", K_DIM);
+}
+
+/* SEL held alone (after 0.4 s): what the shift does, on this page */
+static int shift_show(void) { return (ui.btn >> B_SEL & 1u) && ui.shift_hint && !(ui.btn_used >> B_SEL & 1u); }
+static void draw_shift(void)
+{
+    static const char *const GEN[8] = {"F3 - D4   PATTERN 1-6", "PRESETS   PIECE, NEXT BAR", "ALGO      SOUND / KIT",
+                                       "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "FX        EDIT PAGES",
+                                       "GLO       REMOTE (BROWSER)", ""};
+    static const char *const SQ[8] = {"WHITE KEYS   PATTERN 1-6", "BLACK KEYS   COPY HERE TO 1-6", "OCT-         CLEAR THIS LANE",
+                                      "OCT+         THE LANE'S OWN", "PRESETS      PIECE, NEXT BAR", "ALGO         KIT",
+                                      "SEQ          LINKS ON / OFF", "FX           EDIT PAGES"};
+    const char *const *l = ui.view == V_SEQ ? SQ : GEN;
+    int k;
+    cv_text(4, 1, &FONT_XS, "SHIFT: SEL +", K_ACC);
+    for (k = 0; k < 8; k++)
+        if (l[k][0])
+            cv_text(8, 18 + k * 15, &FONT_XS, l[k], K_TEXT);
 }
 
 /* the track mix (GLO held): the keys, as the FX menu's, each its track's mute (M:) or solo (S:), lit while on */
@@ -2314,6 +2331,16 @@ static void draw_main(void)
     if (ui.frame % 2u)                           /* 30 frames a second is plenty */
         return;
     h = hash(h, ui.theme);
+    if (!mix_show() && shift_show()) {           /* SEL held: what the shift does */
+        h = hash(0x53484654u, (uint32_t)ui.theme | (uint32_t)(ui.view == V_SEQ) << 8);
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_shift();
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (mix_show()) {                            /* GLO held: the track mix */
         h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct()),
                  (uint32_t)ui.scene_set | (uint32_t)ui.dj_on << 4 | (uint32_t)ui.dj_len << 5 | (uint32_t)ui.dj_piece << 7 |
