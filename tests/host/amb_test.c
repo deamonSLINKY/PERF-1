@@ -420,7 +420,11 @@ int main(void)
                 case EN_FXS_GX_TGT: case EN_FXS_PM_TGT: hi = 127; break;
                 case EN_FXS_RL_START: case EN_FXS_RL_END: hi = 5; break;
                 case EN_FXS_RL_TIME: case EN_FXS_PM_RATE: hi = 3; break;
-                case EN_FXS_SC_SIZE: case EN_FXS_HF_SPEED: hi = 2; break;
+                case EN_FXS_SC_SIZE: case EN_FXS_HF_SPEED: case EN_FXS_RV_LEN: hi = 2; break;
+                case EN_FXS_SR_EVERY: case EN_FXS_SR_REACH: case EN_FXS_FZ_GRAINS: hi = 3; break;
+                case EN_FXS_SR_STYLE: hi = 1; break;
+                case EN_FXS_SW_RATE: hi = 4; break;
+                case EN_FXS_SW_TYPE: hi = 2; break;
                 case EN_FXS_SC_LEN: lo = 2; hi = 8; break;
                 default: break;
                 }
@@ -436,9 +440,11 @@ int main(void)
             r ^= r << 13; r ^= r >> 17; r ^= r << 5;
             en_trk(r & 0x7Fu, r >> 8 & 0x7Fu);
             for (s = 0; s < 30; s++) {                /* a fresh set of keys held every 0.4 s */
-                uint32_t m;
+                uint64_t m;
                 r ^= r << 13; r ^= r >> 17; r ^= r << 5;
                 m = r & (r >> 3) & 0x7FFFFFFFu;       /* about a quarter of the bits (0..30) */
+                r ^= r << 13; r ^= r >> 17; r ^= r << 5;
+                m |= (uint64_t)(r & (r >> 5) & 0x3Fu) << 31;   /* and the bits 31..36 */
                 en_fx(m);
                 for (blk = 0; blk < 69; blk++) {
                     en_render(buf, 256, 2048);

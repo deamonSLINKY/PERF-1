@@ -126,7 +126,7 @@ extern volatile uint8_t en_sec_req;            /* a command waiting for the bar:
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
  * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
  * pad (and the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
- * is en_trk (GLO held, on the keys). Bits 31..62 are spare; 63 is the UI's "no effect". */
+ * is en_trk (GLO held, on the keys). Bits 37..62 are spare; 63 is the UI's "no effect". */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
@@ -138,6 +138,8 @@ enum {
     FX_ROLL, FX_PUMP, FX_RISER, FX_VINYL,                     /* a roll that speeds up; a sidechain pump; a build; vinyl dust */
     FX_SCATTER, FX_BRAKE, FX_SPIN, FX_HALF,                   /* the last slices shuffled; a vinyl brake; a spin-back; half time */
     FX_SWEEP,                                                 /* a filter swept in time with the tempo */
+    FX_SCRATCH, FX_FREEZE, FX_RVSWELL, FX_RING,               /* an automatic scratch; a granular freeze; a reverse swell; a ring modulator */
+    FX_RPT8T, FX_RPT16T,                                      /* beat repeats in triplets: 1/8, 1/16 */
     EN_NFX = 64                                               /* the mask is 64 bits: FXB(bit) */
 };
 #define FXB(x) (1ull << (x))
@@ -169,11 +171,17 @@ enum {
     EN_FXS_HF_SPEED, EN_FXS_HF_SLIDE,                                    /* half time: its speed (0..2: x1.5, x2, x4), the slide into it */
     EN_FXS_SW_RATE, EN_FXS_SW_DEPTH, EN_FXS_SW_RESO, EN_FXS_SW_TYPE,     /* the sweep: its period (0..4: 2 bars, 1 bar, 1/2, 1/4, 1/8),
                                                                           * how far (to 7 octaves), resonance, low-pass / high-pass / band-pass (0..2) */
+    EN_FXS_SR_EVERY, EN_FXS_SR_REACH, EN_FXS_SR_STYLE,                   /* the scratch: its period (0..3: 1/4, 1/8, 1/16, 1/32 note), how much of
+                                                                          * the past it works (0..3: 1/16, 1/8, 1/4, 1/2 note), baby or pull (0..1) */
+    EN_FXS_FZ_SIZE, EN_FXS_FZ_SPREAD, EN_FXS_FZ_GRAINS,                  /* the freeze: grain size, how far back it draws, how many grains (0..3: 1..4) */
+    EN_FXS_RV_LEN, EN_FXS_RV_MIX,                                        /* the reverse swell: its length (0..2: 1/2, 1, 2 beats), how much it replaces */
+    EN_FXS_RM_FREQ, EN_FXS_RM_MIX,                                       /* the ring mod: its tone (40 .. 800 Hz), its mix */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0x70, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 15, 70, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0x70, 56, 100, 100, 0, \
-                         60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 1, 70, 55, 0}
+                         60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 1, 70, 55, 0, \
+                         1, 2, 0, 50, 60, 2, 1, 70, 45, 100}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */

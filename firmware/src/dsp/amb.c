@@ -1407,10 +1407,11 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
 static uint32_t sixteenth;
 static int32_t step_t;                          /* samples into this sixteenth (the gate's clock) */
 static uint8_t rpt_arm;                         /* a beat repeat waiting for the next sixteenth: its rate + 1 */
-static uint8_t scat_arm, var_exit;              /* a scatter waiting for the sixteenth; a brake or spin-back let go, leaving on the next */
+static uint8_t scat_arm, var_exit, rvs_arm;              /* a scatter waiting for the sixteenth; a brake or spin-back let go, leaving on the next */
 static void rpt_engage(int r);
 static void scat_engage(void);
 static void var_leave(void);
+static void rvs_engage(void);
 static void tick(void)
 {
     static const uint8_t TRIG_BARS[6] = {0, 1, 2, 4, 8, 0};
@@ -1423,6 +1424,10 @@ static void tick(void)
     if (scat_arm) {                             /* the scatter too */
         scat_engage();
         scat_arm = 0;
+    }
+    if (rvs_arm) {                              /* the reverse swell, from the sixteenth */
+        rvs_engage();
+        rvs_arm = 0;
     }
     if (var_exit) {                             /* a brake let go, spun up: back to the live mix on the grid */
         var_leave();
@@ -2198,7 +2203,7 @@ static uint32_t rb_w;                            /* frames written (they wrap: a
 static uint8_t rb_odd;
 static float rb_hl, rb_hr;                       /* the first sample of each pair, waiting for the second */
 static uint64_t fx_req, fx_on;
-enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR };
+enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR, BM_SCR, BM_GRN, BM_RVS };
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
 static uint32_t bm_start;                        /* the frame the reading counts from */
 static float bm_off, bm_len, bm_speed, bm_mix, bm_tgt;   /* samples from bm_start; the slice; 0 live .. 1 ring */
@@ -2228,7 +2233,8 @@ static int crush_n;
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
 static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
-static float sw_m, sw_s[2][2], sw_c[4];   /* the sweep: its fade, its two filters' states, its coefficients */
+static float sw_m, sw_s[2][2], sw_c[4];
+static float rm_m, rm_ph, rm_inc, rm_wet;   /* the ring mod: its fade, phase, step and share */   /* the sweep: its fade, its two filters' states, its coefficients */
 static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
 static float vn_amp = 1.0f;
 static float ph_fbk, ph_wet, fl_inc, fl_rng, fl_fbk, fl_wet, vn_g, vn_pop, vn_hiss;   /* the settings, as the render uses them */
@@ -2241,11 +2247,11 @@ static float lpk_s, hpk_s, crk_s, thk_s, wash_s;
 static float lp_amt_e, hp_amt_e;                 /* the filters' amounts: the key's or the knob's, the higher */
 static float cr_lv = 2048.0f, cr_wet;
 static int cr_hold = 1;
-static const float RPT_BEATS[6] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f};
+static const float RPT_BEATS[8] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f, 1.0f / 3.0f, 1.0f / 6.0f};   /* (the last two: triplets) */
 const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
-    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep"};
+    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -2361,6 +2367,61 @@ static void var_params(int wh)
     }
 }
 
+/* the scratch: the ring's last stretch (a sixteenth up to half a note) read back and forth, the read point following a sine
+ * (baby) or running forward and snapping back (pull); the speed it moves gives the pitch. */
+static float scr_t, scr_w, scr_per;
+static void scr_engage(void)
+{
+    static const float WIN[4] = {1.0f, 2.0f, 4.0f, 8.0f}, PER[4] = {4.0f, 2.0f, 1.0f, 0.5f};
+    const float avail = (float)(RB_N - 8) * 2.0f;
+    scr_w = fm_minf(fm_maxf(step_len * WIN[(int)fm_clampf((float)fxs_v[EN_FXS_SR_REACH], 0.0f, 3.0f)], 64.0f), avail);
+    scr_per = fm_maxf(step_len * PER[(int)fm_clampf((float)fxs_v[EN_FXS_SR_EVERY], 0.0f, 3.0f)], 32.0f);
+    scr_t = 0.0f;
+    bmode = BM_SCR;
+    bm_start = rb_w - (uint32_t)(scr_w * 0.5f + 0.5f);
+    bm_tgt = 1.0f;
+}
+/* the freeze: a stretch of the past (0.1 .. 0.85 s) held, and grains (20 .. 200 ms, one to four) drawn from it at random
+ * places, each in a parabolic window, overlapping: a shimmering texture of the moment you froze. */
+#define GN_MAX 4
+static float gn_pos[GN_MAX], gn_st[GN_MAX], gn_len, gn_region, gn_scale;
+static int gn_n;
+static void gn_respawn(int i)
+{
+    gn_st[i] = frand() * fm_maxf(gn_region - gn_len, 1.0f);
+    gn_pos[i] = 0.0f;
+}
+static void grn_engage(void)
+{
+    const float frames = fm_minf((0.1f + 0.0075f * (float)fxs_v[EN_FXS_FZ_SPREAD]) * 22050.0f, (float)(RB_N - 8));
+    int i;
+    gn_region = frames * 2.0f;
+    gn_len = fm_minf(20.0f * fm_exp2f((float)fxs_v[EN_FXS_FZ_SIZE] * 0.033f) * 44.1f, gn_region);
+    gn_n = 1 + (int)fm_clampf((float)fxs_v[EN_FXS_FZ_GRAINS], 0.0f, 3.0f);
+    gn_scale = 1.5f / fm_sqrtf((float)gn_n);
+    bmode = BM_GRN;
+    bm_start = rb_w - (uint32_t)frames;
+    bm_tgt = 1.0f;
+    for (i = 0; i < gn_n; i++) {
+        gn_respawn(i);
+        gn_pos[i] = gn_len * (float)i / (float)gn_n;    /* staggered */
+    }
+}
+/* the reverse swell: the last stretch (a half beat, a beat or two) played backwards once, rising in level, ending where it
+ * began, from the sixteenth; under the live mix by its Mix. One swell for each press. */
+static float rv_pos, rv_len;
+static uint8_t rv_held;
+static void rvs_engage(void)
+{
+    static const float LEN[3] = {2.0f, 4.0f, 8.0f};    /* sixteenths */
+    const float avail = (float)(RB_N - 8) * 2.0f;
+    rv_len = fm_minf(step_len * LEN[(int)fm_clampf((float)fxs_v[EN_FXS_RV_LEN], 0.0f, 2.0f)], avail);
+    rv_pos = rv_len - 1.0f;
+    bmode = BM_RVS;
+    bm_start = rb_w - (uint32_t)(rv_len * 0.5f + 0.5f);
+    bm_tgt = 0.3f + 0.007f * (float)fxs_v[EN_FXS_RV_MIX];
+}
+
 static void fx_control(uint32_t n)              /* once a chunk: what the held effects ask for */
 {
     const uint64_t m = fx_req;
@@ -2406,6 +2467,10 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     {   /* tape, flanger, phaser: in and out over ~80 ms; the phaser's all-pass corners (left, right), swept */
         const float sm = fm_minf(dt * 12.0f, 1.0f);
         int c;
+        rm_m += ((float)(uint32_t)(m >> FX_RING & 1u) - rm_m) * sm;
+        rm_m = rm_m < 0.002f && !(m >> FX_RING & 1u) ? 0.0f : rm_m;
+        rm_inc = 40.0f * fm_exp2f((float)fxs_v[EN_FXS_RM_FREQ] * 0.0433f) * (1.0f / EN_SR);
+        rm_wet = (float)fxs_v[EN_FXS_RM_MIX] * 0.01f;
         sw_m += ((float)(uint32_t)(m >> FX_SWEEP & 1u) - sw_m) * sm;
         sw_m = sw_m < 0.002f && !(m >> FX_SWEEP & 1u) ? 0.0f : sw_m;
         if (sw_m > 0.0f) {                      /* the cutoff: a triangle over its period (2 bars .. 1/8 note), 120 Hz up by its depth */
@@ -2488,17 +2553,22 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         lp_s[t] = fm_flush(lp_s[t]);
         hp_s[t] = fm_flush(hp_s[t]);
     }
-    for (t = FX_RPT32; t >= FX_RPT2; t--)       /* the ring: the shortest repeat held */
-        if (m >> t & 1u) {
-            want = t;
-            break;
-        }
+    {   /* the ring: the shortest repeat held (its index into RPT_BEATS) */
+        static const uint8_t RB[8] = {FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32, FX_RPT8T, FX_RPT16T};
+        for (t = 0; t < 8; t++)
+            if ((m >> RB[t] & 1u) && (want < 0 || RPT_BEATS[t] < RPT_BEATS[want]))
+                want = t;
+    }
+    if (!(m >> FX_RVSWELL & 1u)) {
+        rv_held = 0;
+        rvs_arm = 0;
+    }
     if (roll_t > 0.0f) {                        /* a roll: from its first rate toward its last, a stage of its time at each (a repeat held beats it) */
         static const float RL_BEATS[4] = {0.5f, 1.0f, 2.0f, 4.0f};
         const int s = (int)fm_clampf((float)fxs_v[EN_FXS_RL_START], 0.0f, 5.0f), e = (int)fm_clampf((float)fxs_v[EN_FXS_RL_END], 0.0f, 5.0f),
                   tm = (int)fm_clampf((float)fxs_v[EN_FXS_RL_TIME], 0.0f, 3.0f), stage = (int)(roll_t / RL_BEATS[tm]);
         const int r = FX_RPT2 + (s < e ? (s + stage < e ? s + stage : e) : (s - stage > e ? s - stage : e));
-        if (r > want)
+        if (want < 0 || RPT_BEATS[r] < RPT_BEATS[want])
             want = r;
         rl_gain = 1.0f + (float)fxs_v[EN_FXS_RL_SWELL] * 0.008f * fm_minf(roll_t * 0.25f, 1.0f);   /* a swell, to +80% over four beats */
     } else {
@@ -2539,6 +2609,29 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         if (bmode != BM_VAR || bm_tgt < 1.0f || vr_which != wh)
             var_engage(wh);
         var_params(wh);
+    } else if (m >> FX_SCRATCH & 1u) {
+        rpt_arm = 0;
+        scat_arm = 0;
+        var_exit = 0;
+        if (bmode != BM_SCR || bm_tgt < 1.0f)
+            scr_engage();
+    } else if (m >> FX_FREEZE & 1u) {
+        rpt_arm = 0;
+        scat_arm = 0;
+        var_exit = 0;
+        if (bmode != BM_GRN || bm_tgt < 1.0f)
+            grn_engage();
+    } else if (m >> FX_RVSWELL & 1u) {
+        rpt_arm = 0;
+        scat_arm = 0;
+        var_exit = 0;
+        if (!rv_held) {                         /* one swell for each press */
+            rv_held = 1;
+            if (!en_playing || en_ext)
+                rvs_engage();
+            else
+                rvs_arm = 1;
+        }
     } else if (bmode == BM_VAR && bm_tgt >= 1.0f) {   /* let go: spin back up, and out on the grid */
         vr_tgt = 1.0f;
         vr_c = vr_time((float)fxs_v[EN_FXS_BR_RET], 0.02f);
@@ -2581,6 +2674,40 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             w = fm_minf(fm_minf(sc_pos, sc_len - 1.0f - sc_pos) * (1.0f / 48.0f), 1.0f);
             if ((sc_pos += 1.0f) >= sc_len)
                 scat_pick();
+        } else if (bmode == BM_SCR) {
+            const float ph = scr_t / scr_per;
+            float off;
+            if (fxs_v[EN_FXS_SR_STYLE] == 0) {
+                off = scr_w * (0.5f - 0.5f * fm_sin_turns(ph + 0.25f));    /* baby: out and back */
+                w = 1.0f;
+            } else {
+                off = scr_w * ph;                                          /* pull: forward, then snap */
+                w = fm_minf(fm_minf(scr_t, scr_per - scr_t) * (1.0f / 48.0f), 1.0f);
+            }
+            rb_read(off, &bl, &br);
+            if ((scr_t += 1.0f) >= scr_per)
+                scr_t -= scr_per;
+        } else if (bmode == BM_GRN) {
+            int i;
+            for (i = 0; i < gn_n; i++) {
+                float gl, gr, p = gn_pos[i] / gn_len, win = 4.0f * p * (1.0f - p);
+                rb_read(gn_st[i] + gn_pos[i], &gl, &gr);
+                bl += gl * win;
+                br += gr * win;
+                if ((gn_pos[i] += 1.0f) >= gn_len)
+                    gn_respawn(i);
+            }
+            w = gn_scale;
+        } else if (bmode == BM_RVS) {
+            if (rv_pos >= 0.0f) {
+                const float g = 1.0f - rv_pos / rv_len;
+                rb_read(rv_pos, &bl, &br);
+                w = g * g * fm_minf(rv_pos * (1.0f / 48.0f) + 0.0f, 1.0f);
+                rv_pos -= 1.0f;
+            } else {
+                w = 0.0f;
+                bm_tgt = 0.0f;                  /* the swell is over: the live mix alone */
+            }
         } else if (bmode == BM_VAR) {
             float k, ar, lag;
             vr_rate += (vr_tgt - vr_rate) * vr_c;
@@ -2697,6 +2824,14 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
         mod_w++;
         l = out[0];
         r = out[1];
+    }
+    if (rm_m > 0.0f) {                          /* the ring mod: the mix times a sine, 40 .. 800 Hz */
+        float s;
+        rm_ph += rm_inc;
+        rm_ph -= (float)(int)rm_ph;
+        s = fm_sin_turns(rm_ph);
+        l += (l * s - l) * rm_m * rm_wet;
+        r += (r * s - r) * rm_m * rm_wet;
     }
     if (cr_wet > 0.0f) {                        /* sample-rate and bit-depth, together, to 5.5 kHz and 5 bits */
         if (++crush_n >= cr_hold) {

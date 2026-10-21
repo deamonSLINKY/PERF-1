@@ -51,7 +51,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 13
+#define NFXP 17
 static const char *const RATE_NAME[6] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
@@ -59,6 +59,11 @@ static const char *const SSIZE_NAME[3] = {"1/32", "1/16", "1/8"};               
 static const char *const HSPEED_NAME[3] = {"X1.5", "X2", "X4"};                                 /* half time: how much slower */
 static const char *const SWRATE_NAME[5] = {"2 BARS", "1 BAR", "1/2", "1/4", "1/8"};              /* the sweep's period */
 static const char *const SWTYPE_NAME[3] = {"LOW", "HIGH", "BAND"};
+static const char *const SREVERY_NAME[4] = {"1/4", "1/8", "1/16", "1/32"};                      /* the scratch's period */
+static const char *const SREACH_NAME[4] = {"1/16", "1/8", "1/4", "1/2"};                         /* how much of the past it works */
+static const char *const SSTYLE_NAME[2] = {"BABY", "PULL"};
+static const char *const FGRAIN_NAME[4] = {"1", "2", "3", "4"};                                  /* the freeze's grains */
+static const char *const RVLEN_NAME[3] = {"1/2 BEAT", "1 BEAT", "2 BEATS"};                      /* the reverse swell */
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
 static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
@@ -98,6 +103,14 @@ static const struct {
                               {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SWEEP", FX_SWEEP, 0, {{"Every", KN_NAME, EN_FXS_SW_RATE, SWRATE_NAME, 5}, {"Depth", KN_PLAIN, EN_FXS_SW_DEPTH, 0, 0},
                             {"Reso", KN_PLAIN, EN_FXS_SW_RESO, 0, 0}, {"Type", KN_NAME, EN_FXS_SW_TYPE, SWTYPE_NAME, 3}}},
+    {"SCRATCH", FX_SCRATCH, 1, {{"Every", KN_NAME, EN_FXS_SR_EVERY, SREVERY_NAME, 4}, {"Reach", KN_NAME, EN_FXS_SR_REACH, SREACH_NAME, 4},
+                                {"Style", KN_NAME, EN_FXS_SR_STYLE, SSTYLE_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},
+    {"FREEZE", FX_FREEZE, 1, {{"Size", KN_PLAIN, EN_FXS_FZ_SIZE, 0, 0}, {"Spread", KN_PLAIN, EN_FXS_FZ_SPREAD, 0, 0},
+                              {"Grains", KN_NAME, EN_FXS_FZ_GRAINS, FGRAIN_NAME, 4}, {"", KN_NONE, 0, 0, 0}}},
+    {"RV SWELL", FX_RVSWELL, 1, {{"Length", KN_NAME, EN_FXS_RV_LEN, RVLEN_NAME, 3}, {"Mix", KN_PLAIN, EN_FXS_RV_MIX, 0, 0},
+                                 {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
+    {"RING MOD", FX_RING, 0, {{"Tone", KN_PLAIN, EN_FXS_RM_FREQ, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_RM_MIX, 0, 0},
+                              {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
@@ -187,8 +200,8 @@ static const uint8_t KEY_FX[2][NKEYS] = {
      FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_ROLL, FX_MUTE_HATS, FX_PUMP, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
      FX_MUTE_PERC, FX_RISER, FX_THROW, FX_VINYL, FX_FILL,                              /* C5 C#5 D5 D#5 E5 */
      FX_LP, FX_NONE, FX_HP},                                                           /* F5 F#5 G5 */
-    {FX_SCATTER, FX_NONE, FX_BRAKE, FX_NONE, FX_SPIN, FX_NONE, FX_HALF,
-     FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
+    {FX_SCATTER, FX_RPT8T, FX_BRAKE, FX_RPT16T, FX_SPIN, FX_RING, FX_HALF,
+     FX_SCRATCH, FX_NONE, FX_FREEZE, FX_NONE, FX_RVSWELL,
      FX_SWEEP, FX_NONE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,
      FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
      FX_NONE, FX_NONE, FX_NONE}};
@@ -196,7 +209,7 @@ static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
-    "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP",
+    "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
     [FX_NONE] = ""};
 static inline uint64_t fxbit(int k) { return KEY_FX[fx_bank][k] == FX_NONE ? 0u : FXB(KEY_FX[fx_bank][k]); }
 static inline uint32_t h32(uint64_t x) { return (uint32_t)(x ^ x >> 32); }   /* a 64-bit mask, for the hashes */

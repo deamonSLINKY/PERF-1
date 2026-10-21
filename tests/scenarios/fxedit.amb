@@ -123,11 +123,38 @@ spin SELECT 1
 wait 100
 expect fxpage 12
 expect fxmask 1073741824
-# the performing settings page: no effect on; when scenes come, the auto-DJ's groove and breakdown
+# the scratch, the freeze, the reverse swell (each heard with a key held), the ring mod (heard as it is edited)
 spin SELECT 1
 wait 100
 expect fxpage 13
+key 3 down
+wait 200
+expect fxmask -2147483648
+key 3 up
+spin SELECT 1
+wait 100
+expect fxpage 14
+key 3 down
+wait 200
+expect fxmaskhi 1
+key 3 up
+spin SELECT 1
+wait 100
+expect fxpage 15
+key 3 down
+wait 200
+expect fxmaskhi 2
+key 3 up
+spin SELECT 1
+wait 100
+expect fxpage 16
+expect fxmaskhi 4
+# the performing settings page: no effect on; when scenes come, the auto-DJ's groove and breakdown
+spin SELECT 1
+wait 100
+expect fxpage 17
 expect fxmask 0
+expect fxmaskhi 0
 expect scenequant 1
 spin K1 -1
 wait 50
@@ -148,11 +175,11 @@ spin K3 -1
 # the dial stops at the last page
 spin SELECT 1
 wait 100
-expect fxpage 13
+expect fxpage 17
 # the dial back down one page
 spin SELECT -1
 wait 100
-expect fxpage 12
+expect fxpage 16
 # and the keys again with SEL + FX (from the last page); FX alone closes
 spin SELECT 1
 wait 100
