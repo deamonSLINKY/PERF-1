@@ -404,6 +404,63 @@ int main(void)
         CHECK(!bad, "all at min: NaN");
     }
 
+    /* the effects together, set and played at random (settings anywhere in their ranges, any effects held, the mutes,
+     * the FX knobs, the tempo from the slowest to the fastest): nothing breaks: no NaN (it would come out as the
+     * most negative integer), nothing over full scale */
+    {
+        uint32_t r = 0x9E3779B9u;
+        int trial, s, blk, j, broken = 0;
+        for (trial = 0; trial < 16; trial++) {
+            en_init();
+            en_play(1);
+            for (s = 0; s < EN_NFXS; s++) {
+                int lo = 0, hi = 100;
+                switch (s) {
+                case EN_FXS_GX_LEN: lo = 2; hi = 16; break;
+                case EN_FXS_GX_TGT: case EN_FXS_PM_TGT: hi = 127; break;
+                case EN_FXS_RL_START: case EN_FXS_RL_END: hi = 5; break;
+                case EN_FXS_RL_TIME: case EN_FXS_PM_RATE: hi = 3; break;
+                case EN_FXS_SC_SIZE: case EN_FXS_HF_SPEED: hi = 2; break;
+                case EN_FXS_SC_LEN: lo = 2; hi = 8; break;
+                default: break;
+                }
+                r ^= r << 13; r ^= r >> 17; r ^= r << 5;
+                en_fxs(s, lo + (int)(r % (uint32_t)(hi - lo + 1)));
+            }
+            r ^= r << 13; r ^= r >> 17; r ^= r << 5;
+            en_set(P_TEMPO, 30 + (int)(r % 271u));
+            for (s = 0; s < EN_NFXK; s++) {
+                r ^= r << 13; r ^= r >> 17; r ^= r << 5;
+                en_fxk(s, s == EN_FXK_FILTER ? (int)(r % 101u) - 50 : (int)(r % 101u));
+            }
+            r ^= r << 13; r ^= r >> 17; r ^= r << 5;
+            en_trk(r & 0x7Fu, r >> 8 & 0x7Fu);
+            for (s = 0; s < 30; s++) {                /* a fresh set of keys held every 0.4 s */
+                uint32_t m;
+                r ^= r << 13; r ^= r >> 17; r ^= r << 5;
+                m = r & (r >> 3) & 0x7FFFFFFFu;       /* about a quarter of the bits (0..30) */
+                en_fx(m);
+                for (blk = 0; blk < 69; blk++) {
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j++)
+                        if (buf[j] == INT32_MIN || buf[j] > 8400000 || buf[j] < -8400000)
+                            broken++;
+                }
+            }
+        }
+        CHECK(!broken, "effects at random: %d samples broken (NaN or over full scale)", broken);
+        en_fx(0);                                 /* (en_init leaves the effects' state as it was: put it all back) */
+        en_trk(0, 0);
+        for (s = 0; s < EN_NFXK; s++)
+            en_fxk(s, 0);
+        for (s = 0; s < EN_NFXS; s++)
+            en_fxs(s, EN_FXS_DEF[s]);
+        run(1.0f);                                /* (rendered, so the commands are taken before en_init drops what is queued) */
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+
     /* the acid's cutoff and octave, and the vinyl's crackle, are heard (zero crossings: brightness, pitch) */
     {
         float zc[5], hf[5], ee[5];

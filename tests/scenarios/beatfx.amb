@@ -29,6 +29,12 @@ wait 600
 expect fxmask 536870912
 key 6 up
 wait 300
+# the sweep (F4, key 12): on while held
+key 12 down
+wait 400
+expect fxmask 1073741824
+key 12 up
+wait 300
 # the mutes are there too
 key 14 down
 wait 400

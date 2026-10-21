@@ -118,14 +118,19 @@ key 3 down
 wait 200
 expect fxmask 536870912
 key 3 up
+# the sweep (heard as it is edited), the last page
+spin SELECT 1
+wait 100
+expect fxpage 12
+expect fxmask 1073741824
 # the dial stops at the last page
 spin SELECT 1
 wait 100
-expect fxpage 11
+expect fxpage 12
 # the dial back down one page
 spin SELECT -1
 wait 100
-expect fxpage 10
+expect fxpage 11
 # and the keys again with SEL + FX (from the last page); FX alone closes
 spin SELECT 1
 wait 100

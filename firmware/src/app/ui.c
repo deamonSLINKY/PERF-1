@@ -51,12 +51,14 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 11
+#define NFXP 12
 static const char *const RATE_NAME[6] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
 static const char *const SSIZE_NAME[3] = {"1/32", "1/16", "1/8"};                               /* the scatter's slice */
 static const char *const HSPEED_NAME[3] = {"X1.5", "X2", "X4"};                                 /* half time: how much slower */
+static const char *const SWRATE_NAME[5] = {"2 BARS", "1 BAR", "1/2", "1/4", "1/8"};              /* the sweep's period */
+static const char *const SWTYPE_NAME[3] = {"LOW", "HIGH", "BAND"};
 static const struct {
     const char *name;
     uint8_t bit;                        /* the effect (FX_*) held on while the page is up */
@@ -90,6 +92,8 @@ static const struct {
                             {"Return", KN_PLAIN, EN_FXS_BR_RET, 0, 0}, {"Dull", KN_PLAIN, EN_FXS_BR_DULL, 0, 0}}},
     {"HALFTIME", FX_HALF, 1, {{"Speed", KN_NAME, EN_FXS_HF_SPEED, HSPEED_NAME, 3}, {"Slide", KN_PLAIN, EN_FXS_HF_SLIDE, 0, 0},
                               {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
+    {"SWEEP", FX_SWEEP, 0, {{"Every", KN_NAME, EN_FXS_SW_RATE, SWRATE_NAME, 5}, {"Depth", KN_PLAIN, EN_FXS_SW_DEPTH, 0, 0},
+                            {"Reso", KN_PLAIN, EN_FXS_SW_RESO, 0, 0}, {"Type", KN_NAME, EN_FXS_SW_TYPE, SWTYPE_NAME, 3}}},
 };/* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
 #define NGXP 13
@@ -177,13 +181,13 @@ static const uint8_t KEY_FX[2][NKEYS] = {
      FX_LP, FX_NONE, FX_HP},                                                           /* F5 F#5 G5 */
     {FX_SCATTER, FX_NONE, FX_BRAKE, FX_NONE, FX_SPIN, FX_NONE, FX_HALF,
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
-     FX_NONE, FX_NONE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,
+     FX_SWEEP, FX_NONE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,
      FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
      FX_NONE, FX_NONE, FX_NONE}};static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
-    "SCATTER", "BRAKE", "SPIN BK", "HALFTIME",
+    "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP",
     [FX_NONE] = ""};
 static inline uint32_t fxbit(int k) { return KEY_FX[fx_bank][k] == FX_NONE ? 0u : 1u << KEY_FX[fx_bank][k]; }
 

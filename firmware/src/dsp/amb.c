@@ -2227,6 +2227,7 @@ static int crush_n;
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
 static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
+static float sw_m, sw_s[2][2], sw_c[4];   /* the sweep: its fade, its two filters' states, its coefficients */
 static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
 static float vn_amp = 1.0f;
 static float ph_fbk, ph_wet, fl_inc, fl_rng, fl_fbk, fl_wet, vn_g, vn_pop, vn_hiss;   /* the settings, as the render uses them */
@@ -2243,7 +2244,7 @@ static const float RPT_BEATS[6] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f}
 const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
-    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time"};
+    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -2403,6 +2404,15 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     {   /* tape, flanger, phaser: in and out over ~80 ms; the phaser's all-pass corners (left, right), swept */
         const float sm = fm_minf(dt * 12.0f, 1.0f);
         int c;
+        sw_m += ((float)(m >> FX_SWEEP & 1u) - sw_m) * sm;
+        sw_m = sw_m < 0.002f && !(m >> FX_SWEEP & 1u) ? 0.0f : sw_m;
+        if (sw_m > 0.0f) {                      /* the cutoff: a triangle over its period (2 bars .. 1/8 note), 120 Hz up by its depth */
+            static const uint8_t SWP[5] = {32, 16, 8, 4, 2};   /* sixteenths */
+            const uint32_t per = SWP[(int)fm_clampf((float)fxs_v[EN_FXS_SW_RATE], 0.0f, 4.0f)];
+            const float ph = ((float)((sixteenth - 1u) % per) * step_len + (float)step_t) / ((float)per * step_len),
+                        tri = ph < 0.5f ? ph * 2.0f : 2.0f - ph * 2.0f;
+            svf_coefs(sw_c, 120.0f * fm_exp2f((float)fxs_v[EN_FXS_SW_DEPTH] * 0.07f * tri), 1.4f - 0.0128f * (float)fxs_v[EN_FXS_SW_RESO]);
+        }
         tp_m += ((float)(m >> FX_TAPE & 1u) - tp_m) * sm;
         fl_m += ((float)(m >> FX_FLANGER & 1u) - fl_m) * sm;
         ph_m += ((float)(m >> FX_PHASER & 1u) - ph_m) * sm;
@@ -2606,6 +2616,21 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
     if (hp_amt_e > 0.0f) {                      /* the high-pass: what the low-pass leaves out */
         l -= svf_lp(l, hp_c, &hp_s[0]);
         r -= svf_lp(r, hp_c, &hp_s[2]);
+    }
+    if (sw_m > 0.0f) {                          /* the sweep: low-, high- or band-pass, its corner moving with the tempo */
+        const int type = (int)fm_clampf((float)fxs_v[EN_FXS_SW_TYPE], 0.0f, 2.0f);
+        const float k = sw_c[3];
+        float in[2] = {l, r}, o[2];
+        int c;
+        for (c = 0; c < 2; c++) {
+            float *s = sw_s[c], x = in[c];
+            const float v3 = x - s[1], v1 = sw_c[0] * s[0] + sw_c[1] * v3, v2 = s[1] + sw_c[1] * s[0] + sw_c[2] * v3;
+            s[0] = fm_flush(2.0f * v1 - s[0]);
+            s[1] = fm_flush(2.0f * v2 - s[1]);
+            o[c] = type == 0 ? v2 : type == 1 ? x - k * v1 - v2 : k * v1 * 1.6f;   /* low, high, band */
+        }
+        l += (o[0] - l) * sw_m;
+        r += (o[1] - r) * sw_m;
     }
     if (tp_m > 0.0f || fl_m > 0.0f || ph_m > 0.0f) {
         const uint32_t w = mod_w & (MOD_N - 1u);
