@@ -1,0 +1,45 @@
+# The FX menu's four knobs: Filter (bipolar DJ filter), Crush, Throw, Wash. They are the engine's, not a
+# piece's: not stored. The audio (fxknobs.wav) has each in its own stretch, for listening:
+#   4 s filter left (low-pass) 3 s, 7 s filter right (high-pass) 3 s, 10 s crush 3 s, 13 s throw 3 s, 16 s wash 3 s
+wait 4000
+wav fxknobs.wav
+tap FX
+wait 200
+shot fxknobs_menu.png
+# 4 s: low-pass, knob 1 turned left
+spin K1 -30
+wait 300
+shot fxknobs_lp.png
+wait 2700
+spin K1 30
+wait 3000
+# 7 s: high-pass, knob 1 right
+spin K1 30
+wait 300
+shot fxknobs_hp.png
+wait 2700
+spin K1 -30
+wait 3000
+# 10 s: crush up to the top, then back
+spin K2 100
+wait 300
+shot fxknobs_crush.png
+wait 2700
+spin K2 -100
+wait 3000
+# 13 s: throw
+spin K3 60
+wait 3000
+spin K3 -60
+wait 3000
+# 16 s: wash
+spin K4 70
+wait 300
+shot fxknobs_wash.png
+wait 2700
+spin K4 -70
+wait 2000
+tap FX
+wait 200
+shot fxknobs_closed.png
+wavstop

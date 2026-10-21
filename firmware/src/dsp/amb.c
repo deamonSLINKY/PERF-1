@@ -439,7 +439,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -474,6 +474,7 @@ void en_fx(uint32_t mask)                       /* in two halves: the queue carr
     post(C_FX, 0, (int)(mask & 0xFFFFu));
     post(C_FX, 1, (int)(mask >> 16 & 0xFFFFu));
 }
+void en_fxk(int k, int v) { post(C_FXK, k, v); }
 
 /* -------------------------------------------------------------- state --- */
 volatile uint8_t en_playing, en_frozen, en_ext;
@@ -2190,8 +2191,16 @@ static float trk_g[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}, trk_g1[EN_
 static float tg_inv = 1.0f / 256.0f;             /* 1 / the chunk: the tracks' gains ramp across it */
 #define TG(t, j) (trk_g[t] + (trk_g1[t] - trk_g[t]) * (float)(j) * tg_inv)
 enum { TR_KICK, TR_HATS, TR_SNARE, TR_DRONE, TR_ACID, TR_PAD };   /* TR_SNARE: snare, clap, perc; TR_PAD: pad, noise */
-static float lp_amt, hp_amt, lp_s[4], hp_s[4], lp_c[4], hp_c[4], throw_amt, crush_amt, crush_l, crush_r, gate_g = 1.0f;
+static float lp_amt, hp_amt, lp_s[4], hp_s[4], lp_c[4], hp_c[4], throw_amt, throw_key, crush_amt, crush_l, crush_r, gate_g = 1.0f;
 static int crush_n;
+/* the FX knobs (en_fxk): filter -50..50 (a DJ filter: low-pass to the left, high-pass to the right), crush,
+ * throw (the whole mix into the echo), wash (the whole mix into the reverb), each 0..100. They are the
+ * performer's, not a piece's: they start neutral and are not stored. The smoothed values follow them. */
+static volatile int16_t fxk_v[EN_NFXK];
+static float lpk_s, hpk_s, crk_s, thk_s, wash_s;
+static float lp_amt_e, hp_amt_e;                 /* the filters' amounts: the key's or the knob's, the higher */
+static float cr_lv = 2048.0f, cr_wet;
+static int cr_hold = 1;
 static const float RPT_BEATS[6] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f};
 const char *const EN_FX_NAME[EN_NFX] = {
     "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
@@ -2256,17 +2265,40 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     tg_inv = 1.0f / (float)n;
     lp_amt = fm_clampf(lp_amt + (m >> FX_LP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);   /* in 0.5 s, out in 0.17 */
     hp_amt = fm_clampf(hp_amt + (m >> FX_HP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);
-    throw_amt = fm_clampf(throw_amt + (m >> FX_THROW & 1u ? dt * 60.0f : -dt * 60.0f), 0.0f, 1.0f);
+    throw_key = fm_clampf(throw_key + (m >> FX_THROW & 1u ? dt * 60.0f : -dt * 60.0f), 0.0f, 1.0f);
     crush_amt = fm_clampf(crush_amt + (m >> FX_CRUSH & 1u ? dt * 100.0f : -dt * 100.0f), 0.0f, 1.0f);
+    {   /* the FX knobs, smoothed (~50 ms); each takes over from its key when it is the higher */
+        const float sm = fm_minf(dt * 20.0f, 1.0f);
+        float f = (float)fxk_v[EN_FXK_FILTER] * 0.02f, ca;   /* -1 .. 1 */
+        f = f > -0.06f && f < 0.06f ? 0.0f : f;              /* a dead zone at the centre: off */
+        lpk_s += ((f < 0.0f ? -f : 0.0f) - lpk_s) * sm;
+        hpk_s += ((f > 0.0f ? f : 0.0f) - hpk_s) * sm;
+        crk_s += ((float)fxk_v[EN_FXK_CRUSH] * 0.01f - crk_s) * sm;
+        thk_s += ((float)fxk_v[EN_FXK_THROW] * 0.009f - thk_s) * sm;
+        wash_s += ((float)fxk_v[EN_FXK_WASH] * 0.01f - wash_s) * sm;
+        lpk_s = fm_flush(lpk_s);
+        hpk_s = fm_flush(hpk_s);
+        crk_s = fm_flush(crk_s);
+        thk_s = fm_flush(thk_s);
+        wash_s = fm_flush(wash_s);
+        throw_amt = fm_maxf(throw_key, thk_s);
+        /* the crusher: its key is a gentle 0.6; the knob goes on to 1 (5.5 kHz, 5 bits, as the key was) */
+        ca = fm_maxf(crush_amt * 0.6f, crk_s);
+        cr_hold = 1 + (int)(7.0f * ca);
+        cr_lv = fm_exp2f(11.0f - 7.0f * ca);
+        cr_wet = fm_minf(ca * 3.0f, 1.0f);
+        lp_amt_e = fm_maxf(lp_amt, lpk_s);
+        hp_amt_e = fm_maxf(hp_amt, hpk_s);
+    }
     echo_fbx = echo_fb + (0.86f - echo_fb) * throw_amt;
     if (fill_hold != (uint8_t)(m >> FX_FILL & 1u)) {
         fill_hold = (uint8_t)(m >> FX_FILL & 1u);
         drum_publish();
     }
-    if (lp_amt > 0.0f)                          /* 16 kHz down to ~250 Hz */
-        svf_coefs(lp_c, 16000.0f * fm_exp2f(-6.0f * lp_amt), 0.8f);
-    if (hp_amt > 0.0f)                          /* 20 Hz up to ~1.6 kHz */
-        svf_coefs(hp_c, 20.0f * fm_exp2f(6.3f * hp_amt), 0.8f);
+    if (lp_amt_e > 0.0f)                        /* 16 kHz down to ~250 Hz */
+        svf_coefs(lp_c, 16000.0f * fm_exp2f(-6.0f * lp_amt_e), 0.8f);
+    if (hp_amt_e > 0.0f)                        /* 20 Hz up to ~1.6 kHz */
+        svf_coefs(hp_c, 20.0f * fm_exp2f(6.3f * hp_amt_e), 0.8f);
     for (t = 0; t < 4; t++) {
         lp_s[t] = fm_flush(lp_s[t]);
         hp_s[t] = fm_flush(hp_s[t]);
@@ -2339,22 +2371,23 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             brate = -1;
         }
     }
-    if (lp_amt > 0.0f) {
+    if (lp_amt_e > 0.0f) {
         l = svf_lp(l, lp_c, &lp_s[0]);
         r = svf_lp(r, lp_c, &lp_s[2]);
     }
-    if (hp_amt > 0.0f) {                        /* the high-pass: what the low-pass leaves out */
+    if (hp_amt_e > 0.0f) {                      /* the high-pass: what the low-pass leaves out */
         l -= svf_lp(l, hp_c, &hp_s[0]);
         r -= svf_lp(r, hp_c, &hp_s[2]);
     }
-    if (crush_amt > 0.0f) {
-        if (++crush_n >= 8) {                   /* 5.5 kHz, 5 bits */
+    if (cr_wet > 0.0f) {                        /* sample-rate and bit-depth, together, to 5.5 kHz and 5 bits */
+        if (++crush_n >= cr_hold) {
+            const float iv = 1.0f / cr_lv;
             crush_n = 0;
-            crush_l = (float)(int32_t)(l * 16.0f + (l < 0.0f ? -0.5f : 0.5f)) * (1.0f / 16.0f);
-            crush_r = (float)(int32_t)(r * 16.0f + (r < 0.0f ? -0.5f : 0.5f)) * (1.0f / 16.0f);
+            crush_l = (float)(int32_t)(l * cr_lv + (l < 0.0f ? -0.5f : 0.5f)) * iv;
+            crush_r = (float)(int32_t)(r * cr_lv + (r < 0.0f ? -0.5f : 0.5f)) * iv;
         }
-        l += (crush_l - l) * crush_amt;
-        r += (crush_r - r) * crush_amt;
+        l += (crush_l - l) * cr_wet;
+        r += (crush_r - r) * cr_wet;
     }
     *pl = l;
     *pr = r;
@@ -2421,6 +2454,10 @@ static void drain(void)
                 sec_req = 0;
                 drum_publish();
             }
+            break;
+        case C_FXK:
+            if (a < EN_NFXK)
+                fxk_v[a] = (int16_t)b;
             break;
         case C_FX:
             fx_req = a ? (fx_req & 0xFFFFu) | (uint32_t)(b & 0xFFFF) << 16 : (fx_req & 0xFFFF0000u) | (uint32_t)(b & 0xFFFF);
@@ -3185,7 +3222,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     for (j = 0; j < n; j++) {
         float wl, wr, l, r, el, er, xl, xr;
         echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]), &el, &er, &xl, &xr);
-        reverb((rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send) * 0.8f, &wl, &wr);
+        reverb((rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_s * 0.2f * (mixl[j] + mixr[j])) * 0.8f, &wl, &wr);
         l = (mixl[j] + (0.75f * el + 0.15f * xl + 1.3f * wl) * dk[j]) * 0.36f;
         r = (mixr[j] + (0.75f * er + 0.15f * xr + 1.3f * wr) * dk[j]) * 0.36f;
         fx_master(&l, &r);

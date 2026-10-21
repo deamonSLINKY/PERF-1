@@ -139,6 +139,9 @@ enum {
 #define EN_NTRACK 6
 extern const char *const EN_FX_NAME[EN_NFX];   /* short names, for the screen */
 void en_fx(uint32_t mask);
+/* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */
+enum { EN_FXK_FILTER, EN_FXK_CRUSH, EN_FXK_THROW, EN_FXK_WASH, EN_NFXK };
+void en_fxk(int k, int v);
 /* MIDI clock in (as FoMni): ticks drive the 1/16 grid (6 a step) while they keep coming */
 enum { EN_CLK_TICK, EN_CLK_START, EN_CLK_CONTINUE, EN_CLK_STOP };
 void en_clock(int msg);

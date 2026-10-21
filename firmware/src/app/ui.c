@@ -43,7 +43,8 @@ static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LF
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
                                               "Sequencer"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE };
+enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
@@ -178,7 +179,8 @@ static struct {
     uint8_t help;                      /* a button's card is up: the button + 1 */
     uint8_t save_held;                 /* SAVE held long enough: the drop was asked for this hold */
     uint8_t seq_held;                  /* SEQ held long enough: the sequencer opened this hold */
-    uint8_t fx_menu;                   /* the FX menu is on: the keys are effects */
+    uint8_t fx_menu;                   /* the FX menu is on: the keys are effects, the knobs the FX knobs */
+    int8_t fxk[4];                     /* the FX knobs' values (filter -50..50, crush, throw, wash): not stored */
     uint32_t fx_mask;                  /* the effects held (and locked), as last sent */
     uint32_t fx_lock;                  /* the effects locked on (lock mode: SAVE held in FX) */
     uint8_t lock_mode;                 /* SAVE held in the FX menu: keys tapped lock and unlock */
@@ -251,6 +253,10 @@ static const char *mode_name(void)
     return proj.pool == EN_MODE_POOL[proj.par[P_MODE]] ? EN_MODE_NAME[proj.par[P_MODE]] : "Custom";
 }
 
+/* the knobs now: the page's, or with the FX menu on, the FX knobs */
+static int view_knob(int i) { return ui.fx_menu ? K_FXF + i : VIEW_KNOB[ui.view][i]; }
+static const char *view_label(int i) { return ui.fx_menu ? FXK_LABEL[i] : KNOB_LABEL[ui.view][i]; }
+
 /* ------------------------------------------------------------ values --- */
 static int knob_par(int k)                     /* a knob's parameter (the sequencer's: its lane's) */
 {
@@ -265,17 +271,43 @@ static int knob_par(int k)                     /* a knob's parameter (the sequen
 static int knob_get(int k)
 {
     int p = knob_par(k);
+    if (k >= K_FXF)
+        return ui.fxk[k - K_FXF];
     return p >= 0 ? proj.par[p] : 0;
 }
 static void knob_range(int k, int *lo, int *hi)
 {
     int p = knob_par(k);
+    if (k >= K_FXF) {                            /* the filter is bipolar, the rest 0..100 */
+        *lo = k == K_FXF ? -50 : 0;
+        *hi = k == K_FXF ? 50 : 100;
+        return;
+    }
     *lo = p >= 0 ? en_param_info(p)->lo : 0;
     *hi = p >= 0 ? en_param_info(p)->hi : 0;
 }
 static void knob_text(int k, char *b)
 {
     int p = knob_par(k);
+    if (k >= K_FXF) {
+        int v = ui.fxk[k - K_FXF], n = 0;
+        if (k == K_FXF) {                        /* "LP 40", "HP 40", or off in the dead zone */
+            if (v > -3 && v < 3) {
+                b[0] = 'O';
+                b[1] = 'F';
+                b[2] = 'F';
+                b[3] = 0;
+                return;
+            }
+            b[n++] = v < 0 ? 'L' : 'H';
+            b[n++] = 'P';
+            b[n++] = ' ';
+            v = v < 0 ? -v : v;
+            v *= 2;
+        }
+        itoa_u((uint32_t)v, b + n);
+        return;
+    }
     if (p >= 0)
         en_param_text(p, proj.par[p], b);
     else
@@ -285,6 +317,15 @@ static void knob_text(int k, char *b)
 static void knob_set(int k, int v)
 {
     int lo, hi, p = knob_par(k);
+    if (k >= K_FXF) {                            /* the FX knobs: the engine's, never stored */
+        knob_range(k, &lo, &hi);
+        v = v < lo ? lo : v > hi ? hi : v;
+        if (v != ui.fxk[k - K_FXF]) {
+            ui.fxk[k - K_FXF] = (int8_t)v;
+            en_fxk(k - K_FXF, v);
+        }
+        return;
+    }
     if (p < 0)
         return;
     knob_range(k, &lo, &hi);
@@ -1070,7 +1111,7 @@ static void input(void)
     }
     for (i = 0; i < 4; i++)
         if ((e = plat_enc(EN_K1 + (int)i)) != 0) {
-            turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
+            turn(EN_K1 + (int)i, view_knob((int)i), e);
             ui.touched = (int8_t)i;
             ui.touch_until = plat_ms() + 1200u;
             ui.act_t = ui.turn_t = plat_ms();
@@ -1636,8 +1677,8 @@ static void draw_knobs(void)
                         (uint32_t)project_saved(proj.piece) << 9);
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++)
-        h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
-    h = hash(h, (uint32_t)now_touch);
+        h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
+    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -1650,6 +1691,8 @@ static void draw_knobs(void)
             char u[24] = "SEQ: ";
             caps(u + 5, EN_LANE_NAME[ui.lane], (int)sizeof u - 5);
             caps(t, u, sizeof t);
+        } else if (ui.fx_menu) {
+            caps(t, "FX", sizeof t);
         } else {
             caps(t, VIEW_NAME[ui.view], sizeof t);
         }
@@ -1721,7 +1764,7 @@ static void draw_knobs(void)
         }
     }
     for (i = 0; i < 4; i++) {
-        int k = VIEW_KNOB[ui.view][i], lo, hi, v, hot = now_touch && ui.touched == (int)i;
+        int k = view_knob((int)i), lo, hi, v, hot = now_touch && ui.touched == (int)i;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
         uint16_t bg = hot ? K_PANEL : K_BG, fill = hot ? K_ACC : K_PAD;
@@ -1733,7 +1776,7 @@ static void draw_knobs(void)
             cv_round(x + 3, 11, 54, 57, 3, K_PANEL);
         knob_range(k, &lo, &hi);
         v = knob_get(k);
-        caps(t, KNOB_LABEL[ui.view][i], sizeof t);
+        caps(t, view_label((int)i), sizeof t);
         text_c(cx, 12, &FONT_XS, t, hot ? K_TEXT : K_DIM);
         if (hi - lo < 6) {                       /* a switch: its positions as pips */
             int n = hi - lo + 1, j, pw = n > 4 ? 6 : 9, gap = 3, w0 = n * (pw + gap) - gap;
