@@ -1227,10 +1227,33 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
     *t = 0;
 }
 
+static int fx_page_of(int fx)                   /* the edit page (1 ..) of an effect, 0: it has none */
+{
+    int p;
+    if (fx == FX_GATE16 || fx == FX_GATE8)
+        fx = FX_GATEX;
+    for (p = 0; p < NFXP; p++)
+        if (FXP[p].bit == fx)
+            return p + 1;
+    return 0;
+}
 static void shift_key(int key)                  /* a key pressed with SEL held */
 {
     char t[16];
     int i;
+    if (ui.fx_menu && !ui.fx_page) {             /* in the FX menu: SEL + a key opens that effect's settings page */
+        const int fx = KEY_FX[fx_bank][key];
+        int pg = fx_bank == 3 ? 20 : fx >= FX_FLEX1 && fx <= FX_FLEX15 ? 19 : fx == FX_NONE ? 0 : fx_page_of(fx);
+        if (fx >= FX_FLEX1 && fx <= FX_FLEX15)
+            ui.flex_last = (uint8_t)(fx - FX_FLEX1);
+        if (pg) {
+            ui.fx_page = (uint8_t)pg;
+            say(FXP[pg - 1].name, "SETTINGS");
+        } else {
+            say(fx == FX_NONE ? "NO EFFECT" : FX_LABEL[fx], "HAS NO SETTINGS");
+        }
+        return;
+    }
     for (i = 0; i < EN_NPAT; i++)
         if (WHITE_KEY[i] == key) {               /* white 1-6: the pattern */
             knob_set(P_PATTERN, i);
@@ -2740,13 +2763,16 @@ static void draw_perf(void)
 static int shift_show(void) { return (ui.btn >> B_SEL & 1u) && ui.shift_hint && !(ui.btn_used >> B_SEL & 1u); }
 static void draw_shift(void)
 {
+    static const char *const FXG[8] = {"ANY KEY   ITS SETTINGS", "PRESETS   PIECE, NEXT BAR", "ALGO      SOUND / KIT",
+                                       "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "FX        EDIT PAGES",
+                                       "GLO       REMOTE (BROWSER)", ""};
     static const char *const GEN[8] = {"F3 - D4   PATTERN 1-6", "PRESETS   PIECE, NEXT BAR", "ALGO      SOUND / KIT",
                                        "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "FX        EDIT PAGES",
                                        "GLO       REMOTE (BROWSER)", ""};
     static const char *const SQ[8] = {"WHITE KEYS   PATTERN 1-6", "BLACK KEYS   COPY HERE TO 1-6", "OCT-         CLEAR THIS LANE",
                                       "OCT+         THE LANE'S OWN", "PRESETS      PIECE, NEXT BAR", "ALGO         KIT",
                                       "SEQ          LINKS ON / OFF", "FX           EDIT PAGES"};
-    const char *const *l = ui.view == V_SEQ ? SQ : GEN;
+    const char *const *l = ui.view == V_SEQ ? SQ : ui.fx_menu && !ui.fx_page ? FXG : GEN;
     int k;
     cv_text(4, 1, &FONT_XS, "SHIFT: SEL +", K_ACC);
     for (k = 0; k < 8; k++)
@@ -3258,7 +3284,7 @@ static void draw_main(void)
         return;
     h = hash(h, ui.theme);
     if (!mix_show() && shift_show()) {           /* SEL held: what the shift does */
-        h = hash(0x53484654u, (uint32_t)ui.theme | (uint32_t)(ui.view == V_SEQ) << 8);
+        h = hash(0x53484654u, (uint32_t)ui.theme | (uint32_t)(ui.view == V_SEQ) << 8 | (uint32_t)(ui.fx_menu && !ui.fx_page) << 9);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);

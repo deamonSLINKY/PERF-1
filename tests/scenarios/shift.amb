@@ -73,14 +73,15 @@ release SEL
 expect par48 0
 expect lane0 0x1111
 expect view 20
-# in FX, a key pressed with SEL held is a pattern, not an effect
+# in FX, a key pressed with SEL held is not an effect, and not a pattern either: it opens the effect's settings page (ring mod, G3: page 16)
 tap SEQ
 tap FX
 press SEL
 key 2 down
 wait 20
 expect fxmask 0
-expect par48 1
+expect par48 0
+expect fxpage 16
 key 2 up
 release SEL
 expect fxon 1
