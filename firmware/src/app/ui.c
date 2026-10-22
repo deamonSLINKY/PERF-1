@@ -2087,7 +2087,7 @@ static uint16_t mix(uint16_t a, uint16_t b, int t)   /* t 0..16: a -> b */
 }
 static int q16(float x) { return x <= 0.0f ? 0 : x >= 1.0f ? 16 : (int)(x * 16.0f + 0.5f); }
 
-static const char *const MASCOT[20];
+static const char *const MASCOT[23];
 static uint16_t mascot_color(char ch);
 /* the mascot, one pixel a pixel, on a spring like the big dancer's (viz.c), smaller: a hop on the kick (the head lags, the coils spread
  * as he rises, he squashes on landing and wobbles), a squash on the snare, a bigger jump on the drop; asleep in a breakdown (eyes
@@ -2146,16 +2146,16 @@ static void mascot_step(void)
         hm.dhv += (-300.0f * (hm.dh - tg) - 10.0f * hm.dhv) * h;
         hm.dh += hm.dhv * h;
     }
-    hm.dh = fm_clampf(hm.dh, -4.0f, 6.0f);
-    hm.lift = fm_clampf(hm.lift, 0.0f, 5.0f);
+    hm.dh = fm_clampf(hm.dh, -3.0f, 4.0f);
+    hm.lift = fm_clampf(hm.lift, 0.0f, 3.0f);
 }
 static void draw_mascot(int32_t x, int32_t y, int sleepy)
 {
     int r, c;
-    for (r = 0; r < 20; r++) {
-        /* rows 0..10 the head, 11..13, 14..16 and 17..19 the coils: each shifted by its share of the stretch */
-        const int grp = r <= 10 ? 0 : r <= 13 ? 1 : r <= 16 ? 2 : 3;
-        const int32_t dy = (int32_t)(hm.lift + hm.dh * (float)(3 - grp) * (1.0f / 3.0f) + 0.5f);
+    for (r = 0; r < 23; r++) {
+        /* rows 0..10 the head, then four coils of three rows: each shifted by its share of the stretch */
+        const int grp = r <= 10 ? 0 : (r - 8) / 3;
+        const int32_t dy = (int32_t)(hm.lift + hm.dh * (float)(4 - grp) * 0.25f + 0.5f);
         for (c = 0; c < 23; c++) {
             char ch = MASCOT[r][c];
             if (ch == '.')
@@ -2197,7 +2197,7 @@ static void draw_header(void)
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
     } else {
         int32_t x = 207, w;
-        draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 6, en_playing && en_sec == EN_SEC_BREAK);
+        draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 3, en_playing && en_sec == EN_SEC_BREAK);
         if (project_pending()) {                   /* not yet in flash (the theme, Tune, MIDI out: two seconds on) */
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
@@ -3465,7 +3465,7 @@ static void autosave(void)
  * and the credit (a fork of HYP-1 by RedtailWorks), with sixteen steps filling in (the white keys lighting with them) until the
  * music starts. Any button or key: straight to the music.
  * Sprite letters: K outline, H horn, h horn shade, Y eye, R body, r body shade, L highlight, T tail, . nothing. */
-static const char *const MASCOT[20] = {
+static const char *const MASCOT[23] = {
     "..K............K.......",
     ".KHK..........KHK......",
     "..KHK........KHK.......",
@@ -3477,14 +3477,17 @@ static const char *const MASCOT[20] = {
     ".KRRRKRRRRRRKRRRK......",
     ".KrrrKHKKKKHKrrrK...K..",
     "..KKKKKKKKKKKKKK...KRK.",
-    "..KRLLRRRRRRRRRK..KRLRK",
-    "..KrrrrrrrrrrrrK..KKKKK",
-    "...KKKKKKKKKKKK.....T..",
-    "..KRLLRRRRRRRRRK....T..",
-    "..KrrrrrrrrrrrrK....T..",
-    "...KKKKKKKKKKKK....T...",
-    "..KRLLRRRRRRRRRK..T....",
-    "..KrrrrrrrrrrrrKTT.....",
+    "..KRLLRKKKKrrrrK..KRLRK",
+    "..KrrrrRLRRKKKK...KKKKK",
+    "...KKKKrrrrRRRRK....T..",
+    "..KRLLRKKKKrrrrK....T..",
+    "..KrrrrRLRRKKKK.....T..",
+    "...KKKKrrrrRRRRK...T...",
+    "..KRLLRKKKKrrrrK..T....",
+    "..KrrrrRLRRKKKK...T....",
+    "...KKKKrrrrRRRRKTT.....",
+    "..KRLLRKKKKrrrrK.......",
+    "..KrrrrRLRRKKKKK.......",
     "...KKKKKKKKKKKK........"};
 static uint16_t mascot_color(char ch)
 {
@@ -3503,11 +3506,11 @@ static uint16_t mascot_color(char ch)
 static void splash_mascot(int hop, int blink)    /* the mascot, hopped up hop pixels, its eyes shut when blinking */
 {
     int x, y;
-    cv_begin(240, 96, K_BG);
-    for (y = 0; y < 20; y++)
+    cv_begin(240, 108, K_BG);
+    for (y = 0; y < 23; y++)
         for (x = 0; x < 23; x++)
             if (MASCOT[y][x] != '.')
-                cv_rect(120 - 23 * 2 + x * 4, 96 - 20 * 4 - 4 + y * 4 - hop, 4, 4, mascot_color(blink && MASCOT[y][x] == 'Y' ? 'K' : MASCOT[y][x]));
+                cv_rect(120 - 23 * 2 + x * 4, 108 - 23 * 4 + y * 4 - hop, 4, 4, mascot_color(blink && MASCOT[y][x] == 'Y' ? 'K' : MASCOT[y][x]));
     cv_blit(0, 0);
 }
 
@@ -3516,14 +3519,14 @@ static void draw_splash(void)
     int i;
     lcd_fill(0, 0, 240, 240, K_BG);
     splash_mascot(0, 0);
-    cv_begin(240, 144, K_BG);                    /* the name, the rings, and what's next */
+    cv_begin(240, 132, K_BG);                    /* the name, the rings, and what's next */
     text_c(120, 0, &FONT_L, "DEAMON", RGB(242, 230, 196));
     text_c(120, 36, &FONT_L, "SLINKY", RGB(255, 143, 143));
     for (i = 0; i < 9; i++)
         cv_rect(48 + i * 16, 86, 12, 6, i & 1 ? RGB(224, 52, 79) : RGB(156, 29, 58));
     cv_frame(40, 80, 160, 18, K_LINE);
     text_c(120, 110, &FONT_XS, "PRESENTS", K_DIM);
-    cv_blit(0, 96);
+    cv_blit(0, 108);
 }
 
 /* the second card: PERF-1, big 5 x 7 pixel letters (6 px a pixel), an orange shadow under the purple */

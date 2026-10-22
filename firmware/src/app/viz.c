@@ -33,6 +33,7 @@ static struct {
     float conf[24][5];                         /* confetti: x, y, vx, vy, colour */
     uint8_t dsec, dmove, dleft, dother;        /* the section last seen; the move now; two-bar units left of it; 0 jumping, else the other move */
     uint32_t dunit;                            /* the two-bar unit last counted */
+    uint32_t blink_until, blink_next;          /* the dancer's blink: when it ends; the next one */
     uint8_t dpos, dsince;                      /* the step last seen; steps since the last launch */
     uint32_t drop_bar;                         /* the sixteenth the drop came on */
 } vz;
@@ -229,7 +230,7 @@ static void vz_flux(void)
  * width and sway, so the body can stretch, twist and ripple. */
 enum { DM_BOUNCE, DM_SWAY, DM_SPIN, DM_WAVE, DM_BANG, DM_STOMP, DM_N, DM_SHAKE = DM_N, DM_SLEEP, DM_JUMP };
 static const char *const DM_NAME[DM_JUMP + 1] = {"JUMP", "SWAY", "TWIRL", "WAVE", "HEADBANG", "STOMP", "SHAKE", "SLEEPING", "BIG JUMP"};
-static const uint8_t DM_GRP[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3};
+static const uint8_t DM_GRP[23] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4};
 
 static void vz_confetti(void)
 {
@@ -250,7 +251,8 @@ static void vz_dancer(void)
     const float dt = vz.dt;
     const int playing = en_playing;
     int mv, g, r, c;
-    float dx[4] = {0, 0, 0, 0}, sx[4] = {1, 1, 1, 1}, dyg[4], shear = 0.0f, sleepy = 0.0f, wide = 0.0f;
+    float dx[5] = {0, 0, 0, 0, 0}, sx[5] = {1, 1, 1, 1, 1}, dyg[5], shear = 0.0f, sleepy = 0.0f, wide = 0.0f;
+    int mouth = 0, blink;
     int kedge = vz.kick > 0.6f && vz.kprev <= 0.6f;
     const int sedge = vz.snare > 0.6f && vz.sprev <= 0.6f;
     const float t = vz.tt;
@@ -301,7 +303,7 @@ static void vz_dancer(void)
     vz.dmove = (uint8_t)mv;
     /* the hop: a launch on the kick (a big one for the drop), the head's spring left behind, a squash on landing */
     if (kedge && (vz.lift <= 0.0f || (vz.lv < 0.0f && vz.lift < 6.0f)) && (mv == DM_BOUNCE || mv == DM_JUMP || mv == DM_SWAY || mv == DM_SPIN || mv == DM_WAVE || mv == DM_BANG || mv == DM_STOMP)) {
-        const float v0 = mv == DM_JUMP ? 125.0f : mv == DM_BOUNCE ? 100.0f : 70.0f;
+        const float v0 = mv == DM_JUMP ? 105.0f : mv == DM_BOUNCE ? 100.0f : 70.0f;
         vz.lv = v0;
         vz.lift = 0.01f;
         vz.dhv -= v0 * 0.9f;                       /* anticipation: the head lags */
@@ -334,14 +336,14 @@ static void vz_dancer(void)
         vz.dh = fm_clampf(vz.dh, -16.0f, 26.0f);
     }
     /* each move's sway / twist / ripple per group (0 head, 1..3 the coils down to the floor) */
-    for (g = 0; g < 4; g++) {
-        const float w = g == 3 ? 0.0f : g == 2 ? 0.4f : g == 1 ? 0.7f : 1.0f;
-        dyg[g] = vz.dh * 1.3f * (float)(3 - g) * (1.0f / 3.0f);
+    for (g = 0; g < 5; g++) {
+        const float w = g == 4 ? 0.0f : g == 3 ? 0.3f : g == 2 ? 0.5f : g == 1 ? 0.75f : 1.0f;
+        dyg[g] = vz.dh * 1.3f * (float)(4 - g) * 0.25f;
         switch (mv) {
         case DM_SWAY: dx[g] = fm_sinf(t * 2.2f - (float)g * 0.7f) * 20.0f * w; break;
         case DM_SPIN: sx[g] = fm_cosf(t * 3.4f + (float)g * 0.55f); break;
         case DM_WAVE:
-            dx[g] = fm_sinf(t * 3.0f - (float)g * 1.1f) * 12.0f * (g == 3 ? 0.0f : 1.0f);
+            dx[g] = fm_sinf(t * 3.0f - (float)g * 1.1f) * 12.0f * (g == 4 ? 0.0f : 1.0f);
             dyg[g] += fm_sinf(t * 5.0f - (float)g * 1.2f) * 3.0f * (float)g;
             break;
         case DM_BANG: dx[g] = fm_sinf(t * 6.0f) * 3.0f * w; break;
@@ -356,19 +358,33 @@ static void vz_dancer(void)
         sleepy = 1.0f;
     if (mv == DM_SHAKE || mv == DM_JUMP)
         wide = 1.0f;
+    {   /* the face: blinks now and then; the mouth opens in a jump, on a snare, in a headbang, and sleeping he snores */
+        const uint32_t now = plat_ms();
+        if (now >= vz.blink_next) {
+            vz.blink_until = now + 150u;
+            vz.blink_next = now + 1800u + vz_rnd() % 3400u;
+        }
+        blink = now < vz.blink_until;
+        if (mv == DM_SLEEP)
+            mouth = fm_sinf(t * 1.4f) > 0.7f ? 1 : 0;
+        else if (vz.lift > 12.0f)
+            mouth = 2;
+        else if (vz.lift > 3.0f || vz.snare > 0.4f || vz.dh < -5.0f || (mv == DM_BANG && fm_sinf(t * 12.0f) > 0.2f))
+            mouth = 1;
+    }
     if (vz.dh < -3.0f)                                  /* squashed: wider */
-        for (g = 0; g < 4; g++)
+        for (g = 0; g < 5; g++)
             sx[g] *= 1.0f - vz.dh * 0.028f;
     {   /* the floor's shadow, smaller as he rises */
         const int sw = (int)(72.0f - vz.lift * 0.9f);
-        cv_rect(CXD - sw / 2, 119, sw, 3, K_PANEL);
+        cv_rect(CXD - sw / 2, 121, sw, 3, K_PANEL);
     }
-    for (g = 3; g >= 0; g--)                           /* coils first, the head last (a squash overlaps) */
-        for (r = 0; r < 20; r++) {
+    for (g = 4; g >= 0; g--)                           /* coils first, the head last (a squash overlaps) */
+        for (r = 0; r < 23; r++) {
             if (DM_GRP[r] != g)
                 continue;
             {
-                const int32_t y = 118 - 20 * PX + r * PX - (int32_t)(vz.lift + dyg[g]);
+                const int32_t y = 120 - 23 * PX + r * PX - (int32_t)(vz.lift + dyg[g]);
                 float rowdx = dx[g];
                 int hide = sx[g] < 0.0f;
                 if (g == 0)
@@ -379,8 +395,12 @@ static void vz_dancer(void)
                     int32_t w;
                     if (ch == '.')
                         continue;
-                    if (ch == 'Y' && (sleepy > 0.5f || hide))
+                    if (ch == 'Y' && (sleepy > 0.5f || hide || blink))
                         ch = hide ? 'R' : 'K';
+                    if (mouth && !hide && r == 8 && c >= 7 && c <= 10)      /* the mouth open: a dark hole between the fangs */
+                        ch = 'K';
+                    if (mouth == 2 && !hide && r == 9 && (c == 8 || c == 9))   /* wide: a tongue */
+                        ch = 'L';
                     if (ch == 'T' || (c >= 17 && r >= 9))        /* the tail wags with the beat */
                         rowdx += fm_sinf(t * 7.0f + (float)r * 0.5f) * 1.5f * (float)(r - 8) * 0.25f;
                     xx = (float)(c - 11) * (float)PX * sx[g];
