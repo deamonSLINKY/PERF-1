@@ -1,6 +1,7 @@
-# The beat effects: the FX menu's second bank (the SELECT dial in the FX menu): scatter F3, brake G3, spin-back A3,
-# half time B3 (keys 0, 2, 4, 6), the drums' mutes where they were. And the small shortcuts: FX + OCT- everything
-# back, GLO + B3 undo, GLO + E4 tap tempo.
+# The beat effects: the FX menu's second bank (the SELECT dial in the FX menu): the repeats together (F3 .. C4: 1/2, 1/4, 1/6, 1/8,
+# 1/16, 1/32, then the triplets 1/8T and 1/16T), scatter D4, brake D#4, spin-back E4, half time F4, scratch F#4, the drums' mutes where
+# they are on the first page. The first page keeps the rest (sweep, ring mod, freeze, reverse swell moved there). And the small
+# shortcuts: FX + OCT- everything back, GLO + B3 undo, GLO + E4 tap tempo.
 wait 3000
 tap FX
 wait 100
@@ -10,61 +11,54 @@ wait 100
 expect fxbank 1
 shot beatfx_bank.png
 key 0 down
-wait 600
-expect fxmask 67108864
+wait 400
+expect fxmask 1
 key 0 up
-wait 200
-key 2 down
-wait 600
-expect fxmask 134217728
-key 2 up
 wait 300
-key 4 down
-wait 600
-expect fxmask 268435456
-key 4 up
+key 3 down
+wait 400
+expect fxmask 8
+key 3 up
+wait 300
+key 5 down
+wait 400
+expect fxmask 32
+key 5 up
 wait 300
 key 6 down
-wait 600
-expect fxmask 536870912
+wait 400
+expect fxmaskhi 8
 key 6 up
 wait 300
-# the sweep (F4, key 12): on while held
-key 12 down
-wait 400
-expect fxmask 1073741824
-key 12 up
-wait 300
-# the scratch (C4, key 7), freeze (D4, key 9), reverse swell (E4, key 11), ring mod (A#3, key 5), triplet repeats (F#3, G#3: keys 1, 3)
 key 7 down
 wait 400
-expect fxmask -2147483648
+expect fxmaskhi 16
 key 7 up
 wait 300
 key 9 down
 wait 400
-expect fxmaskhi 1
+expect fxmask 67108864
 key 9 up
+wait 300
+key 10 down
+wait 400
+expect fxmask 134217728
+key 10 up
 wait 300
 key 11 down
 wait 400
-expect fxmaskhi 2
+expect fxmask 268435456
 key 11 up
 wait 300
-key 5 down
+key 12 down
 wait 400
-expect fxmaskhi 4
-key 5 up
+expect fxmask 536870912
+key 12 up
 wait 300
-key 1 down
+key 13 down
 wait 400
-expect fxmaskhi 8
-key 1 up
-wait 300
-key 3 down
-wait 400
-expect fxmaskhi 16
-key 3 up
+expect fxmask -2147483648
+key 13 up
 wait 300
 # the mutes are there too
 key 14 down
@@ -73,14 +67,34 @@ expect fxmask 256
 key 14 up
 wait 100
 expect fxmask 0
-# back to the first bank
+# back to the first bank: sweep F3, ring mod G3, freeze A3, reverse swell B3 are there now
 spin SELECT -1
 wait 100
 expect fxbank 0
+key 0 down
+wait 400
+expect fxmask 1073741824
+key 0 up
+wait 300
 key 2 down
-wait 100
-expect fxmask 2
+wait 400
+expect fxmaskhi 4
 key 2 up
+wait 300
+key 4 down
+wait 400
+expect fxmaskhi 1
+key 4 up
+wait 300
+key 6 down
+wait 400
+expect fxmaskhi 2
+key 6 up
+wait 300
+key 17 down
+wait 100
+expect fxmask 8388608
+key 17 up
 # FX + OCT-: everything back. The kick muted first (GLO held, F3), the crush up (FX knob 2)
 press GLO
 tapkey 0

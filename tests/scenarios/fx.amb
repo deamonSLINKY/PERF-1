@@ -9,11 +9,11 @@ expect fxon 1
 expect fxmask 0
 shot fx_menu.png
 # 4.1 s: beat repeat 1/4 (G3), 4 s
-key 2 down
+key 17 down
 wait 4000
-expect fxmask 2
+expect fxmask 8388608
 shot fx_held.png
-key 2 up
+key 17 up
 wait 2000
 # 10.1 s: the kick muted (G4), 4 s
 key 14 down
@@ -61,11 +61,11 @@ expect fxmask 4096
 expect sec 0
 shot fx_locked.png
 # another key, held: it plays while held (a hold is not a latch), the latch stays
-key 2 down
+key 17 down
 wait 400
 expect fxlock 4096
-expect fxmask 4098
-key 2 up
+expect fxmask 8392704
+key 17 up
 wait 100
 expect fxmask 4096
 expect fxlock 4096

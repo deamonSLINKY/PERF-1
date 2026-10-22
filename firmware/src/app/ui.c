@@ -205,17 +205,16 @@ static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT",
 #define FX_NONE 63                     /* a spare key: no effect (the engine's bit 63 is never used) */
 static uint8_t fx_bank;                /* 0 or 1 */
 static const uint8_t KEY_FX[2][NKEYS] = {
-    {FX_RPT2, FX_GATE16, FX_RPT4, FX_GATE8, FX_RPT6, FX_GATEX, FX_RPT8,                /* F3 F#3 G3 G#3 A3 A#3 B3 */
-     FX_RPT16, FX_PHASER, FX_RPT32, FX_FLANGER, FX_REV,                                /* C4 C#4 D4 D#4 E4 */
+    {FX_SWEEP, FX_GATE16, FX_RING, FX_GATE8, FX_FREEZE, FX_GATEX, FX_RVSWELL,          /* F3 F#3 G3 G#3 A3 A#3 B3 */
+     FX_NONE, FX_PHASER, FX_NONE, FX_FLANGER, FX_REV,                                  /* C4 C#4 D4 D#4 E4 (two spares, for something new) */
      FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_ROLL, FX_MUTE_HATS, FX_PUMP, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
      FX_MUTE_PERC, FX_RISER, FX_THROW, FX_VINYL, FX_FILL,                              /* C5 C#5 D5 D#5 E5 */
      FX_LP, FX_NONE, FX_HP},                                                           /* F5 F#5 G5 */
-    {FX_SCATTER, FX_RPT8T, FX_BRAKE, FX_RPT16T, FX_SPIN, FX_RING, FX_HALF,
-     FX_SCRATCH, FX_NONE, FX_FREEZE, FX_NONE, FX_RVSWELL,
-     FX_SWEEP, FX_NONE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,
+    {FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32, FX_RPT8T,                 /* the repeats together, slow to fast: F3 .. B3 */
+     FX_RPT16T, FX_NONE, FX_SCATTER, FX_BRAKE, FX_SPIN,                                /* C4 (the last repeat) C#4 D4 D#4 E4 */
+     FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the mutes where they are on the first page) */
      FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
      FX_NONE, FX_NONE, FX_NONE}};
-static int perf_like(void);
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
