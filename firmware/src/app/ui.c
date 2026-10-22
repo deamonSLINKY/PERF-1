@@ -37,10 +37,10 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -128,7 +128,7 @@ static const struct {
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
 #define NGXP 13
-#define NTGT 10
+#define NTGT 11
 static const struct {
     const char *name;
     uint16_t pat;
@@ -141,8 +141,8 @@ static const struct {
 static const struct {
     const char *name;
     uint8_t mask;                       /* a bit a track (EN_TR_*) */
-} GX_TGT[NTGT] = {{"NO DRUMS", 0x70}, {"PAD", 0x40}, {"DRONE", 0x10}, {"ACID", 0x20}, {"DRUMS", 0x0F},
-                    {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0x7F}, {"NO KICK", 0x7E}, {"KICK+DRN", 0x11}};
+} GX_TGT[NTGT] = {{"NO DRUMS", 0xF0}, {"PAD", 0x40}, {"DRONE", 0x10}, {"ACID", 0x20}, {"DRUMS", 0x0F},
+                    {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0xFF}, {"NO KICK", 0xFE}, {"KICK+DRN", 0x11}, {"PLUCK", 0x80}};
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
@@ -156,6 +156,8 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
+    {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
+    {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
@@ -179,6 +181,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
+    {"Level", "Sound", "Density", "Octave"},
+    {"Decay", "Style", "Rate", "Range"},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
@@ -193,7 +197,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 3}, {B_SEQ, V_DRUMS, 4}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 5}, {B_SEQ, V_DRUMS, 4}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -263,9 +267,9 @@ static inline uint32_t h32(uint64_t x) { return (uint32_t)(x ^ x >> 32); }   /* 
 static const int8_t MIXK[NKEYS] = {
     0, 8, 1, 9, 2, 10, 28,                 /* F3 .. B3: kick, hats, snare (mute, the black key above it solos); undo */
     3, 11, 4, 12, 29,                      /* C4 .. E4: perc, drone; tap tempo */
-    5, 13, 6, 14, 16, 17, 18,              /* F4 .. B4: acid, pad, the drums, clear */
-    20, 21, 22, 23, 24, 25, 26, 27};       /* C5 .. G5: scenes 1-4, reset all, the auto-DJ (on, length, new pieces) */
-static const char *const MIX_NAME[7] = {"KICK", "HATS", "SNARE", "PERC", "DRONE", "ACID", "PAD"};
+    5, 13, 6, 14, 16, 17, 7,               /* F4 .. B4: acid, pad, the drums, the pluck's mute */
+    20, 21, 22, 23, 24, 25, 15, 27};       /* C5 .. G5: scenes 1-4, reset all, the auto-DJ (on, length, new pieces) */
+static const char *const MIX_NAME[8] = {"KICK", "HATS", "SNARE", "PERC", "DRONE", "ACID", "PAD", "PLUCK"};
 /* the white keys, in order: the sequencer's steps; the black keys, in order */
 static const uint8_t WHITE_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
@@ -447,9 +451,9 @@ static int mix_state(int k)
     int c = MIXK[k];
     if (c < 0)
         return 0;
-    if (c < 7)
+    if (c < 8)
         return ui.trk_m >> c & 1u;
-    if (c < 15)
+    if (c < 16)
         return ui.trk_s >> (c - 8) & 1u;
     if (c >= 20 && c <= 23)
         return ui.scene_set >> (c - 20) & 1u;
@@ -528,10 +532,10 @@ static void mix_key(int k)
     uint8_t *m = &ui.trk_m, *s = &ui.trk_s;
     if (c < 0)
         return;
-    if (c < 7) {
+    if (c < 8) {
         *m ^= (uint8_t)(1u << c);
         say(*m >> c & 1u ? "MUTE" : "UNMUTE", MIX_NAME[c]);
-    } else if (c < 15) {
+    } else if (c < 16) {
         *s ^= (uint8_t)(1u << (c - 8));
         say(*s >> (c - 8) & 1u ? "SOLO" : "UNSOLO", MIX_NAME[c - 8]);
     } else if (c == 16 || c == 17) {          /* the four drums together: all on, or (all on already) all off */
@@ -587,7 +591,7 @@ static const struct {
     uint8_t p;
     int8_t d;                                  /* the change at 0 (minus this) and at 100 (plus this) */
 } MOOD[] = {{P_AC_DENS, 30}, {P_AC_CUT, 25}, {P_LANE_LVL(3), 25}, {P_LANE_LVL(4), 20}, {P_LANE_LVL(5), 25}, {P_BRIGHT, 20},
-            {P_DR_CUT, 20},  {P_DRIVE, 20},  {P_REVERB, -15},     {P_ECHO, -10},        {P_EVOLVE, 20},       {P_PULSE, 10}};
+            {P_CM_DENS, 25}, {P_DR_CUT, 20},  {P_DRIVE, 20},  {P_REVERB, -15},     {P_ECHO, -10},        {P_EVOLVE, 20},       {P_PULSE, 10}};
 #define NMOOD (int)(sizeof MOOD / sizeof MOOD[0])
 static int mood_val(int p, int v)
 {
@@ -1279,6 +1283,10 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
         en_param_text(p, proj.par[p], b);
         caps(a, b, sizeof a);
         say(WHO[vc], a);
+    } else if (ui.view == V_CMEL || ui.view == V_CMEL2) {   /* the counter-melody's sound */
+        knob_set(P_CM_SND, (proj.par[P_CM_SND] + d + EN_NCMSND) % EN_NCMSND);
+        caps(a, EN_CM_SOUND[proj.par[P_CM_SND]], sizeof a);
+        say("PLUCK", a);
     } else if (kit_view(ui.view)) {             /* the drums: all four to the next kit */
         int k = (proj.par[P_KIT_KICK] + d + EN_NKIT) % EN_NKIT;
         knob_set(P_KIT_KICK, k);
@@ -1300,6 +1308,8 @@ static int oct_par(int v)                       /* what OCT moves on page v */
         return P_BASSOCT;
     if (v >= V_ACID && v <= V_ACLINE)
         return P_AC_OCT;
+    if (v == V_CMEL || v == V_CMEL2)
+        return P_CM_OCT;
     return P_OCT;
 }
 
@@ -2342,21 +2352,22 @@ static void draw_ring(void)
 
 static void draw_meters(void)                    /* left: the five layers */
 {
-    static const char *const L[5] = {"P", "N", "D", "A", "K"};
-    uint16_t c[5], t[5];
-    float lv[5], dm = 0.0f;
+    static const char *const L[6] = {"P", "N", "D", "A", "C", "K"};
+    uint16_t c[6], t[6];
+    float lv[6], dm = 0.0f;
     int i;
-    c[0] = K_PAD, c[1] = K_DIM, c[2] = K_BASS, c[3] = K_ACID, c[4] = K_PULSE;
-    t[0] = K_PAD_T, t[1] = K_LINE, t[2] = K_BASS_T, t[3] = K_ACID_T, t[4] = K_PULSE_T;
+    c[0] = K_PAD, c[1] = K_DIM, c[2] = K_BASS, c[3] = K_ACID, c[4] = KC_COLOR, c[5] = K_PULSE;
+    t[0] = K_PAD_T, t[1] = K_LINE, t[2] = K_BASS_T, t[3] = K_ACID_T, t[4] = mix(K_BG, KC_COLOR, 4), t[5] = K_PULSE_T;
     for (i = 0; i < EN_NDRUM; i++)
         dm = fm_maxf(dm, en_drum_glow[i]);
     lv[0] = en_pad_level * (float)proj.par[P_PAD] * 0.01f;
     lv[1] = en_noise_level;
     lv[2] = en_bass_level * (float)proj.par[P_BASS] * 0.01f;
     lv[3] = en_acid_level * (float)proj.par[P_ACID] * 0.01f;
-    lv[4] = dm * (float)proj.par[P_PULSE] * 0.01f;
-    for (i = 0; i < 5; i++) {
-        int32_t x = 6 + i * 9, h = (int32_t)(fm_clampf(lv[i], 0.0f, 1.0f) * 92.0f + 0.5f);
+    lv[4] = en_cm_level * (float)proj.par[P_CM_LVL] * 0.01f * 1.6f;
+    lv[5] = dm * (float)proj.par[P_PULSE] * 0.01f;
+    for (i = 0; i < 6; i++) {
+        int32_t x = 4 + i * 8, h = (int32_t)(fm_clampf(lv[i], 0.0f, 1.0f) * 92.0f + 0.5f);
         cv_rect(x, 20, 5, 96, t[i]);
         if (h > 0)
             cv_rect(x, 20 + 96 - h, 5, h, c[i]);
@@ -2436,7 +2447,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     switch (b) {
     case B_HOME: L("TEMPO"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("+ SELECT: TEMPO"); break;
     case B_ENV: L("PAD; AGAIN: ENV, LFO,"); L("THEN THE CHORDS"); L("SEL + ENV ON A VOICE'S"); L("PAGE: PLAY IT BY HAND"); break;
-    case B_ARP: L("THE ACID; AGAIN: ITS"); L("ENVELOPE, THEN THE LINE"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_ARP: L("THE ACID; AGAIN: ITS ENV,"); L("ITS LINE, THEN THE PLUCK"); L("(THE COUNTER-MELODY)"); L("SEL + ALGO: ITS SOUND"); break;
     case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
         static char cpu[24];
@@ -2579,7 +2590,7 @@ static void draw_fxedit(void)
  * its knobs, the FX knobs. */
 static void draw_perf(void)
 {
-    static const char *const TN[7] = {"KCK", "HAT", "SNR", "PRC", "DRN", "ACD", "PAD"};
+    static const char *const TN[8] = {"KCK", "HAT", "SNR", "PRC", "DRN", "ACD", "PAD", "PLK"};
     const int g = DJ_LEN[ui.dj_len % 4], b = dj_break_len(g);
     int i;
     {   /* the section, and the auto-DJ's place in it */
@@ -2607,24 +2618,24 @@ static void draw_perf(void)
     }
     for (i = 0; i < 16; i++)                      /* the bar: its sixteen steps, the one playing lit */
         cv_rect(6 + i * 14, 24, 12, 8, en_playing && (int)en_drum_pos == i ? K_ACC : (i & 3) ? K_LINE : K_DIM);
-    for (i = 0; i < 7; i++) {                     /* the tracks */
-        static const uint8_t LN[7] = {0, 3, 1, 5, 6, 6, 6};   /* the drum lane that shows its hits (6: not a lane) */
-        const int32_t x = 4 + i * 33;
+    for (i = 0; i < 8; i++) {                     /* the tracks */
+        static const uint8_t LN[8] = {0, 3, 1, 5, 6, 6, 6, 6};   /* the drum lane that shows its hits (6: not a lane) */
+        const int32_t x = 4 + i * 29;
         const int muted = (ui.trk_m >> i & 1u) || (i < 4 && (ui.fx_mask >> (FX_MUTE_KICK + i) & 1u));
         const int soloed = ui.trk_s >> i & 1u, dim = muted || (ui.trk_s && !soloed);
         float lvl = i == EN_TR_DRONE ? en_bass_level : i == EN_TR_ACID ? en_acid_level : i == EN_TR_PAD ? en_pad_level :
-                                                                                               en_drum_glow[LN[i]];
+                    i == EN_TR_PLUCK ? en_cm_level : en_drum_glow[LN[i]];
         int32_t h;
         lvl = lvl > 1.0f ? 1.0f : lvl;
         h = (int32_t)(lvl * 24.0f);
         const uint16_t tc = i == 0 ? LANE_COL(0) : i == 1 ? LANE_COL(3) : i == 2 ? LANE_COL(1) : i == 3 ? LANE_COL(5) :
-                            i == 4 ? K_BASS : i == 5 ? K_ACID : K_PAD;
-        cv_round(x, 46, 31, 38, 3, soloed ? tc : K_PANEL);
+                            i == 4 ? K_BASS : i == 5 ? K_ACID : i == 7 ? KC_COLOR : K_PAD;
+        cv_round(x, 46, 27, 38, 3, soloed ? tc : K_PANEL);
         if (!dim && h > 0)
-            cv_rect(x + 4, 78 - h, 23, h, soloed ? K_BG : tc);
-        text_c(x + 15, 48, &FONT_XS, TN[i], soloed ? K_BG : dim ? K_DIM : K_TEXT);
+            cv_rect(x + 3, 78 - h, 21, h, soloed ? K_BG : tc);
+        text_c(x + 13, 48, &FONT_XS, TN[i], soloed ? K_BG : dim ? K_DIM : K_TEXT);
         if (muted)
-            cv_rect(x + 3, 62, 25, 2, K_ACC);   /* struck through */
+            cv_rect(x + 2, 62, 23, 2, K_ACC);   /* struck through */
     }
     for (i = 0; i < 4; i++) {                     /* the scenes */
         const int32_t x = 4 + i * 58;
@@ -2712,9 +2723,9 @@ static void draw_mix(void)
             t[n++] = *nm++;
         t[n++] = (char)('0' + oct);
         t[n] = 0;
-        if (code < 7 || (code >= 8 && code < 15)) {
-            const char *q = MIX_NAME[code < 7 ? code : code - 8];
-            lb[j++] = code < 7 ? 'M' : 'S';
+        if (code < 8 || (code >= 8 && code < 16)) {
+            const char *q = MIX_NAME[code < 8 ? code : code - 8];
+            lb[j++] = code < 8 ? 'M' : 'S';
             lb[j++] = ':';
             while (*q && j < 11)
                 lb[j++] = *q++;
@@ -2751,7 +2762,7 @@ static void draw_mix(void)
             lb[j] = 0;
         }
         {
-            const uint16_t kc = code < 7 || code == 16 ? KC_MUTE : (code >= 8 && code < 15) || code == 17 ? KC_FILTER :
+            const uint16_t kc = code < 8 || code == 16 ? KC_MUTE : (code >= 8 && code < 16) || code == 17 ? KC_FILTER :
                                 (code >= 20 && code <= 23) ? KC_REPEAT : (code >= 25 && code <= 27) ? KC_GATE :
                                 code == 24 || code == 28 || code == 30 ? KC_MOVE : KC_BUILD;
             if (on)
@@ -2774,7 +2785,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -2786,6 +2797,7 @@ static int scope_kind(int v)
     case V_DRONE: return SCOPE_DFILT;
     case V_ACID: return SCOPE_AFILT;
     case V_SPACE: return SCOPE_SPACE;
+    case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
     }
 }
@@ -2989,6 +3001,35 @@ static void draw_scope(int kind)
     uint16_t col = K_PAD;
     int32_t x;
     sc_oy = SC_Y, sc_oh = SC_H;
+    if (kind == SCOPE_CMEL) {                    /* the counter-melody: its decay, and the line it plays over a bar (the chord's tones, low to high) */
+        static const uint8_t RATE[4] = {2, 1, 4, 3};
+        const int st = proj.par[P_CM_STYLE], ri = proj.par[P_CM_RATE] & 3, n = 6;
+        const float T = 0.1f * fm_exp2f((float)proj.par[P_CM_DEC] * 0.045f);
+        int s, k;
+        col = KC_COLOR;
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            sc_y[x] = (uint8_t)(scope_expo(u * 1.2f / T, 10.0f) * (float)(SC_H - 8) * 0.45f);
+        }
+        cv_text(6, 2, &FONT_B, "PLUCK", col);
+        cv_text(6 + text_w(&FONT_B, "PLUCK") + 8, 6, &FONT_XS, EN_CM_STYLE[(unsigned)st < EN_NCMSTYLE ? st : 0], K_DIM);
+        cv_text(6, SC_Y + SC_H + 6, &FONT_XS, "A BAR: THE CHORD'S TONES, AND THE RING", K_DIM);
+        scope_trace(mix(K_BG, col, 8));
+        for (s = 0, k = 0; s < 16; s += RATE[ri], k++) {
+            int idx;
+            const int per = 2 * n - 2, q = k % per;
+            switch (st) {
+            case 1: idx = n - 1 - k % n; break;
+            case 2: idx = q < n ? q : per - q; break;
+            case 3: idx = (int)(hash(31u, (uint32_t)k) >> 9) % n; break;
+            case 4: idx = (2 * k) % n; break;
+            case 5: idx = (3 * k) % n; break;
+            default: idx = k % n; break;
+            }
+            cv_disc(SC_X + 6 + s * 13, SC_Y + SC_H - 8 - idx * (SC_H - 22) / (n - 1), 4, col);
+        }
+        return;
+    }
     if (kind == SCOPE_PENV || kind == SCOPE_DENV || kind == SCOPE_AENV) {
         float seg[5];                            /* the curve's pieces as widths; their ends */
         if (kind == SCOPE_PENV) {                /* attack, hold, release, rest */
@@ -3184,7 +3225,8 @@ static void draw_main(void)
         h = hash(h, h32(ui.fx_lock) ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
         for (i = 0; i < EN_NLANE; i++)
             h = hash(h, (uint32_t)q16(en_drum_glow[i]));
-        h = hash(h, (uint32_t)q16(en_pad_level) | (uint32_t)q16(en_bass_level) << 5 | (uint32_t)q16(en_acid_level) << 10 | (uint32_t)en_playing << 15);
+        h = hash(h, (uint32_t)q16(en_pad_level) | (uint32_t)q16(en_bass_level) << 5 | (uint32_t)q16(en_acid_level) << 10 | (uint32_t)en_playing << 15 |
+                        (uint32_t)q16(en_cm_level) << 16);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
@@ -3197,6 +3239,7 @@ static void draw_main(void)
         h = hash(hash(0x53434F50u, ui.view | (uint32_t)ui.theme << 8), scope_tick());
         for (i = 0; i < 4; i++)
             h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
+        h = hash(h, (uint32_t)proj.par[P_CM_DEC] | (uint32_t)proj.par[P_CM_STYLE] << 8 | (uint32_t)proj.par[P_CM_RATE] << 12 | (uint32_t)proj.par[P_CM_RANGE] << 16);
         h = hash(h, (uint32_t)proj.par[P_AC_ENV] | (uint32_t)proj.par[P_ECHO] << 8 | (uint32_t)proj.par[P_SIZE] << 16 |
                         (uint32_t)proj.par[P_PL_RATE] << 24);
         h = hash(h, (uint32_t)(proj.par[P_PL_DEPTH] | proj.par[P_DL_SHAPE] << 8 | proj.par[P_DL_RATE] << 12 | proj.par[P_DL_DEPTH] << 16));
@@ -3226,6 +3269,7 @@ static void draw_main(void)
         h = hash(h, en_chord[i]);
     h = hash(h, en_acid_gate | (uint32_t)en_acid_acc << 16);
     h = hash(h, en_acid_pos | (uint32_t)en_acid_len << 8 | (uint32_t)q16(en_acid_glow) << 16);
+    h = hash(h, (uint32_t)q16(en_cm_level));
     h = hash(h, (uint32_t)(en_drift * 40.0f) | (uint32_t)q16(en_pad_level) << 8 | (uint32_t)q16(en_bass_level) << 13 |
                     (uint32_t)q16(en_acid_level) << 18 | (uint32_t)q16(en_noise_level) << 23);
     for (i = 0; i < 5; i++)
@@ -3256,7 +3300,7 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     const int g = group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
     switch (g >= 0 ? GROUP[g].btn : -1) {
     case B_LFO: return K_BASS;
-    case B_ARP: return K_ACID;
+    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? KC_COLOR : K_ACID;
     case B_SEQ: return RGB(255, 160, 60);
     case B_HOME: return KC_REPEAT;
     default: return perf_like() ? KC_FILTER : K_PAD;
@@ -3324,6 +3368,8 @@ static void draw_knobs(void)
             if (vc >= 0) {
                 en_param_text(SOUND_PAR[vc], proj.par[SOUND_PAR[vc]], t);
                 caps(u, t, sizeof u);
+            } else if (ui.view == V_CMEL || ui.view == V_CMEL2) {
+                caps(u, EN_CM_SOUND[(unsigned)proj.par[P_CM_SND] < EN_NCMSND ? proj.par[P_CM_SND] : 0], sizeof u);
             } else if (kit_view(ui.view)) {
                 int k = proj.par[P_KIT_KICK];
                 int same = proj.par[P_KIT_SNARE] == k && proj.par[P_KIT_HAT] == k && proj.par[P_KIT_PERC] == k;

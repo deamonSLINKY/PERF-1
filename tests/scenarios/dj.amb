@@ -1,17 +1,56 @@
-# Auto-DJ: GLO held, F5 (key 24) on, F#5 (key 25) its groove length (8, 16, 32 bars; three taps from 8: 8), G5 (key 26)
+# Auto-DJ: GLO held, F5 (key 24) on, its groove length on the PERFORM edit page (8, 16, 32, 64 bars), G5 (key 26)
 # a new piece each round. A groove, a drum fill in its last bar, a breakdown, a build (the riser held), the drop,
 # and the groove again, on the bar clock. The timings below are for the first piece (seed 0).
 seed 0
 wait 1500
+# the groove length (8 bars) is on the PERFORM edit page now (the key it was on is the pluck's solo): SEL + FX, to page 17, Groove
+press SEL
+tap FX
+release SEL
+wait 100
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin K2 -1
+wait 50
+expect djlen 0
+tap FX
+wait 100
 press GLO
 tapkey 24
-tapkey 25
-tapkey 25
-tapkey 25
 release GLO
 expect djon 1
 expect piece 0
-wait 10500
+wait 11700
 # 12 s: the groove, bars counting
 expect djphase 0
 expect sec 0

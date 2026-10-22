@@ -501,6 +501,48 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the counter-melody: every sound, in every style and at every rate, plays (not silent), nothing is NaN or over full scale; level 0 is silent */
+    {
+        int sn, st, blk, j, broken = 0, silent = 0, loud = 0;
+        for (sn = 0; sn < EN_NCMSND; sn++)
+            for (st = 0; st < EN_NCMSTYLE + 1; st++) {
+                float peak = 0.0f;
+                en_init();
+                en_set(P_PAD, 0);
+                en_set(P_BASS, 0);
+                en_set(P_ACID, 0);
+                en_set(P_PULSE, 0);
+                en_set(P_NOISE, 0);
+                en_set(P_CM_LVL, st == EN_NCMSTYLE ? 0 : 80);     /* (the last round: level 0) */
+                en_set(P_CM_SND, sn);
+                en_set(P_CM_STYLE, st % EN_NCMSTYLE);
+                en_set(P_CM_RATE, (sn + st) % 4);
+                en_set(P_CM_DENS, 100);
+                en_play(1);
+                for (blk = 0; blk < (st == EN_NCMSTYLE ? 2100 : 700); blk++) {   /* ~4 s (the silent round: 12 s, the last 4 measured: the last run's tails die away) */
+                    en_render(buf, 256, 2048);
+                    if (st == EN_NCMSTYLE && blk < 1400)
+                        continue;
+                    for (j = 0; j < 512; j++) {
+                        const float a = (float)(buf[j] < 0 ? -buf[j] : buf[j]);
+                        if (buf[j] == INT32_MIN || a > 8400000.0f)
+                            broken++;
+                        if (a > peak)
+                            peak = a;
+                    }
+                }
+                if (st < EN_NCMSTYLE && peak < 0.02f * 8388608.0f)
+                    silent++;
+                if (st == EN_NCMSTYLE && peak > 0.003f * 8388608.0f)
+                    loud++;
+            }
+        CHECK(!broken, "counter-melody: %d samples broken (NaN or over full scale)", broken);
+        CHECK(!silent, "counter-melody: %d sound/style combinations silent", silent);
+        CHECK(!loud, "counter-melody: %d level-0 runs not silent", loud);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* Flex Beat: every pattern, started each way (off, on the beat, on the bar), held as a one shot: it arms, plays its bar, and is over
      * exactly once; the level stays sane; and a loop keeps going while it is held */
     {
@@ -600,6 +642,7 @@ int main(void)
             en_set(P_PAD, 0);
             en_set(P_BASS, 0);
             en_set(P_PULSE, 0);
+            en_set(P_CM_LVL, 0);                 /* (and the counter-melody) */
             en_set(P_ECHO, 0);
             en_set(P_REVERB, 0);
             if (k < 3) {                         /* the acid alone: cutoff low, high; an octave up twice */

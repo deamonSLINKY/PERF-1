@@ -1,0 +1,43 @@
+# The counter-melody (PLUCK): two pages in the ARP button's cycle (Acid, Acid env, Acid line, Pluck, Pluck 2), a Sound that SEL + ALGORITHM
+# steps, a mute (GLO + B4) and a solo (GLO + F#5) of its own.
+wait 3000
+tap ARP
+tap ARP
+tap ARP
+expect view 11
+tap ARP
+expect view 12
+expect par98 30
+turn K1 1
+expect par98 31
+turn K2 2
+expect par99 3
+wait 2000
+shot pluck1.png
+press SEL
+turn ALGO 1
+release SEL
+expect par99 4
+tap ARP
+expect view 13
+turn K2 1
+expect par103 1
+turn K3 1
+expect par104 1
+wait 2000
+shot pluck2.png
+tap ARP
+expect view 9
+press GLO
+tapkey 18
+release GLO
+expect trkmute 128
+press GLO
+tapkey 25
+release GLO
+expect trksolo 128
+press GLO
+tapkey 23
+release GLO
+expect trkmute 0
+expect trksolo 0

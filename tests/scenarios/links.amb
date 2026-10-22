@@ -3,15 +3,15 @@
 wait 500
 expect par77 0
 tap SEQ
-expect view 12
+expect view 14
 tap SEQ
-expect view 13
+expect view 15
 shot links_off.png
 press SEL
 tap SEQ
 release SEL
 expect par77 1
-expect view 13
+expect view 15
 expect edited 1
 wait 2000
 shot links_on.png
@@ -34,4 +34,4 @@ expect par78 80
 press SEQ
 wait 500
 release SEQ
-expect view 18
+expect view 20

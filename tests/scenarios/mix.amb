@@ -8,7 +8,7 @@ expect trksolo 0
 # GLO tapped: the Global page, as ever
 tap GLO
 wait 100
-expect view 17
+expect view 19
 tap HOME
 wait 100
 # GLO held, F3: the kick muted; the page stays where it was
@@ -40,9 +40,9 @@ wait 100
 shot mix_solo.png
 release GLO
 expect trksolo 64
-# clear (B4)
+# reset all (E5; the clear key is the pluck's mute now)
 press GLO
-tapkey 18
+tapkey 23
 release GLO
 expect trkmute 0
 expect trksolo 0

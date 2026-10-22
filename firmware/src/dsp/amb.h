@@ -34,6 +34,8 @@
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 24                   /* the sounds each of pad, drone and acid can play */
+#define EN_NCMSND 12                   /* the counter-melody's sounds */
+#define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID };   /* the voices the keys can play (en_note) */
 
@@ -46,6 +48,8 @@ extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_LANE_NAME[EN_NLANE];
 extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NSOUND];
 extern const char *const EN_KIT_NAME[EN_NKIT];
+extern const char *const EN_CM_SOUND[EN_NCMSND], *const EN_CM_STYLE[EN_NCMSTYLE], *const EN_CM_RATE[4];
+extern volatile float en_cm_level;             /* the counter-melody's level, for the screen */
 void en_style_sounds(int16_t *par);             /* a piece stored with a style (before 1.0.27): its sounds and
                                                  * kit set as the style had them, the style cleared */
 
@@ -87,6 +91,8 @@ enum {
                                                            * Next, Random), when (with the chord, or every 4-64
                                                            * bars), from patterns 1..pool, a fill the bar before;
                                                            * and mutate (Off, Shift, Morph): hits move, come, go */
+    P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT,              /* the counter-melody (PLUCK): level, sound, density, octave */
+    P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE,          /* decay, style (up, down, ..), rate (1/8, 1/16, 1/4, 3/16), range in octaves */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -145,7 +151,7 @@ enum {
     EN_NFX = 64                                               /* the mask is 64 bits: FXB(bit) */
 };
 #define FXB(x) (1ull << (x))
-enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID, EN_TR_PAD, EN_NTRACK };
+enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID, EN_TR_PAD, EN_TR_PLUCK, EN_NTRACK };
 extern const char *const EN_FX_NAME[EN_NFX];   /* short names, for the screen */
 void en_fx(uint64_t mask);
 void en_trk(uint32_t mute, uint32_t solo);     /* the tracks' mutes and solos, a bit a track (EN_TR_*), latched */
@@ -181,8 +187,8 @@ enum {
     EN_FXS_FX_QUANT, EN_FXS_FX_MODE, EN_FXS_FX_MIX,                      /* Flex Beat: when it starts (0 off, 1 beat, 2 bar), one shot (0) or loop (1), its mix (0..100) */
     EN_NFXS
 };
-#define EN_FXS_DEFAULTS {16, 0x70, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 25, 80, \
-                         70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0x70, 56, 100, 100, 0, \
+#define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 25, 80, \
+                         70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0xF0, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100}
 extern const int16_t EN_FXS_DEF[EN_NFXS];

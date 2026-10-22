@@ -63,6 +63,9 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CHORD] = {"Chord", 0, EN_NCHORD - 1, 0}, [P_VOICING] = {"Voicing", 0, 1, 0},
     [P_DD_CHANGE] = {"Change", 0, 2, 0}, [P_DD_EVERY] = {"Every", 0, 5, 2}, [P_DD_POOL] = {"Pool", 2, EN_NPAT, 4},
     [P_DD_MUTATE] = {"Mutate", 0, 2, 0},
+    [P_CM_LVL] = {"Pluck", 0, 100, 30},     [P_CM_SND] = {"Sound", 0, EN_NCMSND - 1, 1}, [P_CM_DENS] = {"Density", 0, 100, 45},
+    [P_CM_OCT] = {"Pluck oct", -2, 2, 0},   [P_CM_DEC] = {"Decay", 0, 100, 45},          [P_CM_STYLE] = {"Style", 0, EN_NCMSTYLE - 1, 0},
+    [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -361,6 +364,9 @@ void en_param_text(int i, int v, char *b)
     case P_NZ_COLOR: s = NOISE_NAME[v & 7]; break;
     case P_DE_TRIG: s = TRIG_NAME[(unsigned)v < 6u ? v : 0]; break;
     case P_AC_WAVE: s = EN_ACID_SOUND[(unsigned)v < EN_NSOUND ? v : 0]; break;
+    case P_CM_SND: s = EN_CM_SOUND[(unsigned)v < EN_NCMSND ? v : 0]; break;
+    case P_CM_STYLE: s = EN_CM_STYLE[(unsigned)v < EN_NCMSTYLE ? v : 0]; break;
+    case P_CM_RATE: s = EN_CM_RATE[v & 3]; break;
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
     case P_LK_PERC: s = v ? "Clock" : "Off"; break;
@@ -612,7 +618,7 @@ void en_fx(uint64_t mask)                       /* in four quarters: the queue c
         post(C_FX, q, (int)(mask >> (16 * q) & 0xFFFFu));
 }
 void en_fxk(int k, int v) { post(C_FXK, k, v); }
-void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0x7Fu) | (solo & 0x7Fu) << 7)); }
+void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0xFFu) | (solo & 0xFFu) << 8)); }
 void en_gate_pat(uint32_t steps) { post(C_GATEPAT, 0, (int)(steps & 0xFFFFu)); }
 void en_fxs(int i, int v) { post(C_FXS, i, v); }
 
@@ -1592,6 +1598,88 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
         }
 }
 
+
+/* ------------------------------------------------------ the counter-melody --- */
+/* PLUCK: a counter-melody: two plucked FM voices (taking turns, so a tail rings on under the next note) playing an arpeggio of the chord's
+ * tones over RANGE octaves, in a STYLE (up, down, up and down, random, skipping, thirds), at a RATE (1/8, 1/16, 1/4, dotted 1/8), a note
+ * for each step with the chance DENSITY gives it (fewer in a breakdown). Its sounds are FM at their own ratios: each decays over DECAY. */
+typedef struct { float fr, i0, i1; uint8_t rise; float g; } cm_snd_t;
+static const cm_snd_t CM_SOUND[EN_NCMSND] = {
+    {2.0f, 0.2f, 2.2f, 0, 1.0f},     /* Pluck */
+    {4.0f, 0.05f, 1.3f, 0, 1.0f},    /* Marimba */
+    {1.0f, 0.25f, 0.9f, 0, 1.05f},   /* E.Piano */
+    {5.4f, 0.04f, 0.8f, 0, 1.0f},    /* Kalimba */
+    {3.5f, 0.15f, 1.8f, 0, 1.0f},    /* Bell */
+    {4.01f, 0.05f, 0.5f, 0, 1.0f},   /* Vibes */
+    {2.76f, 0.2f, 1.8f, 0, 0.95f},   /* Gong */
+    {3.0f, 0.5f, 1.2f, 0, 1.0f},     /* Clav */
+    {1.5f, 0.35f, 1.6f, 0, 1.0f},    /* Digital */
+    {1.0f, 0.4f, 2.0f, 1, 0.9f},     /* Brass */
+    {1.0f, 0.0f, 0.0f, 0, 1.15f},    /* Bleep: a plain sine */
+    {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
+};
+const char *const EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass"};
+const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
+const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
+static struct { float ph, ps, inc, env, dm, vel; uint32_t age; } cm[2];
+static float cm_vol;
+static uint32_t cm_clock;
+static int cm_i, cm_alt;
+volatile float en_cm_level;
+
+static void cm_step(void)                       /* a sixteenth of the counter-melody */
+{
+    static const uint8_t RATE[4] = {2, 1, 4, 3};
+    const int ri = par[P_CM_RATE] < 0 ? 0 : par[P_CM_RATE] > 3 ? 3 : par[P_CM_RATE];
+    int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE], voice;
+    float dens = (float)par[P_CM_DENS] * 0.01f, dec;
+    const int base = 60 + 12 * (par[P_OCT] + par[P_CM_OCT]);
+    if (cm_clock++ % (uint32_t)RATE[ri])
+        return;
+    if (par[P_CM_LVL] == 0 || chord_nt < 1)
+        return;
+    if (sec == SEC_BREAK)
+        dens *= 0.4f;
+    if (frand() >= (cm_i == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens))
+        return;
+    for (o = 0; o < range; o++)                 /* the chord's tones over the octaves, low to high */
+        for (k = 0; k < chord_nt && n < 12; k++)
+            arp[n++] = base + chord_pcs[k] + 12 * o;
+    for (k = 1; k < n; k++) {
+        t = arp[k];
+        for (o = k - 1; o >= 0 && arp[o] > t; o--)
+            arp[o + 1] = arp[o];
+        arp[o + 1] = t;
+    }
+    switch (par[P_CM_STYLE]) {
+    case 1: idx = n - 1 - cm_i % n; cm_i++; break;
+    case 2: {                                    /* up and down, not repeating the ends */
+        const int per = n > 1 ? 2 * n - 2 : 1, q = cm_i % per;
+        idx = q < n ? q : per - q;
+        cm_i++;
+        break;
+    }
+    case 3: idx = irand(n); cm_i++; break;
+    case 4: idx = cm_i % n; cm_i += 2; break;
+    case 5: idx = cm_i % n; cm_i += 3; break;
+    default: idx = cm_i % n; cm_i++; break;
+    }
+    note = arp[idx];
+    while (note > 100)
+        note -= 12;
+    while (note < 36)
+        note += 12;
+    voice = cm_alt ^= 1;
+    dec = 0.1f * fm_exp2f((float)par[P_CM_DEC] * 0.045f);   /* the time to silence: 0.1 .. 2.2 s */
+    cm[voice].inc = mtof((float)note) * (1.0f / EN_SR);
+    cm[voice].ps = 0.0f;
+    cm[voice].env = 1.0f;
+    cm[voice].age = 0;
+    cm[voice].vel = 0.7f + 0.3f * frand();
+    cm[voice].dm = fm_expf(-6.9f / (dec * EN_SR));
+}
+
+
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
 static uint32_t sixteenth;
 static int32_t step_t;                          /* samples into this sixteenth (the gate's clock) */
@@ -1714,6 +1802,7 @@ static void tick(void)
     } else {
         acid_step();
     }
+    cm_step();
     if (st == 0 && change_pending && !en_frozen) {   /* chords move on the bar */
         change_pending = 0;
         chord_change();
@@ -1983,6 +2072,7 @@ static void apply(int p, int v)
     switch (p) {
     case P_PAD: pad_vol = (float)(v * v) * 0.0001f; break;
     case P_ACID: acid_vol = (float)(v * v) * 0.0001f; break;
+    case P_CM_LVL: cm_vol = (float)(v * v) * 0.0001f; break;
     case P_BASS: bass_vol = (float)(v * v) * 0.0001f; break;
     case P_PULSE: pulse_vol = (float)(v * v) * 0.0001f; break;
     case P_NOISE: noise_vol = (float)(v * v) * 0.0001f; break;
@@ -2400,8 +2490,8 @@ enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR, BM_SCR, BM_GRN, BM_RVS
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
 static uint32_t bm_start;                        /* the frame the reading counts from */
 static float bm_off, bm_len, bm_speed, bm_mix, bm_tgt;   /* samples from bm_start; the slice; 0 live .. 1 ring */
-static float trk_g[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
-             trk_g1[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+static float trk_g[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+             trk_g1[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 static float tg_inv = 1.0f / 256.0f;             /* 1 / the chunk: the tracks' gains ramp across it */
 #define TG(t, j) (trk_g[t] + (trk_g1[t] - trk_g[t]) * (float)(j) * tg_inv)
 #define TR_KICK EN_TR_KICK
@@ -2411,11 +2501,12 @@ static float tg_inv = 1.0f / 256.0f;             /* 1 / the chunk: the tracks' g
 #define TR_DRONE EN_TR_DRONE
 #define TR_ACID EN_TR_ACID
 #define TR_PAD EN_TR_PAD                         /* pad and vinyl */
+#define TR_CM EN_TR_PLUCK                        /* the counter-melody */
 static uint8_t trk_mute, trk_solo;               /* latched (en_trk), a bit a track */
 static uint16_t gx_pat = 0x5249;                 /* the pattern gate: steps 0 3 6 9 12 14 open (3+3+3+3+2+2) */
 const int16_t EN_FXS_DEF[EN_NFXS] = EN_FXS_DEFAULTS;
 static volatile int16_t fxs_v[EN_NFXS] = EN_FXS_DEFAULTS;   /* the effects' settings (en_fxs) */
-static float gate_f[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the pattern gate's gain a track */
+static float gate_f[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the pattern gate's gain a track */
 static float lp_amt, hp_amt, lp_s[4], hp_s[4], lp_c[4], hp_c[4], throw_amt, throw_key, crush_l, crush_r, gate_g = 1.0f;
 static int crush_n;
 /* tape, flanger and phaser, on the master after the filters: a tape's wow and flutter (a short delay, its
@@ -3332,8 +3423,8 @@ static void drain(void)
                 fxk_v[a] = (int16_t)b;
             break;
         case C_TRK:
-            trk_mute = (uint8_t)(b & 0x7F);
-            trk_solo = (uint8_t)(b >> 7 & 0x7F);
+            trk_mute = (uint8_t)(b & 0xFF);
+            trk_solo = (uint8_t)(b >> 8 & 0xFF);
             break;
         case C_GATEPAT: gx_pat = (uint16_t)b; break;
         case C_FXS:
@@ -3642,6 +3733,46 @@ static void render_bass(uint32_t n)
     bass.mph = mp;
     bass.amp = amp;
     en_bass_level = amp;
+}
+
+static void render_cm(uint32_t n)
+{
+    const int sn = par[P_CM_SND] < 0 ? 0 : par[P_CM_SND] >= EN_NCMSND ? EN_NCMSND - 1 : par[P_CM_SND];
+    const cm_snd_t *S = &CM_SOUND[sn];
+    const float g = cm_vol * 0.5f * S->g;
+    float lvl = 0.0f;
+    int v;
+    uint32_t j;
+    if (g <= 0.0f) {
+        cm[0].env = cm[1].env = 0.0f;
+        en_cm_level = 0.0f;
+        return;
+    }
+    for (v = 0; v < 2; v++) {
+        const float pl = v ? 0.65f : 0.35f, pr = 1.0f - pl;
+        if (cm[v].env < 0.0008f)
+            continue;
+        for (j = 0; j < n; j++) {
+            const float e = cm[v].env, idx = S->i0 + S->i1 * (S->rise ? 1.0f - e : e),
+                        y = sine_any(cm[v].ph + idx * sine(cm[v].ps)) * e * fm_minf((float)cm[v].age * (1.0f / 96.0f), 1.0f) * cm[v].vel * g *
+                            TG(TR_CM, j);
+            mixl[j] += y * pl * 2.0f;
+            mixr[j] += y * pr * 2.0f;
+            rsend[j] += y * 0.35f;
+            esend[j] += y * 0.5f;
+            cm[v].ph += cm[v].inc;
+            if (cm[v].ph >= 1.0f)
+                cm[v].ph -= 1.0f;
+            cm[v].ps += cm[v].inc * S->fr;
+            if (cm[v].ps >= 1.0f)
+                cm[v].ps -= (float)(int)cm[v].ps;
+            cm[v].env *= cm[v].dm;
+            cm[v].age++;
+            lvl = fm_maxf(lvl, e * cm[v].vel);
+        }
+        cm[v].env = fm_flush(cm[v].env);
+    }
+    en_cm_level = lvl;
 }
 
 static void render_acid(uint32_t n)
@@ -4071,6 +4202,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     render_pad(n);
     render_bass(n);
     render_acid(n);
+    render_cm(n);
     render_noise(n);
     for (j = 0; j < n; j++) {                   /* the sidechain: the kick pushes the rest down, briefly */
         float gt = 1.0f;
