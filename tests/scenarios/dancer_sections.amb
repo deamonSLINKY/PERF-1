@@ -1,0 +1,30 @@
+seed 0
+wait 3000
+tap HOME
+wait 100
+tap HOME
+wait 100
+spin SELECT 1
+wait 100
+spin SELECT 1
+wait 100
+spin SELECT 1
+wait 100
+spin SELECT 1
+wait 100
+tap SAVE
+wait 3500
+shot s_sleep.png
+wait 400
+shot s_sleep2.png
+tap SAVE
+wait 1800
+shot s_shake.png
+wait 300
+shot s_shake2.png
+wait 9000
+shot s_jump.png
+wait 350
+shot s_jump2.png
+wait 350
+shot s_jump3.png
