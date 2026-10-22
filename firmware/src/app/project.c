@@ -196,10 +196,9 @@ void project_piece(int i)
     take(proj.piece);
 }
 
-/* the genres: the original bank is the one in flash. The others are factory sets in RAM (changes last until power-off,
- * nothing of them is stored). A switch keeps the bank being left as it is and brings up the other with the same piece. */
-static slot_t gset[EN_NGENRE][NPIECES];
-static uint8_t gready[EN_NGENRE];
+/* the genres: the original bank is the one in flash. The others are factory sets (their changes last while you stay in the
+ * genre; nothing of them is stored). A switch brings up the other bank with the same piece number. */
+static slot_t gset0[NPIECES];                /* the original bank as it was left (its session changes) */
 void project_set_genre(int g)
 {
     int i;
@@ -207,15 +206,14 @@ void project_set_genre(int g)
     if (g == proj.genre)
         return;
     keep();
-    memcpy(gset[proj.genre], proj.slot, sizeof proj.slot);
-    gready[proj.genre] = 1;
+    if (proj.genre == 0)
+        memcpy(gset0, proj.slot, sizeof proj.slot);
     proj.genre = (uint8_t)g;
-    if (gready[g]) {
-        memcpy(proj.slot, gset[g], sizeof proj.slot);
-    } else {
+    if (g == 0) {
+        memcpy(proj.slot, gset0, sizeof proj.slot);
+    } else {                                 /* the others: their recipes, fresh each time (to save RAM) */
         for (i = 0; i < NPIECES; i++)
             recipe(i, &proj.slot[i]);
-        gready[g] = 1;
     }
     proj.edited = 0;
     take(proj.piece);

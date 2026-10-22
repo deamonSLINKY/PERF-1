@@ -963,16 +963,24 @@ static void fxs_put(int i, int v)
 }
 static void genre_fx(int g)
 {
-    static const uint8_t SET[8] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_DRIVE, EN_FXS_TP_DULL,
-                                   EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE};
-    static const uint8_t LOFI[8] = {25, 18, 30, 45, 55, 40, 28, 75};
-    const uint64_t bundle = FXB(FX_VINYL) | FXB(FX_TAPE);
+    static const uint8_t SET[12] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_DRIVE, EN_FXS_TP_DULL,
+                                    EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE,
+                                    EN_FXS_PM_DEPTH, EN_FXS_PM_REL, EN_FXS_PM_RATE, EN_FXS_PM_TGT};
+    static const uint8_t LOFI[8] = {25, 18, 30, 45, 55, 40, 28, 75};             /* tape and vinyl, gentler */
+    static const uint8_t HOUSE[4] = {50, 45, 1, 0x70};                           /* the pump: depth, release, every quarter, the chords and bass */
     int i;
-    ui.fx_lock &= ~bundle;
-    for (i = 0; i < 8; i++)
-        fxs_put(SET[i], g == 1 ? LOFI[i] : EN_FXS_DEF[SET[i]]);
-    if (g == 1)
-        ui.fx_lock |= bundle;
+    ui.fx_lock &= ~(FXB(FX_VINYL) | FXB(FX_TAPE) | FXB(FX_PUMP));
+    for (i = 0; i < 12; i++)
+        fxs_put(SET[i], EN_FXS_DEF[SET[i]]);
+    if (g == 1) {                                /* lofi: the vinyl and the tape on */
+        for (i = 0; i < 8; i++)
+            fxs_put(SET[i], LOFI[i]);
+        ui.fx_lock |= FXB(FX_VINYL) | FXB(FX_TAPE);
+    } else if (g == 2) {                         /* house: the pump on */
+        for (i = 0; i < 4; i++)
+            fxs_put(SET[8 + i], HOUSE[i]);
+        ui.fx_lock |= FXB(FX_PUMP);
+    }
 }
 static void genre_step(int d)
 {

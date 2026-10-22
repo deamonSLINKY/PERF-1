@@ -124,6 +124,42 @@ static const int16_t PL_07[] = {LOFI_BASE, P_TEMPO, 86, P_ROOT, 3, P_MODE, 7, P_
 static const int16_t PL_08[] = {LOFI_BASE, P_TEMPO, 76, P_ROOT, 4, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 3, P_BRIGHT, 24, P_ECHO, 40, -1};   /* E dorian, glass */
 static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_DR_INST, 9, P_REVERB, 46, P_SIZE, 70, -1};   /* C# lydian, dreamy */
 static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
+/* HOUSE: ten pieces, 118 .. 126 beats a minute, four on the floor, a clap on 2 and 4, open hats on the off-beats, stabs and
+ * organ chords, a sub or square bass, a plucked line rolling in sixteenths; the pump (latched with the genre) ducks the chords. */
+#define HOUSE_BASE P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
+    P_AC_RES, 40, P_AC_ENV, 40, P_AC_DENS, 45, P_AC_LEN, 16, P_AC_MUT, 25, P_BASS, 70, P_DR_INST, 9, P_DR_CUT, 40, P_PULSE, 80, \
+    KIT(1), P_DRIVE, 35, P_SWING, 12, P_ECHO, 30, P_ETIME, 3, P_REVERB, 30, P_SIZE, 50, P_EVOLVE, 45, P_MOTION, 50, P_PATTERN, 0, \
+    LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45
+static const int16_t PH_01[] = {HOUSE_BASE, P_TEMPO, 122, P_ROOT, 9, P_MODE, 1, -1};
+static const int16_t PH_02[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 0, P_MODE, 5, P_PADTONE, 4, P_DR_INST, 10, P_AC_WAVE, 9, -1};
+static const int16_t PH_03[] = {HOUSE_BASE, P_TEMPO, 120, P_ROOT, 5, P_MODE, 1, P_PADTONE, 0, P_CHORD, EN_CH_9TH, -1};
+static const int16_t PH_04[] = {HOUSE_BASE, P_TEMPO, 126, P_ROOT, 2, P_MODE, 5, P_PADTONE, 10, P_DR_INST, 5, -1};
+static const int16_t PH_05[] = {HOUSE_BASE, P_TEMPO, 118, P_ROOT, 7, P_MODE, 4, P_PADTONE, 8, P_CHORD, EN_CH_9TH, P_DR_INST, 1, P_AC_WAVE, 15, -1};
+static const int16_t PH_06[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 11, P_MODE, 5, P_AC_WAVE, 9, -1};
+static const int16_t PH_07[] = {HOUSE_BASE, P_TEMPO, 122, P_ROOT, 3, P_MODE, 7, P_PADTONE, 4, P_DR_INST, 10, -1};
+static const int16_t PH_08[] = {HOUSE_BASE, P_TEMPO, 125, P_ROOT, 10, P_MODE, 1, P_PADTONE, 1, -1};
+static const int16_t PH_09[] = {HOUSE_BASE, P_TEMPO, 121, P_ROOT, 4, P_MODE, 5, P_PADTONE, 14, P_DR_INST, 5, P_AC_WAVE, 8, -1};
+static const int16_t PH_10[] = {HOUSE_BASE, P_TEMPO, 126, P_ROOT, 8, P_MODE, 1, P_SWING, 20, -1};
+static const int16_t *const HOUSE_PIECES[EN_NPIECES] = {PH_01, PH_02, PH_03, PH_04, PH_05, PH_06, PH_07, PH_08, PH_09, PH_10};
+static const char *const HOUSE_NAME[EN_NPIECES] = {"H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10"};
+/* DUBSTEP: ten pieces at 136 .. 150, the beat in half time (the snare on the third beat), a deep sub kick, the drone as the wobble
+ * bass (its LFO, a quarter or half note, on its cutoff), a harsh lead, dark pads in the minor modes. */
+#define DUB_BASE P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
+    P_AC_RES, 60, P_AC_ENV, 60, P_AC_DENS, 40, P_AC_LEN, 8, P_AC_MUT, 30, P_BASS, 85, P_DR_INST, 4, P_DR_CUT, 40, P_DR_RES, 55, \
+    P_DL_RATE, 0, P_DL_SHAPE, 1, P_DL_DEPTH, 85, P_DL_DEST, 0, P_PULSE, 85, KIT(9), P_DRIVE, 60, P_SWING, 0, P_ECHO, 45, P_ETIME, 3, \
+    P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45
+static const int16_t PD_01[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 4, P_MODE, 2, -1};
+static const int16_t PD_02[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 5, P_MODE, 5, P_DR_INST, 9, P_DL_RATE, 1, P_DL_SHAPE, 0, -1};
+static const int16_t PD_03[] = {DUB_BASE, P_TEMPO, 142, P_ROOT, 2, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
+static const int16_t PD_04[] = {DUB_BASE, P_TEMPO, 138, P_ROOT, 7, P_MODE, 5, P_DL_SHAPE, 0, -1};
+static const int16_t PD_05[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 9, P_MODE, 7, P_DR_INST, 6, P_DL_RATE, 1, -1};
+static const int16_t PD_06[] = {DUB_BASE, P_TEMPO, 145, P_ROOT, 1, P_MODE, 2, P_DR_INST, 13, P_DL_SHAPE, 4, -1};
+static const int16_t PD_07[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 0, P_MODE, 5, P_DR_INST, 3, -1};
+static const int16_t PD_08[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 10, P_MODE, 2, P_DR_INST, 8, P_DL_RATE, 1, P_DL_SHAPE, 0, -1};
+static const int16_t PD_09[] = {DUB_BASE, P_TEMPO, 136, P_ROOT, 6, P_MODE, 5, P_PADTONE, 11, -1};
+static const int16_t PD_10[] = {DUB_BASE, P_TEMPO, 150, P_ROOT, 11, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
+static const int16_t *const DUB_PIECES[EN_NPIECES] = {PD_01, PD_02, PD_03, PD_04, PD_05, PD_06, PD_07, PD_08, PD_09, PD_10};
+static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"};
 #undef LV
 #undef TU
 #undef DE
@@ -149,6 +185,44 @@ static void lofi_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
         pats[p][5] = PERC[(i * 3 + p) % 6];
     }
 }
+/* the house patterns: the kick four on the floor (a few with an extra), the clap on 2 and 4, the open hats on the off-beats
+ * (some pieces: every other), closed hats in eighths or sixteenths, a shaker or conga ghosting between */
+static void house_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
+{
+    static const uint16_t KICK[6] = {0x1111, 0x1111, 0x1111, 0x1151, 0x9111, 0x1115};
+    static const uint16_t CLAP[4] = {0x1010, 0x1010, 0x1210, 0x5010};
+    static const uint16_t HAT[6] = {0x5555, 0xFFFF, 0xEEEE, 0x7777, 0xDDDD, 0x5D5D};
+    static const uint16_t OPEN[4] = {0x4444, 0x4444, 0x4040, 0x4444};
+    static const uint16_t PERC[6] = {0x0000, 0x0A0A, 0x2828, 0x8421, 0x4A4A, 0x2424};
+    int p;
+    for (p = 0; p < EN_NPAT; p++) {
+        pats[p][0] = KICK[(i + p * 2) % 6];
+        pats[p][1] = (i + p) % 5 == 0 ? (uint16_t)0x1010 : (uint16_t)0;
+        pats[p][2] = CLAP[(i + p) % 4];
+        pats[p][3] = HAT[(i * 3 + p) % 6];
+        pats[p][4] = OPEN[(i + p) % 4];
+        pats[p][5] = PERC[(i * 2 + p) % 6];
+    }
+}
+/* the dubstep patterns: half time, the kick on the one (and one more, off the beat), the snare and clap on the third beat,
+ * sparse hats, now and then an open hat or a perc hit before the snare */
+static void dub_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
+{
+    static const uint16_t KICK[7] = {0x0001, 0x0401, 0x0041, 0x0081, 0x0801, 0x0021, 0x0A01};
+    static const uint16_t SNARE[3] = {0x0100, 0x4100, 0x0110};
+    static const uint16_t HAT[6] = {0x5555, 0x4444, 0x7777, 0x5D5D, 0xFFFF, 0x1515};
+    static const uint16_t OPEN[4] = {0x0000, 0x0400, 0x0040, 0x4000};
+    static const uint16_t PERC[4] = {0x0000, 0x2000, 0x0010, 0x0220};
+    int p;
+    for (p = 0; p < EN_NPAT; p++) {
+        pats[p][0] = KICK[(i * 3 + p * 2) % 7];
+        pats[p][1] = SNARE[(i + p) % 3];
+        pats[p][2] = 0x0100;
+        pats[p][3] = HAT[(i + p * 2) % 6];
+        pats[p][4] = OPEN[(i + p) % 4];
+        pats[p][5] = PERC[(i * 2 + p) % 4];
+    }
+}
 static const int16_t *const PIECES[EN_NPIECES] = {
     PC_HYPNOS, PC_UNDERTOW, PC_MONOLITH, PC_ASCENSION, PC_NIGHT_DRIVE,
     PC_DUB_CHAMBER, PC_GLASS_TUNNEL, PC_TIDAL, PC_WAREHOUSE, PC_DEEP_FIELD,
@@ -156,13 +230,13 @@ static const int16_t *const PIECES[EN_NPIECES] = {
 static const char *const PIECE_NAME[EN_NPIECES] = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10"};
 
 const char *en_piece_name(int i) { return PIECE_NAME[(unsigned)i < EN_NPIECES ? i : 0]; }
-static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES};
-static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI"};
+static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES, HOUSE_PIECES, DUB_PIECES};
+static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP"};
 const char *en_genre_name(int g) { return GENRE_NAME[(unsigned)g < EN_NGENRE ? g : 0]; }
 const char *en_piece_name_g(int g, int i)
 {
     i = (unsigned)i < EN_NPIECES ? i : 0;
-    return g == 1 ? LOFI_NAME[i] : PIECE_NAME[i];
+    return g == 1 ? LOFI_NAME[i] : g == 2 ? HOUSE_NAME[i] : g == 3 ? DUB_NAME[i] : PIECE_NAME[i];
 }
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
 {
@@ -181,8 +255,13 @@ void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
 {
     int p, l;
     i = (unsigned)i < EN_NPIECES ? i : 0;
-    if (g == 1) {
-        lofi_pats(i, pats);
+    if (g >= 1) {
+        if (g == 1)
+            lofi_pats(i, pats);
+        else if (g == 2)
+            house_pats(i, pats);
+        else
+            dub_pats(i, pats);
         return;
     }
     for (p = 0; p < EN_NPAT; p++)
@@ -209,7 +288,7 @@ const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", 
                                                "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright"};
 const char *const EN_ACID_SOUND[EN_NSOUND] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft"};
-const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty"};
+const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy"};
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -673,6 +752,10 @@ static const kit_t KITS[EN_NKIT] = {
     {2.8f, 0.0010f, 0.2f, 0.95f, 0.08f, 0.45f, 0.0f,
      172.0f, 290.0f, 0.9f, 0.85f, 0.95f, 380.0f, 0.8f,
      0.85f, 0.55f, 0.85f, 1.1f, 520.0f, 1.5f, 0.9f, 0.35f, 0.0f, 0.0f},
+    /* Heavy (dubstep): a deep sub kick with a long tail, a big cracking snare, a wide clap, tight hats, a metal perc; it ducks the bass hard */
+    {3.0f, 0.0013f, 0.28f, 1.35f, 0.25f, 1.1f, 0.35f,
+     190.0f, 330.0f, 1.5f, 0.75f, 1.05f, 330.0f, 1.1f,
+     1.2f, 0.5f, 0.7f, 1.0f, 300.0f, 2.2f, 1.6f, 1.0f, 0.0f, 0.0f},
 };
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */

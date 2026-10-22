@@ -467,6 +467,40 @@ int main(void)
         run(1.0f);
     }
 
+    /* every piece of every genre plays: not silent, not over full scale, no NaN */
+    {
+        int g, i, p, l, wrong = 0;
+        for (g = 0; g < EN_NGENRE; g++)
+            for (i = 0; i < EN_NPIECES; i++) {
+                int16_t par[P_NPARAMS];
+                uint16_t pool, pats[EN_NPAT][EN_NLANE];
+                float rms;
+                en_init();
+                en_piece_g(g, i, par, &pool);
+                en_piece_pats_g(g, i, pats);
+                for (p = 0; p < P_NPARAMS; p++)
+                    en_set(p, par[p]);
+                en_pool(pool);
+                for (p = 0; p < EN_NPAT; p++)
+                    for (l = 0; l < EN_NLANE; l++)
+                        en_pats[p][l] = pats[p][l];
+                en_play(1);
+                run(2.0f);
+                peak = 0.0f;
+                sum2 = 0.0f;
+                run(12.0f);
+                rms = sqrtf(sum2 / (12.0f * 44100.0f * 2.0f));
+                if (bad || rms < 0.015f || peak > 0.99f) {
+                    wrong++;
+                    printf("   genre %d piece %d: rms %.4f peak %.3f%s\n", g, i, (double)rms, (double)peak, bad ? " NaN" : "");
+                }
+            }
+        CHECK(!wrong, "genre pieces: %d silent or over full scale", wrong);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+
     /* the acid's cutoff and octave, and the vinyl's crackle, are heard (zero crossings: brightness, pitch) */
     {
         float zc[5], hf[5], ee[5];
