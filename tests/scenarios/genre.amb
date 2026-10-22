@@ -1,4 +1,4 @@
-# Genres: GLO held + the PRESETS dial switches the bank of ten pieces (the original, lofi, house, dubstep); the same piece
+# Genres: GLO held + the PRESETS dial switches the bank of ten pieces (the original, lofi, house, dubstep, jungle, dnb, breaks, garage, electro, trap); the same piece
 # number plays. A genre brings its effects (lofi: the vinyl and the tape latched; house: the pump). Only the first bank stores.
 seed 0
 wait 3000
@@ -48,6 +48,43 @@ expect piece 1
 expect tempo 140
 expect fxlock 0
 shot genre_dub.png
+# the six more (jungle, dnb, breaks, garage, electro, trap): piece 1 of each, by its tempo
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 4
+expect tempo 168
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 5
+expect tempo 172
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 6
+expect tempo 110
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 7
+expect tempo 132
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 8
+expect tempo 120
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 9
+expect tempo 134
 # round to the first again; its piece 1 as it was
 press GLO
 turn PRESET 1

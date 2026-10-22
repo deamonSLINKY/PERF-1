@@ -163,6 +163,52 @@ static const int16_t PD_09[] = {DUB_BASE, P_TEMPO, 136, P_ROOT, 6, P_MODE, 5, P_
 static const int16_t PD_10[] = {DUB_BASE, P_TEMPO, 150, P_ROOT, 11, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
 static const int16_t *const DUB_PIECES[EN_NPIECES] = {PD_01, PD_02, PD_03, PD_04, PD_05, PD_06, PD_07, PD_08, PD_09, PD_10};
 static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"};
+/* the other six genres (4 .. 9: JUNGLE, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
+ * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
+static const int16_t X_JUNGLE[] = {P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
+    KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, -1};
+static const int16_t X_DNB[] = {P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
+    KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, -1};
+static const int16_t X_BREAKS[] = {P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
+    KIT(4), P_PATTERN, 0, P_EVOLVE, 45, -1};
+static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 52, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
+    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, -1};
+static const int16_t X_ELECTRO[] = {P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
+    KIT(11), P_PATTERN, 0, P_EVOLVE, 40, -1};
+static const int16_t X_TRAP[] = {P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
+    KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, -1};
+static const int16_t *const XBASE[6] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP};
+static const uint8_t XROW[6][10][7] = {
+    {{165, 5, 5, 5, 8, 4, 9}, {168, 7, 2, 4, 7, 9, 13}, {162, 2, 1, 2, 0, 1, 4}, {170, 9, 5, 1, 14, 11, 3}, {160, 0, 7, 5, 8, 9, 11}, {166, 4, 2, 6, 11, 4, 14}, {164, 10, 5, 1, 2, 1, 9}, {168, 6, 1, 3, 3, 9, 4}, {170, 1, 5, 4, 7, 2, 13}, {160, 8, 2, 5, 8, 4, 9}},
+    {{174, 9, 1, 3, 0, 9, 4}, {172, 2, 5, 2, 1, 1, 15}, {174, 5, 3, 3, 3, 9, 11}, {175, 4, 2, 6, 7, 4, 14}, {174, 0, 5, 4, 11, 3, 2}, {176, 7, 1, 2, 5, 9, 4}, {170, 10, 5, 3, 2, 1, 15}, {175, 6, 2, 4, 7, 13, 13}, {172, 11, 1, 2, 0, 9, 11}, {178, 3, 5, 6, 11, 2, 14}},
+    {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 7, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 7, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
+    {{130, 5, 1, 3, 0, 9, 4}, {132, 9, 5, 2, 4, 5, 11}, {128, 0, 4, 3, 1, 9, 12}, {134, 2, 1, 2, 5, 10, 4}, {130, 7, 5, 3, 0, 4, 15}, {136, 10, 1, 2, 1, 9, 11}, {126, 4, 5, 3, 4, 5, 12}, {132, 1, 4, 2, 5, 9, 4}, {130, 6, 1, 3, 3, 1, 15}, {138, 10, 5, 2, 0, 10, 11}},
+    {{118, 9, 5, 1, 2, 10, 13}, {120, 2, 2, 6, 3, 6, 3}, {122, 0, 1, 4, 14, 11, 9}, {124, 4, 5, 1, 2, 10, 13}, {125, 7, 2, 6, 3, 6, 3}, {126, 5, 1, 4, 14, 11, 9}, {127, 11, 5, 1, 2, 10, 13}, {128, 9, 2, 6, 3, 6, 3}, {129, 6, 1, 4, 14, 11, 9}, {130, 2, 5, 1, 2, 10, 13}},
+    {{130, 1, 5, 6, 7, 9, 11}, {134, 5, 5, 4, 12, 9, 4}, {136, 9, 2, 1, 2, 9, 15}, {138, 3, 5, 6, 13, 3, 11}, {140, 7, 7, 4, 7, 9, 4}, {140, 11, 5, 1, 12, 9, 15}, {142, 6, 2, 6, 2, 9, 11}, {144, 0, 5, 4, 13, 3, 4}, {146, 4, 7, 1, 7, 9, 15}, {150, 10, 5, 6, 12, 9, 11}},
+};
+static const uint16_t XPAT[6][6][6] = {
+    {{0x0C05, 0x1010, 0x8280, 0x5555, 0x0000, 0x0000}, {0x4C45, 0x1010, 0x8280, 0x5555, 0x0000, 0x0000}, {0x0405, 0x4010, 0x0280, 0x5555, 0x0000, 0x0000}, {0x040C, 0x4010, 0x0282, 0x4044, 0x0400, 0x0000}, {0x0401, 0x1010, 0x8288, 0x5555, 0x0000, 0x4040}, {0x0005, 0xF550, 0x0000, 0x0155, 0x0000, 0x0000}},
+    {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0401, 0x1010, 0x8080, 0xFF7F, 0x0000, 0x4040}, {0x0405, 0x1010, 0x8080, 0xFFFF, 0x0000, 0x0000}, {0x0401, 0x1010, 0x0000, 0x4444, 0x0000, 0x8008}, {0x0409, 0x1010, 0x0000, 0x5555, 0x0000, 0x4080}, {0x4041, 0x0100, 0x0100, 0x5555, 0x1000, 0x0000}},
+    {{0x2445, 0x1010, 0x8A80, 0xDF7F, 0x2080, 0x0000}, {0x4181, 0x1010, 0x0000, 0x51D5, 0x0400, 0x0000}, {0x0C83, 0x1010, 0x0000, 0x0000, 0x5555, 0x0000}, {0x0501, 0x9090, 0x0000, 0x5555, 0x0000, 0x0000}, {0x4405, 0x1010, 0x1010, 0x5555, 0x8000, 0x0080}, {0x0005, 0xF510, 0x1000, 0x0155, 0x0000, 0x0000}},
+    {{0x0401, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0421, 0x1010, 0x0000, 0x1313, 0x4044, 0x8880}, {0x1111, 0x8080, 0x1010, 0x4444, 0x0000, 0x0000}, {0x0449, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0401, 0x9244, 0x1010, 0x0111, 0x4000, 0x0000}, {0x0401, 0xF010, 0x0000, 0x1111, 0x0044, 0x0000}},
+    {{0x2449, 0x0000, 0x1010, 0x4444, 0x0000, 0x0200}, {0x0909, 0x0000, 0x1010, 0x5555, 0x0000, 0x4040}, {0x0505, 0x1010, 0x1010, 0x5555, 0x0000, 0x8040}, {0x2449, 0x1000, 0x0010, 0x4444, 0x0000, 0x1449}, {0x050B, 0x0000, 0x1010, 0xFFFF, 0x0000, 0x0000}, {0x0109, 0xF000, 0x1110, 0x0055, 0x0000, 0x0000}},
+    {{0x1001, 0x0000, 0x0100, 0x5555, 0x0000, 0x0000}, {0x0481, 0x0100, 0x0100, 0x5555, 0x0000, 0x0000}, {0x0009, 0x0100, 0x0100, 0xF555, 0x0000, 0x0000}, {0x2041, 0x0100, 0x0100, 0x5575, 0x0000, 0x0000}, {0x0401, 0x0100, 0x0100, 0x1111, 0x0000, 0x0000}, {0x0801, 0xD100, 0x0100, 0xFF55, 0x0000, 0x0000}},
+};
+static const char *const XNAME[6][10] = {
+    {"J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10"},
+    {"N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10"},
+    {"B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10"},
+    {"G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08", "G09", "G10"},
+    {"E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"},
+    {"T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09", "T10"},
+};
+static void x_pats(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
+{
+    int p, l;
+    for (p = 0; p < EN_NPAT; p++)
+        for (l = 0; l < EN_NLANE; l++)
+            pats[p][l] = XPAT[g][(i + p) % 6][l];
+}
 #undef LV
 #undef TU
 #undef DE
@@ -234,11 +280,13 @@ static const char *const PIECE_NAME[EN_NPIECES] = {"01", "02", "03", "04", "05",
 
 const char *en_piece_name(int i) { return PIECE_NAME[(unsigned)i < EN_NPIECES ? i : 0]; }
 static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES, HOUSE_PIECES, DUB_PIECES};
-static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP"};
+static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP"};
 const char *en_genre_name(int g) { return GENRE_NAME[(unsigned)g < EN_NGENRE ? g : 0]; }
 const char *en_piece_name_g(int g, int i)
 {
     i = (unsigned)i < EN_NPIECES ? i : 0;
+    if (g >= 4 && g < EN_NGENRE)
+        return XNAME[g - 4][i];
     return g == 1 ? LOFI_NAME[i] : g == 2 ? HOUSE_NAME[i] : g == 3 ? DUB_NAME[i] : PIECE_NAME[i];
 }
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
@@ -249,8 +297,21 @@ void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
     g = (unsigned)g < EN_NGENRE ? g : 0;
     for (p = 0; p < P_NPARAMS; p++)
         par[p] = PARAMS[p].def;
-    for (c = GENRE_PIECES[g][i]; c[0] >= 0; c += 2)
-        par[c[0]] = c[1];
+    if (g >= 4) {                               /* the other six: the genre's base, then the piece's row */
+        const uint8_t *r = XROW[g - 4][i];
+        for (c = XBASE[g - 4]; c[0] >= 0; c += 2)
+            par[c[0]] = c[1];
+        par[P_TEMPO] = r[0];
+        par[P_ROOT] = r[1];
+        par[P_MODE] = r[2];
+        par[P_CHORD] = r[3];
+        par[P_PADTONE] = r[4];
+        par[P_DR_INST] = r[5];
+        par[P_AC_WAVE] = r[6];
+    } else {
+        for (c = GENRE_PIECES[g][i]; c[0] >= 0; c += 2)
+            par[c[0]] = c[1];
+    }
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
 void en_piece(int i, int16_t *par, uint16_t *pool) { en_piece_g(0, i, par, pool); }
@@ -259,7 +320,9 @@ void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
     int p, l;
     i = (unsigned)i < EN_NPIECES ? i : 0;
     if (g >= 1) {
-        if (g == 1)
+        if (g >= 4)
+            x_pats(g - 4, i, pats);
+        else if (g == 1)
             lofi_pats(i, pats);
         else if (g == 2)
             house_pats(i, pats);

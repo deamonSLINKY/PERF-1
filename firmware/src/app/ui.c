@@ -1141,7 +1141,7 @@ static void genre_fx(int g)
     static const uint8_t LOFI[8] = {25, 18, 30, 45, 55, 40, 28, 75};             /* tape and vinyl, gentler */
     static const uint8_t HOUSE[4] = {50, 45, 1, 0x70};                           /* the pump: depth, release, every quarter, the chords and bass */
     int i;
-    ui.fx_lock &= ~(FXB(FX_VINYL) | FXB(FX_TAPE) | FXB(FX_PUMP));
+    ui.fx_lock &= ~(FXB(FX_VINYL) | FXB(FX_TAPE) | FXB(FX_PUMP) | FXB(FX_PHASER));
     for (i = 0; i < 12; i++)
         fxs_put(SET[i], EN_FXS_DEF[SET[i]]);
     if (g == 1) {                                /* lofi: the vinyl and the tape on */
@@ -1152,6 +1152,20 @@ static void genre_fx(int g)
         for (i = 0; i < 4; i++)
             fxs_put(SET[8 + i], HOUSE[i]);
         ui.fx_lock |= FXB(FX_PUMP);
+    } else if (g >= 4) {                         /* the other six: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
+        static const uint8_t XFX[6][12] = {
+            {10, 12, 45, 35, 35, 30, 25, 70, 255, 255, 255, 255},     /* jungle: sampled-from-vinyl grit */
+            {5, 5, 25, 20, 255, 255, 255, 255, 30, 30, 1, 0xF0},      /* dnb: a light pump, a very light tape */
+            {20, 15, 60, 30, 255, 255, 255, 255, 255, 255, 255, 255}, /* breaks: tape drive, the phaser */
+            {25, 10, 25, 40, 255, 255, 255, 255, 30, 35, 1, 0xF0},    /* garage: a light tape and pump */
+            {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* electro: the phaser alone */
+            {255, 255, 255, 255, 255, 255, 255, 255, 45, 55, 0, 0x50}};     /* trap: a pump under the 808 */
+        static const uint8_t XLK[6] = {3, 6, 10, 6, 8, 4};
+        for (i = 0; i < 12; i++)
+            if (XFX[g - 4][i] != 255)
+                fxs_put(SET[i], XFX[g - 4][i]);
+        ui.fx_lock |= ((XLK[g - 4] & 1u) ? FXB(FX_VINYL) : 0u) | ((XLK[g - 4] & 2u) ? FXB(FX_TAPE) : 0u) | ((XLK[g - 4] & 4u) ? FXB(FX_PUMP) : 0u) |
+                      ((XLK[g - 4] & 8u) ? FXB(FX_PHASER) : 0u);
     }
 }
 static void genre_step(int d)
