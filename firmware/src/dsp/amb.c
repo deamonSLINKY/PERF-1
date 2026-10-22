@@ -2507,7 +2507,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         tp_fd = (float)fxs_v[EN_FXS_TP_FLUT] * 0.2f;                                    /* flutter: 0 .. 20 (8 Hz) */
         tp_drive = 1.0f + (float)fxs_v[EN_FXS_TP_DRIVE] * 0.025f;                       /* saturation: 1 .. 3.5 */
         tp_k = 1.0f - (float)fxs_v[EN_FXS_TP_DULL] * 0.009f;                            /* the top: 1 (open) .. 0.1 (dull) */
-        vn_g = (float)fxs_v[EN_FXS_VN_LEVEL] * 0.0012f;   /* (the loudest pops at 50 are near -24 dBFS, at 100 near -18) */
+        vn_g = (float)fxs_v[EN_FXS_VN_LEVEL] * 0.0144f;   /* (the loudest ticks at 50 are near -15 dBFS, the whole near -45; at 100, 6 dB more) */
         {   /* 1 .. 128 pops a second; above 10 a second each pop is quieter, by the square root, so the level stays: Crackle is how many */
             const float pps = fm_exp2f((float)fxs_v[EN_FXS_VN_CRACK] * 0.07f);
             vn_pop = pps * (1.0f / EN_SR);
@@ -3363,7 +3363,7 @@ static inline float nz_white(nz_t *z)
  * with a duller thump (a 700 Hz one); under them the faintest surface hiss (pink). Left and right pop apart. */
 static inline float nz_sample(nz_t *z, int unused)
 {
-    float w = nz_white(z), pk, u, ex = 0.0f, ex2 = 0.0f, y, y2;
+    float w = nz_white(z), pk, u, o, d;
     (void)unused;
     z->b0 = 0.99765f * z->b0 + w * 0.0990460f;  /* pink: Paul Kellet's economy filter */
     z->b1 = 0.96300f * z->b1 + w * 0.2965164f;
@@ -3371,24 +3371,28 @@ static inline float nz_sample(nz_t *z, int unused)
     pk = (z->b0 + z->b1 + z->b2 + w * 0.1848f) * 0.22f;
     z->rng = z->rng * 1664525u + 1013904223u;
     u = (float)(z->rng >> 8) * (1.0f / 16777216.0f);      /* 0 .. 1 */
-    if (u < vn_pop) {                           /* a pop */
+    if (u < vn_pop) {                           /* a tick: a burst of noise that dies in a fraction of a millisecond or two */
         float a, m;
-        z->rng = z->rng * 1664525u + 1013904223u;   /* a fresh draw: the one that chose the pop was a small number */
-        a = (float)(int32_t)z->rng * (1.0f / 2147483648.0f);   /* -1 .. 1 */
-        m = a < 0.0f ? -a : a;
-        ex = a * (0.15f + 1.2f * m * m) * vn_amp;
-        if (m > 0.8f)
-            ex2 = a * 0.9f * vn_amp;            /* the thump */
+        z->rng = z->rng * 1664525u + 1013904223u;   /* a fresh draw: the one that chose the tick was a small number */
+        a = (float)(z->rng >> 8) * (1.0f / 16777216.0f);    /* 0 .. 1 */
+        m = a * a;
+        z->crack = (0.1f + 1.2f * m) * vn_amp;  /* most small, now and then a loud one */
+        z->r1 = 0.90f + 0.075f * a;             /* its decay: 0.25 ms (small) to 1.5 ms (big) */
+        if (a > 0.85f)
+            z->y2 = 0.45f * vn_amp * (a - 0.85f) * 6.0f + z->y2;   /* a loud one brings a dull thud with it */
     }
-    y = ex + 1.760f * z->r1 - 0.912f * z->r2;   /* a click: the resonator rung by the pop */
-    z->r2 = z->r1;
-    z->r1 = fm_flush(y);
-    y2 = ex2 + 1.9100f * z->y1 - 0.9640f * z->y2;   /* a thump: 700 Hz, slower to die */
-    z->y2 = z->y1;
-    z->y1 = fm_flush(y2);
+    z->rng = z->rng * 1664525u + 1013904223u;
+    if ((float)(z->rng >> 8) * (1.0f / 16777216.0f) < 5.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
+        z->r2 = 0.09f * vn_amp;
+    d = (w - z->pw) * 0.7f;                     /* white, with the lows taken out: a tick has no body */
+    o = d * (z->crack + z->r2);
+    z->crack *= z->r1;
+    z->r2 *= 0.80f;
+    o += z->y2;                                 /* the thud: a pulse that falls away in some milliseconds */
+    z->y2 *= 0.9965f;
     z->pw = w;
     z->pp = pk;
-    return y * 0.7f + y2 * 0.5f + pk * vn_hiss;
+    return o + pk * vn_hiss;
 }
 
 static float nzl[BLK], nzr[BLK];
