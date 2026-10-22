@@ -51,7 +51,8 @@ expect view 0
 tapkey 1
 expect pool 0x7AD
 tapkey 1
-# the dial from the perform screen goes on to the next page
+# the dial from the perform screen goes on to the next page (HOME twice quickly would be the visualizers)
+wait 600
 tap HOME
 wait 100
 expect view 19
@@ -59,6 +60,7 @@ spin SELECT 1
 wait 100
 expect view 1
 # and from the Global page HOME is the tempo page
+wait 600
 tap GLO
 tap HOME
 wait 100

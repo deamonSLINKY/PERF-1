@@ -38,10 +38,12 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, V_PERF, NVIEWS };   /* V_PERF: the second home screen */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
-                                              "Sequencer", "Perform"};
+                                              "Sequencer", "Perform", "Visual"};
+enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_STARS, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
+static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "STARS", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
@@ -158,6 +160,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
     {K_FXF, K_FXF + 1, K_FXF + 2, K_FXF + 3},      /* perform: the FX knobs, without the FX menu */
+    {K_FXF, K_FXF + 1, K_FXF + 2, K_FXF + 3},      /* the visualizers: the same */
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tempo", "Evolve", "Motion", "Drift"},
@@ -179,6 +182,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Level", "Tune", "Decay", "Pattern"},
+    {"Filter", "Crush", "Throw", "Wash"},
     {"Filter", "Crush", "Throw", "Wash"},
 };
 /* the buttons that lead to pages: each to a group, pressed again the next page in it */
@@ -211,6 +215,7 @@ static const uint8_t KEY_FX[2][NKEYS] = {
      FX_SWEEP, FX_NONE, FX_MUTE_KICK, FX_NONE, FX_MUTE_HATS, FX_NONE, FX_MUTE_SNARE,
      FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
      FX_NONE, FX_NONE, FX_NONE}};
+static int perf_like(void);
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
@@ -341,6 +346,8 @@ static struct {
     uint8_t dj_break, dj_fillon;       /* its breakdown (0 short: 4 bars, 1 half the groove, 2 as long); a drum fill before it */
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
+    uint8_t viz;                       /* the visualizer on the SELECT dial (VZ_*) */
+    uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
     uint16_t dj_n;                     /* bars in the phase */
@@ -1294,10 +1301,25 @@ static int group_of(int v)
     return -1;
 }
 
+static int perf_like(void) { return ui.view == V_PERF || ui.view == V_VIZ; }   /* the screens whose keys are the mix, knobs the FX knobs, ALGORITHM the mood */
+
 static void button(int b)
 {
     int g;
-    if (b == B_HOME) {                           /* HOME: the tempo page; again, the perform screen; and back */
+    if (b == B_HOME) {                           /* HOME: the tempo page; again, the perform screen; and back; twice quickly, the visualizers */
+        const uint32_t now = plat_ms();
+        if (ui.view == V_VIZ) {                  /* (HOME leaves them: the perform screen) */
+            set_view(V_PERF);
+            ui.home_t = 0;
+            return;
+        }
+        if (ui.home_t && now - ui.home_t < 450u) {
+            ui.home_t = 0;
+            set_view(V_VIZ);
+            say("VISUAL", VZ_NAME[ui.viz % VZ_N]);
+            return;
+        }
+        ui.home_t = now ? now : 1u;
         set_view(ui.view == V_TEMPO ? V_PERF : V_TEMPO);
         return;
     }
@@ -1671,7 +1693,7 @@ static void input(void)
             if ((ch & keys) >> i & 1u)
                 shift_key((int)i);
     }
-    if (!(btn >> B_SEL & 1u) && ((btn >> B_GLO & 1u) || (ui.view == V_PERF && !ui.fx_menu)) &&
+    if (!(btn >> B_SEL & 1u) && ((btn >> B_GLO & 1u) || (perf_like() && !ui.fx_menu)) &&
         (ch & keys & ~ui.shift_keys)) {        /* GLO held, or the perform screen: the track mix on the keys */
         uint32_t p = ch & keys & ~ui.shift_keys;
         ui.shift_keys |= p;
@@ -1789,6 +1811,9 @@ static void input(void)
                 itoa_u((uint32_t)proj.par[P_TEMPO], t);
                 say("TEMPO", t);
             }
+        } else if (ui.view == V_VIZ) {            /* the visualizers: the next one */
+            ui.viz = (uint8_t)((ui.viz + (e > 0 ? 1 : VZ_N - 1)) % VZ_N);
+            say("VISUAL", VZ_NAME[ui.viz]);
         } else {
             int v = (ui.view == V_SEQ ? V_DRUMS : ui.view == V_PERF ? V_TEMPO : (int)ui.view) + (e > 0 ? 1 : -1);   /* (out of the sequencer and the perform screen too) */
             if (v >= 0 && v < NDIAL)
@@ -1797,7 +1822,7 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {
-        if (ui.view == V_PERF && !ui.fx_menu && !(btn >> B_SEL & 1u)) {   /* the perform screen: the mood */
+        if (perf_like() && !ui.fx_menu && !(btn >> B_SEL & 1u)) {   /* the perform screen (and the visualizers): the mood */
             int m = ui.mood + 2 * e;
             char t[8];
             ui.mood = (uint8_t)(m < 0 ? 0 : m > 100 ? 100 : m);
@@ -2960,6 +2985,8 @@ static void draw_scope(int kind)
     }
 }
 
+#include "viz.c"
+
 static void draw_main(void)
 {
     uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)proj.par[P_ROOT] << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
@@ -3022,6 +3049,12 @@ static void draw_main(void)
             draw_help();
             cv_blit(0, MAIN_Y);
         }
+        return;
+    }
+    if (ui.view == V_VIZ) {                      /* the visualizers: fifteen frames a second */
+        ui.sig[1] = 0;
+        if (ui.frame % 4u == 0u)
+            draw_viz();
         return;
     }
     if (ui.view == V_PERF) {
@@ -3106,7 +3139,7 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     case B_ARP: return K_ACID;
     case B_SEQ: return RGB(255, 160, 60);
     case B_HOME: return KC_REPEAT;
-    default: return ui.view == V_PERF ? KC_FILTER : K_PAD;
+    default: return perf_like() ? KC_FILTER : K_PAD;
     }
 }
 
@@ -3263,7 +3296,7 @@ static void leds(void)
             for (i = 0; i < EN_NPAT; i++)
                 if ((int)i != seq_pat())
                     k |= 1u << BLACK_KEY[i];
-    } else if (mix_show() || (ui.view == V_PERF && !ui.fx_menu)) {   /* GLO held, or the perform screen: the keys muted and soloed */
+    } else if (mix_show() || (perf_like() && !ui.fx_menu)) {   /* GLO held, or the perform screen: the keys muted and soloed */
         for (i = 0; i < NKEYS; i++)
             if (mix_state((int)i))
                 k |= 1u << i;
