@@ -513,6 +513,10 @@ static int expect(const char *what, const char *val)
         got = (int)en_flx_done;
     else if (!strcmp(what, "flexlast"))
         got = ui.flex_last;
+    else if (!strcmp(what, "smp"))                /* the sampler's voices sounding */
+        got = en_smp_active;
+    else if (!strcmp(what, "smpmode"))            /* the sampler page's Keys setting */
+        got = ui.fxs[EN_FXS_SM_MODE];
     else if (!strcmp(what, "saver"))              /* the STAGE page: the screensaver setting, it is on, the lights */
         got = ui.saver;
     else if (!strcmp(what, "saveron"))

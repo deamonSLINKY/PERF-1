@@ -63,27 +63,27 @@ wait 300
 # the drum rolls (C#5 hat roll, D5 hat triplets, D#5 snare roll, E5 flams, F5 double kick)
 key 20 down
 wait 400
-expect fxmaskhi 1048576
+expect fxmaskhi 4194304
 key 20 up
 wait 300
 key 21 down
 wait 400
-expect fxmaskhi 2097152
+expect fxmaskhi 8388608
 key 21 up
 wait 300
 key 22 down
 wait 400
-expect fxmaskhi 4194304
+expect fxmaskhi 16777216
 key 22 up
 wait 300
 key 23 down
 wait 400
-expect fxmaskhi 8388608
+expect fxmaskhi 33554432
 key 23 up
 wait 300
 key 24 down
 wait 400
-expect fxmaskhi 16777216
+expect fxmaskhi 67108864
 key 24 up
 wait 300
 # the mutes are there too
@@ -121,6 +121,17 @@ key 17 down
 wait 100
 expect fxmask 8388608
 key 17 up
+# talk (C4) and wah (D4)
+key 7 down
+wait 400
+expect fxmaskhi 1048576
+key 7 up
+wait 300
+key 9 down
+wait 400
+expect fxmaskhi 2097152
+key 9 up
+wait 300
 # a tap latches an effect past bit 31 too (freeze, A3): it stayed a hold before; a tap again lets it go
 tapkey 4
 wait 100

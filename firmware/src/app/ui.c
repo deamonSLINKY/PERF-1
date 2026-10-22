@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 19
+#define NFXP 22
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
@@ -68,6 +68,10 @@ static const char *const FGRAIN_NAME[4] = {"1", "2", "3", "4"};                 
 static const char *const RVLEN_NAME[3] = {"1/2 BEAT", "1 BEAT", "2 BEATS"};                      /* the reverse swell */
 static const char *const LFO_SHAPE_NAME_UI[6] = {"SINE", "TRIANGLE", "SAW", "SQUARE", "S&H", "DRIFT"};
 static const float ETIME_BEATS_UI[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
+static const char *const TKR_NAME[5] = {"2 BARS", "1 BAR", "1/2", "1/4", "1/8"};              /* talk: the vowels' period */
+static const char *const SMM_NAME[2] = {"PITCH", "SLICE"};                                  /* the sampler: the keys pitch it, or are slices of it */
+static const char *const SML_NAME[2] = {"ONE SHOT", "LOOP"};
+static const char *const SMN_NAME[3] = {"FULL", "HALF", "QUARTER"};                                /* the window: the last 0.95 s, half, a quarter of it */
 static const char *const FXQ_NAME[3] = {"OFF", "BEAT", "BAR"};                                   /* Flex Beat: when it starts */
 static const char *const FXM_NAME[2] = {"ONE SHOT", "LOOP"};
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
@@ -127,6 +131,12 @@ static const struct {
                       {"", KN_NONE, 0, 0, 0}}},
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
+    {"SAMPLE", 62, 0, {{"Keys", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 2}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
+                       {"Window", KN_NAME, EN_FXS_SM_LEN, SMN_NAME, 3}, {"Mix", KN_PLAIN, EN_FXS_SM_MIX, 0, 0}}},
+    {"TALK", FX_TALK, 0, {{"Every", KN_NAME, EN_FXS_TK_RATE, TKR_NAME, 5}, {"Depth", KN_PLAIN, EN_FXS_TK_DEPTH, 0, 0},
+                          {"Reso", KN_PLAIN, EN_FXS_TK_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_TK_MIX, 0, 0}}},
+    {"WAH", FX_WAH, 0, {{"Sens", KN_PLAIN, EN_FXS_WH_SENS, 0, 0}, {"Range", KN_PLAIN, EN_FXS_WH_RANGE, 0, 0},
+                        {"Reso", KN_PLAIN, EN_FXS_WH_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_WH_MIX, 0, 0}}},
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
@@ -215,9 +225,9 @@ static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT",
  * again). The other tracks' mutes and every solo are on GLO held (MIXK). */
 #define FX_NONE 63                     /* a spare key: no effect (the engine's bit 63 is never used) */
 static uint8_t fx_bank;                /* 0 .. 2: the effects, the beat effects, Flex Beat */
-static const uint8_t KEY_FX[3][NKEYS] = {
+static const uint8_t KEY_FX[4][NKEYS] = {
     {FX_SWEEP, FX_GATE16, FX_RING, FX_GATE8, FX_FREEZE, FX_GATEX, FX_RVSWELL,          /* F3 F#3 G3 G#3 A3 A#3 B3 */
-     FX_NONE, FX_PHASER, FX_NONE, FX_FLANGER, FX_REV,                                  /* C4 C#4 D4 D#4 E4 (two spares, for something new) */
+     FX_TALK, FX_PHASER, FX_WAH, FX_FLANGER, FX_REV,                                   /* C4 C#4 D4 D#4 E4 */
      FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_ROLL, FX_MUTE_HATS, FX_PUMP, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
      FX_MUTE_PERC, FX_RISER, FX_THROW, FX_VINYL, FX_FILL,                              /* C5 C#5 D5 D#5 E5 */
      FX_LP, FX_NONE, FX_HP},                                                           /* F5 F#5 G5 */
@@ -228,13 +238,15 @@ static const uint8_t KEY_FX[3][NKEYS] = {
      FX_DBLKICK, FX_NONE, FX_NONE},
     {FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7,             /* Flex Beat: its fifteen patterns, F3 .. */
      FX_FLEX8, FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
+     FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE},
+    {FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE,   /* the sampler: the keys are notes, not effects */
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE}};
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
-    "STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD", "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
+    "STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD", "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT", "TALK", "WAH", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
     [FX_NONE] = ""};
 /* every kind of effect its own colour (the same in every theme, so a key is found by its colour as well as its name):
  * repeats cyan, filters green, gates and the pump yellow, the drums' mutes red, the colour effects pink, the transport
@@ -257,7 +269,7 @@ static uint16_t fx_color(int fx)
     case FX_LP: case FX_HP: case FX_SWEEP: return KC_FILTER;
     case FX_GATE16: case FX_GATE8: case FX_GATEX: case FX_PUMP: return KC_GATE;
     case FX_MUTE_KICK: case FX_MUTE_HATS: case FX_MUTE_SNARE: case FX_MUTE_PERC: return KC_MUTE;
-    case FX_PHASER: case FX_FLANGER: case FX_TAPE: case FX_VINYL: case FX_RING: return KC_COLOR;
+    case FX_PHASER: case FX_FLANGER: case FX_TAPE: case FX_VINYL: case FX_RING: case FX_TALK: case FX_WAH: return KC_COLOR;
     case FX_RISER: case FX_ROLL: case FX_FILL: case FX_THROW: case FX_RVSWELL: return KC_BUILD;
     default: return KC_MOVE;
     }
@@ -1745,6 +1757,14 @@ static void input(void)
     ui.lock_keys &= keys;
     if (!ui.fx_menu || ui.fx_page)
         ui.fx_tap = 0;
+    if (ui.fx_menu && !ui.fx_page && fx_bank == 3) {   /* the sampler: each key down is a note of it (let go: the note off, with the other voices' keys) */
+        const uint32_t down = ch & keys & ~ui.shift_keys;
+        for (i = 0; i < NKEYS; i++)
+            if (down >> i & 1u) {
+                en_note(EN_V_SAMPLE, 53 + (int)i, 1);
+                ui.key_voice[i] = EN_V_SAMPLE + 1;
+            }
+    }
     if (ui.fx_menu && !ui.fx_page) {           /* the FX keys: tapped, latched; held, played; a latched one tapped, off */
         const uint32_t down = ch & keys & ~ui.shift_keys, up = ch & ~keys;
         for (i = 0; i < NKEYS; i++) {
@@ -1838,8 +1858,8 @@ static void input(void)
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {        /* SELECT: the pages (the steps); with HOME held, the tempo */
         if (ui.fx_menu && !ui.fx_page) {         /* the FX keys: the dial is the bank (the effects, the beat effects) */
-            fx_bank = (uint8_t)(e > 0 ? (fx_bank < 2 ? fx_bank + 1 : 2) : (fx_bank > 0 ? fx_bank - 1 : 0));
-            say(fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
+            fx_bank = (uint8_t)(e > 0 ? (fx_bank < 3 ? fx_bank + 1 : 3) : (fx_bank > 0 ? fx_bank - 1 : 0));
+            say(fx_bank == 3 ? "SAMPLER" : fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
         } else if (ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
             const int p = ui.fx_page + (e > 0 ? 1 : -1);
             if (p >= 1 && p <= NFXP) {
@@ -2506,8 +2526,8 @@ static void draw_fx(void)
 {
     int k;
     {
-        const char *hd = fx_bank == 2 ? "FLEX: TAP LATCHES" : fx_bank ? "BEAT: TAP LATCHES" : "FX: TAP LATCHES",
-                   *dl = fx_bank == 2 ? "DIAL: BEAT FX" : fx_bank ? "DIAL: FLEX / FX" : "DIAL: BEAT FX";
+        const char *hd = fx_bank == 3 ? "SAMPLER: HOLD TO PLAY" : fx_bank == 2 ? "FLEX: TAP LATCHES" : fx_bank ? "BEAT: TAP LATCHES" : "FX: TAP LATCHES",
+                   *dl = fx_bank == 3 ? "DIAL: FLEX" : fx_bank == 2 ? "DIAL: BEAT / SMPL" : fx_bank ? "DIAL: FLEX / FX" : "DIAL: BEAT FX";
         cv_text(4, 1, &FONT_XS, hd, K_ACC);
         cv_text(236 - text_w(&FONT_XS, dl), 1, &FONT_XS, dl, K_DIM);
     }
@@ -2523,6 +2543,29 @@ static void draw_fx(void)
             t[n++] = *nm++;
         t[n++] = (char)('0' + oct);
         t[n] = 0;
+        if (fx_bank == 3) {                    /* the sampler: each key's pitch (or its slice), lit while held */
+            const int held = (int)(ui.keys >> k & 1u), slice = ui.fxs[EN_FXS_SM_MODE] != 0;
+            char lb[8];
+            if (slice) {
+                const int s = k * 16 / 27;
+                lb[0] = (char)(black ? 'R' : 'S');
+                itoa_u((uint32_t)s + 1u, lb + 1);
+            } else {
+                const int d = k - 13;
+                int n = 0;
+                lb[n++] = d < 0 ? '-' : d > 0 ? '+' : '=';
+                itoa_u((uint32_t)(d < 0 ? -d : d), lb + n);
+                if (d == 0)
+                    lb[1] = 0;
+            }
+            if (held)
+                cv_round(x - 1, y - 1, 77, 14, 2, KC_MOVE);
+            else
+                cv_rect(x - 1, y + 1, 2, 10, KC_MOVE);
+            cv_text(x + 3, y, &FONT_XS, t, held ? K_BG : black ? K_DIM : K_TEXT);
+            cv_text(x + 27, y, &FONT_XS, lb, held ? K_BG : KC_MOVE);
+            continue;
+        }
         if (KEY_FX[fx_bank][k] == FX_NONE) {
             cv_text(x, y, &FONT_XS, t, K_LINE);
             continue;
@@ -2588,6 +2631,9 @@ static void draw_fxedit(void)
             if (p == 18) {
                 cv_text(4, 112, &FONT_XS, "THE LAST PAD'S BAR: TALL = OLDER, BOX = LIVE, DASH = MUTE.", K_DIM);
                 cv_text(4, 126, &FONT_XS, "QUANT: WHEN IT STARTS. MIX: DRY TO WET.", K_DIM);
+            } else if (p == 19) {
+                cv_text(4, 112, &FONT_XS, "THE LAST STRETCH OF THE MUSIC. PLAY IT IN THE", K_DIM);
+                cv_text(4, 126, &FONT_XS, "SAMPLER BANK (FX MENU, SELECT DIAL).", K_DIM);
             } else {
             cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
@@ -2973,6 +3019,49 @@ static int draw_fxscope(int p)
         }
         scope_trace(col);
         return 1;
+    case 20: {                                   /* talk: the two formants (F1 above, F2) through the cycle */
+        static const float VF1[5] = {700.0f, 530.0f, 270.0f, 570.0f, 300.0f}, VF2[5] = {1220.0f, 1840.0f, 2290.0f, 840.0f, 870.0f};
+        const float depth = 0.15f + 0.85f * FS(EN_FXS_TK_DEPTH);
+        uint8_t f2[SC_W];
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1) * 2.0f, ph = u - fm_floorf(u), tri = ph < 0.5f ? ph * 2.0f : 2.0f - ph * 2.0f,
+                        pos = fm_clampf(tri * 4.0f * depth, 0.0f, 4.0f);
+            const int i = pos >= 4.0f ? 3 : (int)pos;
+            const float fr = pos - (float)i, a = VF1[i] + (VF1[i + 1] - VF1[i]) * fr, b = VF2[i] + (VF2[i + 1] - VF2[i]) * fr;
+            sc_y[x] = (uint8_t)(a * (float)(H - 6) / 2400.0f);
+            f2[x] = (uint8_t)(b * (float)(H - 6) / 2400.0f);
+        }
+        scope_trace(mix(K_BG, col, 7));
+        for (x = 0; x < SC_W; x++)
+            cv_rect(SC_X + x, sc_oy + sc_oh - f2[x] - 1, 1, 2, col);
+        return 1;
+    }
+    case 21:                                     /* wah: the band-pass at its lowest, and where the loudness will push it */
+        for (x = 0; x < SC_W; x++) {
+            const float k = 0.7f - 0.0058f * (float)ui.fxs[EN_FXS_WH_RESO], f = 20.0f * fm_exp2f((float)x / (float)(SC_W - 1) * 10.0f),
+                        fc = 280.0f * fm_exp2f(4.0f * FS(EN_FXS_WH_RANGE) * (0.25f + 0.5f * tk)), r = f / fc, a = 1.0f - r * r,
+                        m = (r * k) / fm_sqrtf(a * a + r * r * k * k + 1e-6f);
+            sc_y[x] = (uint8_t)(fm_clampf(m, 0.0f, 1.0f) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    case 19: {                                   /* the sampler: the window (its peaks), and what the keys will play of it */
+        uint8_t pk[SC_W / 2];
+        int s;
+        const int slice = ui.fxs[EN_FXS_SM_MODE] != 0;
+        en_ring_peaks(pk, SC_W / 2, ui.fxs[EN_FXS_SM_LEN]);
+        cv_rect(SC_X, sc_oy + sc_oh / 2, SC_W, 1, K_LINE);
+        for (s = 0; s < SC_W / 2; s++) {
+            const int32_t h = (int32_t)pk[s] * (H / 2 - 2) / 255;
+            cv_rect(SC_X + s * 2, sc_oy + sc_oh / 2 - h, 2, h * 2 + 1, KC_MOVE);
+        }
+        if (slice)                               /* the sixteen slices, and where they are */
+            for (s = 1; s < 16; s++)
+                cv_rect(SC_X + s * (SC_W / 16), sc_oy, 1, sc_oh, K_TEXT);
+        else                                     /* one piece, played at the keys' pitches: the root marked */
+            cv_rect(SC_X, sc_oy + sc_oh + 2, SC_W, 2, KC_MOVE);
+        return 1;
+    }
     case 18: {                                   /* Flex Beat: the last pad's bar, a column a sixteenth */
         int s;
         cv_rect(SC_X, sc_oy + sc_oh, SC_W, 1, K_LINE);
@@ -3192,7 +3281,9 @@ static void draw_main(void)
     }
     if (ui.fx_menu) {
         h = hash(hash(0x46584D4Eu, h32(ui.fx_mask) ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), h32(ui.fx_lock));
-        h = hash(h, (uint32_t)fx_bank << 30);
+        h = hash(h, (uint32_t)fx_bank << 29);
+        if (fx_bank == 3)
+            h = hash(h, ui.keys | (uint32_t)ui.fxs[EN_FXS_SM_MODE] << 28);
         h = hash(h, ui.fx_page | (uint32_t)ui.gx_pat << 4 | (uint32_t)ui.fxs[EN_FXS_GX_LEN] << 20 | (uint32_t)ui.gx_tgt << 25);
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
@@ -3511,6 +3602,9 @@ static void leds(void)
                 k |= 1u << WHITE_KEY[i];
     } else if (ui.fx_menu && ui.fx_page) {       /* another effect's page: FX lit */
         b |= 1u << B_FX;
+    } else if (ui.fx_menu && fx_bank == 3) {     /* the sampler: the keys held */
+        b |= 1u << B_FX;
+        k |= ui.keys;
     } else if (ui.fx_menu) {                     /* FX: lit; the keys held */
         b |= 1u << B_FX;
         for (i = 0; i < NKEYS; i++)

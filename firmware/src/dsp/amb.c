@@ -2305,9 +2305,14 @@ static void pad_play(int key, int on)
         midi(0x90, v->midi_note, 100);
     }
 }
+static void smp_note(int key, int on);
 static void note_cmd(int voice, int key, int on)
 {
     int k, t, legato;
+    if (voice == EN_V_SAMPLE) {                 /* the sampler: its key (the note less 53) */
+        smp_note(key - 53, on);
+        return;
+    }
     if (voice < 0 || voice > 2)
         return;
     for (k = 0; k < nheld[voice]; k++)          /* the held keys: this one out of the list, and in at the top */
@@ -2554,7 +2559,9 @@ static int crush_n;
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
 static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
-static float sw_m, sw_s[2][2], sw_c[4], sw_s2[2][2], sw_c2[4];   /* (the second: the resonant spike, for the band-pass) */
+static float sw_m, sw_s[2][2], sw_c[4], sw_s2[2][2], sw_c2[4];
+static float tk_m, tk_c[2][4], tk_s[2][2][2], wh_m, wh_c[4], wh_s[2][2], wh_env;   /* talk (two formants a channel), wah */
+static uint32_t wh_cnt;   /* (the second: the resonant spike, for the band-pass) */
 static float rm_m, rm_ph, rm_inc, rm_wet;   /* the ring mod: its fade, phase, step and share */   /* the sweep: its fade, its two filters' states, its coefficients */
 static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
 static float vn_amp = 1.0f;
@@ -2580,7 +2587,7 @@ const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
     "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T",
-    "Stut 16", "Stut 32", "Beat repeat", "Half Rpt", "Beat Rev", "Skip", "Trance", "Gate 8", "Double", "Shuffle", "Back-Fwd", "Roll Out", "Build", "Scratch", "Dropout", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
+    "Stut 16", "Stut 32", "Beat repeat", "Half Rpt", "Beat Rev", "Skip", "Trance", "Gate 8", "Double", "Shuffle", "Back-Fwd", "Roll Out", "Build", "Scratch", "Dropout", "Talk", "Wah", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -2597,7 +2604,7 @@ static void rpt_engage(int r)                   /* the slice that just ended, lo
     bm_tgt = 1.0f;
 }
 
-static inline void rb_read(float off, float *l, float *r)   /* off samples (44.1 kHz) after bm_start (before it, if negative) */
+static inline void rb_read_from(uint32_t sm, float off, float *l, float *r)   /* off samples (44.1 kHz) after the ring index sm (before it, if negative) */
 {
     float f = off * 0.5f, t;
     int32_t k = (int32_t)f, i;
@@ -2605,13 +2612,14 @@ static inline void rb_read(float off, float *l, float *r)   /* off samples (44.1
     if (f < 0.0f && (float)k != f)
         k--;
     t = f - (float)k;
-    i = (int32_t)bm_sm + k;                     /* (k is within one ring either way: one step brings it home) */
+    i = (int32_t)sm + k;                        /* (k is within one ring either way: one step brings it home) */
     i += i < 0 ? (int32_t)RB_N : i >= (int32_t)RB_N ? -(int32_t)RB_N : 0;
     i0 = (uint32_t)i;
     i1 = i0 + 1u == RB_N ? 0u : i0 + 1u;
     *l = ((float)rb[2 * i0] + ((float)rb[2 * i1] - (float)rb[2 * i0]) * t) * (1.0f / 12000.0f);
     *r = ((float)rb[2 * i0 + 1] + ((float)rb[2 * i1 + 1] - (float)rb[2 * i0 + 1]) * t) * (1.0f / 12000.0f);
 }
+static inline void rb_read(float off, float *l, float *r) { rb_read_from(bm_sm, off, l, r); }   /* off samples (44.1 kHz) after bm_start */
 
 /* the master's spectrum, for the screen (the UI asks, fifteen times a second): the last 512 frames of the ring (22.05 kHz; about 23 ms),
  * windowed, then nb bands from 70 Hz to 10 kHz, spaced like notes, each a Goertzel filter: ~12k multiply-adds a call. out: 0 .. 1 (a dB
@@ -2789,6 +2797,96 @@ static void flx_tick(int st)                    /* on every sixteenth */
         }
     }
 }
+
+/* THE SAMPLER (the FX menu's fourth bank): the keys play the last stretch of the music (the ring: 0.95 s, or half, or a quarter of it), frozen
+ * from the first key down until the last has gone. PITCH: the keys play the whole stretch at their pitch (F#4 as it was, a semitone a key, the ring's
+ * 22 kHz grit and all). SLICE: the keys are slices of it in time order (a black key plays its slice backwards). One shot: the piece plays
+ * through whatever the key does; loop: it repeats while the key is held and fades when let go. Up to four voices. Mix: how loud against the music. */
+typedef struct { uint8_t on, held, rev; int key; float pos, rate, len, start, env; uint32_t age; } smp_t;
+static smp_t smp[4];
+static uint32_t smp_sm;                         /* the window's start in the ring */
+static float smp_win;                           /* its length, in samples at 44.1 kHz */
+static uint8_t smp_hold;                        /* the ring is frozen for it */
+static uint32_t smp_age;
+volatile uint8_t en_smp_active;
+
+static void smp_note(int key, int on)
+{
+    int i, v = -1;
+    if (key < 0 || key > 26)
+        return;
+    if (!on) {
+        for (i = 0; i < 4; i++)
+            if (smp[i].on && smp[i].key == key)
+                smp[i].held = 0;
+        return;
+    }
+    {
+        static const float WIN[3] = {1.0f, 0.5f, 0.25f};
+        const int len = (int)fm_clampf((float)fxs_v[EN_FXS_SM_LEN], 0.0f, 2.0f), mode = fxs_v[EN_FXS_SM_MODE] != 0;
+        if (!smp_hold) {                        /* the first key down: the window, from now frozen */
+            const float frames = (float)(RB_N - 8) * WIN[len];
+            smp_win = frames * 2.0f;
+            smp_sm = (rb_w - (uint32_t)frames) % RB_N;
+            smp_hold = 1;
+        }
+        for (i = 0; i < 4; i++)
+            if (!smp[i].on) {
+                v = i;
+                break;
+            }
+        if (v < 0) {                            /* all four going: the oldest is taken */
+            v = 0;
+            for (i = 1; i < 4; i++)
+                if (smp[i].age < smp[v].age)
+                    v = i;
+        }
+        smp[v].on = 1;
+        smp[v].held = 1;
+        smp[v].key = key;
+        smp[v].env = 0.0f;
+        smp[v].age = ++smp_age;
+        if (!mode) {                            /* pitch: a semitone a key, F#4 (key 13) as it was */
+            smp[v].rate = fm_exp2f((float)(key - 13) * (1.0f / 12.0f));
+            smp[v].start = 0.0f;
+            smp[v].len = smp_win;
+            smp[v].rev = 0;
+        } else {                                /* slice: sixteenths of the window, left to right; the black keys backwards */
+            const int pc = (5 + key) % 12, black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10, s = key * 16 / 27;
+            smp[v].rate = 1.0f;
+            smp[v].len = smp_win * (1.0f / 16.0f);
+            smp[v].start = (float)s * smp[v].len;
+            smp[v].rev = (uint8_t)black;
+        }
+        smp[v].pos = 0.0f;
+    }
+}
+
+/* the window's peaks, for the sampler's page: n buckets, 0..255 (the captured window while it is held, else the last stretch of the ring) */
+void en_ring_peaks(uint8_t *out, int n, int len_sel)
+{
+    static const float WIN[3] = {1.0f, 0.5f, 0.25f};
+    const uint32_t frames = smp_hold ? (uint32_t)(smp_win * 0.5f) : (uint32_t)((float)(RB_N - 8) * WIN[len_sel < 0 ? 0 : len_sel > 2 ? 2 : len_sel]);
+    uint32_t start = smp_hold ? smp_sm : (rb_wi >= frames ? rb_wi - frames : rb_wi + RB_N - frames), per = frames / (uint32_t)(n > 0 ? n : 1);
+    int b;
+    for (b = 0; b < n; b++) {
+        int32_t pk = 0;
+        uint32_t j;
+        for (j = 0; j < per; j += 4u) {
+            uint32_t i = start + (uint32_t)b * per + j;
+            int32_t a;
+            if (i >= RB_N)
+                i -= RB_N;
+            a = rb[2 * i];
+            a = a < 0 ? -a : a;
+            if (a > pk)
+                pk = a;
+        }
+        pk = pk * 255 / 9000;
+        out[b] = (uint8_t)(pk > 255 ? 255 : pk);
+    }
+}
+
 /* a brake, a spin-back, half time: the ring read at a rate that slides to its target (0; backwards; a half or less)
  * while the live mix goes on being written; a low-pass follows the rate down. Let go: the rate slides back to 1 and
  * the live mix returns on the next sixteenth. It lets go by itself when the ring is used up. */
@@ -2943,6 +3041,21 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
                 svf_coefs(sw_c, fc, 1.4f - 0.0128f * (float)fxs_v[EN_FXS_SW_RESO]);
             }
         }
+        tk_m += ((float)(uint32_t)(m >> FX_TALK & 1u) - tk_m) * sm;           /* TALK: a vowel filter across everything, sweeping A E I O U with the tempo */
+        tk_m = tk_m < 0.002f && !(m >> FX_TALK & 1u) ? 0.0f : tk_m;
+        if (tk_m > 0.0f) {
+            static const uint8_t TKP[5] = {32, 16, 8, 4, 2};   /* sixteenths: 2 bars, 1 bar, 1/2, 1/4, 1/8 */
+            static const float VF1[5] = {700.0f, 530.0f, 270.0f, 570.0f, 300.0f}, VF2[5] = {1220.0f, 1840.0f, 2290.0f, 840.0f, 870.0f};   /* A E I O U */
+            const uint32_t per = TKP[(int)fm_clampf((float)fxs_v[EN_FXS_TK_RATE], 0.0f, 4.0f)];
+            const float ph = ((float)((sixteenth - 1u) % per) * step_len + (float)step_t) / ((float)per * step_len), tri = ph < 0.5f ? ph * 2.0f : 2.0f - ph * 2.0f,
+                        pos = fm_clampf(tri * 4.0f * (0.15f + 0.85f * (float)fxs_v[EN_FXS_TK_DEPTH] * 0.01f), 0.0f, 4.0f), k = 0.5f - 0.0042f * (float)fxs_v[EN_FXS_TK_RESO];
+            const int i = pos >= 4.0f ? 3 : (int)pos;
+            const float fr = pos - (float)i;
+            svf_coefs(tk_c[0], VF1[i] + (VF1[i + 1] - VF1[i]) * fr, k);
+            svf_coefs(tk_c[1], VF2[i] + (VF2[i + 1] - VF2[i]) * fr, k);
+        }
+        wh_m += ((float)(uint32_t)(m >> FX_WAH & 1u) - wh_m) * sm;            /* WAH: a band-pass that follows how loud it is */
+        wh_m = wh_m < 0.002f && !(m >> FX_WAH & 1u) ? 0.0f : wh_m;
         tp_m += ((float)(uint32_t)(m >> FX_TAPE & 1u) - tp_m) * sm;
         fl_m += ((float)(uint32_t)(m >> FX_FLANGER & 1u) - fl_m) * sm;
         ph_m += ((float)(uint32_t)(m >> FX_PHASER & 1u) - ph_m) * sm;
@@ -3157,7 +3270,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
 {
     float l = *pl, r = *pr;
-    if (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR)
+    if (!smp_hold && (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR))
         rb_write(l, r);
     if (bmode != BM_LIVE) {
         float bl = 0.0f, br = 0.0f, w = 1.0f;
@@ -3264,6 +3377,41 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             brate = -1;
         }
     }
+    if (smp_hold) {                             /* the sampler's voices, added to the music */
+        const float loopy = fxs_v[EN_FXS_SM_LOOP] ? 1.0f : 0.0f, gain = 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_SM_MIX], 0.0f, 100.0f) * 0.9f;
+        float sl = 0.0f, sr = 0.0f;
+        int v, live = 0;
+        for (v = 0; v < 4; v++) {
+            float a, b, g, edge;
+            if (!smp[v].on)
+                continue;
+            rb_read_from(smp_sm, smp[v].start + (smp[v].rev ? smp[v].len - 1.0f - smp[v].pos : smp[v].pos), &a, &b);
+            edge = fm_minf(fm_minf(smp[v].pos, smp[v].len - 1.0f - smp[v].pos) * (1.0f / 48.0f), 1.0f);   /* 1 ms edges: no clicks at the ends or the loop */
+            edge = edge < 0.0f ? 0.0f : edge;
+            if (loopy > 0.0f && !smp[v].held)
+                smp[v].env -= 1.0f / 300.0f;                       /* let go: out in 7 ms */
+            else
+                smp[v].env = fm_minf(smp[v].env + 1.0f / 48.0f, 1.0f);
+            g = fm_maxf(smp[v].env, 0.0f) * edge;
+            sl += a * g;
+            sr += b * g;
+            smp[v].pos += smp[v].rate;
+            if (smp[v].pos >= smp[v].len) {
+                if (loopy > 0.0f && smp[v].held)
+                    smp[v].pos -= smp[v].len;
+                else
+                    smp[v].on = 0;
+            }
+            if (loopy > 0.0f && !smp[v].held && smp[v].env <= 0.0f)
+                smp[v].on = 0;
+            live += smp[v].on;
+        }
+        l += sl * gain;
+        r += sr * gain;
+        en_smp_active = (uint8_t)live;
+        if (!live)
+            smp_hold = 0;                       /* all done: the ring runs again */
+    }
     if (lp_amt_e > 0.0f) {
         l = svf_lp(l, lp_c, &lp_s[0]);
         r = svf_lp(r, lp_c, &lp_s[2]);
@@ -3294,6 +3442,43 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
         }
         l += (o[0] - l) * sw_m;
         r += (o[1] - r) * sw_m;
+    }
+    if (tk_m > 0.0f) {                          /* TALK: two formants (band-passes), summed */
+        const float w = tk_m * 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_TK_MIX], 0.0f, 100.0f);
+        float in[2] = {l, r}, o[2];
+        int c, f;
+        for (c = 0; c < 2; c++) {
+            float y = 0.0f;
+            for (f = 0; f < 2; f++) {
+                float *s = tk_s[c][f];
+                const float *cc = tk_c[f], v3 = in[c] - s[1], v1 = cc[0] * s[0] + cc[1] * v3, v2 = s[1] + cc[1] * s[0] + cc[2] * v3;
+                s[0] = fm_flush(2.0f * v1 - s[0]);
+                s[1] = fm_flush(2.0f * v2 - s[1]);
+                y += cc[3] * v1 * (f ? 0.7f : 1.0f);
+            }
+            o[c] = y * 1.8f;
+        }
+        l += (o[0] - l) * w;
+        r += (o[1] - r) * w;
+    }
+    if (wh_m > 0.0f) {                          /* WAH: the cutoff rides the envelope (every 32 samples) */
+        const float w = wh_m * 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_WH_MIX], 0.0f, 100.0f), x = 0.5f * (fm_fabsf(l) + fm_fabsf(r));
+        float in[2] = {l, r}, o[2];
+        int c;
+        wh_env += (x - wh_env) * (x > wh_env ? 0.02f : 0.0015f);
+        if (!(wh_cnt++ & 31u)) {
+            const float e = fm_clampf(wh_env * (2.0f + 14.0f * (float)fxs_v[EN_FXS_WH_SENS] * 0.01f), 0.0f, 1.0f);
+            svf_coefs(wh_c, 280.0f * fm_exp2f(4.0f * (float)fxs_v[EN_FXS_WH_RANGE] * 0.01f * e), 0.7f - 0.0058f * (float)fxs_v[EN_FXS_WH_RESO]);
+        }
+        for (c = 0; c < 2; c++) {
+            float *s = wh_s[c];
+            const float v3 = in[c] - s[1], v1 = wh_c[0] * s[0] + wh_c[1] * v3, v2 = s[1] + wh_c[1] * s[0] + wh_c[2] * v3;
+            s[0] = fm_flush(2.0f * v1 - s[0]);
+            s[1] = fm_flush(2.0f * v2 - s[1]);
+            o[c] = wh_c[3] * v1 * 2.0f;
+        }
+        l += (o[0] - l) * w;
+        r += (o[1] - r) * w;
     }
     if (tp_m > 0.0f || fl_m > 0.0f || ph_m > 0.0f) {
         const uint32_t w = mod_w & (MOD_N - 1u);

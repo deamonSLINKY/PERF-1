@@ -444,7 +444,7 @@ int main(void)
                 r ^= r << 13; r ^= r >> 17; r ^= r << 5;
                 m = r & (r >> 3) & 0x7FFFFFFFu;       /* about a quarter of the bits (0..30) */
                 r ^= r << 13; r ^= r >> 17; r ^= r << 5;
-                m |= (uint64_t)(r & (r >> 5) & 0x3Fu) << 31;   /* and the bits 31..36 */
+                m |= (uint64_t)(r & (r >> 5) & 0x0FFFFFFFu) << 31;   /* and the bits 31..58 (the flex pads, talk, wah, the drum rolls too) */
                 en_fx(m);
                 for (blk = 0; blk < 69; blk++) {
                     en_render(buf, 256, 2048);
@@ -539,6 +539,54 @@ int main(void)
         CHECK(!broken, "counter-melody: %d samples broken (NaN or over full scale)", broken);
         CHECK(!silent, "counter-melody: %d sound/style combinations silent", silent);
         CHECK(!loud, "counter-melody: %d level-0 runs not silent", loud);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+    /* the sampler: a key down freezes the last stretch of the music and plays it (pitched, or as a slice, one shot or loop); let go (or played out)
+     * it is silent again and the ring runs; nothing breaks */
+    {
+        int mode, loopy, blk, j, broken = 0, quiet = 0, stuck = 0;
+        for (mode = 0; mode < 2; mode++)
+            for (loopy = 0; loopy < 2; loopy++) {
+                float peak = 0.0f;
+                en_init();
+                en_play(1);
+                en_fxs(EN_FXS_SM_MODE, mode);
+                en_fxs(EN_FXS_SM_LOOP, loopy);
+                en_fxs(EN_FXS_SM_LEN, 0);
+                en_fxs(EN_FXS_SM_MIX, 100);
+                run(4.0f);
+                en_note(EN_V_SAMPLE, 53 + 13, 1);
+                en_note(EN_V_SAMPLE, 53 + 5, 1);
+                for (blk = 0; blk < 350; blk++) {      /* ~2 s held */
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j++) {
+                        const float a = (float)(buf[j] < 0 ? -buf[j] : buf[j]);
+                        if (buf[j] == INT32_MIN || a > 8400000.0f)
+                            broken++;
+                        if (a > peak)
+                            peak = a;
+                    }
+                }
+                if (!en_smp_active && loopy)
+                    stuck++;                            /* a loop held should still be sounding */
+                en_note(EN_V_SAMPLE, 53 + 13, 0);
+                en_note(EN_V_SAMPLE, 53 + 5, 0);
+                for (blk = 0; blk < 700; blk++)
+                    en_render(buf, 256, 2048);
+                if (en_smp_active)
+                    stuck++;                            /* and silent again once let go (or played out) */
+                if (peak < 0.02f * 8388608.0f)
+                    quiet++;
+            }
+        CHECK(!broken, "sampler: %d samples broken (NaN or over full scale)", broken);
+        CHECK(!quiet, "sampler: %d of 4 modes silent", quiet);
+        CHECK(!stuck, "sampler: %d voices stuck on or off", stuck);
+        en_fxs(EN_FXS_SM_MODE, EN_FXS_DEF[EN_FXS_SM_MODE]);
+        en_fxs(EN_FXS_SM_LOOP, EN_FXS_DEF[EN_FXS_SM_LOOP]);
+        en_fxs(EN_FXS_SM_LEN, EN_FXS_DEF[EN_FXS_SM_LEN]);
+        en_fxs(EN_FXS_SM_MIX, EN_FXS_DEF[EN_FXS_SM_MIX]);
         en_init();
         en_play(1);
         run(1.0f);
