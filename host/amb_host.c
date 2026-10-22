@@ -503,6 +503,16 @@ static int expect(const char *what, const char *val)
         got = ui.scene_q;
     else if (!strcmp(what, "mood"))               /* the mood macro, 0 .. 100 */
         got = ui.mood;
+    else if (!strcmp(what, "flexq"))              /* Flex Beat: quantize, mode, state (0 idle, 1 armed, 2 playing), one shots done, the last pad */
+        got = ui.fxs[EN_FXS_FX_QUANT];
+    else if (!strcmp(what, "flexmode"))
+        got = ui.fxs[EN_FXS_FX_MODE];
+    else if (!strcmp(what, "flexstate"))
+        got = en_flx_state;
+    else if (!strcmp(what, "flexdone"))
+        got = (int)en_flx_done;
+    else if (!strcmp(what, "flexlast"))
+        got = ui.flex_last;
     else if (!strcmp(what, "keyon"))              /* the drop's key change is on */
         got = ui.key_on;
     else if (!strcmp(what, "keyset"))

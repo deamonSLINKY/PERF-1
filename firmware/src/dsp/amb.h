@@ -126,7 +126,7 @@ extern volatile uint8_t en_sec_req;            /* a command waiting for the bar:
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
  * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
  * pad (and the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
- * is en_trk (GLO held, on the keys). Bits 37..62 are spare; 63 is the UI's "no effect". */
+ * is en_trk (GLO held, on the keys). Bits 52..62 are spare; 63 is the UI's "no effect". */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
@@ -140,6 +140,8 @@ enum {
     FX_SWEEP,                                                 /* a filter swept in time with the tempo */
     FX_SCRATCH, FX_FREEZE, FX_RVSWELL, FX_RING,               /* an automatic scratch; a granular freeze; a reverse swell; a ring modulator */
     FX_RPT8T, FX_RPT16T,                                      /* beat repeats in triplets: 1/8, 1/16 */
+    FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7, FX_FLEX8,   /* Flex Beat: fifteen one-bar patterns (en_flex_step) */
+    FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
     EN_NFX = 64                                               /* the mask is 64 bits: FXB(bit) */
 };
 #define FXB(x) (1ull << (x))
@@ -176,14 +178,18 @@ enum {
     EN_FXS_FZ_SIZE, EN_FXS_FZ_SPREAD, EN_FXS_FZ_GRAINS,                  /* the freeze: grain size, how far back it draws, how many grains (0..3: 1..4) */
     EN_FXS_RV_LEN, EN_FXS_RV_MIX,                                        /* the reverse swell: its length (0..2: 1/2, 1, 2 beats), how much it replaces */
     EN_FXS_RM_FREQ, EN_FXS_RM_MIX,                                       /* the ring mod: its tone (40 .. 800 Hz), its mix */
+    EN_FXS_FX_QUANT, EN_FXS_FX_MODE, EN_FXS_FX_MIX,                      /* Flex Beat: when it starts (0 off, 1 beat, 2 bar), one shot (0) or loop (1), its mix (0..100) */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0x70, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 25, 80, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0x70, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
-                         1, 2, 0, 50, 60, 2, 1, 70, 45, 100}
+                         1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
+uint8_t en_flex_step(int pat, int step);       /* Flex Beat pattern pat (0..14), step 0..15: e | rev << 4 | mute << 5 | div << 6 (e 15: live) */
+extern volatile uint8_t en_flx_state;          /* 0 idle, 1 armed, 2 playing */
+extern volatile uint32_t en_flx_done;          /* one shots played out so far */
 void en_spectrum(float *out, int nb);          /* the master's spectrum, nb bands (70 Hz .. 10 kHz), each 0..1: for the screen */
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */
 enum { EN_FXK_FILTER, EN_FXK_CRUSH, EN_FXK_THROW, EN_FXK_WASH, EN_NFXK };

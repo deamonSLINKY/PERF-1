@@ -501,6 +501,58 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* Flex Beat: every pattern, started each way (off, on the beat, on the bar), held as a one shot: it arms, plays its bar, and is over
+     * exactly once; the level stays sane; and a loop keeps going while it is held */
+    {
+        int pat, q, blk, j, broken = 0, bad = 0, badloop = 0;
+        for (pat = 0; pat < 15; pat++)
+            for (q = 0; q < 3; q++) {
+                uint32_t done0;
+                en_init();
+                en_play(1);
+                run(2.0f);
+                en_fxs(EN_FXS_FX_QUANT, q);
+                en_fxs(EN_FXS_FX_MODE, 0);
+                en_fxs(EN_FXS_FX_MIX, 100);
+                run(0.1f);
+                done0 = en_flx_done;
+                en_fx(1ull << (FX_FLEX1 + pat));
+                for (blk = 0; blk < 1700; blk++) {            /* ~10 s: a bar to wait, a bar to play */
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j++)
+                        if (buf[j] == INT32_MIN || buf[j] > 8400000 || buf[j] < -8400000)
+                            broken++;
+                }
+                if (en_flx_done != done0 + 1u || en_flx_state != 0)
+                    bad++;
+                en_fx(0);
+                run(0.5f);
+            }
+        for (pat = 0; pat < 15; pat += 7) {                   /* a loop: not over while it is held, over when let go */
+            uint32_t done0;
+            en_init();
+            en_play(1);
+            run(2.0f);
+            en_fxs(EN_FXS_FX_QUANT, 0);
+            en_fxs(EN_FXS_FX_MODE, 1);
+            run(0.1f);
+            done0 = en_flx_done;
+            en_fx(1ull << (FX_FLEX1 + pat));
+            run(7.0f);
+            if (en_flx_done != done0 || en_flx_state != 2)
+                badloop++;
+            en_fx(0);
+            run(0.5f);
+        }
+        CHECK(!broken, "flex beat: %d samples broken (NaN or over full scale)", broken);
+        CHECK(!bad, "flex beat: %d of 45 one shots did not play out exactly once", bad);
+        CHECK(!badloop, "flex beat: %d loops stopped by themselves", badloop);
+        en_fxs(EN_FXS_FX_QUANT, EN_FXS_DEF[EN_FXS_FX_QUANT]);
+        en_fxs(EN_FXS_FX_MODE, EN_FXS_DEF[EN_FXS_FX_MODE]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* every piece of every genre plays: not silent, not over full scale, no NaN */
     {
         int g, i, p, l, wrong = 0;

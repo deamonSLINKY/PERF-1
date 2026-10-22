@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 18
+#define NFXP 19
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
@@ -68,6 +68,8 @@ static const char *const FGRAIN_NAME[4] = {"1", "2", "3", "4"};                 
 static const char *const RVLEN_NAME[3] = {"1/2 BEAT", "1 BEAT", "2 BEATS"};                      /* the reverse swell */
 static const char *const LFO_SHAPE_NAME_UI[6] = {"SINE", "TRIANGLE", "SAW", "SQUARE", "S&H", "DRIFT"};
 static const float ETIME_BEATS_UI[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
+static const char *const FXQ_NAME[3] = {"OFF", "BEAT", "BAR"};                                   /* Flex Beat: when it starts */
+static const char *const FXM_NAME[2] = {"ONE SHOT", "LOOP"};
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
@@ -120,6 +122,8 @@ static const struct {
     {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
     {"DROP", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
+    {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
+                     {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
@@ -203,8 +207,8 @@ static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT",
  * vinyl; one spare. The second, the beat effects: the scatter, the brake, the spin-back, half time (and the mutes
  * again). The other tracks' mutes and every solo are on GLO held (MIXK). */
 #define FX_NONE 63                     /* a spare key: no effect (the engine's bit 63 is never used) */
-static uint8_t fx_bank;                /* 0 or 1 */
-static const uint8_t KEY_FX[2][NKEYS] = {
+static uint8_t fx_bank;                /* 0 .. 2: the effects, the beat effects, Flex Beat */
+static const uint8_t KEY_FX[3][NKEYS] = {
     {FX_SWEEP, FX_GATE16, FX_RING, FX_GATE8, FX_FREEZE, FX_GATEX, FX_RVSWELL,          /* F3 F#3 G3 G#3 A3 A#3 B3 */
      FX_NONE, FX_PHASER, FX_NONE, FX_FLANGER, FX_REV,                                  /* C4 C#4 D4 D#4 E4 (two spares, for something new) */
      FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_ROLL, FX_MUTE_HATS, FX_PUMP, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
@@ -214,12 +218,16 @@ static const uint8_t KEY_FX[2][NKEYS] = {
      FX_RPT16T, FX_NONE, FX_SCATTER, FX_BRAKE, FX_SPIN,                                /* C4 (the last repeat) C#4 D4 D#4 E4 */
      FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the mutes where they are on the first page) */
      FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
-     FX_NONE, FX_NONE, FX_NONE}};
+     FX_NONE, FX_NONE, FX_NONE},
+    {FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7,             /* Flex Beat: its fifteen patterns, F3 .. */
+     FX_FLEX8, FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
+     FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE}};
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
+    "STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD", "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT",
     [FX_NONE] = ""};
 /* every kind of effect its own colour (the same in every theme, so a key is found by its colour as well as its name):
  * repeats cyan, filters green, gates and the pump yellow, the drums' mutes red, the colour effects pink, the transport
@@ -231,8 +239,11 @@ static const char *const FX_LABEL[EN_NFX] = {
 #define KC_COLOR RGB(255, 120, 220)
 #define KC_MOVE RGB(255, 160, 60)
 #define KC_BUILD RGB(190, 140, 255)
+#define KC_FLEX RGB(110, 240, 200)
 static uint16_t fx_color(int fx)
 {
+    if (fx >= FX_FLEX1 && fx <= FX_FLEX15)
+        return KC_FLEX;
     switch (fx) {
     case FX_RPT2: case FX_RPT4: case FX_RPT6: case FX_RPT8: case FX_RPT16: case FX_RPT32: case FX_RPT8T: case FX_RPT16T: return KC_REPEAT;
     case FX_LP: case FX_HP: case FX_SWEEP: return KC_FILTER;
@@ -346,6 +357,7 @@ static struct {
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
     uint8_t viz;                       /* the visualizer on the SELECT dial (VZ_*) */
+    uint8_t flex_last;                 /* the Flex Beat pad pressed last (0..14) */
     uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
@@ -1711,7 +1723,7 @@ static void input(void)
     if (ui.fx_menu && !ui.fx_page) {           /* the FX keys: tapped, latched; held, played; a latched one tapped, off */
         const uint32_t down = ch & keys & ~ui.shift_keys, up = ch & ~keys;
         for (i = 0; i < NKEYS; i++) {
-            const uint32_t bit = fxbit((int)i);
+            const uint64_t bit = fxbit((int)i);
             if (!bit)
                 continue;
             if (down >> i & 1u) {
@@ -1733,14 +1745,24 @@ static void input(void)
         uint64_t m = 0;
         if (!ui.fx_menu)
             ui.lock_mode = 0;                  /* FX closed: the locks play on (FX again, a key: that one off) */
+        {   /* a Flex Beat one shot is over: a latched pad lets go */
+            static uint32_t flx_seen;
+            if (en_flx_done != flx_seen) {
+                flx_seen = en_flx_done;
+                ui.fx_lock &= ~(0x7FFFull << FX_FLEX1);
+            }
+        }
         m = ui.fx_lock;
         if (ui.fx_menu && ui.fx_page && FXP[ui.fx_page - 1].bit != 63 &&
             (!FXP[ui.fx_page - 1].hold || (keys & ~ui.shift_keys)))   /* an edit page: its effect on, */
             m |= FXB(FXP[ui.fx_page - 1].bit);                                                 /* to be heard as it is edited (a roll or riser: with a key held) */
         if (ui.fx_menu && !ui.fx_page) {
             for (i = 0; i < NKEYS; i++)
-                if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u)
+                if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u) {
                     m |= fxbit(i);
+                    if (fx_bank == 2 && KEY_FX[2][i] != FX_NONE)
+                        ui.flex_last = (uint8_t)(KEY_FX[2][i] - FX_FLEX1);
+                }
         }
         if (ui.dj_on && en_playing) {              /* the auto-DJ: a fill before the breakdown, the riser in the build */
             if (ui.dj_fill)
@@ -1791,8 +1813,8 @@ static void input(void)
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {        /* SELECT: the pages (the steps); with HOME held, the tempo */
         if (ui.fx_menu && !ui.fx_page) {         /* the FX keys: the dial is the bank (the effects, the beat effects) */
-            fx_bank = (uint8_t)(e > 0 ? 1 : 0);
-            say(fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
+            fx_bank = (uint8_t)(e > 0 ? (fx_bank < 2 ? fx_bank + 1 : 2) : (fx_bank > 0 ? fx_bank - 1 : 0));
+            say(fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
         } else if (ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
             const int p = ui.fx_page + (e > 0 ? 1 : -1);
             if (p >= 1 && p <= NFXP) {
@@ -2458,8 +2480,12 @@ static void draw_help(void)
 static void draw_fx(void)
 {
     int k;
-    cv_text(4, 1, &FONT_XS, fx_bank ? "BEAT: TAP LATCHES" : "FX: TAP LATCHES", K_ACC);
-    cv_text(fx_bank ? 136 : 118, 1, &FONT_XS, fx_bank ? "DIAL: FX 1" : "DIAL: BEAT FX", K_DIM);
+    {
+        const char *hd = fx_bank == 2 ? "FLEX: TAP LATCHES" : fx_bank ? "BEAT: TAP LATCHES" : "FX: TAP LATCHES",
+                   *dl = fx_bank == 2 ? "DIAL: BEAT FX" : fx_bank ? "DIAL: FLEX / FX" : "DIAL: BEAT FX";
+        cv_text(4, 1, &FONT_XS, hd, K_ACC);
+        cv_text(236 - text_w(&FONT_XS, dl), 1, &FONT_XS, dl, K_DIM);
+    }
     for (k = 0; k < NKEYS; k++) {
         int32_t x = 2 + (k / 9) * 79, y = 16 + (k % 9) * 14;
         int pc = (5 + k) % 12, oct = 3 + (5 + k) / 12, on = (int)(ui.fx_mask >> KEY_FX[fx_bank][k] & 1u),
@@ -2532,10 +2558,15 @@ static void draw_fxedit(void)
         cv_text(8, 112, &FONT_XS, "CLOSES", K_DIM);
         cv_text(52, 112, &FONT_XS, GX_TGT[ui.gx_tgt].name, K_TEXT);
     } else {
-        cv_text(4, 18, &FONT_B, FXP[p].name, FXP[p].bit < 63 ? fx_color(FXP[p].bit) : K_TEXT);
+        cv_text(4, 18, &FONT_B, FXP[p].name, p == 18 ? KC_FLEX : FXP[p].bit < 63 ? fx_color(FXP[p].bit) : K_TEXT);
         if (draw_fxscope(p)) {
+            if (p == 18) {
+                cv_text(4, 112, &FONT_XS, "THE LAST PAD'S BAR: TALL = OLDER, BOX = LIVE, DASH = MUTE.", K_DIM);
+                cv_text(4, 126, &FONT_XS, "QUANT: WHEN IT STARTS. MIX: DRY TO WET.", K_DIM);
+            } else {
             cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
+            }
         } else {
             cv_text(4, 50, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT. THE DIAL: NEXT PAGE.", K_DIM);
@@ -2916,6 +2947,28 @@ static int draw_fxscope(int p)
         }
         scope_trace(col);
         return 1;
+    case 18: {                                   /* Flex Beat: the last pad's bar, a column a sixteenth */
+        int s;
+        cv_rect(SC_X, sc_oy + sc_oh, SC_W, 1, K_LINE);
+        for (s = 0; s < 16; s++) {
+            const uint8_t b = en_flex_step(ui.flex_last, s);
+            const int e = b & 15, rev = b >> 4 & 1, mute = b >> 5 & 1, div = b >> 6 & 3;
+            const int32_t x = SC_X + 4 + s * 13, full = H - 4, hh = e == 15 ? full : 12 + (7 - e) * 5;
+            if (mute) {
+                cv_rect(x, sc_oy + sc_oh - 4, 11, 2, K_LINE);
+            } else if (e == 15) {                /* live: a box */
+                cv_frame(x, sc_oy + sc_oh - full, 11, full, KC_FLEX);
+            } else {
+                int k;
+                cv_rect(x, sc_oy + sc_oh - hh, 11, hh, rev ? K_ACC : KC_FLEX);
+                for (k = 1; k < (1 << div); k++)   /* a stutter: cut in two, four, eight */
+                    cv_rect(x + k * 11 / (1 << div), sc_oy + sc_oh - hh, 1, hh, K_BG);
+            }
+            if (en_playing && en_flx_state == 2 && (int)(en_bars & 15u) == s)   /* (the step playing in the bar: marked) */
+                cv_rect(x, sc_oy + sc_oh + 3, 11, 2, K_TEXT);
+        }
+        return 1;
+    }
     case 14:                                     /* the reverse swell: a tail running backwards into the beat */
         for (x = 0; x < SC_W; x++) {
             const float u = (float)x / (float)(SC_W - 1);
@@ -3088,6 +3141,7 @@ static void draw_main(void)
         h = hash(h, ui.fx_page | (uint32_t)ui.gx_pat << 4 | (uint32_t)ui.fxs[EN_FXS_GX_LEN] << 20 | (uint32_t)ui.gx_tgt << 25);
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
+        h = hash(h, ui.flex_last);
         if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
             int j;
             h = hash(h, scope_tick());

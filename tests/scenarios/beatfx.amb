@@ -95,6 +95,13 @@ key 17 down
 wait 100
 expect fxmask 8388608
 key 17 up
+# a tap latches an effect past bit 31 too (freeze, A3): it stayed a hold before; a tap again lets it go
+tapkey 4
+wait 100
+expect fxmaskhi 1
+tapkey 4
+wait 100
+expect fxmaskhi 0
 # FX + OCT-: everything back. The kick muted first (GLO held, F3), the crush up (FX knob 2)
 press GLO
 tapkey 0

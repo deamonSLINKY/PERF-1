@@ -1,0 +1,27 @@
+# Flex Beat: the FX menu's third bank (the SELECT dial twice): fifteen one-bar patterns. A tapped pad latches; it waits for the bar
+# (Quantize: bar), plays its bar, and one shot lets the latch go.
+seed 0
+wait 3000
+tap FX
+wait 100
+spin SELECT 1
+wait 100
+spin SELECT 1
+wait 100
+expect fxbank 2
+shot flex_bank.png
+tapkey 2
+wait 100
+expect flexlast 2
+wait 7000
+expect flexdone 1
+expect flexstate 0
+expect fxmaskhi 0
+# held (not tapped): it plays while the pad is down and the bar plays out; held through its end it does not start again
+key 5 down
+wait 9000
+expect flexdone 2
+expect flexstate 0
+key 5 up
+wait 300
+expect flexlast 5

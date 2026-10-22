@@ -1601,6 +1601,7 @@ static void rpt_engage(int r);
 static void scat_engage(void);
 static void var_leave(void);
 static void rvs_engage(void);
+static void flx_tick(int st);
 static void tick(void)
 {
     static const uint8_t TRIG_BARS[6] = {0, 1, 2, 4, 8, 0};
@@ -1618,6 +1619,7 @@ static void tick(void)
         rvs_engage();
         rvs_arm = 0;
     }
+    flx_tick(st);                               /* Flex Beat: its step, or its start */
     if (var_exit) {                             /* a brake let go, spun up: back to the live mix on the grid */
         var_leave();
         var_exit = 0;
@@ -2394,7 +2396,7 @@ static uint32_t bm_sm;                           /* bm_start mod RB_N, set with 
 static uint8_t rb_odd;
 static float rb_hl, rb_hr;                       /* the first sample of each pair, waiting for the second */
 static uint64_t fx_req, fx_on;
-enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR, BM_SCR, BM_GRN, BM_RVS };
+enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR, BM_SCR, BM_GRN, BM_RVS, BM_FLX };
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
 static uint32_t bm_start;                        /* the frame the reading counts from */
 static float bm_off, bm_len, bm_speed, bm_mix, bm_tgt;   /* samples from bm_start; the slice; 0 live .. 1 ring */
@@ -2449,7 +2451,8 @@ static const float RPT_BEATS[9] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f,
 const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
-    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T"};
+    "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T",
+    "Stut 16", "Stut 32", "Beat repeat", "Half Rpt", "Beat Rev", "Skip", "Trance", "Gate 8", "Double", "Shuffle", "Back-Fwd", "Roll Out", "Build", "Scratch", "Dropout"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -2565,6 +2568,98 @@ static void scat_engage(void)
     bm_start = rb_w - (uint32_t)((float)n * sl * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
     bm_tgt = 1.0f;
     scat_pick();
+}
+
+/* FLEX BEAT (after the MPC's): one-bar patterns that rework the last stretch of the music (the ring: up to eight sixteenths) on the grid.
+ * Each of the sixteen steps plays a slice (e: 0 the sixteenth just gone, 1 the one before, .. 7), or the live mix (15), muted, backwards,
+ * or cut in two / four / eight and repeated (a stutter). Quantize: off (the next sixteenth), beat, bar. One shot: the bar plays out and
+ * it is over (en_flx_done counts them, for the UI to let a latched key go); loop: it goes on while it is held or latched. The ring is
+ * frozen while it plays (as the scatter), the live mix goes on under the live steps. Mix: how much of the effect against the music. */
+#define FL(e, r, m, d) ((uint8_t)((e) | (r) << 4 | (m) << 5 | (d) << 6))
+static const uint8_t FLEX[15][16] = {
+    /* 1 STUT 16 */ {FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 2 STUT 32 */ {FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1)},
+    /* 3 BEAT RPT */ {FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 4 HALF RPT */ {FL(7, 0, 0, 0), FL(6, 0, 0, 0), FL(5, 0, 0, 0), FL(4, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(7, 0, 0, 0), FL(6, 0, 0, 0), FL(5, 0, 0, 0), FL(4, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 5 BEAT REV */ {FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0)},
+    /* 6 SKIP */ {FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0)},
+    /* 7 TRANCE */ {FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0)},
+    /* 8 GATE 8 */ {FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0)},
+    /* 9 DOUBLE */ {FL(3, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 10 SHUFFLE */ {FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0)},
+    /* 11 BACK-FWD */ {FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0)},
+    /* 12 ROLL OUT */ {FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1)},
+    /* 13 BUILD */ {FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 2), FL(0, 0, 0, 2)},
+    /* 14 SCRATCH */ {FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0)},
+    /* 15 DROPOUT */ {FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0)},
+};
+#define FLEXMASK (0x7FFFull << FX_FLEX1)
+uint8_t en_flex_step(int pat, int step) { return FLEX[(unsigned)pat < 15u ? pat : 0][step & 15]; }
+volatile uint8_t en_flx_state;                  /* 0 idle, 1 armed (waiting for its time), 2 playing */
+volatile uint32_t en_flx_done;                  /* one shots played out */
+static uint8_t flx_arm, flx_active, flx_pat, flx_pos, flx_held, flx_wait_rel, flx_rev, flx_live, flx_mute;
+static int flx_n;
+static float flx_slice, flx_off, flx_sub, flx_p;
+static void flx_load(void)                      /* the step's slice */
+{
+    const uint8_t b = FLEX[flx_pat][flx_pos & 15];
+    const int e = b & 15, div = b >> 6 & 3;
+    flx_mute = (b >> 5) & 1u;
+    flx_rev = (b >> 4) & 1u;
+    flx_live = e == 15;
+    if (!flx_live) {
+        flx_off = (float)(flx_n - 1 - (e % flx_n)) * flx_slice;
+        flx_sub = fm_maxf(flx_slice / (float)(1 << div), 32.0f);
+    }
+    flx_p = 0.0f;
+}
+static void flx_engage(void)
+{
+    if (flx_active && bmode == BM_FLX) {        /* already playing: the next pattern, from its start */
+        flx_pos = 0;
+        flx_load();
+        return;
+    }
+    flx_slice = fm_maxf(step_len, 64.0f);
+    flx_n = (int)(((float)(RB_N - 8) * 2.0f) / flx_slice);
+    flx_n = flx_n < 1 ? 1 : flx_n > 8 ? 8 : flx_n;
+    bmode = BM_FLX;
+    bm_start = rb_w - (uint32_t)((float)flx_n * flx_slice * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
+    bm_tgt = 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_FX_MIX], 0.0f, 100.0f);
+    flx_pos = 0;
+    flx_active = 1;
+    en_flx_state = 2;
+    flx_load();
+}
+static void flx_tick(int st)                    /* on every sixteenth */
+{
+    if (flx_active && bmode != BM_FLX) {        /* another effect took over */
+        flx_active = 0;
+        en_flx_state = flx_arm ? 1 : 0;
+    }
+    if (flx_active) {
+        if (++flx_pos >= 16) {
+            if (fxs_v[EN_FXS_FX_MODE] == 1 && flx_held) {
+                flx_pos = 0;
+            } else {                            /* the bar is over */
+                flx_active = 0;
+                bm_tgt = 0.0f;
+                flx_wait_rel = flx_held;
+                en_flx_done++;
+                en_flx_state = flx_arm ? 1 : 0;
+            }
+        }
+        if (flx_active)
+            flx_load();
+    }
+    if (flx_arm) {
+        const int q = (int)fm_clampf((float)fxs_v[EN_FXS_FX_QUANT], 0.0f, 2.0f);
+        if (q == 0 || (q == 1 && (st & 3) == 0) || (q == 2 && st == 0)) {
+            flx_pat = (uint8_t)(flx_arm - 1u);
+            flx_arm = 0;
+            flx_engage();
+        }
+    }
 }
 /* a brake, a spin-back, half time: the ring read at a rate that slides to its target (0; backwards; a half or less)
  * while the live mix goes on being written; a low-pass follows the rate down. Let go: the rate slides back to 1 and
@@ -2824,6 +2919,14 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     } else {
         rl_gain = 1.0f;
     }
+    if (!(m & FLEXMASK)) {                      /* no Flex Beat pad down: let go (a one shot plays out its bar) */
+        flx_held = 0;
+        flx_wait_rel = 0;
+        if (flx_arm) {
+            flx_arm = 0;
+            en_flx_state = flx_active ? 2 : 0;
+        }
+    }
     if (m >> FX_STOP & 1u) {
         rpt_arm = 0;
         if (bmode != BM_STOP || bm_tgt < 1.0f) {
@@ -2841,6 +2944,25 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             bm_start = rb_w - (RB_N - 8), bm_sm = bm_start % RB_N;
             bm_off = bm_len - 1.0f;
             bm_tgt = 1.0f;
+        }
+    } else if (m & FLEXMASK) {                  /* Flex Beat: the lowest pad held */
+        int p = 0;
+        while (!(m >> (FX_FLEX1 + p) & 1u))
+            p++;
+        rpt_arm = 0;
+        scat_arm = 0;
+        var_exit = 0;
+        flx_held = 1;
+        if (flx_active)
+            bm_tgt = 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_FX_MIX], 0.0f, 100.0f);   /* (Mix turned while it plays) */
+        if (!flx_wait_rel && (flx_active ? (flx_pat != p && flx_arm != p + 1) : flx_arm != p + 1)) {
+            flx_arm = (uint8_t)(p + 1);
+            en_flx_state = 1;
+            if (!en_playing || en_ext) {        /* no grid to wait for */
+                flx_pat = (uint8_t)p;
+                flx_arm = 0;
+                flx_engage();
+            }
         }
     } else if (m >> FX_SCATTER & 1u) {
         rpt_arm = 0;
@@ -2896,7 +3018,10 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             else
                 rpt_arm = (uint8_t)(want + 1);
         }
+    } else if (flx_active && fxs_v[EN_FXS_FX_MODE] == 0) {
+        /* a Flex Beat one shot plays out its bar */
     } else {
+        flx_active = 0;
         rpt_arm = 0;
         bm_tgt = 0.0f;                          /* back to the live mix (the ring fades out) */
     }
@@ -2938,6 +3063,18 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             rb_read(off, &bl, &br);
             if ((scr_t += 1.0f) >= scr_per)
                 scr_t -= scr_per;
+        } else if (bmode == BM_FLX) {
+            if (flx_live) {                     /* the live mix goes through */
+                bl = l;
+                br = r;
+            } else if (flx_mute) {
+                w = 0.0f;
+            } else {
+                rb_read(flx_off + (flx_rev ? flx_sub - 1.0f - flx_p : flx_p), &bl, &br);
+                w = fm_maxf(fm_minf(fm_minf(flx_p, flx_sub - 1.0f - flx_p) * (1.0f / 48.0f), 1.0f), 0.0f);
+                if ((flx_p += 1.0f) >= flx_sub)
+                    flx_p = 0.0f;               /* a stutter: the same piece again */
+            }
         } else if (bmode == BM_GRN) {
             int i;
             for (i = 0; i < gn_n; i++) {
