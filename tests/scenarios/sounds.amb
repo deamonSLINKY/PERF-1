@@ -19,9 +19,9 @@ tap LFO
 press SEL
 turn ALGO -1
 release SEL
-expect par84 15
+expect par84 23
 turn K2 -3
-expect par84 12
+expect par84 20
 wait 1500
 shot sound_drone.png
 # the acid: its Sound is KNOB 4 on Acid env
@@ -53,7 +53,7 @@ press SEL
 turn ALGO 1
 release SEL
 expect par10 3
-expect par84 12
+expect par84 20
 # keys on a voice's page still edit the scale while it plays with the music, as everywhere
 tap LFO
 tapkey w3

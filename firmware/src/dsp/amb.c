@@ -283,12 +283,16 @@ static const char *const THEME_NAME[EN_NTHEME] = {"Synth", "Acid", "Ice", "Ember
 /* the voice bank: what each voice can play (the sounds themselves: PAD_SOUND, DRONE_SOUND, ACID_SOUND, and
  * the kits: the old styles' drums) */
 const char *const EN_PAD_SOUND[EN_NSOUND] = {"Rhodes", "Voices", "Strings", "Glass", "Organ", "Warm", "Stabs", "Dark",
-                                             "Dub", "Trance", "Poly", "Hollow", "Pings", "Hits", "Rave", "Sine"};
+                                             "Dub", "Trance", "Poly", "Hollow", "Pings", "Hits", "Rave", "Sine",
+                                             "Ooh", "Wurli", "Mallet", "Brass", "Fat", "Pluck", "Chapel", "Air"};
 const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", "Reese", "Pulse", "FM", "Organ",
-                                               "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright"};
+                                               "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright",
+                                               "Wub", "Bite", "Tine", "Clang", "Gnarl", "Wide", "Power", "Air"};
 const char *const EN_ACID_SOUND[EN_NSOUND] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
-                                              "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft"};
-const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy"};
+                                              "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft",
+                                              "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital"};
+const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
+                                                   "909", "Electro", "DnB", "Trap"};
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -756,6 +760,22 @@ static const kit_t KITS[EN_NKIT] = {
     {3.0f, 0.0013f, 0.28f, 1.35f, 0.25f, 1.1f, 0.35f,
      190.0f, 330.0f, 1.5f, 0.75f, 1.05f, 330.0f, 1.1f,
      1.2f, 0.5f, 0.7f, 1.0f, 300.0f, 2.2f, 1.6f, 1.0f, 0.0f, 0.0f},
+    /* 909: a punchy kick with a click, a snappy snare, a clap, ticking hats and long open ones, a tom */
+    {5.0f, 0.0015f, 0.16f, 0.7f, 0.3f, 1.1f, 0.0f,
+     188.0f, 332.0f, 1.25f, 0.75f, 0.85f, 410.0f, 0.95f,
+     1.3f, 0.7f, 0.7f, 1.2f, 150.0f, 1.0f, 0.5f, 1.1f, 0.0f, 0.0f},
+    /* Electro: a short high kick, a tight bright snare, a thin clap, glassy hats, a zappy tom */
+    {6.0f, 0.0020f, 0.09f, 0.4f, 0.5f, 1.3f, 0.0f,
+     220.0f, 400.0f, 1.5f, 0.5f, 0.6f, 300.0f, 0.4f,
+     1.6f, 0.5f, 0.5f, 1.0f, 160.0f, 1.0f, 1.2f, 1.0f, 0.0f, 0.0f},
+    /* DnB: a tight kick, a loud cracking snare, a clap, fast tiny hats, a clicky perc */
+    {5.5f, 0.0018f, 0.1f, 0.4f, 0.35f, 1.0f, 0.0f,
+     240.0f, 460.0f, 1.3f, 0.7f, 0.55f, 380.0f, 0.5f,
+     1.5f, 0.5f, 0.45f, 0.8f, 320.0f, 1.5f, 0.8f, 1.0f, 0.0f, 0.0f},
+    /* Trap: a long 808 sub with almost no click, a snare and a wide clap together, tiny hats, a bell */
+    {2.0f, 0.0006f, 0.35f, 2.0f, 0.05f, 0.6f, 0.0f,
+     200.0f, 390.0f, 1.2f, 0.6f, 0.9f, 460.0f, 1.0f,
+     1.7f, 0.4f, 0.4f, 0.9f, 460.0f, 1.48f, 1.0f, 1.1f, 0.0f, 0.0f},
 };
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */
@@ -773,10 +793,19 @@ static const struct { uint8_t osc, stabs; float fc, g; } PAD_SOUND[EN_NSOUND] = 
     {PO_ORGAN, 1, 1.3f, 1.05f},                 /* Hits: a house organ, stabbed */
     {PO_SUPER, 1, 1.5f, 1.1f},                  /* Rave: supersaw stabs */
     {PO_SINE, 0, 1.0f, 0.65f},                   /* Sine: pure, for minimal */
+    {PO_VOICES, 0, 0.7f, 0.85f},                /* Ooh: the voices, darker and rounder */
+    {PO_RHODES, 1, 1.8f, 0.9f},                 /* Wurli: an electric piano, bright, played as stabs */
+    {PO_GLASS, 1, 1.0f, 1.1f},                  /* Mallet: FM at 3.5, softer, stabbed: marimba and vibes chords */
+    {PO_STRINGS, 1, 1.9f, 0.9f},                /* Brass: saw chords stabbed, the filter wide open */
+    {PO_SUPER, 0, 0.8f, 0.85f},                 /* Fat: a supersaw with the top closed down */
+    {PO_PWM, 1, 1.5f, 1.0f},                    /* Pluck: the PWM pad as short stabs */
+    {PO_ORGAN, 0, 0.7f, 0.8f},                  /* Chapel: drawbars with the top closed: a church organ's */
+    {PO_SINE, 0, 1.6f, 0.7f},                   /* Air: a sine, open: breath */
 };
 /* the drone's: the oscillator; the saws and sub's levels, drive, cutoff (octaves) and level */
-enum { DO_SAWS, DO_REESE, DO_PULSE, DO_FM, DO_ORGAN, DO_SINE, DO_SQUARE, DO_HOOVER, DO_FIFTHS, DO_METAL, DO_SYNC };
+enum { DO_SAWS, DO_REESE, DO_PULSE, DO_FM, DO_ORGAN, DO_SINE, DO_SQUARE, DO_HOOVER, DO_FIFTHS, DO_METAL, DO_SYNC, DO_FMR };
 typedef struct { uint8_t osc; float saw, sub, drive, cut, g; } drone_snd_t;
+static const float DRONE_FR[EN_NSOUND] = {[17] = 2.0f, [18] = 3.5f, [19] = 5.19f};   /* DO_FMR's modulator ratio, by sound */
 static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_SAWS, 0.4f, 0.55f, 1.0f, 0.0f, 1.0f},   {DO_SAWS, 0.3f, 0.75f, 0.8f, -0.4f, 1.0f},
     {DO_SAWS, 0.45f, 0.5f, 2.2f, -0.3f, 1.0f},  {DO_SAWS, 0.3f, 0.8f, 3.0f, -0.6f, 0.9f},
@@ -790,11 +819,22 @@ static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_METAL, 0.5f, 0.45f, 1.3f, 0.5f, 0.95f}, /* Metal: FM at a ratio off the harmonics: clangy */
     {DO_SYNC, 0.45f, 0.5f, 1.2f, 0.3f, 0.85f},  /* Sync: a saw synced, the envelope sweeping it */
     {DO_SAWS, 0.45f, 0.4f, 1.2f, 1.2f, 0.85f},  /* Bright: the saws, the filter open */
+    {DO_SAWS, 0.35f, 0.9f, 3.5f, -0.3f, 0.9f},  /* Wub: the sub on top, hard driven, the filter low: a dubstep wobble's body */
+    {DO_FMR, 0.5f, 0.45f, 1.3f, 0.4f, 0.95f},   /* Bite: FM at 2, the envelope opening it */
+    {DO_FMR, 0.45f, 0.4f, 1.1f, 0.6f, 0.9f},    /* Tine: FM at 3.5: an electric piano's bass */
+    {DO_FMR, 0.5f, 0.4f, 1.4f, 0.5f, 0.9f},    /* Clang: FM far off the harmonics */
+    {DO_REESE, 0.55f, 0.35f, 2.6f, 0.2f, 0.9f},  /* Gnarl: the reese driven hard */
+    {DO_HOOVER, 0.3f, 0.6f, 1.0f, 0.3f, 0.9f},  /* Wide: the hoover, softer, the sub up */
+    {DO_FIFTHS, 0.45f, 0.6f, 1.8f, -0.2f, 0.9f},    /* Power: the root and its fifth, driven */
+    {DO_SINE, 0.7f, 0.2f, 1.0f, 1.0f, 1.0f},    /* Air: a soft open sine */
 };
 /* the acid's: the oscillator, its drive and level */
 enum { AO_SAW, AO_SQUARE, AO_SYNC, AO_PLUCK, AO_PWM, AO_CHIP, AO_SUB, AO_TRANCE, AO_BLEEP, AO_FIFTH, AO_BELL, AO_ORGAN,
-       AO_LASER, AO_FOLD, AO_SOFT };
+       AO_LASER, AO_FOLD, AO_SOFT, AO_FMR };
 typedef struct { uint8_t osc; float drive, g; } acid_snd_t;
+static const struct { float fr, i0, i1; uint8_t rise; } ACID_FM[EN_NSOUND] = {   /* AO_FMR: the modulator's ratio, the index (i0 + i1 * the envelope, or its opposite if rise) */
+    [16] = {4.0f, 0.05f, 1.3f, 0},   [17] = {1.0f, 0.25f, 0.9f, 0},  [18] = {5.4f, 0.04f, 0.8f, 0},  [19] = {1.0f, 0.4f, 2.0f, 1},
+    [20] = {2.76f, 0.2f, 1.8f, 0},   [21] = {3.0f, 0.5f, 1.2f, 0},   [22] = {4.01f, 0.05f, 0.5f, 0}, [23] = {1.5f, 0.35f, 1.6f, 0}};
 static const acid_snd_t ACID_SOUND[EN_NSOUND] = {
     {AO_SAW, 1.0f, 1.0f}, {AO_SQUARE, 1.0f, 1.0f}, {AO_SAW, 1.5f, 1.45f}, {AO_SYNC, 1.1f, 0.85f},
     {AO_PLUCK, 1.0f, 1.15f}, {AO_PWM, 1.0f, 1.0f}, {AO_CHIP, 1.2f, 0.7f}, {AO_SUB, 1.1f, 0.95f},
@@ -806,6 +846,14 @@ static const acid_snd_t ACID_SOUND[EN_NSOUND] = {
     {AO_LASER, 1.0f, 1.0f},                     /* Laser: a sine, its pitch falling with the envelope */
     {AO_FOLD, 1.1f, 1.0f},                      /* Fold: a sine folded over, more as the envelope opens */
     {AO_SOFT, 0.9f, 0.95f},                      /* Soft: a triangle, round, for quiet arps */
+    {AO_FMR, 1.0f, 1.0f},      /* Marimba: FM at 4, the index falling fast */
+    {AO_FMR, 1.0f, 1.05f},     /* E.Piano: FM at 1: a Rhodes' bark and bell */
+    {AO_FMR, 1.0f, 1.0f},      /* Kalimba: FM at 5.4: a thumb piano */
+    {AO_FMR, 1.3f, 0.95f},      /* Brass: FM at 1, the index rising as the note settles */
+    {AO_FMR, 1.0f, 0.95f},     /* Gong: FM at 2.76: a bar's partials */
+    {AO_FMR, 1.3f, 1.0f},       /* Clav: FM at 3, bitten */
+    {AO_FMR, 1.0f, 1.0f},     /* Vibes: FM at 4, soft */
+    {AO_FMR, 1.0f, 1.0f},      /* Digital: FM at 1.5: a DX-style bell */
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
@@ -3355,7 +3403,7 @@ static void render_bass(uint32_t n)
          (1.0f / EN_SR);                        /* -9, 0, +9 cents (Reese and Hoover: 24; Fifths: a fifth) */
     i1 = f * (1.0f / EN_SR);
     i2 = f * (osc == DO_REESE || osc == DO_HOOVER ? 1.0140f : 1.00521f) * (1.0f / EN_SR);
-    mi = osc == DO_METAL ? i1 * 1.4142f : i1 * (1.5f + 2.5f * bass.env);   /* Metal's modulator; Sync's slave */
+    mi = osc == DO_METAL ? i1 * 1.4142f : osc == DO_FMR ? i1 * DRONE_FR[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0] : i1 * (1.5f + 2.5f * bass.env);   /* Metal's and FMR's modulator; Sync's slave */
     for (j = 0; j < n; j++) {
         float x;
         if (!(j & 31u)) {                       /* the filter, every 32 samples */
@@ -3407,6 +3455,9 @@ static void render_bass(uint32_t n)
         }
         case DO_FIFTHS:                         /* the root and the fifth (p0 runs at 3/2) */
             x = (blep_saw(p1, i1) + 0.75f * blep_saw(p0, i0)) * dsaw * 1.1f;
+            break;
+        case DO_FMR:                            /* FM at the sound's own ratio, the envelope opening the index */
+            x = sine_any(p1 + (0.25f + 1.5f * bass.env) * sine(mp)) * dsaw * 2.0f;
             break;
         case DO_METAL:                          /* FM, the modulator at 1.41: off the harmonics */
             x = sine_any(p1 + (0.3f + 1.6f * bass.env) * sine(mp)) * dsaw * 2.0f;
@@ -3551,6 +3602,15 @@ static void render_acid(uint32_t n)
         case AO_FOLD:                           /* a sine through a sine: it folds over as the envelope opens */
             x = sine_any((0.3f + 1.2f * acid.env) * sine(ph)) * 1.1f;
             break;
+        case AO_FMR: {                          /* FM at the sound's ratio: marimba, piano, kalimba, brass, gong, clav, vibes */
+            const int sn = (unsigned)par[P_AC_WAVE] < EN_NSOUND ? par[P_AC_WAVE] : 0;
+            const float idx = ACID_FM[sn].i0 + ACID_FM[sn].i1 * (ACID_FM[sn].rise ? 1.0f - acid.env : acid.env);
+            x = sine_any(ph + idx * sine(ps)) * 1.2f;
+            ps += inc * ACID_FM[sn].fr;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            break;
+        }
         case AO_SOFT:                           /* a triangle */
             x = (ph < 0.5f ? 4.0f * ph - 1.0f : 3.0f - 4.0f * ph) * 1.2f;
             break;
