@@ -2068,19 +2068,82 @@ static int q16(float x) { return x <= 0.0f ? 0 : x >= 1.0f ? 16 : (int)(x * 16.0
 
 static const char *const MASCOT[20];
 static uint16_t mascot_color(char ch);
-/* the mascot, one pixel a pixel, hopping with the kick; asleep in a breakdown (eyes shut), wide awake in a build (shaking) */
-static void draw_mascot(int32_t x, int32_t y, int hop, int sleepy)
+/* the mascot, one pixel a pixel, on a spring like the big dancer's (viz.c), smaller: a hop on the kick (the head lags, the coils spread
+ * as he rises, he squashes on landing and wobbles), a squash on the snare, a bigger jump on the drop; asleep in a breakdown (eyes
+ * shut, sagging), wide awake in a build (shaking) */
+static struct {
+    float dh, dhv, lift, lv, kprev, sprev;     /* the head's spring (px, + up) and its speed; the hop's height and speed */
+    uint32_t t;
+    uint8_t sec;
+} hm;
+static void mascot_step(void)
+{
+    const uint32_t now = plat_ms();
+    float dt = (float)(now - hm.t) * 0.001f;
+    int s;
+    const int kedge = en_drum_glow[0] > 0.6f && hm.kprev <= 0.6f, sedge = en_drum_glow[1] > 0.6f && hm.sprev <= 0.6f;
+    hm.t = now;
+    hm.kprev = en_drum_glow[0], hm.sprev = en_drum_glow[1];
+    if (dt > 0.1f)
+        dt = 0.1f;
+    if (dt <= 0.0f)
+        return;
+    if (!en_playing) {
+        hm.lift = hm.lv = 0.0f;
+    } else {
+        if (en_sec != hm.sec) {                          /* the drop: a big jump */
+            if (en_sec == EN_SEC_GROOVE && hm.sec != EN_SEC_GROOVE && hm.lift <= 0.0f) {
+                hm.lv = 52.0f;
+                hm.lift = 0.01f;
+                hm.dhv -= 40.0f;
+            }
+            hm.sec = en_sec;
+        }
+        if (kedge && hm.lift <= 0.0f && en_sec == EN_SEC_GROOVE) {
+            hm.lv = 36.0f;
+            hm.lift = 0.01f;
+            hm.dhv -= 32.0f;                              /* anticipation: the head lags */
+        }
+        if (sedge && en_sec == EN_SEC_GROOVE && hm.lift <= 0.0f)
+            hm.dhv -= 55.0f;                              /* a stomp on the snare: squashed, then up */
+    }
+    for (s = 0; s < 4; s++) {
+        const float h = dt * 0.25f;
+        float tg;
+        if (hm.lift > 0.0f || hm.lv > 0.0f) {
+            hm.lv -= 200.0f * h;
+            hm.lift += hm.lv * h;
+            if (hm.lift <= 0.0f && hm.lv < 0.0f) {
+                hm.dhv += hm.lv * 2.3f;                   /* landing: squashed */
+                hm.lift = 0.0f;
+                hm.lv = 0.0f;
+            }
+        }
+        tg = hm.lift > 0.0f ? fm_fabsf(hm.lv) * 0.11f : 0.0f;       /* stretched by the speed */
+        if (en_playing && en_sec == EN_SEC_BREAK)
+            tg = -2.0f;
+        hm.dhv += (-300.0f * (hm.dh - tg) - 10.0f * hm.dhv) * h;
+        hm.dh += hm.dhv * h;
+    }
+    hm.dh = fm_clampf(hm.dh, -4.0f, 6.0f);
+    hm.lift = fm_clampf(hm.lift, 0.0f, 5.0f);
+}
+static void draw_mascot(int32_t x, int32_t y, int sleepy)
 {
     int r, c;
-    for (r = 0; r < 20; r++)
+    for (r = 0; r < 20; r++) {
+        /* rows 0..10 the head, 11..13, 14..16 and 17..19 the coils: each shifted by its share of the stretch */
+        const int grp = r <= 10 ? 0 : r <= 13 ? 1 : r <= 16 ? 2 : 3;
+        const int32_t dy = (int32_t)(hm.lift + hm.dh * (float)(3 - grp) * (1.0f / 3.0f) + 0.5f);
         for (c = 0; c < 23; c++) {
             char ch = MASCOT[r][c];
             if (ch == '.')
                 continue;
             if (ch == 'Y' && sleepy)
                 ch = 'K';
-            cv_pset(x + c, y + r - hop, ch == 'K' || ch == 'T' ? K_LINE : mascot_color(ch));
+            cv_pset(x + c, y + r - dy, ch == 'K' || ch == 'T' ? K_LINE : mascot_color(ch));
         }
+    }
 }
 
 /* the header: the piece in a tag, its root and mode; on the right, the tempo with a beat light (a play
@@ -2089,8 +2152,12 @@ static void draw_mascot(int32_t x, int32_t y, int hop, int sleepy)
 static void draw_header(void)
 {
     char t[24];
-    int msg = plat_ms() < ui.msg_until, hop;
-    uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
+    int msg = plat_ms() < ui.msg_until;
+    uint32_t h;
+    mascot_step();
+    if (ui.frame % 2u)                          /* (the spring moves every frame; the header is redrawn thirty times a second) */
+        return;
+    h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
                            en_playing | (uint32_t)en_sec << 2 | (uint32_t)en_sec_req << 9 | (uint32_t)msg << 5 |
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
@@ -2098,8 +2165,8 @@ static void draw_header(void)
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
-    hop = en_playing ? (int)(fm_clampf(en_drum_glow[0] * 1.5f, 0.0f, 1.0f) * 3.0f + 0.5f) : 0;
-    h = hash(h, (uint32_t)hop | (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 4);
+    h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
+                    (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 12);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -2109,7 +2176,7 @@ static void draw_header(void)
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
     } else {
         int32_t x = 207, w;
-        draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 5, hop, en_playing && en_sec == EN_SEC_BREAK);
+        draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 6, en_playing && en_sec == EN_SEC_BREAK);
         if (project_pending()) {                   /* not yet in flash (the theme, Tune, MIDI out: two seconds on) */
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
