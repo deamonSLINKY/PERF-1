@@ -111,3 +111,4 @@ int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_
 static volatile uint32_t audio_cpu_pct, audio_xruns;
 uint32_t plat_cpu_pct(void) { return audio_cpu_pct; }
 uint32_t plat_xruns(void) { return audio_xruns; }
+uint32_t plat_core2(void) { return EN_CORE2 ? (fm1_core1_online() ? 1u : 2u) : 0u; }

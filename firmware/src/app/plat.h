@@ -48,3 +48,4 @@ enum { OBJ_PROJ, OBJ_PANEL, OBJ_NOBJ };
 /* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
 uint32_t plat_cpu_pct(void);
 uint32_t plat_xruns(void);
+uint32_t plat_core2(void);                  /* the second core: 0 not in this build, 1 reverbing, 2 not (lost, or barred after a crash) */

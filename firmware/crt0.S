@@ -24,3 +24,19 @@ _start:
 	ssp = _sstack_top
 	call fm1_cstart
 	goto .
+
+/* CPU1 entry (experimental second core, EN_CORE2), after cpu.a/startup.S.o: install separate
+ * supervisor/user stacks, then return from the startup interrupt into the RAM polling loop. No
+ * application interrupt is enabled on this core. */
+#if EN_CORE2
+	.section .text.core1,"ax",@progbits
+	.globl fm1_core1_start
+fm1_core1_start:
+	cli
+	icfg = 0
+	usp = _cpu1_ustack_top
+	sp = _cpu1_sstack_top
+	ssp = _cpu1_sstack_top
+	reti = fm1_core1_main
+	rti
+#endif

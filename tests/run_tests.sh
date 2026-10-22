@@ -26,6 +26,9 @@ run uac sh -c "$CC -O2 -w -Ifirmware/src -Ifirmware/hal -o $OUT/uac_test tests/h
 run trs sh -c "$CC -O2 -w -Ifirmware/src -Ifirmware/hal -o $OUT/trs_test tests/host/trs_test.c && $OUT/trs_test"
 run amb sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -DEN_HOST -Ifirmware/src/dsp \
     -o $OUT/amb_test tests/host/amb_test.c firmware/src/dsp/amb.c -lm && $OUT/amb_test"
+run core2 sh -c "$CC -O2 -ffp-contract=off -std=c11 -Wall -Wextra -DEN_HOST -Ifirmware/src/dsp -o $OUT/core2_test tests/host/core2_test.c firmware/src/dsp/amb.c -lm -pthread && \
+    s=\$($OUT/core2_test 0) && d=\$($OUT/core2_test 1) && t=\$($OUT/core2_test 2) && m=\$($OUT/core2_test 3) && $OUT/core2_test 4 && \
+    [ \"\${s#* }\" = \"\${d#* }\" ] && [ \"\${s#* }\" = \"\${t#* }\" ] && [ \"\${s#* }\" = \"\${m#* }\" ] && echo \$s \$d \$t \$m"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)
 if [ -f build/amb.fwsc ]; then

@@ -4,7 +4,7 @@
 /* AMB-1 on the FM-1 (from X0X's): boot (WDT first, boot-loop guard, guards), LCD, input (TIMER5
  * 10 kHz), audio (ALNK0), USB; then the main loop: UI at ~60 frames/s, input polled in between. */
 extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
-extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[];
+extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[], _dsp_start[], _dsp_end[], _dsp_load[];
 
 /* --------------------------------------------------------------- audio --- */
 /* Felucca's 256-frame halves (5.8 ms): AMB-1's render is light, and a strum wants the short latency */
@@ -32,6 +32,7 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 #if FELUCCA_UAC
     uac_render_start();
 #endif
+    fm1_core1_check();                              /* nothing outstanding: retire a CPU1 that faulted or misread */
     {
         uint32_t k;
         for (k = 0; k < HALF_FRAMES; k += REND_FRAMES) {
@@ -143,6 +144,9 @@ static void fm1_fault(const fm1_crash_t *c)
 {
     char b[12];
     uint32_t t0;
+    if (fm1_core1_online())
+        fm1_core1_bar_set();                        /* CPU1's data can go bad too: this boot and the next run on one core */
+    fm1_core1_stop();
     fm1_audio_stop();
     lcd_fill(0, 0, 240, 240, RGB(160, 0, 0));
     draw_text_box(0, 8, 240, &FONT_S, "PERF-1 CRASH", C_WHITE, 1);
@@ -274,6 +278,9 @@ static void fm1_main(void)
     panel_init();
     led_pos_init();
     en_init();
+#if EN_CORE2
+    en_core2_attach(fm1_core1_submit, fm1_core1_join);   /* the reverb runs on CPU1 while it is online */
+#endif
     project_start(plat_seed());                     /* a piece at random, a little changed */
     project_apply();
     audio_init();
@@ -360,6 +367,7 @@ void fm1_cstart(void)
     src = fm1_boot.rst_src;
     wdt = fm1_boot.wdt_con;
     fm1_wdt_arm(0x0D);
+    fm1_core1_stop();                               /* a CPU1 left running by the last boot: hold it before RAM is cleared */
     if (bootguard.magic != BOOTGUARD_MAGIC) {
         bootguard.magic = BOOTGUARD_MAGIC;
         bootguard.failed = 0;
@@ -383,8 +391,20 @@ void fm1_cstart(void)
         *d = *s;
     for (s = _rt_load, d = _rt_start; d < _rt_end; s++, d++)
         *d = *s;
+    for (s = _dsp_load, d = _dsp_start; d < _dsp_end; s++, d++)
+        *d = *s;                                    /* CPU1's worker loop (EN_CORE2) */
     fm1_mailbox_clear();
+#if EN_CORE2
+    fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS);
+    /* One core after a crash (CPU1's data can go bad where no check reaches), in safe mode, or after CPU1
+     * was retired: the bar stays until power-off. CPU1 starts through mask ROM before it reaches our RAM
+     * worker, so the instruction-fetch limits come after it. */
+    if (!fm1_core1_barred() && bootguard.failed == 0u)
+        fm1_core1_boot();
+    fm1_guard_enable(FM1_GUARD_PC);
+#else
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS | FM1_GUARD_PC);
+#endif
     safe_mode = (uint8_t)(p3 >> 8);
     fm1_boot.p3_rst = (uint8_t)p3;
     fm1_boot.rst_src = src;

@@ -1938,11 +1938,13 @@ static void tick(void)
  * are for 29761 Hz; DS() scales them to 44.1 kHz. */
 #define DS(n) (((n) * 14818 + 5000) / 10000)          /* 44100 / 29761 */
 #define PRE_N 1323                                   /* 30 ms */
+#define PRE_D (PRE_N - 1)                            /* the predelay in samples: the tank reads the input this old */
+#define PRE_LP (PRE_N + 256)                         /* the line is a chunk longer: a chunk is written while the last one's tank reads */
 #define EXC DS(16)
 enum { L_PRE, L_IN1, L_IN2, L_IN3, L_IN4, L_APL, L_D1L, L_AP2L, L_D2L, L_APR, L_D1R, L_AP2R, L_D2R, L_N };
-static const int DL_LEN[L_N] = {PRE_N, DS(142), DS(107), DS(379), DS(277), DS(672) + EXC + 2, DS(4453), DS(1800),
+static const int DL_LEN[L_N] = {PRE_LP, DS(142), DS(107), DS(379), DS(277), DS(672) + EXC + 2, DS(4453), DS(1800),
                                 DS(3720), DS(908) + EXC + 2, DS(4217), DS(2656), DS(3163)};
-#define DL_TOTAL (PRE_N + DS(142) + DS(107) + DS(379) + DS(277) + DS(672) + DS(4453) + DS(1800) + DS(3720) + DS(908) + \
+#define DL_TOTAL (PRE_LP + DS(142) + DS(107) + DS(379) + DS(277) + DS(672) + DS(4453) + DS(1800) + DS(3720) + DS(908) + \
                   DS(4217) + DS(2656) + DS(3163) + 2 * (EXC + 2))
 static float pl_buf[DL_TOTAL] EN_POOL;
 typedef struct {
@@ -1977,11 +1979,10 @@ static inline float allpass_mod(dl_t *d, float len, float x, float g)
     return z + g * v;
 }
 
-static inline void reverb(float in, float *ol, float *or_)
+/* The tank, one sample: x is the input after the predelay. */
+static inline void reverb_tank(float x, float *ol, float *or_)
 {
-    float x, a, b, fb_l = tap(&dl[L_D2R], DS(3163)), fb_r = tap(&dl[L_D2L], DS(3720));
-    push(&dl[L_PRE], in);
-    x = tap(&dl[L_PRE], PRE_N);
+    float a, b, fb_l = tap(&dl[L_D2R], DS(3163)), fb_r = tap(&dl[L_D2L], DS(3720));
     pl_bw += 0.6f * (x - pl_bw);
     x = allpass(&dl[L_IN1], DS(142), pl_bw, 0.75f);
     x = allpass(&dl[L_IN2], DS(107), x, 0.75f);
@@ -2010,6 +2011,35 @@ static inline void reverb(float in, float *ol, float *or_)
     *or_ = 0.6f * (tap(&dl[L_D1L], DS(353)) + tap(&dl[L_D1L], DS(3627)) - tap(&dl[L_AP2L], DS(1228)) +
                    tap(&dl[L_D2L], DS(2673)) - tap(&dl[L_D1R], DS(2111)) - tap(&dl[L_AP2R], DS(335)) -
                    tap(&dl[L_D2R], DS(121)));
+}
+
+/* The reverb as a job. The input is written to the predelay line a chunk at a time (render_chunk); the tank
+ * reads it PRE_D samples old, so a chunk's tank needs none of that chunk's input: it can start with the chunk and run
+ * on the other core (en_core2_attach) while this one renders the voices, the drums and the echoes. Same job, same
+ * result, whichever core runs it. The line's slots a job reads and the slots being written are apart (PRE_LP). */
+#define RV_MAX 256
+typedef struct { int n, r0; } rv_job_t;
+static rv_job_t rv_job;
+static float rv_wl[RV_MAX], rv_wr[RV_MAX];           /* the tank's output for the chunk */
+static int (*c2_submit)(void (*)(void *), void *);
+static int (*c2_join)(void);
+uint32_t en_c2_jobs, en_c2_lost;
+void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void))
+{
+    c2_submit = submit;
+    c2_join = join;
+}
+static void reverb_job(void *p)
+{
+    const rv_job_t *c = (const rv_job_t *)p;
+    const float *pre = dl[L_PRE].b;
+    const int np = dl[L_PRE].n;
+    int r = c->r0, j;
+    for (j = 0; j < c->n; j++) {
+        reverb_tank(pre[r], &rv_wl[j], &rv_wr[j]);
+        if (++r >= np)
+            r = 0;
+    }
 }
 
 static void plate_init(void)
@@ -4492,6 +4522,7 @@ static void render_drums(uint32_t n)
     render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC]);
 }
 
+_Static_assert(BLK <= RV_MAX && RV_MAX <= 256, "a chunk is at most the predelay line's extra length");
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
@@ -4500,8 +4531,19 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
     const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : 0;
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
+    int rv_c2;
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
+    {   /* the tank for this chunk starts now (it reads input older than this chunk's), here or on the other core */
+        const dl_t *pd = &dl[L_PRE];
+        rv_job.n = (int)n;
+        rv_job.r0 = pd->i >= PRE_D ? pd->i - PRE_D : pd->i - PRE_D + pd->n;
+        rv_c2 = c2_submit && c2_submit(reverb_job, &rv_job);
+        if (rv_c2)
+            en_c2_jobs++;
+        else
+            reverb_job(&rv_job);
+    }
     render_pad(n);
     render_bass(n);
     render_acid(n);
@@ -4554,12 +4596,22 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         render_drums(n);                        /* (the kick sets duck_env for the next chunk) */
     }
     duck_env = fm_flush(de);
-    for (j = 0; j < n; j++) {
-        float wl, wr, l, r, el, er, xl, xr;
+    for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
+        float el, er, xl, xr;
         echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]), &el, &er, &xl, &xr);
-        reverb((rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f, &wl, &wr);
-        l = (mixl[j] + (0.75f * el + 0.15f * xl + 1.3f * wl) * dk[j]) * 0.36f;
-        r = (mixr[j] + (0.75f * er + 0.15f * xr + 1.3f * wr) * dk[j]) * 0.36f;
+        push(&dl[L_PRE], (rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f);
+        mixl[j] = (mixl[j] + (0.75f * el + 0.15f * xl) * dk[j]) * 0.36f;
+        mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;
+        dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
+    }
+    if (rv_c2 && !c2_join()) {                  /* the other core was lost: this chunk has no reverb, and the tank starts over */
+        en_c2_lost++;
+        for (j = 0; j < n; j++)
+            rv_wl[j] = rv_wr[j] = 0.0f;
+        plate_init();
+    }
+    for (j = 0; j < n; j++) {
+        float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
         out[2 * j] = (int32_t)(fm_tanhf(l * gain) * 8300000.0f);
         out[2 * j + 1] = (int32_t)(fm_tanhf(r * gain) * 8300000.0f);

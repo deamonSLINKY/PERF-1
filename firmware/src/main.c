@@ -8,6 +8,7 @@
 #include "fm1_sys.h"
 #include "fm1_irq.h"
 #include "fm1_guard.h"
+#include "fm1_core1.h"
 #include "fm1_input.h"
 #include "fm1_timer.h"
 #include "fm1_audio.h"

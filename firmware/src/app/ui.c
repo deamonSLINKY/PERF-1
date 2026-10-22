@@ -2609,7 +2609,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ARP: L("THE ACID; AGAIN: ITS ENV,"); L("ITS LINE, THEN THE PLUCK"); L("(THE COUNTER-MELODY)"); L("SEL + ALGO: ITS SOUND"); break;
     case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
-        static char cpu[24];
+        static char cpu[32];
         uint32_t c = plat_cpu_pct(), x = plat_xruns(), j = 4;
         cpu[0] = 'C', cpu[1] = 'P', cpu[2] = 'U', cpu[3] = ' ';
         itoa_u(c, cpu + j);
@@ -2618,6 +2618,11 @@ static int help_lines(int b, const char *l[HELP_LINES])
         cpu[j++] = '%', cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'X', cpu[j++] = 'R', cpu[j++] = 'U', cpu[j++] = 'N', cpu[j++] = 'S',
         cpu[j++] = ' ';
         itoa_u(x > 9999u ? 9999u : x, cpu + j);
+        if (plat_core2()) {                      /* the experimental build: C2, the reverb on the second core; C1, it fell back to one */
+            while (cpu[j])
+                j++;
+            cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'C', cpu[j++] = plat_core2() == 1u ? '2' : '1', cpu[j] = 0;
+        }
         L("GLOBAL");
         L("ROOT, THEME, TUNE, MIDI OUT");
         L("+ SEL: REMOTE (BROWSER)");
@@ -3436,7 +3441,7 @@ static void draw_main(void)
     if (ui.help) {
         h = hash(0x48454C50u, ui.help | (uint32_t)ui.theme << 8);
         if (ui.help - 1 == B_GLO)                /* the load, as it changes */
-            h = hash(h, plat_cpu_pct() | plat_xruns() << 8);
+            h = hash(h, plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);

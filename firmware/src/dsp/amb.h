@@ -108,6 +108,11 @@ void en_param_text(int i, int v, char *buf);   /* the value as the screen shows 
 
 /* commands (main loop -> render) */
 void en_init(void);
+/* The experimental second core: the plate reverb as a job another core can run (see render_chunk). submit runs
+ * fn(ctx) there and returns 1, or returns 0 (run it here); join returns 1 when the job is done, 0 when that core was
+ * lost (its results are dropped, the reverb restarts). Without it, or after a loss, the same job runs in place. */
+void en_core2_attach(int (*submit)(void (*fn)(void *), void *ctx), int (*join)(void));
+extern uint32_t en_c2_jobs, en_c2_lost;          /* chunks reverbed on the other core; times it was lost */
 void en_set(int param, int value);
 void en_pool(uint32_t pool);                   /* the scale, relative to the root (bit 0 always set) */
 void en_play(int on);                          /* play / stop (the tails ring on) */
