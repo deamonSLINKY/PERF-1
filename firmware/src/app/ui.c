@@ -2900,7 +2900,16 @@ static void draw_mix(void)
             c[n++] = *pn++;
         itoa_u(ui.dj_n, c + n);
     } else {
+        int n = 4;
         itoa_u(plat_cpu_pct(), c + 4);
+        while (c[n])
+            n++;
+        c[n++] = ' ', c[n++] = ' ', c[n++] = 'X', c[n++] = 'R', c[n++] = ' ';
+        itoa_u(plat_xruns() > 999u ? 999u : plat_xruns(), c + n);
+        while (c[n])
+            n++;
+        if (plat_core2())                        /* the experimental build: C2, the reverb on the second core; C1, it fell back to one */
+            c[n++] = ' ', c[n++] = ' ', c[n++] = 'C', c[n++] = plat_core2() == 1u ? '2' : '1', c[n] = 0;
     }
     cv_text(118, 1, &FONT_XS, c, K_DIM);
     for (k = 0; k < NKEYS; k++) {
@@ -3401,7 +3410,7 @@ static void draw_main(void)
         return;
     }
     if (mix_show()) {                            /* GLO held: the track mix */
-        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct()),
+        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24),
                  (uint32_t)ui.scene_set | (uint32_t)ui.dj_on << 4 | (uint32_t)ui.dj_len << 5 | (uint32_t)ui.dj_piece << 7 |
                      (uint32_t)ui.dj_phase << 8 | (uint32_t)ui.dj_n << 12);
         if (h != ui.sig[1]) {
