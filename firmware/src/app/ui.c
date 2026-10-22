@@ -51,7 +51,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 17
+#define NFXP 18
 static const char *const RATE_NAME[6] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
@@ -64,6 +64,7 @@ static const char *const SREACH_NAME[4] = {"1/16", "1/8", "1/4", "1/2"};        
 static const char *const SSTYLE_NAME[2] = {"BABY", "PULL"};
 static const char *const FGRAIN_NAME[4] = {"1", "2", "3", "4"};                                  /* the freeze's grains */
 static const char *const RVLEN_NAME[3] = {"1/2 BEAT", "1 BEAT", "2 BEATS"};                      /* the reverse swell */
+static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
 static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
@@ -114,6 +115,7 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
+    {"DROP", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
@@ -312,6 +314,8 @@ static struct {
     uint8_t dj_on, dj_len, dj_piece;   /* the auto-DJ: on; its groove length (8, 16, 32, 64 bars); a new piece each round */
     uint8_t dj_break, dj_fillon;       /* its breakdown (0 short: 4 bars, 1 half the groove, 2 as long); a drum fill before it */
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
+    uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
+    uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
     uint16_t dj_n;                     /* bars in the phase */
     uint64_t fx_mask;                  /* the effects held (and locked), as last sent */
@@ -532,6 +536,35 @@ static void mix_key(int k)
     en_trk(*m, *s);
 }
 
+/* the MOOD macro (the PERFORM screen, the ALGORITHM dial): 0 chill .. 100 peak, 50 leaves the piece as it is. Each setting listed
+ * moves by its share of the distance from 50: the engine is given the moved value; the piece (proj.par), the screens and the
+ * store keep their own. A setting turned by hand while the mood is off 50 is moved the same way. */
+static const struct {
+    uint8_t p;
+    int8_t d;                                  /* the change at 0 (minus this) and at 100 (plus this) */
+} MOOD[] = {{P_AC_DENS, 30}, {P_AC_CUT, 25}, {P_LANE_LVL(3), 25}, {P_LANE_LVL(4), 20}, {P_LANE_LVL(5), 25}, {P_BRIGHT, 20},
+            {P_DR_CUT, 20},  {P_DRIVE, 20},  {P_REVERB, -15},     {P_ECHO, -10},        {P_EVOLVE, 20},       {P_PULSE, 10}};
+#define NMOOD (int)(sizeof MOOD / sizeof MOOD[0])
+static int mood_val(int p, int v)
+{
+    int i;
+    if (ui.mood == 50)
+        return v;
+    for (i = 0; i < NMOOD; i++)
+        if (MOOD[i].p == p) {
+            const en_param_t *pi = en_param_info(p);
+            v += MOOD[i].d * (ui.mood - 50) / 50;
+            return v < pi->lo ? pi->lo : v > pi->hi ? pi->hi : v;
+        }
+    return v;
+}
+static void mood_apply(void)
+{
+    int i;
+    for (i = 0; i < NMOOD; i++)
+        en_set(MOOD[i].p, mood_val(MOOD[i].p, proj.par[MOOD[i].p]));
+}
+
 /* the knobs now: the page's, or with the FX menu on, the FX knobs */
 static int view_knob(int i)
 {
@@ -568,7 +601,7 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
 }
 static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
 {
-    return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : &ui.dj_fillon;
+    return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : &ui.key_set;
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -743,7 +776,7 @@ static void knob_set(int k, int v)
     if (v == proj.par[p])
         return;
     proj.par[p] = (int16_t)v;
-    en_set(p, v);
+    en_set(p, mood_val(p, v));
     if (en_par_global(p))
         project_globals();                       /* the player's: stored at once */
     else
@@ -909,6 +942,32 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
     }
 }
 
+/* the key change on the drop (the DROP page: SAME, +2, +3, +5, +7 semitones): when a breakdown or a build gives way to the groove, the
+ * root rises for the round; the next breakdown (or a stop, or another piece) puts it back. The engine alone moves; the piece's
+ * own root (the Global page) stays. */
+static void key_tick(void)
+{
+    static const uint8_t SH[5] = {0, 2, 3, 5, 7};
+    const int sec = en_playing ? en_sec : EN_SEC_GROOVE, sh = SH[ui.key_set % 5];
+    if (sec != ui.sec_last) {
+        if (sec == EN_SEC_GROOVE && ui.sec_last != EN_SEC_GROOVE && sh && en_playing && !ui.key_on) {
+            char t[8] = "+0";
+            ui.key_on = 1;
+            en_set(P_ROOT, (proj.par[P_ROOT] + sh) % 12);
+            t[1] = (char)('0' + sh);
+            say("KEY CHANGE", t);
+        } else if (sec == EN_SEC_BREAK && ui.key_on) {
+            ui.key_on = 0;
+            en_set(P_ROOT, proj.par[P_ROOT]);
+        }
+        ui.sec_last = (uint8_t)sec;
+    }
+    if (!en_playing && ui.key_on) {
+        ui.key_on = 0;
+        en_set(P_ROOT, proj.par[P_ROOT]);
+    }
+}
+
 /* ------------------------------------------------------------- the pool --- */
 static void toggle_note(int pc)                 /* a key: its note in or out of the scale */
 {
@@ -944,7 +1003,9 @@ static void caps(char *d, const char *s, int n);
 static void set_piece(int i)                    /* the piece playing kept as it is; piece i as it was left */
 {
     project_piece(i);
+    ui.key_on = 0;                               /* (project_apply puts the key back) */
     project_apply();
+    mood_apply();
     en_seed(plat_ms());
     en_regrow();
     {
@@ -986,7 +1047,9 @@ static void genre_step(int d)
 {
     const int g = (proj.genre + d + EN_NGENRE) % EN_NGENRE;
     project_set_genre(g);
+    ui.key_on = 0;
     project_apply();
+    mood_apply();
     en_seed(plat_ms());
     en_regrow();
     ui.piece_q = 0;
@@ -1038,6 +1101,7 @@ static void piece_factory(void)                 /* Global, SAVE held: back to th
     char t[12] = "FACTORY ";
     project_piece_factory();
     project_apply();
+    mood_apply();
     en_regrow();
     caps(t + 8, piece_name(proj.piece), 4);
     store_now(t);
@@ -1682,7 +1746,14 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {
-        if (btn >> B_SEL & 1u) {               /* shift: the sound of the voice on screen (drums: the kit) */
+        if (ui.view == V_PERF && !ui.fx_menu && !(btn >> B_SEL & 1u)) {   /* the perform screen: the mood */
+            int m = ui.mood + 2 * e;
+            char t[8];
+            ui.mood = (uint8_t)(m < 0 ? 0 : m > 100 ? 100 : m);
+            mood_apply();
+            itoa_u(ui.mood, t);
+            say("MOOD", t);
+        } else if (btn >> B_SEL & 1u) {               /* shift: the sound of the voice on screen (drums: the kit) */
             ui.btn_used |= 1u << B_SEL;
             shift_sound(e > 0 ? 1 : -1);
         } else {
@@ -1930,7 +2001,7 @@ static void draw_header(void)
                            en_playing | (uint32_t)en_sec << 2 | (uint32_t)en_sec_req << 9 | (uint32_t)msg << 5 |
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
-                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 |
+                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
@@ -1965,6 +2036,11 @@ static void draw_header(void)
         if (ui.fxk[0] || ui.fxk[1] || ui.fxk[2] || ui.fxk[3]) {   /* an FX knob off its home: said, so a forgotten filter is not a mystery */
             x -= text_w(&FONT_XS, "KNOB");
             cv_text(x, 8, &FONT_XS, "KNOB", K_FROST);
+            x -= 10;
+        }
+        if (ui.key_on) {                          /* the drop's key change is on */
+            x -= text_w(&FONT_XS, "KEY");
+            cv_text(x, 8, &FONT_XS, "KEY", K_ACC);
             x -= 10;
         }
         if (ui.scene_q) {                         /* a scene waiting for the bar */
@@ -2360,7 +2436,15 @@ static void draw_perf(void)
         if (!n)
             cv_text(26, 110, &FONT_XS, "NONE", K_DIM);
     }
-    cv_text(6, 126, &FONT_XS, "KEYS: MIX   HOLD GLO: KEY MAP", K_DIM);
+    {   /* the mood: a bar, the middle marked (the ALGORITHM dial) */
+        char t[8];
+        cv_text(6, 126, &FONT_XS, "MOOD", K_DIM);
+        cv_rect(46, 131, 150, 5, K_LINE);
+        cv_rect(46, 131, ui.mood * 150 / 100, 5, ui.mood > 50 ? K_ACC : K_PAD);
+        cv_rect(46 + 74, 128, 2, 11, K_TEXT);
+        itoa_u(ui.mood, t);
+        cv_text(204, 126, &FONT_XS, t, K_TEXT);
+    }
 }
 
 /* SEL held alone (after 0.4 s): what the shift does, on this page */
@@ -2519,7 +2603,7 @@ static void draw_main(void)
     if (ui.view == V_PERF) {
         h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.scene_set << 14 | (uint32_t)ui.dj_on << 18 |
                         (uint32_t)ui.dj_phase << 19 | (uint32_t)ui.dj_len << 21 | (uint32_t)en_sec << 23 | (uint32_t)en_sec_req << 25);
-        h = hash(h, h32(ui.fx_mask) | (uint32_t)ui.scene_q << 28);
+        h = hash(h, h32(ui.fx_mask) | ((uint32_t)ui.scene_q << 28 ^ (uint32_t)ui.mood << 8 ^ (uint32_t)ui.key_on << 16));
         h = hash(h, h32(ui.fx_lock) ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
         for (i = 0; i < EN_NLANE; i++)
             h = hash(h, (uint32_t)q16(en_drum_glow[i]));
@@ -2904,6 +2988,7 @@ void ui_init(void)
         ui.dj_len = 1;                         /* the auto-DJ: 16 bars of groove, a half-length breakdown, a fill before it */
         ui.dj_break = 1;
         ui.dj_fillon = 1;
+        ui.mood = 50;                          /* the mood macro: the middle leaves the piece as it is */
     }
     ui.touched = -1;
     ui.boot_t = plat_ms();
@@ -2966,6 +3051,7 @@ void ui_frame(void)
     input();
     scene_tick();
     dj_tick();
+    key_tick();
     autosave();
     if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
         runner_update();

@@ -1273,9 +1273,10 @@ static void ac_regrow(void)
     ac_publish();
 }
 
-static void ac_mutate(void)                     /* the loop's end: Mutate re-rolls a few steps */
+static void ac_mutate(void)                     /* the loop's end: Mutate (a deja-vu knob) re-rolls steps: 0 holds the line, 100 renews it every loop */
 {
-    float m = (float)par[P_AC_MUT] * 0.0025f + 0.05f * evolve;
+    const float k = (float)par[P_AC_MUT] * 0.01f;
+    float m = k * k + (par[P_AC_MUT] ? 0.05f * evolve : 0.0f);     /* (squared: 25 is as it was, the top reaches every step) */
     int st;
     for (st = 0; st < par[P_AC_LEN]; st++)
         if (frand() < m)

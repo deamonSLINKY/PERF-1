@@ -1,0 +1,36 @@
+# The MOOD macro: on the PERFORM screen the ALGORITHM dial is the mood, 0 (chill) .. 100 (peak), 50 as the piece is. The engine is given
+# each listed setting moved by its share (here the acid's density, 60 in the first piece, by 30 at the ends); the piece keeps its own.
+seed 0
+wait 3000
+expect mood 50
+expect moodacid 60
+tap HOME
+wait 100
+expect view 19
+turn ALGO 5
+wait 100
+expect mood 60
+expect moodacid 66
+turn ALGO 20
+wait 100
+expect mood 100
+expect moodacid 90
+shot mood_peak.png
+turn ALGO -50
+wait 100
+expect mood 0
+expect moodacid 30
+shot mood_chill.png
+# off the perform screen the dial is the mode again, the mood stays
+tap HOME
+wait 100
+expect view 0
+turn ALGO 1
+wait 100
+expect mood 0
+# back to the middle: the piece as it is
+tap HOME
+turn ALGO 25
+wait 100
+expect mood 50
+expect moodacid 60

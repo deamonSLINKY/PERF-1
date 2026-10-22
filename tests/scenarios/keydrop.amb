@@ -1,0 +1,64 @@
+# The key change on the drop: the DROP edit page (the last) sets it (SAME, +2, +3, +5, +7); when a breakdown or a build gives way to the
+# groove the engine's root rises; the next breakdown puts it back. The piece's own root is left alone.
+seed 0
+wait 3000
+press SEL
+tap FX
+release SEL
+wait 100
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
+expect fxpage 18
+spin K1 1
+wait 50
+expect keyset 1
+tap FX
+wait 100
+expect keyon 0
+# a breakdown, a build, the drop: the key goes up by two
+tap SAVE
+wait 3000
+expect sec 1
+expect keyon 0
+tap SAVE
+wait 11000
+expect sec 0
+expect keyon 1
+shot keydrop_on.png
+# the next breakdown: back
+tap SAVE
+wait 3000
+expect sec 1
+expect keyon 0

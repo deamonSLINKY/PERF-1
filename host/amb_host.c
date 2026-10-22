@@ -501,6 +501,14 @@ static int expect(const char *what, const char *val)
         got = ui.dj_break;
     else if (!strcmp(what, "sceneq"))             /* the scene waiting for the bar: slot + 1 */
         got = ui.scene_q;
+    else if (!strcmp(what, "mood"))               /* the mood macro, 0 .. 100 */
+        got = ui.mood;
+    else if (!strcmp(what, "keyon"))              /* the drop's key change is on */
+        got = ui.key_on;
+    else if (!strcmp(what, "keyset"))
+        got = ui.key_set;
+    else if (!strcmp(what, "moodacid"))           /* the acid density as the engine is given it */
+        got = mood_val(P_AC_DENS, proj.par[P_AC_DENS]);
     else if (!strcmp(what, "genre"))              /* the bank of pieces: 0 the original, 1 lofi */
         got = proj.genre;
     else if (!strcmp(what, "fxbank"))             /* the FX keys' bank (the dial in the FX menu) */
