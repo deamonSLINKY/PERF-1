@@ -1636,12 +1636,33 @@ static uint32_t cm_clock;
 static int cm_i, cm_alt;
 volatile float en_cm_level;
 
+static void cm_trigger(int note, float vel)     /* a note: the next voice, its decay as the Decay knob has it */
+{
+    const int voice = cm_alt ^= 1;
+    const float dec = 0.1f * fm_exp2f((float)par[P_CM_DEC] * 0.045f);   /* the time to silence: 0.1 .. 2.2 s */
+    cm[voice].inc = mtof((float)note) * (1.0f / EN_SR);
+    cm[voice].ps = 0.0f;
+    cm[voice].env = 1.0f;
+    cm[voice].age = 0;
+    cm[voice].vel = vel;
+    cm[voice].dm = fm_expf(-6.9f / (dec * EN_SR));
+}
+static void cm_play(int key)                    /* a note played by hand (the JAM page): the key is the pitch, within the song's and the pluck's octaves */
+{
+    int note = key + 12 * (par[P_OCT] + par[P_CM_OCT]);
+    while (note > 100)
+        note -= 12;
+    while (note < 36)
+        note += 12;
+    cm_trigger(note, 0.95f);
+}
+
 static void cm_step(void)                       /* a sixteenth of the counter-melody */
 {
     static const uint8_t RATE[4] = {2, 1, 4, 3};
     const int ri = par[P_CM_RATE] < 0 ? 0 : par[P_CM_RATE] > 3 ? 3 : par[P_CM_RATE];
-    int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE], voice;
-    float dens = (float)par[P_CM_DENS] * 0.01f, dec;
+    int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE];
+    float dens = (float)par[P_CM_DENS] * 0.01f;
     const int base = 60 + 12 * (par[P_OCT] + par[P_CM_OCT]);
     if (cm_clock++ % (uint32_t)RATE[ri])
         return;
@@ -1678,14 +1699,7 @@ static void cm_step(void)                       /* a sixteenth of the counter-me
         note -= 12;
     while (note < 36)
         note += 12;
-    voice = cm_alt ^= 1;
-    dec = 0.1f * fm_exp2f((float)par[P_CM_DEC] * 0.045f);   /* the time to silence: 0.1 .. 2.2 s */
-    cm[voice].inc = mtof((float)note) * (1.0f / EN_SR);
-    cm[voice].ps = 0.0f;
-    cm[voice].env = 1.0f;
-    cm[voice].age = 0;
-    cm[voice].vel = 0.7f + 0.3f * frand();
-    cm[voice].dm = fm_expf(-6.9f / (dec * EN_SR));
+    cm_trigger(note, 0.7f + 0.3f * frand());
 }
 
 
@@ -2309,6 +2323,11 @@ static void smp_note(int key, int on);
 static void note_cmd(int voice, int key, int on)
 {
     int k, t, legato;
+    if (voice == EN_V_PLUCK) {                  /* the counter-melody played by hand: the note's pitch (the off does nothing: it rings out) */
+        if (on)
+            cm_play(key);
+        return;
+    }
     if (voice == EN_V_SAMPLE) {                 /* the sampler: its key (the note less 53) */
         smp_note(key - 53, on);
         return;

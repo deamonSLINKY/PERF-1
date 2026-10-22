@@ -543,6 +543,40 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the pluck played by hand (the JAM page): a note is heard; nothing breaks */
+    {
+        int k, blk, j, broken = 0, quiet = 0;
+        float peak = 0.0f;
+        en_init();
+        en_set(P_PAD, 0);
+        en_set(P_BASS, 0);
+        en_set(P_ACID, 0);
+        en_set(P_PULSE, 0);
+        en_set(P_CM_LVL, 70);
+        en_set(P_CM_DENS, 0);                    /* (no notes of its own) */
+        en_play(1);
+        run(1.0f);
+        for (k = 0; k < 6; k++) {
+            en_note(EN_V_PLUCK, 60 + 3 * k, 1);
+            for (blk = 0; blk < 100; blk++) {
+                en_render(buf, 256, 2048);
+                for (j = 0; j < 512; j++) {
+                    const float a = (float)(buf[j] < 0 ? -buf[j] : buf[j]);
+                    if (buf[j] == INT32_MIN || a > 8400000.0f)
+                        broken++;
+                    if (a > peak)
+                        peak = a;
+                }
+            }
+        }
+        if (peak < 0.02f * 8388608.0f)
+            quiet++;
+        CHECK(!broken, "pluck by hand: %d samples broken", broken);
+        CHECK(!quiet, "pluck by hand: not heard");
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the sampler: a key down freezes the last stretch of the music and plays it (pitched, or as a slice, one shot or loop); let go (or played out)
      * it is silent again and the ring runs; nothing breaks */
     {

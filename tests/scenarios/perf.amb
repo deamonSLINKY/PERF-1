@@ -4,7 +4,7 @@ wait 3000
 expect view 0
 tap HOME
 wait 100
-expect view 21
+expect view 22
 # the keys: F3 mutes the kick, G3 the hats; the scale is not touched
 tapkey 0
 tapkey 2
@@ -55,7 +55,7 @@ tapkey 1
 wait 600
 tap HOME
 wait 100
-expect view 21
+expect view 22
 spin SELECT 1
 wait 100
 expect view 1

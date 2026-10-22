@@ -38,9 +38,9 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 220 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 22
+#define NFXP 23
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
@@ -74,6 +74,9 @@ static const char *const SML_NAME[2] = {"ONE SHOT", "LOOP"};
 static const char *const SMN_NAME[3] = {"FULL", "HALF", "QUARTER"};                                /* the window: the last 0.95 s, half, a quarter of it */
 static const char *const FXQ_NAME[3] = {"OFF", "BEAT", "BAR"};                                   /* Flex Beat: when it starts */
 static const char *const FXM_NAME[2] = {"ONE SHOT", "LOOP"};
+static const char *const JV_NAME[4];
+static const char *const JM_NAME[3];
+static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
@@ -137,6 +140,8 @@ static const struct {
                           {"Reso", KN_PLAIN, EN_FXS_TK_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_TK_MIX, 0, 0}}},
     {"WAH", FX_WAH, 0, {{"Sens", KN_PLAIN, EN_FXS_WH_SENS, 0, 0}, {"Range", KN_PLAIN, EN_FXS_WH_RANGE, 0, 0},
                         {"Reso", KN_PLAIN, EN_FXS_WH_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_WH_MIX, 0, 0}}},
+    /* the JAM page's four knobs (the UI's own: uiv 7 .. 10): not an FX page, the dial never walks to it */
+    {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
@@ -177,6 +182,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
+    {K_NONE, K_NONE, K_NONE, K_NONE},              /* Jam: its knobs are the FXP table's last page (view_knob) */
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
     {K_FXF, K_FXF + 1, K_FXF + 2, K_FXF + 3},      /* perform: the FX knobs, without the FX menu */
     {K_FXF, K_FXF + 1, K_FXF + 2, K_FXF + 3},      /* the visualizers: the same */
@@ -202,6 +208,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Change", "Every", "Pool", "Mutate"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Root", "Theme", "Tune", "MIDI out"},
+    {"Voice", "Keys", "Octave", "Answer"},
     {"Level", "Tune", "Decay", "Pattern"},
     {"Filter", "Crush", "Throw", "Wash"},
     {"Filter", "Crush", "Throw", "Wash"},
@@ -383,6 +390,10 @@ static struct {
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
     uint8_t glide_on, glide_busy;
+    uint8_t jam_voice, jam_mode, jam_oct, jam_ans;   /* the JAM page: the voice (pluck, pad, acid, drone), the keys (scale, chords, harp), the octave (0..4: -2..+2), the answer */
+    uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
+    uint8_t ans_note[8], ans_dt[8], ans_cnt, ans_playing, ans_i;   /* the answer's memory: notes, the sixteenths between them; playing, at which */
+    uint32_t ans_last, ans_t;
     uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
@@ -637,6 +648,8 @@ static void mood_apply(void)
 /* the knobs now: the page's, or with the FX menu on, the FX knobs */
 static int view_knob(int i)
 {
+    if (ui.view == V_JAM && !ui.fx_menu)
+        return K_FXP + 4 * (NFXP - 1) + i;      /* the JAM page: the last of the FXP table's pages */
     if (ui.fx_menu) {
         if (ui.fx_page && FXP[ui.fx_page - 1].c[i].kind == KN_NONE)
             return K_NONE;
@@ -646,6 +659,8 @@ static int view_knob(int i)
 }
 static const char *view_label(int i)
 {
+    if (ui.view == V_JAM && !ui.fx_menu)
+        return FXP[NFXP - 1].c[i].label;
     if (ui.fx_menu)
         return ui.fx_page ? FXP[ui.fx_page - 1].c[i].label : FXK_LABEL[i];
     return KNOB_LABEL[ui.view][i];
@@ -671,7 +686,7 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
 static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
-           i == 5 ? &ui.saver : &ui.lights;
+           i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : &ui.jam_ans;
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -1372,6 +1387,10 @@ static int group_of(int v)
     return -1;
 }
 
+static void jam_down(int i);
+static void jam_up(int i);
+static void jam_tick(void);
+static void draw_jam(void);
 static int perf_like(void) { return ui.view == V_PERF || ui.view == V_VIZ; }   /* the screens whose keys are the mix, knobs the FX knobs, ALGORITHM the mood */
 
 static void button(int b)
@@ -1689,7 +1708,7 @@ static void input(void)
                 ui.save_held = 1;              /* nor a drop */
             }
             if (i == B_FX && (btn >> B_SEL & 1u)) {   /* shift: the effects' edit pages, one by one, then the keys again */
-                ui.fx_page = ui.fx_menu ? (uint8_t)((ui.fx_page + 1) % (NFXP + 1)) : 1;
+                ui.fx_page = ui.fx_menu ? (uint8_t)((ui.fx_page + 1) % NFXP) : 1;   /* (NFXP - 1 pages, then the keys again) */
                 ui.fx_menu = 1;
                 ui.lock_mode = 0;
                 say(ui.fx_page ? FXP[ui.fx_page - 1].name : "FX", ui.fx_page ? "EDIT" : "HOLD A KEY");
@@ -1859,6 +1878,8 @@ static void input(void)
                     for (s = 0; s < 16; s++)
                         if (WHITE_KEY[s] == i)
                             step_toggle(s);
+                } else if (ui.view == V_JAM) {   /* the JAM page: the key plays the voice chosen */
+                    jam_down((int)i);
                 } else if (by_hand(voice_of(ui.view))) {   /* a voice off the algorithm, its page: the key plays it */
                     ui.key_voice[i] = (uint8_t)(voice_of(ui.view) + 1);
                     en_note(voice_of(ui.view), 53 + (int)i, 1);
@@ -1866,6 +1887,9 @@ static void input(void)
                     toggle_note((int)((5u + i) % 12u));   /* key 0 is F3 */
                 }
             }
+    for (i = 0; i < NKEYS; i++)                  /* the JAM page's keys let go */
+        if (ui.jam_n[i] && !(keys >> i & 1u))
+            jam_up((int)i);
     for (i = 0; i < NKEYS; i++)                  /* let go: its note off, wherever it went */
         if (ui.key_voice[i] && !(keys >> i & 1u)) {
             en_note(ui.key_voice[i] - 1, 53 + (int)i, 0);
@@ -1885,7 +1909,7 @@ static void input(void)
             say(fx_bank == 3 ? "SAMPLER" : fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
         } else if (ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
             const int p = ui.fx_page + (e > 0 ? 1 : -1);
-            if (p >= 1 && p <= NFXP) {
+            if (p >= 1 && p < NFXP) {                 /* (the last, the JAM page's, is not an FX page) */
                 ui.fx_page = (uint8_t)p;
                 say(FXP[p - 1].name, "EDIT");
             }
@@ -3343,6 +3367,17 @@ static void draw_main(void)
         }
         return;
     }
+    if (ui.view == V_JAM) {                      /* the JAM page: the keyboard, its scale, what is held */
+        h = hash(hash(0x4A414D31u, ui.keys | (uint32_t)ui.jam_voice << 27 | (uint32_t)ui.theme << 29), pool_abs() | (uint32_t)ui.jam_mode << 12 | (uint32_t)ui.jam_oct << 14 |
+                                                                                                        (uint32_t)ui.jam_ans << 17 | (uint32_t)ui.ans_cnt << 18 | (uint32_t)ui.ans_playing << 22 | (uint32_t)ui.ans_i << 23);
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_jam();
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (ui.view == V_VIZ) {                      /* the visualizers: fifteen frames a second */
         ui.sig[1] = 0;
         if (ui.frame % 4u == 0u)
@@ -3434,7 +3469,7 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? KC_COLOR : K_ACID;
     case B_SEQ: return RGB(255, 160, 60);
     case B_HOME: return KC_REPEAT;
-    default: return perf_like() ? KC_FILTER : K_PAD;
+    default: return ui.view == V_JAM ? KC_MOVE : perf_like() ? KC_FILTER : K_PAD;
     }
 }
 
@@ -3645,6 +3680,8 @@ static void leds(void)
         for (i = 0; i < NKEYS; i++)
             if (ap >> ((5u + i) % 12u) & 1u)
                 k |= 1u << i;
+        if (ui.view == V_JAM)
+            k |= ui.keys;                        /* the JAM page: the scale, and the keys held */
     }
     plat_glow(1);
     plat_leds(b, k);
@@ -3669,6 +3706,166 @@ static void glide_tick(void)
             }
         }
     ui.glide_busy = 0;
+}
+
+
+/* THE JAM PAGE (the SELECT dial, after Global): the keys are an instrument. VOICE: the pluck, the pad, the acid, the drone. KEYS: SCALE (every key a
+ * note of the scale: a black key is the scale tone at or below it, so there are no wrong notes), CHORDS (every key a triad of the scale), HARP (the
+ * keys are the scale's tones, one a key, up from the root). OCTAVE. ANSWER: when you stop (after at least two notes), the pluck plays your phrase
+ * back an octave up on the next bar, once, and waits for the next. The scale is still the page's own: this page never edits it. */
+static const char *const JV_NAME[4] = {"PLUCK", "PAD", "ACID", "DRONE"};
+static const char *const JM_NAME[3] = {"SCALE", "CHORDS", "HARP"};
+static const char *const JO_NAME[5] = {"-2", "-1", "0", "+1", "+2"};
+static int jam_snap(int m, uint32_t pool)       /* the note, or the scale tone below it */
+{
+    int d;
+    for (d = 0; d < 12; d++)
+        if (pool >> (((m - d) % 12 + 12) % 12) & 1u)
+            return m - d;
+    return m;
+}
+static int jam_notes(int i, uint8_t *out)       /* the notes of key i: 1 (scale, harp) or 3 (chords) */
+{
+    const uint32_t pool = pool_abs();
+    const int oct = 12 * ((int)ui.jam_oct - 2), base = 53 + i + oct;
+    int m, r, n = 0, cnt = 0, t[5];
+    if (ui.jam_mode == 2) {                      /* harp: the i-th tone of the scale up from the root, from C3 */
+        for (m = 48 + proj.par[P_ROOT]; m < 128; m++)
+            if (pool >> (m % 12) & 1u) {
+                if (cnt == i) {
+                    r = m + oct;
+                    out[0] = (uint8_t)(r < 0 ? 0 : r > 127 ? 127 : r);
+                    return 1;
+                }
+                cnt++;
+            }
+        out[0] = 60;
+        return 1;
+    }
+    r = jam_snap(base, pool);
+    if (r < 0)
+        r = 0;
+    out[n++] = (uint8_t)(r > 127 ? 127 : r);
+    if (ui.jam_mode == 1) {                      /* a triad of the scale: its third and fifth (the 2nd and 4th tones above) */
+        for (m = r + 1, cnt = 0; m < r + 25 && cnt < 5; m++)
+            if (pool >> (m % 12) & 1u)
+                t[cnt++] = m;
+        if (cnt >= 4) {
+            out[n++] = (uint8_t)(t[1] > 127 ? 127 : t[1]);
+            out[n++] = (uint8_t)(t[3] > 127 ? 127 : t[3]);
+        }
+    }
+    return n;
+}
+static void jam_rec(int note)                    /* the ANSWER's memory: the notes played, and the sixteenths between them */
+{
+    const uint32_t now = en_playing ? en_bars : 0u;
+    if (!ui.jam_ans || ui.ans_playing)
+        return;
+    if (ui.ans_cnt == 0 || now - ui.ans_last > 32u || ui.ans_cnt >= 8) {
+        ui.ans_cnt = 0;
+        ui.ans_dt[0] = 0;
+    } else {
+        ui.ans_dt[ui.ans_cnt] = (uint8_t)(now - ui.ans_last > 16u ? 16u : now - ui.ans_last);
+    }
+    ui.ans_note[ui.ans_cnt++] = (uint8_t)note;
+    ui.ans_last = now;
+}
+static void jam_down(int i)
+{
+    static const uint8_t VC[4] = {EN_V_PLUCK, EN_V_PAD, EN_V_ACID, EN_V_DRONE};
+    static const int8_t OFS[4] = {0, 0, 12, 24};   /* the engine plays the acid an octave and the drone two below the key */
+    uint8_t nn[4];
+    const int n = jam_notes(i, nn), vc = ui.jam_voice & 3;
+    int k;
+    if (vc == 0 && proj.par[P_CM_LVL] < 15)
+        knob_set(P_CM_LVL, 40);                  /* the pluck has to be audible to be played */
+    ui.jam_n[i] = (uint8_t)n;
+    ui.jam_vc[i] = VC[vc];
+    for (k = 0; k < n; k++) {
+        const int key = nn[k] + OFS[vc];
+        ui.jam_note[i][k] = (uint8_t)(key > 127 ? 127 : key);
+        en_note(VC[vc], ui.jam_note[i][k], 1);
+    }
+    jam_rec(nn[0]);
+}
+static void jam_up(int i)
+{
+    int k;
+    for (k = 0; k < ui.jam_n[i]; k++)
+        en_note(ui.jam_vc[i], ui.jam_note[i][k], 0);
+    ui.jam_n[i] = 0;
+}
+static void jam_tick(void)                       /* the answer, on the sixteenths */
+{
+    static uint32_t seen;
+    int k, held = 0;
+    if (en_bars == seen)
+        return;
+    seen = en_bars;
+    if (!ui.jam_ans || !en_playing) {
+        ui.ans_playing = 0;
+        return;
+    }
+    for (k = 0; k < NKEYS; k++)
+        held |= ui.jam_n[k];
+    if (!ui.ans_playing) {
+        if (ui.ans_cnt >= 2 && !held && en_bars - ui.ans_last >= 12u && (en_bars & 15u) == 0u) {   /* quiet for a while, a bar line: answer */
+            ui.ans_playing = 1;
+            ui.ans_i = 0;
+            ui.ans_t = 0;
+            if (proj.par[P_CM_LVL] < 15)
+                knob_set(P_CM_LVL, 40);
+        } else {
+            return;
+        }
+    }
+    while (ui.ans_i < ui.ans_cnt) {              /* each note at its time */
+        uint32_t cum = 0;
+        for (k = 0; k <= ui.ans_i; k++)
+            cum += ui.ans_dt[k];
+        if (ui.ans_t < cum)
+            break;
+        en_note(EN_V_PLUCK, ui.ans_note[ui.ans_i] + 12, 1);
+        ui.ans_i++;
+    }
+    ui.ans_t++;
+    if (ui.ans_i >= ui.ans_cnt) {                /* answered: the memory empties */
+        ui.ans_playing = 0;
+        ui.ans_cnt = 0;
+    }
+}
+static void draw_jam(void)
+{
+    const uint32_t pool = pool_abs();
+    int w, j;
+    char t[16];
+    cv_text(6, 2, &FONT_B, JV_NAME[ui.jam_voice & 3], KC_MOVE);
+    cv_text(6 + text_w(&FONT_B, JV_NAME[ui.jam_voice & 3]) + 8, 6, &FONT_XS, JM_NAME[ui.jam_mode % 3], K_DIM);
+    for (w = 0; w < 16; w++) {                   /* the keyboard: the white keys, then the black keys over them; the scale lit, the keys held bright */
+        const int idx = WHITE_KEY[w], pc = (5 + idx) % 12, held = (int)(ui.keys >> idx & 1u), in = (int)(pool >> pc & 1u);
+        cv_rect(8 + w * 14, 30, 13, 66, held ? KC_MOVE : in ? mix(K_PANEL, K_PAD, 9) : K_PANEL);
+        if (idx == 0 || pc == 0)
+            cv_rect(8 + w * 14 + 4, 90, 5, 4, K_TEXT);   /* a C marked */
+    }
+    for (j = 0; j < 11; j++) {
+        const int idx = BLACK_KEY[j], pc = (5 + idx) % 12, held = (int)(ui.keys >> idx & 1u), in = (int)(pool >> pc & 1u);
+        int lw = 0;
+        for (w = 0; w < 16; w++)
+            if (WHITE_KEY[w] == idx - 1)
+                lw = w;
+        cv_rect(8 + lw * 14 + 9, 30, 10, 42, held ? KC_MOVE : in ? K_PAD : K_BG);
+        cv_frame(8 + lw * 14 + 9, 30, 10, 42, K_LINE);
+    }
+    cv_text(6, 104, &FONT_XS, "OCTAVE", K_DIM);
+    cv_text(52, 104, &FONT_XS, JO_NAME[ui.jam_oct % 5], K_TEXT);
+    if (ui.jam_ans) {                            /* the answer: what it has heard (a dot a note), and whether it is playing it */
+        cv_text(100, 104, &FONT_XS, ui.ans_playing ? "ANSWERING" : ui.ans_cnt ? "LISTENING" : "ANSWER ON", ui.ans_playing ? K_ACC : K_TEXT);
+        for (j = 0; j < ui.ans_cnt && j < 8; j++)
+            cv_disc(176 + j * 7, 108, 2, ui.ans_playing && j < ui.ans_i ? K_ACC : KC_MOVE);
+    }
+    itoa_u((uint32_t)(proj.par[P_CM_LVL]), t);
+    cv_text(6, 124, &FONT_XS, "THE KEYS PLAY ONLY THE SCALE'S NOTES", K_DIM);
 }
 
 /* the screensaver (STAGE page): left alone while playing, the visualizers take the screen (the auto one); any key, button or dial turn brings the
@@ -3860,6 +4057,7 @@ void ui_init(void)
         ui.dj_break = 1;
         ui.dj_fillon = 1;
         ui.mood = 50;                          /* the mood macro: the middle leaves the piece as it is */
+        ui.jam_oct = 2;                        /* the JAM page: octave 0 */
     }
     ui.touched = -1;
     ui.boot_t = plat_ms();
@@ -3925,6 +4123,7 @@ void ui_frame(void)
     key_tick();
     glide_tick();
     saver_tick();
+    jam_tick();
     autosave();
     if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
         runner_update();

@@ -513,6 +513,14 @@ static int expect(const char *what, const char *val)
         got = (int)en_flx_done;
     else if (!strcmp(what, "flexlast"))
         got = ui.flex_last;
+    else if (!strcmp(what, "jamv"))               /* the JAM page: voice, keys, the answer's memory, whether it is playing */
+        got = ui.jam_voice;
+    else if (!strcmp(what, "jamm"))
+        got = ui.jam_mode;
+    else if (!strcmp(what, "anscnt"))
+        got = ui.ans_cnt;
+    else if (!strcmp(what, "ansplay"))
+        got = ui.ans_playing;
     else if (!strcmp(what, "smp"))                /* the sampler's voices sounding */
         got = en_smp_active;
     else if (!strcmp(what, "smpmode"))            /* the sampler page's Keys setting */

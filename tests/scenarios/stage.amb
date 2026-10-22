@@ -54,7 +54,7 @@ wait 100
 expect view 0
 wait 62000
 expect saveron 1
-expect view 22
+expect view 23
 shot saver.png
 tapkey 1
 wait 200

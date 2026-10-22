@@ -1,0 +1,65 @@
+# The JAM page (the SELECT dial, after Global): the keys are an instrument and never edit the scale. Voice (K1): pluck, pad, acid, drone; Keys (K2): scale, chords,
+# harp; Octave (K3); Answer (K4): after you stop it plays your phrase back an octave up on the next bar.
+seed 0
+wait 3000
+tap GLO
+expect view 19
+spin SELECT 1
+wait 100
+expect view 20
+expect jamv 0
+shot jam_pluck.png
+# the pad, scale keys: one key, one note held; the scale untouched
+spin K1 1
+wait 50
+expect jamv 1
+key 13 down
+wait 200
+expect held 1
+expect pool 0x5AD
+shot jam_held.png
+key 13 up
+wait 100
+expect held 0
+# chords: three notes
+spin K2 1
+wait 50
+expect jamm 1
+key 13 down
+wait 200
+expect held 3
+key 13 up
+wait 100
+expect held 0
+# the harp
+spin K2 1
+wait 50
+expect jamm 2
+key 0 down
+wait 200
+expect held 1
+key 0 up
+wait 100
+expect pool 0x5AD
+# the answer: three notes on the pluck, then silence: it keeps them (3), and plays them back on a bar line, then forgets
+spin K2 -2
+spin K1 -1
+spin K4 1
+wait 50
+expect jamv 0
+key 13 down
+wait 150
+key 13 up
+wait 200
+key 16 down
+wait 150
+key 16 up
+wait 200
+key 20 down
+wait 150
+key 20 up
+wait 100
+expect anscnt 3
+wait 7000
+expect anscnt 0
+expect ansplay 0
