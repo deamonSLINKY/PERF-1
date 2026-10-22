@@ -64,6 +64,8 @@ static const char *const SREACH_NAME[4] = {"1/16", "1/8", "1/4", "1/2"};        
 static const char *const SSTYLE_NAME[2] = {"BABY", "PULL"};
 static const char *const FGRAIN_NAME[4] = {"1", "2", "3", "4"};                                  /* the freeze's grains */
 static const char *const RVLEN_NAME[3] = {"1/2 BEAT", "1 BEAT", "2 BEATS"};                      /* the reverse swell */
+static const char *const LFO_SHAPE_NAME_UI[6] = {"SINE", "TRIANGLE", "SAW", "SQUARE", "S&H", "DRIFT"};
+static const float ETIME_BEATS_UI[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
@@ -188,6 +190,8 @@ static const struct {
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
 static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT", "OPEN", "PERC"};
+#define LANE_COL(l) ((l) == 0 ? RGB(255, 160, 60) : (l) == 1 ? RGB(255, 220, 60) : (l) == 2 ? RGB(255, 120, 220) : \
+                     (l) == 3 ? RGB(80, 200, 255) : (l) == 4 ? RGB(150, 225, 255) : RGB(190, 140, 255))
 
 /* the FX menu (FX on): each key an effect while it is held. Two banks, the SELECT dial between them. The first: the
  * beat repeats, reverse, tape stop, the drums' mutes (kick, hats, snare, perc), the throw, the fill, the filters, the
@@ -213,6 +217,28 @@ static const char *const FX_LABEL[EN_NFX] = {
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
     [FX_NONE] = ""};
+/* every kind of effect its own colour (the same in every theme, so a key is found by its colour as well as its name):
+ * repeats cyan, filters green, gates and the pump yellow, the drums' mutes red, the colour effects pink, the transport
+ * moves (reverse, stops, scatter) orange, the builds violet */
+#define KC_REPEAT RGB(80, 200, 255)
+#define KC_FILTER RGB(120, 255, 130)
+#define KC_GATE RGB(255, 220, 60)
+#define KC_MUTE RGB(255, 96, 96)
+#define KC_COLOR RGB(255, 120, 220)
+#define KC_MOVE RGB(255, 160, 60)
+#define KC_BUILD RGB(190, 140, 255)
+static uint16_t fx_color(int fx)
+{
+    switch (fx) {
+    case FX_RPT2: case FX_RPT4: case FX_RPT6: case FX_RPT8: case FX_RPT16: case FX_RPT32: case FX_RPT8T: case FX_RPT16T: return KC_REPEAT;
+    case FX_LP: case FX_HP: case FX_SWEEP: return KC_FILTER;
+    case FX_GATE16: case FX_GATE8: case FX_GATEX: case FX_PUMP: return KC_GATE;
+    case FX_MUTE_KICK: case FX_MUTE_HATS: case FX_MUTE_SNARE: case FX_MUTE_PERC: return KC_MUTE;
+    case FX_PHASER: case FX_FLANGER: case FX_TAPE: case FX_VINYL: case FX_RING: return KC_COLOR;
+    case FX_RISER: case FX_ROLL: case FX_FILL: case FX_THROW: case FX_RVSWELL: return KC_BUILD;
+    default: return KC_MOVE;
+    }
+}
 static inline uint64_t fxbit(int k) { return KEY_FX[fx_bank][k] == FX_NONE ? 0u : FXB(KEY_FX[fx_bank][k]); }
 static inline uint32_t h32(uint64_t x) { return (uint32_t)(x ^ x >> 32); }   /* a 64-bit mask, for the hashes */
 
@@ -2015,13 +2041,30 @@ static uint16_t mix(uint16_t a, uint16_t b, int t)   /* t 0..16: a -> b */
 }
 static int q16(float x) { return x <= 0.0f ? 0 : x >= 1.0f ? 16 : (int)(x * 16.0f + 0.5f); }
 
+static const char *const MASCOT[20];
+static uint16_t mascot_color(char ch);
+/* the mascot, one pixel a pixel, hopping with the kick; asleep in a breakdown (eyes shut), wide awake in a build (shaking) */
+static void draw_mascot(int32_t x, int32_t y, int hop, int sleepy)
+{
+    int r, c;
+    for (r = 0; r < 20; r++)
+        for (c = 0; c < 23; c++) {
+            char ch = MASCOT[r][c];
+            if (ch == '.')
+                continue;
+            if (ch == 'Y' && sleepy)
+                ch = 'K';
+            cv_pset(x + c, y + r - hop, ch == 'K' || ch == 'T' ? K_LINE : mascot_color(ch));
+        }
+}
+
 /* the header: the piece in a tag, its root and mode; on the right, the tempo with a beat light (a play
  * triangle while stopped), the section and a dot while the kit is unsaved. Messages take its place
  * for a moment. */
 static void draw_header(void)
 {
     char t[24];
-    int msg = plat_ms() < ui.msg_until;
+    int msg = plat_ms() < ui.msg_until, hop;
     uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
                            en_playing | (uint32_t)en_sec << 2 | (uint32_t)en_sec_req << 9 | (uint32_t)msg << 5 |
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
@@ -2030,8 +2073,8 @@ static void draw_header(void)
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
-    if (en_playing)
-        h = hash(h, (en_bars / 4u) & 1u);
+    hop = en_playing ? (int)(fm_clampf(en_drum_glow[0] * 1.5f, 0.0f, 1.0f) * 3.0f + 0.5f) : 0;
+    h = hash(h, (uint32_t)hop | (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 4);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -2040,7 +2083,8 @@ static void draw_header(void)
         int32_t x = cv_text(10, 6, &FONT_B, ui.msg[0], K_TEXT);
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
     } else {
-        int32_t x = 232, w;
+        int32_t x = 207, w;
+        draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 5, hop, en_playing && en_sec == EN_SEC_BREAK);
         if (project_pending()) {                   /* not yet in flash (the theme, Tune, MIDI out: two seconds on) */
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
@@ -2096,10 +2140,7 @@ static void draw_header(void)
         x -= text_w(&FONT_S, t);
         cv_text(x, 6, &FONT_S, t, en_playing ? K_TEXT : K_DIM);
         x -= 16;
-        if (en_playing) {                         /* the beat light */
-            int on = ((en_bars / 4u) & 1u) == 0u;
-            cv_round(x, 9, 10, 10, 2, on ? K_ACC : K_LINE);
-        } else {
+        if (!en_playing) {
             int32_t j;                            /* stopped: a play triangle */
             for (j = 0; j < 5; j++)
                 cv_rect(x + 2 + j, 9 + j, 1, 11 - 2 * j, K_DIM);
@@ -2140,6 +2181,16 @@ static void draw_ring(void)
     int i, len = en_acid_len ? en_acid_len : 16, s, g = q16(en_acid_glow);
     for (i = 0; i < EN_NPAD; i++)
         chord |= 1u << (en_chord[i] % 12u);
+    if (en_playing && en_drum_glow[0] > 0.04f) {  /* the kick's pulse: a ring of dots swelling outwards, fading */
+        const float kg = fm_clampf(en_drum_glow[0], 0.0f, 1.0f);
+        const uint16_t pc = mix(K_BG, RGB(255, 160, 60), q16(kg));
+        int k;
+        for (k = 0; k < 48; k++) {
+            int32_t x, y;
+            polar(CX, CY, 52.0f + (1.0f - kg) * 6.0f, k, 48, &x, &y);
+            cv_rect(x, y, 2, 2, pc);
+        }
+    }
     for (s = 0; s < len; s++) {                 /* the acid loop */
         int32_t x, y;
         int cur = en_playing && s == en_acid_pos;
@@ -2211,7 +2262,7 @@ static void draw_kit(void)                       /* right: the pattern playing, 
             int32_t x = 170 + s * 4, y = 26 + l * 9;
             int on = (int)(bits >> s & 1u), cur = en_playing && s == pos;
             if (on)
-                cv_rect(x, y, 3, 6, en_pulse_rest ? K_LINE : cur ? K_ACC : mix(K_PULSE_T, K_PULSE, 8 + g / 2));
+                cv_rect(x, y, 3, 6, en_pulse_rest ? K_LINE : cur ? K_TEXT : mix(K_LINE, LANE_COL(l), 8 + g / 2));
             else
                 cv_rect(x + 1, y + 2, 1, 2, cur ? K_DIM : K_LINE);
         }
@@ -2252,7 +2303,7 @@ static void draw_seq(void)
             if (cur)
                 cv_rect(x - 1, y, 12, 18, sel ? K_LINE : K_PANEL);
             if (on)
-                cv_rect(x + 1, y + 3, 9, 12, sel ? (cur ? K_ACC : K_PULSE) : mix(K_PULSE_T, K_PULSE, 9));
+                cv_round(x + 1, y + 3, 9, 12, 2, sel ? (cur ? K_TEXT : LANE_COL(l)) : mix(K_LINE, LANE_COL(l), 9));
             else
                 cv_rect(x + 4, y + 8, 3, 3, (s & 3) == 0 ? K_DIM : K_LINE);
         }
@@ -2330,10 +2381,22 @@ static void draw_fx(void)
             t[n++] = *nm++;
         t[n++] = (char)('0' + oct);
         t[n] = 0;
-        if (on)
-            cv_rect(x - 1, y - 1, 77, 14, locked ? K_PAD : K_ACC);   /* locked: the primary; held: the accent */
-        cv_text(x, y, &FONT_XS, t, on ? K_BG : black ? K_DIM : K_TEXT);
-        cv_text(x + 24, y, &FONT_XS, FX_LABEL[KEY_FX[fx_bank][k]], on ? K_BG : K_TEXT);
+        if (KEY_FX[fx_bank][k] == FX_NONE) {
+            cv_text(x, y, &FONT_XS, t, K_LINE);
+            continue;
+        }
+        {
+            const uint16_t kc = fx_color(KEY_FX[fx_bank][k]);
+            if (on) {                              /* held: a tile in its colour; latched: with a bar beside it */
+                cv_round(x - 1, y - 1, 77, 14, 2, kc);
+                if (locked)
+                    cv_rect(x + 72, y + 1, 3, 10, K_BG);
+            } else {
+                cv_rect(x - 1, y + 1, 2, 10, kc);   /* at rest: its colour in a stripe and in the name */
+            }
+            cv_text(x + 3, y, &FONT_XS, t, on ? K_BG : black ? K_DIM : K_TEXT);
+            cv_text(x + 27, y, &FONT_XS, FX_LABEL[KEY_FX[fx_bank][k]], on ? K_BG : kc);
+        }
     }
 }
 
@@ -2344,6 +2407,7 @@ static int gx_head(void)                       /* the gate's step playing now */
     const uint32_t len = ui.fxs[EN_FXS_GX_LEN] < 2u ? 2u : ui.fxs[EN_FXS_GX_LEN];
     return en_playing ? (int)((en_bars - 1u) % len) : -1;
 }
+static int draw_fxscope(int p);
 static void draw_fxedit(void)
 {
     const int p = ui.fx_page - 1;
@@ -2377,9 +2441,14 @@ static void draw_fxedit(void)
         cv_text(8, 112, &FONT_XS, "CLOSES", K_DIM);
         cv_text(52, 112, &FONT_XS, GX_TGT[ui.gx_tgt].name, K_TEXT);
     } else {
-        cv_text(4, 18, &FONT_B, FXP[p].name, K_TEXT);
-        cv_text(4, 50, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
-        cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT. THE DIAL: NEXT PAGE.", K_DIM);
+        cv_text(4, 18, &FONT_B, FXP[p].name, FXP[p].bit < 63 ? fx_color(FXP[p].bit) : K_TEXT);
+        if (draw_fxscope(p)) {
+            cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
+            cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
+        } else {
+            cv_text(4, 50, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
+            cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT. THE DIAL: NEXT PAGE.", K_DIM);
+        }
     }
 }
 
@@ -2426,9 +2495,11 @@ static void draw_perf(void)
         int32_t h;
         lvl = lvl > 1.0f ? 1.0f : lvl;
         h = (int32_t)(lvl * 24.0f);
-        cv_round(x, 46, 31, 38, 3, soloed ? K_PAD : K_PANEL);
+        const uint16_t tc = i == 0 ? LANE_COL(0) : i == 1 ? LANE_COL(3) : i == 2 ? LANE_COL(1) : i == 3 ? LANE_COL(5) :
+                            i == 4 ? K_BASS : i == 5 ? K_ACID : K_PAD;
+        cv_round(x, 46, 31, 38, 3, soloed ? tc : K_PANEL);
         if (!dim && h > 0)
-            cv_rect(x + 4, 78 - h, 23, h, soloed ? K_BG : K_PAD);
+            cv_rect(x + 4, 78 - h, 23, h, soloed ? K_BG : tc);
         text_c(x + 15, 48, &FONT_XS, TN[i], soloed ? K_BG : dim ? K_DIM : K_TEXT);
         if (muted)
             cv_rect(x + 3, 62, 25, 2, K_ACC);   /* struck through */
@@ -2455,7 +2526,7 @@ static void draw_perf(void)
                     cv_text(x, 110, &FONT_XS, "+", K_DIM);
                     break;
                 }
-                x = cv_text(x, 110, &FONT_XS, s, (ui.fx_lock >> bit & 1u) ? K_PAD : K_ACC) + 8;
+                x = cv_text(x, 110, &FONT_XS, s, fx_color(bit)) + 8;
                 n++;
             }
         if (!n)
@@ -2557,15 +2628,337 @@ static void draw_mix(void)
                 lb[j++] = *q++;
             lb[j] = 0;
         }
-        if (on)
-            cv_rect(x - 1, y - 1, 77, 14, (code >= 8 && code < 15) || code == 17 ? K_PAD : K_ACC);   /* solos in the primary, mutes in the accent */
-        cv_text(x, y, &FONT_XS, t, on ? K_BG : black ? K_DIM : K_TEXT);
-        cv_text(x + 24, y, &FONT_XS, lb, on ? K_BG : K_TEXT);
+        {
+            const uint16_t kc = code < 7 || code == 16 ? KC_MUTE : (code >= 8 && code < 15) || code == 17 ? KC_FILTER :
+                                (code >= 20 && code <= 23) ? KC_REPEAT : (code >= 25 && code <= 27) ? KC_GATE :
+                                code == 24 || code == 28 || code == 30 ? KC_MOVE : KC_BUILD;
+            if (on)
+                cv_round(x - 1, y - 1, 77, 14, 2, kc);
+            else
+                cv_rect(x - 1, y + 1, 2, 10, kc);
+            cv_text(x + 3, y, &FONT_XS, t, on ? K_BG : black ? K_DIM : K_TEXT);
+            cv_text(x + 27, y, &FONT_XS, lb, on ? K_BG : kc);
+        }
     }
 }
 
 #include "runner.c"
 static int runner_on(void) { return kr.on; }
+
+/* THE SCOPES: on the pages that shape a sound the main area draws what the knobs make: the envelopes' curves, the
+ * LFOs' waves, the filters' response, the echo and the reverb. The shape follows the knobs as they turn; a dot
+ * runs along it so the page is alive. (Drawn from the settings, not measured: it shows the idea, not the exact milliseconds.) */
+#define SC_X 12
+#define SC_W 216
+#define SC_Y 24
+#define SC_H 90
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE };
+static int scope_kind(int v)
+{
+    switch (v) {
+    case V_PADENV: return SCOPE_PENV;
+    case V_DRENV: return SCOPE_DENV;
+    case V_ACENV: return SCOPE_AENV;
+    case V_PADLFO: return SCOPE_PLFO;
+    case V_DRLFO: return SCOPE_DLFO;
+    case V_DRONE: return SCOPE_DFILT;
+    case V_ACID: return SCOPE_AFILT;
+    case V_SPACE: return SCOPE_SPACE;
+    default: return SCOPE_NONE;
+    }
+}
+static uint32_t scope_tick(void) { return plat_ms() / 90u; }       /* ~11 steps a second for the dot */
+
+static float lfo_wave(int shape, float ph)       /* -1..1; ph in cycles */
+{
+    float f = ph - fm_floorf(ph);
+    switch (shape) {
+    case 0: return fm_sinf(ph * FM_TWO_PI);
+    case 1: return f < 0.5f ? 4.0f * f - 1.0f : 3.0f - 4.0f * f;
+    case 2: return 2.0f * f - 1.0f;
+    case 3: return f < 0.5f ? 1.0f : -1.0f;
+    case 4: return (float)(hash(2166136261u, (uint32_t)(ph * 4.0f + 100.0f)) >> 8 & 255u) * (1.0f / 127.5f) - 1.0f;
+    default: return 0.6f * fm_sinf(ph * FM_TWO_PI) + 0.4f * fm_sinf(ph * 2.7f * FM_TWO_PI + 1.3f);
+    }
+}
+
+static uint8_t sc_y[SC_W];
+static int32_t sc_oy = SC_Y, sc_oh = SC_H;       /* the trace's top and height (the effects' pages draw it smaller) */
+static void scope_trace(uint16_t col)            /* sc_y[x] (0 .. SC_H): a filled curve with a bright line, and the baseline */
+{
+    int32_t x;
+    cv_rect(SC_X, sc_oy + sc_oh, SC_W, 1, K_LINE);
+    cv_rect(SC_X, sc_oy, 1, sc_oh, K_LINE);
+    for (x = 0; x < SC_W; x++) {
+        const int32_t y = sc_y[x], py = x ? sc_y[x - 1] : y, hi = y > py ? y : py, lo = y > py ? py : y;
+        if (y > 1)
+            cv_rect(SC_X + x, sc_oy + sc_oh - y, 1, y, mix(K_BG, col, 4));
+        cv_rect(SC_X + x, sc_oy + sc_oh - hi - 1, 1, hi - lo + 2, col);
+    }
+}
+static void scope_dot(float u, uint16_t col)     /* the dot at u (0..1 across) riding the trace */
+{
+    const int32_t x = (int32_t)(u * (float)(SC_W - 1));
+    cv_disc(SC_X + x, sc_oy + sc_oh - (int32_t)sc_y[x], 3, K_TEXT);
+    cv_disc(SC_X + x, sc_oy + sc_oh - (int32_t)sc_y[x], 2, col);
+}
+static float scope_expo(float t, float k) { return fm_exp2f(-t * k); }
+
+/* the same, for the effects' edit pages: the effect drawn from its settings, moving where it moves */
+static int draw_fxscope(int p)
+{
+    const float tk = (float)(scope_tick() % 64u) * (1.0f / 64.0f);
+    const uint16_t col = fx_color(FXP[p].bit);
+    const int32_t H = 58;
+    int32_t x;
+#define FS(i) ((float)ui.fxs[i] * 0.01f)
+    sc_oy = 46, sc_oh = H;
+    switch (p) {
+    case 1: case 2: {                            /* the phaser's notches, the flanger's comb, moving with the LFO */
+        const int fl = p == 2;
+        const float rate = FS(fl ? EN_FXS_FL_RATE : EN_FXS_PH_RATE), depth = FS(fl ? EN_FXS_FL_DEPTH : EN_FXS_PH_DEPTH),
+                    fb = FS(fl ? EN_FXS_FL_FB : EN_FXS_PH_FB), mixv = FS(fl ? EN_FXS_FL_MIX : EN_FXS_PH_MIX),
+                    sw = 0.5f + 0.5f * fm_sinf(FM_TWO_PI * tk * (float)(1 + (int)(rate * 3.0f)));
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            float y = 1.0f;
+            if (fl) {
+                float c = 0.5f + 0.5f * fm_cosf(FM_TWO_PI * u * (5.0f + depth * 9.0f * sw));
+                c = c * (1.0f - fb * 0.6f) + c * c * fb * 0.6f;
+                y = 1.0f - mixv * (1.0f - c) * 0.9f;
+            } else {
+                int k;
+                for (k = 0; k < 3; k++) {
+                    const float c = 0.18f + 0.27f * (float)k + depth * 0.14f * (sw * 2.0f - 1.0f), w = 0.055f - 0.035f * fb, d = (u - c) / w;
+                    y -= mixv * 0.9f * fm_expf(-d * d);
+                }
+            }
+            sc_y[x] = (uint8_t)(fm_clampf(y, 0.0f, 1.0f) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    }
+    case 4:                                      /* the tape's wobble: slow wow, fast flutter */
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            const float y = 0.5f + FS(EN_FXS_TP_WOW) * 0.32f * fm_sinf(FM_TWO_PI * (u * 1.5f + tk)) +
+                            FS(EN_FXS_TP_FLUT) * 0.12f * fm_sinf(FM_TWO_PI * (u * 9.0f + tk * 8.0f));
+            sc_y[x] = (uint8_t)(fm_clampf(y, 0.0f, 1.0f) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    case 3: {                                    /* the vinyl: hiss, and pops now and then, scrolling */
+        const float hiss = FS(EN_FXS_VN_HISS), lv = 0.15f + 0.85f * FS(EN_FXS_VN_LEVEL), ck = FS(EN_FXS_VN_CRACK);
+        const uint32_t t0 = scope_tick() * 3u;
+        for (x = 0; x < SC_W; x++) {
+            const uint32_t n = hash(2166136261u, (uint32_t)x + t0), pop = hash(n >> 7, ((uint32_t)x + t0) / 4u);
+            float y = 0.5f + hiss * 0.18f * ((float)(n & 255u) * (1.0f / 127.5f) - 1.0f);
+            if ((pop & 127u) < (uint32_t)(ck * 14.0f))
+                y += (pop & 256u ? 1.0f : -1.0f) * lv * 0.42f;
+            sc_y[x] = (uint8_t)(fm_clampf(y, 0.0f, 1.0f) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    }
+    case 6: {                                    /* the pump: the level ducking at each hit, coming back with the release */
+        const int dips = 2 << (ui.fxs[EN_FXS_PM_RATE] & 3);
+        const float depth = FS(EN_FXS_PM_DEPTH), k = 1.0f + (1.0f - FS(EN_FXS_PM_REL)) * 14.0f;
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1) * (float)dips, f = u - fm_floorf(u);
+            sc_y[x] = (uint8_t)((1.0f - depth * scope_expo(f, k)) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    }
+    case 9: {                                    /* the brake: the speed to a stop, then spinning back up */
+        const float dn = 0.1f + 0.5f * FS(EN_FXS_BR_TIME), up = 0.05f + 0.3f * FS(EN_FXS_BR_RET), a = 0.12f;
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            float y;
+            if (u < a)
+                y = 1.0f;
+            else if (u < a + dn)
+                y = (1.0f - (u - a) / dn) * (1.0f - (u - a) / dn);
+            else if (u > 1.0f - up)
+                y = (u - (1.0f - up)) / up;
+            else
+                y = 0.0f;
+            sc_y[x] = (uint8_t)(y * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    }
+    case 7:                                      /* the riser: the filter and the wash climbing to the top */
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            sc_y[x] = (uint8_t)((0.12f + 0.88f * u * u) * (0.35f + 0.65f * FS(EN_FXS_RS_FILT)) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    case 5: {                                    /* the roll: its hits, closer and louder as it speeds up */
+        const float s0 = 0.30f * fm_exp2f(-(float)ui.fxs[EN_FXS_RL_START]), s1 = 0.30f * fm_exp2f(-(float)ui.fxs[EN_FXS_RL_END]),
+                    sw = FS(EN_FXS_RL_SWELL);
+        float u = 0.02f;
+        cv_rect(SC_X, sc_oy + sc_oh, SC_W, 1, K_LINE);
+        while (u < 1.0f) {
+            const int32_t bh = (int32_t)((float)(H - 6) * (0.35f + 0.65f * sw * u + 0.0f * tk));
+            cv_rect(SC_X + (int32_t)(u * (float)(SC_W - 6)), sc_oy + sc_oh - bh, 4, bh, col);
+            u += fm_maxf(s0 + (s1 - s0) * u, 0.024f);
+        }
+        return 1;
+    }
+    case 11: {                                   /* the sweep: the filter's cutoff going up and down */
+        const int cyc = 1 << (ui.fxs[EN_FXS_SW_RATE] % 5 < 4 ? ui.fxs[EN_FXS_SW_RATE] % 5 : 4);
+        const float depth = 0.1f + 0.9f * FS(EN_FXS_SW_DEPTH);
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1) * (float)cyc, f = u - fm_floorf(u), tri = f < 0.5f ? f * 2.0f : 2.0f - f * 2.0f;
+            sc_y[x] = (uint8_t)((0.1f + 0.9f * tri * depth) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    }
+    case 10:                                     /* half time: the speed falling to a half, a quarter */
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1), sp = 1.0f / (ui.fxs[EN_FXS_HF_SPEED] == 0 ? 1.5f : ui.fxs[EN_FXS_HF_SPEED] == 1 ? 2.0f : 4.0f),
+                        sl = 0.03f + 0.4f * FS(EN_FXS_HF_SLIDE), f = fm_clampf((u - 0.2f) / sl, 0.0f, 1.0f);
+            sc_y[x] = (uint8_t)((1.0f - (1.0f - sp) * f) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    case 14:                                     /* the reverse swell: a tail running backwards into the beat */
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            sc_y[x] = (uint8_t)(u * u * u * (0.4f + 0.6f * FS(EN_FXS_RV_MIX)) * (float)(H - 6));
+        }
+        scope_trace(col);
+        return 1;
+    default:
+        return 0;
+    }
+#undef FS
+}
+
+static void draw_scope(int kind)
+{
+    const float tk = (float)(scope_tick() % 64u) * (1.0f / 64.0f);
+    const char *title = "", *sub = "";
+    uint16_t col = K_PAD;
+    int32_t x;
+    sc_oy = SC_Y, sc_oh = SC_H;
+    if (kind == SCOPE_PENV || kind == SCOPE_DENV || kind == SCOPE_AENV) {
+        float seg[5];                            /* the curve's pieces as widths; their ends */
+        if (kind == SCOPE_PENV) {                /* attack, hold, release, rest */
+            const float a = (float)proj.par[P_PE_ATK] * 0.01f, h = (float)proj.par[P_PE_HOLD] * 0.01f,
+                        r = (float)proj.par[P_PE_REL] * 0.01f, s = (float)proj.par[P_PE_REST] * 0.01f;
+            float tot;
+            seg[0] = 0.06f + 0.35f * a, seg[1] = 0.04f + 0.30f * h, seg[2] = 0.08f + 0.50f * r, seg[3] = 0.04f + 0.30f * s;
+            tot = seg[0] + seg[1] + seg[2] + seg[3];
+            seg[0] /= tot, seg[1] /= tot, seg[2] /= tot, seg[3] /= tot;
+            title = "PAD ENVELOPE", sub = "ATTACK  HOLD  RELEASE  REST";
+            for (x = 0; x < SC_W; x++) {
+                float u = (float)x / (float)(SC_W - 1), y;
+                if (u < seg[0]) {
+                    const float t = u / seg[0];
+                    y = 1.0f - (1.0f - t) * (1.0f - t);
+                } else if (u < seg[0] + seg[1]) {
+                    y = 1.0f;
+                } else if (u < seg[0] + seg[1] + seg[2]) {
+                    const float t = (u - seg[0] - seg[1]) / seg[2];
+                    y = (1.0f - t) * (1.0f - t);
+                } else {
+                    y = 0.0f;
+                }
+                sc_y[x] = (uint8_t)(y * (float)(SC_H - 8));
+            }
+        } else if (kind == SCOPE_DENV) {         /* the drone's: attack then decay, as high as the amount */
+            const float a = (float)proj.par[P_DE_ATK] * 0.01f, d = (float)proj.par[P_DE_DEC] * 0.01f,
+                        m = 0.15f + 0.85f * (float)proj.par[P_DE_AMT] * 0.01f, wa = 0.05f + 0.30f * a, wd = 0.65f;
+            col = K_BASS;
+            title = "DRONE ENVELOPE", sub = "ATTACK  DECAY  AMOUNT";
+            for (x = 0; x < SC_W; x++) {
+                const float u = (float)x / (float)(SC_W - 1);
+                float y;
+                if (u < wa)
+                    y = u / wa;
+                else
+                    y = scope_expo((u - wa) / wd, 1.0f + (1.0f - d) * 9.0f);
+                sc_y[x] = (uint8_t)(y * m * (float)(SC_H - 8));
+            }
+        } else {                                 /* the acid's: a note, then an accented one (taller), each decaying */
+            const float d = (float)proj.par[P_AC_DEC] * 0.01f, ac = (float)proj.par[P_AC_ACC] * 0.01f;
+            col = K_ACID;
+            title = "ACID ENVELOPE", sub = "DECAY  ACCENT  SLIDE";
+            for (x = 0; x < SC_W; x++) {
+                const float u = (float)x / (float)(SC_W - 1), lu = u < 0.5f ? u * 2.0f : u * 2.0f - 1.0f;
+                const float amp = u < 0.5f ? 0.55f : 0.55f + 0.45f * ac;
+                sc_y[x] = (uint8_t)(scope_expo(lu, 1.5f + (1.0f - d) * 9.0f) * amp * (float)(SC_H - 8));
+            }
+        }
+        cv_text(6, 2, &FONT_B, title, col);
+        cv_text(6, SC_Y + SC_H + 6, &FONT_XS, sub, K_DIM);
+        scope_trace(col);
+        scope_dot(tk, col);
+        return;
+    }
+    if (kind == SCOPE_PLFO || kind == SCOPE_DLFO) {
+        const int pl = kind == SCOPE_PLFO, shape = proj.par[pl ? P_PL_SHAPE : P_DL_SHAPE],
+                  rate = proj.par[pl ? P_PL_RATE : P_DL_RATE] & 7, dep = proj.par[pl ? P_PL_DEPTH : P_DL_DEPTH];
+        const float cyc = 8.0f * fm_exp2f(-(float)rate * 0.5f), amp = 0.06f + 0.94f * (float)dep * 0.01f;
+        col = pl ? K_PAD : K_BASS;
+        title = pl ? "PAD LFO" : "DRONE LFO";
+        sub = LFO_SHAPE_NAME_UI[(unsigned)shape < 6u ? shape : 0];
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1), w = lfo_wave(shape, u * cyc + tk);
+            sc_y[x] = (uint8_t)((0.5f + 0.5f * w * amp) * (float)(SC_H - 8));
+        }
+        cv_text(6, 2, &FONT_B, title, col);
+        cv_text(6 + text_w(&FONT_B, title) + 8, 6, &FONT_XS, sub, K_DIM);
+        scope_trace(col);
+        cv_rect(SC_X, SC_Y + SC_H / 2, SC_W, 1, K_LINE);
+        return;
+    }
+    if (kind == SCOPE_DFILT || kind == SCOPE_AFILT) {
+        const int ac = kind == SCOPE_AFILT, cut = proj.par[ac ? P_AC_CUT : P_DR_CUT], res = proj.par[ac ? P_AC_RES : P_DR_RES],
+                  env = ac ? proj.par[P_AC_ENV] : 0;
+        int pass;
+        col = ac ? K_ACID : K_BASS;
+        title = ac ? "ACID FILTER" : "DRONE FILTER";
+        sub = ac ? "CUTOFF  RESO  ENV MOD (DIM: PEAK)" : "CUTOFF  RESO";
+        cv_text(6, 2, &FONT_B, title, col);
+        cv_text(6, SC_Y + SC_H + 6, &FONT_XS, sub, K_DIM);
+        for (pass = 0; pass < (ac && env > 4 ? 2 : 1); pass++) {
+            const float oct = 8.4f * (float)cut * 0.01f + (pass ? 4.0f * (float)env * 0.01f : 0.0f), fc = 60.0f * fm_exp2f(oct),
+                        q = 0.6f + (float)res * 0.09f, top = (q > 1.0f ? q : 1.0f) * 1.12f;
+            for (x = 0; x < SC_W; x++) {
+                const float f = 20.0f * fm_exp2f((float)x / (float)(SC_W - 1) * 10.0f), r = f / fc, a = 1.0f - r * r,
+                            m = 1.0f / fm_sqrtf(a * a + r * r / (q * q) + 1e-6f);
+                sc_y[x] = (uint8_t)(fm_clampf(m / top, 0.0f, 1.0f) * (float)(SC_H - 6));
+            }
+            scope_trace(pass == 0 && ac && env > 4 ? mix(K_BG, col, 7) : col);
+        }
+        return;
+    }
+    {   /* Space: the echo's taps and the reverb's tail */
+        const float eb = ETIME_BEATS_UI[(unsigned)proj.par[P_ETIME] < 6u ? proj.par[P_ETIME] : 0], fb = 0.15f + 0.7f * (float)proj.par[P_ECHO] * 0.01f,
+                    rv = (float)proj.par[P_REVERB] * 0.01f, len = 0.25f + 0.75f * (float)proj.par[P_SIZE] * 0.01f;
+        const int32_t px = (int32_t)(eb * 34.0f);
+        int k;
+        col = KC_REPEAT;
+        cv_text(6, 2, &FONT_B, "SPACE", col);
+        cv_text(6, SC_Y + SC_H + 6, &FONT_XS, "THE HIT, ITS ECHOES, THE REVERB'S TAIL", K_DIM);
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            sc_y[x] = (uint8_t)(rv * 0.55f * scope_expo(u / len, 4.0f) * (float)(SC_H - 8));
+        }
+        scope_trace(KC_COLOR);
+        for (k = 0; k < 7; k++) {
+            const int32_t bx = SC_X + 4 + k * px, bh = (int32_t)((float)(SC_H - 8) * (k ? fm_powf(fb, (float)k) * 0.85f : 1.0f));
+            if (bx > SC_X + SC_W - 3 || bh < 2)
+                break;
+            cv_rect(bx, SC_Y + SC_H - bh, 3, bh, k ? col : K_TEXT);
+        }
+    }
+}
 
 static void draw_main(void)
 {
@@ -2602,6 +2995,12 @@ static void draw_main(void)
         h = hash(h, ui.fx_page | (uint32_t)ui.gx_pat << 4 | (uint32_t)ui.fxs[EN_FXS_GX_LEN] << 20 | (uint32_t)ui.gx_tgt << 25);
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
+        if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
+            int j;
+            h = hash(h, scope_tick());
+            for (j = 0; j < EN_NFXS; j++)
+                h = hash(h, ui.fxs[j]);
+        }
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
@@ -2637,6 +3036,21 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_perf();
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
+    if (scope_kind(ui.view)) {                   /* a page that shapes a sound: its curve */
+        h = hash(hash(0x53434F50u, ui.view | (uint32_t)ui.theme << 8), scope_tick());
+        for (i = 0; i < 4; i++)
+            h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
+        h = hash(h, (uint32_t)proj.par[P_AC_ENV] | (uint32_t)proj.par[P_ECHO] << 8 | (uint32_t)proj.par[P_SIZE] << 16 |
+                        (uint32_t)proj.par[P_PL_RATE] << 24);
+        h = hash(h, (uint32_t)(proj.par[P_PL_DEPTH] | proj.par[P_DL_SHAPE] << 8 | proj.par[P_DL_RATE] << 12 | proj.par[P_DL_DEPTH] << 16));
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_scope(scope_kind(ui.view));
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -2684,6 +3098,18 @@ static void draw_main(void)
 /* the knob strip (X0X's): a rule with the page's name and a dot a page at its right end; under it a
  * cell a knob: its name, a ring (or pips, for a switch of a few positions), the value. The knob being
  * turned is drawn on a tint. Only redrawn when what it shows changes. */
+static uint16_t view_color(void)                /* the page's voice in its colour: the pad, the drone, the acid, the drums */
+{
+    const int g = group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
+    switch (g >= 0 ? GROUP[g].btn : -1) {
+    case B_LFO: return K_BASS;
+    case B_ARP: return K_ACID;
+    case B_SEQ: return RGB(255, 160, 60);
+    case B_HOME: return KC_REPEAT;
+    default: return ui.view == V_PERF ? KC_FILTER : K_PAD;
+    }
+}
+
 static void draw_knobs(void)
 {
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8 | (uint32_t)ui.lane << 16 | (uint32_t)ui.theme << 24), i;
@@ -2788,7 +3214,7 @@ static void draw_knobs(void)
         int k = view_knob((int)i), lo, hi, v, hot = now_touch && ui.touched == (int)i;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
-        uint16_t bg = hot ? K_PANEL : K_BG, fill = hot ? K_ACC : K_PAD;
+        uint16_t bg = hot ? K_PANEL : K_BG, fill = hot ? K_ACC : view_color();
         if (k == K_NONE)
             continue;
         if (i)
@@ -2921,16 +3347,22 @@ static uint16_t mascot_color(char ch)
     }
 }
 
-static void draw_splash(void)
+static void splash_mascot(int hop, int blink)    /* the mascot, hopped up hop pixels, its eyes shut when blinking */
 {
-    int i, x, y;
-    lcd_fill(0, 0, 240, 240, K_BG);
-    cv_begin(240, 96, K_BG);                     /* the mascot */
+    int x, y;
+    cv_begin(240, 96, K_BG);
     for (y = 0; y < 20; y++)
         for (x = 0; x < 23; x++)
             if (MASCOT[y][x] != '.')
-                cv_rect(120 - 23 * 2 + x * 4, 96 - 20 * 4 - 4 + y * 4, 4, 4, mascot_color(MASCOT[y][x]));
+                cv_rect(120 - 23 * 2 + x * 4, 96 - 20 * 4 - 4 + y * 4 - hop, 4, 4, mascot_color(blink && MASCOT[y][x] == 'Y' ? 'K' : MASCOT[y][x]));
     cv_blit(0, 0);
+}
+
+static void draw_splash(void)
+{
+    int i;
+    lcd_fill(0, 0, 240, 240, K_BG);
+    splash_mascot(0, 0);
     cv_begin(240, 144, K_BG);                    /* the name, the rings, and what's next */
     text_c(120, 0, &FONT_L, "DEAMON", RGB(242, 230, 196));
     text_c(120, 36, &FONT_L, "SLINKY", RGB(255, 143, 143));
@@ -2980,8 +3412,18 @@ static void splash_tick(void)                    /* the HYP-1 card's steps, fill
 {
     uint32_t t = plat_ms() - ui.boot_t, t1 = ui_splash_ms * 17u / 32u, n, k = 0, i;
     if (ui.splash == 1) {
-        if (t < t1)
+        static uint32_t last = 0xFFFFFFFFu;
+        if (t < t1) {                              /* the mascot hops twice, then blinks */
+            const int hop = t < t1 * 3u / 5u ? (int)(14.0f * fm_fabsf(fm_sinf(FM_PI * (float)t / (float)(t1 * 3u / 10u + 1u)))) : 0,
+                      blink = t > t1 * 3u / 4u && t < t1 * 7u / 8u;
+            const uint32_t s = (uint32_t)hop | (uint32_t)blink << 8;
+            if (s != last) {
+                last = s;
+                splash_mascot(hop, blink);
+            }
             return;
+        }
+        last = 0xFFFFFFFFu;
         ui.splash = 2;
         draw_hyp();
     }
