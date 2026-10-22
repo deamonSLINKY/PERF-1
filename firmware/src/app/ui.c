@@ -2772,74 +2772,10 @@ static void autosave(void)
         project_flush_globals();                 /* playing: the theme, Tune, MIDI out (a moment's gap) */
 }
 
-/* THE BOOT CARDS. First RedtailWorks: a pixel red panda (3x) sitting on the name, its ringed tail
- * curled up behind it, and the rings again beneath; then HYP-1 in big pixel letters, sixteen steps
- * filling in (the white keys lighting with them) until the music starts. Any button or key: straight
- * to the music. */
-#define PANDA_W 32
-#define PANDA_H 25
-static const char *const PANDA[PANDA_H] = {
-    ".WWW..............WWW...........",
-    ".WBBW............WBBW...........",
-    ".WBBRRRRRRRRRRRRRRBBW...........",
-    "..RRRRRRRRRRRRRRRRRR............",
-    ".RRRWWWRRRRRRRRWWWRRR...........",
-    ".RRRRRRRRRRRRRRRRRRRR...........",
-    ".RRRRKKRRRRRRRRKKRRRR...........",
-    ".RWWDKKDRRRRRRDKKDWWR...........",
-    ".WWWWDDWWWWWWWWDDWWWW...........",
-    ".WWWWWDDWWKKWWDDWWWWW...........",
-    "..WWWWWDDWWWWDDWWWWW........DDD.",
-    "...DWWWWDDWWDDWWWWD........DDDDD",
-    "....DDWWWWWWWWWWDD.........TTTTT",
-    "......DDDDDDDDDD...........TTTTT",
-    "......DRRRRRRRRD...........RRRRR",
-    ".....BRRRRRRRRRRB..........RRRRR",
-    "....BBRRRRRRRRRRBB.........TTTTT",
-    "....BBBRRRRRRRRBBB........TTTTTT",
-    "...BBBBBRRRRRRBBBBB.......RRRRRR",
-    "...BBBBBBBBBBBBBBBB......RRRRRR.",
-    "...BBBBBBBBBBBBBBBBRRTTRRTTTTT..",
-    "...BBBBBBBBBBBBBBBBRRTTRRTTTTT..",
-    "....BBBB.BBBB.BBBBRRRTTRRRRRR...",
-    "...KKBBB..BB..BBBKKDDTTDDDD.....",
-    "...KKKK...KK...KKKK............."
-};
-static uint16_t panda_col(char c)
-{
-    switch (c) {
-    case 'R': return RGB(200, 84, 32);           /* rust */
-    case 'D': return RGB(140, 52, 20);           /* its shade */
-    case 'T': return RGB(232, 156, 92);          /* the tail's pale rings */
-    case 'W': return RGB(246, 236, 222);         /* the face's white */
-    case 'B': return RGB(64, 30, 22);            /* the dark legs and belly, the ears inside */
-    case 'K': return RGB(24, 16, 18);            /* eyes, nose, paws */
-    default: return 0;
-    }
-}
-
-static void draw_splash(void)
-{
-    int i, x, y;
-    lcd_fill(0, 0, 240, 240, K_BG);
-    cv_begin(240, 96, K_BG);                     /* the panda */
-    for (y = 0; y < PANDA_H; y++)
-        for (x = 0; PANDA[y][x]; x++)
-            if (PANDA[y][x] != '.')
-                cv_rect(120 - PANDA_W * 3 / 2 + x * 3, 96 - PANDA_H * 3 - 4 + y * 3, 3, 3, panda_col(PANDA[y][x]));
-    cv_blit(0, 0);
-    cv_begin(240, 144, K_BG);                    /* the name, the rings, and what's next */
-    text_c(120, 0, &FONT_L, "REDTAIL", K_PAD);
-    text_c(120, 36, &FONT_L, "WORKS", K_ACC);
-    for (i = 0; i < 9; i++)
-        cv_rect(48 + i * 16, 86, 12, 6, i & 1 ? K_ACC : K_PAD);
-    cv_frame(40, 80, 160, 18, K_LINE);
-    text_c(120, 110, &FONT_XS, "PRESENTS", K_DIM);
-    cv_blit(0, 96);
-}
-
-/* the second boot card: deamonSLINKY's mascot, a slinky with demon horns (23 x 20 sprite, 5 px a pixel; the design is the Hellfire
- * colorway of the logo concept), the name in two colours, and the credit: the firmware is a fork of HYP-1 by RedtailWorks.
+/* THE BOOT CARDS. First deamonSLINKY (the maker): its mascot, a slinky with demon horns (a 23 x 20 sprite, 4 px a pixel; the Hellfire
+ * colorway of the logo concept), the name in two colours, a ringed bar and "PRESENTS". Then PERF-1 in big pixel letters, what it is,
+ * and the credit (a fork of HYP-1 by RedtailWorks), with sixteen steps filling in (the white keys lighting with them) until the
+ * music starts. Any button or key: straight to the music.
  * Sprite letters: K outline, H horn, h horn shade, Y eye, R body, r body shade, L highlight, T tail, . nothing. */
 static const char *const MASCOT[20] = {
     "..K............K.......",
@@ -2875,27 +2811,58 @@ static uint16_t mascot_color(char ch)
     default: return 0;
     }
 }
+
+static void draw_splash(void)
+{
+    int i, x, y;
+    lcd_fill(0, 0, 240, 240, K_BG);
+    cv_begin(240, 96, K_BG);                     /* the mascot */
+    for (y = 0; y < 20; y++)
+        for (x = 0; x < 23; x++)
+            if (MASCOT[y][x] != '.')
+                cv_rect(120 - 23 * 2 + x * 4, 96 - 20 * 4 - 4 + y * 4, 4, 4, mascot_color(MASCOT[y][x]));
+    cv_blit(0, 0);
+    cv_begin(240, 144, K_BG);                    /* the name, the rings, and what's next */
+    text_c(120, 0, &FONT_L, "DEAMON", RGB(242, 230, 196));
+    text_c(120, 36, &FONT_L, "SLINKY", RGB(255, 143, 143));
+    for (i = 0; i < 9; i++)
+        cv_rect(48 + i * 16, 86, 12, 6, i & 1 ? RGB(224, 52, 79) : RGB(156, 29, 58));
+    cv_frame(40, 80, 160, 18, K_LINE);
+    text_c(120, 110, &FONT_XS, "PRESENTS", K_DIM);
+    cv_blit(0, 96);
+}
+
+/* the second card: PERF-1, big 5 x 7 pixel letters (6 px a pixel), an orange shadow under the purple */
+#define BIG_N 6
+#define BIG_PX 6
+static const uint8_t BIG_GLYPH[BIG_N][7] = {
+    {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  /* P */
+    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},  /* E */
+    {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11},  /* R */
+    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},  /* F */
+    {0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00},  /* - */
+    {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},  /* 1 */
+};
 #define SPLASH_STEP_Y 184
 static void draw_hyp(void)
 {
-    int r, c;
-    int32_t x, w1, w2;
+    int g, r, c, pass;
     lcd_fill(0, 0, 240, 240, K_BG);
-    cv_begin(240, 140, K_BG);                   /* (a canvas is at most 144 rows: the mascot and the name, then the two lines) */
-    for (r = 0; r < 20; r++)
-        for (c = 0; c < 23; c++)
-            if (MASCOT[r][c] != '.')
-                cv_rect(62 + c * 5, r * 5, 5, 5, mascot_color(MASCOT[r][c]));
-    w1 = text_w(&FONT_M, "deamon");
-    w2 = text_w(&FONT_M, "SLINKY");
-    x = (240 - w1 - w2) / 2;
-    cv_text(x, 106, &FONT_M, "deamon", RGB(242, 230, 196));
-    cv_text(x + w1, 106, &FONT_M, "SLINKY", RGB(255, 143, 143));
+    cv_begin(240, 140, K_BG);
+    for (pass = 0; pass < 2; pass++)             /* the shadow, then the letters */
+        for (g = 0; g < BIG_N; g++)
+            for (r = 0; r < 7; r++)
+                for (c = 0; c < 5; c++)
+                    if (BIG_GLYPH[g][r] >> (4 - c) & 1u)
+                        cv_rect(12 + (g * 6 + c) * BIG_PX + (pass ? 0 : 3), 24 + r * BIG_PX + (pass ? 0 : 3), BIG_PX, BIG_PX,
+                                pass ? K_PAD : K_ACC);
+    text_c(120, 86, &FONT_S, "GENERATIVE  //  LIVE", K_TEXT);
     cv_blit(0, 6);
-    cv_begin(240, 36, K_BG);
-    text_c(120, 2, &FONT_XS, EN_VERSION[0] == 'D' ? "FM-1 CUSTOM FIRMWARE" : "FM-1 CUSTOM FIRMWARE  //  " EN_VERSION, K_TEXT);
-    text_c(120, 18, &FONT_XS, "BASED ON HYP-1 BY REDTAILWORKS", K_DIM);
-    cv_blit(0, 146);
+    cv_begin(240, 52, K_BG);                     /* (a canvas is at most 144 rows) */
+    text_c(120, 0, &FONT_XS, EN_VERSION[0] == 'D' ? "FM-1 CUSTOM FIRMWARE" : "FM-1 CUSTOM FIRMWARE  //  " EN_VERSION, K_TEXT);
+    text_c(120, 16, &FONT_XS, "BY DEAMONSLINKY", RGB(255, 143, 143));
+    text_c(120, 32, &FONT_XS, "BASED ON HYP-1 BY REDTAILWORKS", K_DIM);
+    cv_blit(0, 120);
     for (c = 0; c < 16; c++)
         lcd_fill(8 + c * 14, SPLASH_STEP_Y, 11, 11, K_PANEL);
 }
