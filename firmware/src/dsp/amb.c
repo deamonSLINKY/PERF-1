@@ -1170,7 +1170,8 @@ static int nz_color;
  * open), a perc (an FM blip: a rim or a tom, by its tune). Each lane its level, tune and decay. */
 typedef struct {
     float ph, inc, inc_end, amp, adec, idx, x1, x2, att, mph[4], pend, t, hp, ph2, inc2;
-    int32_t wait;                               /* swing: samples until a hit that waits (pend: its velocity) */
+    int32_t wait, wait2;                        /* swing, rolls: samples until a hit that waits (pend, pend2: its velocity) */
+    float pend2;
     uint8_t on, note;
 } drum_t;
 static drum_t drum[EN_NDRUM];
@@ -1582,20 +1583,28 @@ static int32_t drums_wait(void)                 /* samples to the next hit that 
 {
     int32_t m = 0;
     int d;
-    for (d = 0; d < EN_NDRUM; d++)
+    for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (!m || drum[d].wait < m))
             m = drum[d].wait;
+        if (drum[d].wait2 > 0 && (!m || drum[d].wait2 < m))
+            m = drum[d].wait2;
+    }
     return m;
 }
 
 static void drums_wait_step(int32_t k)          /* k samples went by: hits whose wait is over */
 {
     int d;
-    for (d = 0; d < EN_NDRUM; d++)
+    for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (drum[d].wait -= k) <= 0) {
             drum[d].wait = 0;
             drum_fire(d, drum[d].pend);
         }
+        if (drum[d].wait2 > 0 && (drum[d].wait2 -= k) <= 0) {
+            drum[d].wait2 = 0;
+            drum_fire(d, drum[d].pend2);
+        }
+    }
 }
 
 
@@ -1690,6 +1699,7 @@ static void scat_engage(void);
 static void var_leave(void);
 static void rvs_engage(void);
 static void flx_tick(int st);
+static uint64_t fx_on;
 static void tick(void)
 {
     static const uint8_t TRIG_BARS[6] = {0, 1, 2, 4, 8, 0};
@@ -1733,7 +1743,8 @@ static void tick(void)
     drum_publish();
     lk_hat = 0;
     for (l = 0; l < EN_NDRUM; l++) {
-        int hit = (int)(en_pats[pat_now][l] >> st & 1u);
+        int hit = (int)(en_pats[pat_now][l] >> st & 1u), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
+        const uint64_t fxm = fx_on;
         float vel = 0.9f;
         if (sec == SEC_BREAK) {
             hit = 0;
@@ -1761,13 +1772,39 @@ static void tick(void)
                 vel = 0.5f;
             }
         }
+        if (l == L_HAT && (fxm & (FXB(FX_HATROLL) | FXB(FX_HATTRIP)))) {     /* HAT ROLL / HAT TRIP: every step, in 32nds or triplets */
+            hit = 1;
+            vel = (st & 1) ? 0.5f : 0.65f;
+            dbl = (fxm & FXB(FX_HATTRIP)) ? 2 : 1;
+        }
+        if (l == L_SNARE && (fxm & FXB(FX_SNROLL))) {                      /* SN ROLL: every step, louder through the bar, doubled on the odd ones */
+            hit = 1;
+            vel = 0.3f + 0.045f * (float)st;
+            dbl = (st & 1) ? 1 : 0;
+        }
+        if (hit && (l == L_SNARE || l == L_CLAP) && (fxm & FXB(FX_FLAM)))   /* FLAM: a grace note just before it */
+            dbl = 3;
+        if (hit && l == L_KICK && (fxm & FXB(FX_DBLKICK)))                  /* DBL KICK: and again half a step on */
+            dbl = 1;
         if (hit && (l == L_HAT || l == L_OHAT))
             lk_hat = 1;
         if (hit && l == L_PERC)
             perc_hit = 1;
         if (hit) {
             vel *= l == L_HAT || l == L_OHAT ? pa : 1.0f;
-            if (chop > 0.0f && !sw && (l == L_SNARE || l == L_KICK || l == L_HAT) && frand() < 0.2f * chop) {
+            if (dbl == 3) {                     /* a flam: the grace note now, the hit 20 ms on */
+                drum_fire(l, vel * 0.4f);
+                drum[l].wait = (int32_t)(0.02f * EN_SR);
+                drum[l].pend = vel;
+            } else if (dbl) {                   /* a roll: the hit, and its echoes within the step */
+                drum_fire(l, vel);
+                drum[l].wait = (int32_t)(step_len * (dbl == 2 ? 0.3333f : 0.5f));
+                drum[l].pend = vel * 0.7f;
+                if (dbl == 2) {
+                    drum[l].wait2 = (int32_t)(step_len * 0.6667f);
+                    drum[l].pend2 = vel * 0.6f;
+                }
+            } else if (chop > 0.0f && !sw && (l == L_SNARE || l == L_KICK || l == L_HAT) && frand() < 0.2f * chop) {
                 drum_fire(l, vel);              /* a 32nd roll: the hit, and again half a step on */
                 drum[l].wait = (int32_t)(0.5f * step_len);
                 drum[l].pend = vel * 0.7f;
@@ -2457,7 +2494,7 @@ static void play_stop(void)
 {
     int d;
     for (d = 0; d < EN_NDRUM; d++)
-        drum[d].wait = 0;                        /* a swung hit still waiting stays unplayed */
+        drum[d].wait = drum[d].wait2 = 0;        /* a swung hit still waiting stays unplayed */
     en_playing = 0;
     pad_gate = 0.0f;
     acid.amp_t = 0.0f;
@@ -2485,7 +2522,7 @@ static uint32_t rb_wi;                           /* rb_w mod RB_N, kept by count
 static uint32_t bm_sm;                           /* bm_start mod RB_N, set with it (SETSTART) */
 static uint8_t rb_odd;
 static float rb_hl, rb_hr;                       /* the first sample of each pair, waiting for the second */
-static uint64_t fx_req, fx_on;
+static uint64_t fx_req;
 enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR, BM_SCR, BM_GRN, BM_RVS, BM_FLX };
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
 static uint32_t bm_start;                        /* the frame the reading counts from */
@@ -2543,7 +2580,7 @@ const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
     "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T",
-    "Stut 16", "Stut 32", "Beat repeat", "Half Rpt", "Beat Rev", "Skip", "Trance", "Gate 8", "Double", "Shuffle", "Back-Fwd", "Roll Out", "Build", "Scratch", "Dropout"};
+    "Stut 16", "Stut 32", "Beat repeat", "Half Rpt", "Beat Rev", "Skip", "Trance", "Gate 8", "Double", "Shuffle", "Back-Fwd", "Roll Out", "Build", "Scratch", "Dropout", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -3109,10 +3146,9 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             else
                 rpt_arm = (uint8_t)(want + 1);
         }
-    } else if (flx_active && fxs_v[EN_FXS_FX_MODE] == 0) {
-        /* a Flex Beat one shot plays out its bar */
+    } else if (flx_active) {
+        /* a Flex Beat pattern plays out its bar (a loop let go ends at the bar line too) */
     } else {
-        flx_active = 0;
         rpt_arm = 0;
         bm_tgt = 0.0f;                          /* back to the live mix (the ring fades out) */
     }

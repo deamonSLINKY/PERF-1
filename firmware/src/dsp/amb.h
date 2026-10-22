@@ -132,7 +132,7 @@ extern volatile uint8_t en_sec_req;            /* a command waiting for the bar:
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The
  * tracks, for mute and solo: kick; hats (closed and open); snare (snare and clap); perc; drone; acid;
  * pad (and the vinyl). The FX menu holds the four drums' mutes; every track's mute and solo, latched,
- * is en_trk (GLO held, on the keys). Bits 52..62 are spare; 63 is the UI's "no effect". */
+ * is en_trk (GLO held, on the keys). Bits 57..62 are spare; 63 is the UI's "no effect". */
 enum {
     FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32,   /* beat repeat: the last 1/2 .. 1/32 note, looped */
     FX_REV, FX_STOP,                                          /* reverse; tape stop */
@@ -148,6 +148,7 @@ enum {
     FX_RPT8T, FX_RPT16T,                                      /* beat repeats in triplets: 1/8, 1/16 */
     FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7, FX_FLEX8,   /* Flex Beat: fifteen one-bar patterns (en_flex_step) */
     FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
+    FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM, FX_DBLKICK,   /* drum rolls (held): the hats in 32nds; in triplets; a snare roll; flams on snare and clap; a double kick */
     EN_NFX = 64                                               /* the mask is 64 bits: FXB(bit) */
 };
 #define FXB(x) (1ull << (x))

@@ -70,6 +70,8 @@ static const char *const LFO_SHAPE_NAME_UI[6] = {"SINE", "TRIANGLE", "SAW", "SQU
 static const float ETIME_BEATS_UI[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
 static const char *const FXQ_NAME[3] = {"OFF", "BEAT", "BAR"};                                   /* Flex Beat: when it starts */
 static const char *const FXM_NAME[2] = {"ONE SHOT", "LOOP"};
+static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
+static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
@@ -121,7 +123,8 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"DROP", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
+    {"STAGE", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
+                      {"", KN_NONE, 0, 0, 0}}},
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
 };
@@ -221,8 +224,8 @@ static const uint8_t KEY_FX[3][NKEYS] = {
     {FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32, FX_RPT8T,                 /* the repeats together, slow to fast: F3 .. B3 */
      FX_RPT16T, FX_NONE, FX_SCATTER, FX_BRAKE, FX_SPIN,                                /* C4 (the last repeat) C#4 D4 D#4 E4 */
      FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the mutes where they are on the first page) */
-     FX_MUTE_PERC, FX_NONE, FX_NONE, FX_NONE, FX_NONE,
-     FX_NONE, FX_NONE, FX_NONE},
+     FX_MUTE_PERC, FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM,                         /* C5 .. E5: the drum rolls */
+     FX_DBLKICK, FX_NONE, FX_NONE},
     {FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7,             /* Flex Beat: its fifteen patterns, F3 .. */
      FX_FLEX8, FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE}};
@@ -231,7 +234,7 @@ static const char *const FX_LABEL[EN_NFX] = {
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
-    "STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD", "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT",
+    "STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD", "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
     [FX_NONE] = ""};
 /* every kind of effect its own colour (the same in every theme, so a key is found by its colour as well as its name):
  * repeats cyan, filters green, gates and the pump yellow, the drums' mutes red, the colour effects pink, the transport
@@ -249,7 +252,8 @@ static uint16_t fx_color(int fx)
     if (fx >= FX_FLEX1 && fx <= FX_FLEX15)
         return KC_FLEX;
     switch (fx) {
-    case FX_RPT2: case FX_RPT4: case FX_RPT6: case FX_RPT8: case FX_RPT16: case FX_RPT32: case FX_RPT8T: case FX_RPT16T: return KC_REPEAT;
+    case FX_RPT2: case FX_RPT4: case FX_RPT6: case FX_RPT8: case FX_RPT16: case FX_RPT32: case FX_RPT8T: case FX_RPT16T:
+    case FX_HATROLL: case FX_HATTRIP: case FX_SNROLL: case FX_FLAM: case FX_DBLKICK: return KC_REPEAT;
     case FX_LP: case FX_HP: case FX_SWEEP: return KC_FILTER;
     case FX_GATE16: case FX_GATE8: case FX_GATEX: case FX_PUMP: return KC_GATE;
     case FX_MUTE_KICK: case FX_MUTE_HATS: case FX_MUTE_SNARE: case FX_MUTE_PERC: return KC_MUTE;
@@ -362,6 +366,11 @@ static struct {
     uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
     uint8_t viz;                       /* the visualizer on the SELECT dial (VZ_*) */
     uint8_t flex_last;                 /* the Flex Beat pad pressed last (0..14) */
+    uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
+    uint32_t saver_t;
+    float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
+    int8_t glide_t[4];
+    uint8_t glide_on, glide_busy;
     uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
@@ -649,7 +658,8 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
 }
 static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
 {
-    return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : &ui.key_set;
+    return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
+           i == 5 ? &ui.saver : &ui.lights;
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -809,6 +819,8 @@ static void knob_set(int k, int v)
         return;
     }
     if (k >= K_FXF) {                            /* the FX knobs: the engine's, never stored */
+        if (!ui.glide_busy)
+            ui.glide_on &= (uint8_t)~(1u << (k - K_FXF));   /* (turned by hand: a gliding one is let go) */
         knob_range(k, &lo, &hi);
         v = v < lo ? lo : v > hi ? hi : v;
         if (v != ui.fxk[k - K_FXF]) {
@@ -890,8 +902,11 @@ static void scene_apply(int s)
     ui.trk_m = ui.scene_m[s];
     ui.trk_s = ui.scene_s[s];
     en_trk(ui.trk_m, ui.trk_s);
-    for (k = 0; k < 4; k++)
-        knob_set(K_FXF + k, ui.scene_k[s][k]);
+    for (k = 0; k < 4; k++) {                  /* the FX knobs glide there (glide_tick) */
+        ui.glide_t[k] = ui.scene_k[s][k];
+        ui.glide_f[k] = (float)ui.fxk[k];
+    }
+    ui.glide_on = 15;
     say(t, 0);
 }
 static void scene_recall(int s)                /* a scene: on the next bar while playing (a setting), else at once */
@@ -3461,6 +3476,29 @@ static void leds(void)
             for (i = 0; i < EN_NPAT; i++)
                 if ((int)i != seq_pat())
                     k |= 1u << BLACK_KEY[i];
+    } else if (ui.view == V_VIZ && ui.lights && !mix_show() && !ui.fx_menu) {   /* the light show (STAGE: Lights) */
+        const int st = en_playing ? (int)en_drum_pos : (int)((ui.frame / 6u) & 15u);
+        if (en_sec == EN_SEC_BREAK) {            /* a breakdown breathes: the white keys and the black ones in turn */
+            const uint32_t ph = (ui.frame / 24u) & 1u;
+            for (i = 0; i < 16; i++)
+                if ((i & 1u) == ph)
+                    k |= 1u << WHITE_KEY[i];
+            for (i = 0; i < 11; i++)
+                if ((i & 1u) != ph)
+                    k |= 1u << BLACK_KEY[i];
+        } else if (en_sec == EN_SEC_BUILD) {     /* a build fills the white keys from the left, over its bars */
+            const uint32_t n = 1u + (en_bars % 64u) / 4u;
+            for (i = 0; i < 16 && i < n; i++)
+                k |= 1u << WHITE_KEY[i];
+        } else {                                 /* a groove: two chasers; the black keys flash with the kick and the snare */
+            k |= 1u << WHITE_KEY[st] | 1u << WHITE_KEY[(st + 8) & 15];
+            if (en_drum_glow[0] > 0.5f)
+                for (i = 0; i < 11; i += 2)
+                    k |= 1u << BLACK_KEY[i];
+            if (en_drum_glow[1] > 0.5f)
+                for (i = 1; i < 11; i += 2)
+                    k |= 1u << BLACK_KEY[i];
+        }
     } else if (mix_show() || (perf_like() && !ui.fx_menu)) {   /* GLO held, or the perform screen: the keys muted and soloed */
         for (i = 0; i < NKEYS; i++)
             if (mix_state((int)i))
@@ -3490,6 +3528,51 @@ static void leds(void)
     }
     plat_glow(1);
     plat_leds(b, k);
+}
+
+/* the FX knobs glide to a scene's values (a second or so) instead of jumping; a knob turned by hand takes its own back */
+static void glide_tick(void)
+{
+    int k;
+    if (!ui.glide_on)
+        return;
+    ui.glide_busy = 1;
+    for (k = 0; k < 4; k++)
+        if (ui.glide_on >> k & 1u) {
+            float d = (float)ui.glide_t[k] - ui.glide_f[k];
+            if (d > -0.6f && d < 0.6f) {
+                knob_set(K_FXF + k, ui.glide_t[k]);
+                ui.glide_on &= (uint8_t)~(1u << k);
+            } else {
+                ui.glide_f[k] += d * 0.06f;
+                knob_set(K_FXF + k, (int)(ui.glide_f[k] + (ui.glide_f[k] < 0.0f ? -0.5f : 0.5f)));
+            }
+        }
+    ui.glide_busy = 0;
+}
+
+/* the screensaver (STAGE page): left alone while playing, the visualizers take the screen (the auto one); any key, button or dial turn brings the
+ * page back (that touch is a touch as well) */
+static void saver_tick(void)
+{
+    static const uint32_t MS[4] = {0u, 60000u, 180000u, 600000u};
+    const uint32_t now = plat_ms(), last = ui.act_t > ui.turn_t ? ui.act_t : ui.turn_t;
+    if (ui.saver_on) {
+        if (last > ui.saver_t || !en_playing) {
+            ui.saver_on = 0;
+            set_view(ui.saver_view);
+            ui.viz = ui.saver_viz;
+        }
+        return;
+    }
+    if (ui.saver && ui.saver < 4 && en_playing && ui.view != V_VIZ && !ui.fx_menu && !ui.help && !ui.btn && !ui.keys && now - last >= MS[ui.saver]) {
+        ui.saver_on = 1;
+        ui.saver_view = ui.view;
+        ui.saver_viz = ui.viz;
+        ui.saver_t = now;
+        ui.viz = VZ_AUTO;
+        set_view(V_VIZ);
+    }
 }
 
 /* what's left waiting for flash (a store is written at once, store_now): stopped, all of it after a
@@ -3720,6 +3803,8 @@ void ui_frame(void)
     scene_tick();
     dj_tick();
     key_tick();
+    glide_tick();
+    saver_tick();
     autosave();
     if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
         runner_update();

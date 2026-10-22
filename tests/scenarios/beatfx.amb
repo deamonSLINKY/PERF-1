@@ -60,6 +60,32 @@ wait 400
 expect fxmask -2147483648
 key 13 up
 wait 300
+# the drum rolls (C#5 hat roll, D5 hat triplets, D#5 snare roll, E5 flams, F5 double kick)
+key 20 down
+wait 400
+expect fxmaskhi 1048576
+key 20 up
+wait 300
+key 21 down
+wait 400
+expect fxmaskhi 2097152
+key 21 up
+wait 300
+key 22 down
+wait 400
+expect fxmaskhi 4194304
+key 22 up
+wait 300
+key 23 down
+wait 400
+expect fxmaskhi 8388608
+key 23 up
+wait 300
+key 24 down
+wait 400
+expect fxmaskhi 16777216
+key 24 up
+wait 300
 # the mutes are there too
 key 14 down
 wait 400

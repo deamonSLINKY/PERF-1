@@ -513,6 +513,14 @@ static int expect(const char *what, const char *val)
         got = (int)en_flx_done;
     else if (!strcmp(what, "flexlast"))
         got = ui.flex_last;
+    else if (!strcmp(what, "saver"))              /* the STAGE page: the screensaver setting, it is on, the lights */
+        got = ui.saver;
+    else if (!strcmp(what, "saveron"))
+        got = ui.saver_on;
+    else if (!strcmp(what, "lights"))
+        got = ui.lights;
+    else if (!strcmp(what, "glide"))              /* an FX knob still gliding to a scene's value (bits) */
+        got = ui.glide_on;
     else if (!strcmp(what, "keyon"))              /* the drop's key change is on */
         got = ui.key_on;
     else if (!strcmp(what, "keyset"))

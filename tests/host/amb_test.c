@@ -543,6 +543,58 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the hat roll and the hat triplets really are more hits: counted by the hat lane's glow jumping, over 4 s at 128 bpm */
+    {
+        int fx, blk, n[3];
+        for (fx = 0; fx < 3; fx++) {
+            float prev = 0.0f;
+            n[fx] = 0;
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_play(1);
+            run(1.0f);
+            if (fx)
+                en_fx(1ull << (fx == 1 ? FX_HATROLL : FX_HATTRIP));
+            for (blk = 0; blk < 2756; blk++) {          /* 4 s in blocks of 64 frames */
+                float g;
+                en_render(buf, 64, 2048);
+                g = en_drum_glow[3];
+                if (g > prev + 0.3f)
+                    n[fx]++;
+                prev = g;
+            }
+            en_fx(0);
+            run(0.5f);
+        }
+        CHECK(n[1] > n[0] * 3 / 2 && n[2] > n[1], "hat rolls: %d hits (none held), %d (roll), %d (triplets): expected more with each", n[0], n[1], n[2]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+    /* the drum rolls (hat roll, hat triplets, snare roll, flams, double kick), each held for four seconds at three tempos: nothing breaks */
+    {
+        int fx, tm, blk, j, broken = 0;
+        for (fx = FX_HATROLL; fx <= FX_DBLKICK; fx++)
+            for (tm = 0; tm < 3; tm++) {
+                en_init();
+                en_set(P_TEMPO, tm == 0 ? 70 : tm == 1 ? 128 : 190);
+                en_play(1);
+                run(1.0f);
+                en_fx(1ull << fx);
+                for (blk = 0; blk < 700; blk++) {
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j++)
+                        if (buf[j] == INT32_MIN || buf[j] > 8400000 || buf[j] < -8400000)
+                            broken++;
+                }
+                en_fx(0);
+                run(0.5f);
+            }
+        CHECK(!broken, "drum rolls: %d samples broken (NaN or over full scale)", broken);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* Flex Beat: every pattern, started each way (off, on the beat, on the bar), held as a one shot: it arms, plays its bar, and is over
      * exactly once; the level stays sane; and a loop keeps going while it is held */
     {
