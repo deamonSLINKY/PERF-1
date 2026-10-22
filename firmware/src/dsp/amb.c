@@ -66,6 +66,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CM_LVL] = {"Pluck", 0, 100, 30},     [P_CM_SND] = {"Sound", 0, EN_NCMSND - 1, 1}, [P_CM_DENS] = {"Density", 0, 100, 45},
     [P_CM_OCT] = {"Pluck oct", -2, 2, 0},   [P_CM_DEC] = {"Decay", 0, 100, 45},          [P_CM_STYLE] = {"Style", 0, EN_NCMSTYLE - 1, 0},
     [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
+    [P_PROB] = {"Prob", 0, 100, 100},     [P_PROB1] = {"Prob", 0, 100, 100},   [P_PROB2] = {"Prob", 0, 100, 100},
+    [P_PROB3] = {"Prob", 0, 100, 100},    [P_PROB4] = {"Prob", 0, 100, 100},   [P_PROB5] = {"Prob", 0, 100, 100},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -1849,6 +1851,8 @@ static void tick(void)
                 vel = 0.5f;
             }
         }
+        if (hit && par[P_PROB + l] < 100 && frand() * 100.0f >= (float)par[P_PROB + l])   /* the lane's probability: some hits do not sound */
+            hit = 0;
         if (l == L_HAT && (fxm & (FXB(FX_HATROLL) | FXB(FX_HATTRIP)))) {     /* HAT ROLL / HAT TRIP: every step, in 32nds or triplets */
             hit = 1;
             vel = (st & 1) ? 0.5f : 0.65f;

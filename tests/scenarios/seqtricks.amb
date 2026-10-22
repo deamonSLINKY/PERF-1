@@ -1,0 +1,26 @@
+# The sequencer's tricks (SEL + a knob): K1 fills the lane with a Euclidean pattern of n hits in 16, K2 turns it round, K3 sets the lane's probability (a hit sounds
+# that often). Here the kick (the lane that is first): eight hits are every other step; turned one on, the other ones; 80 percent.
+seed 0
+wait 3000
+press SEQ
+wait 500
+release SEQ
+expect view 21
+expect lane0 0x1111
+press SEL
+spin K1 -16
+spin K1 8
+release SEL
+wait 50
+expect lane0 0x5555
+press SEL
+spin K2 1
+release SEL
+wait 50
+expect lane0 0xAAAA
+press SEL
+spin K3 -4
+release SEL
+wait 50
+expect par106 80
+shot seq_tricks.png

@@ -93,6 +93,7 @@ enum {
                                                            * and mutate (Off, Shift, Morph): hits move, come, go */
     P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT,              /* the counter-melody (PLUCK): level, sound, density, octave */
     P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE,          /* decay, style (up, down, ..), rate (1/8, 1/16, 1/4, 3/16), range in octaves */
+    P_PROB, P_PROB1, P_PROB2, P_PROB3, P_PROB4, P_PROB5,  /* each drum lane's chance a hit sounds (P_PROB + lane), 100 always: thinned from the sequencer */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))

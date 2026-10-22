@@ -625,6 +625,31 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* a lane's probability: the hats at 100 sound every time, at 50 about half as often, at 0 never (counted by the glow, 4 s at 128 bpm) */
+    {
+        int pr, blk, n[3];
+        for (pr = 0; pr < 3; pr++) {
+            float prev = 0.0f;
+            n[pr] = 0;
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_PROB + 3, pr == 0 ? 100 : pr == 1 ? 50 : 0);
+            en_play(1);
+            run(1.0f);
+            for (blk = 0; blk < 2756; blk++) {
+                float g;
+                en_render(buf, 64, 2048);
+                g = en_drum_glow[3];
+                if (g > prev + 0.3f)
+                    n[pr]++;
+                prev = g;
+            }
+        }
+        CHECK(n[0] > 8 && n[1] > 0 && n[1] < n[0] && n[2] == 0, "lane probability: %d hits at 100, %d at 50, %d at 0", n[0], n[1], n[2]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the hat roll and the hat triplets really are more hits: counted by the hat lane's glow jumping, over 4 s at 128 bpm */
     {
         int fx, blk, n[3];

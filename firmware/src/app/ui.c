@@ -384,6 +384,7 @@ static struct {
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
     uint8_t viz;                       /* the visualizer on the SELECT dial (VZ_*) */
+    uint8_t eu_n[EN_NLANE], eu_r[EN_NLANE];   /* the sequencer's Euclid tricks: each lane's hits and rotation, as last set */
     uint8_t flex_last;                 /* the Flex Beat pad pressed last (0..14) */
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
     uint32_t saver_t;
@@ -1238,6 +1239,53 @@ static void piece_factory(void)                 /* Global, SAVE held: back to th
 
 /* ------------------------------------------------------------ the kit --- */
 static int seq_pat(void) { return proj.par[P_PATTERN]; }   /* the pattern the sequencer edits: the one chosen */
+static void seq_trick(int k, int32_t e)         /* SEL + K1: the lane as a Euclidean pattern of n hits in 16; K2: turned round; K3: how likely a hit is to sound */
+{
+    char t[20];
+    const int l = ui.lane;
+    int n = ui.eu_n[l], r = ui.eu_r[l];
+    if (k == 2) {
+        const int p = P_PROB + l;
+        knob_set(p, proj.par[p] + 5 * (int)e);
+        itoa_u((uint32_t)proj.par[p], t);
+        t[3] = 0;
+        {
+            int j = 0;
+            while (t[j])
+                j++;
+            t[j++] = '%';
+            t[j] = 0;
+        }
+        say("PROBABILITY", t);
+        return;
+    }
+    if (k == 0)
+        n = n + (int)e < 0 ? 0 : n + (int)e > 16 ? 16 : n + (int)e;
+    else
+        r = (r + (int)e + 16) & 15;
+    ui.eu_n[l] = (uint8_t)n;
+    ui.eu_r[l] = (uint8_t)r;
+    en_pats[seq_pat()][l] = (uint16_t)en_euclid(n, 16, r);
+    edited();
+    {
+        int j = 0;
+        const char *s = "EUCLID ";
+        while (*s)
+            t[j++] = *s++;
+        itoa_u((uint32_t)n, t + j);
+        while (t[j])
+            j++;
+        t[j++] = '/';
+        t[j++] = '1';
+        t[j++] = '6';
+        t[j] = 0;
+    }
+    {
+        char u[12] = "ROT ";
+        itoa_u((uint32_t)r, u + 4);
+        say(t, u);
+    }
+}
 
 static void step_toggle(int s)                  /* a hit on or off: the lane's step s (its white key) */
 {
@@ -2020,6 +2068,12 @@ static void input(void)
     }
     for (i = 0; i < 4; i++)
         if ((e = plat_enc(EN_K1 + (int)i)) != 0) {
+            if (ui.view == V_SEQ && (btn >> B_SEL & 1u) && i < 3) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation) and the lane's probability */
+                ui.btn_used |= 1u << B_SEL;
+                seq_trick((int)i, e);
+                ui.act_t = ui.turn_t = plat_ms();
+                continue;
+            }
             turn(EN_K1 + (int)i, view_knob((int)i), e);
             ui.touched = (int8_t)i;
             ui.touch_until = plat_ms() + 1200u;
@@ -2514,6 +2568,16 @@ static void draw_seq(void)
         if (sel)                                /* the keys' lane */
             cv_rect(0, y + 1, 240, 17, K_PANEL);
         cv_text(4, y + 3, &FONT_XS, LANE_SHORT[l], sel ? K_TEXT : K_DIM);
+        if (proj.par[P_PROB + l] < 100) {        /* thinned: its chance, under the name */
+            char pt[6];
+            int j = 0;
+            itoa_u((uint32_t)proj.par[P_PROB + l], pt);
+            while (pt[j])
+                j++;
+            pt[j++] = '%';
+            pt[j] = 0;
+            cv_text(4, y + 11, &FONT_XS, pt, K_ACC);
+        }
         if (sel)
             cv_rect(1, y + 4, 2, 9, K_ACC);
         for (s = 0; s < 16; s++) {
@@ -3437,6 +3501,8 @@ static void draw_main(void)
                     (uint32_t)ui.view << 20);
     if (ui.view == V_SEQ) {
         h = hash(h, ui.lane | (uint32_t)proj.par[P_PATTERN] << 16);
+        for (i = 0; i < EN_NLANE; i++)
+            h = hash(h, (uint32_t)proj.par[P_PROB + i]);
         if (h == ui.sig[1])
             return;
         ui.sig[1] = h;
