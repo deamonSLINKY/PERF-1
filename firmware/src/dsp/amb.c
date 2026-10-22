@@ -2340,6 +2340,8 @@ static void play_stop(void)
 #define RB_N 21000
 static int16_t rb[RB_N * 2] EN_POOL;
 static uint32_t rb_w;                            /* frames written (they wrap: an index is taken mod RB_N) */
+static uint32_t rb_wi;                           /* rb_w mod RB_N, kept by counting (no division in the audio path) */
+static uint32_t bm_sm;                           /* bm_start mod RB_N, set with it (SETSTART) */
 static uint8_t rb_odd;
 static float rb_hl, rb_hr;                       /* the first sample of each pair, waiting for the second */
 static uint64_t fx_req, fx_on;
@@ -2377,7 +2379,14 @@ static float sw_m, sw_s[2][2], sw_c[4];
 static float rm_m, rm_ph, rm_inc, rm_wet;   /* the ring mod: its fade, phase, step and share */   /* the sweep: its fade, its two filters' states, its coefficients */
 static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
 static float vn_amp = 1.0f;
+static float ph_k0, ph_k1;                      /* the phaser's mix, as constants for the chunk: dry and wet shares (0.88 of them) */
 static float ph_fbk, ph_wet, fl_inc, fl_rng, fl_fbk, fl_wet, vn_g, vn_pop, vn_hiss;   /* the settings, as the render uses them */
+static inline float soft_sat(float x)           /* ~tanh: x (27 + x^2) / (27 + 9 x^2), held at +-3 (where it reaches 1) */
+{
+    x = x > 3.0f ? 3.0f : x < -3.0f ? -3.0f : x;
+    return x * (27.0f + x * x) / (27.0f + 9.0f * x * x);
+}
+static float tp_d = 150.0f, tp_dd, fl_d = 10.0f, fl_dd;   /* the tape's and the flanger's delay now, and its step a sample */
 static float tp_m, fl_m, ph_m, tp_ph, tp_ph2, fl_ph, ph_ph, tp_lp[2], ph_z[2][4], ph_fb[2], ph_a[2];
 /* the FX knobs (en_fxk): filter -50..50 (a DJ filter: low-pass to the left, high-pass to the right), crush,
  * throw (the whole mix into the echo), wash (the whole mix into the reverb), each 0..100. They are the
@@ -2403,7 +2412,7 @@ static void rpt_engage(int r)                   /* the slice that just ended, lo
     bmode = BM_RPT;
     brate = r;
     bm_len = len;
-    bm_start = rb_w - (uint32_t)(len * 0.5f + 0.5f);
+    bm_start = rb_w - (uint32_t)(len * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
     bm_off = 0.0f;
     bm_tgt = 1.0f;
 }
@@ -2416,11 +2425,10 @@ static inline void rb_read(float off, float *l, float *r)   /* off samples (44.1
     if (f < 0.0f && (float)k != f)
         k--;
     t = f - (float)k;
-    i = (int32_t)(bm_start % RB_N) + k;
-    i %= (int32_t)RB_N;
-    i += i < 0 ? (int32_t)RB_N : 0;
+    i = (int32_t)bm_sm + k;                     /* (k is within one ring either way: one step brings it home) */
+    i += i < 0 ? (int32_t)RB_N : i >= (int32_t)RB_N ? -(int32_t)RB_N : 0;
     i0 = (uint32_t)i;
-    i1 = (i0 + 1u) % RB_N;
+    i1 = i0 + 1u == RB_N ? 0u : i0 + 1u;
     *l = ((float)rb[2 * i0] + ((float)rb[2 * i1] - (float)rb[2 * i0]) * t) * (1.0f / 12000.0f);
     *r = ((float)rb[2 * i0 + 1] + ((float)rb[2 * i1 + 1] - (float)rb[2 * i0 + 1]) * t) * (1.0f / 12000.0f);
 }
@@ -2435,10 +2443,11 @@ static inline void rb_write(float l, float r)
     }
     rb_odd = 0;
     {
-        uint32_t i = rb_w % RB_N;
+        uint32_t i = rb_wi;
         rb[2 * i] = s16(0.5f * (rb_hl + l));
         rb[2 * i + 1] = s16(0.5f * (rb_hr + r));
         rb_w++;
+        rb_wi = i + 1u == RB_N ? 0u : i + 1u;
     }
 }
 
@@ -2469,7 +2478,7 @@ static void scat_engage(void)
     sc_len = sl;
     sc_k = 0;
     bmode = BM_SCAT;
-    bm_start = rb_w - (uint32_t)((float)n * sl * 0.5f + 0.5f);
+    bm_start = rb_w - (uint32_t)((float)n * sl * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
     bm_tgt = 1.0f;
     scat_pick();
 }
@@ -2486,7 +2495,7 @@ static float vr_time(float v, float base)       /* base * 2 ^ (v * 0.06) seconds
 static void var_engage(int wh)
 {
     bmode = BM_VAR;
-    bm_start = rb_w - 2u;
+    bm_start = rb_w - 2u, bm_sm = bm_start % RB_N;
     bm_off = 0.0f;
     bm_tgt = 1.0f;
     vr_rate = 1.0f;
@@ -2518,7 +2527,7 @@ static void scr_engage(void)
     scr_per = fm_maxf(step_len * PER[(int)fm_clampf((float)fxs_v[EN_FXS_SR_EVERY], 0.0f, 3.0f)], 32.0f);
     scr_t = 0.0f;
     bmode = BM_SCR;
-    bm_start = rb_w - (uint32_t)(scr_w * 0.5f + 0.5f);
+    bm_start = rb_w - (uint32_t)(scr_w * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
     bm_tgt = 1.0f;
 }
 /* the freeze: a stretch of the past (0.1 .. 0.85 s) held, and grains (20 .. 200 ms, one to four) drawn from it at random
@@ -2540,7 +2549,7 @@ static void grn_engage(void)
     gn_n = 1 + (int)fm_clampf((float)fxs_v[EN_FXS_FZ_GRAINS], 0.0f, 3.0f);
     gn_scale = 1.5f / fm_sqrtf((float)gn_n);
     bmode = BM_GRN;
-    bm_start = rb_w - (uint32_t)frames;
+    bm_start = rb_w - (uint32_t)frames, bm_sm = bm_start % RB_N;
     bm_tgt = 1.0f;
     for (i = 0; i < gn_n; i++) {
         gn_respawn(i);
@@ -2558,7 +2567,7 @@ static void rvs_engage(void)
     rv_len = fm_minf(step_len * LEN[(int)fm_clampf((float)fxs_v[EN_FXS_RV_LEN], 0.0f, 2.0f)], avail);
     rv_pos = rv_len - 1.0f;
     bmode = BM_RVS;
-    bm_start = rb_w - (uint32_t)(rv_len * 0.5f + 0.5f);
+    bm_start = rb_w - (uint32_t)(rv_len * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
     bm_tgt = 0.3f + 0.007f * (float)fxs_v[EN_FXS_RV_MIX];
 }
 
@@ -2628,6 +2637,15 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         ph_m = ph_m < 0.002f && !(m >> FX_PHASER & 1u) ? 0.0f : ph_m;
         ph_fbk = (float)fxs_v[EN_FXS_PH_FB] * 0.009f;     /* 0 .. 0.9 */
         ph_wet = (float)fxs_v[EN_FXS_PH_MIX] * 0.005f;    /* the wet's share: 0 .. 0.5 (half and half: the deepest notches) */
+        ph_k0 = (1.0f - ph_wet) * 0.88f;
+        ph_k1 = ph_wet * 0.88f / (1.0f + 0.6f * ph_fbk);    /* (the feedback adds level) */
+        for (c = 0; c < 2; c++) {                         /* the denormal flush, once a chunk */
+            ph_fb[c] = fm_flush(ph_fb[c]);
+            ph_z[c][0] = fm_flush(ph_z[c][0]);
+            ph_z[c][1] = fm_flush(ph_z[c][1]);
+            ph_z[c][2] = fm_flush(ph_z[c][2]);
+            ph_z[c][3] = fm_flush(ph_z[c][3]);
+        }
         if (ph_m > 0.0f) {                      /* rate 0.08 .. 2.6 Hz; the sweep 0 .. 4.5 octaves up from 250 Hz */
             const float oct = (float)fxs_v[EN_FXS_PH_DEPTH] * 0.045f;
             ph_ph += dt * 0.08f * fm_exp2f((float)fxs_v[EN_FXS_PH_RATE] * 0.05f);
@@ -2718,7 +2736,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         rpt_arm = 0;
         if (bmode != BM_STOP || bm_tgt < 1.0f) {
             bmode = BM_STOP;
-            bm_start = rb_w - 2u;
+            bm_start = rb_w - 2u, bm_sm = bm_start % RB_N;
             bm_off = 0.0f;
             bm_speed = 1.0f;
             bm_tgt = 1.0f;
@@ -2728,7 +2746,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         if (bmode != BM_REV || bm_tgt < 1.0f) {
             bmode = BM_REV;
             bm_len = (float)(RB_N - 8) * 2.0f;
-            bm_start = rb_w - (RB_N - 8);
+            bm_start = rb_w - (RB_N - 8), bm_sm = bm_start % RB_N;
             bm_off = bm_len - 1.0f;
             bm_tgt = 1.0f;
         }
@@ -2907,11 +2925,17 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
         int c;
         if (tp_m > 0.0f) {                      /* tape: wow 0.7 Hz (+-70 samples, about 12 cents), flutter 8 Hz */
             float d;
-            tp_ph += 0.7f * (1.0f / EN_SR);
-            tp_ph2 += 8.0f * (1.0f / EN_SR);
-            tp_ph -= (float)(int)tp_ph;
-            tp_ph2 -= (float)(int)tp_ph2;
-            d = 150.0f + tp_wd * fm_sin_turns(tp_ph) + tp_fd * fm_sin_turns(tp_ph2);
+            if (!(mod_w & 15u)) {               /* the delay time is worked out every 16 samples (two sines) and slid between */
+                float dn;
+                tp_ph += 16.0f * 0.7f * (1.0f / EN_SR);
+                tp_ph2 += 16.0f * 8.0f * (1.0f / EN_SR);
+                tp_ph -= (float)(int)tp_ph;
+                tp_ph2 -= (float)(int)tp_ph2;
+                dn = 150.0f + tp_wd * fm_sin_turns(tp_ph) + tp_fd * fm_sin_turns(tp_ph2);
+                tp_dd = (dn - tp_d) * (1.0f / 16.0f);
+            }
+            tp_d += tp_dd;
+            d = tp_d;
             for (c = 0; c < 2; c++) {
                 float rd = (float)w - d, y;
                 uint32_t i0, i1;
@@ -2923,15 +2947,21 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                 tp_buf[c][w] = in[c];
                 y = tp_buf[c][i0] + (tp_buf[c][i1] - tp_buf[c][i0]) * fr;
                 tp_lp[c] += tp_k * (y - tp_lp[c]);      /* a duller top */
-                y = fm_tanhf(tp_lp[c] * tp_drive) * (1.0f / tp_drive);   /* and saturation */
+                y = soft_sat(tp_lp[c] * tp_drive) * (1.0f / tp_drive);   /* and saturation (a rational tanh: one division) */
                 in[c] += (y - in[c]) * tp_m;
             }
         }
         if (fl_m > 0.0f) {                      /* flanger: a short delay (0.2 ms and up), swept, with feedback */
             float d;
-            fl_ph += fl_inc;
-            fl_ph -= (float)(int)fl_ph;
-            d = 10.0f + fl_rng * (0.5f + 0.5f * fm_sin_turns(fl_ph));
+            if (!(mod_w & 15u)) {               /* the delay time: a sine every 16 samples, slid between */
+                float dn;
+                fl_ph += 16.0f * fl_inc;
+                fl_ph -= (float)(int)fl_ph;
+                dn = 10.0f + fl_rng * (0.5f + 0.5f * fm_sin_turns(fl_ph));
+                fl_dd = (dn - fl_d) * (1.0f / 16.0f);
+            }
+            fl_d += fl_dd;
+            d = fl_d;
             for (c = 0; c < 2; c++) {
                 float rd = (float)w - d, y;
                 uint32_t i0, i1;
@@ -2950,15 +2980,14 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
         if (ph_m > 0.0f) {                      /* phaser: four all-passes, with feedback, mixed with the dry */
             for (c = 0; c < 2; c++) {
                 float x = in[c] + ph_fbk * ph_fb[c], y = x;
-                int s;
-                for (s = 0; s < 4; s++) {
-                    float v = ph_a[c] * y + ph_z[c][s];
-                    ph_z[c][s] = fm_flush(y - ph_a[c] * v);
-                    y = v;
-                }
-                ph_fb[c] = fm_flush(y);
-                y *= 1.0f / (1.0f + 0.6f * ph_fbk);          /* (the feedback adds level) */
-                out[c] = in[c] + ((in[c] * (1.0f - ph_wet) + y * ph_wet) * 0.88f - in[c]) * ph_m;
+                const float a = ph_a[c];
+                float v;
+                v = a * y + ph_z[c][0];  ph_z[c][0] = y - a * v;  y = v;
+                v = a * y + ph_z[c][1];  ph_z[c][1] = y - a * v;  y = v;
+                v = a * y + ph_z[c][2];  ph_z[c][2] = y - a * v;  y = v;
+                v = a * y + ph_z[c][3];  ph_z[c][3] = y - a * v;  y = v;
+                ph_fb[c] = y;
+                out[c] = in[c] + (in[c] * ph_k0 + y * ph_k1 - in[c]) * ph_m;
             }
         }
         mod_w++;
@@ -3503,36 +3532,38 @@ static inline float nz_white(nz_t *z)
  * with a duller thump (a 700 Hz one); under them the faintest surface hiss (pink). Left and right pop apart. */
 static inline float nz_sample(nz_t *z, int unused)
 {
-    float w = nz_white(z), pk, u, o, d;
+    float w, pk = 0.0f, o, d;
+    uint32_t h;
     (void)unused;
-    z->b0 = 0.99765f * z->b0 + w * 0.0990460f;  /* pink: Paul Kellet's economy filter */
-    z->b1 = 0.96300f * z->b1 + w * 0.2965164f;
-    z->b2 = 0.57000f * z->b2 + w * 1.0526913f;
-    pk = (z->b0 + z->b1 + z->b2 + w * 0.1848f) * 0.22f;
-    z->rng = z->rng * 1664525u + 1013904223u;
-    u = (float)(z->rng >> 8) * (1.0f / 16777216.0f);      /* 0 .. 1 */
-    if (u < vn_pop) {                           /* a tick: a burst of noise that dies in a fraction of a millisecond or two */
-        float a, m;
-        z->rng = z->rng * 1664525u + 1013904223u;   /* a fresh draw: the one that chose the tick was a small number */
-        a = (float)(z->rng >> 8) * (1.0f / 16777216.0f);    /* 0 .. 1 */
-        m = a * a;
-        z->crack = (0.1f + 1.2f * m) * vn_amp;  /* most small, now and then a loud one */
+    z->rng = z->rng * 1664525u + 1013904223u;    /* one step a sample: the noise from it, the chances from a scramble of it */
+    w = (float)(int32_t)z->rng * (1.0f / 2147483648.0f);
+    h = (z->rng ^ z->rng >> 15) * 2246822519u;
+    if (vn_hiss > 0.0f) {                       /* the hiss: pink (Paul Kellet's economy filter), only if it is wanted */
+        z->b0 = 0.99765f * z->b0 + w * 0.0990460f;
+        z->b1 = 0.96300f * z->b1 + w * 0.2965164f;
+        z->b2 = 0.57000f * z->b2 + w * 1.0526913f;
+        pk = (z->b0 + z->b1 + z->b2 + w * 0.1848f) * 0.22f * vn_hiss;
+    }
+    if ((float)(h >> 8) * (1.0f / 16777216.0f) < vn_pop) {   /* a tick: a burst of noise that dies in a fraction of a millisecond or two */
+        float a;
+        h = (h ^ h >> 13) * 3266489917u;        /* another scramble: its size, not the number that chose it */
+        a = (float)(h >> 8) * (1.0f / 16777216.0f);          /* 0 .. 1 */
+        z->crack = (0.1f + 1.2f * a * a) * vn_amp;           /* most small, now and then a loud one */
         z->r1 = 0.90f + 0.075f * a;             /* its decay: 0.25 ms (small) to 1.5 ms (big) */
         if (a > 0.85f)
-            z->y2 = 0.45f * vn_amp * (a - 0.85f) * 6.0f + z->y2;   /* a loud one brings a dull thud with it */
+            z->y2 += 0.45f * vn_amp * (a - 0.85f) * 6.0f;    /* a loud one brings a dull thud with it */
+    } else {
+        h = (h ^ h >> 13) * 3266489917u;
+        if ((float)(h >> 8) * (1.0f / 16777216.0f) < 5.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
+            z->r2 = 0.09f * vn_amp;
     }
-    z->rng = z->rng * 1664525u + 1013904223u;
-    if ((float)(z->rng >> 8) * (1.0f / 16777216.0f) < 5.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
-        z->r2 = 0.09f * vn_amp;
     d = (w - z->pw) * 0.7f;                     /* white, with the lows taken out: a tick has no body */
-    o = d * (z->crack + z->r2);
+    o = d * (z->crack + z->r2) + z->y2 + pk;
     z->crack *= z->r1;
     z->r2 *= 0.80f;
-    o += z->y2;                                 /* the thud: a pulse that falls away in some milliseconds */
     z->y2 *= 0.9965f;
     z->pw = w;
-    z->pp = pk;
-    return o + pk * vn_hiss;
+    return o;
 }
 
 static float nzl[BLK], nzr[BLK];

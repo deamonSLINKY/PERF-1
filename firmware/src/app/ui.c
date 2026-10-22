@@ -2838,33 +2838,64 @@ static void draw_splash(void)
     cv_blit(0, 96);
 }
 
-/* the HYP-1 card: big 5 x 7 pixel letters (7 px a pixel), an orange shadow under the purple */
-#define BIG_N 6
-#define BIG_PX 6                               /* a pixel of the letters: 6 px (six letters fill the screen) */
-static const uint8_t BIG_GLYPH[BIG_N][7] = {
-    {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  /* P */
-    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},  /* E */
-    {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11},  /* R */
-    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},  /* F */
-    {0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00},  /* - */
-    {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},  /* 1 */
-};
+/* the second boot card: deamonSLINKY's mascot, a slinky with demon horns (23 x 20 sprite, 5 px a pixel; the design is the Hellfire
+ * colorway of the logo concept), the name in two colours, and the credit: the firmware is a fork of HYP-1 by RedtailWorks.
+ * Sprite letters: K outline, H horn, h horn shade, Y eye, R body, r body shade, L highlight, T tail, . nothing. */
+static const char *const MASCOT[20] = {
+    "..K............K.......",
+    ".KHK..........KHK......",
+    "..KHK........KHK.......",
+    "..KhK.KKKKKK.KhK.......",
+    "...KhKRRRRRRKhK........",
+    "..KRLLRRRRRRRRRK.......",
+    ".KRLRKKRRRRKKRRRK......",
+    ".KRRRYYRRRRYYRRRK......",
+    ".KRRRKRRRRRRKRRRK......",
+    ".KrrrKHKKKKHKrrrK...K..",
+    "..KKKKKKKKKKKKKK...KRK.",
+    "..KRLLRRRRRRRRRK..KRLRK",
+    "..KrrrrrrrrrrrrK..KKKKK",
+    "...KKKKKKKKKKKK.....T..",
+    "..KRLLRRRRRRRRRK....T..",
+    "..KrrrrrrrrrrrrK....T..",
+    "...KKKKKKKKKKKK....T...",
+    "..KRLLRRRRRRRRRK..T....",
+    "..KrrrrrrrrrrrrKTT.....",
+    "...KKKKKKKKKKKK........"};
+static uint16_t mascot_color(char ch)
+{
+    switch (ch) {
+    case 'K': case 'T': return RGB(27, 16, 34);
+    case 'H': return RGB(242, 230, 196);
+    case 'h': return RGB(196, 173, 126);
+    case 'Y': return RGB(255, 212, 71);
+    case 'R': return RGB(224, 52, 79);
+    case 'r': return RGB(156, 29, 58);
+    case 'L': return RGB(255, 143, 143);
+    default: return 0;
+    }
+}
 #define SPLASH_STEP_Y 184
 static void draw_hyp(void)
 {
-    int g, r, c, pass;
+    int r, c;
+    int32_t x, w1, w2;
     lcd_fill(0, 0, 240, 240, K_BG);
-    cv_begin(240, 144, K_BG);
-    for (pass = 0; pass < 2; pass++)             /* the shadow, then the letters */
-        for (g = 0; g < BIG_N; g++)
-            for (r = 0; r < 7; r++)
-                for (c = 0; c < 5; c++)
-                    if (BIG_GLYPH[g][r] >> (4 - c) & 1u)
-                        cv_rect(12 + (g * 6 + c) * BIG_PX + (pass ? 0 : 3), 12 + r * BIG_PX + (pass ? 0 : 3), BIG_PX, BIG_PX,
-                                pass ? K_PAD : K_ACC);
-    text_c(120, 76, &FONT_S, "GENERATIVE  //  LIVE", K_TEXT);
-    text_c(120, 102, &FONT_XS, EN_VERSION[0] == 'D' ? "FOR THE M-VAVE FM-1" : "FOR THE FM-1  //  " EN_VERSION, K_DIM);
-    cv_blit(0, 30);
+    cv_begin(240, 140, K_BG);                   /* (a canvas is at most 144 rows: the mascot and the name, then the two lines) */
+    for (r = 0; r < 20; r++)
+        for (c = 0; c < 23; c++)
+            if (MASCOT[r][c] != '.')
+                cv_rect(62 + c * 5, r * 5, 5, 5, mascot_color(MASCOT[r][c]));
+    w1 = text_w(&FONT_M, "deamon");
+    w2 = text_w(&FONT_M, "SLINKY");
+    x = (240 - w1 - w2) / 2;
+    cv_text(x, 106, &FONT_M, "deamon", RGB(242, 230, 196));
+    cv_text(x + w1, 106, &FONT_M, "SLINKY", RGB(255, 143, 143));
+    cv_blit(0, 6);
+    cv_begin(240, 36, K_BG);
+    text_c(120, 2, &FONT_XS, EN_VERSION[0] == 'D' ? "FM-1 CUSTOM FIRMWARE" : "FM-1 CUSTOM FIRMWARE  //  " EN_VERSION, K_TEXT);
+    text_c(120, 18, &FONT_XS, "BASED ON HYP-1 BY REDTAILWORKS", K_DIM);
+    cv_blit(0, 146);
     for (c = 0; c < 16; c++)
         lcd_fill(8 + c * 14, SPLASH_STEP_Y, 11, 11, K_PANEL);
 }
