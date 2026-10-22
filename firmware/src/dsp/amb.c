@@ -2376,7 +2376,7 @@ static int crush_n;
 static float tp_buf[2][MOD_N], fl_buf[2][MOD_N];
 static uint32_t mod_w;
 static float vin_m, roll_t, riser_amt, wash_e;   /* vinyl in; the roll's time held (beats); the build; the wash's total */
-static float sw_m, sw_s[2][2], sw_c[4];
+static float sw_m, sw_s[2][2], sw_c[4], sw_s2[2][2], sw_c2[4];   /* (the second: the resonant spike, for the band-pass) */
 static float rm_m, rm_ph, rm_inc, rm_wet;   /* the ring mod: its fade, phase, step and share */   /* the sweep: its fade, its two filters' states, its coefficients */
 static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
 static float vn_amp = 1.0f;
@@ -2397,7 +2397,7 @@ static float lpk_s, hpk_s, crk_s, thk_s, wash_s;
 static float lp_amt_e, hp_amt_e;                 /* the filters' amounts: the key's or the knob's, the higher */
 static float cr_lv = 2048.0f, cr_wet;
 static int cr_hold = 1;
-static const float RPT_BEATS[8] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f, 1.0f / 3.0f, 1.0f / 6.0f};   /* (the last two: triplets) */
+static const float RPT_BEATS[9] = {2.0f, 1.0f, 2.0f / 3.0f, 0.5f, 0.25f, 0.125f, 1.0f / 3.0f, 1.0f / 6.0f, 0.0625f};   /* (the 7th and 8th: triplets; the last, 1/64, only the roll reaches) */
 const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
@@ -2432,6 +2432,41 @@ static inline void rb_read(float off, float *l, float *r)   /* off samples (44.1
     i1 = i0 + 1u == RB_N ? 0u : i0 + 1u;
     *l = ((float)rb[2 * i0] + ((float)rb[2 * i1] - (float)rb[2 * i0]) * t) * (1.0f / 12000.0f);
     *r = ((float)rb[2 * i0 + 1] + ((float)rb[2 * i1 + 1] - (float)rb[2 * i0 + 1]) * t) * (1.0f / 12000.0f);
+}
+
+/* the master's spectrum, for the screen (the UI asks, fifteen times a second): the last 512 frames of the ring (22.05 kHz; about 23 ms),
+ * windowed, then nb bands from 70 Hz to 10 kHz, spaced like notes, each a Goertzel filter: ~12k multiply-adds a call. out: 0 .. 1 (a dB
+ * scale, tilted up towards the top as music falls away there). It reads the ring the repeat and scratch effects hold still, and zero while stopped. */
+void en_spectrum(float *out, int nb)
+{
+    enum { N = 512 };
+    static float x[N];
+    int i, k;
+    if (!en_playing) {
+        for (k = 0; k < nb; k++)
+            out[k] = 0.0f;
+        return;
+    }
+    {
+        uint32_t idx = rb_wi;
+        for (i = N - 1; i >= 0; i--) {                      /* oldest first */
+            const uint32_t j = idx == 0u ? RB_N - 1u : idx - 1u;
+            idx = j;
+            x[i] = ((float)rb[2 * j] + (float)rb[2 * j + 1]) * (0.5f / 12000.0f) * (0.5f - 0.5f * fm_cosf(FM_TWO_PI * (float)i * (1.0f / (float)N)));
+        }
+    }
+    for (k = 0; k < nb; k++) {
+        const float f = 70.0f * fm_exp2f((float)k * (7.1f / (float)(nb > 1 ? nb - 1 : 1))), cf = 2.0f * fm_cosf(FM_TWO_PI * f * (1.0f / 22050.0f));
+        float s1 = 0.0f, s2 = 0.0f, p, db;
+        for (i = 0; i < N; i++) {
+            const float s0 = x[i] + cf * s1 - s2;
+            s2 = s1;
+            s1 = s0;
+        }
+        p = s1 * s1 + s2 * s2 - cf * s1 * s2;
+        db = 10.0f * 0.30103f * fm_log2f(p * (4.0f / ((float)N * (float)N)) + 1e-9f);   /* amplitude in dB (a full-scale sine ~ 0) */
+        out[k] = fm_clampf((db + 56.0f + (float)k * (18.0f / (float)(nb > 1 ? nb - 1 : 1))) * (1.0f / 50.0f), 0.0f, 1.0f);
+    }
 }
 
 static inline void rb_write(float l, float r)
@@ -2526,6 +2561,7 @@ static void scr_engage(void)
     const float avail = (float)(RB_N - 8) * 2.0f;
     scr_w = fm_minf(fm_maxf(step_len * WIN[(int)fm_clampf((float)fxs_v[EN_FXS_SR_REACH], 0.0f, 3.0f)], 64.0f), avail);
     scr_per = fm_maxf(step_len * PER[(int)fm_clampf((float)fxs_v[EN_FXS_SR_EVERY], 0.0f, 3.0f)], 32.0f);
+    scr_w = fm_minf(scr_w, scr_per * (fxs_v[EN_FXS_SR_STYLE] == 0 ? 0.8f : 0.6f));   /* the record never moves faster than ~2.5x: a shorter stroke, not a squeak */
     scr_t = 0.0f;
     bmode = BM_SCR;
     bm_start = rb_w - (uint32_t)(scr_w * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
@@ -2624,11 +2660,17 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         sw_m += ((float)(uint32_t)(m >> FX_SWEEP & 1u) - sw_m) * sm;
         sw_m = sw_m < 0.002f && !(m >> FX_SWEEP & 1u) ? 0.0f : sw_m;
         if (sw_m > 0.0f) {                      /* the cutoff: a triangle over its period (2 bars .. 1/8 note), 120 Hz up by its depth */
-            static const uint8_t SWP[5] = {32, 16, 8, 4, 2};   /* sixteenths */
-            const uint32_t per = SWP[(int)fm_clampf((float)fxs_v[EN_FXS_SW_RATE], 0.0f, 4.0f)];
+            static const uint8_t SWP[7] = {128, 64, 32, 16, 8, 4, 2};   /* sixteenths: 8, 4, 2, 1 bars, 1/2, 1/4, 1/8 */
+            const uint32_t per = SWP[(int)fm_clampf((float)fxs_v[EN_FXS_SW_RATE], 0.0f, 6.0f)];
             const float ph = ((float)((sixteenth - 1u) % per) * step_len + (float)step_t) / ((float)per * step_len),
                         tri = ph < 0.5f ? ph * 2.0f : 2.0f - ph * 2.0f;
-            svf_coefs(sw_c, 120.0f * fm_exp2f((float)fxs_v[EN_FXS_SW_DEPTH] * 0.07f * tri), 1.4f - 0.0128f * (float)fxs_v[EN_FXS_SW_RESO]);
+            const float fc = 120.0f * fm_exp2f((float)fxs_v[EN_FXS_SW_DEPTH] * 0.07f * tri);
+            if (fxs_v[EN_FXS_SW_TYPE] == 2) {            /* band-pass: a wide base (always), and the resonance a narrow spike on top of it */
+                svf_coefs(sw_c, fc, 1.0f);
+                svf_coefs(sw_c2, fc, 1.4f - 0.0128f * (float)fxs_v[EN_FXS_SW_RESO]);
+            } else {
+                svf_coefs(sw_c, fc, 1.4f - 0.0128f * (float)fxs_v[EN_FXS_SW_RESO]);
+            }
         }
         tp_m += ((float)(uint32_t)(m >> FX_TAPE & 1u) - tp_m) * sm;
         fl_m += ((float)(uint32_t)(m >> FX_FLANGER & 1u) - fl_m) * sm;
@@ -2724,9 +2766,10 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     }
     if (roll_t > 0.0f) {                        /* a roll: from its first rate toward its last, a stage of its time at each (a repeat held beats it) */
         static const float RL_BEATS[4] = {0.5f, 1.0f, 2.0f, 4.0f};
-        const int s = (int)fm_clampf((float)fxs_v[EN_FXS_RL_START], 0.0f, 5.0f), e = (int)fm_clampf((float)fxs_v[EN_FXS_RL_END], 0.0f, 5.0f),
+        const int s = (int)fm_clampf((float)fxs_v[EN_FXS_RL_START], 0.0f, 6.0f), e = (int)fm_clampf((float)fxs_v[EN_FXS_RL_END], 0.0f, 6.0f),
                   tm = (int)fm_clampf((float)fxs_v[EN_FXS_RL_TIME], 0.0f, 3.0f), stage = (int)(roll_t / RL_BEATS[tm]);
-        const int r = FX_RPT2 + (s < e ? (s + stage < e ? s + stage : e) : (s - stage > e ? s - stage : e));
+        const int rr = s < e ? (s + stage < e ? s + stage : e) : (s - stage > e ? s - stage : e);   /* the rate: 0..5 are 1/2 .. 1/32, 6 is 1/64 */
+        const int r = FX_RPT2 + (rr == 6 ? 8 : rr);
         if (want < 0 || RPT_BEATS[r] < RPT_BEATS[want])
             want = r;
         rl_gain = 1.0f + (float)fxs_v[EN_FXS_RL_SWELL] * 0.008f * fm_minf(roll_t * 0.25f, 1.0f);   /* a swell, to +80% over four beats */
@@ -2839,9 +2882,10 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             if (fxs_v[EN_FXS_SR_STYLE] == 0) {
                 off = scr_w * (0.5f - 0.5f * fm_sin_turns(ph + 0.25f));    /* baby: out and back */
                 w = 1.0f;
-            } else {
-                off = scr_w * ph;                                          /* pull: forward, then snap */
-                w = fm_minf(fm_minf(scr_t, scr_per - scr_t) * (1.0f / 48.0f), 1.0f);
+            } else {                                                       /* pull: forward at ease, back quickly with the fader cut */
+                const float u = ph < 0.6f ? ph * (1.0f / 0.6f) : 1.0f - (ph - 0.6f) * 2.5f, e = u * u * (3.0f - 2.0f * u);
+                off = scr_w * e;
+                w = ph < 0.6f ? 1.0f : 0.2f;
             }
             rb_read(off, &bl, &br);
             if ((scr_t += 1.0f) >= scr_per)
@@ -2872,6 +2916,17 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             vr_rate += (vr_tgt - vr_rate) * vr_c;
             rb_read(bm_off, &bl, &br);
             bm_off += vr_rate;
+            if (bm_off >= 16384.0f) {           /* (rb_read wraps once: keep the offset within a ring of its start) */
+                bm_off -= 8192.0f;
+                bm_start += 4096u;
+                bm_sm += 4096u;
+                if (bm_sm >= RB_N)
+                    bm_sm -= RB_N;
+            } else if (bm_off <= -16384.0f) {
+                bm_off += 8192.0f;
+                bm_start -= 4096u;
+                bm_sm = bm_sm >= 4096u ? bm_sm - 4096u : bm_sm + RB_N - 4096u;
+            }
             ar = vr_rate < 0.0f ? -vr_rate : vr_rate;
             k = fm_clampf(1.0f - vr_dull * (1.0f - fm_minf(ar, 1.0f)), 0.04f, 1.0f);
             vr_lp[0] += k * (bl - vr_lp[0]);
@@ -2915,7 +2970,15 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             const float v3 = x - s[1], v1 = sw_c[0] * s[0] + sw_c[1] * v3, v2 = s[1] + sw_c[1] * s[0] + sw_c[2] * v3;
             s[0] = fm_flush(2.0f * v1 - s[0]);
             s[1] = fm_flush(2.0f * v2 - s[1]);
-            o[c] = type == 0 ? v2 : type == 1 ? x - k * v1 - v2 : k * v1 * 1.6f;   /* low, high, band */
+            if (type == 2) {                    /* band: the wide one, and the resonant one's spike (as much as Reso) */
+                float *s2 = sw_s2[c];
+                const float u3 = x - s2[1], u1 = sw_c2[0] * s2[0] + sw_c2[1] * u3, u2 = s2[1] + sw_c2[1] * s2[0] + sw_c2[2] * u3;
+                s2[0] = fm_flush(2.0f * u1 - s2[0]);
+                s2[1] = fm_flush(2.0f * u2 - s2[1]);
+                o[c] = k * v1 * 1.3f + sw_c2[3] * u1 * (float)fxs_v[EN_FXS_SW_RESO] * 0.012f;
+            } else {
+                o[c] = type == 0 ? v2 : x - k * v1 - v2;   /* low, high */
+            }
         }
         l += (o[0] - l) * sw_m;
         r += (o[1] - r) * sw_m;
@@ -3558,7 +3621,7 @@ static inline float nz_sample(nz_t *z, int unused)
         if ((float)(h >> 8) * (1.0f / 16777216.0f) < 5.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
             z->r2 = 0.09f * vn_amp;
     }
-    d = (w - z->pw) * 0.7f;                     /* white, with the lows taken out: a tick has no body */
+    d = (w - 0.5f * z->pw) * 0.5f;              /* white, the lows only eased (not taken out: that was piercing): a tick with a little body */
     o = d * (z->crack + z->r2) + z->y2 + pk;
     z->crack *= z->r1;
     z->r2 *= 0.80f;

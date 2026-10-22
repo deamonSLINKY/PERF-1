@@ -418,12 +418,12 @@ int main(void)
                 switch (s) {
                 case EN_FXS_GX_LEN: lo = 2; hi = 16; break;
                 case EN_FXS_GX_TGT: case EN_FXS_PM_TGT: hi = 127; break;
-                case EN_FXS_RL_START: case EN_FXS_RL_END: hi = 5; break;
+                case EN_FXS_RL_START: case EN_FXS_RL_END: hi = 6; break;
                 case EN_FXS_RL_TIME: case EN_FXS_PM_RATE: hi = 3; break;
                 case EN_FXS_SC_SIZE: case EN_FXS_HF_SPEED: case EN_FXS_RV_LEN: hi = 2; break;
                 case EN_FXS_SR_EVERY: case EN_FXS_SR_REACH: case EN_FXS_FZ_GRAINS: hi = 3; break;
                 case EN_FXS_SR_STYLE: hi = 1; break;
-                case EN_FXS_SW_RATE: hi = 4; break;
+                case EN_FXS_SW_RATE: hi = 6; break;
                 case EN_FXS_SW_TYPE: hi = 2; break;
                 case EN_FXS_SC_LEN: lo = 2; hi = 8; break;
                 default: break;
@@ -467,6 +467,40 @@ int main(void)
         run(1.0f);
     }
 
+    /* the varispeed effects held long (half time at x1.5 ran the read point more than a ring from its start: garbage after ~3 s): the level
+     * stays sane for ten seconds, whatever the speed */
+    {
+        const int fxs[3] = {FX_HALF, FX_BRAKE, FX_SPIN};
+        int k, sp, blk, j, broken = 0;
+        float peak = 0.0f;
+        for (k = 0; k < 3; k++)
+            for (sp = 0; sp < 3; sp++) {
+                en_init();
+                en_play(1);
+                en_fxs(EN_FXS_HF_SPEED, sp);
+                en_fxs(EN_FXS_BR_BACK, sp * 50);
+                run(1.0f);
+                en_fx(1ull << fxs[k]);
+                for (blk = 0; blk < 1700; blk++) {            /* ~10 s */
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j++) {
+                        const float a = (float)(buf[j] < 0 ? -buf[j] : buf[j]);
+                        if (buf[j] == INT32_MIN || a > 8400000.0f)
+                            broken++;
+                        if (a > peak)
+                            peak = a;
+                    }
+                }
+                en_fx(0);
+                run(0.5f);
+            }
+        CHECK(!broken, "varispeed effects held ten seconds: %d samples broken (peak %.0f)", broken, (double)peak);
+        for (k = 0; k < EN_NFXS; k++)
+            en_fxs(k, EN_FXS_DEF[k]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* every piece of every genre plays: not silent, not over full scale, no NaN */
     {
         int g, i, p, l, wrong = 0;

@@ -20,7 +20,7 @@
 static struct {
     float tt, ph, ph2, dt;                     /* time (tempo scaled), two phases, the frame's seconds */
     float kick, snare, hat, en;                /* the frame's signals */
-    float bars[24], caps[24];
+    float bars[24], caps[24], spec[24];
     float sx[VZ_NSTAR], sy[VZ_NSTAR], sz[VZ_NSTAR];
     float cf[3];
     uint8_t life[2][VZ_CH][VZ_CW];
@@ -29,7 +29,8 @@ static struct {
     uint16_t lut[64];
     float dh, dhv, lift, lv, kprev, sprev;     /* the dancer: the head's spring (px, + up) and its speed; the hop's height and speed */
     float conf[24][5];                         /* confetti: x, y, vx, vy, colour */
-    uint8_t dsec, dmove;                       /* the section last seen; the move now */
+    uint8_t dsec, dmove, dleft, dother;        /* the section last seen; the move now; two-bar units left of it; 0 jumping, else the other move */
+    uint32_t dunit;                            /* the two-bar unit last counted */
     uint32_t drop_bar;                         /* the sixteenth the drop came on */
 } vz;
 
@@ -114,16 +115,13 @@ static void vz_tunnel(void)
     cv_disc(120, 72, 2 + (int32_t)(vz.kick * 8.0f), K_TEXT);
 }
 
-static void vz_bars(void)
+static void vz_bars(void)                       /* the real thing: the master's spectrum (en_spectrum), 24 bands */
 {
     int i, j;
+    en_spectrum(vz.spec, 24);
     for (i = 0; i < 24; i++) {
-        const float u = (float)i * (1.0f / 23.0f), a = (u - 0.12f) / 0.14f, b = (u - 0.5f) / 0.18f, c = (u - 0.85f) / 0.16f;
-        float tg = fm_expf(-a * a) * (0.35f * fm_clampf(en_bass_level, 0.0f, 1.0f) + vz.kick) +
-                   fm_expf(-b * b) * (0.5f * fm_clampf(en_pad_level, 0.0f, 1.0f) + 0.8f * vz.snare) +
-                   fm_expf(-c * c) * (0.7f * vz.hat + 0.6f * fm_clampf(en_acid_level, 0.0f, 1.0f));
-        tg = tg * 0.9f + vz_rf() * 0.12f * vz.en;
-        tg = fm_clampf(tg, 0.0f, 1.0f);
+        const float u = (float)i * (1.0f / 23.0f);
+        const float tg = vz.spec[i];
         vz.bars[i] = tg > vz.bars[i] ? tg : fm_maxf(vz.bars[i] - vz.dt * 1.8f, 0.0f);
         vz.caps[i] = vz.bars[i] > vz.caps[i] ? vz.bars[i] : fm_maxf(vz.caps[i] - vz.dt * 0.5f, 0.0f);
         for (j = 0; j < (int)(vz.bars[i] * 14.0f + 0.5f); j++)
@@ -171,15 +169,15 @@ static void vz_stars(void)
  * a big jump with confetti on the drop). Rows are grouped: the head (0..10) and three coils; each group has its own offset,
  * width and sway, so the body can stretch, twist and ripple. */
 enum { DM_BOUNCE, DM_SWAY, DM_SPIN, DM_WAVE, DM_BANG, DM_STOMP, DM_N, DM_SHAKE = DM_N, DM_SLEEP, DM_JUMP };
-static const char *const DM_NAME[DM_JUMP + 1] = {"BOUNCE", "SWAY", "TWIRL", "WAVE", "HEADBANG", "STOMP", "SHAKE", "SLEEPING", "BIG JUMP"};
+static const char *const DM_NAME[DM_JUMP + 1] = {"JUMP", "SWAY", "TWIRL", "WAVE", "HEADBANG", "STOMP", "SHAKE", "SLEEPING", "BIG JUMP"};
 static const uint8_t DM_GRP[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3};
 
 static void vz_confetti(void)
 {
     int i;
     for (i = 0; i < 24; i++) {
-        vz.conf[i][0] = 120.0f + (vz_rf() - 0.5f) * 40.0f;
-        vz.conf[i][1] = 60.0f;
+        vz.conf[i][0] = 84.0f + (vz_rf() - 0.5f) * 40.0f;
+        vz.conf[i][1] = 70.0f;
         vz.conf[i][2] = (vz_rf() - 0.5f) * 170.0f;
         vz.conf[i][3] = -60.0f - vz_rf() * 130.0f;
         vz.conf[i][4] = vz_rf();
@@ -188,7 +186,8 @@ static void vz_confetti(void)
 
 static void vz_dancer(void)
 {
-    const int PX = 3;
+    const int PX = 4;
+    const int CXD = 84;                        /* his middle; the pattern is on the right */
     const float dt = vz.dt;
     const int playing = en_playing;
     int mv, g, r, c;
@@ -213,11 +212,28 @@ static void vz_dancer(void)
     else if (en_bars - vz.drop_bar < 32u)
         mv = DM_JUMP;
     else
-        mv = (int)((hash(77u, en_bars / 32u + (uint32_t)en_pat_now) >> 8) % DM_N);
+    {   /* mostly jumping: the jump for 2 .. 8 bars (random), then one other move for 2 bars */
+        const uint32_t unit = en_bars / 32u;
+        if (unit != vz.dunit) {
+            vz.dunit = unit;
+            if (vz.dleft)
+                vz.dleft--;
+            if (!vz.dleft) {
+                if (vz.dother) {
+                    vz.dother = 0;
+                    vz.dleft = (uint8_t)(1u + vz_rnd() % 4u);
+                } else {
+                    vz.dother = (uint8_t)(1u + vz_rnd() % (DM_N - 1));
+                    vz.dleft = 1;
+                }
+            }
+        }
+        mv = vz.dother ? vz.dother : DM_BOUNCE;
+    }
     vz.dmove = (uint8_t)mv;
     /* the hop: a launch on the kick (a big one for the drop), the head's spring left behind, a squash on landing */
     if (kedge && vz.lift <= 0.0f && (mv == DM_BOUNCE || mv == DM_JUMP || mv == DM_SWAY || mv == DM_SPIN || mv == DM_WAVE || mv == DM_BANG || mv == DM_STOMP)) {
-        const float v0 = mv == DM_JUMP ? 210.0f : mv == DM_BOUNCE ? 105.0f : 70.0f;
+        const float v0 = mv == DM_JUMP ? 150.0f : mv == DM_BOUNCE ? 100.0f : 70.0f;
         vz.lv = v0;
         vz.lift = 0.01f;
         vz.dhv -= v0 * 0.9f;                       /* anticipation: the head lags */
@@ -252,7 +268,7 @@ static void vz_dancer(void)
     /* each move's sway / twist / ripple per group (0 head, 1..3 the coils down to the floor) */
     for (g = 0; g < 4; g++) {
         const float w = g == 3 ? 0.0f : g == 2 ? 0.4f : g == 1 ? 0.7f : 1.0f;
-        dyg[g] = vz.dh * (3 - g) * (1.0f / 3.0f);
+        dyg[g] = vz.dh * 1.3f * (float)(3 - g) * (1.0f / 3.0f);
         switch (mv) {
         case DM_SWAY: dx[g] = fm_sinf(t * 2.2f - (float)g * 0.7f) * 20.0f * w; break;
         case DM_SPIN: sx[g] = fm_cosf(t * 3.4f + (float)g * 0.55f); break;
@@ -276,15 +292,15 @@ static void vz_dancer(void)
         for (g = 0; g < 4; g++)
             sx[g] *= 1.0f - vz.dh * 0.028f;
     {   /* the floor's shadow, smaller as he rises */
-        const int sw = (int)(54.0f - vz.lift * 0.8f);
-        cv_rect(120 - sw / 2, 97, sw, 3, K_PANEL);
+        const int sw = (int)(72.0f - vz.lift * 0.9f);
+        cv_rect(CXD - sw / 2, 119, sw, 3, K_PANEL);
     }
     for (g = 3; g >= 0; g--)                           /* coils first, the head last (a squash overlaps) */
         for (r = 0; r < 20; r++) {
             if (DM_GRP[r] != g)
                 continue;
             {
-                const int32_t y = 94 - 20 * PX + r * PX - (int32_t)(vz.lift + dyg[g]) - (g == 0 ? 0 : 0);
+                const int32_t y = 118 - 20 * PX + r * PX - (int32_t)(vz.lift + dyg[g]);
                 float rowdx = dx[g];
                 int hide = sx[g] < 0.0f;
                 if (g == 0)
@@ -303,7 +319,7 @@ static void vz_dancer(void)
                     w = (int32_t)(fm_fabsf(sx[g]) * (float)PX + 0.99f);
                     if (w < 1)
                         w = 1;
-                    cv_rect(120 + (int32_t)(xx + rowdx) - (sx[g] < 0.0f ? w : 0), y, w, PX, ch == 'K' || ch == 'T' ? RGB(27, 16, 34) :
+                    cv_rect(CXD + (int32_t)(xx + rowdx) - (sx[g] < 0.0f ? w : 0), y, w, PX, ch == 'K' || ch == 'T' ? RGB(27, 16, 34) :
                             ch == 'Y' && wide > 0.5f ? RGB(255, 255, 255) : mascot_color(ch));
                 }
             }
@@ -313,14 +329,14 @@ static void vz_dancer(void)
         for (k = 0; k < 3; k++) {
             const float u = (t * 0.35f + (float)k * 0.33f);
             const float f = u - fm_floorf(u);
-            cv_text(150 + k * 10 + (int32_t)(f * 8.0f), 60 - (int32_t)(f * 50.0f), &FONT_XS, k == 0 ? "Z" : "z", mix(K_BG, K_TEXT, (int)((1.0f - f) * 16.0f)));
+            cv_text(CXD + 40 + k * 10 + (int32_t)(f * 8.0f), 70 - (int32_t)(f * 50.0f), &FONT_XS, k == 0 ? "Z" : "z", mix(K_BG, K_TEXT, (int)((1.0f - f) * 16.0f)));
         }
     }
     {   /* confetti, from the drop */
         int k;
         for (k = 0; k < 24; k++) {
             float *p = vz.conf[k];
-            if (p[1] > 150.0f)
+            if (p[1] > 150.0f || p[0] < -4.0f || p[0] > 164.0f)
                 continue;
             p[3] += 330.0f * dt;
             p[0] += p[2] * dt;
@@ -328,27 +344,71 @@ static void vz_dancer(void)
             cv_rect((int32_t)p[0], (int32_t)p[1], 3, 3, vpal(p[4] + vz.ph * 3.0f));
         }
     }
-    cv_text(4, 2, &FONT_XS, DM_NAME[mv], K_DIM);        /* the move, in the corner */
+    cv_text(172, 76, &FONT_XS, DM_NAME[mv], K_DIM);     /* the move, under the pattern */
 }
 
 static void vz_disco(void)
 {
     int i, l, s;
-    for (i = 0; i < 12; i++)                       /* the room: bands of colour, brighter on the kick */
-        cv_rect(0, i * 12, 240, 12, mix(K_BG, vpal(vz.ph * 2.0f + (float)i * 0.04f), 2 + (int)(vz.kick * 6.0f)));
-    for (i = 0; i < 14; i++) {                     /* sparkles */
+    const int kk = (int)(vz.kick * 5.0f), step4 = en_playing ? (int)(en_drum_pos >> 1) : 0;
+    const int32_t bx = 84, by = 13;
+    {   /* the back wall, breathing with the kick; a disco floor below it, tiles chasing along with the pattern */
+        int c, r;
+        cv_rect(0, 0, 240, 120, mix(K_BG, vpal(vz.ph * 2.0f), 1 + kk / 2));
+        for (r = 0; r < 2; r++)
+            for (c = 0; c < 12; c++) {
+                const int lit = ((c + r * 3 + step4) & 3) == 0 && en_playing;
+                const uint16_t col = lit ? mix(K_PANEL, vpal(vz.ph * 2.0f + (float)c * 0.07f + (float)r * 0.12f), 9 + kk) :
+                                           mix(K_BG, K_PANEL, ((c + r) & 1) ? 12 : 7);
+                cv_rect(c * 20, 123 + r * 11, 19, 10, col);
+            }
+    }
+    {   /* the beams from the ball, sweeping; their spots where they meet the floor */
+        int k;
+        for (k = 0; k < 6; k++) {
+            const float a = -1.15f + (float)k * 0.46f + fm_sinf(vz.tt * 0.7f + (float)k * 1.3f) * 0.3f;
+            const uint16_t col = mix(K_BG, vpal(vz.ph * 3.0f + (float)k * 0.17f), 5 + kk);
+            const int32_t ex = bx + (int32_t)(fm_sinf(a) * 140.0f), ey = by + (int32_t)(fm_cosf(a) * 140.0f);
+            cv_line(bx, by, ex, ey, col);
+            cv_line(bx + 1, by, ex + 1, ey, col);
+            cv_line(bx - 1, by, ex - 1, ey, col);
+            if (a > -1.3f && a < 1.3f && fm_cosf(a) > 0.2f) {
+                const int32_t sx = bx + (int32_t)(fm_sinf(a) / fm_cosf(a) * 108.0f);
+                cv_disc(sx, 122, 4, mix(K_BG, vpal(vz.ph * 3.0f + (float)k * 0.17f), 8 + kk));
+            }
+        }
+    }
+    for (i = 0; i < 12; i++) {                     /* sparkles on the wall */
         const uint32_t h = hash(2166136261u, (uint32_t)i * 977u + (plat_ms() >> 8));
-        cv_rect((int32_t)(h % 240u), (int32_t)(h >> 8) % 86, 2, 2, (h >> 20 & 1u) ? K_TEXT : vpal((float)i * 0.07f));
+        cv_rect((int32_t)(h % 164u), (int32_t)(h >> 8) % 100, 2, 2, (h >> 20 & 1u) ? K_TEXT : vpal((float)i * 0.07f));
+    }
+    cv_line(bx, 0, bx, by - 8, K_LINE);            /* the ball: a rope, a sphere of mirrors turning */
+    cv_disc(bx, by, 9, K_LINE);
+    for (i = 0; i < 16; i++) {
+        const float a = (float)i * (FM_TWO_PI / 16.0f) + vz.tt * 1.4f, r = (i & 1) ? 3.0f : 6.0f;
+        const int on = (int)((hash(77u, (uint32_t)i + (uint32_t)(vz.tt * 3.0f)) >> 9) & 3u);
+        cv_rect(bx + (int32_t)(fm_cosf(a) * r) - 1, by + (int32_t)(fm_sinf(a) * r * 0.8f) - 1, 3, 3, on == 0 ? K_TEXT : on == 1 ? vpal(vz.ph * 3.0f + (float)i * 0.06f) : K_DIM);
     }
     vz_dancer();
-    for (l = 0; l < EN_NLANE; l++)                 /* the floor: the pattern's tiles, the one playing lit */
-        for (s = 0; s < 16; s++) {
-            const int on = (int)(en_pats[en_pat_now][l] >> s & 1u), cur = en_playing && s == en_drum_pos;
-            uint16_t col = on ? mix(K_PANEL, LANE_COL(l), cur ? 16 : 9) : cur ? K_LINE : K_PANEL;
-            if (on && cur)
-                col = mix(col, K_TEXT, (int)(en_drum_glow[l] * 8.0f));
-            cv_rect(8 + s * 14, 102 + l * 7, 13, 6, col);
+    {   /* the drum pattern, small, at the right (as on the home screen), the step playing lit */
+        const int pos = en_drum_pos, pat = en_pat_now;
+        char tt[8] = "PAT ";
+        cv_round(168, 6, 70, 62, 3, K_PANEL);
+        for (l = 0; l < EN_NLANE; l++) {
+            const uint16_t bits = en_pats[pat][l];
+            const int g = q16(en_drum_glow[l]);
+            for (s = 0; s < 16; s++) {
+                const int32_t x = 172 + s * 4, y = 10 + l * 9;
+                const int on = (int)(bits >> s & 1u), cur = en_playing && s == pos;
+                if (on)
+                    cv_rect(x, y, 3, 6, en_pulse_rest ? K_LINE : cur ? K_TEXT : mix(K_LINE, LANE_COL(l), 8 + g / 2));
+                else
+                    cv_rect(x + 1, y + 2, 1, 2, cur ? K_DIM : K_LINE);
+            }
         }
+        itoa_u((uint32_t)pat + 1u, tt + 4);
+        cv_text(172, 64 - 2, &FONT_XS, tt, K_DIM);
+    }
 }
 
 static void vz_life_seed(void)
@@ -436,6 +496,8 @@ static void draw_viz(void)
         vz.last_ms = plat_ms();
         vz.cf[0] = 1.0f, vz.cf[1] = 1.3f, vz.cf[2] = 1.6f;
         vz.mode_seen = 255;
+        vz.dleft = (uint8_t)(1u + vz_rnd() % 4u);
+        vz.dunit = en_bars / 32u;
         {
             int q;
             for (q = 0; q < 24; q++)

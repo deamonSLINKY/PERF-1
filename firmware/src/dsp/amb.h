@@ -159,7 +159,7 @@ enum {
     EN_FXS_FL_RATE, EN_FXS_FL_DEPTH, EN_FXS_FL_FB, EN_FXS_FL_MIX,
     EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE,
     EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_DRIVE, EN_FXS_TP_DULL,      /* the tape: slow wobble, flutter, drive, dullness */
-    EN_FXS_RL_START, EN_FXS_RL_END, EN_FXS_RL_TIME, EN_FXS_RL_SWELL,     /* the roll: its first and last rate (0..5: 1/2 .. 1/32),
+    EN_FXS_RL_START, EN_FXS_RL_END, EN_FXS_RL_TIME, EN_FXS_RL_SWELL,     /* the roll: its first and last rate (0..6: 1/2 .. 1/32, 1/64),
                                                                           * beats at each (0..3: 1/2, 1, 2, 4), its swell */
     EN_FXS_PM_DEPTH, EN_FXS_PM_REL, EN_FXS_PM_RATE, EN_FXS_PM_TGT,       /* the pump: depth, release, its period (0..3: 1/2 note,
                                                                           * 1/4, 1/8, 1/16), the tracks (a bit a track) */
@@ -180,10 +180,11 @@ enum {
 };
 #define EN_FXS_DEFAULTS {16, 0x70, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 25, 80, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0x70, 56, 100, 100, 0, \
-                         60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 1, 70, 55, 0, \
+                         60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
+void en_spectrum(float *out, int nb);          /* the master's spectrum, nb bands (70 Hz .. 10 kHz), each 0..1: for the screen */
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */
 enum { EN_FXK_FILTER, EN_FXK_CRUSH, EN_FXK_THROW, EN_FXK_WASH, EN_NFXK };
 void en_fxk(int k, int v);
