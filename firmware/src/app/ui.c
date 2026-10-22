@@ -1000,6 +1000,25 @@ static void set_mode(int m)
 
 static void caps(char *d, const char *s, int n);
 
+/* a title for each piece, made from two short word lists by its genre and number (the same one every time): "VELVET RAIN" */
+static const char *const TITLE_ADJ[16] = {"VELVET", "NEON", "DUSTY", "HOLLOW", "MIDNIGHT", "GLASS", "SLOW", "ELECTRIC",
+                                          "PAPER", "COLD", "GOLDEN", "FADED", "LIQUID", "WILD", "QUIET", "STATIC"};
+static const char *const TITLE_NOUN[16] = {"RAIN", "TIDE", "ROOM", "SIGNAL", "GARDEN", "ENGINE", "SKY", "ORBIT",
+                                           "HIGHWAY", "MIRROR", "HARBOR", "FOREST", "CIRCUIT", "LIGHTS", "ECHO", "DREAM"};
+static void piece_title(char *b, int n)
+{
+    uint32_t h = ((uint32_t)proj.genre * 16u + proj.piece + 1u) * 2654435761u;
+    const char *a = TITLE_ADJ[h >> 28 & 15u], *w = TITLE_NOUN[h >> 20 & 15u];
+    int k = 0;
+    while (*a && k < n - 1)
+        b[k++] = *a++;
+    if (k < n - 1)
+        b[k++] = ' ';
+    while (*w && k < n - 1)
+        b[k++] = *w++;
+    b[k] = 0;
+}
+
 static void set_piece(int i)                    /* the piece playing kept as it is; piece i as it was left */
 {
     project_piece(i);
@@ -1011,7 +1030,9 @@ static void set_piece(int i)                    /* the piece playing kept as it 
     {
         char t[12] = "PIECE ";
         caps(t + 6, piece_name(proj.piece), 4);
-        say(t, project_saved(proj.piece) ? "STORED" : "FACTORY");
+        char u[20];
+        piece_title(u, sizeof u);
+        say(t, u);                               /* (its title; STORED or FACTORY is on the Global page) */
     }
 }
 
@@ -1054,7 +1075,11 @@ static void genre_step(int d)
     en_regrow();
     ui.piece_q = 0;
     genre_fx(g);
-    say(en_genre_name(g), "GENRE");
+    {
+        char u[20];
+        piece_title(u, sizeof u);
+        say(en_genre_name(g), u);
+    }
 }
 
 /* into flash now. Writing it stops the chip a moment (it runs from the same flash), so while the music
