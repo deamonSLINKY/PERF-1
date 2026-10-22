@@ -1,0 +1,63 @@
+# Genres: GLO held + the PRESETS dial switches the bank of ten pieces (the original, then lofi); the same piece number plays.
+# The lofi bank brings its effects (the vinyl and the tape latched) and cannot be stored.
+seed 0
+wait 3000
+expect genre 0
+expect piece 0
+expect tempo 128
+expect fxlock 0
+press GLO
+wait 100
+turn PRESET 1
+wait 200
+release GLO
+wait 300
+expect genre 1
+expect piece 0
+expect tempo 72
+expect fxlock 35651584
+shot genre_lofi.png
+# the pieces of the bank by the dial; a lofi piece's tempo and key
+turn PRESET 1
+wait 200
+expect piece 1
+expect tempo 78
+# a store is refused in this bank
+tap GLO
+press SAVE
+wait 200
+release SAVE
+wait 500
+expect saved 0
+# back: GLO held, the dial down
+press GLO
+wait 100
+turn PRESET -1
+wait 200
+release GLO
+wait 300
+expect genre 0
+expect fxlock 0
+# the first bank's piece 1 as it was
+expect piece 1
+# and the lofi bank again keeps its changes while the power is on: lofi, piece 1, its tempo changed, away and back
+press GLO
+turn PRESET 1
+release GLO
+wait 200
+tap GLO
+tap HOME
+wait 100
+spin K1 3
+wait 100
+expect tempo 81
+press GLO
+turn PRESET -1
+release GLO
+wait 200
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+expect tempo 81

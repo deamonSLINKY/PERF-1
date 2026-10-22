@@ -107,10 +107,48 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     P_ACID, 35, P_AC_CUT, 25, P_AC_DENS, 40, P_AC_LEN, 11, P_AC_MUT, 40, P_BASS, 60, P_NOISE, 30, P_NZ_COLOR, 1,
     P_REVERB, 60, P_SIZE, 85, P_ECHO, 60, P_ETIME, 2, P_PATTERN, 1, P_SWING, 25, P_MOTION, 85, P_DRIFT, 75,
     TU(1), -10, DE(1), 60, DE(0), 60, -1};
+/* LOFI: ten pieces, 68 .. 94 beats a minute, swung, the Rhodes in sevenths and ninths over a warm bass, a soft sparse lead, the
+ * dusty kit; each piece the base with a few changed (its key, mode, sounds and tempo). The patterns are made below. */
+#define LOFI_BASE P_PADTONE, 0, P_PAD, 62, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
+    P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
+    P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
+    P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(1), 55, \
+    LV(3), 42, LV(4), 38, LV(5), 40
+static const int16_t PL_01[] = {LOFI_BASE, P_TEMPO, 72, P_ROOT, 2, P_MODE, 1, P_CHORD, EN_CH_9TH, -1};                       /* D dorian, ninths */
+static const int16_t PL_02[] = {LOFI_BASE, P_TEMPO, 78, P_ROOT, 9, P_MODE, 5, P_DR_INST, 9, P_AC_WAVE, 4, -1};                /* A aeolian, sub bass, plucks */
+static const int16_t PL_03[] = {LOFI_BASE, P_TEMPO, 84, P_ROOT, 7, P_MODE, 4, P_CHORD, EN_CH_9TH, P_PADTONE, 5, P_AC_WAVE, 11, -1};   /* G mixolydian, warm pad, bells */
+static const int16_t PL_04[] = {LOFI_BASE, P_TEMPO, 90, P_ROOT, 0, P_MODE, 0, P_SWING, 42, P_AC_DENS, 35, -1};                /* C major, sevenths */
+static const int16_t PL_05[] = {LOFI_BASE, P_TEMPO, 70, P_ROOT, 5, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 2, P_AC_WAVE, 4, P_REVERB, 42, -1};   /* F dorian, strings, slow */
+static const int16_t PL_06[] = {LOFI_BASE, P_TEMPO, 80, P_ROOT, 10, P_MODE, 5, P_PADTONE, 4, P_AC_WAVE, 11, P_PAD, 52, -1};  /* Bb aeolian, organ */
+static const int16_t PL_07[] = {LOFI_BASE, P_TEMPO, 86, P_ROOT, 3, P_MODE, 7, P_AC_DENS, 22, P_SWING, 34, -1};                /* Eb minor pentatonic, sparse */
+static const int16_t PL_08[] = {LOFI_BASE, P_TEMPO, 76, P_ROOT, 4, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 3, P_BRIGHT, 24, P_ECHO, 40, -1};   /* E dorian, glass */
+static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_DR_INST, 9, P_REVERB, 46, P_SIZE, 70, -1};   /* C# lydian, dreamy */
+static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
 #undef LV
 #undef TU
 #undef DE
 #undef KIT
+static const int16_t *const LOFI_PIECES[EN_NPIECES] = {PL_01, PL_02, PL_03, PL_04, PL_05, PL_06, PL_07, PL_08, PL_09, PL_10};
+static const char *const LOFI_NAME[EN_NPIECES] = {"L01", "L02", "L03", "L04", "L05", "L06", "L07", "L08", "L09", "L10"};
+/* the lofi drum patterns: six for each piece, put together from small palettes (the piece and the pattern choose which),
+ * boom-bap: the kick off the one, the snare on 2 and 4 (some with a ghost), swung eighths or sixteenths on the hats */
+static void lofi_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
+{
+    static const uint16_t KICK[12] = {0x0401, 0x0481, 0x0109, 0x0921, 0x0101, 0x0141, 0x0449, 0x4401, 0x0905, 0x1111, 0x0421, 0x0201};
+    static const uint16_t SNARE[4] = {0x1010, 0x9010, 0x1090, 0x1010};
+    static const uint16_t HAT[6] = {0x5555, 0xFFFF, 0x5D5D, 0xF5F5, 0xDDDD, 0x5757};
+    static const uint16_t OPEN[5] = {0x0000, 0x4000, 0x0040, 0x4040, 0x0000};
+    static const uint16_t PERC[6] = {0x0000, 0x2020, 0x0808, 0x8888, 0x0000, 0x0220};
+    int p;
+    for (p = 0; p < EN_NPAT; p++) {
+        pats[p][0] = KICK[(i * 5 + p * 3) % 12];
+        pats[p][1] = SNARE[(i + p) % 4];
+        pats[p][2] = (i + p) % 3 == 0 ? (uint16_t)0x1010 : (uint16_t)0;
+        pats[p][3] = HAT[(i * 2 + p) % 6];
+        pats[p][4] = OPEN[(i + p * 2) % 5];
+        pats[p][5] = PERC[(i * 3 + p) % 6];
+    }
+}
 static const int16_t *const PIECES[EN_NPIECES] = {
     PC_HYPNOS, PC_UNDERTOW, PC_MONOLITH, PC_ASCENSION, PC_NIGHT_DRIVE,
     PC_DUB_CHAMBER, PC_GLASS_TUNNEL, PC_TIDAL, PC_WAREHOUSE, PC_DEEP_FIELD,
@@ -118,25 +156,40 @@ static const int16_t *const PIECES[EN_NPIECES] = {
 static const char *const PIECE_NAME[EN_NPIECES] = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10"};
 
 const char *en_piece_name(int i) { return PIECE_NAME[(unsigned)i < EN_NPIECES ? i : 0]; }
-void en_piece(int i, int16_t *par, uint16_t *pool)
+static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES};
+static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI"};
+const char *en_genre_name(int g) { return GENRE_NAME[(unsigned)g < EN_NGENRE ? g : 0]; }
+const char *en_piece_name_g(int g, int i)
+{
+    i = (unsigned)i < EN_NPIECES ? i : 0;
+    return g == 1 ? LOFI_NAME[i] : PIECE_NAME[i];
+}
+void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
 {
     int p;
     const int16_t *c;
     i = (unsigned)i < EN_NPIECES ? i : 0;
+    g = (unsigned)g < EN_NGENRE ? g : 0;
     for (p = 0; p < P_NPARAMS; p++)
         par[p] = PARAMS[p].def;
-    for (c = PIECES[i]; c[0] >= 0; c += 2)
+    for (c = GENRE_PIECES[g][i]; c[0] >= 0; c += 2)
         par[c[0]] = c[1];
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
-void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
+void en_piece(int i, int16_t *par, uint16_t *pool) { en_piece_g(0, i, par, pool); }
+void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
 {
     int p, l;
     i = (unsigned)i < EN_NPIECES ? i : 0;
+    if (g == 1) {
+        lofi_pats(i, pats);
+        return;
+    }
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             pats[p][l] = EN_PIECE_PATS[i][p][l];
 }
+void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]) { en_piece_pats_g(0, i, pats); }
 
 static const char *const ETIME_NAME[6] = {"1/8", "3/16", "1/4", "1/4.", "1/2", "1 bar"};
 static const float ETIME_BEATS[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
@@ -156,7 +209,7 @@ const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", 
                                                "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright"};
 const char *const EN_ACID_SOUND[EN_NSOUND] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft"};
-const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808"};
+const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty"};
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -616,6 +669,10 @@ static const kit_t KITS[EN_NKIT] = {
     {2.2f, 0.0007f, 0.3f, 1.6f, 0.08f, 0.5f, 0.0f,
      238.0f, 476.0f, 1.0f, 0.9f, 1.1f, 380.0f, 1.6f,
      1.15f, 0.5f, 0.8f, 1.8f, 540.0f, 1.48f, 1.2f, 1.0f, 0.0f, 0.0f},
+    /* Dusty (lofi): a soft round kick, a loose low snare, a muted clap, dull short hats, a soft rim; the kick ducks the rest a little */
+    {2.8f, 0.0010f, 0.2f, 0.95f, 0.08f, 0.45f, 0.0f,
+     172.0f, 290.0f, 0.9f, 0.85f, 0.95f, 380.0f, 0.8f,
+     0.85f, 0.55f, 0.85f, 1.1f, 520.0f, 1.5f, 0.9f, 0.35f, 0.0f, 0.0f},
 };
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */

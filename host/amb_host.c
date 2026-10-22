@@ -501,6 +501,8 @@ static int expect(const char *what, const char *val)
         got = ui.dj_break;
     else if (!strcmp(what, "sceneq"))             /* the scene waiting for the bar: slot + 1 */
         got = ui.scene_q;
+    else if (!strcmp(what, "genre"))              /* the bank of pieces: 0 the original, 1 lofi */
+        got = proj.genre;
     else if (!strcmp(what, "fxbank"))             /* the FX keys' bank (the dial in the FX menu) */
         got = fx_bank;
     else if (!strcmp(what, "undook"))

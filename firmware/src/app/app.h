@@ -22,6 +22,7 @@ typedef struct {
     uint16_t pool;                       /* its scale, relative to the root (bit 0 = the root) */
     uint8_t leds;                        /* lights: 0 off, 1 keys and the buttons' glow, 2 keys only */
     uint8_t piece;                       /* which piece */
+    uint8_t genre;                       /* which bank of ten pieces (EN_NGENRE): the original, lofi; the others are factory sets */
     uint16_t edited;                     /* bit i: piece i changed since it was taken up (saved or not) */
     slot_t slot[NPIECES];                /* every piece as it was left while the power is on */
 } project_t;
@@ -35,6 +36,7 @@ void project_start(uint32_t seed);       /* power-on (seed 0: the first piece, e
 void project_apply(void);                /* every value to the engine (boot, a piece) */
 const char *piece_name(int i);           /* "01" .. "10" */
 void project_piece(int i);               /* the playing piece kept as it is, piece i taken up as it was left */
+void project_set_genre(int g);           /* another bank: the pieces as they were left in it (or their recipes), the same number playing */
 void project_piece_save(void);           /* the playing piece, as it is, into the bank */
 void project_piece_factory(void);        /* the playing piece back to its recipe, and out of the bank */
 void project_globals(void);              /* the theme, Tune or MIDI out changed: into the bank */

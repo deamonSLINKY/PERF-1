@@ -34,7 +34,7 @@
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 16                   /* the sounds each of pad, drone and acid can play */
-#define EN_NKIT 8                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
+#define EN_NKIT 9                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID };   /* the voices the keys can play (en_note) */
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
@@ -242,4 +242,11 @@ const char *en_chord_name(const int *pcs, int n, char *buf);   /* "Em7", "Dsus4"
 #define EN_NPIECES 10
 const char *en_piece_name(int i);
 void en_piece(int i, int16_t *par, uint16_t *pool);
+/* genres: banks of ten pieces, each with its own recipes and drum patterns (the first, 0, is the original techno and acid
+ * set; the others are factory sets, kept in RAM while the power is on). */
+#define EN_NGENRE 2
+const char *en_genre_name(int g);
+const char *en_piece_name_g(int g, int i);
+void en_piece_g(int g, int i, int16_t *par, uint16_t *pool);
+void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE]);
 void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]);   /* its factory drum patterns */

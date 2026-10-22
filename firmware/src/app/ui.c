@@ -954,6 +954,38 @@ static void set_piece(int i)                    /* the piece playing kept as it 
     }
 }
 
+/* the genres (GLO held + PRESETS): another bank of ten pieces, the same number playing; the bank's effects come with it
+ * (the lofi one: the vinyl and the tape latched on, a gentler wobble and dust). The first bank is the one that is stored. */
+static void fxs_put(int i, int v)
+{
+    ui.fxs[i] = (uint8_t)v;
+    en_fxs(i, v);
+}
+static void genre_fx(int g)
+{
+    static const uint8_t SET[8] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_DRIVE, EN_FXS_TP_DULL,
+                                   EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE};
+    static const uint8_t LOFI[8] = {25, 18, 30, 45, 55, 40, 28, 75};
+    const uint64_t bundle = FXB(FX_VINYL) | FXB(FX_TAPE);
+    int i;
+    ui.fx_lock &= ~bundle;
+    for (i = 0; i < 8; i++)
+        fxs_put(SET[i], g == 1 ? LOFI[i] : EN_FXS_DEF[SET[i]]);
+    if (g == 1)
+        ui.fx_lock |= bundle;
+}
+static void genre_step(int d)
+{
+    const int g = (proj.genre + d + EN_NGENRE) % EN_NGENRE;
+    project_set_genre(g);
+    project_apply();
+    en_seed(plat_ms());
+    en_regrow();
+    ui.piece_q = 0;
+    genre_fx(g);
+    say(en_genre_name(g), "GENRE");
+}
+
 /* into flash now. Writing it stops the chip a moment (it runs from the same flash), so while the music
  * plays it fades out (en_hush), holds still while the store is written, and fades back in where it was:
  * a short pause, not a cut. Stopped: at once. */
@@ -984,6 +1016,10 @@ static void store_tick(void)                    /* the music faded out (or long 
 static void piece_store(void)                   /* Global, SAVE: the piece as it is, stored */
 {
     char t[12] = "STORED ";
+    if (proj.genre) {
+        say("NOT STORED", "ONLY THE FIRST BANK");
+        return;
+    }
     project_piece_save();
     caps(t + 7, piece_name(proj.piece), 4);
     store_now(t);
@@ -1647,7 +1683,10 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if ((e = plat_enc(EN_PRESET)) != 0) {
-        if ((btn >> B_SEL & 1u) && en_playing) {   /* shift: the piece on the next bar */
+        if ((btn >> B_GLO & 1u) && !(btn >> B_SEL & 1u)) {   /* GLO held: the genre */
+            ui.btn_used |= 1u << B_GLO;
+            genre_step(e > 0 ? 1 : -1);
+        } else if ((btn >> B_SEL & 1u) && en_playing) {   /* shift: the piece on the next bar */
             int t = ((ui.piece_q ? ui.piece_q - 1 : proj.piece) + (e > 0 ? 1 : -1) + NPIECES) % NPIECES;
             char u[12] = "PIECE ";
             ui.btn_used |= 1u << B_SEL;

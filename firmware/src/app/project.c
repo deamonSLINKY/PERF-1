@@ -31,12 +31,12 @@ typedef struct {
 } old_kit_t;
 #define OLD_KIT_THEME (8 + 2 * EN_NPAT * EN_NLANE + 2 * 3 * EN_NLANE)   /* its theme's byte */
 
-const char *piece_name(int i) { return en_piece_name(i); }
+const char *piece_name(int i) { return en_piece_name_g(proj.genre, i); }
 
 static void recipe(int i, slot_t *s)
 {
-    en_piece(i, s->par, &s->pool);
-    en_piece_pats(i, s->pats);
+    en_piece_g(proj.genre, i, s->par, &s->pool);
+    en_piece_pats_g(proj.genre, i, s->pats);
 }
 
 static int16_t clamp_par(int p, int v)
@@ -196,8 +196,35 @@ void project_piece(int i)
     take(proj.piece);
 }
 
+/* the genres: the original bank is the one in flash. The others are factory sets in RAM (changes last until power-off,
+ * nothing of them is stored). A switch keeps the bank being left as it is and brings up the other with the same piece. */
+static slot_t gset[EN_NGENRE][NPIECES];
+static uint8_t gready[EN_NGENRE];
+void project_set_genre(int g)
+{
+    int i;
+    g = ((g % EN_NGENRE) + EN_NGENRE) % EN_NGENRE;
+    if (g == proj.genre)
+        return;
+    keep();
+    memcpy(gset[proj.genre], proj.slot, sizeof proj.slot);
+    gready[proj.genre] = 1;
+    proj.genre = (uint8_t)g;
+    if (gready[g]) {
+        memcpy(proj.slot, gset[g], sizeof proj.slot);
+    } else {
+        for (i = 0; i < NPIECES; i++)
+            recipe(i, &proj.slot[i]);
+        gready[g] = 1;
+    }
+    proj.edited = 0;
+    take(proj.piece);
+}
+
 void project_piece_save(void)
 {
+    if (proj.genre)
+        return;                              /* only the original bank is stored */
     keep();
     bank.slot[proj.piece] = proj.slot[proj.piece];
     bank.saved |= (uint16_t)(1u << proj.piece);
@@ -210,7 +237,7 @@ void project_piece_factory(void)
 {
     recipe(proj.piece, &proj.slot[proj.piece]);
     take(proj.piece);
-    if (bank.saved >> proj.piece & 1u) {
+    if (!proj.genre && (bank.saved >> proj.piece & 1u)) {
         bank.saved &= (uint16_t)~(1u << proj.piece);
         memset(&bank.slot[proj.piece], 0, sizeof bank.slot[0]);
         pending = 1;
@@ -224,7 +251,7 @@ void project_globals(void)
     pending_glob = 1;
 }
 
-int project_saved(int i) { return (unsigned)i < NPIECES && (bank.saved >> i & 1u); }
+int project_saved(int i) { return !proj.genre && (unsigned)i < NPIECES && (bank.saved >> i & 1u); }
 int project_pending(void) { return pending || pending_glob; }
 int project_pending_globals(void) { return pending_glob; }
 
