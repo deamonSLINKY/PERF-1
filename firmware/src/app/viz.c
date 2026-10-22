@@ -6,7 +6,7 @@
  *   PLASMA  a colour field that swirls faster with the energy and flashes on the kick
  *   TUNNEL  rings flying out of the middle, a pulse in it on every kick
  *   BARS    an equaliser: lows from the kick and the drone, mids from the pad and the snare, highs from the hats and the acid
- *   STARS   a warp field: faster in a build, a flash on the kick
+ *   FLUX    the classic media-player light show: the spectrum fed back on itself, a trippy bloom
  *   DISCO   the mascot dancing on a floor that lights with the drum pattern
  *   LIFE    a cellular automaton that the drums feed (the kick a cluster, the snare a spray, a hat a spark)
  *   ORBIT   a harmonograph drawn from the chord's notes: it morphs with every chord
@@ -15,15 +15,17 @@
 #define VZ_H 144
 #define VZ_CW 40                                /* the cell grids: 6 pixel cells */
 #define VZ_CH 24
-#define VZ_NSTAR 64
 
 static struct {
     float tt, ph, ph2, dt;                     /* time (tempo scaled), two phases, the frame's seconds */
     float kick, snare, hat, en;                /* the frame's signals */
     float bars[24], caps[24], spec[24];
-    float sx[VZ_NSTAR], sy[VZ_NSTAR], sz[VZ_NSTAR];
     float cf[3];
-    uint8_t life[2][VZ_CH][VZ_CW];
+    union {
+        uint8_t life[2][VZ_CH][VZ_CW];
+        uint8_t fb[2][36][60];                 /* FLUX's picture, two frames */
+    } buf;
+    uint8_t fcur;
     uint8_t lcur, last_step, mode_seen, auto_cur, sec_seen, inited;
     uint32_t seed, last_ms, auto_bar, life_ms;
     uint16_t lut[64];
@@ -31,6 +33,7 @@ static struct {
     float conf[24][5];                         /* confetti: x, y, vx, vy, colour */
     uint8_t dsec, dmove, dleft, dother;        /* the section last seen; the move now; two-bar units left of it; 0 jumping, else the other move */
     uint32_t dunit;                            /* the two-bar unit last counted */
+    uint8_t dpos, dsince;                      /* the step last seen; steps since the last launch */
     uint32_t drop_bar;                         /* the sixteenth the drop came on */
 } vz;
 
@@ -130,39 +133,95 @@ static void vz_bars(void)                       /* the real thing: the master's 
     }
 }
 
-static void vz_stars_init(void)
+/* FLUX: the classic media-player light show. A low-resolution picture (60 x 36 cells) is fed back on itself every frame, zoomed out
+ * and turned a little, and fading; the spectrum is drawn into it as a ring around the middle and a ribbon across it, and the kick adds a
+ * ripple. Colour comes from how bright a cell still is and where it is, so the trails bloom outwards in the theme's colours. */
+#define FL_W 60
+#define FL_H 36
+static void fl_plot(uint8_t (*b)[FL_W], int x, int y, int v)
 {
-    int i;
-    for (i = 0; i < VZ_NSTAR; i++) {
-        vz.sx[i] = vz_rf() * 2.0f - 1.0f;
-        vz.sy[i] = vz_rf() * 2.0f - 1.0f;
-        vz.sz[i] = 0.1f + vz_rf() * 0.9f;
-    }
+    if ((unsigned)x < FL_W && (unsigned)y < FL_H && b[y][x] < v)
+        b[y][x] = (uint8_t)v;
 }
-static void vz_stars(void)
+static void fl_line(uint8_t (*b)[FL_W], int x0, int y0, int x1, int y1, int v)
 {
-    const float sp = 0.25f + 1.1f * vz.en + (en_sec == EN_SEC_BUILD ? 0.9f : 0.0f) + vz.kick * 0.8f;
-    int i;
-    for (i = 0; i < VZ_NSTAR; i++) {
-        const float z0 = vz.sz[i], z1 = z0 - vz.dt * sp * 0.5f;
-        const int32_t x0 = 120 + (int32_t)(vz.sx[i] / z0 * 60.0f), y0 = 72 + (int32_t)(vz.sy[i] / z0 * 40.0f),
-                      x1 = 120 + (int32_t)(vz.sx[i] / (z1 > 0.02f ? z1 : 0.02f) * 60.0f),
-                      y1 = 72 + (int32_t)(vz.sy[i] / (z1 > 0.02f ? z1 : 0.02f) * 40.0f);
-        const uint16_t c = vpal((1.0f - z0) * 0.5f + vz.ph * 2.0f + (i & 7) * 0.02f);
-        cv_line(x0, y0, x1, y1, z0 < 0.35f ? K_TEXT : c);
-        if (z0 < 0.4f)
-            cv_rect(x1, y1, 2, 2, K_TEXT);
-        vz.sz[i] = z1;
-        if (z1 < 0.03f || x1 < -4 || x1 > 244 || y1 < -4 || y1 > 148) {
-            vz.sx[i] = vz_rf() * 2.0f - 1.0f;
-            vz.sy[i] = vz_rf() * 2.0f - 1.0f;
-            vz.sz[i] = 1.0f;
+    const int dx = x1 > x0 ? x1 - x0 : x0 - x1, dy = y1 > y0 ? y0 - y1 : y1 - y0, sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy, guard = 200;
+    while (guard--) {
+        const int e2 = 2 * err;
+        fl_plot(b, x0, y0, v);
+        if (x0 == x1 && y0 == y1)
+            break;
+        if (e2 >= dy) {
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx) {
+            err += dx;
+            y0 += sy;
         }
     }
-    if (vz.kick > 0.5f)
-        cv_disc(120, 72, (int32_t)(vz.kick * 10.0f), vpal(vz.ph2));
 }
-
+static void vz_flux_init(void)
+{
+    memset(vz.buf.fb, 0, sizeof vz.buf.fb);
+    vz.fcur = 0;
+}
+static void vz_flux(void)
+{
+    uint8_t (*src)[FL_W] = vz.buf.fb[vz.fcur], (*dst)[FL_W] = vz.buf.fb[vz.fcur ^ 1u];
+    const float ang = 0.05f + 0.035f * fm_sinf(vz.tt * 0.4f) + vz.kick * 0.05f, ca = fm_cosf(ang), sa = fm_sinf(ang),
+                zoom = 0.955f - 0.025f * vz.kick;
+    int x, y, k;
+    for (y = 0; y < FL_H; y++)
+        for (x = 0; x < FL_W; x++) {
+            const float dx = (float)x + 0.5f - 30.0f, dy = (float)y + 0.5f - 18.0f;
+            const float fx = 29.5f + (dx * ca - dy * sa) * zoom, fy = 17.5f + (dx * sa + dy * ca) * zoom;   /* where it was a frame ago (cell centres) */
+            const int ix = (int)fm_floorf(fx), iy = (int)fm_floorf(fy), tx = (int)((fx - (float)ix) * 16.0f), ty = (int)((fy - (float)iy) * 16.0f);
+            int v = 0;
+            if (ix >= 0 && iy >= 0 && ix < FL_W - 1 && iy < FL_H - 1) {      /* smooth: the four cells round it */
+                const int a = src[iy][ix] * (16 - tx) + src[iy][ix + 1] * tx, b = src[iy + 1][ix] * (16 - tx) + src[iy + 1][ix + 1] * tx;
+                v = (a * (16 - ty) + b * ty) >> 8;
+            }
+            dst[y][x] = (uint8_t)((v * 237) >> 8);
+        }
+    vz.fcur ^= 1u;
+    en_spectrum(vz.spec, 24);
+    {   /* the ring: the spectrum round the middle, turning */
+        int px = 0, py = 0, fx = 0, fy = 0;
+        for (k = 0; k <= 24; k++) {
+            const float s = vz.spec[k % 24], a = (float)k * (FM_TWO_PI / 24.0f) + vz.tt * 0.35f, r = 4.0f + s * 13.0f + (en_playing ? 0.0f : 1.0f + fm_sinf(vz.tt) * 0.8f);
+            const int cx = 30 + (int)(fm_cosf(a) * r), cy = 18 + (int)(fm_sinf(a) * r * 0.95f);
+            if (k)
+                fl_line(dst, px, py, cx, cy, 255);
+            else
+                fx = cx, fy = cy;
+            px = cx, py = cy;
+        }
+        (void)fx, (void)fy;
+    }
+    {   /* the ribbon: a wave across, as tall as the spectrum under it */
+        int px = 0, py = 18;
+        for (x = 0; x < FL_W; x += 2) {
+            const float u = (float)x * (24.0f / (float)FL_W), s = vz.spec[(int)u > 23 ? 23 : (int)u];
+            const int yy = 18 + (int)(fm_sinf((float)x * 0.28f + vz.tt * 2.2f) * (1.5f + s * 12.0f));
+            if (x)
+                fl_line(dst, px, py, x, yy, 190);
+            px = x, py = yy;
+        }
+    }
+    if (vz.kick > 0.6f)                              /* a kick: a ripple */
+        for (k = 0; k < 24; k++)
+            fl_plot(dst, 30 + (int)(fm_cosf((float)k * (FM_TWO_PI / 24.0f)) * 6.0f), 18 + (int)(fm_sinf((float)k * (FM_TWO_PI / 24.0f)) * 6.0f), 255);
+    for (y = 0; y < FL_H; y++)
+        for (x = 0; x < FL_W; x++) {
+            const int v = dst[y][x];
+            if (v > 10) {
+                const float dx = (float)x - 30.0f, dy = (float)y - 18.0f;
+                cv_rect(x * 4, y * 4, 4, 4, mix(K_BG, vpal(vz.ph * 2.0f + (dx * dx + dy * dy) * 0.0009f + (float)v * 0.0018f), (v + 8) >> 4));
+            }
+        }
+}
 
 /* THE DANCER (DISCO): the mascot at three pixels a pixel on springs. The slinky stretches as he rises, squashes as he lands and
  * wobbles a few times after; the moves change every two bars (and with the section: asleep in a breakdown, shaking in a build,
@@ -192,9 +251,18 @@ static void vz_dancer(void)
     const int playing = en_playing;
     int mv, g, r, c;
     float dx[4] = {0, 0, 0, 0}, sx[4] = {1, 1, 1, 1}, dyg[4], shear = 0.0f, sleepy = 0.0f, wide = 0.0f;
-    const int kedge = vz.kick > 0.6f && vz.kprev <= 0.6f, sedge = vz.snare > 0.6f && vz.sprev <= 0.6f;
+    int kedge = vz.kick > 0.6f && vz.kprev <= 0.6f;
+    const int sedge = vz.snare > 0.6f && vz.sprev <= 0.6f;
     const float t = vz.tt;
     vz.kprev = vz.kick, vz.sprev = vz.snare;
+    if (playing && en_drum_pos != vz.dpos) {           /* a jump on every kick of the pattern (the glow can be missed between frames), and at least one a beat */
+        vz.dpos = en_drum_pos;
+        vz.dsince++;
+        if ((en_pats[en_pat_now][0] >> en_drum_pos & 1u) || vz.dsince >= 4u)
+            kedge = 1;
+    }
+    if (kedge)
+        vz.dsince = 0;
     /* which move */
     if (en_sec != vz.dsec) {
         if (en_sec == EN_SEC_GROOVE && vz.dsec != EN_SEC_GROOVE) {      /* the drop */
@@ -232,8 +300,8 @@ static void vz_dancer(void)
     }
     vz.dmove = (uint8_t)mv;
     /* the hop: a launch on the kick (a big one for the drop), the head's spring left behind, a squash on landing */
-    if (kedge && vz.lift <= 0.0f && (mv == DM_BOUNCE || mv == DM_JUMP || mv == DM_SWAY || mv == DM_SPIN || mv == DM_WAVE || mv == DM_BANG || mv == DM_STOMP)) {
-        const float v0 = mv == DM_JUMP ? 150.0f : mv == DM_BOUNCE ? 100.0f : 70.0f;
+    if (kedge && (vz.lift <= 0.0f || (vz.lv < 0.0f && vz.lift < 6.0f)) && (mv == DM_BOUNCE || mv == DM_JUMP || mv == DM_SWAY || mv == DM_SPIN || mv == DM_WAVE || mv == DM_BANG || mv == DM_STOMP)) {
+        const float v0 = mv == DM_JUMP ? 125.0f : mv == DM_BOUNCE ? 100.0f : 70.0f;
         vz.lv = v0;
         vz.lift = 0.01f;
         vz.dhv -= v0 * 0.9f;                       /* anticipation: the head lags */
@@ -416,12 +484,12 @@ static void vz_life_seed(void)
     int x, y;
     for (y = 0; y < VZ_CH; y++)
         for (x = 0; x < VZ_CW; x++)
-            vz.life[vz.lcur][y][x] = (vz_rnd() & 7u) == 0u ? 1u : 0u;
+            vz.buf.life[vz.lcur][y][x] = (vz_rnd() & 7u) == 0u ? 1u : 0u;
 }
 static void vz_life_step(void)
 {
-    uint8_t (*a)[VZ_CW] = vz.life[vz.lcur];
-    uint8_t (*b)[VZ_CW] = vz.life[vz.lcur ^ 1u];
+    uint8_t (*a)[VZ_CW] = vz.buf.life[vz.lcur];
+    uint8_t (*b)[VZ_CW] = vz.buf.life[vz.lcur ^ 1u];
     int x, y, pop = 0;
     for (y = 0; y < VZ_CH; y++)
         for (x = 0; x < VZ_CW; x++) {
@@ -442,7 +510,7 @@ static void vz_life(void)
 {
     int x, y, k;
     const uint32_t now = plat_ms();
-    uint8_t (*a)[VZ_CW] = vz.life[vz.lcur];
+    uint8_t (*a)[VZ_CW] = vz.buf.life[vz.lcur];
     if (en_playing ? (vz.last_step != en_drum_pos) : (now - vz.life_ms > 220u)) {   /* a step for every sixteenth */
         vz.last_step = en_drum_pos;
         vz.life_ms = now;
@@ -457,7 +525,7 @@ static void vz_life(void)
         if (vz.hat > 0.6f)
             a[vz_rnd() % VZ_CH][vz_rnd() % VZ_CW] = 1u;
         vz_life_step();
-        a = vz.life[vz.lcur];
+        a = vz.buf.life[vz.lcur];
     }
     for (y = 0; y < VZ_CH; y++)
         for (x = 0; x < VZ_CW; x++)
@@ -516,8 +584,8 @@ static void draw_viz(void)
     }
     if (mode != vz.mode_seen) {                    /* a new one: its state fresh */
         vz.mode_seen = (uint8_t)mode;
-        if (mode == VZ_STARS)
-            vz_stars_init();
+        if (mode == VZ_FLUX)
+            vz_flux_init();
         if (mode == VZ_LIFE)
             vz_life_seed();
     }
@@ -527,7 +595,7 @@ static void draw_viz(void)
     case VZ_PLASMA: vz_plasma(); break;
     case VZ_TUNNEL: vz_tunnel(); break;
     case VZ_BARS: vz_bars(); break;
-    case VZ_STARS: vz_stars(); break;
+    case VZ_FLUX: vz_flux(); break;
     case VZ_DISCO: vz_disco(); break;
     case VZ_LIFE: vz_life(); break;
     default: vz_orbit(); break;

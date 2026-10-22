@@ -42,8 +42,8 @@ enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, 
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Drums", "Links", "Kit", "Drum drift", "Space", "Global",
                                               "Sequencer", "Perform", "Visual"};
-enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_STARS, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
-static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "STARS", "DISCO", "LIFE", "ORBIT", "AUTO"};
+enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
+static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
