@@ -198,6 +198,7 @@ def build_loader():
 # ---- app
 
 def build_app():
+    os.environ.setdefault("EN_CORE2", "1")      # the reverb on the second core (fallback to one core built in); EN_CORE2=0 for single core
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
     for flag in ("EN_CDC", "EN_CORE2"):
         v = os.environ.get(flag)    # unset: the default in firmware/src/main.c
