@@ -1,0 +1,28 @@
+# A section button from another section returns to the page last on there; pressed inside, it goes to the next page.
+wait 3000
+tap ENV
+wait 100
+expect view 1
+tap ENV
+wait 100
+expect view 2
+tap LFO
+wait 100
+expect view 6
+tap ENV
+wait 100
+expect view 2
+tap ENV
+wait 100
+expect view 3
+# the dial counts too: Drone env by the dial, away to ARP, LFO returns to it
+tap LFO
+tap LFO
+wait 100
+expect view 7
+tap ARP
+wait 100
+expect view 9
+tap LFO
+wait 100
+expect view 7

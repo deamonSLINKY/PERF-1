@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HYP-1 Emulator</title>
-<meta name="description" content="HYP-1, a generative hypnotic techno firmware for the M-VAVE FM-1 (a fork of AMB-1), in your browser: the same code the FM-1 runs.">
+<title>PERF-1 Emulator</title>
+<meta name="description" content="PERF-1, a generative hypnotic techno firmware for the M-VAVE FM-1 (a fork of AMB-1), in your browser: the same code the FM-1 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap">
@@ -144,7 +144,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 <body>
 <main>
 <header>
-  <h1><a href="../"><img src="../img/panda.png" width="48" height="38" alt="">HYP-1</a></h1>
+  <h1><a href="../"><img src="../img/panda.png" width="48" height="38" alt="">PERF-1</a></h1>
   <p>hypnotic techno and acid for the FM-1, in the browser: the same code the FM-1 runs</p>
   <nav><a href="../">Home</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="../board/">Board</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav>
 </header>
@@ -165,7 +165,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 
 <section class="midi" id="midi" aria-labelledby="midi-h">
   <h2 id="midi-h">Play it from your FM-1, or any MIDI controller</h2>
-  <p>Plug the FM-1 in by USB and connect it here (Chrome, Edge or Firefox). <b>With HYP-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel plays this one exactly (buttons, keys, every knob and MASTER), its own sound goes quiet, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back. <b>With M-VAVE's firmware, or any other controller</b>, its keys play the keys here straight away; for the rest, use MIDI learn: click a control here, then move or press the one you want on your controller.</p>
+  <p>Plug the FM-1 in by USB and connect it here (Chrome, Edge or Firefox). <b>With PERF-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel plays this one exactly (buttons, keys, every knob and MASTER), its own sound goes quiet, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back. <b>With M-VAVE's firmware, or any other controller</b>, its keys play the keys here straight away; for the rest, use MIDI learn: click a control here, then move or press the one you want on your controller.</p>
   <div class="bar">
     <button id="midiOn" type="button">Connect MIDI</button>
     <span id="midiStatus">Not connected.</span>
@@ -299,12 +299,12 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
   </div>
   <div>
     <h2>Power-on</h2>
-    <p>Each start shows RedtailWorks (and its red panda), then HYP-1, then plays a piece at random (any button or key skips ahead). New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
-      It is the firmware, not a recording: what you hear is HYP-1 running, at the FM-1's 44.1 kHz.
+    <p>Each start shows RedtailWorks (and its red panda), then PERF-1, then plays a piece at random (any button or key skips ahead). New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
+      It is the firmware, not a recording: what you hear is PERF-1 running, at the FM-1's 44.1 kHz.
       The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
   </div>
 </section>
-<footer class="foot"><span>HYP-1 is a <a href="https://www.redtail.works">RedtailWorks</a> project</span><a class="yt" href="https://www.youtube.com/@RedtailWorks">Videos on YouTube</a><a href="https://ko-fi.com/redtailworks">Support on Ko-fi</a><a href="https://github.com/RustyPawz/fm1-HYP1">Source</a></footer>
+<footer class="foot"><span>PERF-1 is a personal fork of HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a> (GPL-3.0)</span><a class="yt" href="https://www.youtube.com/@RedtailWorks">Videos on YouTube</a><a href="https://ko-fi.com/redtailworks">Support on Ko-fi</a><a href="https://github.com/RustyPawz/fm1-HYP1">Source</a></footer>
 </main>
 
 <script>
@@ -796,7 +796,7 @@ async function switchOn() {
           drawLights(m.buttons, m.keys);
           midiLights(m.buttons, m.keys);
           window.ambLast = m;
-          if (m.load !== undefined) cpu.textContent = `HYP-1 uses ${m.load}% of this computer's time`;
+          if (m.load !== undefined) cpu.textContent = `PERF-1 uses ${m.load}% of this computer's time`;
           if (m.store) saveStore(m.store);
         }
       };

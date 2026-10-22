@@ -294,6 +294,7 @@ static struct {
     uint8_t seq_held;                  /* SEQ held long enough: the sequencer opened this hold */
     uint8_t fx_menu;                   /* the FX menu is on: the keys are effects, the knobs the FX knobs */
     int8_t fxk[4];                     /* the FX knobs' values (filter -50..50, crush, throw, wash): not stored */
+    uint8_t grp_last[8];               /* the page last on in each button's group (a button from elsewhere returns there) */
     uint8_t fx_page;                   /* with the FX menu on: 0 the keys, 1.. an effect's edit page (FXP) */
     uint8_t fxs[EN_NFXS];              /* the effects' settings (en_fxs), mirrored; not stored */
     uint8_t gx_preset, gx_tgt, pm_tgt; /* the gate: its pattern's name (NGXP - 1: the keys' own); its targets; the pump's */
@@ -1065,6 +1066,10 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
 /* ------------------------------------------------------------ buttons --- */
 static void set_view(int v)
 {
+    int g;
+    for (g = 0; g < NGROUP; g++)                 /* remembered: the page last on in its group */
+        if (v >= GROUP[g].first && v < GROUP[g].first + GROUP[g].n)
+            ui.grp_last[g] = (uint8_t)v;
     ui.view = (uint8_t)v;
     if (v < NDIAL)
         ui.last_dial = (uint8_t)v;
@@ -1141,7 +1146,9 @@ static void button(int b)
         if (GROUP[g].btn == b) {
             int v = ui.view;
             if (group_of(v) == g && GROUP[g].n > 1)
-                set_view(GROUP[g].first + (v - GROUP[g].first + 1) % GROUP[g].n);
+                set_view(GROUP[g].first + (v - GROUP[g].first + 1) % GROUP[g].n);       /* inside: the next page */
+            else if (ui.grp_last[g] >= GROUP[g].first && ui.grp_last[g] < GROUP[g].first + GROUP[g].n)
+                set_view(ui.grp_last[g]);                                               /* from elsewhere: back where you were */
             else
                 set_view(GROUP[g].first);
             return;
@@ -2587,7 +2594,7 @@ static void draw_knobs(void)
                 int same = proj.par[P_KIT_SNARE] == k && proj.par[P_KIT_HAT] == k && proj.par[P_KIT_PERC] == k;
                 caps(u, same ? EN_KIT_NAME[(unsigned)k < EN_NKIT ? k : 0] : "Mixed kit", sizeof u);
             } else {
-                caps(u, "HYP-1", sizeof u);
+                caps(u, "PERF-1", sizeof u);
             }
             xs = cv_text(4, -1, &FONT_XS, u, K_DIM);
             if (by_hand(vc))                     /* the voice off the algorithm: said beside its sound */
@@ -2785,10 +2792,13 @@ static void draw_splash(void)
 }
 
 /* the HYP-1 card: big 5 x 7 pixel letters (7 px a pixel), an orange shadow under the purple */
-static const uint8_t BIG_GLYPH[5][7] = {
-    {0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11},  /* H */
-    {0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04},  /* Y */
+#define BIG_N 6
+#define BIG_PX 6                               /* a pixel of the letters: 6 px (six letters fill the screen) */
+static const uint8_t BIG_GLYPH[BIG_N][7] = {
     {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  /* P */
+    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},  /* E */
+    {0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11},  /* R */
+    {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10},  /* F */
     {0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00},  /* - */
     {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},  /* 1 */
 };
@@ -2799,13 +2809,13 @@ static void draw_hyp(void)
     lcd_fill(0, 0, 240, 240, K_BG);
     cv_begin(240, 144, K_BG);
     for (pass = 0; pass < 2; pass++)             /* the shadow, then the letters */
-        for (g = 0; g < 5; g++)
+        for (g = 0; g < BIG_N; g++)
             for (r = 0; r < 7; r++)
                 for (c = 0; c < 5; c++)
                     if (BIG_GLYPH[g][r] >> (4 - c) & 1u)
-                        cv_rect(18 + (g * 6 + c) * 7 + (pass ? 0 : 3), 10 + r * 7 + (pass ? 0 : 3), 7, 7,
+                        cv_rect(12 + (g * 6 + c) * BIG_PX + (pass ? 0 : 3), 12 + r * BIG_PX + (pass ? 0 : 3), BIG_PX, BIG_PX,
                                 pass ? K_PAD : K_ACC);
-    text_c(120, 76, &FONT_S, "HYPNOTIC TECHNO  //  ACID", K_TEXT);
+    text_c(120, 76, &FONT_S, "GENERATIVE  //  LIVE", K_TEXT);
     text_c(120, 102, &FONT_XS, EN_VERSION[0] == 'D' ? "FOR THE M-VAVE FM-1" : "FOR THE FM-1  //  " EN_VERSION, K_DIM);
     cv_blit(0, 30);
     for (c = 0; c < 16; c++)
