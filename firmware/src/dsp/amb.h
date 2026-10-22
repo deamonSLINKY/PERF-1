@@ -217,7 +217,7 @@ extern volatile uint8_t en_chord_root;         /* the chord's root, MIDI pitch c
 extern volatile uint8_t en_chord_n;            /* its distinct tones: 3 or 4 */
 extern volatile float en_drift;                /* 0..1: how far to the next chord */
 extern volatile float en_pad_level, en_bass_level;
-extern volatile float en_noise_level, en_acid_level;
+extern volatile float en_acid_level;
 extern volatile uint8_t en_acid_len, en_acid_pos;    /* the acid loop's length and step */
 extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; those accented */
 extern volatile float en_acid_glow;

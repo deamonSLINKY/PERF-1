@@ -2350,24 +2350,23 @@ static void draw_ring(void)
     }
 }
 
-static void draw_meters(void)                    /* left: the five layers */
+static void draw_meters(void)                    /* left: the five layers (pad, drone, acid, pluck, drums) */
 {
-    static const char *const L[6] = {"P", "N", "D", "A", "C", "K"};
-    uint16_t c[6], t[6];
-    float lv[6], dm = 0.0f;
+    static const char *const L[5] = {"P", "D", "A", "C", "K"};
+    uint16_t c[5], t[5];
+    float lv[5], dm = 0.0f;
     int i;
-    c[0] = K_PAD, c[1] = K_DIM, c[2] = K_BASS, c[3] = K_ACID, c[4] = KC_COLOR, c[5] = K_PULSE;
-    t[0] = K_PAD_T, t[1] = K_LINE, t[2] = K_BASS_T, t[3] = K_ACID_T, t[4] = mix(K_BG, KC_COLOR, 4), t[5] = K_PULSE_T;
+    c[0] = K_PAD, c[1] = K_BASS, c[2] = K_ACID, c[3] = KC_COLOR, c[4] = K_PULSE;
+    t[0] = K_PAD_T, t[1] = K_BASS_T, t[2] = K_ACID_T, t[3] = mix(K_BG, KC_COLOR, 4), t[4] = K_PULSE_T;
     for (i = 0; i < EN_NDRUM; i++)
         dm = fm_maxf(dm, en_drum_glow[i]);
     lv[0] = en_pad_level * (float)proj.par[P_PAD] * 0.01f;
-    lv[1] = en_noise_level;
-    lv[2] = en_bass_level * (float)proj.par[P_BASS] * 0.01f;
-    lv[3] = en_acid_level * (float)proj.par[P_ACID] * 0.01f;
-    lv[4] = en_cm_level * (float)proj.par[P_CM_LVL] * 0.01f * 1.6f;
-    lv[5] = dm * (float)proj.par[P_PULSE] * 0.01f;
-    for (i = 0; i < 6; i++) {
-        int32_t x = 4 + i * 8, h = (int32_t)(fm_clampf(lv[i], 0.0f, 1.0f) * 92.0f + 0.5f);
+    lv[1] = en_bass_level * (float)proj.par[P_BASS] * 0.01f;
+    lv[2] = en_acid_level * (float)proj.par[P_ACID] * 0.01f;
+    lv[3] = en_cm_level * (float)proj.par[P_CM_LVL] * 0.01f * 1.6f;
+    lv[4] = dm * (float)proj.par[P_PULSE] * 0.01f;
+    for (i = 0; i < 5; i++) {
+        int32_t x = 6 + i * 9, h = (int32_t)(fm_clampf(lv[i], 0.0f, 1.0f) * 92.0f + 0.5f);
         cv_rect(x, 20, 5, 96, t[i]);
         if (h > 0)
             cv_rect(x, 20 + 96 - h, 5, h, c[i]);
@@ -3271,7 +3270,7 @@ static void draw_main(void)
     h = hash(h, en_acid_pos | (uint32_t)en_acid_len << 8 | (uint32_t)q16(en_acid_glow) << 16);
     h = hash(h, (uint32_t)q16(en_cm_level));
     h = hash(h, (uint32_t)(en_drift * 40.0f) | (uint32_t)q16(en_pad_level) << 8 | (uint32_t)q16(en_bass_level) << 13 |
-                    (uint32_t)q16(en_acid_level) << 18 | (uint32_t)q16(en_noise_level) << 23);
+                    (uint32_t)q16(en_acid_level) << 18);
     for (i = 0; i < 5; i++)
         h = hash(h, (uint32_t)proj.par[i]);
     if (h == ui.sig[1])

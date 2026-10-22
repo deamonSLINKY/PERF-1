@@ -626,7 +626,7 @@ void en_fxs(int i, int v) { post(C_FXS, i, v); }
 volatile uint8_t en_playing, en_frozen, en_ext;
 volatile uint8_t en_chord[EN_NPAD], en_chord_root, en_chord_n;
 volatile float en_drift, en_pad_level, en_bass_level;
-volatile float en_noise_level, en_acid_level;
+volatile float en_acid_level;
 volatile uint8_t en_acid_len = 16, en_acid_pos;
 volatile uint16_t en_acid_gate, en_acid_acc;
 volatile float en_acid_glow;
@@ -3963,11 +3963,9 @@ static void render_noise(uint32_t n)            /* into its own buffer: the pump
 {
     uint32_t j;
     const float g = vin_m * vn_g, k = nz_lp_k;   /* the vinyl key fades it in; its settings are en_fxs's */
-    float lvl = 0.0f;
     if (g <= 0.0f || !en_playing) {
         for (j = 0; j < n; j++)
             nzl[j] = nzr[j] = 0.0f;
-        en_noise_level *= 0.9f;
         return;
     }
     for (j = 0; j < n; j++) {
@@ -3976,13 +3974,11 @@ static void render_noise(uint32_t n)            /* into its own buffer: the pump
         nz[1].lp += k * (r - nz[1].lp);
         nzl[j] = nz[0].lp * tg;
         nzr[j] = nz[1].lp * tg;
-        lvl = fm_maxf(lvl, fm_fabsf(nzl[j]));
     }
     nz[0].lp = fm_flush(nz[0].lp);
     nz[1].lp = fm_flush(nz[1].lp);
     nz[0].br = fm_flush(nz[0].br);
     nz[1].br = fm_flush(nz[1].br);
-    en_noise_level = fm_maxf(lvl * 6.0f, en_noise_level * 0.9f);
 }
 
 /* a hat: the metal and noise, high-passed (Chamberlin SVF, its corner the lane's tune); little echo */
