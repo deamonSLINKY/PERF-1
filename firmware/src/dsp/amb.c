@@ -291,6 +291,38 @@ const char *en_piece_name_g(int g, int i)
         return XNAME[g - 4][i];
     return g == 1 ? LOFI_NAME[i] : g == 2 ? HOUSE_NAME[i] : g == 3 ? DUB_NAME[i] : PIECE_NAME[i];
 }
+/* Each genre's palette of sounds, five of the pad, drone, acid and pluck and three of each drum's kit: a piece takes one of each by its number, with a
+ * different stride for each (1, 2, 3, 4 of five; 1, 2 of three), so the pieces of a genre differ in sound as well as in key and tempo, and no two
+ * neighbours share them. The pad, drone and acid sounds are the genres' own choices (the original genre's keep theirs). */
+static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {
+    {{0}, {0}, {0}, {1, 4, 5, 11, 6}, {0}, {0}, {0}, {0}},
+    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {2, 3, 1, 5, 11}, {8, 5, 7}, {8, 5, 1}, {8, 5, 1}, {8, 5, 11}},
+    {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 21, 8, 5}, {7, 0, 10, 9, 8}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
+    {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 13, 3, 20}, {6, 4, 8, 5, 11}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
+    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 16}, {4, 21, 9, 13, 1}, {7, 10, 0, 4, 6}, {4, 12, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
+    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {11, 3, 5, 8, 2}, {12, 10, 2}, {12, 4, 10}, {12, 2, 10}, {12, 11, 5}},
+    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 21, 3, 19}, {9, 7, 10, 2, 0}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
+    {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 21, 16, 9}, {3, 2, 5, 0, 1}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
+    {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 13, 23, 5}, {10, 8, 0, 11, 4}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
+    {{7, 15, 22, 3, 18}, {9, 8, 22, 4, 10}, {11, 18, 16, 23, 22}, {4, 3, 5, 11, 6}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
+};
+static const uint8_t PLUCK_RATE[EN_NGENRE] = {0, 0, 0, 2, 1, 1, 0, 0, 1, 2};   /* the pluck's rate by genre: 1/8, 1/16, 1/4 */
+static void vary(int g, int i, int16_t *par)
+{
+    const int pw = g * 3 + i;
+    par[P_CM_SND] = PALETTE[g].pluck[(i * 4 + g) % 5];
+    par[P_CM_STYLE] = (int16_t)((i * 2 + g) % EN_NCMSTYLE);
+    par[P_CM_RATE] = PLUCK_RATE[g];
+    if (g == 0)
+        return;                                 /* the original pieces keep their pad, drone, acid and kit */
+    par[P_PADTONE] = PALETTE[g].pad[i % 5];
+    par[P_DR_INST] = PALETTE[g].drone[(i * 2 + g) % 5];
+    par[P_AC_WAVE] = PALETTE[g].acid[(i * 3 + pw) % 5];
+    par[P_KIT_KICK] = PALETTE[g].kick[(i + g) % 3];
+    par[P_KIT_SNARE] = PALETTE[g].snare[(i * 2 + g) % 3];
+    par[P_KIT_HAT] = PALETTE[g].hat[(i + 2 * g) % 3];
+    par[P_KIT_PERC] = PALETTE[g].perc[(i * 2 + 2 * g) % 3];
+}
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
 {
     int p;
@@ -314,6 +346,7 @@ void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
         for (c = GENRE_PIECES[g][i]; c[0] >= 0; c += 2)
             par[c[0]] = c[1];
     }
+    vary(g, i, par);
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
 void en_piece(int i, int16_t *par, uint16_t *pool) { en_piece_g(0, i, par, pool); }
