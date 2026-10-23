@@ -1979,9 +1979,12 @@ static const int DL_LEN[L_N] = {PRE_LP, DS(142), DS(107), DS(379), DS(277), DS(6
                                 DS(3720), DS(908) + EXC + 2, DS(4217), DS(2656), DS(3163)};
 #define DL_TOTAL (PRE_LP + DS(142) + DS(107) + DS(379) + DS(277) + DS(672) + DS(4453) + DS(1800) + DS(3720) + DS(908) + \
                   DS(4217) + DS(2656) + DS(3163) + 2 * (EXC + 2))
-static float pl_buf[DL_TOTAL] EN_POOL;
+/* The lines are stored as 16-bit integers (the maths stays float): half the memory, 70 KB for other things. Scale 8192: a range of +-4, steps of
+ * -78 dBFS, rounded to nearest (a tail below half a step goes quiet rather than hissing). */
+#define RV_Q 16384.0f
+static int16_t pl_buf[DL_TOTAL] EN_POOL;
 typedef struct {
-    float *b;
+    int16_t *b;
     int n, i;
 } dl_t;
 static dl_t dl[L_N];
@@ -1990,11 +1993,12 @@ static float pl_bw, pl_damp_l, pl_damp_r, pl_decay = 0.5f, pl_decay_t = 0.5f, pl
 static inline float tap(const dl_t *d, int k)
 {
     int j = d->i - k;
-    return d->b[j < 0 ? j + d->n : j];
+    return (float)d->b[j < 0 ? j + d->n : j] * (1.0f / RV_Q);
 }
 static inline void push(dl_t *d, float x)
 {
-    d->b[d->i] = x;
+    x = fm_clampf(x * RV_Q, -32767.0f, 32767.0f);
+    d->b[d->i] = (int16_t)(int32_t)(x + (x < 0.0f ? -0.5f : 0.5f));
     if (++d->i >= d->n)
         d->i = 0;
 }
@@ -2065,11 +2069,11 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void))
 static void reverb_job(void *p)
 {
     const rv_job_t *c = (const rv_job_t *)p;
-    const float *pre = dl[L_PRE].b;
+    const int16_t *pre = dl[L_PRE].b;
     const int np = dl[L_PRE].n;
     int r = c->r0, j;
     for (j = 0; j < c->n; j++) {
-        reverb_tank(pre[r], &rv_wl[j], &rv_wr[j]);
+        reverb_tank((float)pre[r] * (1.0f / RV_Q), &rv_wl[j], &rv_wr[j]);
         if (++r >= np)
             r = 0;
     }
@@ -2077,7 +2081,7 @@ static void reverb_job(void *p)
 
 static void plate_init(void)
 {
-    float *p = pl_buf;
+    int16_t *p = pl_buf;
     int k, i;
     for (k = 0; k < L_N; k++) {
         dl[k].b = p;
@@ -2086,7 +2090,7 @@ static void plate_init(void)
         p += DL_LEN[k];
     }
     for (i = 0; i < DL_TOTAL; i++)
-        pl_buf[i] = 0.0f;
+        pl_buf[i] = 0;
     pl_bw = pl_damp_l = pl_damp_r = 0.0f;
     lfo_s = 0.0f;
     lfo_c = 1.0f;

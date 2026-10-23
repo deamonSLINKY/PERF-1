@@ -81,6 +81,7 @@ int main(int argc, char **argv)
     uint32_t h = 2166136261u, nan = 0;
     pthread_t th;
     unsigned b;
+    FILE *dump = argc > 2 ? fopen(argv[2], "wb") : 0;     /* the whole output, to compare builds (tools, not the suite) */
     mode = argc > 1 ? atoi(argv[1]) : 0;
     en_init();
     en_play(1);
@@ -93,6 +94,8 @@ int main(int argc, char **argv)
     for (b = 0; b < 1200u; b++) {
         unsigned n = sizes[b % (sizeof sizes / sizeof sizes[0])], j;
         en_render(buf, n, 2048);
+        if (dump)
+            fwrite(buf, 4, 2 * n, dump);
         for (j = 0; j < 2 * n; j++) {
             h = (h ^ (uint32_t)buf[j]) * 16777619u;
             if (buf[j] > 8388607 || buf[j] < -8388608)
