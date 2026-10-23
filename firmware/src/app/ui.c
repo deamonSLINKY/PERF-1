@@ -45,7 +45,7 @@ static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LF
 enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -167,7 +167,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
     {P_CHORD, P_VOICING, P_PL_CHO, P_ROOT},        /* the harmony together (Root is also on Global), and the pad's chorus (Drift is on Tempo) */
-    {P_PAD, P_BASS, P_ACID, P_PULSE},              /* the mixer: the layers' levels together (each is also on its voice's page) */
+    {K_MXT, K_MXL, K_MXP, K_MXS},                  /* the mixer: a layer chosen, its level, its place, its send (the level is also on the layer's own page) */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
@@ -195,7 +195,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Chord", "Voicing", "Chorus", "Root"},
-    {"Pad", "Drone", "Acid", "Drums"},
+    {"Track", "Level", "Pan", "Send"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -395,6 +395,7 @@ static struct {
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
     uint8_t glide_on, glide_busy;
+    uint8_t mix_trk;                   /* the mixer page's layer: pad, drone, acid, pluck, drums (0..4) */
     uint8_t jam_man;                   /* the voice the JAM page has taken off its line (1 + voice), 0 none */
     uint8_t jam_voice, jam_mode, jam_oct, jam_ans;   /* the JAM page: the voice (pluck, pad, acid, drone), the keys (scale, chords, harp), the octave (0..4: -2..+2), the answer */
     uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
@@ -786,11 +787,22 @@ static int knob_par(int k)                     /* a knob's parameter (the sequen
         return P_LANE_TUNE(ui.lane);
     if (k == K_DEC)
         return P_LANE_DEC(ui.lane);
+    if (k == K_MXL) {                            /* the mixer's layer: its level */
+        static const uint8_t LV[5] = {P_PAD, P_BASS, P_ACID, P_CM_LVL, P_PULSE};
+        return LV[ui.mix_trk % 5u];
+    }
+    if (k == K_MXP)
+        return P_PAN + (int)(ui.mix_trk % 5u);
+    if (k == K_MXS)
+        return P_SEND + (int)(ui.mix_trk % 5u);
     return k < P_NPARAMS ? k : -1;
 }
+static const char *const MXT_NAME[5] = {"PAD", "DRONE", "ACID", "PLUCK", "DRUMS"};
 static int knob_get(int k)
 {
     int p = knob_par(k);
+    if (k == K_MXT)
+        return ui.mix_trk;
     if (k >= K_FXP)
         return fxp_get(k);
     if (k >= K_FXF)
@@ -800,6 +812,11 @@ static int knob_get(int k)
 static void knob_range(int k, int *lo, int *hi)
 {
     int p = knob_par(k);
+    if (k == K_MXT) {
+        *lo = 0;
+        *hi = 4;
+        return;
+    }
     if (k >= K_FXP) {
         fxp_range(k, lo, hi);
         return;
@@ -815,6 +832,16 @@ static void knob_range(int k, int *lo, int *hi)
 static void knob_text(int k, char *b)
 {
     int p = knob_par(k);
+    if (k == K_MXT) {
+        const char *s = MXT_NAME[ui.mix_trk % 5u];
+        int n = 0;
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
+        return;
+    }
     if (k >= K_FXP) {
         fxp_text(k, b);
         return;
@@ -847,6 +874,10 @@ static void knob_text(int k, char *b)
 static void knob_set(int k, int v)
 {
     int lo, hi, p = knob_par(k);
+    if (k == K_MXT) {
+        ui.mix_trk = (uint8_t)(v < 0 ? 0 : v > 4 ? 4 : v);
+        return;
+    }
     if (k >= K_FXP) {
         fxp_set(k, v);
         return;
@@ -3300,7 +3331,7 @@ static void draw_scope(int kind)
             const int muted = k < 5 && (ui.trk_m & TRK[k]) == TRK[k], solo = k < 5 && ui.trk_s & TRK[k];
             const int32_t set = k < 5 ? (int32_t)lv[k] * sh / 100 : 0, now = (int32_t)(fm_minf(live[k], 1.0f) * (float)sh);
             char tx[8];
-            cv_rect(sx, top, 30, sh, K_LINE);
+            cv_rect(sx, top, 30, sh, k == ui.mix_trk ? K_TEXT : K_LINE);   /* (the chosen layer framed) */
             cv_rect(sx + 1, top + 1, 28, sh - 2, K_BG);
             if (k < 5) {
                 cv_rect(sx + 1, top + sh - 1 - set, 18, set, muted ? K_DIM : mix(K_BG, C[k], 5));   /* the fader: what it is set to */
@@ -3313,6 +3344,10 @@ static void draw_scope(int kind)
             cv_text(sx + (30 - text_w(&FONT_XS, NAME[k])) / 2, top + sh + 3, &FONT_XS, NAME[k], muted ? K_DIM : solo ? K_ACC : K_TEXT);
             if (muted)
                 cv_text(sx + 11, top + sh / 2 - 4, &FONT_XS, "M", K_TEXT);
+            if (k < 5) {                         /* its place: a tick under the strip, across its width */
+                const int32_t pxm = sx + 2 + (int32_t)proj.par[P_PAN + k] * 26 / 100;
+                cv_rect(pxm, top + sh + 13, 2, 3, proj.par[P_PAN + k] == 50 ? K_DIM : K_ACC);
+            }
         }
         return;
     }
@@ -3653,6 +3688,8 @@ static void draw_main(void)
             h = hash(h, (uint32_t)(en_pad_level * 20.0f) | (uint32_t)(en_bass_level * 20.0f) << 5 | (uint32_t)(en_acid_level * 20.0f) << 10 |
                             (uint32_t)(en_cm_level * 20.0f) << 15 | (uint32_t)(dg * 20.0f) << 20 | (uint32_t)(en_out_peak * 20.0f) << 25);
             h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 8 | (uint32_t)proj.par[P_CM_LVL] << 16);
+            h = hash(h, (uint32_t)ui.mix_trk | (uint32_t)proj.par[P_PAN] << 4 | (uint32_t)proj.par[P_PAN1] << 11 | (uint32_t)proj.par[P_PAN2] << 18 | (uint32_t)proj.par[P_PAN3] << 25);
+            h = hash(h, (uint32_t)proj.par[P_PAN4]);
         }
         h = hash(h, (uint32_t)(proj.par[P_PL_DEPTH] | proj.par[P_DL_SHAPE] << 8 | proj.par[P_DL_RATE] << 12 | proj.par[P_DL_DEPTH] << 16));
         if (h != ui.sig[1]) {

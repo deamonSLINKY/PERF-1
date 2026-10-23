@@ -880,6 +880,43 @@ int main(void)
         en_play(1);
     }
 
+    /* the mixer: a layer panned hard left is heard on the left; its send at 0 takes it out of the reverb; the middle and 50 leave it as it was */
+    {
+        double ch[2][3] = {{0}}, rv[2] = {0, 0};
+        int k, blk, j;
+        for (k = 0; k < 3; k++) {          /* 0: as it is; 1: the drums hard left; 2: the drums centred with the send at 0 and the reverb on */
+            en_init();
+            en_set(P_PAD, 0);
+            en_set(P_BASS, 0);
+            en_set(P_ACID, 0);
+            en_set(P_CM_LVL, 0);
+            en_set(P_NOISE, 0);
+            en_set(P_PULSE, 90);
+            en_set(P_ECHO, 0);
+            en_set(P_REVERB, k == 2 ? 100 : 0);
+            en_set(P_PAN4, k == 1 ? 0 : 50);
+            en_set(P_SEND4, k == 2 ? 0 : 50);
+            en_play(1);
+            for (blk = 0; blk < 1000; blk++) {
+                en_render(buf, 256, 2048);
+                if (blk < 300)
+                    continue;
+                for (j = 0; j < 256; j++) {
+                    const double l = (double)buf[2 * j], r = (double)buf[2 * j + 1];
+                    ch[0][k] += l * l;
+                    ch[1][k] += r * r;
+                }
+            }
+        }
+        rv[0] = ch[0][0];
+        rv[1] = ch[1][0];
+        CHECK(ch[1][1] < 0.05 * ch[0][1], "drums hard left: the right side %.3g against %.3g", ch[1][1], ch[0][1]);
+        CHECK(ch[0][0] > 0.5 * ch[1][0] && ch[1][0] > 0.5 * ch[0][0], "the drums centred are on both sides (%.3g, %.3g)", rv[0], rv[1]);
+        CHECK(ch[0][2] > 0.0 && ch[0][2] < 1.5 * ch[0][0], "the drums with no send, the reverb up, are no louder than dry (%.3g vs %.3g)", ch[0][2], ch[0][0]);
+        en_init();
+        en_play(1);
+    }
+
     /* stop: the tails die away */
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, en_param_info(i)->def);

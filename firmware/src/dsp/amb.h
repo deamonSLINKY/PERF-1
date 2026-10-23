@@ -95,6 +95,8 @@ enum {
     P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT,              /* the counter-melody (PLUCK): level, sound, density, octave */
     P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE,          /* decay, style (up, down, ..), rate (1/8, 1/16, 1/4, 3/16), range in octaves */
     P_PROB, P_PROB1, P_PROB2, P_PROB3, P_PROB4, P_PROB5,  /* each drum lane's chance a hit sounds (P_PROB + lane), 100 always: thinned from the sequencer */
+    P_PAN, P_PAN1, P_PAN2, P_PAN3, P_PAN4,                /* the mixer: each layer's place (pad, drone, acid, pluck, drums; 50 the middle) */
+    P_SEND, P_SEND1, P_SEND2, P_SEND3, P_SEND4,           /* and how much of it goes to the echo and the reverb (50 as it was) */
     P_CM_MAN,                                             /* the pluck off the algorithm (the JAM page plays it by hand: engine-only, the page sets it) */
     P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X,               /* the reverb: Plate / Shimmer / Gated, its damping, its predelay, and the type's own amount (the shimmer's, the gate's hold) */
     P_PL_CHO,                                             /* the pad's ensemble chorus: three modulated delays a side, how much of them */

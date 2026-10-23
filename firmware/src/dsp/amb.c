@@ -68,6 +68,9 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
     [P_PROB] = {"Prob", 0, 100, 100},     [P_PROB1] = {"Prob", 0, 100, 100},   [P_PROB2] = {"Prob", 0, 100, 100},
     [P_PROB3] = {"Prob", 0, 100, 100},    [P_PROB4] = {"Prob", 0, 100, 100},   [P_PROB5] = {"Prob", 0, 100, 100},
+    [P_PAN] = {"Pan", 0, 100, 50},          [P_PAN1] = {"Pan", 0, 100, 50},        [P_PAN2] = {"Pan", 0, 100, 50},       [P_PAN3] = {"Pan", 0, 100, 50},
+    [P_PAN4] = {"Pan", 0, 100, 50},         [P_SEND] = {"Send", 0, 100, 50},       [P_SEND1] = {"Send", 0, 100, 50},     [P_SEND2] = {"Send", 0, 100, 50},
+    [P_SEND3] = {"Send", 0, 100, 50},       [P_SEND4] = {"Send", 0, 100, 50},
     [P_CM_MAN] = {"Pluck hand", 0, 1, 0},
     [P_RV_TYPE] = {"Type", 0, 2, 0},       [P_RV_DAMP] = {"Damping", 0, 100, 47}, [P_RV_PRE] = {"Predelay", 0, 100, 100}, [P_RV_X] = {"Amount", 0, 100, 30},
     [P_PL_CHO] = {"Chorus", 0, 100, 0},
@@ -482,6 +485,18 @@ void en_param_text(int i, int v, char *b)
         char *p = itoa_s(6 + 24 * v / 100, b);
         *p++ = 'm';
         *p++ = 's';
+        *p = 0;
+        return;
+    }
+    case P_PAN: case P_PAN1: case P_PAN2: case P_PAN3: case P_PAN4: {    /* L100 .. C .. R100 */
+        char *p = b;
+        if (v == 50) {
+            b[0] = 'C';
+            b[1] = 0;
+            return;
+        }
+        *p++ = v < 50 ? 'L' : 'R';
+        p = itoa_s((v < 50 ? 50 - v : v - 50) * 2, p);
         *p = 0;
         return;
     }
@@ -4889,6 +4904,45 @@ static void render_drums(uint32_t n)
 
 _Static_assert(BLK == BLK_FM, "the DX voices' buffers are a chunk long");
 _Static_assert(BLK <= RV_MAX && RV_MAX <= 256, "a chunk is at most the predelay line's extra length");
+/* the mixer: a layer's place (pan: a balance, the middle leaves it as it is) and its sends. The layers render straight into the mix, so a layer that is off its
+ * defaults is taken as the difference it makes: the mix as it was before it, its change scaled after. The drone 1, the acid 2, the pluck 3 and the drums 4 (the pad 0
+ * and the DX voices are in their own buffers: scaled where they are added). */
+static float mx_sv[4][BLK] EN_POOL;
+static void mx_gains(int t, float *gl, float *gr, float *sg)
+{
+    const float p = (float)par[P_PAN + t] * 0.01f;
+    *gl = fm_minf(1.0f, 2.0f * (1.0f - p));
+    *gr = fm_minf(1.0f, 2.0f * p);
+    *sg = (float)par[P_SEND + t] * 0.02f;
+}
+static int mx_off(int t) { return par[P_PAN + t] != 50 || par[P_SEND + t] != 50; }
+static void mx_begin(int t, uint32_t n)
+{
+    uint32_t j;
+    if (!mx_off(t))
+        return;
+    for (j = 0; j < n; j++) {
+        mx_sv[0][j] = mixl[j];
+        mx_sv[1][j] = mixr[j];
+        mx_sv[2][j] = rsend[j];
+        mx_sv[3][j] = esend[j];
+    }
+}
+static void mx_end(int t, uint32_t n)
+{
+    float gl, gr, sg;
+    uint32_t j;
+    if (!mx_off(t))
+        return;
+    mx_gains(t, &gl, &gr, &sg);
+    for (j = 0; j < n; j++) {
+        mixl[j] = mx_sv[0][j] + (mixl[j] - mx_sv[0][j]) * gl;
+        mixr[j] = mx_sv[1][j] + (mixr[j] - mx_sv[1][j]) * gr;
+        rsend[j] = mx_sv[2][j] + (rsend[j] - mx_sv[2][j]) * sg;
+        esend[j] = mx_sv[3][j] + (esend[j] - mx_sv[3][j]) * sg;
+    }
+}
+
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
@@ -4912,9 +4966,15 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         else
             chunk_job(&rv_job);
     }
+    mx_begin(1, n);
     render_bass(n);
+    mx_end(1, n);
+    mx_begin(2, n);
     render_acid(n);
+    mx_end(2, n);
+    mx_begin(3, n);
     render_cm(n);
+    mx_end(3, n);
     render_noise(n);
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
         while (!stage_done)
@@ -4930,11 +4990,16 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (c2_fence)
             c2_fence();
     }
-    for (j = 0; j < n; j++) {
-        mixl[j] += pad_ol[j] + fm_ol[j];
-        mixr[j] += pad_or[j] + fm_or[j];
-        rsend[j] += pad_rs[j] + fm_rs[j];
-        esend[j] += pad_es[j] + fm_es[j];
+    {
+        float pl, pr, ps, fl, fr, fs;
+        mx_gains(0, &pl, &pr, &ps);
+        mx_gains(3, &fl, &fr, &fs);
+        for (j = 0; j < n; j++) {
+            mixl[j] += pad_ol[j] * pl + fm_ol[j] * fl;
+            mixr[j] += pad_or[j] * pr + fm_or[j] * fr;
+            rsend[j] += pad_rs[j] * ps + fm_rs[j] * fs;
+            esend[j] += pad_es[j] * ps + fm_es[j] * fs;
+        }
     }
     pad_midi_flush();
     for (j = 0; j < n; j++) {                   /* the sidechain: the kick pushes the rest down, briefly */
@@ -4959,6 +5024,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     gate_g = gg;
+    mx_begin(4, n);
     if (KK->crush > 0.0f) {                      /* breakcore: the drums crushed (what they add, held and stepped) */
         static float hl, hr;
         static uint32_t hc;
@@ -4983,6 +5049,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     } else {
         render_drums(n);                        /* (the kick sets duck_env for the next chunk) */
     }
+    mx_end(4, n);
     duck_env = fm_flush(de);
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
         float el, er, xl, xr;
