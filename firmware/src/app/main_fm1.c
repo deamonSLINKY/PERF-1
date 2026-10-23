@@ -404,7 +404,7 @@ static void tel_service(void)
         w[7] = tel_max_us;
         w[8] = en_dbg.last_us;
         w[9] = en_dbg.nested;
-        w[10] = (uint32_t)en_shed_level;
+        w[10] = (uint32_t)en_shed_level | (uint32_t)en_chorus_c0 << 8;   /* (bit 8: the chorus on the first core) */
         w[11] = (uint32_t)en_playing;
         w[12] = tel_stores;
         w[13] = tel_store_us;

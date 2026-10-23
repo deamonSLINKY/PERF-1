@@ -2248,6 +2248,10 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void),
     c2_fence = fence;
     c2_alive = alive;
 }
+volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by the first core (set when it has time to spare and the other has not) */
+static int8_t bal_force = -1;                    /* tests: -1 as it decides, 0 or 1 */
+static uint32_t bal_wait, bal_tot;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
+void en_balance_force(int v) { bal_force = (int8_t)v; }
 static volatile uint32_t stage_done;             /* the job's first stage (the pad) is done: its outputs may be read */
 static void render_pad(uint32_t n);
 static void reverb_job(void *p)
@@ -4444,7 +4448,8 @@ static void render_pad(uint32_t n)
         stab_env *= stab_k;
     stab_env = fm_flush(stab_env);
     pad_bus(n);
-    pad_chorus(n);
+    if (!en_chorus_c0)
+        pad_chorus(n);                           /* (or the first core's, after it waits for this stage: render_chunk) */
 }
 
 static void render_bass(uint32_t n)
@@ -5170,7 +5175,7 @@ volatile uint32_t en_prof[EN_NPROF];
 #define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; pt0_ = t1_; } } while (0)
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
-    uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u;
+    uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u;
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
@@ -5208,6 +5213,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     render_dj(n);
     render_noise(n);
     PT(2);                                      /* pluck, the DX voices' samples, snips, noise */
+    bal_a = pt0_;
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
         while (!stage_done)
             if (c2_alive && !c2_alive()) {
@@ -5226,6 +5232,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             c2_fence();
     }
     PT(3);                                      /* the wait for the pad */
+    bal_w = pt0_ - bal_a;
+    if (en_chorus_c0)
+        pad_chorus(n);                          /* the pad's chorus here, while the other core goes on with the reverb */
     {
         float pl, pr, ps, fl, fr, fs;
         mx_gains(0, &pl, &pr, &ps);
@@ -5298,6 +5307,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
     }
     PT(6);                                      /* the echoes, the reverb's input */
+    bal_a = pt0_;
     if (rv_c2 && !c2_join()) {                  /* the other core was lost: this chunk has no reverb, and the tank starts over */
         en_c2_lost++;
         for (j = 0; j < n; j++)
@@ -5305,6 +5315,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         plate_init();
     }
     PT(7);                                      /* the wait for the reverb and the DX voices */
+    bal_w += pt0_ - bal_a;
     for (j = 0; j < n; j++) {                   /* the tank's output in, the performance effects */
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
@@ -5318,6 +5329,23 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     en_prof[9]++;
+    if (bal_force >= 0) {
+        en_chorus_c0 = (uint8_t)bal_force;
+    } else if (en_prof_clock && rv_c2) {        /* where the chorus runs: the first core takes it when it has waited more than ~14 % of a quarter second,
+                                                 * gives it back when it waits under 3 % (the move itself takes ~7 % off the wait) */
+        bal_tot += pt0_ - bal_t0;
+        bal_wait += bal_w;
+        if (bal_tot >= 6000000u) {
+            const uint32_t frac = bal_wait / (bal_tot / 100u);
+            if (par[P_PL_CHO] <= 0 || en_shed_level)
+                en_chorus_c0 = 0;
+            else if (!en_chorus_c0 && frac > 14u)
+                en_chorus_c0 = 1;
+            else if (en_chorus_c0 && frac < 3u)
+                en_chorus_c0 = 0;
+            bal_tot = bal_wait = 0;
+        }
+    }
     step_t += (int32_t)n;
 }
 

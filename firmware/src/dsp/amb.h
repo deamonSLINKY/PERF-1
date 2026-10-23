@@ -253,6 +253,8 @@ extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; tho
 extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 #define EN_NPROF 10                            /* the first core's stages (amb.c render_chunk PT): ticks summed since cleared, and the chunk count last */
+extern volatile uint8_t en_chorus_c0;          /* 1: the pad's chorus runs on the first core (it decides, from its waits); */
+void en_balance_force(int v);                  /* tests: -1 it decides, 0 / 1 as told */
 extern uint32_t (*en_prof_clock)(void);        /* the firmware's tick counter, for them (0: not measured) */
 extern volatile uint32_t en_prof[EN_NPROF];
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
