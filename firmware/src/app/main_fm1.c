@@ -24,6 +24,7 @@ struct en_dbg {
     uint32_t crash_seen;                            /* the crash count already reported at a boot */
 } en_dbg __attribute__((section(".noinit")));
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
+static volatile uint32_t tel_max_us;                /* telemetry: the longest render (a half block) since the last frame */
 
 static void render_block(int32_t *o)                /* ALNK0: one half, measured */
 {
@@ -49,6 +50,8 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
     en_dbg.last_us = us;
     if (us > en_dbg.max_us)
         en_dbg.max_us = us;
+    if (us > tel_max_us)
+        tel_max_us = us;
     en_dbg.in_audio = 0;
 }
 
@@ -232,6 +235,78 @@ static void safe_main(void)
     }
 }
 
+/* TELEMETRY. A host (tools/fm1log.py) sends F0 7D 50 46 01 F7 and every few seconds again; while it does, a status frame goes back four
+ * times a second: F0 7D 50 46 (version 1) then 20 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
+ * that would have to wait for the host is dropped. The words (tel_service): sequence, ms, CPU %, CPU1 %, core2 state, xruns, late,
+ * the longest render since the last frame (us), the last render, nested ticks, shed level, playing, flash writes, the last write's
+ * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us). */
+static uint32_t tel_gap_us, tel_ui_us;              /* the longest since the last frame */
+static void tel_service(void)
+{
+    static uint8_t on;
+    static uint32_t until, next, seq;
+    uint8_t r = usb.tel_req;
+    if (r) {
+        usb.tel_req = 0;
+        on = r == 2u;
+        until = fm1_ms + 10000u;
+        if (on)
+            next = fm1_ms;
+    }
+    if (!on)
+        return;
+    if ((int32_t)(fm1_ms - until) > 0) {            /* the host went quiet: stop */
+        on = 0;
+        return;
+    }
+    if ((int32_t)(fm1_ms - next) < 0)
+        return;
+    {
+        uint32_t w[20], i;
+        uint8_t f[4 + 20 * 5 + 2];
+        uint32_t n = 4;
+        w[0] = seq;
+        w[1] = fm1_ms;
+        w[2] = audio_cpu_pct;
+        w[3] = fm1_core1_load();
+        w[4] = plat_core2();
+        w[5] = audio_xruns;
+        w[6] = en_dbg.late;
+        w[7] = tel_max_us;
+        w[8] = en_dbg.last_us;
+        w[9] = en_dbg.nested;
+        w[10] = (uint32_t)en_shed_level;
+        w[11] = (uint32_t)en_playing;
+        w[12] = tel_stores;
+        w[13] = tel_store_us;
+        w[14] = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.count : 0u;
+        w[15] = en_dbg.halves;
+        w[16] = en_dbg.ui_frames;
+        w[17] = HALF_FRAMES * 1000000u / FS;
+        w[18] = tel_gap_us;
+        w[19] = tel_ui_us;
+        f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
+        {
+            uint8_t b[20 * 4];
+            for (i = 0; i < 20u; i++)
+                b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
+            n += ota_pack7(b, sizeof b, f + n);
+        }
+        f[n++] = 0xF7;
+        if (usb_sysex_try(f, n) == 0) {
+            seq++;
+            tel_max_us = 0;
+            tel_gap_us = 0;
+            tel_ui_us = 0;
+            next += 250u;
+            if ((int32_t)(fm1_ms - next) > 0)
+                next = fm1_ms + 250u;
+        } else {
+            next = fm1_ms + 250u;                   /* no room (no host listening): try again later */
+        }
+    }
+}
+
 static void splash(void)
 {
     lcd_fill(0, 0, 240, 240, RGB(22, 21, 27));       /* charcoal, until the UI's RedtailWorks card (ui_init) */
@@ -300,6 +375,13 @@ static void fm1_main(void)
     ui_init();
 
     for (;;) {
+        {   /* telemetry: the longest gap between turns of this loop (a flash write, a long frame: what the audio felt) */
+            static uint32_t last_turn;
+            const uint32_t t = fm1_ticks(), g = (t - last_turn) / FM1_TICKS_PER_US;
+            if (last_turn && g > tel_gap_us)
+                tel_gap_us = g;
+            last_turn = t;
+        }
         fm1_wdt_feed();
         usb_retry(fm1_ms);
         if (fm1_ms > 30000u && bootguard.pending) {     /* a crash or hang in the first 30 s counts */
@@ -335,6 +417,7 @@ static void fm1_main(void)
             }
         }
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
+        tel_service();
         if (usb.ota_req) {
             usb.ota_req = 0;
             en_play(0);
@@ -351,7 +434,14 @@ static void fm1_main(void)
         if (fm1_ms - last_frame >= 16u) {           /* ~60 frames/s at most; input in between */
             last_frame = fm1_ms;
             en_dbg.ui_frames++;
-            ui_frame();
+            {
+                const uint32_t t = fm1_ticks();
+                uint32_t u;
+                ui_frame();
+                u = (fm1_ticks() - t) / FM1_TICKS_PER_US;
+                if (u > tel_ui_us)
+                    tel_ui_us = u;
+            }
         } else {
             ui_input_only();
         }

@@ -106,7 +106,18 @@ void plat_midi_out(uint32_t pkt)                    /* the ring has one writer a
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 | st << 8 | d1 << 16 | d2 << 24); }
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
-int plat_store_save(uint32_t obj, const void *src, uint32_t len) { return flash_ok ? st_save(obj, src, len) : -9; }
+static volatile uint32_t tel_stores, tel_store_us;       /* telemetry: flash writes so far, and how long the last one stopped the chip */
+int plat_store_save(uint32_t obj, const void *src, uint32_t len)
+{
+    uint32_t t0, r;
+    if (!flash_ok)
+        return -9;
+    t0 = fm1_ticks();
+    r = (uint32_t)st_save(obj, src, len);
+    tel_store_us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
+    tel_stores++;
+    return (int)r;
+}
 
 static volatile uint32_t audio_cpu_pct, audio_xruns;
 uint32_t plat_cpu_pct(void) { return audio_cpu_pct; }

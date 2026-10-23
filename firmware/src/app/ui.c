@@ -2720,7 +2720,7 @@ static void draw_kit(void)                       /* right: the pattern playing, 
  * tinted column; the pattern edited above, and the one playing if they differ */
 static void draw_seq(void)
 {
-    int l, s, pat = seq_pat(), pos = en_drum_pos;
+    int l, s, pat = seq_pat();
     char t[24] = "PATTERN ";
     itoa_u((uint32_t)pat + 1u, t + 8);
     cv_text(6, 1, &FONT_XS, t, K_ACC);

@@ -110,6 +110,7 @@ static struct {
     uint8_t sx_len, sx_on;
     volatile uint8_t uboot_req;
     volatile uint8_t ota_req;    /* F0 22 24 35 7F F7: M-UPGRADE upgrade command (FELUCCA_OTA) */
+    volatile uint8_t tel_req;    /* F0 7D 50 46 c F7: telemetry on (c = 1) or off (c = 0), plus one: the main loop answers (FELUCCA_OTA) */
 } usb;
 
 #if FELUCCA_OTA
@@ -608,6 +609,8 @@ static void sysex_byte(uint8_t b)
         else if (usb.sx_len == 6u && usb.sysex[1] == 0x22 && usb.sysex[2] == 0x24 && usb.sysex[3] == 0x35 &&
                  usb.sysex[4] == 0x7F)
             usb.ota_req = 1;
+        else if (usb.sx_len == 6u && usb.sysex[1] == 0x7D && usb.sysex[2] == 0x50 && usb.sysex[3] == 0x46)
+            usb.tel_req = (uint8_t)(1u + (usb.sysex[4] & 1u));   /* the telemetry (main_fm1.c): 1 off, 2 on / keep alive */
         else if (sx_collect && sx_pos) {
             sx_frame_len = sx_pos;
             RING_PUBLISH();
@@ -672,6 +675,25 @@ static int ota_wire_send(const uint8_t *p, uint32_t n)   /* F0..F7 -> USB-MIDI S
             }
             ota_idle();
         }
+        sx_out_q[so_w % SXQ] = pkt;
+        RING_PUBLISH();
+        so_w++;
+        i += k;
+    }
+    sx_busy = 0;
+    return 0;
+}
+/* one SysEx F0..F7 to the host if there is room for it all at once, else nothing (the main loop never waits for the host here) */
+static int usb_sysex_try(const uint8_t *p, uint32_t n)
+{
+    uint32_t i = 0;
+    if (!*(volatile uint8_t *)&usb.config || so_w - so_r + (n + 2u) / 3u > SXQ)
+        return -1;
+    sx_busy = 1;
+    while (i < n) {
+        uint32_t k = n - i >= 3u ? 3u : n - i, pkt;
+        uint32_t cin = k == 3u && i + 3u < n ? 4u : k == 3u ? 7u : 4u + k;
+        pkt = cin | (uint32_t)p[i] << 8 | (k > 1u ? (uint32_t)p[i + 1] << 16 : 0u) | (k > 2u ? (uint32_t)p[i + 2] << 24 : 0u);
         sx_out_q[so_w % SXQ] = pkt;
         RING_PUBLISH();
         so_w++;
