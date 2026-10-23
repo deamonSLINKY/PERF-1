@@ -34,7 +34,7 @@
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 24                   /* the sounds each of pad, drone and acid can play */
-#define EN_NCMFM 24                    /* the counter-melody's six-operator FM sounds (the DX7 voices of fm6.inc): after the plain ones */
+#define EN_NCMFM 22                    /* the counter-melody's six-operator FM sounds (the DX7 voices of fm6.inc): after the plain ones */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
@@ -222,8 +222,8 @@ void en_fxs(int i, int v);
 uint8_t en_flex_step(int pat, int step);       /* Flex Beat pattern pat (0..14), step 0..15: e | rev << 4 | mute << 5 | div << 6 (e 15: live) */
 extern volatile uint8_t en_flx_state;          /* 0 idle, 1 armed, 2 playing */
 extern volatile uint32_t en_flx_done;          /* one shots played out so far */
-extern volatile uint8_t en_smp_active;       /* the sampler's voices sounding */
-void en_ring_peaks(uint8_t *out, int n, int len_sel);   /* the peaks of the sampler's window (or the ring's last stretch), n buckets of 0..255 */
+extern volatile uint8_t en_smp_active;       /* the DJ snips sounding */
+const char *en_dj_name(int key);              /* the name of the snip on a key (0..26) */
 void en_spectrum(float *out, int nb);          /* the master's spectrum, nb bands (70 Hz .. 10 kHz), each 0..1: for the screen */
 /* the FX knobs: 0 filter (-50 low-pass .. +50 high-pass, 0 off), 1 crush, 2 throw, 3 wash (0..100) */
 enum { EN_FXK_FILTER, EN_FXK_CRUSH, EN_FXK_THROW, EN_FXK_WASH, EN_NFXK };

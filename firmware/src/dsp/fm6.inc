@@ -180,6 +180,8 @@ typedef struct {
     uint8_t used, gate;
     uint32_t age;                                /* the order the notes came in: the oldest is taken */
     int32_t gate_left;                           /* samples until the key goes up */
+    int32_t kill_left;                           /* after the key is up: samples the note may ring on, then it is faded out (the heavy patches ring for seconds) */
+    float fade;                                  /* 1, falling to 0 when it is being faded out */
 } fm_slot_t;
 static fm_slot_t fmx[FM_NV];
 static void fm_zero(void *p, uint32_t n)         /* (the unit has no libc) */
@@ -224,18 +226,26 @@ static void fm_reset(void)                       /* a new engine: no voices, no 
     fm_age = 0;
 }
 
+/* the 24 voices of Melodee's sets, less the two that were the same sound again (a second Tine EP and a second Drawbars): the patch numbers the pluck
+ * knows (0 ..) and where they are in those sets */
+static const uint8_t FM_MAP[EN_NCMFM] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+/* the voices a patch may use at once: the heaviest (six operators ringing, bells, strings, pads) three; the middle four or five; the rest all six */
+static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3};
 static void fm_set_patch(int idx)                /* between chunks: a new patch cuts the notes */
 {
     int k;
     fm_init();
     if (idx == fm_cur)
         return;
-    if (idx < 0 || idx >= (int)FM6_NPATCH)
+    if (idx < 0 || idx >= EN_NCMFM)
         idx = 0;
-    if (idx < (int)FM6_NFACTORY)
-        fm6_unpack(FM6_FACTORY[idx], fm_ed);
-    else
-        fm6_rom_patch(&FM6_ROM[idx - (int)FM6_NFACTORY], fm_ed);
+    {
+        const int src = FM_MAP[idx];
+        if (src < (int)FM6_NFACTORY)
+            fm6_unpack(FM6_FACTORY[src], fm_ed);
+        else
+            fm6_rom_patch(&FM6_ROM[src - (int)FM6_NFACTORY], fm_ed);
+    }
     fm_cur = idx;
     for (k = 0; k < FM_NV; k++) {
         fmx[k].used = 0;
@@ -256,7 +266,9 @@ static void fm_note_on(int note, float vel, int32_t gate)
     if (fm_cur < 0)
         return;
     {   /* a free voice, unless the load has capped them (shed: 4, then 2): then the oldest is taken */
-        const int cap = en_shed_level == 0 ? FM_NV : en_shed_level == 1 ? 4 : 2;
+        int cap = en_shed_level == 0 ? FM_NV : en_shed_level == 1 ? 4 : 2;
+        if (fm_cur >= 0 && FM_CAP[fm_cur] < cap)
+            cap = FM_CAP[fm_cur];                /* (the patch's own: the heavy ones fewer) */
         int used = 0;
         for (k = 0; k < FM_NV; k++)
             used += fmx[k].used;
@@ -303,15 +315,28 @@ static void fm_note_on(int note, float vel, int32_t gate)
     x->used = 1;
     x->gate = 1;
     x->gate_left = gate;
+    x->kill_left = 0x7FFFFFFF;
+    x->fade = 1.0f;
     x->age = ++fm_age;
 }
 
-static void fm_gates(uint32_t n)                 /* once a chunk, on the first core: the keys whose time is up */
+static void fm_gates(uint32_t n, int32_t tail)  /* once a chunk, on the first core: the keys whose time is up; a note that has been let go for tail samples is faded out */
 {
     int k;
-    for (k = 0; k < FM_NV; k++)
-        if (fmx[k].used && fmx[k].gate && (fmx[k].gate_left -= (int32_t)n) <= 0)
-            fmx[k].gate = 0;
+    for (k = 0; k < FM_NV; k++) {
+        if (!fmx[k].used)
+            continue;
+        if (fmx[k].gate) {
+            if ((fmx[k].gate_left -= (int32_t)n) <= 0) {
+                fmx[k].gate = 0;
+                fmx[k].kill_left = tail;
+            }
+        } else if (fmx[k].kill_left > 0x40000000) {
+            fmx[k].kill_left = tail;
+        } else if ((fmx[k].kill_left -= (int32_t)n) <= 0) {
+            fmx[k].fade = fmx[k].fade < 1.0f ? fmx[k].fade : 0.9999f;      /* (the fade starts: see fm_block) */
+        }
+    }
 }
 
 /* a new Dexed block for a voice: key-up, the envelopes, pitch and gains (Dx7Note::compute), the routing */
@@ -398,6 +423,15 @@ static void fm_block(void)                       /* the next 64 samples of all t
             continue;
         }
         fm6_run(&x->s, FM6_N);
+        if (x->fade < 1.0f) {                    /* faded out over 0.15 s: the ring-on is over */
+            const float g0 = x->fade, g1 = g0 - 1.0f / 103.0f;
+            for (j = 0; j < FM6_N; j++)
+                fm_blk[j] += fm6_sum[j] * (g0 + (g1 - g0) * (float)j * (1.0f / (float)FM6_N));
+            x->fade = g1;
+            if (g1 <= 0.0f)
+                x->used = 0;
+            continue;
+        }
         for (j = 0; j < FM6_N; j++)
             fm_blk[j] += fm6_sum[j];
     }

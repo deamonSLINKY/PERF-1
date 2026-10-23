@@ -577,23 +577,26 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
-    /* the sampler: a key down freezes the last stretch of the music and plays it (pitched, or as a slice, one shot or loop); let go (or played out)
-     * it is silent again and the ring runs; nothing breaks */
+    /* the DJ snips (the FX menu's fourth bank): each of the 27 keys is heard, nothing breaks, and every one is silent again once let go / played out;
+     * in one-shot mode the long ones end by themselves */
     {
-        int mode, loopy, blk, j, broken = 0, quiet = 0, stuck = 0;
+        int key, blk, j, mode, broken = 0, quiet = 0, stuck = 0;
         for (mode = 0; mode < 2; mode++)
-            for (loopy = 0; loopy < 2; loopy++) {
+            for (key = 0; key < 27; key++) {
                 float peak = 0.0f;
                 en_init();
+                en_set(P_PAD, 0);
+                en_set(P_BASS, 0);
+                en_set(P_ACID, 0);
+                en_set(P_PULSE, 0);
+                en_set(P_NOISE, 0);
+                en_set(P_CM_LVL, 0);
                 en_play(1);
-                en_fxs(EN_FXS_SM_MODE, mode);
-                en_fxs(EN_FXS_SM_LOOP, loopy);
-                en_fxs(EN_FXS_SM_LEN, 0);
+                en_fxs(EN_FXS_SM_LOOP, mode);                  /* 0 one shot, 1 held */
                 en_fxs(EN_FXS_SM_MIX, 100);
-                run(4.0f);
-                en_note(EN_V_SAMPLE, 53 + 13, 1);
-                en_note(EN_V_SAMPLE, 53 + 5, 1);
-                for (blk = 0; blk < 350; blk++) {      /* ~2 s held */
+                run(0.5f);
+                en_note(EN_V_SAMPLE, 53 + key, 1);
+                for (blk = 0; blk < 120; blk++) {              /* ~0.7 s held */
                     en_render(buf, 256, 2048);
                     for (j = 0; j < 512; j++) {
                         const float a = (float)(buf[j] < 0 ? -buf[j] : buf[j]);
@@ -603,23 +606,18 @@ int main(void)
                             peak = a;
                     }
                 }
-                if (!en_smp_active && loopy)
-                    stuck++;                            /* a loop held should still be sounding */
-                en_note(EN_V_SAMPLE, 53 + 13, 0);
-                en_note(EN_V_SAMPLE, 53 + 5, 0);
-                for (blk = 0; blk < 700; blk++)
+                en_note(EN_V_SAMPLE, 53 + key, 0);
+                for (blk = 0; blk < 1100; blk++)               /* ~6.4 s: the longest (the long drop) plays out */
                     en_render(buf, 256, 2048);
                 if (en_smp_active)
-                    stuck++;                            /* and silent again once let go (or played out) */
-                if (peak < 0.02f * 8388608.0f)
+                    stuck++;
+                if (peak < 0.01f * 8388608.0f)
                     quiet++;
             }
-        CHECK(!broken, "sampler: %d samples broken (NaN or over full scale)", broken);
-        CHECK(!quiet, "sampler: %d of 4 modes silent", quiet);
-        CHECK(!stuck, "sampler: %d voices stuck on or off", stuck);
-        en_fxs(EN_FXS_SM_MODE, EN_FXS_DEF[EN_FXS_SM_MODE]);
+        CHECK(!broken, "DJ snips: %d samples broken (NaN or over full scale)", broken);
+        CHECK(!quiet, "DJ snips: %d key/mode pairs silent", quiet);
+        CHECK(!stuck, "DJ snips: %d voices stuck on", stuck);
         en_fxs(EN_FXS_SM_LOOP, EN_FXS_DEF[EN_FXS_SM_LOOP]);
-        en_fxs(EN_FXS_SM_LEN, EN_FXS_DEF[EN_FXS_SM_LEN]);
         en_fxs(EN_FXS_SM_MIX, EN_FXS_DEF[EN_FXS_SM_MIX]);
         en_init();
         en_play(1);

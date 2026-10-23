@@ -303,16 +303,16 @@ const char *en_piece_name_g(int g, int i)
  * different stride for each (1, 2, 3, 4 of five; 1, 2 of three), so the pieces of a genre differ in sound as well as in key and tempo, and no two
  * neighbours share them. The pad, drone and acid sounds are the genres' own choices (the original genre's keep theirs). */
 static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {
-    {{0}, {0}, {0}, {1, 4, 13, 30, 16}, {0}, {0}, {0}, {0}},
-    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 24, 30}, {8, 5, 7}, {8, 5, 1}, {8, 5, 1}, {8, 5, 11}},
-    {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 21, 8, 5}, {25, 7, 29, 21, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
-    {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 13, 3, 20}, {33, 6, 23, 35, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
-    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 16}, {4, 21, 9, 13, 1}, {25, 10, 31, 12, 7}, {4, 12, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
-    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {28, 13, 3, 32, 11}, {12, 10, 2}, {12, 4, 10}, {12, 2, 10}, {12, 11, 5}},
-    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 21, 3, 19}, {15, 25, 29, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
-    {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 21, 16, 9}, {12, 19, 30, 2, 31}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
-    {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 13, 23, 5}, {29, 10, 8, 23, 33}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
-    {{7, 15, 22, 3, 18}, {9, 8, 22, 4, 10}, {11, 18, 16, 23, 22}, {13, 23, 35, 3, 31}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
+    {{0}, {0}, {0}, {1, 4, 13, 28, 16}, {0}, {0}, {0}, {0}},
+    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 5, 7}, {8, 5, 1}, {8, 5, 1}, {8, 5, 11}},
+    {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 21, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
+    {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 13, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
+    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 16}, {4, 21, 9, 13, 1}, {24, 10, 29, 12, 7}, {4, 12, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
+    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {26, 13, 3, 30, 11}, {12, 10, 2}, {12, 4, 10}, {12, 2, 10}, {12, 11, 5}},
+    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 21, 3, 19}, {15, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
+    {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 21, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
+    {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 13, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
+    {{7, 15, 22, 3, 18}, {9, 8, 22, 4, 10}, {11, 18, 16, 23, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
 };
 static const uint8_t PLUCK_RATE[EN_NGENRE] = {0, 0, 0, 2, 1, 1, 0, 0, 1, 2};   /* the pluck's rate by genre: 1/8, 1/16, 1/4 */
 static void vary(int g, int i, int16_t *par)
@@ -1815,13 +1815,13 @@ static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
     {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
 };
 const char *const EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
-    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Tine EP 2", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba 2", "DX Clavinet", "DX Drawbars 2", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba 2", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular"};
+    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
 const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
 #include "fm6.inc"
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
-static const float FM_GAIN[EN_NCMFM] = {0.59f, 0.87f, 0.73f, 0.88f, 0.87f, 1.87f, 0.76f, 1.26f, 0.56f, 0.66f, 1.33f, 0.64f, 2.52f, 0.87f, 0.83f, 0.78f, 1.20f, 0.96f, 1.32f, 2.09f, 0.67f, 1.60f, 1.59f, 0.60f};   /* tests/host/fmcal.c */
+static const float FM_GAIN[EN_NCMFM] = {0.60f, 0.96f, 0.73f, 0.95f, 2.56f, 1.87f, 0.76f, 1.26f, 0.94f, 1.33f, 0.75f, 2.55f, 0.88f, 1.22f, 3.84f, 0.85f, 1.32f, 2.13f, 0.67f, 1.58f, 1.62f, 0.73f};   /* tests/host/fmcal.c */
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
@@ -3153,17 +3153,27 @@ static void flx_tick(int st)                    /* on every sixteenth */
     }
 }
 
-/* THE SAMPLER (the FX menu's fourth bank): the keys play the last stretch of the music (the ring: 0.95 s, or half, or a quarter of it), frozen
- * from the first key down until the last has gone. PITCH: the keys play the whole stretch at their pitch (F#4 as it was, a semitone a key, the ring's
- * 22 kHz grit and all). SLICE: the keys are slices of it in time order (a black key plays its slice backwards). One shot: the piece plays
- * through whatever the key does; loop: it repeats while the key is held and fades when let go. Up to four voices. Mix: how loud against the music. */
-typedef struct { uint8_t on, held, rev; int key; float pos, rate, len, start, env; uint32_t age; } smp_t;
-static smp_t smp[4];
-static uint32_t smp_sm;                         /* the window's start in the ring */
-static float smp_win;                           /* its length, in samples at 44.1 kHz */
-static uint8_t smp_hold;                        /* the ring is frozen for it */
-static uint32_t smp_age;
-volatile uint8_t en_smp_active;
+/* THE DJ SNIPS (the FX menu's fourth bank; they replaced the sampler): the 27 keys are sounds a DJ throws in, made on the spot: air horns, sirens, lasers,
+ * zaps, beeps, a whoop, a dub siren, a drop, a riser, a rewind, a crash, a rave stab, a bell, a snare roll. Up to four at once. Held mode (the page's Play):
+ * the sounds that go on (horns, sirens, the dub siren, the riser, the roll) sound as long as the key is down; the others play out. One shot: every one plays
+ * out (the long ones for at most a second or so). Pitch: the page's octave, up or down. Echo: how much of them goes to the echo and the reverb. Level. */
+enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL };
+static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] = {
+    {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_HORN, 349.0f, 0.0f, "HORN LO"}, {DJ_HORN, 622.0f, 0.0f, "HORN HI"}, {DJ_HORN, 466.0f, 1.0f, "HORN MIN"},
+    {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_SIREN, 700.0f, 0.4f, "SIREN 3"},
+    {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_LASER, 1400.0f, 0.1f, "LASER LO"},
+    {DJ_ZAP, 3000.0f, 0.15f, "ZAP"}, {DJ_ZAP, 6000.0f, 0.08f, "ZAP HI"},
+    {DJ_BEEP, 1000.0f, 0.1f, "BEEP"}, {DJ_BEEP, 600.0f, 0.12f, "BEEP LO"}, {DJ_BEEP, 1700.0f, 0.08f, "BEEP HI"}, {DJ_DBL, 1200.0f, 0.07f, "2 BEEP"},
+    {DJ_WHOOP, 300.0f, 0.35f, "WHOOP"}, {DJ_WHOOP, 800.0f, 0.6f, "WHOOP 2"},
+    {DJ_DUB, 1400.0f, 0.9f, "DUB SIREN"}, {DJ_DUB, 900.0f, 1.6f, "DUB LOW"},
+    {DJ_DROP, 140.0f, 1.2f, "DROP"}, {DJ_DROP, 100.0f, 2.4f, "DROP LONG"},
+    {DJ_RISER, 0.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 0.9f, "CRASH"},
+    {DJ_STAB, 220.0f, 0.0f, "STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
+const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
+typedef struct { uint8_t on, held, key, type, hold_mode; float hz, aux, t, ph, ph2, ph3, env, z, z2; uint32_t age; } dj_t;
+static dj_t djv[4];
+static uint32_t dj_age;
+volatile uint8_t en_smp_active;                 /* the snips sounding */
 
 static void smp_note(int key, int on)
 {
@@ -3172,74 +3182,171 @@ static void smp_note(int key, int on)
         return;
     if (!on) {
         for (i = 0; i < 4; i++)
-            if (smp[i].on && smp[i].key == key)
-                smp[i].held = 0;
+            if (djv[i].on && djv[i].key == key)
+                djv[i].held = 0;
         return;
     }
-    {
-        static const float WIN[3] = {1.0f, 0.5f, 0.25f};
-        const int len = (int)fm_clampf((float)fxs_v[EN_FXS_SM_LEN], 0.0f, 2.0f), mode = fxs_v[EN_FXS_SM_MODE] != 0;
-        if (!smp_hold) {                        /* the first key down: the window, from now frozen */
-            const float frames = (float)(RB_N - 8) * WIN[len];
-            smp_win = frames * 2.0f;
-            smp_sm = (rb_w - (uint32_t)frames) % RB_N;
-            smp_hold = 1;
+    for (i = 0; i < 4; i++)
+        if (!djv[i].on) {
+            v = i;
+            break;
         }
-        for (i = 0; i < 4; i++)
-            if (!smp[i].on) {
+    if (v < 0) {                                /* all four going: the oldest is taken */
+        v = 0;
+        for (i = 1; i < 4; i++)
+            if (djv[i].age < djv[v].age)
                 v = i;
-                break;
-            }
-        if (v < 0) {                            /* all four going: the oldest is taken */
-            v = 0;
-            for (i = 1; i < 4; i++)
-                if (smp[i].age < smp[v].age)
-                    v = i;
-        }
-        smp[v].on = 1;
-        smp[v].held = 1;
-        smp[v].key = key;
-        smp[v].env = 0.0f;
-        smp[v].age = ++smp_age;
-        if (!mode) {                            /* pitch: a semitone a key, F#4 (key 13) as it was */
-            smp[v].rate = fm_exp2f((float)(key - 13) * (1.0f / 12.0f));
-            smp[v].start = 0.0f;
-            smp[v].len = smp_win;
-            smp[v].rev = 0;
-        } else {                                /* slice: sixteenths of the window, left to right; the black keys backwards */
-            const int pc = (5 + key) % 12, black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10, s = key * 16 / 27;
-            smp[v].rate = 1.0f;
-            smp[v].len = smp_win * (1.0f / 16.0f);
-            smp[v].start = (float)s * smp[v].len;
-            smp[v].rev = (uint8_t)black;
-        }
-        smp[v].pos = 0.0f;
+    }
+    {
+        dj_t *d = &djv[v];
+        const int oct = fxs_v[EN_FXS_SM_MODE];
+        d->on = 1;
+        d->held = 1;
+        d->key = (uint8_t)key;
+        d->type = DJS[key].type;
+        d->hold_mode = fxs_v[EN_FXS_SM_LOOP] != 0;
+        d->hz = DJS[key].hz * (oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f);
+        d->aux = DJS[key].aux;
+        d->t = d->ph = d->ph2 = d->ph3 = d->env = d->z = d->z2 = 0.0f;
+        d->age = ++dj_age;
     }
 }
 
-/* the window's peaks, for the sampler's page: n buckets, 0..255 (the captured window while it is held, else the last stretch of the ring) */
-void en_ring_peaks(uint8_t *out, int n, int len_sel)
+static inline float dj_wrap(float p) { return p - (float)(int)p; }
+/* one sample of a voice: its signal and its own envelope; it ends itself (on = 0) when its sound is over */
+static float dj_voice(dj_t *v, float *amp)
 {
-    static const float WIN[3] = {1.0f, 0.5f, 0.25f};
-    const uint32_t frames = smp_hold ? (uint32_t)(smp_win * 0.5f) : (uint32_t)((float)(RB_N - 8) * WIN[len_sel < 0 ? 0 : len_sel > 2 ? 2 : len_sel]);
-    uint32_t start = smp_hold ? smp_sm : (rb_wi >= frames ? rb_wi - frames : rb_wi + RB_N - frames), per = frames / (uint32_t)(n > 0 ? n : 1);
-    int b;
-    for (b = 0; b < n; b++) {
-        int32_t pk = 0;
-        uint32_t j;
-        for (j = 0; j < per; j += 4u) {
-            uint32_t i = start + (uint32_t)b * per + j;
-            int32_t a;
-            if (i >= RB_N)
-                i -= RB_N;
-            a = rb[2 * i];
-            a = a < 0 ? -a : a;
-            if (a > pk)
-                pk = a;
-        }
-        pk = pk * 255 / 9000;
-        out[b] = (uint8_t)(pk > 255 ? 255 : pk);
+    const float t = v->t * (1.0f / EN_SR), inc = v->hz * (1.0f / EN_SR), n = frand() * 2.0f - 1.0f;
+    float y = 0.0f, a = 1.0f;
+    switch (v->type) {
+    case DJ_HORN: {                             /* three saws (a chord), low-passed */
+        const float r2 = v->aux > 0.5f ? 1.189f : 1.26f;
+        y = (blep_saw(v->ph, inc) + blep_saw(v->ph2, inc * r2) + blep_saw(v->ph3, inc * 1.5f)) * 0.4f;
+        v->ph = dj_wrap(v->ph + inc);
+        v->ph2 = dj_wrap(v->ph2 + inc * r2);
+        v->ph3 = dj_wrap(v->ph3 + inc * 1.5f);
+        v->z += 0.3f * (y - v->z);
+        y = v->z * 1.4f;
+        break;
     }
+    case DJ_SIREN: {                            /* a sine swept up and down */
+        const float lf = dj_wrap(t * v->aux), tri = lf < 0.5f ? lf * 4.0f - 1.0f : 3.0f - lf * 4.0f;
+        v->ph = dj_wrap(v->ph + inc * (1.0f + 0.5f * tri));
+        y = 0.6f * sine(v->ph) + 0.25f * sine(dj_wrap(v->ph * 2.0f));
+        break;
+    }
+    case DJ_LASER:                              /* a fast fall in pitch, hard-edged */
+        v->ph = dj_wrap(v->ph + (v->hz * fm_expf(-t / v->aux) + 150.0f) * (1.0f / EN_SR));
+        y = 0.5f * fm_tanhf(3.0f * sine(v->ph));
+        a = fm_expf(-t * 4.0f);
+        if (t > 0.5f)
+            v->on = 0;
+        break;
+    case DJ_ZAP: {                              /* noise through a band that falls */
+        const float k = 0.04f + 0.6f * fm_expf(-t / v->aux);
+        v->z += k * (n - v->z);
+        v->z2 += k * (v->z - v->z2);
+        y = (v->z - v->z2) * 3.0f;
+        a = fm_expf(-t * 7.0f / v->aux * 0.5f);
+        if (t > 0.5f)
+            v->on = 0;
+        break;
+    }
+    case DJ_BEEP: case DJ_DBL: {
+        const float ln = v->aux, g1 = t < ln ? 1.0f : 0.0f, g2 = v->type == DJ_DBL && t > ln * 1.9f && t < ln * 2.9f ? 1.0f : 0.0f;
+        v->ph = dj_wrap(v->ph + inc);
+        y = sine(v->ph) * 0.7f;
+        a = g1 + g2;
+        if (t > ln * 3.2f)
+            v->on = 0;
+        break;
+    }
+    case DJ_WHOOP: {                            /* up two and a half octaves */
+        const float u = fm_minf(t / v->aux, 1.0f);
+        v->ph = dj_wrap(v->ph + inc * fm_exp2f(2.585f * u));
+        y = 0.55f * sine(v->ph) + 0.2f * sine(dj_wrap(v->ph * 2.0f));
+        a = u < 1.0f ? 1.0f : fm_maxf(0.0f, 1.0f - (t - v->aux) / 0.15f);
+        if (t > v->aux + 0.16f)
+            v->on = 0;
+        break;
+    }
+    case DJ_DUB: {                              /* a square falling from high to low, again and again */
+        const float cyc = t / v->aux, fr = cyc - (float)(int)cyc;
+        v->ph = dj_wrap(v->ph + inc * fm_exp2f(-2.5f * fr));
+        y = (v->ph < 0.5f ? 0.4f : -0.4f);
+        v->z += 0.35f * (y - v->z);
+        y = v->z;
+        break;
+    }
+    case DJ_DROP:                               /* a sine falling to the sub */
+        v->ph = dj_wrap(v->ph + (v->hz * fm_expf(-t * 3.0f) + 28.0f) * (1.0f / EN_SR));
+        y = 0.9f * sine(v->ph);
+        a = fm_expf(-t / (v->aux * 0.5f));
+        if (t > v->aux * 2.0f)
+            v->on = 0;
+        break;
+    case DJ_RISER: {                            /* noise, brighter and louder over its time */
+        const float u = fm_minf(t / v->aux, 1.0f);
+        v->z += (0.03f + 0.9f * u * u) * (n - v->z);
+        y = v->z * 3.0f;
+        a = 0.08f + 0.9f * u * u;
+        break;
+    }
+    case DJ_REWIND: {                           /* a saw falling away, as a record pulled back */
+        const float u = fm_minf(t / v->aux, 1.0f), f = v->hz * fm_exp2f(-5.0f * u) + 40.0f;
+        v->ph = dj_wrap(v->ph + f * (1.0f / EN_SR));
+        y = blep_saw(v->ph, f * (1.0f / EN_SR)) * 0.5f;
+        v->z += 0.3f * (y - v->z);
+        y = v->z;
+        a = 1.0f - u * u;
+        if (t > v->aux)
+            v->on = 0;
+        break;
+    }
+    case DJ_CRASH:
+        v->z += 0.7f * (n - v->z);
+        y = (n - v->z) * 0.9f;                  /* the highs of noise */
+        a = fm_expf(-t / (v->aux * 0.35f));
+        if (t > v->aux * 2.0f)
+            v->on = 0;
+        break;
+    case DJ_STAB: {                             /* three saws a minor chord, a filter closing */
+        const float k = 0.5f * fm_expf(-t * 6.0f) + 0.04f;
+        y = (blep_saw(v->ph, inc) + blep_saw(v->ph2, inc * 1.189f) + blep_saw(v->ph3, inc * 1.498f)) * 0.4f;
+        v->ph = dj_wrap(v->ph + inc);
+        v->ph2 = dj_wrap(v->ph2 + inc * 1.189f);
+        v->ph3 = dj_wrap(v->ph3 + inc * 1.498f);
+        v->z += k * (y - v->z);
+        y = v->z;
+        a = fm_expf(-t * 7.0f);
+        if (t > 0.7f)
+            v->on = 0;
+        break;
+    }
+    case DJ_BELL: {
+        v->ph = dj_wrap(v->ph + inc);
+        v->ph2 = dj_wrap(v->ph2 + inc * 1.4f);
+        y = 0.7f * sine_any(v->ph + 2.0f * fm_expf(-t * 3.0f) * sine(v->ph2));
+        a = fm_expf(-t * 2.2f);
+        if (t > 3.0f)
+            v->on = 0;
+        break;
+    }
+    default: {                                  /* a snare roll that speeds up */
+        const float rate = 7.0f + 18.0f * fm_minf(t / v->aux, 1.0f);
+        float bt;
+        v->ph3 = dj_wrap(v->ph3 + rate * (1.0f / EN_SR));
+        bt = v->ph3;
+        v->z += 0.25f * (n - v->z);
+        y = (n - v->z) * 0.9f + 0.3f * sine(dj_wrap(v->ph + 0.0f));
+        v->ph = dj_wrap(v->ph + 190.0f * (1.0f / EN_SR));
+        a = fm_expf(-bt * 7.0f);
+        break;
+    }
+    }
+    v->t += 1.0f;
+    *amp = a;
+    return y;
 }
 
 /* a brake, a spin-back, half time: the ring read at a rate that slides to its target (0; backwards; a half or less)
@@ -3728,7 +3835,7 @@ static inline void master_dyn(float *pl, float *pr)
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
 {
     float l = *pl, r = *pr;
-    if (!smp_hold && (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR))
+    if (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR)
         rb_write(l, r);
     if (bmode != BM_LIVE) {
         float bl = 0.0f, br = 0.0f, w = 1.0f;
@@ -3834,41 +3941,6 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             bmode = BM_LIVE;
             brate = -1;
         }
-    }
-    if (smp_hold) {                             /* the sampler's voices, added to the music */
-        const float loopy = fxs_v[EN_FXS_SM_LOOP] ? 1.0f : 0.0f, gain = 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_SM_MIX], 0.0f, 100.0f) * 0.9f;
-        float sl = 0.0f, sr = 0.0f;
-        int v, live = 0;
-        for (v = 0; v < 4; v++) {
-            float a, b, g, edge;
-            if (!smp[v].on)
-                continue;
-            rb_read_from(smp_sm, smp[v].start + (smp[v].rev ? smp[v].len - 1.0f - smp[v].pos : smp[v].pos), &a, &b);
-            edge = fm_minf(fm_minf(smp[v].pos, smp[v].len - 1.0f - smp[v].pos) * (1.0f / 48.0f), 1.0f);   /* 1 ms edges: no clicks at the ends or the loop */
-            edge = edge < 0.0f ? 0.0f : edge;
-            if (loopy > 0.0f && !smp[v].held)
-                smp[v].env -= 1.0f / 300.0f;                       /* let go: out in 7 ms */
-            else
-                smp[v].env = fm_minf(smp[v].env + 1.0f / 48.0f, 1.0f);
-            g = fm_maxf(smp[v].env, 0.0f) * edge;
-            sl += a * g;
-            sr += b * g;
-            smp[v].pos += smp[v].rate;
-            if (smp[v].pos >= smp[v].len) {
-                if (loopy > 0.0f && smp[v].held)
-                    smp[v].pos -= smp[v].len;
-                else
-                    smp[v].on = 0;
-            }
-            if (loopy > 0.0f && !smp[v].held && smp[v].env <= 0.0f)
-                smp[v].on = 0;
-            live += smp[v].on;
-        }
-        l += sl * gain;
-        r += sr * gain;
-        en_smp_active = (uint8_t)live;
-        if (!live)
-            smp_hold = 0;                       /* all done: the ring runs again */
     }
     if (lp_amt_e > 0.0f) {
         l = svf_lp(l, lp_c, &lp_s[0]);
@@ -4468,6 +4540,38 @@ static void render_bass(uint32_t n)
     en_bass_level = amp;
 }
 
+static void render_dj(uint32_t n)               /* the snips, into the mix and its sends, before the sidechain */
+{
+    static const float ES[3][2] = {{0.0f, 0.0f}, {0.25f, 0.35f}, {0.6f, 0.9f}};          /* the reverb's and the echo's share */
+    const int ec = fxs_v[EN_FXS_SM_LEN] < 0 ? 0 : fxs_v[EN_FXS_SM_LEN] > 2 ? 2 : fxs_v[EN_FXS_SM_LEN];
+    const float gain = 0.01f * (float)fm_clampf((float)fxs_v[EN_FXS_SM_MIX], 0.0f, 100.0f) * 0.5f;
+    int v, live = 0;
+    uint32_t j;
+    for (v = 0; v < 4; v++) {
+        dj_t *d = &djv[v];
+        if (!d->on)
+            continue;
+        for (j = 0; j < n && d->on; j++) {
+            float a, y = dj_voice(d, &a);
+            const int sustained = d->type == DJ_HORN || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
+            /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
+            const int gate = !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
+            d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : 0.00025f);
+            y = y * a * d->env * gain * TG(TR_ACID, j);
+            mixl[j] += y;
+            mixr[j] += y;
+            rsend[j] += y * ES[ec][0];
+            esend[j] += y * ES[ec][1];
+            if (sustained && !gate && d->env < 0.003f)
+                d->on = 0;
+            d->z = fm_flush(d->z);
+            d->z2 = fm_flush(d->z2);
+        }
+        live += d->on;
+    }
+    en_smp_active = (uint8_t)live;
+}
+
 /* the DX voices (the pluck's sounds from CM_NPLAIN): a stage of the chunk's job, with the pad's, into their own buffers */
 static void render_fm(uint32_t n)
 {
@@ -5024,6 +5128,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     render_cm(n);
     render_fm(n);                               /* the DX voices' samples from a chunk ago (the other core's), into the fm_ buffers added below */
     mx_end(3, n);
+    render_dj(n);
     render_noise(n);
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
         while (!stage_done)
@@ -5140,7 +5245,10 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     if (par[P_CM_SND] >= CM_NPLAIN)             /* the DX voices: the patch, the tune, the keys' time */
         fm_set_patch(par[P_CM_SND] - CM_NPLAIN);
     fm_tune = par[P_TUNE] * 13981;
-    fm_gates(n);
+    {   /* how long a DX note may ring on after its key is up: 0.35 s .. 2.5 s by the pluck's Decay (a bell's tail would go on for many) */
+        const float d = (float)par[P_CM_DEC] * 0.01f;
+        fm_gates(n, (int32_t)((0.35f + 2.2f * d * d) * EN_SR));
+    }
     master_dyn_set();
     reverb_set();
     en_lim_gr = 8.6859f * gr_hold;               /* 20 log10 of 1/(1 - x), near enough for the small ones: the limiter's reduction in dB */

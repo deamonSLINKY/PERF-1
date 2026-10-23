@@ -1,4 +1,4 @@
-# The sampler (the FX menu's fourth bank, the SELECT dial three times): the keys play the last stretch of the music, frozen while they are held.
+# The DJ snips (the FX menu's fourth bank, the SELECT dial three times; they replaced the sampler): the keys are an air horn, a siren and more, sounding while they are held.
 seed 0
 wait 4000
 tap FX
@@ -10,14 +10,14 @@ wait 100
 spin SELECT 1
 wait 100
 expect fxbank 3
-key 13 down
+key 0 down
 wait 400
 expect smp 1
-shot sampler_held.png
-key 20 down
+shot snips_held.png
+key 4 down
 wait 300
 expect smp 2
-key 13 up
-key 20 up
+key 0 up
+key 4 up
 wait 1500
 expect smp 0
