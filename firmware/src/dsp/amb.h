@@ -121,6 +121,9 @@ void en_init(void);
  * memory between the cores (the job's stages); alive says whether the other core still runs (0: join it, it is retired). */
 void en_core2_attach(int (*submit)(void (*fn)(void *), void *ctx), int (*join)(void), void (*fence)(void), int (*alive)(void));
 extern volatile float en_comp_gr, en_lim_gr, en_out_peak;   /* the master bus now: the compressor's and the limiter's gain reduction (dB, positive), the output's peak (0..1 of full scale) */
+void en_fill_next(void);                       /* a drum fill in the next bar (the auto-DJ asks one bar ahead: the fill is the last bar before the break) */
+void en_dj_sync(int on);                       /* the auto-DJ follows the chord changes: the engine fills the bar before one and breaks on it */
+extern volatile float en_drift_bars;           /* bars to the next chord change (the drift's), 99 when none is coming */
 extern uint32_t en_c2_jobs, en_c2_lost;          /* chunks reverbed on the other core; times it was lost */
 void en_set(int param, int value);
 void en_pool(uint32_t pool);                   /* the scale, relative to the root (bit 0 always set) */

@@ -4,8 +4,8 @@
 /* The six-operator FM voices of the counter-melody (and the JAM page): a polyphonic DX7 on Melodee's core (fm6_core.inc), twenty-four
  * patches (Melodee's factory voices), played from the pluck's sequencer and by hand. The control path (envelopes, LFO, pitch, the
  * routing) follows Melodee's eng_fm6.c without its controllers, portamento, MONO and per-track settings; the voice handling is
- * small: six voices, the oldest is taken. Rendered in Dexed's 64-sample blocks and queued across chunks; runs on the other core
- * with the pad (a stage of the chunk's job), notes and gates are set by the first core between chunks.
+ * small: four voices, the oldest is taken. Rendered in Dexed's 64-sample blocks and queued across chunks, on the first core (the other
+ * core has the pad and the reverb: with the DX voices too its job did not fit the chunk).
  *
  * Included by amb.c, after EN_POOL, the fast maths, par[] and mtof. */
 #define MELODEE_DUAL_CORE 0
@@ -174,7 +174,7 @@ static void fm6_keyed(fm6_voice_t *s, const uint8_t *ed, uint32_t note)
 }
 
 /* ------------------------------------------------------------- the voices --- */
-#define FM_NV 6
+#define FM_NV 4                                  /* four voices: each is up to 6 operators a sample; four is what the first core can add to the rest */
 typedef struct {
     fm6_voice_t s;
     uint8_t used, gate;
@@ -196,7 +196,10 @@ static uint32_t fm_ams_amd, fm_ams_pt[4];
 static uint8_t fm_ams_ok;
 static float fm_blk[FM6_N] EN_POOL;              /* a block of the voices' sum, and the place in it */
 static uint32_t fm_pos = FM6_N;
-static uint32_t fm_engine = FM6_MARK1;           /* the DX7's own log-sine and exponent tables (MODERN: plain fp32; OPL) */
+#ifndef FM_ENG
+#define FM_ENG FM6_MARK1
+#endif
+static uint32_t fm_engine = FM_ENG;           /* the DX7's own log-sine and exponent tables (MODERN: plain fp32; OPL) */
 static int32_t fm_tune;                          /* the global tune in cents, as a Q24 log */
 static int fm_inited;
 

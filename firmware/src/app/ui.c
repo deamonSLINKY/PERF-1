@@ -560,7 +560,8 @@ static void tap_tempo(void)                    /* four taps or so: the tempo fro
         say("TAP TEMPO", "TAP AGAIN");
     }
 }
-static const uint8_t DJ_LEN[4] = {8, 16, 32, 64};
+static const uint8_t DJ_LEN[5] = {8, 16, 32, 64, 16};   /* the fifth: SYNC, with the drift's chord changes (16 only for the bar of the count) */
+#define DJ_G() (DJ_LEN[ui.dj_len % 5u])
 static int dj_break_len(int g)
 {
     return ui.dj_break == 0 ? 4 : ui.dj_break == 1 ? (g / 2 < 4 ? 4 : g / 2) : g;
@@ -603,16 +604,24 @@ static void mix_key(int k)
         say("AUTO-DJ", ui.dj_on ? "ON" : "OFF");
     } else if (c == 26) {
         char t[12];
-        ui.dj_len = (uint8_t)((ui.dj_len + 1) % 4);
-        itoa_u(DJ_LEN[ui.dj_len], t);
-        {   /* " BARS" after the number */
+        ui.dj_len = (uint8_t)((ui.dj_len + 1) % 5);
+        if (ui.dj_len == 4) {
+            const char *q = "WITH THE CHORDS";
             int n = 0;
-            const char *q = " BARS";
-            while (t[n])
-                n++;
             while (*q)
                 t[n++] = *q++;
             t[n] = 0;
+        } else {
+            itoa_u(DJ_LEN[ui.dj_len], t);
+            {   /* " BARS" after the number */
+                int n = 0;
+                const char *q = " BARS";
+                while (t[n])
+                    n++;
+                while (*q)
+                    t[n++] = *q++;
+                t[n] = 0;
+            }
         }
         say("DJ GROOVE", t);
         ui.dj_n = 0;
@@ -1023,7 +1032,7 @@ static void scene_tick(void)                   /* a scene key down: held long en
  * SAVE pressed by hand just moves it on from there. */
 static void dj_bar(void)                       /* a new bar (while playing) */
 {
-    const int g = DJ_LEN[ui.dj_len % 4], b = dj_break_len(g);
+    const int g = DJ_G(), b = dj_break_len(g), sync = ui.dj_len == 4;
     const int ph = en_sec == EN_SEC_GROOVE ? 0 : en_sec == EN_SEC_BREAK ? 1 : 2;
     if (ph != ui.dj_phase) {                   /* the engine moved on (the DJ's request, or SAVE): so does the count */
         ui.dj_phase = (uint8_t)ph;
@@ -1031,9 +1040,13 @@ static void dj_bar(void)                       /* a new bar (while playing) */
     }
     ui.dj_fill = 0;
     ui.dj_n++;
-    if (ph == 0) {
-        if (ui.dj_n == (uint16_t)(g - 1)) {
-            ui.dj_fill = (uint8_t)(ui.dj_fillon != 0);
+    if (ph == 0 && sync) {                     /* with the chords: the engine fills the bar before a change and breaks on it; the next piece comes in as the fill begins */
+        if (en_drift_bars <= 2.0f && ui.dj_piece && !ui.piece_q)
+            ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
+    } else if (ph == 0) {
+        if (ui.dj_n == (uint16_t)(g - 1)) {    /* the fill is the LAST bar of the groove (asked a bar ahead: the engine starts it on the bar line); the break follows at once */
+            if (ui.dj_fillon)
+                en_fill_next();
             if (ui.dj_piece && !ui.piece_q)
                 ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
         }
@@ -1054,6 +1067,14 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
         last = 255;
         ui.scene_q = 0;
         return;
+    }
+    {   /* the engine follows the chords while the DJ is on in SYNC and in a groove */
+        static uint8_t sent;
+        const uint8_t want = (uint8_t)(ui.dj_on && ui.dj_len == 4 && en_sec == EN_SEC_GROOVE);
+        if (want != sent) {
+            sent = want;
+            en_dj_sync(want);
+        }
     }
     if (p != last) {
         if (p == 0 && last != 255) {
@@ -2658,6 +2679,10 @@ static int help_lines(int b, const char *l[HELP_LINES])
             while (cpu[j])
                 j++;
             cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'C', cpu[j++] = plat_core2() == 1u ? '2' : '1', cpu[j] = 0;
+            if (plat_core2() == 1u) {
+                cpu[j++] = ' ';
+                itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), cpu + j);
+            }
         }
         L("GLOBAL");
         L("ROOT, THEME, TUNE, MIDI OUT");
@@ -2817,7 +2842,7 @@ static void draw_fxedit(void)
 static void draw_perf(void)
 {
     static const char *const TN[8] = {"KCK", "HAT", "SNR", "PRC", "DRN", "ACD", "PAD", "PLK"};
-    const int g = DJ_LEN[ui.dj_len % 4], b = dj_break_len(g);
+    const int g = DJ_G(), b = dj_break_len(g);
     int i;
     {   /* the section, and the auto-DJ's place in it */
         const char *sn = en_sec == EN_SEC_BREAK ? "BREAK" : en_sec == EN_SEC_BUILD ? "BUILD" : "GROOVE";
@@ -2927,7 +2952,7 @@ static void draw_shift(void)
 static void draw_mix(void)
 {
     int k;
-    char c[24] = "CPU ";
+    char c[32] = "CPU ";
     cv_text(4, 1, &FONT_XS, "MIX: GLO + KEY", K_ACC);
     if (ui.dj_on) {                            /* the auto-DJ: where it is */
         const char *pn = ui.dj_phase == 0 ? "DJ GROOVE " : ui.dj_phase == 1 ? "DJ BREAK " : "DJ BUILD ";
@@ -2946,6 +2971,10 @@ static void draw_mix(void)
             n++;
         if (plat_core2())                        /* the experimental build: C2, the reverb on the second core; C1, it fell back to one */
             c[n++] = ' ', c[n++] = ' ', c[n++] = 'C', c[n++] = plat_core2() == 1u ? '2' : '1', c[n] = 0;
+        if (plat_core2() == 1u) {                /* and how full the other core is */
+            c[n++] = ' ';
+            itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), c + n);
+        }
     }
     cv_text(118, 1, &FONT_XS, c, K_DIM);
     for (k = 0; k < NKEYS; k++) {
@@ -2988,10 +3017,14 @@ static void draw_mix(void)
             lb[j++] = 'D';
             lb[j++] = 'J';
             lb[j++] = ' ';
-            itoa_u(DJ_LEN[ui.dj_len % 4], lb + j);
-            while (lb[j])
-                j++;
-            lb[j++] = 'B';
+            if (ui.dj_len == 4) {
+                lb[j++] = 'S', lb[j++] = 'Y', lb[j++] = 'N', lb[j++] = 'C';
+            } else {
+                itoa_u(DJ_LEN[ui.dj_len % 5u], lb + j);
+                while (lb[j])
+                    j++;
+                lb[j++] = 'B';
+            }
             lb[j] = 0;
         } else {
             const char *q = "CLEAR";
@@ -3588,8 +3621,8 @@ static void draw_main(void)
         return;
     }
     if (mix_show()) {                            /* GLO held: the track mix */
-        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24),
-                 (uint32_t)ui.scene_set | (uint32_t)ui.dj_on << 4 | (uint32_t)ui.dj_len << 5 | (uint32_t)ui.dj_piece << 7 |
+        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24 | plat_cpu1_pct() << 26),
+                 (uint32_t)ui.scene_set | (uint32_t)ui.dj_on << 4 | (uint32_t)ui.dj_len << 27 | (uint32_t)ui.dj_piece << 7 |
                      (uint32_t)ui.dj_phase << 8 | (uint32_t)ui.dj_n << 12);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
@@ -3628,7 +3661,7 @@ static void draw_main(void)
     if (ui.help) {
         h = hash(0x48454C50u, ui.help | (uint32_t)ui.theme << 8);
         if (ui.help - 1 == B_GLO)                /* the load, as it changes */
-            h = hash(h, plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24);
+            h = hash(h, plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24 | plat_cpu1_pct() << 26);
         if (h != ui.sig[1]) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
@@ -3656,7 +3689,7 @@ static void draw_main(void)
     }
     if (ui.view == V_PERF) {
         h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.scene_set << 14 | (uint32_t)ui.dj_on << 18 |
-                        (uint32_t)ui.dj_phase << 19 | (uint32_t)ui.dj_len << 21 | (uint32_t)en_sec << 23 | (uint32_t)en_sec_req << 25);
+                        (uint32_t)ui.dj_phase << 19 | (uint32_t)ui.dj_len << 27 | (uint32_t)en_sec << 23 | (uint32_t)en_sec_req << 25);
         h = hash(h, h32(ui.fx_mask) | ((uint32_t)ui.scene_q << 28 ^ (uint32_t)ui.mood << 8 ^ (uint32_t)ui.key_on << 16));
         h = hash(h, h32(ui.fx_lock) ^ (uint32_t)ui.dj_n << 20 ^ (uint32_t)en_drum_pos << 27);
         for (i = 0; i < EN_NLANE; i++)

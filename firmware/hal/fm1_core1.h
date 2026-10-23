@@ -71,10 +71,13 @@ static struct {
     volatile uint32_t ready __attribute__((aligned(32)));
     volatile uint32_t complete, rejected;
     uint32_t jobs, max_job_ticks, misread;
+    int32_t avg_ticks;                           /* the job's time, smoothed (CPU1 writes it) */
 } aw __attribute__((aligned(32)));
 static int aw_online;
 
 static int fm1_core1_online(void) { return aw_online; }
+/* how much of a chunk (256 frames at 44.1 kHz = 139320 ticks of the 24 MHz timer) the job takes, in percent: the other core's load */
+static uint32_t fm1_core1_load(void) { return aw_online && aw.avg_ticks > 0 ? (uint32_t)aw.avg_ticks / 1393u : 0u; }
 static uint32_t aw_t0;                      /* when the outstanding job was submitted */
 static void fm1_core1_fence(void) { __asm__ volatile("csync" ::: "memory"); }   /* publish memory between the cores */
 /* 1 while the outstanding job can still finish: no CPU1 fault, under the 10 ms the join allows */
@@ -156,6 +159,7 @@ __attribute__((section(".dsp_text"), noinline, noreturn, used)) static void fm1_
                 aw.jobs++;
                 if (took > aw.max_job_ticks)
                     aw.max_job_ticks = took;
+                aw.avg_ticks += ((int32_t)took - aw.avg_ticks) >> 4;
                 done = request;
                 aw_store(&aw.complete, request);
                 continue;
@@ -218,6 +222,7 @@ static int fm1_core1_boot(void)
 #else  /* single core: the same names, nothing behind them */
 
 static inline int fm1_core1_online(void) { return 0; }
+static inline uint32_t fm1_core1_load(void) { return 0; }
 static inline int fm1_core1_submit(fm1_core1_fn fn, void *context) { (void)fn; (void)context; return 0; }
 static inline void fm1_core1_fence(void) {}
 static inline int fm1_core1_alive(void) { return 1; }

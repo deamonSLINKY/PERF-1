@@ -723,7 +723,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -763,6 +763,9 @@ void en_fxk(int k, int v) { post(C_FXK, k, v); }
 void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0xFFu) | (solo & 0xFFu) << 8)); }
 void en_gate_pat(uint32_t steps) { post(C_GATEPAT, 0, (int)(steps & 0xFFFFu)); }
 void en_fxs(int i, int v) { post(C_FXS, i, v); }
+void en_fill_next(void) { post(C_FILLQ, 0, 0); }
+void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
+volatile float en_drift_bars = 99.0f;
 
 /* -------------------------------------------------------------- state --- */
 volatile uint8_t en_playing, en_frozen, en_ext;
@@ -1559,6 +1562,7 @@ enum { SEC_GROOVE = EN_SEC_GROOVE, SEC_BREAK = EN_SEC_BREAK, SEC_BUILD = EN_SEC_
 static int sec, sec_bars, sec_req, pat_now, pat_next;   /* sec_bars: a build's bars left; sec_req: cmd + 1 */
 static uint32_t bars;                           /* bars played (the drone's envelope counts them) */
 static uint8_t fill_hold;
+static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the next bar; this bar's; the DJ follows the chords; the drop's impact is due */
 volatile uint8_t en_sec, en_sec_req;
 
 /* DRUM DRIFT, as GRAV-1's Drift and LOF-1's: at each bar, a count to the next change; the bar before it a
@@ -1661,8 +1665,10 @@ static void section_cmd(int c)                  /* the player's: on the bar */
             sec = SEC_BUILD;
             sec_bars = 4;
         }
-    } else if (sec != SEC_GROOVE) {             /* the drop */
+    } else if (sec != SEC_GROOVE) {             /* the drop: at once the full groove (the breakdown's swell and the build's dip gone, not eased out), the kick, clap and open hat on the one */
         sec = SEC_GROOVE;
+        brk = 0.0f;
+        drop_imp = 1;
         if (frand() < 0.4f + 0.5f * evolve)
             change_pending = 1;
     }
@@ -1937,6 +1943,14 @@ static void tick(void)
     }
     if (st == 0) {                              /* a bar */
         int tb = TRIG_BARS[(unsigned)par[P_DE_TRIG] < 6u ? par[P_DE_TRIG] : 0];
+        fill_bar = fill_q;                      /* the fill the DJ asked for a bar ahead */
+        fill_q = 0;
+        if (dj_sync && sec == SEC_GROOVE && en_playing && !en_frozen) {   /* the DJ follows the chords: the bar before a change is a fill, the change's bar a breakdown */
+            if (change_pending)
+                section_cmd(EN_CMD_BREAK);
+            else if (drift_total > 0.0f && drift_left <= step_len * 16.0f)
+                fill_bar = 1;
+        }
         if (sec == SEC_BUILD && --sec_bars <= 0)
             section_cmd(EN_CMD_DROP);           /* the build's end: the drop */
         if (sec_req) {
@@ -1960,12 +1974,12 @@ static void tick(void)
         } else if (sec == SEC_BUILD) {
             if (l == L_KICK || l == L_CLAP || l == L_PERC)
                 hit = 0;
-            else if (l == L_SNARE) {            /* the roll: quarters, eighths, sixteenths */
-                hit = sec_bars > 2 ? (st & 3) == 0 : sec_bars == 2 ? (st & 1) == 0 : 1;
+            else if (l == L_SNARE) {            /* the roll: quarters, eighths, sixteenths, and a breath before the drop */
+                hit = sec_bars > 2 ? (st & 3) == 0 : sec_bars == 2 ? (st & 1) == 0 : st < 14;
                 vel = 0.3f + 0.7f * ((float)(4 - sec_bars) * 16.0f + (float)st) / 64.0f;
             }
         }
-        if ((fill_hold || (dd_fill && st >= 8 && sec == SEC_GROOVE)) && (l == L_SNARE || l == L_HAT)) {   /* FILL; drift's */
+        if ((fill_hold || fill_bar || (dd_fill && st >= 8 && sec == SEC_GROOVE)) && (l == L_SNARE || l == L_HAT)) {   /* FILL; the DJ's; drift's */
             hit = 1;
             vel = l == L_SNARE ? 0.35f + 0.04f * (float)st : 0.5f;
         }
@@ -1983,6 +1997,10 @@ static void tick(void)
         }
         if (hit && par[P_PROB + l] < 100 && frand() * 100.0f >= (float)par[P_PROB + l])   /* the lane's probability: some hits do not sound */
             hit = 0;
+        if (drop_imp && st == 0 && (l == L_KICK || l == L_CLAP || l == L_OHAT)) {   /* the drop lands */
+            hit = 1;
+            vel = l == L_KICK ? 1.0f : 0.95f;
+        }
         if (l == L_HAT && (fxm & (FXB(FX_HATROLL) | FXB(FX_HATTRIP)))) {     /* HAT ROLL / HAT TRIP: every step, in 32nds or triplets */
             hit = 1;
             vel = (st & 1) ? 0.5f : 0.65f;
@@ -2044,6 +2062,7 @@ static void tick(void)
         }
     }
     en_drum_pos = (uint8_t)st;
+    drop_imp = 0;
     if (links_on() && par[P_LK_PERC] && sec == SEC_GROOVE) {
         if (perc_hit)
             acid_step();                        /* the links: the perc lane is the acid's clock */
@@ -2224,12 +2243,12 @@ static void reverb_job(void *p)
             r = 0;
     }
 }
-/* what the other core does in a chunk: the pad's voices (the stage the first core waits for, before it mixes), then the reverb's tank */
+/* what the other core does in a chunk: the pad's voices (the stage the first core waits for, before it mixes), then the reverb's tank. (The DX voices are the first
+ * core's: they cost up to a fifth of a core, and the other core already has the pad and the reverb: measured, with them there too the job did not fit the chunk.) */
 static void render_fm(uint32_t n);
 static void chunk_job(void *p)
 {
     render_pad((uint32_t)((const rv_job_t *)p)->n);
-    render_fm((uint32_t)((const rv_job_t *)p)->n);
     if (c2_fence)
         c2_fence();
     stage_done = 1;
@@ -4065,6 +4084,8 @@ static void drain(void)
             trk_solo = (uint8_t)(b >> 8 & 0xFF);
             break;
         case C_GATEPAT: gx_pat = (uint16_t)b; break;
+        case C_FILLQ: fill_q = 1; break;
+        case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)
                 fxs_v[a] = (int16_t)b;
@@ -4974,6 +4995,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     mx_end(2, n);
     mx_begin(3, n);
     render_cm(n);
+    render_fm(n);                               /* the DX voices, here (they fill the fm_ buffers added below) */
     mx_end(3, n);
     render_noise(n);
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
@@ -5116,6 +5138,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         if (drift_left <= 0.0f)
             change_pending = 1;
     }
+    en_drift_bars = drift_total > 0.0f && step_len > 1.0f ? fm_minf(drift_left / (step_len * 16.0f), 99.0f) : 99.0f;
     en_drift = drift_total > 0.0f ? 1.0f - fm_clampf(drift_left / drift_total, 0.0f, 1.0f) : 0.0f;
     en_acid_glow *= 0.93f;
     {   /* the links' envelopes: the amount sets how far and how long (kick 40 .. 160 ms, snare 80 .. 280 ms) */
