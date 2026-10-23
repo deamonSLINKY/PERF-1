@@ -47,12 +47,15 @@ tap SEQ
 expect view 14
 shot drums.png
 tap GLO
-expect view 20
+expect view 21
 shot global.png
 # SELECT: the pages in order, Noise, Space and the Master (compressor, limiter) among them
 turn SELECT -1 100
-expect view 19
+expect view 20
 shot master.png
+turn SELECT -1 100
+expect view 19
+shot reverb.png
 turn SELECT -1 100
 expect view 18
 shot space.png

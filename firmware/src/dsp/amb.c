@@ -68,6 +68,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
     [P_PROB] = {"Prob", 0, 100, 100},     [P_PROB1] = {"Prob", 0, 100, 100},   [P_PROB2] = {"Prob", 0, 100, 100},
     [P_PROB3] = {"Prob", 0, 100, 100},    [P_PROB4] = {"Prob", 0, 100, 100},   [P_PROB5] = {"Prob", 0, 100, 100},
+    [P_RV_TYPE] = {"Type", 0, 2, 0},       [P_RV_DAMP] = {"Damping", 0, 100, 47}, [P_RV_PRE] = {"Predelay", 0, 100, 100}, [P_RV_X] = {"Amount", 0, 100, 30},
+    [P_PL_CHO] = {"Chorus", 0, 100, 0},
     [P_MC_RATIO] = {"Ratio", 0, 6, 1},     [P_MC_THR] = {"Thresh", 0, 100, 60}, [P_MC_MAKE] = {"Make-up", 0, 100, 10}, [P_ML_CEIL] = {"Ceiling", 0, 100, 100},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
@@ -119,7 +121,7 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
     P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
     P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(1), 55, \
-    LV(3), 42, LV(4), 38, LV(5), 40, P_MC_RATIO, 2, P_MC_THR, 55, P_MC_MAKE, 25
+    LV(3), 42, LV(4), 38, LV(5), 40, P_PL_CHO, 50, P_RV_DAMP, 70, P_MC_RATIO, 2, P_MC_THR, 55, P_MC_MAKE, 25
 static const int16_t PL_01[] = {LOFI_BASE, P_TEMPO, 72, P_ROOT, 2, P_MODE, 1, P_CHORD, EN_CH_9TH, -1};                       /* D dorian, ninths */
 static const int16_t PL_02[] = {LOFI_BASE, P_TEMPO, 78, P_ROOT, 9, P_MODE, 5, P_DR_INST, 9, P_AC_WAVE, 4, -1};                /* A aeolian, sub bass, plucks */
 static const int16_t PL_03[] = {LOFI_BASE, P_TEMPO, 84, P_ROOT, 7, P_MODE, 4, P_CHORD, EN_CH_9TH, P_PADTONE, 5, P_AC_WAVE, 11, -1};   /* G mixolydian, warm pad, bells */
@@ -135,7 +137,7 @@ static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_
 #define HOUSE_BASE P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
     P_AC_RES, 40, P_AC_ENV, 40, P_AC_DENS, 45, P_AC_LEN, 16, P_AC_MUT, 25, P_BASS, 70, P_DR_INST, 9, P_DR_CUT, 40, P_PULSE, 80, \
     KIT(1), P_DRIVE, 35, P_SWING, 12, P_ECHO, 30, P_ETIME, 3, P_REVERB, 30, P_SIZE, 50, P_EVOLVE, 45, P_MOTION, 50, P_PATTERN, 0, \
-    LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 35
+    LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45, P_PL_CHO, 35, P_RV_DAMP, 30, P_RV_PRE, 60, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 35
 static const int16_t PH_01[] = {HOUSE_BASE, P_TEMPO, 122, P_ROOT, 9, P_MODE, 1, -1};
 static const int16_t PH_02[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 0, P_MODE, 5, P_PADTONE, 4, P_DR_INST, 10, P_AC_WAVE, 9, -1};
 static const int16_t PH_03[] = {HOUSE_BASE, P_TEMPO, 120, P_ROOT, 5, P_MODE, 1, P_PADTONE, 0, P_CHORD, EN_CH_9TH, -1};
@@ -153,7 +155,7 @@ static const char *const HOUSE_NAME[EN_NPIECES] = {"H01", "H02", "H03", "H04", "
 #define DUB_BASE P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
     P_AC_RES, 60, P_AC_ENV, 60, P_AC_DENS, 40, P_AC_LEN, 8, P_AC_MUT, 30, P_BASS, 85, P_DR_INST, 4, P_DR_CUT, 40, P_DR_RES, 55, \
     P_DL_RATE, 0, P_DL_SHAPE, 1, P_DL_DEPTH, 85, P_DL_DEST, 0, P_PULSE, 85, KIT(9), P_DRIVE, 60, P_SWING, 0, P_ECHO, 45, P_ETIME, 3, \
-    P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40
+    P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45, P_PL_CHO, 30, P_RV_DAMP, 65, P_RV_PRE, 80, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40
 static const int16_t PD_01[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 4, P_MODE, 2, -1};
 static const int16_t PD_02[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 5, P_MODE, 5, P_DR_INST, 9, P_DL_RATE, 1, P_DL_SHAPE, 0, -1};
 static const int16_t PD_03[] = {DUB_BASE, P_TEMPO, 142, P_ROOT, 2, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
@@ -169,17 +171,17 @@ static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D0
 /* the other six genres (4 .. 9: JUNGLE, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
  * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
 static const int16_t X_JUNGLE[] = {P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
-    KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
+    KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 25, P_RV_DAMP, 50, P_RV_PRE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
 static const int16_t X_DNB[] = {P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
-    KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
+    KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 45, P_RV_TYPE, 1, P_RV_X, 25, P_RV_DAMP, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
 static const int16_t X_BREAKS[] = {P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
-    KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
+    KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_PL_CHO, 20, P_RV_TYPE, 2, P_RV_X, 35, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
 static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 52, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
-    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 25, -1};
+    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 25, -1};
 static const int16_t X_ELECTRO[] = {P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
-    KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
+    KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
 static const int16_t X_TRAP[] = {P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
-    KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40, -1};
+    KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 30, P_RV_TYPE, 1, P_RV_X, 30, P_RV_DAMP, 40, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40, -1};
 static const int16_t *const XBASE[6] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP};
 static const uint8_t XROW[6][10][7] = {
     {{165, 5, 5, 5, 8, 4, 9}, {168, 7, 2, 4, 7, 9, 13}, {162, 2, 1, 2, 0, 1, 4}, {170, 9, 5, 1, 14, 11, 3}, {160, 0, 7, 5, 8, 9, 11}, {166, 4, 2, 6, 11, 4, 14}, {164, 10, 5, 1, 2, 1, 9}, {168, 6, 1, 3, 3, 9, 4}, {170, 1, 5, 4, 7, 2, 13}, {160, 8, 2, 5, 8, 4, 9}},
@@ -473,6 +475,14 @@ void en_param_text(int i, int v, char *b)
     case P_VOICING: s = v ? "Open" : "Close"; break;
     case P_DD_CHANGE: { static const char *const C[3] = {"Off", "Next", "Random"}; s = C[(unsigned)v < 3u ? v : 0]; break; }
     case P_DD_EVERY: { static const char *const E[6] = {"Chord", "4 bars", "8 bars", "16 bars", "32 bars", "64 bars"}; s = E[(unsigned)v < 6u ? v : 0]; break; }
+    case P_RV_TYPE: { static const char *const T[3] = {"Plate", "Shimmer", "Gated"}; s = T[(unsigned)v < 3u ? v : 0]; break; }
+    case P_RV_PRE: {                              /* 6 .. 30 ms */
+        char *p = itoa_s(6 + 24 * v / 100, b);
+        *p++ = 'm';
+        *p++ = 's';
+        *p = 0;
+        return;
+    }
     case P_MC_RATIO: { static const char *const R[7] = {"Off", "1.5:1", "2:1", "3:1", "4:1", "6:1", "10:1"}; s = R[(unsigned)v < 7u ? v : 0]; break; }
     case P_MC_THR: case P_MC_MAKE: case P_ML_CEIL: {   /* in dB: -30 .. 0, +0 .. 12 (a decimal), -12 .. 0 */
         const int t10 = i == P_MC_THR ? -300 + 3 * v : i == P_MC_MAKE ? 12 * v / 10 : -120 + 12 * v / 10;
@@ -2044,6 +2054,12 @@ typedef struct {
     int n, i;
 } dl_t;
 static dl_t dl[L_N];
+static float rv_damp = 0.45f, rv_shim, rv_shim_fb, rv_gate_hold, rg_env, rg_g = 1.0f, rg_hold;   /* the type's settings and state (control sets, the tank uses) */
+static int rv_type, rv_pre = 1322;
+#define SH_N 2048
+#define SH_W 1024.0f
+static float sh_buf[SH_N] EN_POOL, sh_ph;                        /* the shimmer's pitch shifter: a delay line, two taps, an octave up */
+static uint32_t sh_w;
 static float pl_bw, pl_damp_l, pl_damp_r, pl_decay = 0.5f, pl_decay_t = 0.5f, pl_dd2 = 0.5f, lfo_s, lfo_c = 1.0f;
 
 static inline float tap(const dl_t *d, int k)
@@ -2073,9 +2089,30 @@ static inline float allpass_mod(dl_t *d, float len, float x, float g)
 }
 
 /* The tank, one sample: x is the input after the predelay. */
+static inline float sh_tap(float d)               /* the shimmer line, d samples back, interpolated */
+{
+    float rp = (float)sh_w - d, f;
+    int i0;
+    if (rp < 0.0f)
+        rp += (float)SH_N;
+    i0 = (int)rp;
+    f = rp - (float)i0;
+    return sh_buf[i0] + (sh_buf[i0 + 1 >= SH_N ? 0 : i0 + 1] - sh_buf[i0]) * f;
+}
+
 static inline void reverb_tank(float x, float *ol, float *or_)
 {
     float a, b, fb_l = tap(&dl[L_D2R], DS(3163)), fb_r = tap(&dl[L_D2L], DS(3720));
+    if (rv_type == 2) {                           /* gated: the input opens it, it stays open for the hold and then closes in ~10 ms */
+        rg_env = fm_maxf(fm_fabsf(x), rg_env * 0.9995f);
+        if (rg_env > 0.004f)
+            rg_hold = rv_gate_hold;
+        else if (rg_hold > 0.0f)
+            rg_hold -= 1.0f;
+        rg_g += ((rg_hold > 0.0f ? 1.0f : 0.0f) - rg_g) * 0.002f;
+    } else if (rv_type == 1) {
+        x += rv_shim_fb;
+    }
     pl_bw += 0.6f * (x - pl_bw);
     x = allpass(&dl[L_IN1], DS(142), pl_bw, 0.75f);
     x = allpass(&dl[L_IN2], DS(107), x, 0.75f);
@@ -2089,13 +2126,13 @@ static inline void reverb_tank(float x, float *ol, float *or_)
     a = allpass_mod(&dl[L_APL], (float)DS(672) + (float)EXC * lfo_s, x + pl_decay * fb_l, -0.7f);
     push(&dl[L_D1L], a);
     b = tap(&dl[L_D1L], DS(4453));
-    pl_damp_l += 0.45f * (b - pl_damp_l);
+    pl_damp_l += rv_damp * (b - pl_damp_l);
     b = allpass(&dl[L_AP2L], DS(1800), pl_damp_l * pl_decay, pl_dd2);
     push(&dl[L_D2L], b);
     a = allpass_mod(&dl[L_APR], (float)DS(908) + (float)EXC * lfo_c, x + pl_decay * fb_r, -0.7f);
     push(&dl[L_D1R], a);
     b = tap(&dl[L_D1R], DS(4217));
-    pl_damp_r += 0.45f * (b - pl_damp_r);
+    pl_damp_r += rv_damp * (b - pl_damp_r);
     b = allpass(&dl[L_AP2R], DS(2656), pl_damp_r * pl_decay, pl_dd2);
     push(&dl[L_D2R], b);
     *ol = 0.6f * (tap(&dl[L_D1R], DS(266)) + tap(&dl[L_D1R], DS(2974)) - tap(&dl[L_AP2R], DS(1913)) +
@@ -2104,6 +2141,22 @@ static inline void reverb_tank(float x, float *ol, float *or_)
     *or_ = 0.6f * (tap(&dl[L_D1L], DS(353)) + tap(&dl[L_D1L], DS(3627)) - tap(&dl[L_AP2L], DS(1228)) +
                    tap(&dl[L_D2L], DS(2673)) - tap(&dl[L_D1R], DS(2111)) - tap(&dl[L_AP2R], DS(335)) -
                    tap(&dl[L_D2R], DS(121)));
+    if (rv_type == 2) {
+        *ol *= rg_g;
+        *or_ *= rg_g;
+    } else if (rv_type == 1) {                    /* shimmer: the tail, an octave up, goes back in (a little) */
+        const float m = 0.5f * (*ol + *or_), p2 = sh_ph + 0.5f >= 1.0f ? sh_ph - 0.5f : sh_ph + 0.5f;
+        const float w1 = 1.0f - fm_fabsf(2.0f * sh_ph - 1.0f), w2 = 1.0f - fm_fabsf(2.0f * p2 - 1.0f);
+        sh_buf[sh_w] = m;
+        rv_shim_fb = fm_flush((sh_tap((1.0f - sh_ph) * SH_W + 2.0f) * w1 + sh_tap((1.0f - p2) * SH_W + 2.0f) * w2) * rv_shim);
+        sh_ph += 1.0f / SH_W;
+        if (sh_ph >= 1.0f)
+            sh_ph -= 1.0f;
+        if (++sh_w >= SH_N)
+            sh_w = 0;
+        *ol += rv_shim_fb * 0.7f;                 /* and heard, the octave up, in the tail */
+        *or_ += rv_shim_fb * 0.7f;
+    }
 }
 
 /* The reverb as a job. The input is written to the predelay line a chunk at a time (render_chunk); the tank
@@ -3512,6 +3565,15 @@ static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, lk_ceil = 1
 volatile float en_comp_gr, en_lim_gr, en_out_peak;
 static float gr_hold, pk_hold;
 
+static void reverb_set(void)                    /* once a chunk, before the tank's job: the type, damping, predelay */
+{
+    rv_type = par[P_RV_TYPE] < 0 ? 0 : par[P_RV_TYPE] > 2 ? 2 : par[P_RV_TYPE];
+    rv_damp = 0.85f - 0.0085f * (float)par[P_RV_DAMP];
+    rv_pre = 256 + (PRE_D - 256) * par[P_RV_PRE] / 100;                    /* 6 .. 30 ms (never under a chunk: the line is written as it is read) */
+    rv_shim = 0.05f + 0.30f * (float)par[P_RV_X] * 0.01f;                  /* the shimmer's feedback */
+    rv_gate_hold = (0.08f + 0.32f * (float)par[P_RV_X] * 0.01f) * EN_SR;   /* the gate's hold: 80 .. 400 ms */
+}
+
 static void master_dyn_set(void)                /* once a chunk: the settings, from the parameters */
 {
     static const float RATIO[7] = {1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 10.0f};
@@ -3994,6 +4056,13 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
 static float padl[BLK] EN_POOL, padr[BLK] EN_POOL;
 static float plp[4];
 static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL, pad_rs[BLK] EN_POOL, pad_es[BLK] EN_POOL;   /* the pad's contribution to the mix, the reverb send and the echo send */
+/* the pad's ensemble: three delays a side, each swept by a slow triangle (the three a third of a turn apart, the right side's the other way), around
+ * 7 ms, 3 ms deep; its sum is added to the pad (Chorus is how much). Widens every pad sound without the pulsing a single swept delay makes against a
+ * pure tone: the beats are never all in step. On the pad's stage, so on the other core with it. */
+#define CH_N 512
+static float ch_buf[2][CH_N] EN_POOL;
+static float ch_ph[3] = {0.0f, 0.3333f, 0.6667f};
+static uint32_t ch_i;
 static float pad_lk;                             /* the snare link, as it was when the chunk began (the pad may be rendered on the other core) */
 
 static void pad_bus(uint32_t n)
@@ -4017,6 +4086,46 @@ static void pad_bus(uint32_t n)
     }
     for (j = 0; j < 4; j++)
         plp[j] = fm_flush(plp[j]);
+}
+
+static void pad_chorus(uint32_t n)
+{
+    const float a = (float)par[P_PL_CHO] * 0.01f * 0.55f;
+    const float rate[3] = {0.47f / EN_SR, 0.61f / EN_SR, 0.79f / EN_SR};   /* Hz, the sweeps are slow and unequal */
+    uint32_t j;
+    int k;
+    for (j = 0; j < n; j++) {
+        const float dl = pad_ol[j], dr = pad_or[j];
+        float wl = 0.0f, wr = 0.0f;
+        ch_buf[0][ch_i] = dl;
+        ch_buf[1][ch_i] = dr;
+        if (a > 0.0f)
+            for (k = 0; k < 3; k++) {
+                const float tri = ch_ph[k] < 0.5f ? 4.0f * ch_ph[k] - 1.0f : 3.0f - 4.0f * ch_ph[k];
+                const float d1 = (0.007f + 0.003f * tri) * EN_SR, d2 = (0.007f - 0.003f * tri) * EN_SR;
+                float rp = (float)ch_i - d1, f;
+                int i0;
+                if (rp < 0.0f)
+                    rp += (float)CH_N;
+                i0 = (int)rp;
+                f = rp - (float)i0;
+                wl += ch_buf[0][i0] + (ch_buf[0][i0 + 1 >= CH_N ? 0 : i0 + 1] - ch_buf[0][i0]) * f;
+                rp = (float)ch_i - d2;
+                if (rp < 0.0f)
+                    rp += (float)CH_N;
+                i0 = (int)rp;
+                f = rp - (float)i0;
+                wr += ch_buf[1][i0] + (ch_buf[1][i0 + 1 >= CH_N ? 0 : i0 + 1] - ch_buf[1][i0]) * f;
+            }
+        for (k = 0; k < 3; k++) {
+            ch_ph[k] += rate[k];
+            if (ch_ph[k] >= 1.0f)
+                ch_ph[k] -= 1.0f;
+        }
+        ch_i = ch_i + 1u >= CH_N ? 0u : ch_i + 1u;
+        pad_ol[j] = dl + wl * a * 0.45f;
+        pad_or[j] = dr + wr * a * 0.45f;
+    }
 }
 
 static void render_pad(uint32_t n)
@@ -4152,6 +4261,7 @@ static void render_pad(uint32_t n)
         stab_env *= stab_k;
     stab_env = fm_flush(stab_env);
     pad_bus(n);
+    pad_chorus(n);
 }
 
 static void render_bass(uint32_t n)
@@ -4777,7 +4887,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     {   /* the tank for this chunk starts now (it reads input older than this chunk's), here or on the other core */
         const dl_t *pd = &dl[L_PRE];
         rv_job.n = (int)n;
-        rv_job.r0 = pd->i >= PRE_D ? pd->i - PRE_D : pd->i - PRE_D + pd->n;
+        rv_job.r0 = pd->i >= rv_pre ? pd->i - rv_pre : pd->i - rv_pre + pd->n;
         pad_lk = lk_snare;
         stage_done = 0;
         rv_c2 = c2_submit && c2_submit(chunk_job, &rv_job);
@@ -4897,6 +5007,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     fm_tune = par[P_TUNE] * 13981;
     fm_gates(n);
     master_dyn_set();
+    reverb_set();
     en_lim_gr = 8.6859f * gr_hold;               /* 20 log10 of 1/(1 - x), near enough for the small ones: the limiter's reduction in dB */
     en_out_peak = pk_hold;
     if (arc_left <= n) {

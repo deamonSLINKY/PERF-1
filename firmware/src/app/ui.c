@@ -38,9 +38,9 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_MASTER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_REVERB, V_MASTER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Master", "Global", "Jam",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Reverb", "Master", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -166,7 +166,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
-    {P_CHORD, P_VOICING, P_DRIFT, P_ROOT},         /* the harmony together (Drift is also on Tempo, Root on Global) */
+    {P_CHORD, P_VOICING, P_PL_CHO, P_ROOT},        /* the harmony together (Root is also on Global), and the pad's chorus (Drift is on Tempo) */
     {P_PAD, P_BASS, P_ACID, P_PULSE},              /* the mixer: the layers' levels together (each is also on its voice's page) */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
@@ -181,6 +181,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
+    {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
     {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_NONE, K_NONE, K_NONE, K_NONE},              /* Jam: its knobs are the FXP table's last page (view_knob) */
@@ -193,7 +194,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Bright", "Sound", "Detune"},
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
-    {"Chord", "Voicing", "Drift", "Root"},
+    {"Chord", "Voicing", "Chorus", "Root"},
     {"Pad", "Drone", "Acid", "Drums"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
@@ -208,6 +209,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Kick", "Snare", "Hats", "Perc"},
     {"Change", "Every", "Pool", "Mutate"},
     {"Echo", "Echo time", "Reverb", "Size"},
+    {"Type", "Damping", "Predelay", "Amount"},
     {"Ratio", "Thresh", "Make-up", "Ceiling"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Voice", "Keys", "Octave", "Answer"},
@@ -2989,7 +2991,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -3002,6 +3004,7 @@ static int scope_kind(int v)
     case V_ACID: return SCOPE_AFILT;
     case V_SPACE: return SCOPE_SPACE;
     case V_MASTER: return SCOPE_MASTER;
+    case V_REVERB: return SCOPE_REVERB;
     case V_NOISE: return SCOPE_MIX;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
@@ -3250,6 +3253,35 @@ static void draw_scope(int kind)
     uint16_t col = K_PAD;
     int32_t x;
     sc_oy = SC_Y, sc_oh = SC_H;
+    if (kind == SCOPE_REVERB) {                  /* the reverb: the gap of the predelay, then the tail by its type */
+        static const char *const TY[3] = {"PLATE", "SHIMMER", "GATED"};
+        const int ty = proj.par[P_RV_TYPE] < 0 ? 0 : proj.par[P_RV_TYPE] > 2 ? 2 : proj.par[P_RV_TYPE];
+        const float len = 0.25f + 0.75f * (float)proj.par[P_SIZE] * 0.01f, amt = (float)proj.par[P_RV_X] * 0.01f,
+                    gap = (6.0f + 24.0f * (float)proj.par[P_RV_PRE] * 0.01f) * (1.0f / 30.0f) * 0.2f, hold = 0.12f + 0.45f * amt;
+        col = KC_COLOR;
+        cv_text(6, 2, &FONT_B, "REVERB", col);
+        cv_text(6 + text_w(&FONT_B, "REVERB") + 8, 6, &FONT_XS, TY[ty], K_TEXT);
+        cv_text(6, SC_Y + SC_H + 6, &FONT_XS, ty == 1 ? "AN OCTAVE UP, BLOOMING IN THE TAIL" : ty == 2 ? "CUT OFF AFTER THE HOLD" : "THE PLATE'S TAIL, AFTER THE PREDELAY", K_DIM);
+        for (x = 0; x < SC_W; x++) {
+            const float u = (float)x / (float)(SC_W - 1);
+            float y = 0.0f;
+            if (u >= gap) {
+                const float tt = (u - gap) / (1.0f - gap);
+                y = 0.8f * scope_expo(tt / len, 4.0f);
+                if (ty == 1) {                   /* the bloom: humps late in the tail, as high as the amount */
+                    const float b1 = tt - 0.3f, b2 = tt - 0.55f;
+                    y += amt * 0.35f * (fm_expf(-b1 * b1 * 90.0f) + 0.7f * fm_expf(-b2 * b2 * 90.0f));
+                } else if (ty == 2) {
+                    y = tt < hold ? 0.8f * scope_expo(tt / (len * 3.0f), 2.0f) : 0.0f;
+                }
+                y = fm_minf(y, 1.0f);
+            }
+            sc_y[x] = (uint8_t)(y * (float)(SC_H - 8));
+        }
+        scope_trace(col);
+        cv_rect(SC_X, SC_Y + SC_H - 6, (int32_t)(gap * (float)SC_W), 2, K_ACC);   /* the predelay */
+        return;
+    }
     if (kind == SCOPE_MIX) {                     /* the mixer: a strip a layer, its level set and its level now, the output last */
         static const char *const NAME[6] = {"PAD", "DRN", "ACID", "PLK", "DRUM", "OUT"};
         static const uint8_t TRK[6] = {0x40, 0x10, 0x20, 0x80, 0x0F, 0};

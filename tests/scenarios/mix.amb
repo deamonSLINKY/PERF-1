@@ -8,7 +8,7 @@ expect trksolo 0
 # GLO tapped: the Global page, as ever
 tap GLO
 wait 100
-expect view 20
+expect view 21
 tap HOME
 wait 100
 # GLO held, F3: the kick muted; the page stays where it was

@@ -95,6 +95,8 @@ enum {
     P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT,              /* the counter-melody (PLUCK): level, sound, density, octave */
     P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE,          /* decay, style (up, down, ..), rate (1/8, 1/16, 1/4, 3/16), range in octaves */
     P_PROB, P_PROB1, P_PROB2, P_PROB3, P_PROB4, P_PROB5,  /* each drum lane's chance a hit sounds (P_PROB + lane), 100 always: thinned from the sequencer */
+    P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X,               /* the reverb: Plate / Shimmer / Gated, its damping, its predelay, and the type's own amount (the shimmer's, the gate's hold) */
+    P_PL_CHO,                                             /* the pad's ensemble chorus: three modulated delays a side, how much of them */
     P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL,           /* the master bus: compressor ratio (Off .. 10:1), threshold, make-up gain, and the limiter's ceiling */
     P_NPARAMS
 };

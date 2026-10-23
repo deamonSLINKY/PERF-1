@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     uint32_t h = 2166136261u, nan = 0;
     pthread_t th;
     unsigned b;
-    FILE *dump = argc > 2 ? fopen(argv[2], "wb") : 0;     /* the whole output, to compare builds (tools, not the suite) */
+    FILE *dump = argc > 2 && argv[2][0] != '-' ? fopen(argv[2], "wb") : 0;     /* the whole output, to compare builds (tools, not the suite) */
     mode = argc > 1 ? atoi(argv[1]) : 0;
     en_init();
     en_play(1);
@@ -109,6 +109,9 @@ int main(int argc, char **argv)
     en_set(P_CM_LVL, 70);               /* the DX voices play too: a stage of the other core's job */
     en_set(P_CM_SND, 12 + 3);
     en_set(P_CM_DENS, 90);
+    en_set(P_PL_CHO, 70);               /* and the pad's chorus */
+    en_set(P_RV_TYPE, argc > 3 ? atoi(argv[3]) : 0);   /* the reverb's type: 0 plate, 1 shimmer, 2 gated (argv[3]) */
+    en_set(P_RV_X, 60);
     if (mode > 0) {
         en_core2_attach(submit, join, fence, alive);
         if (mode != 1)
