@@ -42,8 +42,8 @@ enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, 
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Reverb", "Master", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
-enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
-static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
+enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
+static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
@@ -4197,6 +4197,8 @@ static void saver_tick(void)
             ui.saver_on = 0;
             set_view(ui.saver_view);
             ui.viz = ui.saver_viz;
+            ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;   /* the page, its header and knobs, redrawn */
+            lcd_fill(0, 0, 240, 240, K_BG);
         }
         return;
     }
@@ -4207,6 +4209,7 @@ static void saver_tick(void)
         ui.saver_t = now;
         ui.viz = VZ_AUTO;
         set_view(V_VIZ);
+        lcd_fill(0, 0, 240, 240, K_BG);          /* the whole screen is the picture's: the header and the knobs go */
     }
 }
 
@@ -4466,9 +4469,11 @@ void ui_frame(void)
         ui.frame++;
         return;
     }
-    draw_header();
+    if (!ui.saver_on)
+        draw_header();                           /* (the screensaver has the whole screen) */
     draw_main();
-    draw_knobs();
+    if (!ui.saver_on)
+        draw_knobs();
     leds();
     ui.frame++;
 }

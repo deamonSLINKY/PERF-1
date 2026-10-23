@@ -1,0 +1,15 @@
+# The KALEIDO visualizer (second on the SELECT dial; it replaced the tunnel): curves of the spectrum, mirrored four ways, trailing and turning.
+seed 0
+wait 3000
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 25
+spin SELECT 1
+wait 7000
+expect view 25
+shot viz_kaleido.png
+spin SELECT 1
+wait 3000
+shot viz_bars2.png
