@@ -4266,14 +4266,18 @@ static void pad_chorus(uint32_t n)
                 if (rp < 0.0f)
                     rp += (float)CH_N;
                 i0 = (int)rp;
+                if (i0 >= (int)CH_N)            /* (a position just under 0 rounds up to the end of the ring) */
+                    i0 -= (int)CH_N, rp -= (float)CH_N;
                 f = rp - (float)i0;
-                wl += ch_buf[0][i0] + (ch_buf[0][i0 + 1 >= CH_N ? 0 : i0 + 1] - ch_buf[0][i0]) * f;
+                wl +=ch_buf[0][i0] + (ch_buf[0][i0 + 1 >= CH_N ? 0 : i0 + 1] - ch_buf[0][i0]) * f;
                 rp = (float)ch_i - d2;
                 if (rp < 0.0f)
                     rp += (float)CH_N;
                 i0 = (int)rp;
+                if (i0 >= (int)CH_N)
+                    i0 -= (int)CH_N, rp -= (float)CH_N;
                 f = rp - (float)i0;
-                wr += ch_buf[1][i0] + (ch_buf[1][i0 + 1 >= CH_N ? 0 : i0 + 1] - ch_buf[1][i0]) * f;
+                wr +=ch_buf[1][i0] + (ch_buf[1][i0 + 1 >= CH_N ? 0 : i0 + 1] - ch_buf[1][i0]) * f;
             }
         for (k = 0; k < 3; k++) {
             ch_ph[k] += rate[k];
