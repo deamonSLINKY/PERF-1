@@ -106,6 +106,9 @@ int main(int argc, char **argv)
     en_init();
     en_play(1);
     en_set(P_REVERB, 100);
+    en_set(P_CM_LVL, 70);               /* the DX voices play too: a stage of the other core's job */
+    en_set(P_CM_SND, 12 + 3);
+    en_set(P_CM_DENS, 90);
     if (mode > 0) {
         en_core2_attach(submit, join, fence, alive);
         if (mode != 1)

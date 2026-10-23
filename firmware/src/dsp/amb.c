@@ -291,20 +291,20 @@ const char *en_piece_name_g(int g, int i)
         return XNAME[g - 4][i];
     return g == 1 ? LOFI_NAME[i] : g == 2 ? HOUSE_NAME[i] : g == 3 ? DUB_NAME[i] : PIECE_NAME[i];
 }
-/* Each genre's palette of sounds, five of the pad, drone, acid and pluck and three of each drum's kit: a piece takes one of each by its number, with a
+/* Each genre's palette of sounds, five of the pad, drone, acid and pluck (the pluck's from the plain sounds and the DX voices) and three of each drum's kit: a piece takes one of each by its number, with a
  * different stride for each (1, 2, 3, 4 of five; 1, 2 of three), so the pieces of a genre differ in sound as well as in key and tempo, and no two
  * neighbours share them. The pad, drone and acid sounds are the genres' own choices (the original genre's keep theirs). */
 static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {
-    {{0}, {0}, {0}, {1, 4, 5, 11, 6}, {0}, {0}, {0}, {0}},
-    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {2, 3, 1, 5, 11}, {8, 5, 7}, {8, 5, 1}, {8, 5, 1}, {8, 5, 11}},
-    {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 21, 8, 5}, {7, 0, 10, 9, 8}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
-    {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 13, 3, 20}, {6, 4, 8, 5, 11}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
-    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 16}, {4, 21, 9, 13, 1}, {7, 10, 0, 4, 6}, {4, 12, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
-    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {11, 3, 5, 8, 2}, {12, 10, 2}, {12, 4, 10}, {12, 2, 10}, {12, 11, 5}},
-    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 21, 3, 19}, {9, 7, 10, 2, 0}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
-    {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 21, 16, 9}, {3, 2, 5, 0, 1}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
-    {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 13, 23, 5}, {10, 8, 0, 11, 4}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
-    {{7, 15, 22, 3, 18}, {9, 8, 22, 4, 10}, {11, 18, 16, 23, 22}, {4, 3, 5, 11, 6}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
+    {{0}, {0}, {0}, {1, 4, 13, 30, 16}, {0}, {0}, {0}, {0}},
+    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 24, 30}, {8, 5, 7}, {8, 5, 1}, {8, 5, 1}, {8, 5, 11}},
+    {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 21, 8, 5}, {25, 7, 29, 21, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
+    {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 13, 3, 20}, {33, 6, 23, 35, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
+    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 16}, {4, 21, 9, 13, 1}, {25, 10, 31, 12, 7}, {4, 12, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
+    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {28, 13, 3, 32, 11}, {12, 10, 2}, {12, 4, 10}, {12, 2, 10}, {12, 11, 5}},
+    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 21, 3, 19}, {15, 25, 29, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
+    {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 21, 16, 9}, {12, 19, 30, 2, 31}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
+    {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 13, 23, 5}, {29, 10, 8, 23, 33}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
+    {{7, 15, 22, 3, 18}, {9, 8, 22, 4, 10}, {11, 18, 16, 23, 22}, {13, 23, 35, 3, 31}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
 };
 static const uint8_t PLUCK_RATE[EN_NGENRE] = {0, 0, 0, 2, 1, 1, 0, 0, 1, 2};   /* the pluck's rate by genre: 1/8, 1/16, 1/4 */
 static void vary(int g, int i, int16_t *par)
@@ -1738,7 +1738,8 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
  * tones over RANGE octaves, in a STYLE (up, down, up and down, random, skipping, thirds), at a RATE (1/8, 1/16, 1/4, dotted 1/8), a note
  * for each step with the chance DENSITY gives it (fewer in a breakdown). Its sounds are FM at their own ratios: each decays over DECAY. */
 typedef struct { float fr, i0, i1; uint8_t rise; float g; } cm_snd_t;
-static const cm_snd_t CM_SOUND[EN_NCMSND] = {
+#define CM_NPLAIN 12                            /* the plain FM sounds; from here the DX voices (fm6.inc) */
+static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
     {2.0f, 0.2f, 2.2f, 0, 1.0f},     /* Pluck */
     {4.0f, 0.05f, 1.3f, 0, 1.0f},    /* Marimba */
     {1.0f, 0.25f, 0.9f, 0, 1.05f},   /* E.Piano */
@@ -1752,9 +1753,15 @@ static const cm_snd_t CM_SOUND[EN_NCMSND] = {
     {1.0f, 0.0f, 0.0f, 0, 1.15f},    /* Bleep: a plain sine */
     {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
 };
-const char *const EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass"};
+const char *const EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
+    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Tine EP 2", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba 2", "DX Clavinet", "DX Drawbars 2", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba 2", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
 const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
+#include "fm6.inc"
+#define BLK_FM 256                              /* = BLK (checked below) */
+#define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
+static const float FM_GAIN[EN_NCMFM] = {0.59f, 0.87f, 0.73f, 0.88f, 0.87f, 1.87f, 0.76f, 1.26f, 0.56f, 0.66f, 1.33f, 0.64f, 2.52f, 0.87f, 0.83f, 0.78f, 1.20f, 0.96f, 1.32f, 2.09f, 0.67f, 1.60f, 1.59f, 0.60f};   /* tests/host/fmcal.c */
+static float fm_ol[BLK_FM] EN_POOL, fm_or[BLK_FM] EN_POOL, fm_rs[BLK_FM] EN_POOL, fm_es[BLK_FM] EN_POOL;   /* the DX voices' part of the mix and the sends */
 static struct { float ph, ps, inc, env, dm, vel; uint32_t age; } cm[2];
 static float cm_vol;
 static uint32_t cm_clock;
@@ -1765,6 +1772,11 @@ static void cm_trigger(int note, float vel)     /* a note: the next voice, its d
 {
     const int voice = cm_alt ^= 1;
     const float dec = 0.1f * fm_exp2f((float)par[P_CM_DEC] * 0.045f);   /* the time to silence: 0.1 .. 2.2 s */
+    if (par[P_CM_SND] >= CM_NPLAIN) {            /* a DX voice: the key is down for as long as the Decay knob says (the patch's own envelopes do the rest) */
+        const float d = (float)par[P_CM_DEC] * 0.01f;
+        fm_note_on(note, vel, (int32_t)((0.12f + 1.6f * d * d) * EN_SR));
+        return;
+    }
     cm[voice].inc = mtof((float)note) * (1.0f / EN_SR);
     cm[voice].ps = 0.0f;
     cm[voice].env = 1.0f;
@@ -2112,9 +2124,11 @@ static void reverb_job(void *p)
     }
 }
 /* what the other core does in a chunk: the pad's voices (the stage the first core waits for, before it mixes), then the reverb's tank */
+static void render_fm(uint32_t n);
 static void chunk_job(void *p)
 {
     render_pad((uint32_t)((const rv_job_t *)p)->n);
+    render_fm((uint32_t)((const rv_job_t *)p)->n);
     if (c2_fence)
         c2_fence();
     stage_done = 1;
@@ -2603,6 +2617,8 @@ void en_init(void)
     for (i = 0; i <= SN; i++)
         sint[i] = fm_sinf((float)i * (FM_TWO_PI / (float)SN));
     plate_init();
+    fm_init();
+    fm_reset();
     for (i = 0; i < TAPE_N; i++)
         tape[i] = 0;
     for (i = 0; i < PLEX_N; i++)
@@ -4153,14 +4169,43 @@ static void render_bass(uint32_t n)
     en_bass_level = amp;
 }
 
+/* the DX voices (the pluck's sounds from CM_NPLAIN): a stage of the chunk's job, with the pad's, into their own buffers */
+static void render_fm(uint32_t n)
+{
+    const int on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
+    const float g = cm_vol * 0.5f * FM_OUT * (float)FM_GAIN[(on ? par[P_CM_SND] - CM_NPLAIN : 0)];
+    uint32_t j;
+    float lvl = 0.0f;
+    if (!on) {                                   /* not this chunk's sound: the voices let go, nothing sounds */
+        for (j = 0; j < FM_NV; j++)
+            fmx[j].used = 0;
+        for (j = 0; j < n; j++)
+            fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = 0.0f;
+        return;
+    }
+    for (j = 0; j < n; j++) {
+        const float y = fm_next() * g * TG(TR_CM, j);
+        fm_ol[j] = y;
+        fm_or[j] = y;
+        fm_rs[j] = y * 0.35f;
+        fm_es[j] = y * 0.5f;
+        lvl = fm_maxf(lvl, y < 0.0f ? -y : y);
+    }
+    en_cm_level = fm_minf(lvl * 4.0f, 1.0f);
+}
+
 static void render_cm(uint32_t n)
 {
-    const int sn = par[P_CM_SND] < 0 ? 0 : par[P_CM_SND] >= EN_NCMSND ? EN_NCMSND - 1 : par[P_CM_SND];
+    const int sn = par[P_CM_SND] < 0 ? 0 : par[P_CM_SND] >= CM_NPLAIN ? CM_NPLAIN - 1 : par[P_CM_SND];
     const cm_snd_t *S = &CM_SOUND[sn];
     const float g = cm_vol * 0.5f * S->g;
     float lvl = 0.0f;
     int v;
     uint32_t j;
+    if (par[P_CM_SND] >= CM_NPLAIN) {              /* a DX voice: render_fm */
+        cm[0].env = cm[1].env = 0.0f;
+        return;
+    }
     if (g <= 0.0f) {
         cm[0].env = cm[1].env = 0.0f;
         en_cm_level = 0.0f;
@@ -4603,6 +4648,7 @@ static void render_drums(uint32_t n)
     render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC]);
 }
 
+_Static_assert(BLK == BLK_FM, "the DX voices' buffers are a chunk long");
 _Static_assert(BLK <= RV_MAX && RV_MAX <= 256, "a chunk is at most the predelay line's extra length");
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
@@ -4638,7 +4684,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                 c2_join();                      /* retires it */
                 en_c2_lost++;
                 for (j = 0; j < n; j++)
-                    padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = rv_wl[j] = rv_wr[j] = 0.0f;
+                    padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = rv_wl[j] = rv_wr[j] = 0.0f;
                 plate_init();
                 break;
             }
@@ -4646,10 +4692,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             c2_fence();
     }
     for (j = 0; j < n; j++) {
-        mixl[j] += pad_ol[j];
-        mixr[j] += pad_or[j];
-        rsend[j] += pad_rs[j];
-        esend[j] += pad_es[j];
+        mixl[j] += pad_ol[j] + fm_ol[j];
+        mixr[j] += pad_or[j] + fm_or[j];
+        rsend[j] += pad_rs[j] + fm_rs[j];
+        esend[j] += pad_es[j] + fm_es[j];
     }
     pad_midi_flush();
     for (j = 0; j < n; j++) {                   /* the sidechain: the kick pushes the rest down, briefly */
@@ -4732,6 +4778,10 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     mods_step(n);
     heads_step(n);
     fx_control(n);
+    if (par[P_CM_SND] >= CM_NPLAIN)             /* the DX voices: the patch, the tune, the keys' time */
+        fm_set_patch(par[P_CM_SND] - CM_NPLAIN);
+    fm_tune = par[P_TUNE] * 13981;
+    fm_gates(n);
     if (arc_left <= n) {
         float r = frand() * 2.0f - 1.0f;
         arc_tgt = r * (0.6f + 0.4f * frand()) + (r > 0.0f ? 0.25f : -0.25f);   /* away from the middle */

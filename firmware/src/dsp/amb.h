@@ -34,7 +34,8 @@
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 24                   /* the sounds each of pad, drone and acid can play */
-#define EN_NCMSND 12                   /* the counter-melody's sounds */
+#define EN_NCMFM 24                    /* the counter-melody's six-operator FM sounds (the DX7 voices of fm6.inc): after the plain ones */
+#define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_SAMPLE, EN_V_PLUCK };   /* the voices the keys can play (en_note) */
