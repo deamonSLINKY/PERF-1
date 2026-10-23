@@ -8,7 +8,12 @@ extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[], 
 
 /* --------------------------------------------------------------- audio --- */
 /* Felucca's 256-frame halves (5.8 ms): AMB-1's render is light, and a strum wants the short latency */
-#define HALF_FRAMES 256u                    /* I2S half buffer: 5.8 ms at 44.1 kHz */
+#ifndef EN_HALF
+#define EN_HALF 512u                        /* two renders per half: a slow chunk borrows from a quick one (the telemetry showed the xruns were
+                                             * single renders of 6.0 .. 6.2 ms against the 5.8 ms a half of 256 allows, at 70% load on average);
+                                             * the price is 5.8 ms more delay. 256: the old, one render per half */
+#endif
+#define HALF_FRAMES EN_HALF                 /* I2S half buffer: 11.6 ms at 44.1 kHz (256: 5.8 ms) */
 #define HALF_WORDS (HALF_FRAMES * 2u)
 #define FS 44100u
 #define REND_FRAMES 256u                    /* en_render's frames per call */
@@ -236,10 +241,10 @@ static void safe_main(void)
 }
 
 /* TELEMETRY. A host (tools/fm1log.py) sends F0 7D 50 46 01 F7 and every few seconds again; while it does, a status frame goes back four
- * times a second: F0 7D 50 46 (version 1) then 20 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
+ * times a second: F0 7D 50 46 (version 1) then 22 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
  * that would have to wait for the host is dropped. The words (tel_service): sequence, ms, CPU %, CPU1 %, core2 state, xruns, late,
  * the longest render since the last frame (us), the last render, nested ticks, shed level, playing, flash writes, the last write's
- * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us). */
+ * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us), the genre and the piece. */
 static uint32_t tel_gap_us, tel_ui_us;              /* the longest since the last frame */
 static void tel_service(void)
 {
@@ -262,8 +267,8 @@ static void tel_service(void)
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
-        uint32_t w[20], i;
-        uint8_t f[4 + 20 * 5 + 2];
+        uint32_t w[22], i;
+        uint8_t f[4 + 22 * 5 + 2];
         uint32_t n = 4;
         w[0] = seq;
         w[1] = fm1_ms;
@@ -285,10 +290,12 @@ static void tel_service(void)
         w[17] = HALF_FRAMES * 1000000u / FS;
         w[18] = tel_gap_us;
         w[19] = tel_ui_us;
+        w[20] = (uint32_t)proj.genre;
+        w[21] = (uint32_t)proj.piece;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
         {
-            uint8_t b[20 * 4];
-            for (i = 0; i < 20u; i++)
+            uint8_t b[22 * 4];
+            for (i = 0; i < 22u; i++)
                 b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
             n += ota_pack7(b, sizeof b, f + n);
         }

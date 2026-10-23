@@ -19,7 +19,7 @@ import time
 
 PREFIX = [0x7D, 0x50, 0x46]
 FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing",
-          "stores", "store_us", "crashes", "renders", "ui_frames", "budget_us", "gap_us", "ui_us"]
+          "stores", "store_us", "crashes", "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece"]
 
 
 def pack7(data):
