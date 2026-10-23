@@ -68,6 +68,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
     [P_PROB] = {"Prob", 0, 100, 100},     [P_PROB1] = {"Prob", 0, 100, 100},   [P_PROB2] = {"Prob", 0, 100, 100},
     [P_PROB3] = {"Prob", 0, 100, 100},    [P_PROB4] = {"Prob", 0, 100, 100},   [P_PROB5] = {"Prob", 0, 100, 100},
+    [P_MC_RATIO] = {"Ratio", 0, 6, 1},     [P_MC_THR] = {"Thresh", 0, 100, 60}, [P_MC_MAKE] = {"Make-up", 0, 100, 10}, [P_ML_CEIL] = {"Ceiling", 0, 100, 100},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -118,7 +119,7 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
     P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
     P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(1), 55, \
-    LV(3), 42, LV(4), 38, LV(5), 40
+    LV(3), 42, LV(4), 38, LV(5), 40, P_MC_RATIO, 2, P_MC_THR, 55, P_MC_MAKE, 25
 static const int16_t PL_01[] = {LOFI_BASE, P_TEMPO, 72, P_ROOT, 2, P_MODE, 1, P_CHORD, EN_CH_9TH, -1};                       /* D dorian, ninths */
 static const int16_t PL_02[] = {LOFI_BASE, P_TEMPO, 78, P_ROOT, 9, P_MODE, 5, P_DR_INST, 9, P_AC_WAVE, 4, -1};                /* A aeolian, sub bass, plucks */
 static const int16_t PL_03[] = {LOFI_BASE, P_TEMPO, 84, P_ROOT, 7, P_MODE, 4, P_CHORD, EN_CH_9TH, P_PADTONE, 5, P_AC_WAVE, 11, -1};   /* G mixolydian, warm pad, bells */
@@ -134,7 +135,7 @@ static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_
 #define HOUSE_BASE P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
     P_AC_RES, 40, P_AC_ENV, 40, P_AC_DENS, 45, P_AC_LEN, 16, P_AC_MUT, 25, P_BASS, 70, P_DR_INST, 9, P_DR_CUT, 40, P_PULSE, 80, \
     KIT(1), P_DRIVE, 35, P_SWING, 12, P_ECHO, 30, P_ETIME, 3, P_REVERB, 30, P_SIZE, 50, P_EVOLVE, 45, P_MOTION, 50, P_PATTERN, 0, \
-    LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45
+    LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 35
 static const int16_t PH_01[] = {HOUSE_BASE, P_TEMPO, 122, P_ROOT, 9, P_MODE, 1, -1};
 static const int16_t PH_02[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 0, P_MODE, 5, P_PADTONE, 4, P_DR_INST, 10, P_AC_WAVE, 9, -1};
 static const int16_t PH_03[] = {HOUSE_BASE, P_TEMPO, 120, P_ROOT, 5, P_MODE, 1, P_PADTONE, 0, P_CHORD, EN_CH_9TH, -1};
@@ -152,7 +153,7 @@ static const char *const HOUSE_NAME[EN_NPIECES] = {"H01", "H02", "H03", "H04", "
 #define DUB_BASE P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
     P_AC_RES, 60, P_AC_ENV, 60, P_AC_DENS, 40, P_AC_LEN, 8, P_AC_MUT, 30, P_BASS, 85, P_DR_INST, 4, P_DR_CUT, 40, P_DR_RES, 55, \
     P_DL_RATE, 0, P_DL_SHAPE, 1, P_DL_DEPTH, 85, P_DL_DEST, 0, P_PULSE, 85, KIT(9), P_DRIVE, 60, P_SWING, 0, P_ECHO, 45, P_ETIME, 3, \
-    P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45
+    P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40
 static const int16_t PD_01[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 4, P_MODE, 2, -1};
 static const int16_t PD_02[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 5, P_MODE, 5, P_DR_INST, 9, P_DL_RATE, 1, P_DL_SHAPE, 0, -1};
 static const int16_t PD_03[] = {DUB_BASE, P_TEMPO, 142, P_ROOT, 2, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
@@ -168,17 +169,17 @@ static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D0
 /* the other six genres (4 .. 9: JUNGLE, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
  * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
 static const int16_t X_JUNGLE[] = {P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
-    KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, -1};
+    KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
 static const int16_t X_DNB[] = {P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
-    KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, -1};
+    KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
 static const int16_t X_BREAKS[] = {P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
-    KIT(4), P_PATTERN, 0, P_EVOLVE, 45, -1};
+    KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
 static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 52, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
-    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, -1};
+    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 25, -1};
 static const int16_t X_ELECTRO[] = {P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
-    KIT(11), P_PATTERN, 0, P_EVOLVE, 40, -1};
+    KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
 static const int16_t X_TRAP[] = {P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
-    KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, -1};
+    KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40, -1};
 static const int16_t *const XBASE[6] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP};
 static const uint8_t XROW[6][10][7] = {
     {{165, 5, 5, 5, 8, 4, 9}, {168, 7, 2, 4, 7, 9, 13}, {162, 2, 1, 2, 0, 1, 4}, {170, 9, 5, 1, 14, 11, 3}, {160, 0, 7, 5, 8, 9, 11}, {166, 4, 2, 6, 11, 4, 14}, {164, 10, 5, 1, 2, 1, 9}, {168, 6, 1, 3, 3, 9, 4}, {170, 1, 5, 4, 7, 2, 13}, {160, 8, 2, 5, 8, 4, 9}},
@@ -472,6 +473,7 @@ void en_param_text(int i, int v, char *b)
     case P_VOICING: s = v ? "Open" : "Close"; break;
     case P_DD_CHANGE: { static const char *const C[3] = {"Off", "Next", "Random"}; s = C[(unsigned)v < 3u ? v : 0]; break; }
     case P_DD_EVERY: { static const char *const E[6] = {"Chord", "4 bars", "8 bars", "16 bars", "32 bars", "64 bars"}; s = E[(unsigned)v < 6u ? v : 0]; break; }
+    case P_MC_RATIO: { static const char *const R[7] = {"Off", "1.5:1", "2:1", "3:1", "4:1", "6:1", "10:1"}; s = R[(unsigned)v < 7u ? v : 0]; break; }
     case P_DD_MUTATE: { static const char *const M[3] = {"Off", "Shift", "Morph"}; s = M[(unsigned)v < 3u ? v : 0]; break; }
     default: break;
     }
@@ -2611,6 +2613,7 @@ static void quiet(void)
     notes_off();
 }
 
+static void master_dyn_reset(void);
 void en_init(void)
 {
     int i, l;
@@ -2619,6 +2622,7 @@ void en_init(void)
     plate_init();
     fm_init();
     fm_reset();
+    master_dyn_reset();
     for (i = 0; i < TAPE_N; i++)
         tape[i] = 0;
     for (i = 0; i < PLEX_N; i++)
@@ -3476,6 +3480,100 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         rpt_arm = 0;
         bm_tgt = 0.0f;                          /* back to the live mix (the ring fades out) */
     }
+}
+
+/* ----------------------------------------------------- the master bus: a compressor and a limiter --- */
+/* After the performance effects, before the master gain. The compressor: a stereo-linked peak detector in dB, a soft knee (6 dB), the
+ * ratio, the threshold, a fast attack (4 ms) and a release that follows the programme (it is slower the deeper the reduction), the
+ * make-up. The limiter: a look-ahead brick wall: the signal is delayed 64 samples (1.5 ms), the gain it needs for the peak that is
+ * coming is the minimum over the window, smoothed over the window (so it is in place when the peak arrives and never steps), and
+ * released over about 60 ms; the ceiling is its level, 0 dB (the mix's full scale before the master gain) down to -12 dB. */
+#define LK 64
+#define LKS 8                                   /* the window's sub-blocks of 8 samples */
+static float lk_l[LK], lk_r[LK], lk_gm[LK], lk_sub[LKS];
+static float lk_cur = 1.0f, lk_sum = (float)LK, lk_rs = 1.0f, cp_env;
+static uint32_t lk_i, lk_n, lk_si;
+static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, lk_ceil = 1.0f;
+volatile float en_comp_gr, en_lim_gr, en_out_peak;
+static float gr_hold, pk_hold;
+
+static void master_dyn_set(void)                /* once a chunk: the settings, from the parameters */
+{
+    static const float RATIO[7] = {1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 10.0f};
+    const int r = par[P_MC_RATIO] < 0 ? 0 : par[P_MC_RATIO] > 6 ? 6 : par[P_MC_RATIO];
+    cp_slope = r ? 1.0f - 1.0f / RATIO[r] : 0.0f;
+    cp_thr = -30.0f + 0.3f * (float)par[P_MC_THR];                 /* -30 .. 0 dB */
+    cp_make = fm_db2lin(0.12f * (float)par[P_MC_MAKE]);            /* 0 .. +12 dB */
+    cp_ka = 1.0f - fm_expf(-1.0f / (0.004f * EN_SR));
+    lk_ceil = fm_db2lin(-12.0f + 0.12f * (float)par[P_ML_CEIL]);   /* -12 .. 0 dB */
+}
+
+static void master_dyn_reset(void)              /* a new engine: nothing delayed, no reduction */
+{
+    uint32_t k;
+    for (k = 0; k < LK; k++)
+        lk_l[k] = lk_r[k] = 0.0f, lk_gm[k] = 1.0f;
+    for (k = 0; k < LKS; k++)
+        lk_sub[k] = 1.0f;
+    lk_cur = lk_rs = 1.0f;
+    lk_sum = (float)LK;
+    lk_i = lk_n = lk_si = 0;
+    cp_env = gr_hold = pk_hold = 0.0f;
+}
+
+static inline void master_dyn(float *pl, float *pr)
+{
+    float l = *pl, r = *pr, g = 1.0f, p, gq, avg;
+    if (cp_slope > 0.0f) {                      /* the compressor */
+        const float d = fm_maxf(fm_fabsf(l), fm_fabsf(r)) + 1e-9f, lv = 6.0206f * fm_log2f(d) - cp_thr;
+        float gr = 0.0f, kr;
+        if (lv > 3.0f)
+            gr = cp_slope * lv;
+        else if (lv > -3.0f)
+            gr = cp_slope * (lv + 3.0f) * (lv + 3.0f) * (1.0f / 12.0f);
+        kr = 1.0f - fm_expf(-1.0f / ((0.06f + 0.04f * cp_env) * EN_SR));   /* ~60 ms, up to 400 ms at 9 dB down */
+        cp_env += (gr - cp_env) * (gr > cp_env ? cp_ka : kr);
+        g = fm_db2lin(-cp_env);
+        en_comp_gr = cp_env;
+        l *= g;
+        r *= g;
+    } else {
+        cp_env = 0.0f;
+        en_comp_gr = 0.0f;
+    }
+    l *= cp_make;
+    r *= cp_make;
+    /* the limiter: the audio goes into the delay, the gain is figured for what is coming */
+    p = fm_maxf(fm_fabsf(l), fm_fabsf(r));
+    gq = p > lk_ceil ? lk_ceil / p : 1.0f;
+    lk_l[lk_i] = l;
+    lk_r[lk_i] = r;
+    lk_cur = fm_minf(lk_cur, gq);               /* the window's minimum: the sub-block under way, and the eight before */
+    {
+        float m = lk_cur;
+        uint32_t k;
+        for (k = 0; k < LKS; k++)
+            m = fm_minf(m, lk_sub[k]);
+        avg = m;
+    }
+    lk_sum += avg - lk_gm[lk_i];                /* smoothed over the window */
+    lk_gm[lk_i] = avg;
+    if (++lk_n >= 8u) {
+        lk_n = 0;
+        lk_sub[lk_si] = lk_cur;
+        lk_si = (lk_si + 1u) & (LKS - 1u);
+        lk_cur = 1.0f;
+    }
+    lk_i = (lk_i + 1u) & (LK - 1u);
+    avg = lk_sum * (1.0f / (float)LK);
+    if (avg < lk_rs)                            /* quick down, ~60 ms back up */
+        lk_rs = avg;
+    else
+        lk_rs += (avg - lk_rs) * (1.0f / (0.06f * EN_SR));
+    *pl = lk_l[lk_i] * lk_rs;                   /* (lk_i is now the oldest: 64 samples ago) */
+    *pr = lk_r[lk_i] * lk_rs;
+    gr_hold = fm_maxf(gr_hold * 0.9998f, 1.0f - lk_rs);
+    pk_hold = fm_maxf(pk_hold * 0.9997f, fm_maxf(fm_fabsf(*pl), fm_fabsf(*pr)));
 }
 
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
@@ -4762,6 +4860,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     for (j = 0; j < n; j++) {
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
+        master_dyn(&l, &r);
         out[2 * j] = (int32_t)(fm_tanhf(l * gain) * 8300000.0f);
         out[2 * j + 1] = (int32_t)(fm_tanhf(r * gain) * 8300000.0f);
     }
@@ -4782,6 +4881,9 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         fm_set_patch(par[P_CM_SND] - CM_NPLAIN);
     fm_tune = par[P_TUNE] * 13981;
     fm_gates(n);
+    master_dyn_set();
+    en_lim_gr = 8.6859f * gr_hold;               /* 20 log10 of 1/(1 - x), near enough for the small ones: the limiter's reduction in dB */
+    en_out_peak = pk_hold;
     if (arc_left <= n) {
         float r = frand() * 2.0f - 1.0f;
         arc_tgt = r * (0.6f + 0.4f * frand()) + (r > 0.0f ? 0.25f : -0.25f);   /* away from the middle */

@@ -839,6 +839,47 @@ int main(void)
         en_play(1);
     }
 
+    /* the master bus: the compressor reduces (its meter says so, and the level falls), the limiter holds its ceiling (at -12 dB nothing passes 0.2512 of the
+     * mix's full scale, which at the unit gain tanh makes 2.04 M of 8.39 M), and with both off the sound is unchanged but for the limiter's delay */
+    {
+        double rms[3] = {0, 0, 0};
+        float pk[3] = {0, 0, 0}, grmax = 0.0f, lgmax = 0.0f;
+        int k, blk, j;
+        for (k = 0; k < 3; k++) {          /* 0: off; 1: compressor 10:1 at -30 dB; 2: limiter at -12 dB */
+            en_init();
+            en_set(P_PULSE, 100);
+            en_set(P_PAD, 80);
+            en_set(P_ACID, 80);
+            en_set(P_BASS, 90);
+            en_set(P_MC_RATIO, k == 1 ? 6 : 0);
+            en_set(P_MC_THR, 0);
+            en_set(P_ML_CEIL, k == 2 ? 0 : 100);
+            en_play(1);
+            for (blk = 0; blk < 1800; blk++) {
+                en_render(buf, 256, 2048);
+                if (blk < 600)
+                    continue;
+                if (en_comp_gr > grmax)
+                    grmax = en_comp_gr;
+                if (en_lim_gr > lgmax)
+                    lgmax = en_lim_gr;
+                for (j = 0; j < 512; j++) {
+                    const float a2 = (float)(buf[j] < 0 ? -buf[j] : buf[j]);
+                    rms[k] += (double)a2 * (double)a2;
+                    if (a2 > pk[k])
+                        pk[k] = a2;
+                }
+            }
+        }
+        CHECK(grmax > 3.0f, "the compressor's meter: %.1f dB", (double)grmax);
+        CHECK(rms[1] < 0.6 * rms[0], "10:1 at -30 dB lowers the level (%.3g vs %.3g)", rms[1], rms[0]);
+        CHECK(pk[0] > 2.3e6f, "the unlimited mix is loud enough to test with (%.3g)", (double)pk[0]);
+        CHECK(pk[2] < 2.1e6f, "the limiter at -12 dB holds: peak %.3g", (double)pk[2]);
+        CHECK(lgmax > 1.0f, "the limiter's meter: %.1f dB", (double)lgmax);
+        en_init();
+        en_play(1);
+    }
+
     /* stop: the tails die away */
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, en_param_info(i)->def);

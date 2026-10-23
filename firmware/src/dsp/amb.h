@@ -95,6 +95,7 @@ enum {
     P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT,              /* the counter-melody (PLUCK): level, sound, density, octave */
     P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE,          /* decay, style (up, down, ..), rate (1/8, 1/16, 1/4, 3/16), range in octaves */
     P_PROB, P_PROB1, P_PROB2, P_PROB3, P_PROB4, P_PROB5,  /* each drum lane's chance a hit sounds (P_PROB + lane), 100 always: thinned from the sequencer */
+    P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL,           /* the master bus: compressor ratio (Off .. 10:1), threshold, make-up gain, and the limiter's ceiling */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -114,6 +115,7 @@ void en_init(void);
  * lost (its results are dropped, the reverb restarts). Without it, or after a loss, the same job runs in place. fence publishes
  * memory between the cores (the job's stages); alive says whether the other core still runs (0: join it, it is retired). */
 void en_core2_attach(int (*submit)(void (*fn)(void *), void *ctx), int (*join)(void), void (*fence)(void), int (*alive)(void));
+extern volatile float en_comp_gr, en_lim_gr, en_out_peak;   /* the master bus now: the compressor's and the limiter's gain reduction (dB, positive), the output's peak (0..1 of full scale) */
 extern uint32_t en_c2_jobs, en_c2_lost;          /* chunks reverbed on the other core; times it was lost */
 void en_set(int param, int value);
 void en_pool(uint32_t pool);                   /* the scale, relative to the root (bit 0 always set) */
