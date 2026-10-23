@@ -723,7 +723,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -764,6 +764,7 @@ void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0xFFu) 
 void en_gate_pat(uint32_t steps) { post(C_GATEPAT, 0, (int)(steps & 0xFFFFu)); }
 void en_fxs(int i, int v) { post(C_FXS, i, v); }
 void en_fill_next(void) { post(C_FILLQ, 0, 0); }
+void en_flx_hold(int on) { post(C_FLXH, on ? 1 : 0, 0); }
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
 volatile float en_drift_bars = 99.0f;
 
@@ -1819,6 +1820,12 @@ const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
 static const float FM_GAIN[EN_NCMFM] = {0.59f, 0.87f, 0.73f, 0.88f, 0.87f, 1.87f, 0.76f, 1.26f, 0.56f, 0.66f, 1.33f, 0.64f, 2.52f, 0.87f, 0.83f, 0.78f, 1.20f, 0.96f, 1.32f, 2.09f, 0.67f, 1.60f, 1.59f, 0.60f};   /* tests/host/fmcal.c */
+/* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
+ * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
+#define FM_R 512
+#define FM_D 256
+static float fm_fifo[FM_R] EN_POOL;
+static uint32_t fm_ctr;                         /* samples gone by (the first core's) */
 static float fm_ol[BLK_FM] EN_POOL, fm_or[BLK_FM] EN_POOL, fm_rs[BLK_FM] EN_POOL, fm_es[BLK_FM] EN_POOL;   /* the DX voices' part of the mix and the sends */
 static struct { float ph, ps, inc, env, dm, vel; uint32_t age; } cm[2];
 static float cm_vol;
@@ -2154,12 +2161,12 @@ static inline void reverb_tank(float x, float *ol, float *or_)
 {
     float a, b, fb_l = tap(&dl[L_D2R], DS(3163)), fb_r = tap(&dl[L_D2L], DS(3720));
     if (rv_type == 2) {                           /* gated: the input opens it, it stays open for the hold and then closes in ~10 ms */
-        rg_env = fm_maxf(fm_fabsf(x), rg_env * 0.9995f);
+        rg_env = fm_flush(fm_maxf(fm_fabsf(x), rg_env * 0.9995f));
         if (rg_env > 0.004f)
             rg_hold = rv_gate_hold;
         else if (rg_hold > 0.0f)
             rg_hold -= 1.0f;
-        rg_g += ((rg_hold > 0.0f ? 1.0f : 0.0f) - rg_g) * 0.002f;
+        rg_g = fm_flush(rg_g + ((rg_hold > 0.0f ? 1.0f : 0.0f) - rg_g) * 0.002f);
     } else if (rv_type == 1) {
         x += rv_shim_fb;
     }
@@ -2214,7 +2221,7 @@ static inline void reverb_tank(float x, float *ol, float *or_)
  * on the other core (en_core2_attach) while this one renders the voices, the drums and the echoes. Same job, same
  * result, whichever core runs it. The line's slots a job reads and the slots being written are apart (PRE_LP). */
 #define RV_MAX 256
-typedef struct { int n, r0; } rv_job_t;
+typedef struct { int n, r0; int fm_on; uint32_t fm_w; } rv_job_t;
 static rv_job_t rv_job;
 static float rv_wl[RV_MAX] EN_POOL, rv_wr[RV_MAX] EN_POOL;           /* the tank's output for the chunk */
 static int (*c2_submit)(void (*)(void *), void *);
@@ -2243,9 +2250,21 @@ static void reverb_job(void *p)
             r = 0;
     }
 }
-/* what the other core does in a chunk: the pad's voices (the stage the first core waits for, before it mixes), then the reverb's tank. (The DX voices are the first
- * core's: they cost up to a fifth of a core, and the other core already has the pad and the reverb: measured, with them there too the job did not fit the chunk.) */
-static void render_fm(uint32_t n);
+static void fm_job(const rv_job_t *c)           /* the DX voices' samples for this chunk, into the ring (they are played a chunk later) */
+{
+    int j;
+    if (!c->fm_on) {                             /* not the pluck's sound: the voices let go, nothing sounds */
+        for (j = 0; j < FM_NV; j++)
+            fmx[j].used = 0;
+        for (j = 0; j < c->n; j++)
+            fm_fifo[(c->fm_w + (uint32_t)j) & (FM_R - 1)] = 0.0f;
+        return;
+    }
+    for (j = 0; j < c->n; j++)
+        fm_fifo[(c->fm_w + (uint32_t)j) & (FM_R - 1)] = fm_next();
+}
+/* what the other core does in a chunk: the pad's voices (the stage the first core waits for, before it mixes), then the reverb's tank (the first core needs its
+ * output at the end of the chunk), then the DX voices (needed a chunk on, so nothing waits for them) */
 static void chunk_job(void *p)
 {
     render_pad((uint32_t)((const rv_job_t *)p)->n);
@@ -2253,6 +2272,7 @@ static void chunk_job(void *p)
         c2_fence();
     stage_done = 1;
     reverb_job(p);
+    fm_job((const rv_job_t *)p);
 }
 
 static void plate_init(void)
@@ -3066,7 +3086,7 @@ static const uint8_t FLEX[15][16] = {
 uint8_t en_flex_step(int pat, int step) { return FLEX[(unsigned)pat < 15u ? pat : 0][step & 15]; }
 volatile uint8_t en_flx_state;                  /* 0 idle, 1 armed (waiting for its time), 2 playing */
 volatile uint32_t en_flx_done;                  /* one shots played out */
-static uint8_t flx_arm, flx_active, flx_pat, flx_pos, flx_held, flx_wait_rel, flx_rev, flx_live, flx_mute;
+static uint8_t flx_arm, flx_active, flx_pat, flx_pos, flx_held, flx_wait_rel, flx_rev, flx_live, flx_mute, flx_phys;
 static int flx_n;
 static float flx_slice, flx_off, flx_sub, flx_p;
 static void flx_load(void)                      /* the step's slice */
@@ -3108,7 +3128,7 @@ static void flx_tick(int st)                    /* on every sixteenth */
     }
     if (flx_active) {
         if (++flx_pos >= 16) {
-            if (fxs_v[EN_FXS_FX_MODE] == 1 && flx_held) {
+            if ((fxs_v[EN_FXS_FX_MODE] == 1 && flx_held) || flx_phys) {   /* a loop while held or latched; a one shot too while the pad is held down by hand */
                 flx_pos = 0;
             } else {                            /* the bar is over */
                 flx_active = 0;
@@ -3659,7 +3679,7 @@ static inline void master_dyn(float *pl, float *pr)
         else if (lv > -3.0f)
             gr = cp_slope * (lv + 3.0f) * (lv + 3.0f) * (1.0f / 12.0f);
         kr = 1.0f - fm_expf(-1.0f / ((0.06f + 0.04f * cp_env) * EN_SR));   /* ~60 ms, up to 400 ms at 9 dB down */
-        cp_env += (gr - cp_env) * (gr > cp_env ? cp_ka : kr);
+        cp_env = fm_flush(cp_env + (gr - cp_env) * (gr > cp_env ? cp_ka : kr));
         g = fm_db2lin(-cp_env);
         en_comp_gr = cp_env;
         l *= g;
@@ -3699,8 +3719,8 @@ static inline void master_dyn(float *pl, float *pr)
         lk_rs += (avg - lk_rs) * (1.0f / (0.06f * EN_SR));
     *pl = lk_l[lk_i] * lk_rs;                   /* (lk_i is now the oldest: 64 samples ago) */
     *pr = lk_r[lk_i] * lk_rs;
-    gr_hold = fm_maxf(gr_hold * 0.9998f, 1.0f - lk_rs);
-    pk_hold = fm_maxf(pk_hold * 0.9997f, fm_maxf(fm_fabsf(*pl), fm_fabsf(*pr)));
+    gr_hold = fm_flush(fm_maxf(gr_hold * 0.9998f, 1.0f - lk_rs));
+    pk_hold = fm_flush(fm_maxf(pk_hold * 0.9997f, fm_maxf(fm_fabsf(*pl), fm_fabsf(*pr))));
 }
 
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
@@ -4085,6 +4105,7 @@ static void drain(void)
             break;
         case C_GATEPAT: gx_pat = (uint16_t)b; break;
         case C_FILLQ: fill_q = 1; break;
+        case C_FLXH: flx_phys = (uint8_t)a; break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)
@@ -4451,15 +4472,15 @@ static void render_fm(uint32_t n)
     const float g = cm_vol * 0.5f * FM_OUT * (float)FM_GAIN[(on ? par[P_CM_SND] - CM_NPLAIN : 0)];
     uint32_t j;
     float lvl = 0.0f;
-    if (!on) {                                   /* not this chunk's sound: the voices let go, nothing sounds */
-        for (j = 0; j < FM_NV; j++)
-            fmx[j].used = 0;
+    if (!on) {
         for (j = 0; j < n; j++)
             fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = 0.0f;
+        fm_ctr += n;
         return;
     }
     for (j = 0; j < n; j++) {
-        const float y = fm_next() * g * TG(TR_CM, j);
+        float x = fm_fifo[(fm_ctr - FM_D + j) & (FM_R - 1)];   /* (rendered a chunk ago, by the other core) */
+        const float y = (x < -16.0f ? -16.0f : x > 16.0f ? 16.0f : x) * g * TG(TR_CM, j);
         fm_ol[j] = y;
         fm_or[j] = y;
         fm_rs[j] = y * 0.35f;
@@ -4467,6 +4488,7 @@ static void render_fm(uint32_t n)
         lvl = fm_maxf(lvl, y < 0.0f ? -y : y);
     }
     en_cm_level = fm_minf(lvl * 4.0f, 1.0f);
+    fm_ctr += n;
 }
 
 static void render_cm(uint32_t n)
@@ -4979,6 +5001,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         const dl_t *pd = &dl[L_PRE];
         rv_job.n = (int)n;
         rv_job.r0 = pd->i >= rv_pre ? pd->i - rv_pre : pd->i - rv_pre + pd->n;
+        rv_job.fm_on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
+        rv_job.fm_w = fm_ctr & (FM_R - 1);
         pad_lk = lk_snare;
         stage_done = 0;
         rv_c2 = c2_submit && c2_submit(chunk_job, &rv_job);
@@ -4995,7 +5019,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     mx_end(2, n);
     mx_begin(3, n);
     render_cm(n);
-    render_fm(n);                               /* the DX voices, here (they fill the fm_ buffers added below) */
+    render_fm(n);                               /* the DX voices' samples from a chunk ago (the other core's), into the fm_ buffers added below */
     mx_end(3, n);
     render_noise(n);
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
@@ -5007,6 +5031,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                 for (j = 0; j < n; j++)
                     padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = rv_wl[j] = rv_wr[j] = 0.0f;
                 plate_init();
+                fm_reset();                      /* (its voices were the other core's too) */
+                for (j = 0; j < FM_R; j++)
+                    fm_fifo[j] = 0.0f;
                 break;
             }
         if (c2_fence)

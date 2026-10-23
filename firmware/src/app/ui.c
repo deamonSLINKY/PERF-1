@@ -1962,13 +1962,23 @@ static void input(void)
         if (ui.fx_menu && ui.fx_page && FXP[ui.fx_page - 1].bit != 63 &&
             (!FXP[ui.fx_page - 1].hold || (keys & ~ui.shift_keys)))   /* an edit page: its effect on, */
             m |= FXB(FXP[ui.fx_page - 1].bit);                                                 /* to be heard as it is edited (a roll or riser: with a key held) */
-        if (ui.fx_menu && !ui.fx_page) {
-            for (i = 0; i < NKEYS; i++)
-                if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u) {
-                    m |= fxbit(i);
-                    if (fx_bank == 2 && KEY_FX[2][i] != FX_NONE)
-                        ui.flex_last = (uint8_t)(KEY_FX[2][i] - FX_FLEX1);
-                }
+        {
+            uint8_t flxh = 0;                  /* a Flex Beat pad held down by hand (the engine goes on with a one shot while it is) */
+            static uint8_t flxh_sent;
+            if (ui.fx_menu && !ui.fx_page) {
+                for (i = 0; i < NKEYS; i++)
+                    if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u) {
+                        m |= fxbit(i);
+                        if (fx_bank == 2 && KEY_FX[2][i] != FX_NONE) {
+                            ui.flex_last = (uint8_t)(KEY_FX[2][i] - FX_FLEX1);
+                            flxh = 1;
+                        }
+                    }
+            }
+            if (flxh != flxh_sent) {
+                flxh_sent = flxh;
+                en_flx_hold(flxh);
+            }
         }
         if (ui.dj_on && en_playing) {              /* the auto-DJ: a fill before the breakdown, the riser in the build */
             if (ui.dj_fill)

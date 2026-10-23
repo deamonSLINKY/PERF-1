@@ -4,8 +4,8 @@
 /* The six-operator FM voices of the counter-melody (and the JAM page): a polyphonic DX7 on Melodee's core (fm6_core.inc), twenty-four
  * patches (Melodee's factory voices), played from the pluck's sequencer and by hand. The control path (envelopes, LFO, pitch, the
  * routing) follows Melodee's eng_fm6.c without its controllers, portamento, MONO and per-track settings; the voice handling is
- * small: four voices, the oldest is taken. Rendered in Dexed's 64-sample blocks and queued across chunks, on the first core (the other
- * core has the pad and the reverb: with the DX voices too its job did not fit the chunk).
+ * small: six voices, the oldest is taken. Rendered in Dexed's 64-sample blocks and queued across chunks, by the other core, a chunk ahead of
+ * the first core's use of them (amb.c: fm_job / render_fm; the notes and gates are set by the first core between chunks).
  *
  * Included by amb.c, after EN_POOL, the fast maths, par[] and mtof. */
 #define MELODEE_DUAL_CORE 0
@@ -174,7 +174,7 @@ static void fm6_keyed(fm6_voice_t *s, const uint8_t *ed, uint32_t note)
 }
 
 /* ------------------------------------------------------------- the voices --- */
-#define FM_NV 4                                  /* four voices: each is up to 6 operators a sample; four is what the first core can add to the rest */
+#define FM_NV 6                                  /* six voices: each is up to 6 operators a sample (the other core renders them, a chunk ahead) */
 typedef struct {
     fm6_voice_t s;
     uint8_t used, gate;

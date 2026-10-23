@@ -17,11 +17,13 @@ wait 7000
 expect flexdone 1
 expect flexstate 0
 expect fxmaskhi 0
-# held (not tapped): it plays while the pad is down and the bar plays out; held through its end it does not start again
+# held (not tapped): a one shot goes on, bar after bar, while the pad is down; let go, it ends on the bar line
 key 5 down
 wait 9000
+expect flexdone 1
+expect flexstate 2
+key 5 up
+wait 3000
 expect flexdone 2
 expect flexstate 0
-key 5 up
-wait 300
 expect flexlast 5
