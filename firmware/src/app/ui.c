@@ -396,6 +396,7 @@ static struct {
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
     uint8_t glide_on, glide_busy;
+    uint8_t set_dirty;                 /* the effects' / performing settings changed: written when you leave them alone a moment */
     uint32_t fx_open_t;                /* when the FX menu was opened (a second tap soon after goes to the settings) */
     uint8_t fx_lastpg;                 /* the edit page of the effect key pressed last */
     uint8_t mix_trk;                   /* the mixer page's layer: pad, drone, acid, pluck, drums (0..4) */
@@ -698,6 +699,7 @@ static void gx_load(int p)                     /* a pattern, and its natural len
 }
 static void gx_step(int s)                     /* a step of the gate's pattern on or off: the pattern is then the keys' own */
 {
+    ui.set_dirty = 1;
     ui.gx_pat ^= (uint16_t)(1u << s);
     ui.gx_preset = NGXP - 1;
     en_gate_pat(ui.gx_pat);
@@ -730,6 +732,8 @@ static void fxp_set(int k, int v)
     int lo, hi;
     fxp_range(k, &lo, &hi);
     v = v < lo ? lo : v > hi ? hi : v;
+    if (v != fxp_get(k))
+        ui.set_dirty = 1;                        /* a setting changed: written when it has been left alone a moment (settings_save) */
     switch (FXP_CTL(k).kind) {
     case KN_PRESET:
         if (v != ui.gx_preset && v < NGXP - 1)
@@ -1200,11 +1204,12 @@ static void fxs_put(int i, int v)
     ui.fxs[i] = (uint8_t)v;
     en_fxs(i, v);
 }
+static const uint8_t GENRE_FXS[12] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_DRIVE, EN_FXS_TP_DULL,   /* the settings a genre sets (and a stored set leaves to it) */
+                                      EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE,
+                                      EN_FXS_PM_DEPTH, EN_FXS_PM_REL, EN_FXS_PM_RATE, EN_FXS_PM_TGT};
 static void genre_fx(int g)
 {
-    static const uint8_t SET[12] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_DRIVE, EN_FXS_TP_DULL,
-                                    EN_FXS_VN_LEVEL, EN_FXS_VN_CRACK, EN_FXS_VN_HISS, EN_FXS_VN_TONE,
-                                    EN_FXS_PM_DEPTH, EN_FXS_PM_REL, EN_FXS_PM_RATE, EN_FXS_PM_TGT};
+#define SET GENRE_FXS
     static const uint8_t LOFI[8] = {25, 18, 30, 45, 55, 40, 28, 75};             /* tape and vinyl, gentler */
     static const uint8_t HOUSE[4] = {50, 45, 1, 0x70};                           /* the pump: depth, release, every quarter, the chords and bass */
     int i;
@@ -1234,6 +1239,7 @@ static void genre_fx(int g)
         ui.fx_lock |= ((XLK[g - 4] & 1u) ? FXB(FX_VINYL) : 0u) | ((XLK[g - 4] & 2u) ? FXB(FX_TAPE) : 0u) | ((XLK[g - 4] & 4u) ? FXB(FX_PUMP) : 0u) |
                       ((XLK[g - 4] & 8u) ? FXB(FX_PHASER) : 0u);
     }
+#undef SET
 }
 static void genre_step(int d)
 {
@@ -2092,6 +2098,7 @@ static void input(void)
             }
         } else if (ui.view == V_VIZ) {            /* the visualizers: the next one */
             ui.viz = (uint8_t)((ui.viz + (e > 0 ? 1 : VZ_N - 1)) % VZ_N);
+            ui.set_dirty = 1;
             say("VISUAL", VZ_NAME[ui.viz]);
         } else {
             int v = (ui.view == V_SEQ ? V_DRUMS : ui.view == V_PERF ? V_TEMPO : (int)ui.view) + (e > 0 ? 1 : -1);   /* (out of the sequencer and the perform screen too) */
@@ -4274,11 +4281,90 @@ static void saver_tick(void)
     }
 }
 
+/* THE SETTINGS' MEMORY: the effects' settings (the FX edit pages), the performing settings (scenes, the DJ, the key change, the saver, the lights,
+ * JAM) and the visualizer chosen are kept in flash (OBJ_SET) a moment after you stop changing them, and come back at power-on. A genre sets its own
+ * tape, vinyl and pump settings when you switch to it (genre_fx): those are kept as they were saved while you are in another genre, so what you
+ * set in HYPNO is what comes back. Not stored: what is latched on, the FX knobs, the mood. */
+#define SET_MAGIC 0x31544553u                    /* "SET1" */
+typedef struct {
+    uint32_t magic;
+    uint16_t nfxs, nui;
+    uint8_t fxs[EN_NFXS];
+    uint8_t uiv[12];
+    uint8_t gx_preset, gx_tgt, pm_tgt, viz;
+    uint16_t gx_pat, rsv;
+} set_t;
+typedef char set_fits[sizeof(set_t) <= PLAT_STORE_MAX ? 1 : -1];
+static set_t set_disk;                           /* as it was last read or written */
+static int set_have;
+static void settings_save(void)
+{
+    set_t s;
+    int i;
+    memset(&s, 0, sizeof s);
+    s.magic = SET_MAGIC;
+    s.nfxs = EN_NFXS;
+    s.nui = 12;
+    for (i = 0; i < EN_NFXS; i++)
+        s.fxs[i] = ui.fxs[i];
+    if (proj.genre && set_have)                  /* in another genre: its own tape / vinyl / pump settings are not the player's */
+        for (i = 0; i < 12; i++)
+            s.fxs[GENRE_FXS[i]] = set_disk.fxs[GENRE_FXS[i]];
+    for (i = 0; i < 11; i++)
+        s.uiv[i] = *uiv(i);
+    s.gx_preset = ui.gx_preset;
+    s.gx_tgt = ui.gx_tgt;
+    s.pm_tgt = ui.pm_tgt;
+    s.gx_pat = ui.gx_pat;
+    s.viz = ui.viz;
+    if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
+        set_disk = s;
+        set_have = 1;
+    }
+}
+static void settings_load(void)
+{
+    set_t s;
+    int p, c;
+    if (plat_store_load(OBJ_SET, &s, sizeof s) != (int)sizeof s || s.magic != SET_MAGIC || s.nfxs != EN_NFXS || s.nui != 12)
+        return;
+    set_disk = s;
+    set_have = 1;
+    for (p = 0; p < NFXP; p++)
+        for (c = 0; c < 4; c++) {
+            const int k = K_FXP + 4 * p + c, kind = FXP[p].c[c].kind;
+            if (kind == KN_NONE || kind == KN_PRESET)
+                continue;
+            if (FXP[p].bit == 63) {              /* the UI's own (not the genre: 11) */
+                if (FXP[p].c[c].idx < 11)
+                    fxp_set(k, s.uiv[FXP[p].c[c].idx]);
+            } else if (kind == KN_TGT) {
+                fxp_set(k, s.gx_tgt);
+            } else if (kind == KN_PTGT) {
+                fxp_set(k, s.pm_tgt);
+            } else {
+                fxp_set(k, s.fxs[FXP[p].c[c].idx]);
+            }
+        }
+    if (s.gx_preset < NGXP) {                    /* the gate's pattern, after its length (which says "the keys' own") */
+        ui.gx_preset = s.gx_preset;
+        ui.gx_pat = s.gx_pat;
+        en_gate_pat(ui.gx_pat);
+    }
+    ui.viz = (uint8_t)(s.viz % VZ_N);
+    ui.set_dirty = 0;
+}
+
 /* what's left waiting for flash (a store is written at once, store_now): stopped, all of it after a
  * quiet moment; playing, the player's three (theme, Tune, MIDI out), with a moment's gap */
 static void autosave(void)
 {
     uint32_t now = plat_ms();
+    if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= GLOB_QUIET) {
+        ui.set_dirty = 0;
+        settings_save();                         /* the effects' and performing settings: a moment after the last change */
+        return;
+    }
     if (!project_pending() || ui.btn || ui.keys || ui.store_wait)
         return;
     if (!en_playing && now - ui.act_t >= KIT_QUIET)
@@ -4441,6 +4527,7 @@ void ui_init(void)
         ui.mood = 50;                          /* the mood macro: the middle leaves the piece as it is */
         ui.jam_oct = 2;                        /* the JAM page: octave 0 */
     }
+    settings_load();                             /* the effects' and performing settings as you left them */
     ui.touched = -1;
     ui.boot_t = plat_ms();
     ui.theme = (uint8_t)proj.par[P_THEME];
