@@ -2250,7 +2250,7 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void),
 }
 volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by the first core (set when it has time to spare and the other has not) */
 static int8_t bal_force = -1;                    /* tests: -1 as it decides, 0 or 1 */
-static uint32_t bal_wait, bal_tot;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
+static uint32_t bal_wait, bal_tot, bal_dwell;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
 void en_balance_force(int v) { bal_force = (int8_t)v; }
 static volatile uint32_t stage_done;             /* the job's first stage (the pad) is done: its outputs may be read */
 static void render_pad(uint32_t n);
@@ -5331,18 +5331,25 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     en_prof[9]++;
     if (bal_force >= 0) {
         en_chorus_c0 = (uint8_t)bal_force;
-    } else if (en_prof_clock && rv_c2) {        /* where the chorus runs: the first core takes it when it has waited more than ~14 % of a quarter second,
-                                                 * gives it back when it waits under 3 % (the move itself takes ~7 % off the wait) */
+    } else if (en_prof_clock && rv_c2) {        /* where the chorus runs: the first core takes it when it has waited more than 8 % of a quarter second
+                                                 * (it costs about 9 % of a chunk), gives it back when it waits under 1 % */
         bal_tot += pt0_ - bal_t0;
         bal_wait += bal_w;
         if (bal_tot >= 6000000u) {
             const uint32_t frac = bal_wait / (bal_tot / 100u);
-            if (par[P_PL_CHO] <= 0 || en_shed_level)
+            if (bal_dwell)
+                bal_dwell--;
+            if (par[P_PL_CHO] <= 0 || en_shed_level) {
                 en_chorus_c0 = 0;
-            else if (!en_chorus_c0 && frac > 14u)
-                en_chorus_c0 = 1;
-            else if (en_chorus_c0 && frac < 3u)
-                en_chorus_c0 = 0;
+            } else if (!bal_dwell) {
+                if (!en_chorus_c0 && frac > 8u) {
+                    en_chorus_c0 = 1;
+                    bal_dwell = 8;              /* (two seconds before it may move again: it does not flutter between the two) */
+                } else if (en_chorus_c0 && frac < 1u) {
+                    en_chorus_c0 = 0;
+                    bal_dwell = 8;
+                }
+            }
             bal_tot = bal_wait = 0;
         }
     }
