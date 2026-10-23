@@ -2636,6 +2636,7 @@ static void draw_meters(void)                    /* left: the five layers (pad, 
     }
 }
 
+static void cpu_line(char *c);
 static void draw_kit(void)                       /* right: the pattern playing, small */
 {
     int l, s, pos = en_drum_pos, pat = en_pat_now;
@@ -2654,6 +2655,18 @@ static void draw_kit(void)                       /* right: the pattern playing, 
     }
     itoa_u((uint32_t)pat + 1u, t + 4);
     cv_text(170, 84, &FONT_XS, t, K_TEXT);
+    {   /* under it, always: the load (CPU, XR; then C2, the other core's, and S1/S2 if the engine eases off) */
+        char c[40];
+        int n = 0;
+        cpu_line(c);
+        while (c[n] && !(c[n] == ' ' && c[n + 1] == 'C' && (c[n + 2] == '1' || c[n + 2] == '2')))
+            n++;
+        if (c[n]) {
+            c[n] = 0;
+            cv_text(170, 106, &FONT_XS, c + n + 1, K_DIM);
+        }
+        cv_text(170, 96, &FONT_XS, c, K_DIM);
+    }
     if (en_pat_next != en_pat_now) {             /* the next, waiting for the bar */
         char u[8] = "> ";
         itoa_u((uint32_t)en_pat_next + 1u, u + 2);
@@ -2707,6 +2720,8 @@ static void draw_seq(void)
         cv_rect(44 + s * 48 - 2, 18, 1, 118, K_LINE);
 }
 
+static void cpu_line(char *c);
+
 /* a button's card (help_tick): its name, then what it does, in the main area's place */
 #define HELP_LINES 4
 static const char *const BTN_LABEL[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ",
@@ -2721,26 +2736,8 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_ARP: L("THE ACID; AGAIN: ITS ENV,"); L("ITS LINE, THEN THE PLUCK"); L("(THE COUNTER-MELODY)"); L("SEL + ALGO: ITS SOUND"); break;
     case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
-        static char cpu[32];
-        uint32_t c = plat_cpu_pct(), x = plat_xruns(), j = 4;
-        cpu[0] = 'C', cpu[1] = 'P', cpu[2] = 'U', cpu[3] = ' ';
-        itoa_u(c, cpu + j);
-        while (cpu[j])
-            j++;
-        cpu[j++] = '%', cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'X', cpu[j++] = 'R', cpu[j++] = 'U', cpu[j++] = 'N', cpu[j++] = 'S',
-        cpu[j++] = ' ';
-        itoa_u(x > 9999u ? 9999u : x, cpu + j);
-        if (plat_core2()) {                      /* the experimental build: C2, the reverb on the second core; C1, it fell back to one */
-            while (cpu[j])
-                j++;
-            cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'C', cpu[j++] = plat_core2() == 1u ? '2' : '1', cpu[j] = 0;
-            if (en_shed_level)
-                cpu[j++] = 'S', cpu[j++] = (char)('0' + en_shed_level), cpu[j] = 0;
-            if (plat_core2() == 1u) {
-                cpu[j++] = ' ';
-                itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), cpu + j);
-            }
-        }
+        static char cpu[40];
+        cpu_line(cpu);
         L("GLOBAL");
         L("ROOT, THEME, TUNE, MIDI OUT");
         L("+ SEL: REMOTE (BROWSER)");
@@ -2993,40 +2990,50 @@ static void draw_shift(void)
             cv_text(8, 18 + k * 15, &FONT_XS, l[k], K_TEXT);
 }
 
+/* the load, as text: CPU (the first core), XR (the xruns), C2 and the second core's load (the experimental build), S1/S2 (the engine is
+ * easing off to keep up; absent while all is well) */
+static void cpu_line(char *c)
+{
+    int n = 0;
+    c[n++] = 'C', c[n++] = 'P', c[n++] = 'U', c[n++] = ' ';
+    itoa_u(plat_cpu_pct(), c + n);
+    while (c[n])
+        n++;
+    c[n++] = ' ', c[n++] = 'X', c[n++] = 'R', c[n++] = ' ';
+    itoa_u(plat_xruns() > 999u ? 999u : plat_xruns(), c + n);
+    while (c[n])
+        n++;
+    if (plat_core2()) {                          /* C2: the reverb and more on the second core; C1: it fell back to one */
+        c[n++] = ' ', c[n++] = 'C', c[n++] = plat_core2() == 1u ? '2' : '1', c[n] = 0;
+        if (plat_core2() == 1u) {                /* and how full the other core is */
+            c[n++] = ' ';
+            itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), c + n);
+            while (c[n])
+                n++;
+        }
+    }
+    if (en_shed_level)
+        c[n++] = ' ', c[n++] = 'S', c[n++] = (char)('0' + en_shed_level);
+    c[n] = 0;
+}
+
 /* the track mix (GLO held): the keys, as the FX menu's, each its track's mute (M:) or solo (S:), lit while on */
 static void draw_mix(void)
 {
     int k;
-    char c[32] = "CPU ";
+    char c[40];
     cv_text(4, 1, &FONT_XS, "MIX: GLO + KEY", K_ACC);
-    if (ui.dj_on) {                            /* the auto-DJ: where it is */
+    cpu_line(c);
+    cv_text(118, 1, &FONT_XS, c, K_DIM);
+    if (ui.dj_on) {                            /* the auto-DJ: where it is, under the load */
+        char d[24];
         const char *pn = ui.dj_phase == 0 ? "DJ GROOVE " : ui.dj_phase == 1 ? "DJ BREAK " : "DJ BUILD ";
         int n = 0;
         while (*pn)
-            c[n++] = *pn++;
-        itoa_u(ui.dj_n, c + n);
-    } else {
-        int n = 4;
-        itoa_u(plat_cpu_pct(), c + 4);
-        while (c[n])
-            n++;
-        c[n++] = ' ', c[n++] = ' ', c[n++] = 'X', c[n++] = 'R', c[n++] = ' ';
-        itoa_u(plat_xruns() > 999u ? 999u : plat_xruns(), c + n);
-        while (c[n])
-            n++;
-        if (plat_core2())                        /* the experimental build: C2, the reverb on the second core; C1, it fell back to one */
-            c[n++] = ' ', c[n++] = ' ', c[n++] = 'C', c[n++] = plat_core2() == 1u ? '2' : '1', c[n] = 0;
-        if (plat_core2() == 1u) {                /* and how full the other core is */
-            c[n++] = ' ';
-            itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), c + n);
-        }
-        if (en_shed_level) {                      /* and, if the engine is easing off to keep up: S1, S2 */
-            while (c[n])
-                n++;
-            c[n++] = ' ', c[n++] = 'S', c[n++] = (char)('0' + en_shed_level), c[n] = 0;
-        }
+            d[n++] = *pn++;
+        itoa_u(ui.dj_n, d + n);
+        cv_text(118, 8, &FONT_XS, d, K_ACC);
     }
-    cv_text(118, 1, &FONT_XS, c, K_DIM);
     for (k = 0; k < NKEYS; k++) {
         int code = MIXK[k], on = mix_state(k);
         int32_t x = 2 + (k / 9) * 79, y = 16 + (k % 9) * 14;
