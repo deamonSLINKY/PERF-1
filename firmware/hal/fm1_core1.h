@@ -75,6 +75,13 @@ static struct {
 static int aw_online;
 
 static int fm1_core1_online(void) { return aw_online; }
+static uint32_t aw_t0;                      /* when the outstanding job was submitted */
+static void fm1_core1_fence(void) { __asm__ volatile("csync" ::: "memory"); }   /* publish memory between the cores */
+/* 1 while the outstanding job can still finish: no CPU1 fault, under the 10 ms the join allows */
+static int fm1_core1_alive(void)
+{
+    return !fm1_core1_fault.count && (uint32_t)(fm1_ticks() - aw_t0) < AW_TIMEOUT_TICKS;
+}
 
 static int fm1_core1_submit(fm1_core1_fn fn, void *context)
 {
@@ -85,6 +92,7 @@ static int fm1_core1_submit(fm1_core1_fn fn, void *context)
     aw.fn = fn;
     aw.context = context;
     aw.check = AW_CHECK(fn, context, request);
+    aw_t0 = fm1_ticks();
     aw_store(&aw.request, request);
     return 1;
 }
@@ -158,8 +166,8 @@ __attribute__((section(".dsp_text"), noinline, noreturn, used)) static void fm1_
     }
 }
 
-/* two small stacks (user, supervisor); the job is leaf float code with no deep calls */
-static uint32_t cpu1_stacks[1024] __attribute__((section(".cpu1_stacks"), aligned(32), used));
+/* two 4 KB stacks (user, supervisor): the pad's voices call a few levels deep */
+static uint32_t cpu1_stacks[2048] __attribute__((section(".cpu1_stacks"), aligned(32), used));
 extern void fm1_core1_start(void);
 extern uint8_t _cpu1_stacks_lo[], _cpu1_stacks_hi[];
 /* Assembly (crt0.S) names this symbol. */
@@ -211,6 +219,8 @@ static int fm1_core1_boot(void)
 
 static inline int fm1_core1_online(void) { return 0; }
 static inline int fm1_core1_submit(fm1_core1_fn fn, void *context) { (void)fn; (void)context; return 0; }
+static inline void fm1_core1_fence(void) {}
+static inline int fm1_core1_alive(void) { return 1; }
 static inline int fm1_core1_join(void) { return 1; }
 static inline void fm1_core1_check(void) {}
 static inline int fm1_core1_boot(void) { return 0; }

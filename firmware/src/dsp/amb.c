@@ -755,6 +755,15 @@ static uint32_t rnd(void)
     return rng;
 }
 static float frand(void) { return (float)(rnd() >> 8) * (1.0f / 16777216.0f); }
+/* the pad's own stream: its render may run on the other core, and the shared one would then be taken in whatever order the cores got there */
+static uint32_t prng = 0x2545F491u;
+static float pfrand(void)
+{
+    prng ^= prng << 13;
+    prng ^= prng >> 17;
+    prng ^= prng << 5;
+    return (float)(prng >> 8) * (1.0f / 16777216.0f);
+}
 static int irand(int n) { return n > 0 ? (int)((rnd() >> 8) % (uint32_t)n) : 0; }
 
 static void midi(uint32_t st, uint32_t d1, uint32_t d2)
@@ -1081,6 +1090,24 @@ static inline float svf_lp(float x, const float *c, float *s)   /* TPT SVF (Zava
 }
 
 static void midi(uint32_t st, uint32_t d1, uint32_t d2);
+/* the pad's MIDI notes are queued, and sent by the first core once the pad's render is done (MIDI out is not for the other core to call) */
+static uint8_t pq_st[16], pq_d1[16], pq_d2[16], pq_n;
+static void pad_midi(uint32_t st, uint32_t d1, uint32_t d2)
+{
+    if (pq_n < 16u) {
+        pq_st[pq_n] = (uint8_t)st;
+        pq_d1[pq_n] = (uint8_t)d1;
+        pq_d2[pq_n] = (uint8_t)d2;
+        pq_n++;
+    }
+}
+static void pad_midi_flush(void)
+{
+    uint32_t k;
+    for (k = 0; k < pq_n; k++)
+        midi(pq_st[k], pq_d1[k], pq_d2[k]);
+    pq_n = 0;
+}
 static void pad_breathe(pad_t *v, int i)        /* a new breath: its length, its strength, its note */
 {
     float a = pe_atk_s(par[P_PE_ATK]), h = pe_hold_s(par[P_PE_HOLD]), r = pe_rel_s(par[P_PE_REL]),
@@ -1089,16 +1116,16 @@ static void pad_breathe(pad_t *v, int i)        /* a new breath: its length, its
     v->fa = fm_maxf(a / secs, 0.002f);
     v->fh = h / secs;
     v->fr = fm_maxf(r / secs, 0.002f);
-    secs *= BREATH[i] * (0.85f + 0.3f * frand());
+    secs *= BREATH[i] * (0.85f + 0.3f * pfrand());
     v->rate = 32.0f / (secs * EN_SR);
-    v->peak = 0.6f + 0.4f * frand();
+    v->peak = 0.6f + 0.4f * pfrand();
     if (en_playing && v->midi_note)
-        midi(0x80, v->midi_note, 0);
+        pad_midi(0x80, v->midi_note, 0);
     v->note = v->target;
     v->voices = (uint8_t)pad_osc();
     v->midi_note = (uint8_t)v->target;
     if (en_playing && !par[P_PAD_MAN])
-        midi(0x90, v->midi_note, (uint32_t)(50.0f + 40.0f * v->peak));
+        pad_midi(0x90, v->midi_note, (uint32_t)(50.0f + 40.0f * v->peak));
 }
 
 /* a new key (piece, root, scale): the voices still singing the old one fade out in about a second and
@@ -2057,15 +2084,21 @@ static inline void reverb_tank(float x, float *ol, float *or_)
 #define RV_MAX 256
 typedef struct { int n, r0; } rv_job_t;
 static rv_job_t rv_job;
-static float rv_wl[RV_MAX], rv_wr[RV_MAX];           /* the tank's output for the chunk */
+static float rv_wl[RV_MAX] EN_POOL, rv_wr[RV_MAX] EN_POOL;           /* the tank's output for the chunk */
 static int (*c2_submit)(void (*)(void *), void *);
 static int (*c2_join)(void);
+static void (*c2_fence)(void);
+static int (*c2_alive)(void);
 uint32_t en_c2_jobs, en_c2_lost;
-void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void))
+void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void), void (*fence)(void), int (*alive)(void))
 {
     c2_submit = submit;
     c2_join = join;
+    c2_fence = fence;
+    c2_alive = alive;
 }
+static volatile uint32_t stage_done;             /* the job's first stage (the pad) is done: its outputs may be read */
+static void render_pad(uint32_t n);
 static void reverb_job(void *p)
 {
     const rv_job_t *c = (const rv_job_t *)p;
@@ -2077,6 +2110,15 @@ static void reverb_job(void *p)
         if (++r >= np)
             r = 0;
     }
+}
+/* what the other core does in a chunk: the pad's voices (the stage the first core waits for, before it mixes), then the reverb's tank */
+static void chunk_job(void *p)
+{
+    render_pad((uint32_t)((const rv_job_t *)p)->n);
+    if (c2_fence)
+        c2_fence();
+    stage_done = 1;
+    reverb_job(p);
 }
 
 static void plate_init(void)
@@ -3820,13 +3862,15 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
  * Synthi's filter below half, then tape). No chorus: a modulated delay against pure tones beats (on
  * the FM-1's speaker above all), and that read as pulsing. The width comes from the voices' places,
  * the echo's two heads and the plate. */
-static float padl[BLK], padr[BLK];
+static float padl[BLK] EN_POOL, padr[BLK] EN_POOL;
 static float plp[4];
+static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL, pad_rs[BLK] EN_POOL, pad_es[BLK] EN_POOL;   /* the pad's contribution to the mix, the reverb send and the echo send */
+static float pad_lk;                             /* the snare link, as it was when the chunk began (the pad may be rendered on the other core) */
 
 static void pad_bus(uint32_t n)
 {
     const float fc = fm_clampf(700.0f * PAD_SOUND[pad_snd()].fc * fm_exp2f(bright * 0.03f + 0.6f * arcm + 1.5f * pad_filt +
-                                                         3.0f * (float)par[P_LK_SNARE] * 0.01f * lk_snare), 200.0f, 12000.0f);
+                                                         3.0f * (float)par[P_LK_SNARE] * 0.01f * pad_lk), 200.0f, 12000.0f);
     const float c = 1.0f - fm_expf(-FM_TWO_PI * fc * (1.0f / EN_SR));
     uint32_t j;
     for (j = 0; j < n; j++) {
@@ -3837,10 +3881,10 @@ static void pad_bus(uint32_t n)
         plp[3] += c * (plp[2] - plp[3]);
         l = plp[1] * TG(TR_PAD, j);
         r = plp[3] * TG(TR_PAD, j);
-        mixl[j] += l * 0.8f;
-        mixr[j] += r * 0.8f;
-        rsend[j] += (l + r) * 0.6f;
-        esend[j] += (l + r) * 0.2f;
+        pad_ol[j] = l * 0.8f;
+        pad_or[j] = r * 0.8f;
+        pad_rs[j] = (l + r) * 0.6f;
+        pad_es[j] = (l + r) * 0.2f;
     }
     for (j = 0; j < 4; j++)
         plp[j] = fm_flush(plp[j]);
@@ -3854,7 +3898,7 @@ static void render_pad(uint32_t n)
     for (j0 = 0; j0 < n; j0++)
         padl[j0] = padr[j0] = 0.0f;
     const float g = pad_vol * 0.5f * pad_lvl * (1.0f + 0.9f * fm_maxf(brk, 0.0f)) * PAD_SOUND[pad_snd()].g *   /* the pad rises in a breakdown */
-                    (1.0f + 0.35f * (float)par[P_LK_SNARE] * 0.01f * lk_snare);                  /* and swells with the links */
+                    (1.0f + 0.35f * (float)par[P_LK_SNARE] * 0.01f * pad_lk);                    /* and swells with the links */
     uint32_t nb = (n + 31u) >> 5;
     pad_gain += (pad_gate - pad_gain) * fm_minf((float)n / ((pad_gate > 0.0f ? 2.0f : 5.0f) * EN_SR), 1.0f);
     for (i = 0; i < EN_NPAD; i++) {
@@ -4575,17 +4619,39 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         const dl_t *pd = &dl[L_PRE];
         rv_job.n = (int)n;
         rv_job.r0 = pd->i >= PRE_D ? pd->i - PRE_D : pd->i - PRE_D + pd->n;
-        rv_c2 = c2_submit && c2_submit(reverb_job, &rv_job);
+        pad_lk = lk_snare;
+        stage_done = 0;
+        rv_c2 = c2_submit && c2_submit(chunk_job, &rv_job);
         if (rv_c2)
             en_c2_jobs++;
         else
-            reverb_job(&rv_job);
+            chunk_job(&rv_job);
     }
-    render_pad(n);
     render_bass(n);
     render_acid(n);
     render_cm(n);
     render_noise(n);
+    if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
+        while (!stage_done)
+            if (c2_alive && !c2_alive()) {
+                rv_c2 = 0;
+                c2_join();                      /* retires it */
+                en_c2_lost++;
+                for (j = 0; j < n; j++)
+                    padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = rv_wl[j] = rv_wr[j] = 0.0f;
+                plate_init();
+                break;
+            }
+        if (c2_fence)
+            c2_fence();
+    }
+    for (j = 0; j < n; j++) {
+        mixl[j] += pad_ol[j];
+        mixr[j] += pad_or[j];
+        rsend[j] += pad_rs[j];
+        esend[j] += pad_es[j];
+    }
+    pad_midi_flush();
     for (j = 0; j < n; j++) {                   /* the sidechain: the kick pushes the rest down, briefly */
         float gt = 1.0f;
         if (gate == 1)                          /* the gate: the first half of each sixteenth */

@@ -26,8 +26,8 @@ SECTIONS
     _dsp_load = LOADADDR(.dsp_text);
     _guard_ram_end = _dsp_end;
     .cpu1_stacks (NOLOAD) : { . = ALIGN(32); _cpu1_stacks_lo = .; KEEP(*(.cpu1_stacks)) _cpu1_stacks_hi = .; } > RAMTEXT
-    _cpu1_ustack_top = _cpu1_stacks_lo + 2048;
-    _cpu1_sstack_top = _cpu1_stacks_lo + 4096;
+    _cpu1_ustack_top = _cpu1_stacks_lo + 4096;
+    _cpu1_sstack_top = _cpu1_stacks_lo + 8192;
     ASSERT(_cpu1_stacks_hi <= 0x01C06000, "RAM code and CPU1 stacks overflow RAMTEXT")
     .data : { . = ALIGN(4); _data_start = .; *(.data*) *(.sdata*) . = ALIGN(4); _data_end = .; } > RAM AT > XIP
     _data_load = LOADADDR(.data);

@@ -7,6 +7,7 @@
  *   thread    a real second thread runs it, concurrently with the render
  *   mixed     the second core is busy for some chunks (submit refuses): in place for those, thread for the rest
  *   lost      the thread is lost at chunk 400 (join answers 0): the sound goes on, with no NaN, on one core
+ *   lostpad   it stops answering at chunk 500, while the first core waits for the pad's stage (alive answers 0)
  * Prints "<mode> <checksum of the output>"; tests/run_tests.sh compares the first four. */
 #include <pthread.h>
 #include <stdatomic.h>
@@ -21,7 +22,7 @@ static void (*job_fn)(void *);
 static void *job_ctx;
 static atomic_uint req, done;
 static atomic_int quit;
-static int mode;                    /* 0 serial 1 deferred 2 thread 3 mixed 4 lost */
+static int mode;                    /* 0 serial 1 deferred 2 thread 3 mixed 4 lost 5 lostpad */
 static unsigned chunk, mix_state = 12345u;
 
 static void *worker(void *a)
@@ -42,6 +43,8 @@ static void *worker(void *a)
 static int submit(void (*fn)(void *), void *ctx)
 {
     chunk++;
+    if ((mode == 4 && chunk > 400u) || (mode == 5 && chunk > 500u))
+        return 0;               /* retired: in place from here */
     if (mode == 3) {
         mix_state = mix_state * 1103515245u + 12345u;
         if ((mix_state >> 16) % 3u == 0u)
@@ -57,11 +60,28 @@ static int submit(void (*fn)(void *), void *ctx)
     return 1;
 }
 
-static int join(void)
+static void fence(void) { atomic_thread_fence(memory_order_seq_cst); }
+static int alive(void)
 {
-    if (mode == 1) {
+    if (mode == 1 && atomic_load(&done) != atomic_load(&req)) {      /* deferred: the job runs when the first core waits for it */
         job_fn(job_ctx);
         atomic_store(&done, atomic_load(&req));
+    }
+    return !(mode == 5 && chunk == 500u);
+}
+
+static int join(void)
+{
+    if (mode == 5 && chunk == 500u) {
+        while (atomic_load_explicit(&done, memory_order_acquire) != atomic_load(&req))
+            ;                       /* (the stand-in thread is let finish: nothing real to hold) */
+        return 0;
+    }
+    if (mode == 1) {                /* it ran when the pad's stage was waited for (alive) */
+        if (atomic_load(&done) != atomic_load(&req)) {
+            job_fn(job_ctx);
+            atomic_store(&done, atomic_load(&req));
+        }
         return 1;
     }
     if (mode == 4 && chunk == 400u) {
@@ -77,7 +97,7 @@ int main(int argc, char **argv)
 {
     static int32_t buf[2 * 256];
     static const unsigned sizes[] = {256, 173, 40, 256, 99, 256, 256, 211};
-    const char *names[] = {"serial", "deferred", "thread", "mixed", "lost"};
+    const char *names[] = {"serial", "deferred", "thread", "mixed", "lost", "lostpad"};
     uint32_t h = 2166136261u, nan = 0;
     pthread_t th;
     unsigned b;
@@ -87,7 +107,7 @@ int main(int argc, char **argv)
     en_play(1);
     en_set(P_REVERB, 100);
     if (mode > 0) {
-        en_core2_attach(submit, join);
+        en_core2_attach(submit, join, fence, alive);
         if (mode != 1)
             pthread_create(&th, 0, worker, 0);
     }
@@ -114,7 +134,7 @@ int main(int argc, char **argv)
         printf("FAIL no job ran on the other core\n");
         return 1;
     }
-    if (mode == 4 && en_c2_lost != 1) {
+    if ((mode == 4 || mode == 5) && en_c2_lost != 1) {
         printf("FAIL lost %u times\n", (unsigned)en_c2_lost);
         return 1;
     }

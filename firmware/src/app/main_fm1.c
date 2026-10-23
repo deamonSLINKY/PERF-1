@@ -279,7 +279,7 @@ static void fm1_main(void)
     led_pos_init();
     en_init();
 #if EN_CORE2
-    en_core2_attach(fm1_core1_submit, fm1_core1_join);   /* the reverb runs on CPU1 while it is online */
+    en_core2_attach(fm1_core1_submit, fm1_core1_join, fm1_core1_fence, fm1_core1_alive);   /* the reverb runs on CPU1 while it is online */
 #endif
     project_start(plat_seed());                     /* a piece at random, a little changed */
     project_apply();
