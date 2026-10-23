@@ -1316,6 +1316,19 @@ static void seq_trick(int k, int32_t e)         /* SEL + K1: the lane as a Eucli
     char t[20];
     const int l = ui.lane;
     int n = ui.eu_n[l], r = ui.eu_r[l];
+    if (k == 3) {                               /* K4: the lane's length, 1 .. 16 steps: shorter than the bar, it runs against it */
+        const int p = P_LLEN + l;
+        knob_set(p, proj.par[p] + (int)e);
+        itoa_u((uint32_t)proj.par[p], t);
+        {
+            int j = 0;
+            while (t[j])
+                j++;
+            t[j++] = ' ', t[j++] = 'S', t[j++] = 'T', t[j++] = 'E', t[j++] = 'P', t[j++] = 'S', t[j] = 0;
+        }
+        say("LANE LENGTH", t);
+        return;
+    }
     if (k == 2) {
         const int p = P_PROB + l;
         knob_set(p, proj.par[p] + 5 * (int)e);
@@ -2180,7 +2193,7 @@ static void input(void)
     }
     for (i = 0; i < 4; i++)
         if ((e = plat_enc(EN_K1 + (int)i)) != 0) {
-            if (ui.view == V_SEQ && (btn >> B_SEL & 1u) && i < 3) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation) and the lane's probability */
+            if (ui.view == V_SEQ && (btn >> B_SEL & 1u)) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation), the lane's probability and length */
                 ui.btn_used |= 1u << B_SEL;
                 seq_trick((int)i, e);
                 ui.act_t = ui.turn_t = plat_ms();
@@ -2705,13 +2718,26 @@ static void draw_seq(void)
         }
         if (sel)
             cv_rect(1, y + 4, 2, 9, K_ACC);
+        {
+            const int ll = proj.par[P_LLEN + l];
+            if (ll < 16) {                       /* a shorter lane: its length, and where it stops */
+                char lt[5] = "L";
+                itoa_u((uint32_t)ll, lt + 1);
+                cv_text(27, y + 11, &FONT_XS, lt, K_ACC);
+                cv_rect(44 + ll * 12 - 3, y, 1, 18, K_ACC);
+            }
+        }
         for (s = 0; s < 16; s++) {
             int32_t x = 44 + s * 12;
-            int on = (int)(bits >> s & 1u), cur = en_playing && s == pos && en_pat_now == pat;
+            int on = (int)(bits >> s & 1u), cur = en_playing && s == (int)en_lane_pos[l] && en_pat_now == pat;
+            if (s >= proj.par[P_LLEN + l])        /* past the lane's end: dimmed, not played */
+                on = on ? -1 : 0;
             if (cur)
                 cv_rect(x - 1, y, 12, 18, sel ? K_LINE : K_PANEL);
-            if (on)
+            if (on > 0)
                 cv_round(x + 1, y + 3, 9, 12, 2, sel ? (cur ? K_TEXT : LANE_COL(l)) : mix(K_LINE, LANE_COL(l), 9));
+            else if (on < 0)
+                cv_round(x + 1, y + 3, 9, 12, 2, K_LINE);
             else
                 cv_rect(x + 4, y + 8, 3, 3, (s & 3) == 0 ? K_DIM : K_LINE);
         }
@@ -3795,7 +3821,7 @@ static void draw_main(void)
     if (ui.view == V_SEQ) {
         h = hash(h, ui.lane | (uint32_t)proj.par[P_PATTERN] << 16);
         for (i = 0; i < EN_NLANE; i++)
-            h = hash(h, (uint32_t)proj.par[P_PROB + i]);
+            h = hash(h, (uint32_t)proj.par[P_PROB + i] | (uint32_t)proj.par[P_LLEN + i] << 8);
         if (h == ui.sig[1])
             return;
         ui.sig[1] = h;

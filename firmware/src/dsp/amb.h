@@ -102,6 +102,7 @@ enum {
     P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X,               /* the reverb: Plate / Shimmer / Gated, its damping, its predelay, and the type's own amount (the shimmer's, the gate's hold) */
     P_PL_CHO,                                             /* the pad's ensemble chorus: three modulated delays a side, how much of them */
     P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL,           /* the master bus: compressor ratio (Off .. 10:1), threshold, make-up gain, and the limiter's ceiling */
+    P_LLEN, P_LLEN1, P_LLEN2, P_LLEN3, P_LLEN4, P_LLEN5,  /* each drum lane's length in steps (P_LLEN + lane), 16 the bar: shorter ones run against it (polymeter) */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -252,6 +253,7 @@ extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; tho
 extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
+extern volatile uint8_t en_lane_pos[EN_NLANE]; /* each lane's step (its own length: P_LLEN + lane) */
 extern volatile float en_drum_glow[EN_NDRUM];
 extern volatile uint8_t en_pat_now, en_pat_next;
 extern volatile int8_t en_dd_left;             /* drum drift: bars to the change (1: the fill bar), -1 none */

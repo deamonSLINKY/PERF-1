@@ -75,6 +75,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_RV_TYPE] = {"Type", 0, 2, 0},       [P_RV_DAMP] = {"Damping", 0, 100, 47}, [P_RV_PRE] = {"Predelay", 0, 100, 100}, [P_RV_X] = {"Amount", 0, 100, 30},
     [P_PL_CHO] = {"Chorus", 0, 100, 0},
     [P_MC_RATIO] = {"Ratio", 0, 6, 1},     [P_MC_THR] = {"Thresh", 0, 100, 60}, [P_MC_MAKE] = {"Make-up", 0, 100, 10}, [P_ML_CEIL] = {"Ceiling", 0, 100, 100},
+    [P_LLEN] = {"Length", 1, 16, 16},      [P_LLEN1] = {"Length", 1, 16, 16},   [P_LLEN2] = {"Length", 1, 16, 16},
+    [P_LLEN3] = {"Length", 1, 16, 16},     [P_LLEN4] = {"Length", 1, 16, 16},   [P_LLEN5] = {"Length", 1, 16, 16},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -781,6 +783,7 @@ volatile uint16_t en_acid_gate, en_acid_acc;
 volatile float en_acid_glow;
 volatile uint8_t en_held;
 volatile uint8_t en_drum_pos;
+volatile uint8_t en_lane_pos[EN_NLANE];         /* and each lane's own (it may be shorter than the bar) */
 volatile float en_drum_glow[EN_NDRUM];
 volatile uint8_t en_pat_now, en_pat_next;
 volatile uint32_t en_bars;
@@ -1979,7 +1982,10 @@ static void tick(void)
     drum_publish();
     lk_hat = 0;
     for (l = 0; l < EN_NDRUM; l++) {
-        int hit = (int)(en_pats[pat_now][l] >> st & 1u), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
+        const int llen = par[P_LLEN + l] < 16 && par[P_LLEN + l] >= 1 ? par[P_LLEN + l] : 16;
+        const int ls = llen < 16 ? (int)(sixteenth % (uint32_t)llen) : st;   /* a shorter lane runs against the bar: polymeter */
+        int hit = (int)(en_pats[pat_now][l] >> ls & 1u), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
+        en_lane_pos[l] = (uint8_t)ls;
         const uint64_t fxm = fx_on;
         float vel = 0.9f;
         if (sec == SEC_BREAK) {

@@ -623,6 +623,27 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* polymeter: a lane of 5 steps wraps at 5 and keeps its own count across bars (it sees 0..4, all of them, never more); a 16-step lane follows the bar */
+    {
+        int seen5 = 0, over5 = 0, follow = 0, k;
+        en_init();
+        en_set(P_LLEN + 3, 5);
+        en_play(1);
+        for (k = 0; k < 400; k++) {
+            run(0.05f);
+            if (en_lane_pos[3] < 5)
+                seen5 |= 1 << en_lane_pos[3];
+            else
+                over5++;
+            if (en_lane_pos[0] != en_drum_pos)
+                follow++;
+        }
+        CHECK(seen5 == 31 && !over5, "polymeter: the 5-step lane saw %x and %d steps beyond", seen5, over5);
+        CHECK(!follow, "polymeter: the 16-step lane left the bar %d times", follow);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* a lane's probability: the hats at 100 sound every time, at 50 about half as often, at 0 never (counted by the glow, 4 s at 128 bpm) */
     {
         int pr, blk, n[3];
