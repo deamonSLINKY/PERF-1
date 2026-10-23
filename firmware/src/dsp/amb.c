@@ -38,7 +38,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_DL_DEST] = {"Target", 0, 3, 0},
     [P_AC_CUT] = {"Cutoff", 0, 100, 35},    [P_AC_RES] = {"Reso", 0, 100, 70},     [P_AC_ENV] = {"Env mod", 0, 100, 55},
     [P_AC_DEC] = {"Decay", 0, 100, 40},     [P_AC_ACC] = {"Accent", 0, 100, 50},   [P_AC_SLIDE] = {"Slide", 0, 100, 30},
-    [P_AC_WAVE] = {"Sound", 0, EN_NSOUND - 1, 0},
+    [P_AC_WAVE] = {"Sound", 0, EN_NACID - 1, 0},
     [P_AC_DENS] = {"Density", 0, 100, 60},  [P_AC_LEN] = {"Length", 1, 16, 16},    [P_AC_RANGE] = {"Range", 1, 3, 1},
     [P_AC_MUT] = {"Mutate", 0, 100, 25},    [P_AC_OCT] = {"Acid oct", -3, 3, 0},
     [P_DRIVE] = {"Drive", 0, 100, 40},      [P_SWING] = {"Swing", 0, 100, 0},      [P_PATTERN] = {"Pattern", 0, EN_NPAT - 1, 0},
@@ -397,9 +397,10 @@ const char *const EN_PAD_SOUND[EN_NSOUND] = {"Rhodes", "Voices", "Strings", "Gla
 const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", "Reese", "Pulse", "FM", "Organ",
                                                "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright",
                                                "Wub", "Bite", "Tine", "Clang", "Gnarl", "Wide", "Power", "Air"};
-const char *const EN_ACID_SOUND[EN_NSOUND] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
+const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft",
-                                              "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital"};
+                                              "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
+                                              "Super", "CZ", "Mini"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
                                                    "909", "Electro", "DnB", "Trap"};
 
@@ -469,7 +470,7 @@ void en_param_text(int i, int v, char *b)
     case P_DL_DEST: s = DRONE_DEST_NAME[v & 3]; break;
     case P_NZ_COLOR: s = NOISE_NAME[v & 7]; break;
     case P_DE_TRIG: s = TRIG_NAME[(unsigned)v < 6u ? v : 0]; break;
-    case P_AC_WAVE: s = EN_ACID_SOUND[(unsigned)v < EN_NSOUND ? v : 0]; break;
+    case P_AC_WAVE: s = EN_ACID_SOUND[(unsigned)v < EN_NACID ? v : 0]; break;
     case P_CM_SND: s = EN_CM_SOUND[(unsigned)v < EN_NCMSND ? v : 0]; break;
     case P_CM_STYLE: s = EN_CM_STYLE[(unsigned)v < EN_NCMSTYLE ? v : 0]; break;
     case P_CM_RATE: s = EN_CM_RATE[v & 3]; break;
@@ -994,12 +995,12 @@ static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
 };
 /* the acid's: the oscillator, its drive and level */
 enum { AO_SAW, AO_SQUARE, AO_SYNC, AO_PLUCK, AO_PWM, AO_CHIP, AO_SUB, AO_TRANCE, AO_BLEEP, AO_FIFTH, AO_BELL, AO_ORGAN,
-       AO_LASER, AO_FOLD, AO_SOFT, AO_FMR };
+       AO_LASER, AO_FOLD, AO_SOFT, AO_FMR, AO_SUPER, AO_CZ, AO_MINI };
 typedef struct { uint8_t osc; float drive, g; } acid_snd_t;
-static const struct { float fr, i0, i1; uint8_t rise; } ACID_FM[EN_NSOUND] = {   /* AO_FMR: the modulator's ratio, the index (i0 + i1 * the envelope, or its opposite if rise) */
+static const struct { float fr, i0, i1; uint8_t rise; } ACID_FM[EN_NACID] = {   /* AO_FMR: the modulator's ratio, the index (i0 + i1 * the envelope, or its opposite if rise) */
     [16] = {4.0f, 0.05f, 1.3f, 0},   [17] = {1.0f, 0.25f, 0.9f, 0},  [18] = {5.4f, 0.04f, 0.8f, 0},  [19] = {1.0f, 0.4f, 2.0f, 1},
     [20] = {2.76f, 0.2f, 1.8f, 0},   [21] = {3.0f, 0.5f, 1.2f, 0},   [22] = {4.01f, 0.05f, 0.5f, 0}, [23] = {1.5f, 0.35f, 1.6f, 0}};
-static const acid_snd_t ACID_SOUND[EN_NSOUND] = {
+static const acid_snd_t ACID_SOUND[EN_NACID] = {
     {AO_SAW, 1.0f, 1.0f}, {AO_SQUARE, 1.0f, 1.0f}, {AO_SAW, 1.5f, 1.45f}, {AO_SYNC, 1.1f, 0.85f},
     {AO_PLUCK, 1.0f, 1.15f}, {AO_PWM, 1.0f, 1.0f}, {AO_CHIP, 1.2f, 0.7f}, {AO_SUB, 1.1f, 0.95f},
     {AO_TRANCE, 1.0f, 0.9f},                   /* Trance: three saws detuned, a trance arp's */
@@ -1018,6 +1019,9 @@ static const acid_snd_t ACID_SOUND[EN_NSOUND] = {
     {AO_FMR, 1.3f, 1.0f},       /* Clav: FM at 3, bitten */
     {AO_FMR, 1.0f, 1.0f},     /* Vibes: FM at 4, soft */
     {AO_FMR, 1.0f, 1.0f},      /* Digital: FM at 1.5: a DX-style bell */
+    {AO_SUPER, 1.1f, 0.7f},    /* Super: five saws spread, a trance lead's wall */
+    {AO_CZ, 1.0f, 1.0f},       /* CZ: phase distortion, the saw bending open with the envelope, a resonant sweep on top */
+    {AO_MINI, 1.2f, 0.85f},    /* Mini: a virtual analog: two saws a few cents apart and a pulse an octave down, a monosynth's bass */
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
@@ -1318,7 +1322,7 @@ static struct {
     int32_t gate_left;                          /* samples until the note's gate closes; -1 held (a slide) */
     uint8_t note, sliding;
     uint8_t play;                               /* played from the keys: the line steps on, silent */
-    float ps, p3, lph;                          /* more phases (sync, sub, the trance saws...), the PWM's LFO */
+    float ps, p3, p4, p5, lph;                  /* more phases (sync, sub, the trance saws, the supersaw's...), the PWM's LFO */
 } acid;
 static int8_t ac_off[EN_NSTEP], ac_oct[EN_NSTEP];   /* each step: scale steps above the chord's degree, octave */
 static uint16_t ac_gate, ac_accent, ac_slide;       /* bit s: step s plays; is accented; slides into the next */
@@ -4645,13 +4649,13 @@ static void render_cm(uint32_t n)
 static void render_acid(uint32_t n)
 {
     uint32_t j;
-    const acid_snd_t *AS = &ACID_SOUND[(unsigned)par[P_AC_WAVE] < EN_NSOUND ? par[P_AC_WAVE] : 0];
+    const acid_snd_t *AS = &ACID_SOUND[(unsigned)par[P_AC_WAVE] < EN_NACID ? par[P_AC_WAVE] : 0];
     const int osc = AS->osc;
     const float g = acid_vol * 0.75f * AS->g, adrv = AS->drive, res = (float)par[P_AC_RES] * 0.01f, envmod = (float)par[P_AC_ENV] * 0.06f,
                 accamt = (float)par[P_AC_ACC] * 0.01f,
                 base = (float)par[P_AC_CUT] * 0.066f, k1 = 1.45f - 1.38f * res,
                 vel = 0.75f + 0.5f * accamt * acid.acc, glide = acid.sliding ? 0.0012f : 1.0f;
-    float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, sratio = 1.0f, pw = 0.5f, lz = 1.0f;
+    float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, p4 = acid.p4, p5 = acid.p5, sratio = 1.0f, pw = 0.5f, lz = 1.0f;
     if (amp < 1e-5f && acid.amp_t <= 0.0f) {
         acid.amp = 0.0f;
         en_acid_level = 0.0f;
@@ -4738,7 +4742,7 @@ static void render_acid(uint32_t n)
             x = sine_any((0.3f + 1.2f * acid.env) * sine(ph)) * 1.1f;
             break;
         case AO_FMR: {                          /* FM at the sound's ratio: marimba, piano, kalimba, brass, gong, clav, vibes */
-            const int sn = (unsigned)par[P_AC_WAVE] < EN_NSOUND ? par[P_AC_WAVE] : 0;
+            const int sn = (unsigned)par[P_AC_WAVE] < EN_NACID ? par[P_AC_WAVE] : 0;
             const float idx = ACID_FM[sn].i0 + ACID_FM[sn].i1 * (ACID_FM[sn].rise ? 1.0f - acid.env : acid.env);
             x = sine_any(ph + idx * sine(ps)) * 1.2f;
             ps += inc * ACID_FM[sn].fr;
@@ -4746,6 +4750,40 @@ static void render_acid(uint32_t n)
                 ps -= (float)(int)ps;
             break;
         }
+        case AO_SUPER: {                        /* five saws, -24 .. +24 cents: the middle one the note */
+            x = 0.38f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0139f) + blep_saw(p3, inc * 0.9863f) +
+                         blep_saw(p4, inc * 1.0278f) + blep_saw(p5, inc * 0.9728f));
+            ps += inc * 1.0139f;
+            p3 += inc * 0.9863f;
+            p4 += inc * 1.0278f;
+            p5 += inc * 0.9728f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            if (p3 >= 1.0f)
+                p3 -= (float)(int)p3;
+            if (p4 >= 1.0f)
+                p4 -= (float)(int)p4;
+            if (p5 >= 1.0f)
+                p5 -= (float)(int)p5;
+            break;
+        }
+        case AO_CZ: {                           /* phase distortion: a cosine's phase bent into a saw's shape (the knee falls as the
+                                                 * envelope rises: a sine to a saw), a resonant peak above it, as the CZ's */
+            const float d = 0.5f - 0.46f * acid.env;
+            const float pp = ph < d ? ph * (0.5f / d) : 0.5f + (ph - d) * (0.5f / (1.0f - d));
+            const float rs = sine_any(ph * (1.0f + 5.0f * acid.env)) * (1.0f - ph);
+            x = (sine_any(pp + 0.25f) * 0.9f + 0.5f * rs) * 0.95f;
+            break;
+        }
+        case AO_MINI:                           /* two saws 7 cents apart and a pulse an octave down */
+            x = 0.55f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0041f)) + 0.6f * (p3 < 0.4f ? 1.0f : -1.0f);
+            ps += inc * 1.0041f;
+            p3 += inc * 0.5f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            if (p3 >= 1.0f)
+                p3 -= 1.0f;
+            break;
         case AO_SOFT:                           /* a triangle */
             x = (ph < 0.5f ? 4.0f * ph - 1.0f : 3.0f - 4.0f * ph) * 1.2f;
             break;
@@ -4775,6 +4813,8 @@ static void render_acid(uint32_t n)
     acid.ph = ph;
     acid.ps = ps;
     acid.p3 = p3;
+    acid.p4 = p4;
+    acid.p5 = p5;
     acid.inc = inc;
     acid.amp = amp;
     en_acid_level = lvl * (0.6f + 0.4f * acid.env);

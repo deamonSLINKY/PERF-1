@@ -290,7 +290,7 @@ int main(void)
         int k, v;
         static const int SP[3] = {P_PADTONE, P_DR_INST, P_AC_WAVE};
         for (v = 0; v < 3; v++) {
-            for (k = 0; k < EN_NSOUND; k++) {
+            for (k = 0; k < (v == 2 ? EN_NACID : EN_NSOUND); k++) {
                 en_set(SP[v], k);
                 peak = 0.0f;
                 run(3.0f);
@@ -375,7 +375,7 @@ int main(void)
             r ^= r << 13, r ^= r >> 17, r ^= r << 5;
             v = (int)(r % 7u);
             if (r & 0x100u)
-                en_set(SP[v], (int)((r >> 9) % (v < 3 ? EN_NSOUND : EN_NKIT)));
+                en_set(SP[v], (int)((r >> 9) % (v == 2 ? EN_NACID : v < 3 ? EN_NSOUND : EN_NKIT)));
             else
                 en_note((int)((r >> 9) % 3u), 53 + (int)((r >> 12) % 27u), (int)(r >> 20 & 1u));
             run(0.1f);

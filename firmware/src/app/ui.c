@@ -1483,7 +1483,8 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
     if (vc >= 0) {
         static const char *const WHO[3] = {"PAD", "DRONE", "ACID"};
         int p = SOUND_PAR[vc];
-        knob_set(p, (proj.par[p] + d + EN_NSOUND) % EN_NSOUND);
+        const int ns = vc == 2 ? EN_NACID : EN_NSOUND;
+        knob_set(p, (proj.par[p] + d + ns) % ns);
         en_param_text(p, proj.par[p], b);
         caps(a, b, sizeof a);
         say(WHO[vc], a);

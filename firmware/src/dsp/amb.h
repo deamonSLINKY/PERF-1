@@ -33,7 +33,8 @@
 #define EN_NTHEME 5                    /* the screen's colour themes (the UI's; kept with the settings) */
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
-#define EN_NSOUND 24                   /* the sounds each of pad, drone and acid can play */
+#define EN_NSOUND 24                   /* the sounds each of pad and drone can play */
+#define EN_NACID 27                    /* the acid's (three more: a supersaw, a CZ, a mini) */
 #define EN_NCMFM 22                    /* the counter-melody's six-operator FM sounds (the DX7 voices of fm6.inc): after the plain ones */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
@@ -47,7 +48,7 @@ extern const char *const EN_MODE_NAME[EN_NMODES];
 extern const uint16_t EN_MODE_POOL[EN_NMODES];
 extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_LANE_NAME[EN_NLANE];
-extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NSOUND];
+extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NACID];
 extern const char *const EN_KIT_NAME[EN_NKIT];
 extern const char *const EN_CM_SOUND[EN_NCMSND], *const EN_CM_STYLE[EN_NCMSTYLE], *const EN_CM_RATE[4];
 extern volatile float en_cm_level;             /* the counter-melody's level, for the screen */
