@@ -29,6 +29,7 @@ struct en_dbg {
     uint32_t crash_seen;                            /* the crash count already reported at a boot */
 } en_dbg __attribute__((section(".noinit")));
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
+static volatile uint32_t tel_isr_in, tel_isr_out;   /* telemetry: ticks in the timer interrupt while a render ran (it nests into it) and outside it */
 static volatile uint32_t tel_max_us;                /* telemetry: the longest render (a half block) since the last frame */
 
 static void render_block(int32_t *o)                /* ALNK0: one half, measured */
@@ -96,6 +97,7 @@ static uint8_t usb_due;
 void fm1_timer5_irq(void)
 {
     static uint32_t sub;
+    const uint32_t tel_t0 = fm1_ticks(), tel_nest = en_dbg.in_audio;
     fm1_timer5_ack();
     en_dbg.timer_irqs++;
     if (en_dbg.in_audio)
@@ -123,6 +125,10 @@ void fm1_timer5_irq(void)
     }
     if (++sub == 10u)
         sub = 0;
+    if (tel_nest)
+        tel_isr_in += fm1_ticks() - tel_t0;
+    else
+        tel_isr_out += fm1_ticks() - tel_t0;
     {
         static uint32_t last, acc;
         uint32_t now = fm1_ticks();
@@ -241,11 +247,11 @@ static void safe_main(void)
 }
 
 /* TELEMETRY. A host (tools/fm1log.py) sends F0 7D 50 46 01 F7 and every few seconds again; while it does, a status frame goes back four
- * times a second: F0 7D 50 46 (version 1) then 32 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
+ * times a second: F0 7D 50 46 (version 1) then 34 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
  * that would have to wait for the host is dropped. The words (tel_service): sequence, ms, CPU %, CPU1 %, core2 state, xruns, late,
  * the longest render since the last frame (us), the last render, nested ticks, shed level, playing, flash writes, the last write's
  * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us), the genre and the piece, then the first core's stages (render_chunk PT: clear, bass+acid, pluck+DX+snips+noise, wait for the pad,
- * merge+sidechain, drums, echoes, wait for the reverb, master; us) and the chunks they cover. */
+ * merge+sidechain, drums, echoes, wait for the reverb, master; us) and the chunks they cover, then the timer interrupt's time (nested in renders, outside). */
 static uint32_t tel_gap_us, tel_ui_us;              /* the longest since the last frame */
 static uint32_t prof_clk(void) { return fm1_ticks(); }
 static void tel_service(void)
@@ -269,8 +275,8 @@ static void tel_service(void)
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
-        uint32_t w[32], i;
-        uint8_t f[4 + 32 * 5 + 2];
+        uint32_t w[34], i;
+        uint8_t f[4 + 34 * 5 + 2];
         uint32_t n = 4;
         w[0] = seq;
         w[1] = fm1_ms;
@@ -300,10 +306,13 @@ static void tel_service(void)
         }
         w[31] = en_prof[9];
         en_prof[9] = 0;
+        w[32] = tel_isr_in / FM1_TICKS_PER_US;      /* the timer interrupt: us nested into renders, and outside them */
+        w[33] = tel_isr_out / FM1_TICKS_PER_US;
+        tel_isr_in = tel_isr_out = 0;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
         {
-            uint8_t b[32 * 4];
-            for (i = 0; i < 32u; i++)
+            uint8_t b[34 * 4];
+            for (i = 0; i < 34u; i++)
                 b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
             n += ota_pack7(b, sizeof b, f + n);
         }

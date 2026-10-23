@@ -3749,6 +3749,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
 #define LKS 8                                   /* the window's sub-blocks of 8 samples */
 static float lk_l[LK], lk_r[LK], lk_gm[LK], lk_sub[LKS];
 static float lk_cur = 1.0f, lk_sum = (float)LK, lk_rs = 1.0f, cp_env;
+static float cp_g = 1.0f, lk_subm = 1.0f;       /* the compressor's gain at the end of the last block; the minimum of lk_sub (it changes every 8 samples) */
 static uint32_t lk_i, lk_n, lk_si;
 static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, cp_kr = 0.0005f, lk_ceil = 1.0f;
 volatile float en_comp_gr, en_lim_gr, en_out_peak;
@@ -3782,64 +3783,82 @@ static void master_dyn_reset(void)              /* a new engine: nothing delayed
         lk_l[k] = lk_r[k] = 0.0f, lk_gm[k] = 1.0f;
     for (k = 0; k < LKS; k++)
         lk_sub[k] = 1.0f;
-    lk_cur = lk_rs = 1.0f;
+    lk_cur = lk_rs = lk_subm = cp_g = 1.0f;
     lk_sum = (float)LK;
     lk_i = lk_n = lk_si = 0;
     cp_env = gr_hold = pk_hold = 0.0f;
 }
 
-static inline void master_dyn(float *pl, float *pr)
+
+/* a block of the master bus. The compressor decides once a 4 samples (the loudest of them, one log and one exp for four) and its gain is
+ * ramped across them; the limiter's window minimum is kept, not rescanned. */
+static void master_dyn_block(float *pl, float *pr, uint32_t n)
 {
-    float l = *pl, r = *pr, g = 1.0f, p, gq, avg;
-    if (cp_slope > 0.0f) {                      /* the compressor */
-        const float d = fm_maxf(fm_fabsf(l), fm_fabsf(r)) + 1e-9f, lv = 6.0206f * fm_log2f(d) - cp_thr;
-        float gr = 0.0f;
-        if (lv > 3.0f)
-            gr = cp_slope * lv;
-        else if (lv > -3.0f)
-            gr = cp_slope * (lv + 3.0f) * (lv + 3.0f) * (1.0f / 12.0f);
-        cp_env = fm_flush(cp_env + (gr - cp_env) * (gr > cp_env ? cp_ka : cp_kr));
-        g = fm_db2lin(-cp_env);
-        en_comp_gr = cp_env;
-        l *= g;
-        r *= g;
-    } else {
-        cp_env = 0.0f;
-        en_comp_gr = 0.0f;
+    static const float INV[5] = {0.0f, 1.0f, 0.5f, 0.33333334f, 0.25f};
+    uint32_t j = 0;
+    while (j < n) {
+        const uint32_t m = n - j > 4u ? 4u : n - j;
+        float g1 = 1.0f, gs, g0 = cp_g;
+        uint32_t i;
+        if (cp_slope > 0.0f) {                  /* the compressor */
+            float d = 0.0f, gr = 0.0f, lv;
+            for (i = 0; i < m; i++)
+                d = fm_maxf(d, fm_maxf(fm_fabsf(pl[j + i]), fm_fabsf(pr[j + i])));
+            lv = 6.0206f * fm_log2f(d + 1e-9f) - cp_thr;
+            if (lv > 3.0f)
+                gr = cp_slope * lv;
+            else if (lv > -3.0f)
+                gr = cp_slope * (lv + 3.0f) * (lv + 3.0f) * (1.0f / 12.0f);
+            cp_env = fm_flush(cp_env + (gr - cp_env) * ((gr > cp_env ? cp_ka : cp_kr) * (float)m));
+            g1 = fm_db2lin(-cp_env);
+            en_comp_gr = cp_env;
+        } else {
+            cp_env = 0.0f;
+            en_comp_gr = 0.0f;
+        }
+        gs = (g1 - g0) * INV[m];
+        for (i = 0; i < m; i++) {
+            float l, r, p, gq, avg;
+            g0 += gs;
+            l = pl[j + i] * g0 * cp_make;
+            r = pr[j + i] * g0 * cp_make;
+            /* the limiter: the audio goes into the delay, the gain is figured for what is coming */
+            p = fm_maxf(fm_fabsf(l), fm_fabsf(r));
+            gq = p > lk_ceil ? lk_ceil / p : 1.0f;
+            lk_l[lk_i] = l;
+            lk_r[lk_i] = r;
+            lk_cur = fm_minf(lk_cur, gq);       /* the window's minimum: the sub-block under way, and the eight before */
+            avg = fm_minf(lk_cur, lk_subm);
+            lk_sum += avg - lk_gm[lk_i];        /* smoothed over the window */
+            lk_gm[lk_i] = avg;
+            if (++lk_n >= 8u) {
+                uint32_t k;
+                float mn;
+                lk_n = 0;
+                lk_sub[lk_si] = lk_cur;
+                lk_si = (lk_si + 1u) & (LKS - 1u);
+                lk_cur = 1.0f;
+                mn = lk_sub[0];
+                for (k = 1; k < LKS; k++)
+                    mn = fm_minf(mn, lk_sub[k]);
+                lk_subm = mn;
+            }
+            lk_i = (lk_i + 1u) & (LK - 1u);
+            avg = lk_sum * (1.0f / (float)LK);
+            if (avg < lk_rs)                    /* quick down, ~60 ms back up */
+                lk_rs = avg;
+            else
+                lk_rs += (avg - lk_rs) * (1.0f / (0.06f * EN_SR));
+            l = lk_l[lk_i] * lk_rs;             /* (lk_i is now the oldest: 64 samples ago) */
+            r = lk_r[lk_i] * lk_rs;
+            pl[j + i] = l;
+            pr[j + i] = r;
+            gr_hold = fm_flush(fm_maxf(gr_hold * 0.9998f, 1.0f - lk_rs));
+            pk_hold = fm_flush(fm_maxf(pk_hold * 0.9997f, fm_maxf(fm_fabsf(l), fm_fabsf(r))));
+        }
+        cp_g = g1;
+        j += m;
     }
-    l *= cp_make;
-    r *= cp_make;
-    /* the limiter: the audio goes into the delay, the gain is figured for what is coming */
-    p = fm_maxf(fm_fabsf(l), fm_fabsf(r));
-    gq = p > lk_ceil ? lk_ceil / p : 1.0f;
-    lk_l[lk_i] = l;
-    lk_r[lk_i] = r;
-    lk_cur = fm_minf(lk_cur, gq);               /* the window's minimum: the sub-block under way, and the eight before */
-    {
-        float m = lk_cur;
-        uint32_t k;
-        for (k = 0; k < LKS; k++)
-            m = fm_minf(m, lk_sub[k]);
-        avg = m;
-    }
-    lk_sum += avg - lk_gm[lk_i];                /* smoothed over the window */
-    lk_gm[lk_i] = avg;
-    if (++lk_n >= 8u) {
-        lk_n = 0;
-        lk_sub[lk_si] = lk_cur;
-        lk_si = (lk_si + 1u) & (LKS - 1u);
-        lk_cur = 1.0f;
-    }
-    lk_i = (lk_i + 1u) & (LK - 1u);
-    avg = lk_sum * (1.0f / (float)LK);
-    if (avg < lk_rs)                            /* quick down, ~60 ms back up */
-        lk_rs = avg;
-    else
-        lk_rs += (avg - lk_rs) * (1.0f / (0.06f * EN_SR));
-    *pl = lk_l[lk_i] * lk_rs;                   /* (lk_i is now the oldest: 64 samples ago) */
-    *pr = lk_r[lk_i] * lk_rs;
-    gr_hold = fm_flush(fm_maxf(gr_hold * 0.9998f, 1.0f - lk_rs));
-    pk_hold = fm_flush(fm_maxf(pk_hold * 0.9997f, fm_maxf(fm_fabsf(*pl), fm_fabsf(*pr))));
 }
 
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
@@ -5284,12 +5303,16 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         plate_init();
     }
     PT(7);                                      /* the wait for the reverb and the DX voices */
-    for (j = 0; j < n; j++) {
+    for (j = 0; j < n; j++) {                   /* the tank's output in, the performance effects */
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
-        master_dyn(&l, &r);
-        out[2 * j] = (int32_t)(fm_tanhf(l * gain) * 8300000.0f);
-        out[2 * j + 1] = (int32_t)(fm_tanhf(r * gain) * 8300000.0f);
+        mixl[j] = l;
+        mixr[j] = r;
+    }
+    master_dyn_block(mixl, mixr, n);            /* the compressor and the limiter */
+    for (j = 0; j < n; j++) {                   /* the master gain and the soft clip */
+        out[2 * j] = (int32_t)(fm_tanhf(mixl[j] * gain) * 8300000.0f);
+        out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
     }
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     en_prof[9]++;
