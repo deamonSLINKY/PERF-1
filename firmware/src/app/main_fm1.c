@@ -253,12 +253,128 @@ static void safe_main(void)
  * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us), the genre and the piece, then the first core's stages (render_chunk PT: clear, bass+acid, pluck+DX+snips+noise, wait for the pad,
  * merge+sidechain, drums, echoes, wait for the reverb, master; us) and the chunks they cover, then the timer interrupt's time (nested in renders, outside). */
 static uint32_t tel_gap_us, tel_ui_us;              /* the longest since the last frame */
+/* BENCH. On request (F0 7D 50 46 02 F7, tools/fm1log.py --bench) the chip times a handful of loops with the interrupts off (a glitch in
+ * the music, once): float multiply-add, the same from RAM, divide, int <-> float, a table's lookup from flash and from RAM, a rational
+ * soft clip, integer adds and a RAM copy; each BN turns, in ticks. Back: F0 7D 50 47 then the words (BN, ticks per us, the nine results) F7. */
+#define BN 1500u
+#define BENCH_BODY_F     float a = 1.0f, b = 0.5f;     uint32_t i;     for (i = 0; i < BN; i++) {         a = a * 0.9999f + b;         b = b * 0.9998f + a * 0.0001f;         a = a * 1.0001f - b * 0.0001f;         b = b + a * 0.00002f;     }     return a + b;
+static float bench_sink;
+static __attribute__((noinline)) float bench_f_flash(void) { BENCH_BODY_F }
+static __attribute__((section(".ram_text.bench"), noinline, used)) float bench_f_ram(void) { BENCH_BODY_F }
+static __attribute__((noinline)) float bench_div(void)
+{
+    float a = 1.0f;
+    uint32_t i;
+    for (i = 0; i < BN; i++) {
+        a = 1.0f / (a + 1.5f);
+        a = 1.0f / (a + 1.5f);
+        a = 1.0f / (a + 1.5f);
+        a = 1.0f / (a + 1.5f);
+    }
+    return a;
+}
+static __attribute__((noinline)) float bench_cvt(void)
+{
+    float a = 0.37f;
+    uint32_t i;
+    for (i = 0; i < BN; i++) {
+        a = (float)(int32_t)(a * 1000.0f) * 0.001f + 0.37f;
+        a = (float)(int32_t)(a * 1000.0f) * 0.001f + 0.21f;
+        a = (float)(int32_t)(a * 1000.0f) * 0.001f + 0.13f;
+        a = (float)(int32_t)(a * 1000.0f) * 0.001f + 0.43f;
+    }
+    return a;
+}
+static const float bench_tab_f[130] = {0.0f, 0.049f, 0.098f, 0.146f, 0.195f, 0.243f, 0.290f, 0.336f, 0.382f, 0.426f, 0.471f, 0.514f, 0.556f, 0.596f, 0.634f, 0.673f, 0.707f};
+static float bench_tab_r[130] = {0.0f, 0.049f, 0.098f, 0.146f, 0.195f, 0.243f, 0.290f, 0.336f, 0.382f, 0.426f, 0.471f, 0.514f, 0.556f, 0.596f, 0.634f, 0.673f, 0.707f};
+static __attribute__((noinline)) float bench_tab(const float *tb)
+{
+    float a = 0.0f, ph = 0.1f;
+    uint32_t i;
+    for (i = 0; i < BN; i++) {
+        float x, f;
+        int k;
+        ph += 0.0371f;
+        ph -= (float)(int32_t)ph;
+        x = ph * 64.0f;
+        k = (int)x;
+        f = x - (float)k;
+        a += tb[k] + (tb[k + 1] - tb[k]) * f;
+        a *= 0.5f;
+    }
+    return a;
+}
+static __attribute__((noinline)) float bench_sat(void)
+{
+    float a = 0.3f;
+    uint32_t i;
+    for (i = 0; i < BN; i++) {
+        float x = a * 1.7f;
+        x = x > 3.0f ? 3.0f : x < -3.0f ? -3.0f : x;
+        a = x * (27.0f + x * x) / (27.0f + 9.0f * x * x) + 0.3f;
+    }
+    return a;
+}
+static __attribute__((noinline)) uint32_t bench_int(void)
+{
+    uint32_t a = 1u, b = 7u, i;
+    for (i = 0; i < BN; i++) {
+        a = a * 3u + b;
+        b ^= a >> 3;
+        a += b;
+        b += a & 0xFFu;
+    }
+    return a ^ b;
+}
+static uint32_t bench_buf[256], bench_buf2[256];
+static __attribute__((noinline)) uint32_t bench_copy(void)
+{
+    uint32_t i, j, s = 0;
+    for (j = 0; j < BN / 64u; j++)
+        for (i = 0; i < 256u; i++) {
+            bench_buf2[i] = bench_buf[i] + s;
+            s += bench_buf2[i];
+        }
+    return s;
+}
+static void bench_run(uint32_t *w)
+{
+    uint32_t t, f = irq_save();
+#define BT(slot, call) t = fm1_ticks(); bench_sink += (float)(call); w[slot] = fm1_ticks() - t
+    BT(2, bench_f_flash());
+    BT(3, FL_FAR(bench_f_ram)());
+    BT(4, bench_div());
+    BT(5, bench_cvt());
+    BT(6, bench_tab(bench_tab_f));
+    BT(7, bench_tab(bench_tab_r));
+    BT(8, bench_sat());
+    BT(9, bench_int());
+    BT(10, bench_copy());
+#undef BT
+    irq_restore(f);
+    w[0] = BN;
+    w[1] = FM1_TICKS_PER_US;
+}
+
 static uint32_t prof_clk(void) { return fm1_ticks(); }
 static void tel_service(void)
 {
     static uint8_t on;
     static uint32_t until, next, seq;
     uint8_t r = usb.tel_req;
+    if (r == 3u) {                                  /* the bench, once */
+        uint32_t w[11], i;
+        uint8_t f[4 + 11 * 5 + 2], b[11 * 4];
+        usb.tel_req = 0;
+        bench_run(w);
+        for (i = 0; i < 11u; i++)
+            b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
+        f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x47;
+        i = 4u + ota_pack7(b, sizeof b, f + 4);
+        f[i++] = 0xF7;
+        usb_sysex_try(f, i);
+        return;
+    }
     if (r) {
         usb.tel_req = 0;
         on = r == 2u;

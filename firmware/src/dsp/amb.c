@@ -2928,7 +2928,7 @@ static float sw_m, sw_s[2][2], sw_c[4], sw_s2[2][2], sw_c2[4];
 static float tk_m, tk_c[2][4], tk_s[2][2][2], wh_m, wh_c[4], wh_s[2][2], wh_env;   /* talk (two formants a channel), wah */
 static uint32_t wh_cnt;   /* (the second: the resonant spike, for the band-pass) */
 static float rm_m, rm_ph, rm_inc, rm_wet;   /* the ring mod: its fade, phase, step and share */   /* the sweep: its fade, its two filters' states, its coefficients */
-static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
+static float rl_gain = 1.0f, tp_wd, tp_fd, tp_drive = 1.5f, tp_idrive = 1.0f / 1.5f, fl_inv = 1.0f, tp_k = 0.55f, rs_inv, rs_filt, rs_wash, rs_echo;   /* the roll's swell; the tape's; the riser's */
 static float vn_amp = 1.0f;
 static float ph_k0, ph_k1;                      /* the phaser's mix, as constants for the chunk: dry and wet shares (0.88 of them) */
 static float ph_fbk, ph_wet, fl_inc, fl_rng, fl_fbk, fl_wet, vn_g, vn_pop, vn_hiss;   /* the settings, as the render uses them */
@@ -3563,6 +3563,8 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         tp_wd = (float)fxs_v[EN_FXS_TP_WOW];                                           /* wow: 0 .. 100 samples either way (0.7 Hz) */
         tp_fd = (float)fxs_v[EN_FXS_TP_FLUT] * 0.2f;                                    /* flutter: 0 .. 20 (8 Hz) */
         tp_drive = 1.0f + (float)fxs_v[EN_FXS_TP_DRIVE] * 0.025f;                       /* saturation: 1 .. 3.5 */
+        tp_idrive = 1.0f / tp_drive;                                                    /* (a division once a chunk, not per sample) */
+        fl_inv = 1.0f / (1.0f + 0.85f * fl_wet * fl_m);
         tp_k = 1.0f - (float)fxs_v[EN_FXS_TP_DULL] * 0.009f;                            /* the top: 1 (open) .. 0.1 (dull) */
         vn_g = (float)fxs_v[EN_FXS_VN_LEVEL] * 0.0144f;   /* (the loudest ticks at 50 are near -15 dBFS, the whole near -45; at 100, 6 dB more) */
         {   /* 1 .. 128 pops a second; above 10 a second each pop is quieter, by the square root, so the level stays: Crackle is how many */
@@ -4067,7 +4069,7 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                 tp_buf[c][w] = in[c];
                 y = tp_buf[c][i0] + (tp_buf[c][i1] - tp_buf[c][i0]) * fr;
                 tp_lp[c] += tp_k * (y - tp_lp[c]);      /* a duller top */
-                y = soft_sat(tp_lp[c] * tp_drive) * (1.0f / tp_drive);   /* and saturation (a rational tanh: one division) */
+                y = soft_sat(tp_lp[c] * tp_drive) * tp_idrive;   /* and saturation (a rational tanh: one division) */
                 in[c] += (y - in[c]) * tp_m;
             }
         }
@@ -4092,7 +4094,7 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
                 fr = rd - (float)(int)rd;
                 y = fl_buf[c][i0] + (fl_buf[c][i1] - fl_buf[c][i0]) * fr;
                 fl_buf[c][w] = fm_flush(in[c] + fl_fbk * (c ? -y : y));   /* the right side's feedback inverted: wider */
-                in[c] = (in[c] + fl_wet * y * fl_m) * (1.0f / (1.0f + 0.85f * fl_wet * fl_m));
+                in[c] = (in[c] + fl_wet * y * fl_m) * fl_inv;
             }
         }
         out[0] = in[0];

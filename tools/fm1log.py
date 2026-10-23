@@ -5,6 +5,7 @@
     python tools/fm1log.py --list                 the MIDI ports
     python tools/fm1log.py                        log to telemetry/fm1_<time>.csv until Ctrl-C (and a live line)
     python tools/fm1log.py --port FM-1 --out x.csv
+    python tools/fm1log.py --bench                time float / int / table / flash-versus-RAM loops on the chip (once; a glitch in the music)
     python tools/fm1log.py --selftest             the decoder, without a device
 
 The device sends nothing until this program asks (F0 7D 50 46 01 F7, repeated every 3 s as a keep-alive);
@@ -63,12 +64,42 @@ def decode(msg):
     return dict(zip(FIELDS, struct.unpack("<%dI" % len(FIELDS), bytes(raw[:n]))))
 
 
+BENCH_NAMES = ["float mul-add x10 (flash code)", "float mul-add x10 (RAM code)", "float divide x4", "float<->int x4",
+               "table lerp (flash table)", "table lerp (RAM table)", "rational soft clip (1 divide)", "integer chain x4", "RAM copy+sum (per word)"]
+
+
+def decode_bench(msg):
+    msg = list(msg)
+    if msg[:3] != [0x7D, 0x50, 0x47]:
+        return None
+    raw = unpack7(msg[3:])
+    if len(raw) < 44:
+        return None
+    return struct.unpack("<11I", bytes(raw[:44]))
+
+
+def show_bench(w):
+    bn, tpu = w[0], w[1]
+    print("bench: %d turns each, %d ticks per us" % (bn, tpu))
+    base = w[9] / bn
+    for k, name in enumerate(BENCH_NAMES):
+        n = bn if k < 8 else (bn // 64) * 256
+        per = w[2 + k] / n
+        print("  %-34s %8.2f ticks/turn = %7.1f ns  (%.2fx the int chain)" % (name, per, per / tpu * 1000, per / base))
+    if w[3]:
+        print("  RAM code runs the float loop in %.0f%% of flash code's time" % (100.0 * w[3] / w[2]))
+    if w[7]:
+        print("  RAM table is read in %.0f%% of the flash table's time" % (100.0 * w[7] / w[6]))
+
+
 def selftest():
     w = list(range(1, len(FIELDS) + 1))
     msg = PREFIX + pack7(struct.pack("<%dI" % len(w), *w))
     d = decode(msg)
     assert d and [d[k] for k in FIELDS] == w, d
     assert decode([0x00, 0x59, 0x11]) is None
+    wb = [1500, 240] + [3000 + 100 * k for k in range(9)]
+    assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<11I", *wb))) == tuple(wb)
     print("selftest ok:", len(msg) + 2, "bytes a frame")
 
 
@@ -78,6 +109,7 @@ def main():
     ap.add_argument("--port", default="")
     ap.add_argument("--out", default="")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--bench", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         return selftest()
@@ -93,8 +125,20 @@ def main():
     if not pin or not pout:
         sys.exit("no FM-1 MIDI port found (ports: in %s, out %s). Use --port NAME." % (ins, outs))
     out = a.out or os.path.join("telemetry", time.strftime("fm1_%Y%m%d_%H%M%S.csv"))
-    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     print("in:", pin, "| out:", pout, "| csv:", out)
+    if a.bench:
+        fin, fout = mido.open_input(pin), mido.open_output(pout)
+        fout.send(mido.Message("sysex", data=PREFIX + [0x02]))
+        t_end = time.time() + 5
+        while time.time() < t_end:
+            for m in fin.iter_pending():
+                if m.type == "sysex":
+                    w = decode_bench(m.data)
+                    if w:
+                        return show_bench(w)
+            time.sleep(0.02)
+        sys.exit("no answer (is it the build with the bench?)")
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     fin, fout = mido.open_input(pin), mido.open_output(pout)
     arm = mido.Message("sysex", data=PREFIX + [0x01])
     last_arm = 0.0
