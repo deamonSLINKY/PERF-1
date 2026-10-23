@@ -723,7 +723,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -765,6 +765,8 @@ void en_gate_pat(uint32_t steps) { post(C_GATEPAT, 0, (int)(steps & 0xFFFFu)); }
 void en_fxs(int i, int v) { post(C_FXS, i, v); }
 void en_fill_next(void) { post(C_FILLQ, 0, 0); }
 void en_flx_hold(int on) { post(C_FLXH, on ? 1 : 0, 0); }
+volatile uint8_t en_shed_level;
+void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 2 ? 2 : level, 0); }
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
 volatile float en_drift_bars = 99.0f;
 
@@ -3631,7 +3633,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
 static float lk_l[LK], lk_r[LK], lk_gm[LK], lk_sub[LKS];
 static float lk_cur = 1.0f, lk_sum = (float)LK, lk_rs = 1.0f, cp_env;
 static uint32_t lk_i, lk_n, lk_si;
-static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, lk_ceil = 1.0f;
+static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, cp_kr = 0.0005f, lk_ceil = 1.0f;
 volatile float en_comp_gr, en_lim_gr, en_out_peak;
 static float gr_hold, pk_hold;
 
@@ -3652,6 +3654,7 @@ static void master_dyn_set(void)                /* once a chunk: the settings, f
     cp_thr = -30.0f + 0.3f * (float)par[P_MC_THR];                 /* -30 .. 0 dB */
     cp_make = fm_db2lin(0.12f * (float)par[P_MC_MAKE]);            /* 0 .. +12 dB */
     cp_ka = 1.0f - fm_expf(-1.0f / (0.004f * EN_SR));
+    cp_kr = 1.0f - fm_expf(-1.0f / ((0.06f + 0.04f * cp_env) * EN_SR));     /* the release: ~60 ms, up to 400 ms at 9 dB of reduction (set once a chunk) */
     lk_ceil = fm_db2lin(-12.0f + 0.12f * (float)par[P_ML_CEIL]);   /* -12 .. 0 dB */
 }
 
@@ -3673,13 +3676,12 @@ static inline void master_dyn(float *pl, float *pr)
     float l = *pl, r = *pr, g = 1.0f, p, gq, avg;
     if (cp_slope > 0.0f) {                      /* the compressor */
         const float d = fm_maxf(fm_fabsf(l), fm_fabsf(r)) + 1e-9f, lv = 6.0206f * fm_log2f(d) - cp_thr;
-        float gr = 0.0f, kr;
+        float gr = 0.0f;
         if (lv > 3.0f)
             gr = cp_slope * lv;
         else if (lv > -3.0f)
             gr = cp_slope * (lv + 3.0f) * (lv + 3.0f) * (1.0f / 12.0f);
-        kr = 1.0f - fm_expf(-1.0f / ((0.06f + 0.04f * cp_env) * EN_SR));   /* ~60 ms, up to 400 ms at 9 dB down */
-        cp_env = fm_flush(cp_env + (gr - cp_env) * (gr > cp_env ? cp_ka : kr));
+        cp_env = fm_flush(cp_env + (gr - cp_env) * (gr > cp_env ? cp_ka : cp_kr));
         g = fm_db2lin(-cp_env);
         en_comp_gr = cp_env;
         l *= g;
@@ -4106,6 +4108,7 @@ static void drain(void)
         case C_GATEPAT: gx_pat = (uint16_t)b; break;
         case C_FILLQ: fill_q = 1; break;
         case C_FLXH: flx_phys = (uint8_t)a; break;
+        case C_SHED: en_shed_level = (uint8_t)a; break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)
@@ -4163,7 +4166,7 @@ static void pad_bus(uint32_t n)
 
 static void pad_chorus(uint32_t n)
 {
-    const float a = (float)par[P_PL_CHO] * 0.01f * 0.55f;
+    const float a = en_shed_level ? 0.0f : (float)par[P_PL_CHO] * 0.01f * 0.55f;   /* (no chorus when the load is too high) */
     const float rate[3] = {0.47f / EN_SR, 0.61f / EN_SR, 0.79f / EN_SR};   /* Hz, the sweeps are slow and unequal */
     uint32_t j;
     int k;

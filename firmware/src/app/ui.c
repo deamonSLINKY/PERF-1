@@ -80,8 +80,9 @@ static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
+static const char *const GENRE_UI_NAME[10] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP"};
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
-static const char *const DJG_NAME[4] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS"};              /* the auto-DJ's groove */
+static const char *const DJG_NAME[5] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS", "SYNC"};   /* the auto-DJ's groove (SYNC: until the chord changes) */
 static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const struct {
@@ -128,10 +129,10 @@ static const struct {
     {"RING MOD", FX_RING, 0, {{"Tone", KN_PLAIN, EN_FXS_RM_FREQ, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_RM_MIX, 0, 0},
                               {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
-    {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 4},
+    {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"STAGE", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
-                      {"", KN_NONE, 0, 0, 0}}},
+    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
+                         {"Genre", KN_NAME, 11, GENRE_UI_NAME, 10}}},
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SAMPLE", 62, 0, {{"Keys", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 2}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
@@ -395,6 +396,8 @@ static struct {
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
     uint8_t glide_on, glide_busy;
+    uint32_t fx_open_t;                /* when the FX menu was opened (a second tap soon after goes to the settings) */
+    uint8_t fx_lastpg;                 /* the edit page of the effect key pressed last */
     uint8_t mix_trk;                   /* the mixer page's layer: pad, drone, acid, pluck, drums (0..4) */
     uint8_t jam_man;                   /* the voice the JAM page has taken off its line (1 + voice), 0 none */
     uint8_t jam_voice, jam_mode, jam_oct, jam_ans;   /* the JAM page: the voice (pluck, pad, acid, drone), the keys (scale, chords, harp), the octave (0..4: -2..+2), the answer */
@@ -702,7 +705,7 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
 static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
-           i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : &ui.jam_ans;
+           i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans : &proj.genre;   /* 11: the genre (proj's own) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -721,6 +724,7 @@ static void fxp_range(int k, int *lo, int *hi)
     *hi = kind == KN_PRESET ? NGXP - 1 : kind == KN_LEN ? 16 : kind == KN_TGT || kind == KN_PTGT ? NTGT - 1 :
           kind == KN_NAME ? FXP_CTL(k).n - 1 : kind == KN_RANGE ? FXP_CTL(k).n : 100;
 }
+static void genre_step(int d);
 static void fxp_set(int k, int v)
 {
     int lo, hi;
@@ -746,6 +750,11 @@ static void fxp_set(int k, int v)
         }
         break;
     default:
+        if (FXP_UI(k) && FXP_CTL(k).idx == 11) {   /* the genre: a switch of bank (the way GLO + PRESETS does it) */
+            if (v != proj.genre)
+                genre_step(v - proj.genre);
+            break;
+        }
         if (FXP_UI(k)) {
             *uiv(FXP_CTL(k).idx) = (uint8_t)v;
             break;
@@ -1371,13 +1380,18 @@ static int fx_page_of(int fx)                   /* the edit page (1 ..) of an ef
             return p + 1;
     return 0;
 }
+static int fx_key_page(int key)                 /* the edit page of the effect a key plays (in this bank), 0: none */
+{
+    const int fx = KEY_FX[fx_bank][key];
+    return fx_bank == 3 ? 20 : fx >= FX_FLEX1 && fx <= FX_FLEX15 ? 19 : fx == FX_NONE ? 0 : fx_page_of(fx);
+}
 static void shift_key(int key)                  /* a key pressed with SEL held */
 {
     char t[16];
     int i;
     if (ui.fx_menu && !ui.fx_page) {             /* in the FX menu: SEL + a key opens that effect's settings page */
         const int fx = KEY_FX[fx_bank][key];
-        int pg = fx_bank == 3 ? 20 : fx >= FX_FLEX1 && fx <= FX_FLEX15 ? 19 : fx == FX_NONE ? 0 : fx_page_of(fx);
+        int pg = fx_key_page(key);
         if (fx >= FX_FLEX1 && fx <= FX_FLEX15)
             ui.flex_last = (uint8_t)(fx - FX_FLEX1);
         if (pg) {
@@ -1544,11 +1558,20 @@ static void button(int b)
             return;
         }
     switch (b) {
-    case B_FX:
+    case B_FX: {
+        const uint32_t now = plat_ms();
+        if (ui.fx_menu && !ui.fx_page && ui.fx_open_t && now - ui.fx_open_t < 350u) {   /* FX twice quickly: the settings of the effect you used last (the first page if none) */
+            ui.fx_open_t = 0;
+            ui.fx_page = ui.fx_lastpg ? ui.fx_lastpg : 1;
+            say(FXP[ui.fx_page - 1].name, "SETTINGS");
+            break;
+        }
         ui.fx_menu = (uint8_t)!ui.fx_menu;
         ui.fx_page = 0;                          /* (from an edit page too: closed) */
+        ui.fx_open_t = ui.fx_menu ? (now ? now : 1u) : 0u;
         say("FX", ui.fx_menu ? "TAP: LATCH  HOLD: PLAY" : ui.fx_lock ? "LATCHED ONES STAY ON" : "OFF");
         break;
+    }
     case B_EDIT:
         en_next();
         say("NEXT CHORD", en_playing ? "ON THE BAR" : 0);
@@ -1631,8 +1654,19 @@ static void help_tick(uint32_t btn, uint32_t keys)
     }
     if (!btn || (btn & (btn - 1u)) || keys)
         return;
+    if (btn == 1u << B_HOME && !(ui.btn_used & btn) && now - ui.down_t[B_HOME] >= 700u && (int32_t)(ui.turn_t - ui.down_t[B_HOME]) <= 0) {   /* HOME held: the settings */
+        int p;
+        for (p = 0; p < NFXP; p++)
+            if (FXP[p].name[0] == 'S' && FXP[p].name[1] == 'E' && FXP[p].name[2] == 'T')
+                break;
+        ui.btn_used |= btn;                      /* its release now does nothing */
+        ui.fx_menu = 1;
+        ui.fx_page = (uint8_t)(p < NFXP ? p + 1 : 1);
+        say("SETTINGS", "GENRE, SAVER, LIGHTS, KEY");
+        return;
+    }
     for (i = 0; i < NB; i++)
-        if (btn == 1u << i && i != B_PLAY && i != B_SEL && i != B_FX && i != B_SAVE && i != B_SEQ &&
+        if (btn == 1u << i && i != B_HOME && i != B_PLAY && i != B_SEL && i != B_FX && i != B_SAVE && i != B_SEQ &&
             !(ui.btn_used & btn) && now - ui.down_t[i] >= HELP_HOLD && (int32_t)(ui.turn_t - ui.down_t[i]) <= 0) {
             ui.help = (uint8_t)(i + 1);
             ui.btn_used |= btn;                  /* its release now does nothing */
@@ -1933,12 +1967,15 @@ static void input(void)
             if (!bit)
                 continue;
             if (down >> i & 1u) {
+                ui.fx_open_t = 0;              /* (a key since the menu opened: FX again closes it) */
                 if (ui.fx_lock & bit) {
                     ui.fx_lock &= ~bit;        /* off at once, and not played while it's held */
                     ui.lock_keys |= 1u << i;
                 } else {
                     ui.fx_down_t[i] = plat_ms();
                     ui.fx_tap |= 1u << i;
+                    if (fx_key_page((int)i))
+                        ui.fx_lastpg = (uint8_t)fx_key_page((int)i);
                 }
             }
             if ((up >> i & 1u) && (ui.fx_tap >> i & 1u)) {
@@ -2689,6 +2726,8 @@ static int help_lines(int b, const char *l[HELP_LINES])
             while (cpu[j])
                 j++;
             cpu[j++] = ' ', cpu[j++] = ' ', cpu[j++] = 'C', cpu[j++] = plat_core2() == 1u ? '2' : '1', cpu[j] = 0;
+            if (en_shed_level)
+                cpu[j++] = 'S', cpu[j++] = (char)('0' + en_shed_level), cpu[j] = 0;
             if (plat_core2() == 1u) {
                 cpu[j++] = ' ';
                 itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), cpu + j);
@@ -2984,6 +3023,11 @@ static void draw_mix(void)
         if (plat_core2() == 1u) {                /* and how full the other core is */
             c[n++] = ' ';
             itoa_u(plat_cpu1_pct() > 99u ? 99u : plat_cpu1_pct(), c + n);
+        }
+        if (en_shed_level) {                      /* and, if the engine is easing off to keep up: S1, S2 */
+            while (c[n])
+                n++;
+            c[n++] = ' ', c[n++] = 'S', c[n++] = (char)('0' + en_shed_level), c[n] = 0;
         }
     }
     cv_text(118, 1, &FONT_XS, c, K_DIM);
@@ -3631,7 +3675,7 @@ static void draw_main(void)
         return;
     }
     if (mix_show()) {                            /* GLO held: the track mix */
-        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24 | plat_cpu1_pct() << 26),
+        h = hash(hash(hash(0x4D495821u, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 7 | (uint32_t)ui.theme << 14), plat_cpu_pct() | plat_xruns() << 8 | plat_core2() << 24 | plat_cpu1_pct() << 26 | (uint32_t)en_shed_level << 30),
                  (uint32_t)ui.scene_set | (uint32_t)ui.dj_on << 4 | (uint32_t)ui.dj_len << 27 | (uint32_t)ui.dj_piece << 7 |
                      (uint32_t)ui.dj_phase << 8 | (uint32_t)ui.dj_n << 12);
         if (h != ui.sig[1]) {
@@ -3816,7 +3860,7 @@ static void draw_knobs(void)
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
-    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1 | (uint32_t)ui.fx_page << 2);
+    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1 | (uint32_t)ui.fx_page << 2 | (uint32_t)fx_bank << 10);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -3824,7 +3868,8 @@ static void draw_knobs(void)
     {   /* the rule; at its right end, where you are: the page, then the dots */
         char t[24];
         int k;
-        int32_t xd = 237 - NDIAL * 5, xt;
+        const int ndots = ui.fx_menu ? (ui.fx_page ? NFXP - 1 : 4) : NDIAL;   /* the dots: the pages; in the FX menu the banks, in an effect's settings the edit pages */
+        int32_t xd = 237 - ndots * 5, xt;
         if (ui.view == V_SEQ) {
             char u[24] = "SEQ: ";
             caps(u + 5, EN_LANE_NAME[ui.lane], (int)sizeof u - 5);
@@ -3897,9 +3942,15 @@ static void draw_knobs(void)
                 cv_rect(xs + 4, 5, xt - 9 - xs - 4, 1, K_LINE);
         }
         cv_text(xt, -1, &FONT_XS, t, K_ACC);
-        for (k = 0; k < NDIAL; k++) {
-            int cur = k == ui.view || (ui.view == V_SEQ && k == V_DRUMS);
-            int same = group_of(k) >= 0 && group_of(k) == group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
+        for (k = 0; k < ndots; k++) {
+            int cur, same;
+            if (ui.fx_menu) {
+                cur = k == (ui.fx_page ? ui.fx_page - 1 : (int)fx_bank);
+                same = 0;
+            } else {
+                cur = k == ui.view || (ui.view == V_SEQ && k == V_DRUMS);
+                same = group_of(k) >= 0 && group_of(k) == group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
+            }
             cv_rect(xd + k * 5, 3, 3, 4, cur ? K_ACC : same ? K_DIM : K_LINE);
         }
     }
@@ -4455,6 +4506,27 @@ void ui_frame(void)
     glide_tick();
     saver_tick();
     jam_tick();
+    {   /* the load too high for long (the first core past 82%): the engine drops the chorus and holds the DX voices to four, then two; and eases back when it is calm */
+        static uint32_t over_t, calm_t;
+        const uint32_t now = plat_ms(), c = plat_cpu_pct();
+        if (!en_playing) {
+            over_t = calm_t = now;
+        } else if (c > 82u) {
+            calm_t = now;
+            if (now - over_t > 600u && en_shed_level < 2) {
+                en_shed(en_shed_level + 1);
+                over_t = now;
+            }
+        } else if (c < 68u) {
+            over_t = now;
+            if (now - calm_t > 6000u && en_shed_level > 0) {
+                en_shed(en_shed_level - 1);
+                calm_t = now;
+            }
+        } else {
+            over_t = calm_t = now;
+        }
+    }
     {   /* the JAM page plays one voice by hand: its own line stops (the engine's hand switch, not the piece's setting), and comes back when you leave */
         static const uint8_t MAN[4] = {P_CM_MAN, P_PAD_MAN, P_AC_MAN, P_DR_MAN};
         const int want = ui.view == V_JAM ? 1 + (ui.jam_voice & 3) : 0;

@@ -255,15 +255,21 @@ static void fm_note_on(int note, float vel, int32_t gate)
     const uint8_t *ed = fm_ed;
     if (fm_cur < 0)
         return;
-    for (k = 0; k < FM_NV; k++) {
-        if (!fmx[k].used) {
-            best = k;
-            steal = 0;
-            break;
-        }
-        if (fmx[k].age < oldest) {
-            oldest = fmx[k].age;
-            best = k;
+    {   /* a free voice, unless the load has capped them (shed: 4, then 2): then the oldest is taken */
+        const int cap = en_shed_level == 0 ? FM_NV : en_shed_level == 1 ? 4 : 2;
+        int used = 0;
+        for (k = 0; k < FM_NV; k++)
+            used += fmx[k].used;
+        for (k = 0; k < FM_NV; k++) {
+            if (!fmx[k].used && used < cap) {
+                best = k;
+                steal = 0;
+                break;
+            }
+            if (fmx[k].used && fmx[k].age < oldest) {
+                oldest = fmx[k].age;
+                best = k;
+            }
         }
     }
     x = &fmx[best];

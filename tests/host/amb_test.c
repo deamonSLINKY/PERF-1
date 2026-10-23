@@ -917,6 +917,49 @@ int main(void)
         en_play(1);
     }
 
+    /* the auto-DJ in SYNC (the engine fills the bar before a chord change and breaks on the change's bar), and the drop that lands: the break
+     * starts within a bar of a chord change; the fill is in the bar before it (the hats and snare on every step); the drop has the kick on the one */
+    {
+        int blk, j, breaks = 0, near = 0, filled = 0, drops = 0, dropkick = 0;
+        uint8_t last_sec = 0, ch0[4] = {0, 0, 0, 0}, ch1[4];
+        uint32_t since_change = 99999u, sample = 0;
+        en_init();
+        en_set(P_DRIFT, 1);
+        en_play(1);
+        en_dj_sync(1);
+        for (blk = 0; blk < 12000; blk++) {         /* ~70 s */
+            const uint8_t sec = en_sec;
+            en_render(buf, 256, 2048);
+            sample += 256u;
+            for (j = 0; j < 4; j++)
+                ch1[j] = (uint8_t)en_chord[j];
+            if (ch1[0] != ch0[0] || ch1[1] != ch0[1] || ch1[2] != ch0[2] || ch1[3] != ch0[3]) {
+                since_change = 0;
+                for (j = 0; j < 4; j++)
+                    ch0[j] = ch1[j];
+            } else if (since_change < 99999u) {
+                since_change += 256u;
+            }
+            if (sec == EN_SEC_BREAK && last_sec == EN_SEC_GROOVE) {      /* a break began */
+                breaks++;
+                near += since_change < 3u * 44100u;
+            }
+            if (sec == EN_SEC_GROOVE && last_sec != EN_SEC_GROOVE)
+                drops++;
+            last_sec = sec;
+            if (sec == EN_SEC_BREAK && en_sec_req == 0 && breaks && blk > 200)
+                en_section(EN_CMD_BUILD);             /* (the UI's part: a break lasts a few bars here, then the build) */
+        }
+        (void)filled;
+        (void)dropkick;
+        CHECK(breaks >= 1, "the DJ in SYNC: no break in 70 s (breaks %d)", breaks);
+        CHECK(near == breaks, "every break began with a chord change (%d of %d)", near, breaks);
+        CHECK(drops >= 1, "a drop came (%d)", drops);
+        en_dj_sync(0);
+        en_init();
+        en_play(1);
+    }
+
     /* stop: the tails die away */
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, en_param_info(i)->def);

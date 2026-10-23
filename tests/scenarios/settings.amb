@@ -1,0 +1,39 @@
+# 0.9.4: FX twice quickly opens the settings of the effect used last (the first page if none); HOME held opens SETTINGS (key change, saver, lights, genre);
+# the genre knob switches the bank. (fxpage: -1 the menu closed, 0 the keys, 1.. an effect's edit page.)
+seed 0
+wait 3000
+tap FX
+tap FX
+wait 100
+expect fxpage 1
+tap FX
+wait 100
+expect fxpage -1
+# an effect key used (key 15), the menu closed, then FX twice: that effect's page
+tap FX
+wait 100
+tapkey 15
+wait 100
+tap FX
+wait 700
+tap FX
+tap FX
+wait 100
+expect fxpage 6
+tap FX
+wait 100
+tap HOME
+wait 100
+# HOME held: SETTINGS
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+shot settings.png
+spin K4 1
+wait 300
+expect genre 1
+spin K4 -1
+wait 300
+expect genre 0

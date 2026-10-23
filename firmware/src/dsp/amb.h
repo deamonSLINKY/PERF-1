@@ -121,6 +121,8 @@ void en_init(void);
  * memory between the cores (the job's stages); alive says whether the other core still runs (0: join it, it is retired). */
 void en_core2_attach(int (*submit)(void (*fn)(void *), void *ctx), int (*join)(void), void (*fence)(void), int (*alive)(void));
 extern volatile float en_comp_gr, en_lim_gr, en_out_peak;   /* the master bus now: the compressor's and the limiter's gain reduction (dB, positive), the output's peak (0..1 of full scale) */
+void en_shed(int level);                       /* the load is too high: 0 none, 1 the DX voices to four and no chorus, 2 to two (the UI watches the CPU and says) */
+extern volatile uint8_t en_shed_level;
 void en_flx_hold(int on);                      /* a Flex Beat pad is held down (not latched): a one shot goes on, bar after bar, while it is, and ends on the bar line after it is let go */
 void en_fill_next(void);                       /* a drum fill in the next bar (the auto-DJ asks one bar ahead: the fill is the last bar before the break) */
 void en_dj_sync(int on);                       /* the auto-DJ follows the chord changes: the engine fills the bar before one and breaks on it */
