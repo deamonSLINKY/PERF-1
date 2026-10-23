@@ -9,9 +9,9 @@ wait 100
 expect fxpage 18
 spin K1 2
 spin K2 1
-wait 3500
+wait 6000
 expect keyset 2
 reboot
-wait 4000
+wait 6500
 expect keyset 2
 expect saver 1

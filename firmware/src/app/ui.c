@@ -418,6 +418,7 @@ static struct {
     uint8_t lane;                      /* the sequencer's lane (OCT- / OCT+) */
     uint8_t save_global;               /* SAVE went down on Global: the piece is stored when it comes up */
     uint8_t store_wait;                /* a store while playing: the music fading out to write it (store_tick) */
+    uint8_t store_kind;                /* and what: 0 the piece's, 1 the settings, 2 the globals (quiet_write) */
     uint32_t store_t;
     char store_msg[12];
     uint8_t factory_done;              /* SAVE held on Global: the piece went back to its factory settings */
@@ -1268,6 +1269,7 @@ static void store_now(const char *done)
     for (i = 0; done[i] && i < (int)sizeof ui.store_msg - 1; i++)
         ui.store_msg[i] = done[i];
     ui.store_msg[i] = 0;
+    ui.store_kind = 0;
     if (en_playing) {
         en_hush(1);
         ui.store_wait = 1;
@@ -1277,12 +1279,39 @@ static void store_now(const char *done)
         say(ui.store_msg, project_flush() == 0 ? 0 : "NOT WRITTEN");
     }
 }
+static void settings_save(void);
+/* an autosave while the music plays: the same fade out, write, fade in (the write stops the chip, so unfaded it is a crack and an xrun);
+ * kind 1: the effects' and performing settings; 2: the theme, Tune, MIDI out */
+static void quiet_write(int kind)
+{
+    if (!en_playing) {
+        if (kind == 1)
+            settings_save();
+        else
+            project_flush_globals();
+        return;
+    }
+    ui.store_msg[0] = 0;
+    ui.store_kind = (uint8_t)kind;
+    en_hush(1);
+    ui.store_wait = 1;
+    ui.store_t = plat_ms();
+}
 static void store_tick(void)                    /* the music faded out (or long enough): write, then back in */
 {
     if (!ui.store_wait || (!en_hushed && plat_ms() - ui.store_t < 150u))
         return;
     ui.store_wait = 0;
-    say(ui.store_msg, project_flush() == 0 ? 0 : "NOT WRITTEN");
+    if (ui.store_kind == 1) {
+        settings_save();
+    } else if (ui.store_kind == 2) {
+        project_flush_globals();
+    } else {
+        const int r = project_flush();
+        if (ui.store_msg[0])
+            say(ui.store_msg, r == 0 ? 0 : "NOT WRITTEN");
+    }
+    ui.store_kind = 0;
     en_hush(0);
 }
 
@@ -4380,17 +4409,17 @@ static void settings_load(void)
 static void autosave(void)
 {
     uint32_t now = plat_ms();
-    if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= GLOB_QUIET) {
+    if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: longer, each write is a dip) */
         ui.set_dirty = 0;
-        settings_save();                         /* the effects' and performing settings: a moment after the last change */
+        quiet_write(1);                          /* the effects' and performing settings: a moment after the last change (playing: faded) */
         return;
     }
     if (!project_pending() || ui.btn || ui.keys || ui.store_wait)
         return;
     if (!en_playing && now - ui.act_t >= KIT_QUIET)
         project_flush();                         /* stopped: all of it */
-    else if (project_pending_globals() && now - ui.act_t >= GLOB_QUIET)
-        project_flush_globals();                 /* playing: the theme, Tune, MIDI out (a moment's gap) */
+    else if (project_pending_globals() && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET))
+        quiet_write(2);                          /* playing: the theme, Tune, MIDI out (faded) */
 }
 
 /* THE BOOT CARDS. First deamonSLINKY (the maker): its mascot, a slinky with demon horns (a 23 x 20 sprite, 4 px a pixel; the Hellfire
