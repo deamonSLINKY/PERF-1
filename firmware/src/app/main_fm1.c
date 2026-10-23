@@ -241,11 +241,13 @@ static void safe_main(void)
 }
 
 /* TELEMETRY. A host (tools/fm1log.py) sends F0 7D 50 46 01 F7 and every few seconds again; while it does, a status frame goes back four
- * times a second: F0 7D 50 46 (version 1) then 22 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
+ * times a second: F0 7D 50 46 (version 1) then 32 little-endian words packed 8-to-7, F7. Nothing is sent otherwise, and a frame
  * that would have to wait for the host is dropped. The words (tel_service): sequence, ms, CPU %, CPU1 %, core2 state, xruns, late,
  * the longest render since the last frame (us), the last render, nested ticks, shed level, playing, flash writes, the last write's
- * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us), the genre and the piece. */
+ * us, crash count, renders, UI frames, the render budget (us), the longest gap between main-loop turns and the longest UI frame (us), the genre and the piece, then the first core's stages (render_chunk PT: clear, bass+acid, pluck+DX+snips+noise, wait for the pad,
+ * merge+sidechain, drums, echoes, wait for the reverb, master; us) and the chunks they cover. */
 static uint32_t tel_gap_us, tel_ui_us;              /* the longest since the last frame */
+static uint32_t prof_clk(void) { return fm1_ticks(); }
 static void tel_service(void)
 {
     static uint8_t on;
@@ -267,8 +269,8 @@ static void tel_service(void)
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
-        uint32_t w[22], i;
-        uint8_t f[4 + 22 * 5 + 2];
+        uint32_t w[32], i;
+        uint8_t f[4 + 32 * 5 + 2];
         uint32_t n = 4;
         w[0] = seq;
         w[1] = fm1_ms;
@@ -292,10 +294,16 @@ static void tel_service(void)
         w[19] = tel_ui_us;
         w[20] = (uint32_t)proj.genre;
         w[21] = (uint32_t)proj.piece;
+        for (i = 0; i < 9u; i++) {                  /* the first core's time by stage since the last frame (us), then the chunks */
+            w[22 + i] = en_prof[i] / FM1_TICKS_PER_US;
+            en_prof[i] = 0;
+        }
+        w[31] = en_prof[9];
+        en_prof[9] = 0;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
         {
-            uint8_t b[22 * 4];
-            for (i = 0; i < 22u; i++)
+            uint8_t b[32 * 4];
+            for (i = 0; i < 32u; i++)
                 b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
             n += ota_pack7(b, sizeof b, f + n);
         }
@@ -360,6 +368,7 @@ static void fm1_main(void)
     panel_init();
     led_pos_init();
     en_init();
+    en_prof_clock = prof_clk;
 #if EN_CORE2
     en_core2_attach(fm1_core1_submit, fm1_core1_join, fm1_core1_fence, fm1_core1_alive);   /* the reverb runs on CPU1 while it is online */
 #endif

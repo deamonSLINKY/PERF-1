@@ -252,6 +252,9 @@ extern volatile uint8_t en_acid_len, en_acid_pos;    /* the acid loop's length a
 extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; those accented */
 extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
+#define EN_NPROF 10                            /* the first core's stages (amb.c render_chunk PT): ticks summed since cleared, and the chunk count last */
+extern uint32_t (*en_prof_clock)(void);        /* the firmware's tick counter, for them (0: not measured) */
+extern volatile uint32_t en_prof[EN_NPROF];
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
 extern volatile uint8_t en_lane_pos[EN_NLANE]; /* each lane's step (its own length: P_LLEN + lane) */
 extern volatile float en_drum_glow[EN_NDRUM];

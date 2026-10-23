@@ -5143,9 +5143,13 @@ static void mx_end(int t, uint32_t n)
     }
 }
 
+/* the first core's time by stage, for the telemetry (the firmware sets the clock; the host leaves it off): ticks summed since last read */
+uint32_t (*en_prof_clock)(void);
+volatile uint32_t en_prof[EN_NPROF];
+#define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; pt0_ = t1_; } } while (0)
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
-    uint32_t j;
+    uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u;
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
@@ -5168,18 +5172,21 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         else
             chunk_job(&rv_job);
     }
+    PT(0);                                      /* the clear, the job's start */
     mx_begin(1, n);
     render_bass(n);
     mx_end(1, n);
     mx_begin(2, n);
     render_acid(n);
     mx_end(2, n);
+    PT(1);                                      /* bass, acid */
     mx_begin(3, n);
     render_cm(n);
     render_fm(n);                               /* the DX voices' samples from a chunk ago (the other core's), into the fm_ buffers added below */
     mx_end(3, n);
     render_dj(n);
     render_noise(n);
+    PT(2);                                      /* pluck, the DX voices' samples, snips, noise */
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
         while (!stage_done)
             if (c2_alive && !c2_alive()) {
@@ -5197,6 +5204,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (c2_fence)
             c2_fence();
     }
+    PT(3);                                      /* the wait for the pad */
     {
         float pl, pr, ps, fl, fr, fs;
         mx_gains(0, &pl, &pr, &ps);
@@ -5231,6 +5239,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     gate_g = gg;
+    PT(4);                                      /* the merge, the sidechain */
     mx_begin(4, n);
     if (KK->crush > 0.0f) {                      /* breakcore: the drums crushed (what they add, held and stepped) */
         static float hl, hr;
@@ -5257,6 +5266,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         render_drums(n);                        /* (the kick sets duck_env for the next chunk) */
     }
     mx_end(4, n);
+    PT(5);                                      /* the drums */
     duck_env = fm_flush(de);
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
         float el, er, xl, xr;
@@ -5266,12 +5276,14 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;
         dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
     }
+    PT(6);                                      /* the echoes, the reverb's input */
     if (rv_c2 && !c2_join()) {                  /* the other core was lost: this chunk has no reverb, and the tank starts over */
         en_c2_lost++;
         for (j = 0; j < n; j++)
             rv_wl[j] = rv_wr[j] = 0.0f;
         plate_init();
     }
+    PT(7);                                      /* the wait for the reverb and the DX voices */
     for (j = 0; j < n; j++) {
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
@@ -5279,6 +5291,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         out[2 * j] = (int32_t)(fm_tanhf(l * gain) * 8300000.0f);
         out[2 * j + 1] = (int32_t)(fm_tanhf(r * gain) * 8300000.0f);
     }
+    PT(8);                                      /* the master: effects, dynamics, the soft clip */
+    en_prof[9]++;
     step_t += (int32_t)n;
 }
 
