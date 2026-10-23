@@ -6,7 +6,7 @@ expect mood 50
 expect moodacid 60
 tap HOME
 wait 100
-expect view 22
+expect view 23
 turn ALGO 5
 wait 100
 expect mood 60

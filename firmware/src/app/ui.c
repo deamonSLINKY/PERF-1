@@ -38,9 +38,9 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_MASTER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Global", "Jam",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Master", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_TUNNEL, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "TUNNEL", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -181,6 +181,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
+    {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_NONE, K_NONE, K_NONE, K_NONE},              /* Jam: its knobs are the FXP table's last page (view_knob) */
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
@@ -207,6 +208,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Kick", "Snare", "Hats", "Perc"},
     {"Change", "Every", "Pool", "Mutate"},
     {"Echo", "Echo time", "Reverb", "Size"},
+    {"Ratio", "Thresh", "Make-up", "Ceiling"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Voice", "Keys", "Octave", "Answer"},
     {"Level", "Tune", "Decay", "Pattern"},
@@ -2987,7 +2989,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -2999,6 +3001,8 @@ static int scope_kind(int v)
     case V_DRONE: return SCOPE_DFILT;
     case V_ACID: return SCOPE_AFILT;
     case V_SPACE: return SCOPE_SPACE;
+    case V_MASTER: return SCOPE_MASTER;
+    case V_NOISE: return SCOPE_MIX;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
     }
@@ -3246,6 +3250,112 @@ static void draw_scope(int kind)
     uint16_t col = K_PAD;
     int32_t x;
     sc_oy = SC_Y, sc_oh = SC_H;
+    if (kind == SCOPE_MIX) {                     /* the mixer: a strip a layer, its level set and its level now, the output last */
+        static const char *const NAME[6] = {"PAD", "DRN", "ACID", "PLK", "DRUM", "OUT"};
+        static const uint8_t TRK[6] = {0x40, 0x10, 0x20, 0x80, 0x0F, 0};
+        const uint8_t lv[5] = {(uint8_t)proj.par[P_PAD], (uint8_t)proj.par[P_BASS], (uint8_t)proj.par[P_ACID], (uint8_t)proj.par[P_CM_LVL], (uint8_t)proj.par[P_PULSE]};
+        float live[6], dg = 0.0f;
+        const uint16_t C[6] = {K_PAD, K_BASS, K_ACID, KC_COLOR, RGB(255, 160, 60), K_ACC};
+        int k, d;
+        for (d = 0; d < EN_NLANE; d++)
+            dg = fm_maxf(dg, en_drum_glow[d]);
+        live[0] = en_pad_level, live[1] = en_bass_level, live[2] = en_acid_level, live[3] = en_cm_level, live[4] = dg, live[5] = en_out_peak;
+        cv_text(6, 2, &FONT_B, "MIXER", K_PAD);
+        cv_text(6 + text_w(&FONT_B, "MIXER") + 8, 6, &FONT_XS, "SET LEVEL, AND WHAT SOUNDS", K_DIM);
+        for (k = 0; k < 6; k++) {
+            const int32_t sx = 10 + k * 36, sh = SC_H - 18, top = SC_Y + 12;
+            const int muted = k < 5 && (ui.trk_m & TRK[k]) == TRK[k], solo = k < 5 && ui.trk_s & TRK[k];
+            const int32_t set = k < 5 ? (int32_t)lv[k] * sh / 100 : 0, now = (int32_t)(fm_minf(live[k], 1.0f) * (float)sh);
+            char tx[8];
+            cv_rect(sx, top, 30, sh, K_LINE);
+            cv_rect(sx + 1, top + 1, 28, sh - 2, K_BG);
+            if (k < 5) {
+                cv_rect(sx + 1, top + sh - 1 - set, 18, set, muted ? K_DIM : mix(K_BG, C[k], 5));   /* the fader: what it is set to */
+                cv_rect(sx, top + sh - 1 - set, 20, 2, muted ? K_DIM : C[k]);
+                itoa_u((uint32_t)lv[k], tx);
+                cv_text(sx + 2, SC_Y - 2, &FONT_XS, tx, muted ? K_DIM : K_TEXT);
+            }
+            if (now > 0)
+                cv_rect(sx + 21, top + sh - 1 - now, 8, now, muted ? K_DIM : C[k]);                  /* the meter: what sounds */
+            cv_text(sx + (30 - text_w(&FONT_XS, NAME[k])) / 2, top + sh + 3, &FONT_XS, NAME[k], muted ? K_DIM : solo ? K_ACC : K_TEXT);
+            if (muted)
+                cv_text(sx + 11, top + sh / 2 - 4, &FONT_XS, "M", K_TEXT);
+        }
+        return;
+    }
+    if (kind == SCOPE_MASTER) {                  /* the master bus: the compressor's curve (in, out, in dB), where the limiter stops it, and the meters */
+        const int PW = 108, PH = SC_H;
+        const float thr = -30.0f + 0.3f * (float)proj.par[P_MC_THR], make = 0.12f * (float)proj.par[P_MC_MAKE],
+                    ceil = -12.0f + 0.12f * (float)proj.par[P_ML_CEIL];
+        static const float RATIO[7] = {1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 10.0f};
+        const float slope = 1.0f - 1.0f / RATIO[proj.par[P_MC_RATIO] < 0 ? 0 : proj.par[P_MC_RATIO] > 6 ? 6 : proj.par[P_MC_RATIO]];
+        const int32_t px = SC_X, py = SC_Y;
+        int32_t bx = px + PW + 14, bw = SC_W - PW - 14, y;
+        char t[24];
+        col = KC_FILTER;
+        cv_text(6, 2, &FONT_B, "MASTER", col);
+        cv_text(6 + text_w(&FONT_B, "MASTER") + 8, 6, &FONT_XS, "COMPRESSOR, LIMITER", K_DIM);
+        cv_rect(px, py, 1, PH, K_LINE);
+        cv_rect(px, py + PH, PW, 1, K_LINE);
+        cv_rect(px + (int32_t)((thr + 36.0f) * (float)PW / 36.0f), py, 1, PH, mix(K_BG, col, 5));         /* the threshold */
+        for (x = 0; x < PW; x++) {
+            const float in = -36.0f + 36.0f * (float)x / (float)(PW - 1), lv = in - thr;
+            float gr = 0.0f, out;
+            int32_t yy;
+            if (lv > 3.0f)
+                gr = slope * lv;
+            else if (lv > -3.0f)
+                gr = slope * (lv + 3.0f) * (lv + 3.0f) * (1.0f / 12.0f);
+            out = in - gr + make;
+            if (out > ceil)
+                out = ceil;
+            yy = (int32_t)((out + 36.0f) * (float)PH / 48.0f);
+            yy = yy < 0 ? 0 : yy > PH - 2 ? PH - 2 : yy;
+            if (x % 3 == 0)                      /* unity, dotted */
+                cv_rect(px + x, py + PH - (int32_t)((in + 36.0f) * (float)PH / 48.0f), 1, 1, K_DIM);
+            cv_rect(px + x, py + PH - yy - 1, 1, 3, col);
+        }
+        y = py + PH - (int32_t)((ceil + 36.0f) * (float)PH / 48.0f);                                           /* the ceiling */
+        cv_rect(px, y, PW, 1, mix(K_BG, K_ACC, 6));
+        /* the meters, as they are now: the compressor's reduction, the limiter's, the output's peak */
+        {
+            const float gr = en_comp_gr, lg = en_lim_gr, pk = en_out_peak;
+            int32_t w;
+            cv_text(bx, py, &FONT_XS, "COMP", K_DIM);
+            w = (int32_t)(fm_minf(gr / 18.0f, 1.0f) * (float)bw);
+            cv_rect(bx, py + 14, bw, 8, K_LINE);
+            if (w > 0)
+                cv_rect(bx + bw - w, py + 14, w, 8, KC_FILTER);
+            {   /* the reduction as "-3.2 dB" ("0 dB" when none) */
+                const uint32_t g10 = (uint32_t)(gr * 10.0f + 0.5f);
+                int j = 0;
+                if (g10) {
+                    t[j++] = '-';
+                    itoa_u(g10 / 10u, t + j);
+                    while (t[j])
+                        j++;
+                    t[j++] = '.';
+                    t[j++] = (char)('0' + g10 % 10u);
+                } else {
+                    t[j++] = '0';
+                }
+                t[j++] = ' ', t[j++] = 'd', t[j++] = 'B', t[j] = 0;
+                cv_text(bx, py + 26, &FONT_XS, t, K_TEXT);
+            }
+            cv_text(bx, py + 42, &FONT_XS, "LIMIT", K_DIM);
+            w = (int32_t)(fm_minf(lg / 12.0f, 1.0f) * (float)bw);
+            cv_rect(bx, py + 56, bw, 8, K_LINE);
+            if (w > 0)
+                cv_rect(bx + bw - w, py + 56, w, 8, K_ACC);
+            cv_text(bx, py + 68, &FONT_XS, "OUT", K_DIM);
+            w = (int32_t)(fm_minf(pk, 1.0f) * (float)bw);
+            cv_rect(bx, py + 80, bw, 6, K_LINE);
+            if (w > 0)
+                cv_rect(bx, py + 80, w, 6, pk > 0.9f ? K_ACC : K_PAD);
+        }
+        cv_text(6, SC_Y + SC_H + 6, &FONT_XS, "IN ACROSS, OUT UP: KNEE, CEILING", K_DIM);
+        return;
+    }
     if (kind == SCOPE_CMEL) {                    /* the counter-melody: its decay, and the line it plays over a bar (the chord's tones, low to high) */
         static const uint8_t RATE[4] = {2, 1, 4, 3};
         const int st = proj.par[P_CM_STYLE], ri = proj.par[P_CM_RATE] & 3, n = 6;
@@ -3500,6 +3610,17 @@ static void draw_main(void)
         h = hash(h, (uint32_t)proj.par[P_CM_DEC] | (uint32_t)proj.par[P_CM_STYLE] << 8 | (uint32_t)proj.par[P_CM_RATE] << 12 | (uint32_t)proj.par[P_CM_RANGE] << 16);
         h = hash(h, (uint32_t)proj.par[P_AC_ENV] | (uint32_t)proj.par[P_ECHO] << 8 | (uint32_t)proj.par[P_SIZE] << 16 |
                         (uint32_t)proj.par[P_PL_RATE] << 24);
+        if (ui.view == V_MASTER)
+            h = hash(h, (uint32_t)(en_comp_gr * 2.0f) | (uint32_t)(en_lim_gr * 2.0f) << 8 | (uint32_t)(en_out_peak * 40.0f) << 16);
+        if (ui.view == V_NOISE) {
+            int d;
+            float dg = 0.0f;
+            for (d = 0; d < EN_NLANE; d++)
+                dg = fm_maxf(dg, en_drum_glow[d]);
+            h = hash(h, (uint32_t)(en_pad_level * 20.0f) | (uint32_t)(en_bass_level * 20.0f) << 5 | (uint32_t)(en_acid_level * 20.0f) << 10 |
+                            (uint32_t)(en_cm_level * 20.0f) << 15 | (uint32_t)(dg * 20.0f) << 20 | (uint32_t)(en_out_peak * 20.0f) << 25);
+            h = hash(h, (uint32_t)ui.trk_m | (uint32_t)ui.trk_s << 8 | (uint32_t)proj.par[P_CM_LVL] << 16);
+        }
         h = hash(h, (uint32_t)(proj.par[P_PL_DEPTH] | proj.par[P_DL_SHAPE] << 8 | proj.par[P_DL_RATE] << 12 | proj.par[P_DL_DEPTH] << 16));
         if (h != ui.sig[1]) {
             ui.sig[1] = h;

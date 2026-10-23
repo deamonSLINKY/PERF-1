@@ -474,6 +474,21 @@ void en_param_text(int i, int v, char *b)
     case P_DD_CHANGE: { static const char *const C[3] = {"Off", "Next", "Random"}; s = C[(unsigned)v < 3u ? v : 0]; break; }
     case P_DD_EVERY: { static const char *const E[6] = {"Chord", "4 bars", "8 bars", "16 bars", "32 bars", "64 bars"}; s = E[(unsigned)v < 6u ? v : 0]; break; }
     case P_MC_RATIO: { static const char *const R[7] = {"Off", "1.5:1", "2:1", "3:1", "4:1", "6:1", "10:1"}; s = R[(unsigned)v < 7u ? v : 0]; break; }
+    case P_MC_THR: case P_MC_MAKE: case P_ML_CEIL: {   /* in dB: -30 .. 0, +0 .. 12 (a decimal), -12 .. 0 */
+        const int t10 = i == P_MC_THR ? -300 + 3 * v : i == P_MC_MAKE ? 12 * v / 10 : -120 + 12 * v / 10;
+        const int neg = t10 < 0, a = neg ? -t10 : t10;
+        char *p = b;
+        *p++ = neg ? '-' : i == P_MC_MAKE ? '+' : ' ';
+        p = itoa_s(a / 10, p);
+        if (i != P_MC_THR) {
+            *p++ = '.';
+            *p++ = (char)('0' + a % 10);
+        }
+        *p++ = 'd';
+        *p++ = 'B';
+        *p = 0;
+        return;
+    }
     case P_DD_MUTATE: { static const char *const M[3] = {"Off", "Shift", "Morph"}; s = M[(unsigned)v < 3u ? v : 0]; break; }
     default: break;
     }
