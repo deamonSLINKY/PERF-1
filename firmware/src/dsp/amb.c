@@ -68,12 +68,14 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
     [P_PROB] = {"Prob", 0, 100, 100},     [P_PROB1] = {"Prob", 0, 100, 100},   [P_PROB2] = {"Prob", 0, 100, 100},
     [P_PROB3] = {"Prob", 0, 100, 100},    [P_PROB4] = {"Prob", 0, 100, 100},   [P_PROB5] = {"Prob", 0, 100, 100},
+    [P_CM_MAN] = {"Pluck hand", 0, 1, 0},
     [P_RV_TYPE] = {"Type", 0, 2, 0},       [P_RV_DAMP] = {"Damping", 0, 100, 47}, [P_RV_PRE] = {"Predelay", 0, 100, 100}, [P_RV_X] = {"Amount", 0, 100, 30},
     [P_PL_CHO] = {"Chorus", 0, 100, 0},
     [P_MC_RATIO] = {"Ratio", 0, 6, 1},     [P_MC_THR] = {"Thresh", 0, 100, 60}, [P_MC_MAKE] = {"Make-up", 0, 100, 10}, [P_ML_CEIL] = {"Ceiling", 0, 100, 100},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
+int en_par_sticky(int p) { return en_par_global(p) || (p >= P_DD_CHANGE && p <= P_DD_MUTATE); }
 
 /* the pieces' factory drum patterns: six for each piece (tools/gen_pats.py writes them) */
 #include "pats.h"
@@ -766,6 +768,7 @@ volatile uint8_t en_pad_note[EN_NPAD];
 volatile float en_pad_amp[EN_NPAD];
 
 static int16_t par[P_NPARAMS];
+int en_par_now(int p) { return (unsigned)p < (unsigned)P_NPARAMS ? par[p] : 0; }
 static int links_on(void) { return par[P_LINKS] != 0; }
 static uint32_t pool = 0xAADu;                  /* Ionian until told */
 static int nsteps, steps[12];                   /* the scale */
@@ -1731,9 +1734,12 @@ static void drum_hit(int d, float vel, int32_t wait)   /* wait: a swung sixteent
     }
 }
 
+static int32_t cm_wait, cm_pnote;                /* a pluck note that waits for the swing */
+static float cm_pvel;
+static void cm_trigger(int note, float vel);
 static int32_t drums_wait(void)                 /* samples to the next hit that waits; 0: none */
 {
-    int32_t m = 0;
+    int32_t m = cm_wait > 0 ? cm_wait : 0;
     int d;
     for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (!m || drum[d].wait < m))
@@ -1747,6 +1753,10 @@ static int32_t drums_wait(void)                 /* samples to the next hit that 
 static void drums_wait_step(int32_t k)          /* k samples went by: hits whose wait is over */
 {
     int d;
+    if (cm_wait > 0 && (cm_wait -= k) <= 0) {   /* the swung pluck note */
+        cm_wait = 0;
+        cm_trigger(cm_pnote, cm_pvel);
+    }
     for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (drum[d].wait -= k) <= 0) {
             drum[d].wait = 0;
@@ -1791,7 +1801,6 @@ static const float FM_GAIN[EN_NCMFM] = {0.59f, 0.87f, 0.73f, 0.88f, 0.87f, 1.87f
 static float fm_ol[BLK_FM] EN_POOL, fm_or[BLK_FM] EN_POOL, fm_rs[BLK_FM] EN_POOL, fm_es[BLK_FM] EN_POOL;   /* the DX voices' part of the mix and the sends */
 static struct { float ph, ps, inc, env, dm, vel; uint32_t age; } cm[2];
 static float cm_vol;
-static uint32_t cm_clock;
 static int cm_i, cm_alt;
 volatile float en_cm_level;
 
@@ -1821,16 +1830,17 @@ static void cm_play(int key)                    /* a note played by hand (the JA
     cm_trigger(note, 0.95f);
 }
 
-static void cm_step(void)                       /* a sixteenth of the counter-melody */
+static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-melody: st its place in the bar, sw the swing's delay (samples) */
 {
     static const uint8_t RATE[4] = {2, 1, 4, 3};
     const int ri = par[P_CM_RATE] < 0 ? 0 : par[P_CM_RATE] > 3 ? 3 : par[P_CM_RATE];
     int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE];
     float dens = (float)par[P_CM_DENS] * 0.01f;
     const int base = 60 + 12 * (par[P_OCT] + par[P_CM_OCT]);
-    if (cm_clock++ % (uint32_t)RATE[ri])
+    /* on the bar's grid, whatever has gone before (a stop, a new piece): every 2nd, 1st, 4th sixteenth; the dotted eighth 0 3 6 9 12 each bar */
+    if (RATE[ri] == 3 ? (st % 3 != 0 || st > 12) : st % RATE[ri])
         return;
-    if (par[P_CM_LVL] == 0 || chord_nt < 1)
+    if (par[P_CM_LVL] == 0 || par[P_CM_MAN] || chord_nt < 1)
         return;
     if (sec == SEC_BREAK)
         dens *= 0.4f;
@@ -1863,7 +1873,13 @@ static void cm_step(void)                       /* a sixteenth of the counter-me
         note -= 12;
     while (note < 36)
         note += 12;
-    cm_trigger(note, 0.7f + 0.3f * frand());
+    if (sw > 0) {                               /* the off sixteenths are late, as the drums' are */
+        cm_wait = sw;
+        cm_pnote = note;
+        cm_pvel = 0.7f + 0.3f * frand();
+    } else {
+        cm_trigger(note, 0.7f + 0.3f * frand());
+    }
 }
 
 
@@ -2019,7 +2035,7 @@ static void tick(void)
     } else {
         acid_step();
     }
-    cm_step();
+    cm_step(st, sw);
     if (st == 0 && change_pending && !en_frozen) {   /* chords move on the bar */
         change_pending = 0;
         chord_change();

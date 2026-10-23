@@ -395,6 +395,7 @@ static struct {
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
     uint8_t glide_on, glide_busy;
+    uint8_t jam_man;                   /* the voice the JAM page has taken off its line (1 + voice), 0 none */
     uint8_t jam_voice, jam_mode, jam_oct, jam_ans;   /* the JAM page: the voice (pluck, pad, acid, drone), the keys (scale, chords, harp), the octave (0..4: -2..+2), the answer */
     uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
     uint8_t ans_note[8], ans_dt[8], ans_cnt, ans_playing, ans_i;   /* the answer's memory: notes, the sixteenths between them; playing, at which */
@@ -628,12 +629,12 @@ static const struct {
     uint8_t p;
     int8_t d;                                  /* the change at 0 (minus this) and at 100 (plus this) */
 } MOOD[] = {{P_AC_DENS, 30}, {P_AC_CUT, 25}, {P_LANE_LVL(3), 25}, {P_LANE_LVL(4), 20}, {P_LANE_LVL(5), 25}, {P_BRIGHT, 20},
-            {P_CM_DENS, 25}, {P_DR_CUT, 20},  {P_DRIVE, 20},  {P_REVERB, -15},     {P_ECHO, -10},        {P_EVOLVE, 20},       {P_PULSE, 10}};
+            {P_CM_DENS, 25}, {P_CM_LVL, 20}, {P_CM_DEC, -15}, {P_DR_CUT, 20},  {P_DRIVE, 20},  {P_REVERB, -15},     {P_ECHO, -10},        {P_EVOLVE, 20},       {P_PULSE, 10}};
 #define NMOOD (int)(sizeof MOOD / sizeof MOOD[0])
 static int mood_val(int p, int v)
 {
     int i;
-    if (ui.mood == 50)
+    if (ui.mood == 50 || (p == P_CM_LVL && v == 0))   /* (a pluck set to nothing stays nothing) */
         return v;
     for (i = 0; i < NMOOD; i++)
         if (MOOD[i].p == p) {
@@ -4371,6 +4372,17 @@ void ui_frame(void)
     glide_tick();
     saver_tick();
     jam_tick();
+    {   /* the JAM page plays one voice by hand: its own line stops (the engine's hand switch, not the piece's setting), and comes back when you leave */
+        static const uint8_t MAN[4] = {P_CM_MAN, P_PAD_MAN, P_AC_MAN, P_DR_MAN};
+        const int want = ui.view == V_JAM ? 1 + (ui.jam_voice & 3) : 0;
+        if (want != ui.jam_man) {
+            if (ui.jam_man)
+                en_set(MAN[ui.jam_man - 1], proj.par[MAN[ui.jam_man - 1]]);
+            if (want)
+                en_set(MAN[want - 1], 1);
+            ui.jam_man = (uint8_t)want;
+        }
+    }
     autosave();
     if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
         runner_update();

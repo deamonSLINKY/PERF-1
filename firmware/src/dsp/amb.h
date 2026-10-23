@@ -95,6 +95,7 @@ enum {
     P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT,              /* the counter-melody (PLUCK): level, sound, density, octave */
     P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE,          /* decay, style (up, down, ..), rate (1/8, 1/16, 1/4, 3/16), range in octaves */
     P_PROB, P_PROB1, P_PROB2, P_PROB3, P_PROB4, P_PROB5,  /* each drum lane's chance a hit sounds (P_PROB + lane), 100 always: thinned from the sequencer */
+    P_CM_MAN,                                             /* the pluck off the algorithm (the JAM page plays it by hand: engine-only, the page sets it) */
     P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X,               /* the reverb: Plate / Shimmer / Gated, its damping, its predelay, and the type's own amount (the shimmer's, the gate's hold) */
     P_PL_CHO,                                             /* the pad's ensemble chorus: three modulated delays a side, how much of them */
     P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL,           /* the master bus: compressor ratio (Off .. 10:1), threshold, make-up gain, and the limiter's ceiling */
@@ -256,6 +257,8 @@ extern volatile float en_pad_amp[EN_NPAD];     /* and how loud */
 /* the pure parts, for the tests and the screen */
 uint32_t en_euclid(int k, int n, int rot);     /* Bjorklund's pattern, as a bitmask (bit 0 = step 0) */
 int en_par_global(int p);                      /* the player's, not a piece's: Tune, MIDI, Theme */
+int en_par_now(int p);                         /* the engine's own value of a parameter (what the UI has sent it: the mood's, the JAM page's hand switch) */
+int en_par_sticky(int p);                      /* kept across pieces and genres: the player's, and the drum drift's settings */
 int en_scale(uint32_t pool, int *steps);       /* the pool's pitch classes (relative), ascending; count */
 /* the chord on scale degree deg: its tones (MIDI pitch classes, absolute), 3 or 4 of them; count */
 int en_chord_tones(uint32_t pool, int root, int deg, int *pcs);

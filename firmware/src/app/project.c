@@ -58,7 +58,7 @@ static void take(int i)                      /* piece i's slot into play (its pa
     const slot_t *s = &proj.slot[i];
     int p, l;
     for (p = 0; p < P_NPARAMS; p++)
-        if (!en_par_global(p))
+        if (!en_par_sticky(p))
             proj.par[p] = s->par[p];
     proj.pool = s->pool;
     for (p = 0; p < EN_NPAT; p++)

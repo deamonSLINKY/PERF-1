@@ -594,6 +594,8 @@ static int expect(const char *what, const char *val)
         got = __builtin_popcount(en_acid_gate);
     else if (!strcmp(what, "theme"))
         got = proj.par[P_THEME];
+    else if (!strncmp(what, "enpar", 5))        /* enparN: the engine's own value (the mood's, the JAM page's hand switch) */
+        got = en_par_now(atoi(what + 5));
     else if (!strncmp(what, "par", 3))          /* parN: parameter N (amb.h P_*) */
         got = proj.par[atoi(what + 3)];
     else if (!strcmp(what, "peak_db_max") || !strcmp(what, "peak_db_min")) {
