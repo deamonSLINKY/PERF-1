@@ -4643,8 +4643,8 @@ void ui_frame(void)
     saver_tick();
     jam_tick();
     {   /* a render that ran out of time (an xrun, or the longest render of the last second reaching the deadline): the engine drops the chorus and holds the DX voices to four,
-         * then two; and eases back after eight seconds in which no render came within 12 % of it. (It went by the average CPU before: the logs showed that sat at 70 % in the
-         * heavy pieces, never calm enough to ease back, while the peaks, which are what crack, were rare.) */
+         * then two; and eases back a step after twenty seconds without one. (It went by the average CPU before, then by how close the peaks came: the logs showed both sit high in the
+         * heavy pieces, so it never eased back, while the cracks themselves were rare.) */
         static uint32_t over_t, calm_t, last_xr;
         const uint32_t now = plat_ms(), pk = plat_peak_pct(), xr = plat_xruns();
         const int xrun = xr != last_xr;
@@ -4657,15 +4657,12 @@ void ui_frame(void)
                 en_shed(en_shed_level + 1);
                 over_t = now;
             }
-        } else if (pk < 88u) {
+        } else {
             over_t = now;
-            if (now - calm_t > 8000u && en_shed_level > 0) {
+            if (now - calm_t > 20000u && en_shed_level > 0) {   /* twenty seconds without a crack: a step back (and if it cracks again, a step up: the peaks sit at 90-95 % of the time in the heavy pieces, so they cannot be the gauge) */
                 en_shed(en_shed_level - 1);
                 calm_t = now;
             }
-        } else {
-            over_t = now;
-            calm_t = now;
         }
     }
     {   /* the JAM page plays one voice by hand: its own line stops (the engine's hand switch, not the piece's setting), and comes back when you leave */
