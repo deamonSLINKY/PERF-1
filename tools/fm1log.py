@@ -77,9 +77,9 @@ def decode_bench(msg):
     if msg[:3] != [0x7D, 0x50, 0x47]:
         return None
     raw = unpack7(msg[3:])
-    if len(raw) < 44:
+    if len(raw) < 64:
         return None
-    return struct.unpack("<11I", bytes(raw[:44]))
+    return struct.unpack("<16I", bytes(raw[:64]))
 
 
 def show_bench(w):
@@ -94,6 +94,7 @@ def show_bench(w):
         print("  RAM code runs the float loop in %.0f%% of flash code's time" % (100.0 * w[3] / w[2]))
     if w[7]:
         print("  RAM table is read in %.0f%% of the flash table's time" % (100.0 * w[7] / w[6]))
+    print("  cache 0x1EEE008 %08X  0x1EEE00C %08X  0x1EEE010 %08X   PLL 0x16A00 %08X  0x10008 %08X" % tuple(w[11:16]))
 
 
 def selftest():
@@ -103,7 +104,8 @@ def selftest():
     assert d and d.pop("chorus") == 0 and d.pop("bass") == 0 and [d[k] for k in FIELDS] == w, d
     assert decode([0x00, 0x59, 0x11]) is None
     wb = [1500, 240] + [3000 + 100 * k for k in range(9)]
-    assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<11I", *wb))) == tuple(wb)
+    wb = wb + [7] * 5
+    assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<16I", *wb))) == tuple(wb)
     print("selftest ok:", len(msg) + 2, "bytes a frame")
 
 

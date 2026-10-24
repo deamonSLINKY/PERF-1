@@ -124,3 +124,6 @@ python3 tools/site/video.py [--vertical]                       # the tour; --seq
 
 `tools/publish_pages.sh` (pushing a site to a `gh-pages` branch by hand) is AMB-1's older route and
 isn't needed with the workflow.
+
+## What protects an install, and what does not
+The installer's checks (identity read from the package's own markers, the loader mark, the CRCs, the head-equal check, the identity read back after the reboot) and the firmware's safe mode (two failed boots, then USB-only, then UBOOT by SysEx or OCT- + OCT+ held for five seconds) cover a bad *app*. They do not cover a corrupt start-up sector, a bad SPL, or power lost partway through the write with no resume record: no hardware recovery (ISP pads, boot strapping, a key chord) has been demonstrated for this chip, and the interrupted-write safety is by design, not yet tested with a power cut. Keep a way to restore the stock firmware to hand, and do not use `--force` on a package that was not built by this tree. (From the reverse-engineering repo's safety notes: G:\fm1\research\re-ota-safety.md.)

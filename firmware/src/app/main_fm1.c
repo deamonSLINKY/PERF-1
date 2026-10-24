@@ -364,6 +364,7 @@ static void bench_run(uint32_t *w)
     irq_restore(f);
     w[0] = BN;
     w[1] = FM1_TICKS_PER_US;
+    fm1_probe_read(w + 11);                         /* the cache control as the boot left it (stock writes 0x1EEE008, 0x1EEE00C = 0x808080, 0x1EEE010 = 0xFFFF), the PLL, the CPU1 enable */
 }
 
 static uint32_t prof_clk(void) { return fm1_ticks(); }
@@ -373,11 +374,11 @@ static void tel_service(void)
     static uint32_t until, next, seq;
     uint8_t r = usb.tel_req;
     if (r == 3u) {                                  /* the bench, once */
-        uint32_t w[11], i;
-        uint8_t f[4 + 11 * 5 + 2], b[11 * 4];
+        uint32_t w[16], i;
+        uint8_t f[4 + 16 * 5 + 2], b[16 * 4];
         usb.tel_req = 0;
         bench_run(w);
-        for (i = 0; i < 11u; i++)
+        for (i = 0; i < 16u; i++)
             b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x47;
         i = 4u + ota_pack7(b, sizeof b, f + 4);

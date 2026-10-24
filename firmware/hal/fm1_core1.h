@@ -147,8 +147,10 @@ __attribute__((section(".dsp_text"), noinline, noreturn, used)) static void fm1_
     aw_store(&aw.ready, 1u);
     for (;;) {
         uint32_t request = aw_load(&aw.request);
-        if (request == done)
+        if (request == done) {                   /* nothing yet: a few cycles of rest between looks (a flat-out poll, a memory barrier each time, may take the bus from the first core) */
+            __asm__ volatile("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop");
             continue;
+        }
         if (request == done + 1u) {
             fm1_core1_fn fn = aw.fn;
             void *context = aw.context;
