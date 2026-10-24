@@ -447,3 +447,6 @@ static inline float fm_next(void)                /* one sample, clipped as the D
     y = fm_blk[fm_pos++];
     return y < -16.0f ? -16.0f : y > 16.0f ? 16.0f : y;
 }
+
+/* tests: MARK I on the float buses (1) or the integer ones (0): the output must be the same bits */
+void en_fm_float_path(int v) { fm6_float_path = v; }

@@ -288,6 +288,7 @@ enum { FM6_P_ADD = 4, FM6_P_FB = 0x40, FM6_P_RUN = 0x80 };   /* plan: bits 0-1 o
 
 /* ------------------------------------------------------ the operators --- */
 static float fm6_bus[2][FM6_N] EN_POOL, fm6_sum[FM6_N] EN_POOL;
+static int fm6_float_path;                       /* tests: 1 runs MARK I on the float buses (the integer ones must give the same bits) */
 
 /* MARK I: a sine from the log-sine and exponent tables (mkiSin); env: attenuation, 1024 an octave.
  * As in Dexed the sum is 16 bits, the sign its top bit (a gain ramp that overshoots wraps it) */
@@ -410,6 +411,102 @@ static void fm6_op_loop(fm6_voice_t *s, float *out, uint32_t n)
     s->fb[1] = y;
 }
 
+/* MARK I on integer buses. The float buses carried y / 2^24 and the next operator turned that back into a phase offset (y exactly: its low 13 bits are zero, so
+ * the float holds it whole), then the output went to float again: five int <-> float conversions per operator and sample, about 10 ns each here. The bus is the
+ * integer y itself now, the phase offset is y (the counter wraps it), the gain ramp is an integer (its steps are whole numbers), and the voice's sum is converted
+ * once per sample at the end. Bit for bit the same output (a test compares it with the float path). */
+static int32_t fm6_ibus[2][FM6_N] EN_POOL, fm6_isum[FM6_N] EN_POOL;
+#define FM6_LOOP_I(Y)                                                                              \
+    do {                                                                                           \
+        if (add)                                                                                   \
+            for (i = 0; i < n; i++) {                                                              \
+                g += dg;                                                                           \
+                out[i] += (Y);                                                                     \
+                ph += fq;                                                                          \
+            }                                                                                      \
+        else                                                                                       \
+            for (i = 0; i < n; i++) {                                                              \
+                g += dg;                                                                           \
+                out[i] = (Y);                                                                      \
+                ph += fq;                                                                          \
+            }                                                                                      \
+    } while (0)
+static void fm6_op_i(fm6_voice_t *s, uint32_t k, int32_t *out, const int32_t *in, int add, uint32_t n)
+{
+    uint32_t ph = s->ph[k], i, fq = (uint32_t)s->fq[k];
+    int32_t g = (int32_t)s->g[k], dg = (int32_t)s->dg[k];
+    if (in)
+        FM6_LOOP_I(fm6_mki((int32_t)((ph + (uint32_t)in[i]) & 0xFFFFFFu), g));
+    else
+        FM6_LOOP_I(fm6_mki((int32_t)(ph & 0xFFFFFFu), g));
+    s->ph[k] = ph;
+    s->g[k] = (float)g;
+}
+/* the feedback's offset: the two last outputs added and scaled down by 2^sh, truncated toward zero (as the float's cast did) */
+static inline __attribute__((always_inline)) int32_t fm6_fbi(int32_t a, uint32_t sh) { return (a + ((a >> 31) & (int32_t)((1u << sh) - 1u))) >> sh; }
+static void fm6_op_fb_i(fm6_voice_t *s, uint32_t k, int32_t *out, int add, uint32_t n)
+{
+    uint32_t ph = s->ph[k], i, fq = (uint32_t)s->fq[k], sh = s->fbs + 1u;
+    int32_t g = (int32_t)s->g[k], dg = (int32_t)s->dg[k], y0 = (int32_t)(s->fb[0] * 16777216.0f), y = (int32_t)(s->fb[1] * 16777216.0f);
+    for (i = 0; i < n; i++) {
+        const int32_t m = fm6_fbi(y0 + y, sh);
+        g += dg;
+        y0 = y;
+        y = fm6_mki((int32_t)((ph + (uint32_t)m) & 0xFFFFFFu), g);
+        if (add)
+            out[i] += y;
+        else
+            out[i] = y;
+        ph += fq;
+    }
+    s->ph[k] = ph;
+    s->g[k] = (float)g;
+    s->fb[0] = (float)y0 * (1.0f / 16777216.0f);
+    s->fb[1] = (float)y * (1.0f / 16777216.0f);
+}
+static void fm6_op_loop_i(fm6_voice_t *s, int32_t *out, uint32_t n)
+{
+    uint32_t i, j, nl = s->loop, sh = s->fbs + 1u;
+    int32_t y0 = (int32_t)(s->fb[0] * 16777216.0f), y = (int32_t)(s->fb[1] * 16777216.0f);
+    int32_t g0 = (int32_t)s->g[0];
+    const int32_t dg0 = (int32_t)s->dg[0];
+    for (i = 0; i < n; i++) {
+        const int32_t m = fm6_fbi(y0 + y, sh);
+        g0 += dg0;
+        y0 = y;
+        y = fm6_mki((int32_t)((s->ph[0] + (uint32_t)m) & 0xFFFFFFu), g0);
+        s->ph[0] += (uint32_t)s->fq[0];
+        for (j = 1; j < nl; j++) {
+            y = fm6_mki((int32_t)((s->ph[j] + (uint32_t)y) & 0xFFFFFFu), (int32_t)s->g[j]);
+            s->ph[j] += (uint32_t)s->fq[j];
+        }
+        out[i] = y;
+    }
+    s->g[0] = (float)g0;
+    s->fb[0] = (float)y0 * (1.0f / 16777216.0f);
+    s->fb[1] = (float)y * (1.0f / 16777216.0f);
+}
+static void fm6_run_mki(fm6_voice_t *s, uint32_t n, float *sum)
+{
+    uint32_t k;
+    for (k = 0; k < n; k++)
+        fm6_isum[k] = 0;
+    for (k = 0; k < 6u; k++) {
+        uint32_t pl = s->plan[k], o = pl & 3u, in = (pl >> 4) & 3u;
+        int32_t *out = o ? fm6_ibus[o - 1u] : fm6_isum;
+        if (!(pl & FM6_P_RUN))
+            continue;
+        if (!k && s->loop)
+            fm6_op_loop_i(s, out, n);
+        else if (pl & FM6_P_FB)
+            fm6_op_fb_i(s, k, out, pl & FM6_P_ADD, n);
+        else
+            fm6_op_i(s, k, out, in ? fm6_ibus[in - 1u] : 0, pl & FM6_P_ADD, n);
+    }
+    for (k = 0; k < n; k++)
+        sum[k] = (float)fm6_isum[k] * (1.0f / 16777216.0f);
+}
+
 /* the block's routing (FmCore / EngineMkI / EngineOpl render): which operators sound, into what,
  * from what, their gain ramps; operators below the threshold only keep time */
 static inline __attribute__((always_inline)) void fm6_plan(fm6_voice_t *s, const int32_t *lv, uint32_t alg, uint32_t eng, uint32_t fbshift)
@@ -496,6 +593,10 @@ static void fm6_run(fm6_voice_t *s, uint32_t n)
     uint32_t k, eng = s->eng;
 #if !MELODEE_DUAL_CORE
     float (*bus)[CTL] = fm6_bus, *sum = fm6_sum;
+    if (eng == FM6_MARK1 && !fm6_float_path) {   /* the default engine: integer buses */
+        fm6_run_mki(s, n, sum);
+        return;
+    }
 #endif
     for (k = 0; k < n; k++)
         sum[k] = 0;

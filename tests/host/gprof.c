@@ -18,6 +18,8 @@ int main(int argc, char **argv)
     en_piece_pats_g(g, piece, pats);
     if (argc > 3)
         par[P_CM_SND] = (int16_t)atoi(argv[3]);
+    if (argc > 4)
+        par[P_RV_TYPE] = (int16_t)atoi(argv[4]);
     for (p = 0; p < P_NPARAMS; p++)
         en_set(p, par[p]);
     en_pool(pool);

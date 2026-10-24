@@ -35,6 +35,8 @@ run core2 sh -c "$CC -O2 -ffp-contract=off -std=c11 -Wall -Wextra -DEN_HOST -Ifi
     [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 2 - 0 2 | cut -d' ' -f2)\" ] && \
     [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 3 - 0 2 | cut -d' ' -f2)\" ] && \
     [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 1 - 0 2 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 0 - 0 -1 1 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 - 1 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 0 - 1 -1 1 | cut -d' ' -f2)\" ] && \
     [ \"\${s#* }\" = \"\${d#* }\" ] && [ \"\${s#* }\" = \"\${t#* }\" ] && [ \"\${s#* }\" = \"\${m#* }\" ] && echo \$s \$d \$t \$m"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)
