@@ -236,6 +236,7 @@ static const char *const LANE_SHORT[EN_NLANE] = {"KICK", "SNARE", "CLAP", "HAT",
  * vinyl; one spare. The second, the beat effects: the scatter, the brake, the spin-back, half time (and the mutes
  * again). The other tracks' mutes and every solo are on GLO held (MIXK). */
 #define FX_NONE 63                     /* a spare key: no effect (the engine's bit 63 is never used) */
+#define FILL_KEY 25                    /* F#5 in the first bank: a drum fill in the next bar */
 static uint8_t fx_bank;                /* 0 .. 2: the effects, the beat effects, Flex Beat */
 static const uint8_t KEY_FX[4][NKEYS] = {
     {FX_SWEEP, FX_GATE16, FX_RING, FX_GATE8, FX_FREEZE, FX_GATEX, FX_RVSWELL,          /* F3 F#3 G3 G#3 A3 A#3 B3 */
@@ -1961,13 +1962,22 @@ static void input(void)
             if (i == B_SEQ)
                 ui.seq_held = 0;
 #ifndef EN_WEB
-            if (i == B_GLO && (btn >> B_SEL & 1u)) {   /* shift: remote, the panel plays the browser */
-                rm_enter();
-                return;
+            if (i == B_GLO && (btn >> B_SEL & 1u)) {   /* shift: remote, the panel plays the browser (stopped only: it stops the music) */
+                if (en_playing) {
+                    ui.btn_used |= m | 1u << B_SEL;
+                    say("REMOTE", "STOP FIRST");
+                } else {
+                    rm_enter();
+                    return;
+                }
             }
 #endif
-            if (i == B_EDIT && (btn >> B_SEL & 1u)) {   /* shift: the secret */
+            if (i == B_EDIT && (btn >> B_SEL & 1u) && en_playing) {   /* the secret, stopped only (it takes the music over) */
                 ui.btn_used |= m | 1u << B_SEL;
+                say("STOP FIRST", 0);
+            } else if (i == B_EDIT && (btn >> B_SEL & 1u)) {   /* shift: the secret (it starts the music: it plays to the beat) */
+                ui.btn_used |= m | 1u << B_SEL;
+                en_play(1);
                 ui.btn = btn;
                 ui.keys = keys;
                 runner_start();
@@ -2055,6 +2065,12 @@ static void input(void)
         const uint32_t down = ch & keys & ~ui.shift_keys, up = ch & ~keys;
         for (i = 0; i < NKEYS; i++) {
             const uint64_t bit = fxbit((int)i);
+            if (fx_bank == 0 && i == FILL_KEY && (down >> i & 1u)) {   /* F#5: a drum fill in the next bar */
+                ui.fx_open_t = 0;
+                en_fill_next();
+                say("FILL", "NEXT BAR");
+                continue;
+            }
             if (!bit)
                 continue;
             if (down >> i & 1u) {
@@ -2894,6 +2910,16 @@ static void draw_fx(void)
                 cv_rect(x - 1, y + 1, 2, 10, KC_MOVE);
             cv_text(x + 3, y, &FONT_XS, t, held ? K_BG : black ? K_DIM : K_TEXT);
             cv_text(x + 27, y, &FONT_XS, lb, held ? K_BG : KC_MOVE);
+            continue;
+        }
+        if (fx_bank == 0 && k == FILL_KEY) {     /* F#5: the fill in the next bar (a tap, not an effect) */
+            const int held = (int)(ui.keys >> k & 1u);
+            if (held)
+                cv_round(x - 1, y - 1, 77, 14, 2, KC_MOVE);
+            else
+                cv_rect(x - 1, y + 1, 2, 10, KC_MOVE);
+            cv_text(x + 3, y, &FONT_XS, t, held ? K_BG : K_DIM);
+            cv_text(x + 27, y, &FONT_XS, "FILL>", held ? K_BG : KC_MOVE);
             continue;
         }
         if (KEY_FX[fx_bank][k] == FX_NONE) {

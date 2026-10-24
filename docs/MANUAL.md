@@ -602,7 +602,7 @@ The 27 keys run F3 to G5; on the screen they fall down three columns of nine.
 | D4 | Wah: an auto-wah that follows the loudness | D#5 | Vinyl: crackle, hiss and pops (the bed of noise) |
 | D#4 | Flanger | E5 | Fill: a drum fill |
 | E4 | Reverse | F5 | Low-pass, closing in |
-| F4 | Tape stop | F#5 | (spare) |
+| F4 | Tape stop | F#5 | FILL>: a drum fill in the next bar (a tap) |
 | | | G5 | High-pass |
 
 The drums' mutes here are momentary like any held key; the other tracks' mutes and every solo are on the GLO layer (section 10).
@@ -699,7 +699,7 @@ share this page. The settings, the gate's pattern and targets are kept across po
 - **Next chord: EDIT.** Moves on at the next bar.
 - **The scale: the keys.** Each adds or removes its note; the root stays. ALGORITHM picks a mode.
 - **Patterns.** Drums page, knob d, or SEL + white keys 1-6. A change waits for the bar, so turning past patterns plays none of them.
-- **Drum drift: the patterns change by themselves** (SEQ four times). **Change** moves on to the next pattern, or a random one from 1 to the **Pool**, **Every** so many bars, or with each chord change. The bar before a change ends in a fill, the snare and hats rolling in. **Mutate** rewrites a little at the same moments: Shift moves a hit or two a step, Morph also adds or takes one. The kick and clap stay as written, so the floor holds, and what changes stays in the pattern (store the piece to keep it). Mutate works with Change off too, wearing one pattern in slowly. Off by default. The four settings are yours: they stay when you change piece or genre.
+- **Drum drift: the patterns change by themselves** (SEQ four times). **Change** moves on to the next pattern, or a random one from 1 to the **Pool**, **Every** so many bars, or with each chord change. The bar before a change ends in a fill, the snare and hats rolling in. **Mutate** rewrites a little at the same moments: Shift moves a hit or two a step, Morph also adds or takes one. The kick and clap stay as written, and a snare on a beat never moves, so the floor and the backbeat hold, and what changes stays in the pattern (store the piece to keep it). Mutate works with Change off too, wearing one pattern in slowly. Off by default. The four settings are yours: they stay when you change piece or genre.
 
 ![Drum drift](img/perf-screen-drum-drift.png)
 
@@ -848,8 +848,8 @@ Hold **SEL** and:
 | ENV | On a voice's page: that voice (pad, drone or acid) off the algorithm, played by hand; again, back. |
 | FX | The effects' settings pages, one by one, then the keys again. |
 | A key in the FX menu | That effect's settings page. |
-| GLO | Remote: the FM-1 plays the emulator (see 17). |
-| EDIT | A secret. |
+| GLO | Remote: the FM-1 plays the emulator (see 17). Stopped only (it stops the music): playing, it says `STOP FIRST`. |
+| EDIT | A secret. Stopped only: it starts the music itself. |
 | Black keys 1-6 (sequencer) | Copy the pattern you're editing into pattern 1-6. |
 | OCT- (sequencer) | Clear this drum's lane. |
 | OCT+ (sequencer) | This drum's lane back to the piece's own. |

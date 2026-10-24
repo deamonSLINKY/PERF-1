@@ -2,6 +2,17 @@
 # brings a part of the track back (the mutes lifted), a wall takes one away. SELECT, OCT-/OCT+ steer.
 wait 1500
 expect playing 1
+# playing, SEL + EDIT only says so; stopped, it starts the game and the music
+press SEL
+press EDIT
+wait 100
+release SEL
+release EDIT
+wait 100
+expect runner 0
+tap PLAY
+wait 100
+expect playing 0
 press SEL
 press EDIT
 wait 100

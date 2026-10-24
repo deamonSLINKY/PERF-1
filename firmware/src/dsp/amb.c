@@ -1601,8 +1601,9 @@ static void dd_mutate(int p)
     for (c = 0; c < 2; c++) {                   /* a hit or two, a step either way */
         int l = LN[irand(4)], on[16], m = 0, st;
         uint32_t b = en_pats[p][l];
+        const uint32_t keep = l == L_SNARE ? 0x1111u : 0u;   /* the snare on a beat (the backbeat, or 3 in half time) stays where it is */
         for (st = 0; st < 16; st++)
-            if (b >> st & 1u)
+            if ((b & ~keep) >> st & 1u)
                 on[m++] = st;
         if (m) {
             int k = on[irand(m)], to = (k + (frand() < 0.5f ? 15 : 1)) & 15;
@@ -1614,8 +1615,9 @@ static void dd_mutate(int p)
         int l = LN[irand(4)], st;
         uint32_t b = en_pats[p][l];
         int h = bits16(b);
-        if ((frand() < 0.5f && h > 1) || h >= 10) {
-            for (st = irand(16); !(b >> st & 1u); st = (st + 1) & 15)
+        const uint32_t keep = l == L_SNARE ? 0x1111u : 0u, free_ = b & ~keep;   /* (a snare on a beat is never the one taken) */
+        if (((frand() < 0.5f && h > 1) || h >= 10) && free_) {
+            for (st = irand(16); !(free_ >> st & 1u); st = (st + 1) & 15)
                 ;
             b &= ~(1u << st);
         } else if (h < 10) {
