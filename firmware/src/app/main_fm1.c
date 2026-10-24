@@ -417,8 +417,8 @@ static void dx_service(void)
     }
     ui_voices_changed(r, kind);
     ack[0] = 0xF0, ack[1] = 0x7D, ack[2] = 0x50, ack[3] = 0x57, ack[4] = (uint8_t)kind, ack[5] = r < 0 ? 0x7Fu : (uint8_t)r, ack[6] = 0xF7;
+    dx_state = 0;                                    /* dx_buf free before the answer goes, so the next voice the answer releases is never dropped */
     usb_sysex_try(ack, sizeof ack);                  /* the answer: the page waits for it before the next voice */
-    dx_state = 0;
 }
 
 /* THE EDITOR (web/editor): parameter changes, a dump of every parameter, a voice read back. Changes are applied as the knobs would; a dump goes out in
@@ -690,6 +690,7 @@ static void fm1_main(void)
             usb.ota_req = 0;
             en_play(0);
             en_panic();
+            ui_flush();                             /* a store or autosave in flight: written, its fade undone */
             if (flash_ok)
                 ota_session();                      /* returns only if nothing was committed */
             ui_init();

@@ -2138,6 +2138,7 @@ static int rv_type, rv_pre = 1322;
 #define SH_W 1024.0f
 static float sh_buf[SH_N] EN_POOL, sh_ph;                        /* the shimmer's pitch shifter: a delay line, two taps, an octave up */
 static uint32_t sh_w;
+static float sh_dc;                                                   /* the shimmer's feed, its DC and lowest lows taken out (left in, they built up round the loop until it howled, even after a stop) */
 static float pl_bw, pl_damp_l, pl_damp_r, pl_decay = 0.5f, pl_decay_t = 0.5f, pl_dd2 = 0.5f, lfo_s, lfo_c = 1.0f;
 
 static inline float tap(const dl_t *d, int k)
@@ -2225,7 +2226,8 @@ static inline void reverb_tank(float x, float *ol, float *or_)
     } else if (rv_type == 1) {                    /* shimmer: the tail, an octave up, goes back in (a little) */
         const float m = 0.5f * (*ol + *or_), p2 = sh_ph + 0.5f >= 1.0f ? sh_ph - 0.5f : sh_ph + 0.5f;
         const float w1 = 1.0f - fm_fabsf(2.0f * sh_ph - 1.0f), w2 = 1.0f - fm_fabsf(2.0f * p2 - 1.0f);
-        sh_buf[sh_w] = m;
+        sh_dc += 0.0142f * (m - sh_dc);           /* a one-pole high-pass, ~100 Hz, before the shifter */
+        sh_buf[sh_w] = m - sh_dc;
         rv_shim_fb = fm_flush((sh_tap((1.0f - sh_ph) * SH_W + 2.0f) * w1 + sh_tap((1.0f - p2) * SH_W + 2.0f) * w2) * rv_shim);
         sh_ph += 1.0f / SH_W;
         if (sh_ph >= 1.0f)
@@ -2331,7 +2333,7 @@ static void plate_init(void)
     }
     for (i = 0; i < DL_TOTAL; i++)
         pl_buf[i] = 0;
-    pl_bw = pl_damp_l = pl_damp_r = 0.0f;
+    pl_bw = pl_damp_l = pl_damp_r = sh_dc = 0.0f;
     lfo_s = 0.0f;
     lfo_c = 1.0f;
 }
@@ -5280,8 +5282,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
         while (!stage_done)
             if (c2_alive && !c2_alive()) {
-                rv_c2 = 0;
-                c2_join();                      /* retires it */
+                if (c2_join())                  /* it finished just as the time ran out: not lost */
+                    continue;
+                rv_c2 = 0;                      /* (the join retired it) */
                 en_c2_lost++;
                 for (j = 0; j < n; j++)
                     padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = rv_wl[j] = rv_wr[j] = bass_o[j] = acid_o[j] = 0.0f;

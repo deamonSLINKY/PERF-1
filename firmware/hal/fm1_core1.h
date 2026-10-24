@@ -135,8 +135,8 @@ static void fm1_core1_check(void)
 static int fm1_core1_join(void)
 {
     uint32_t start = fm1_ticks(), elapsed;
-    while (aw_load(&aw.complete) != aw_load(&aw.request)) {
-        if (fm1_core1_fault.count || (uint32_t)(fm1_ticks() - start) >= AW_TIMEOUT_TICKS) {
+    while (aw_load(&aw.complete) != aw_load(&aw.request)) {   /* (the 10 ms count from the hand-over, as fm1_core1_alive's: a wait that already gave up does not start a second 10 ms) */
+        if (fm1_core1_fault.count || (uint32_t)(fm1_ticks() - aw_t0) >= AW_TIMEOUT_TICKS) {
             if (!fm1_core1_fault.count)
                 aw.timeouts++;
             fm1_core1_retire();
@@ -161,7 +161,7 @@ __attribute__((section(".dsp_text"), noinline, noreturn, used)) static void fm1_
     for (;;) {
         uint32_t request = aw_load(&aw.request);
         if (request == done) {                   /* nothing yet: a few cycles of rest between looks (a flat-out poll, a memory barrier each time, may take the bus from the first core) */
-            __asm__ volatile("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop");
+            __asm__ volatile("nop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop\n\tnop");   /* (one a line: here ";" starts a comment, so "nop; nop" was a single nop) */
             continue;
         }
         if (request == done + 1u) {

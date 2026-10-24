@@ -47,6 +47,7 @@ int project_pending_globals(void);       /* the theme, Tune or MIDI out changed,
 int project_flush_globals(void);         /* those alone into flash (while playing too): 0 = written */
 
 void ui_init(void);
+void ui_flush(void);                    /* before an update session: a store or autosave in flight written now, the fade undone */
 void ui_frame(void);
 void ui_input_only(void);
 int ui_remote(void);                   /* remote (SEL + GLO): the panel plays the browser over USB */

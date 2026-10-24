@@ -1321,6 +1321,27 @@ static void store_tick(void)                    /* the music faded out (or long 
     en_hush(0);
 }
 
+/* an update session is coming (the music already stopped): what waits for flash is written now and a store's fade is undone, since
+ * ui_init afterwards starts from nothing (left alone, a store caught mid-fade kept the output hushed and unsaved voices were lost) */
+void ui_flush(void)
+{
+    if (ui.store_wait) {
+        ui.store_t = plat_ms() - 150u;
+        store_tick();
+    }
+    if (ui.vox_dirty) {
+        ui.vox_dirty = 0;
+        voices_save();
+    }
+    if (ui.set_dirty) {
+        ui.set_dirty = 0;
+        settings_save();
+    }
+    if (project_pending())
+        project_flush();
+    en_hush(0);
+}
+
 static void piece_store(void)                   /* Global, SAVE: the piece as it is, stored */
 {
     char t[12] = "STORED ";
@@ -1656,10 +1677,10 @@ static void button(int b)
             ui.touched = -1;
         } else {                                 /* the page's voice's octave, or the song's */
             int p = oct_par(ui.view);
-            char t[8];
+            char t[12];                          /* (en_param_text writes up to 10) */
             knob_set(p, proj.par[p] + (b == B_OCTUP ? 1 : -1));
             en_param_text(p, proj.par[p], t);
-            say(p == P_PAD_OCT ? "PAD OCTAVE" : p == P_BASSOCT ? "DRONE OCTAVE" : p == P_AC_OCT ? "ACID OCTAVE" : "SONG OCTAVE", t);
+            say(p == P_PAD_OCT ? "PAD OCTAVE" : p == P_BASSOCT ? "DRONE OCTAVE" : p == P_AC_OCT ? "ACID OCTAVE" : p == P_CM_OCT ? "PLUCK OCTAVE" : "SONG OCTAVE", t);
         }
         break;
     case B_SAVE:                                 /* nothing is saved by it: SAVE is the breakdown (and the build) */
@@ -1895,6 +1916,20 @@ static void input(void)
     int32_t e;
     if (runner_on()) {                           /* the secret: the game has the panel */
         runner_input(btn, keys);
+        return;
+    }
+    if (ui.saver_on) {                           /* the screensaver: the touch that wakes it only wakes (it was the visualizer's: a key muted a track, a knob moved the filter) */
+        const uint32_t nb = btn & ~ui.btn, nk = keys & ~ui.keys;
+        int r;
+        ui.btn_used |= nb;                       /* its button does nothing when let go, nor held */
+        ui.shift_keys |= nk;                     /* its key is no note, effect or mute until let go */
+        ui.btn = btn;
+        ui.keys = keys;
+        for (r = 0; r < NE; r++)
+            if (plat_enc(r))
+                ui.turn_t = plat_ms();
+        if (nb || nk)
+            ui.act_t = plat_ms();
         return;
     }
     ch = btn ^ ui.btn;
@@ -2834,7 +2869,7 @@ static void draw_fx(void)
     int k;
     {
         const char *hd = fx_bank == 3 ? "DJ SNIPS: HOLD TO PLAY" : fx_bank == 2 ? "FLEX: TAP LATCHES" : fx_bank ? "BEAT: TAP LATCHES" : "FX: TAP LATCHES",
-                   *dl = fx_bank == 3 ? "DIAL: FLEX" : fx_bank == 2 ? "DIAL: BEAT / SMPL" : fx_bank ? "DIAL: FLEX / FX" : "DIAL: BEAT FX";
+                   *dl = fx_bank == 3 ? "DIAL: FLEX" : fx_bank == 2 ? "DIAL: BEAT / SNIPS" : fx_bank ? "DIAL: FX / FLEX" : "DIAL: BEAT FX";
         cv_text(4, 1, &FONT_XS, hd, K_ACC);
         cv_text(236 - text_w(&FONT_XS, dl), 1, &FONT_XS, dl, K_DIM);
     }
@@ -2934,8 +2969,9 @@ static void draw_fxedit(void)
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
             }
         } else {
-            cv_text(4, 50, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
-            cv_text(4, 64, &FONT_XS, "THE KNOBS BELOW SET IT. THE DIAL: NEXT PAGE.", K_DIM);
+            cv_text(4, 50, &FONT_XS, p == 16 ? "PERFORMING SETTINGS: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
+                                     FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
+            cv_text(4, 64, &FONT_XS, p == 16 || p == 17 ? "THE KNOBS SET THEM. DIAL: NEXT PAGE." : "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
         }
     }
 }
@@ -3942,6 +3978,7 @@ static void draw_knobs(void)
         } else {
             caps(t, VIEW_NAME[ui.view], sizeof t);
         }
+        int32_t xl = 0;                          /* where the left text ends: the page's name only if it clears it */
         xt = xd - 5 - text_w(&FONT_XS, t);
         if (ui.view == V_GLOBAL) {               /* Global: the piece's state, and what SAVE does */
             char u[24];
@@ -3949,13 +3986,17 @@ static void draw_knobs(void)
             caps(u, piece_name(proj.piece), 4);
             if (proj.edited >> proj.piece & 1u) {
                 const char *q = " SAVE: STORE";
-                int j = 2;
+                int j = 0;
+                while (u[j])                     /* (after the tag, "01" or "L03") */
+                    j++;
                 while (*q && j < 23)
                     u[j++] = *q++;
                 u[j] = 0;
             } else {
                 const char *q = project_saved(proj.piece) ? " STORED" : " FACTORY";
-                int j = 2;
+                int j = 0;
+                while (u[j])
+                    j++;
                 while (*q && j < 23)
                     u[j++] = *q++;
                 u[j] = 0;
@@ -3963,6 +4004,7 @@ static void draw_knobs(void)
             xs = cv_text(4, -1, &FONT_XS, u, proj.edited >> proj.piece & 1u ? K_TEXT : K_DIM);
             if (xt - 9 > xs + 4)
                 cv_rect(xs + 4, 5, xt - 9 - xs - 4, 1, K_LINE);
+            xl = xs;
         } else {                                 /* the voice's sound (the drums: the kit), then the rule */
             char u[16], t[12];
             int32_t xs;
@@ -4003,8 +4045,10 @@ static void draw_knobs(void)
             }
             if (xt - 9 > xs + 4)
                 cv_rect(xs + 4, 5, xt - 9 - xs - 4, 1, K_LINE);
+            xl = xs;
         }
-        cv_text(xt, -1, &FONT_XS, t, K_ACC);
+        if (xt >= xl + 6)                        /* (a long sound name, BY HAND or the store's state would run into it) */
+            cv_text(xt, -1, &FONT_XS, t, K_ACC);
         for (k = 0; k < ndots; k++) {
             int cur, same;
             if (ui.fx_menu) {
