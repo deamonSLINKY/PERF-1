@@ -96,22 +96,22 @@ static const int16_t PC_HYPNOS[] = {-1};
 static const int16_t PC_UNDERTOW[] = {P_TEMPO, 124, P_ROOT, 2, P_MODE, 1, P_PAD, 30, P_ACID, 45, P_BASS, 80, P_NOISE, 25,
     P_NZ_COLOR, 2, P_BASSOCT, -1, P_DR_RES, 60, P_DL_DEPTH, 70, P_AC_CUT, 25, P_AC_DENS, 45, P_AC_LEN, 13,
     P_PATTERN, 1, P_ECHO, 55, P_BRIGHT, 20, TU(0), -10, DE(0), 65, LV(5), 60, -1};
-static const int16_t PC_MONOLITH[] = {P_TEMPO, 132, P_ROOT, 4, P_MODE, 2, P_PAD, 20, P_ACID, 60, P_BASS, 75,
+static const int16_t PC_MONOLITH[] = {P_KIT_KICK, 2, P_TEMPO, 132, P_ROOT, 4, P_MODE, 2, P_PAD, 20, P_ACID, 60, P_BASS, 75,
     P_AC_RES, 80, P_AC_ENV, 70, P_AC_DENS, 70, P_DRIVE, 60, P_NOISE, 15, P_REVERB, 25, P_SIZE, 60, P_PATTERN, 1,
     LV(0), 90, LV(2), 70, DE(3), 25, -1};
-static const int16_t PC_ASCENSION[] = {P_TEMPO, 138, P_ROOT, 7, P_PAD, 60, P_BRIGHT, 60, P_ACID, 45, P_BASS, 60,
+static const int16_t PC_ASCENSION[] = {P_PADTONE, 9, P_AC_WAVE, 8, P_TEMPO, 138, P_ROOT, 7, P_PAD, 60, P_BRIGHT, 60, P_ACID, 45, P_BASS, 60,
     P_AC_LEN, 12, P_PATTERN, 1, P_REVERB, 55, P_SIZE, 85, P_MOTION, 80, P_NZ_COLOR, 0, P_NOISE, 15, P_PL_DEPTH, 40,
     LV(4), 60, LV(2), 70, -1};
-static const int16_t PC_NIGHT_DRIVE[] = {P_TEMPO, 130, P_ROOT, 9, P_MODE, 1, P_PAD, 35, P_ACID, 65, P_AC_CUT, 45,
+static const int16_t PC_NIGHT_DRIVE[] = {P_KIT_PERC, 3, P_TEMPO, 130, P_ROOT, 9, P_MODE, 1, P_PAD, 35, P_ACID, 65, P_AC_CUT, 45,
     P_AC_RES, 75, P_AC_WAVE, 1, P_AC_SLIDE, 50, P_AC_DENS, 55, P_AC_LEN, 14, P_PATTERN, 1, P_NZ_COLOR, 4, P_NOISE, 12,
     P_SWING, 15, TU(5), 20, LV(5), 55, -1};
-static const int16_t PC_DUB_CHAMBER[] = {P_TEMPO, 120, P_ROOT, 5, P_MODE, 7, P_PAD, 70, P_CHORD, EN_CH_DUB, P_PADTONE, 8, P_ACID, 40, P_AC_CUT, 20,
+static const int16_t PC_DUB_CHAMBER[] = {P_DR_INST, 12, P_TEMPO, 120, P_ROOT, 5, P_MODE, 7, P_PAD, 70, P_CHORD, EN_CH_DUB, P_PADTONE, 8, P_ACID, 40, P_AC_CUT, 20,
     P_AC_DEC, 60, P_ECHO, 80, P_SIZE, 90, P_AC_LEN, 7, P_AC_DENS, 35, P_PATTERN, 1, P_NZ_COLOR, 6, P_NOISE, 35,
     P_DE_TRIG, 1, P_SWING, 20, TU(1), 25, DE(1), 25, DE(0), 70, -1};
 static const int16_t PC_GLASS_TUNNEL[] = {P_TEMPO, 134, P_ROOT, 11, P_MODE, 6, P_PAD, 30, P_BRIGHT, 55, P_ACID, 55,
     P_AC_LEN, 10, P_AC_DENS, 65, P_AC_MUT, 40, P_PATTERN, 1, P_NZ_COLOR, 7, P_NOISE, 20, P_PL_RATE, 3, P_PL_DEPTH, 50,
     P_PL_DEST, 2, TU(5), 30, DE(5), 25, DE(3), 25, -1};
-static const int16_t PC_TIDAL[] = {P_TEMPO, 126, P_ROOT, 10, P_MODE, 4, P_PAD, 50, P_ACID, 50, P_BASS, 75,
+static const int16_t PC_TIDAL[] = {P_KIT_PERC, 10, P_TEMPO, 126, P_ROOT, 10, P_MODE, 4, P_PAD, 50, P_ACID, 50, P_BASS, 75,
     P_DL_DEPTH, 85, P_DL_RATE, 5, P_MOTION, 95, P_EVOLVE, 75, P_AC_LEN, 15, P_PATTERN, 1, P_NZ_COLOR, 3, P_NOISE, 15,
     P_DE_TRIG, 3, P_DE_AMT, 60, TU(5), -25, DE(5), 60, LV(5), 60, -1};
 static const int16_t PC_WAREHOUSE[] = {P_TEMPO, 136, P_ROOT, 0, P_MODE, 2, P_PAD, 15, P_ACID, 55, P_BASS, 80,
@@ -124,11 +124,11 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     TU(1), -10, DE(1), 60, DE(0), 60, -1};
 /* LOFI: ten pieces, 68 .. 94 beats a minute, swung, the Rhodes in sevenths and ninths over a warm bass, a soft sparse lead, the
  * dusty kit; each piece the base with a few changed (its key, mode, sounds and tempo). The patterns are made below. */
-#define LOFI_BASE P_PADTONE, 0, P_PAD, 62, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
+#define LOFI_BASE P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
     P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
     P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
-    P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(1), 55, \
-    LV(3), 42, LV(4), 38, LV(5), 40, P_PL_CHO, 50, P_RV_DAMP, 70, P_MC_RATIO, 2, P_MC_THR, 55, P_MC_MAKE, 25
+    P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(0), 92, LV(1), 55, \
+    LV(3), 42, LV(4), 38, LV(5), 40, P_PL_CHO, 50, P_RV_DAMP, 70, P_MC_RATIO, 2, P_MC_THR, 55, P_MC_MAKE, 45
 static const int16_t PL_01[] = {LOFI_BASE, P_TEMPO, 72, P_ROOT, 2, P_MODE, 1, P_CHORD, EN_CH_9TH, -1};                       /* D dorian, ninths */
 static const int16_t PL_02[] = {LOFI_BASE, P_TEMPO, 78, P_ROOT, 9, P_MODE, 5, P_DR_INST, 9, P_AC_WAVE, 4, -1};                /* A aeolian, sub bass, plucks */
 static const int16_t PL_03[] = {LOFI_BASE, P_TEMPO, 84, P_ROOT, 7, P_MODE, 4, P_CHORD, EN_CH_9TH, P_PADTONE, 5, P_AC_WAVE, 11, -1};   /* G mixolydian, warm pad, bells */
@@ -183,8 +183,8 @@ static const int16_t X_DNB[] = {P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT,
     KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 45, P_RV_TYPE, 1, P_RV_X, 25, P_RV_DAMP, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
 static const int16_t X_BREAKS[] = {P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
     KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_PL_CHO, 20, P_RV_TYPE, 2, P_RV_X, 35, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
-static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 52, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
-    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 25, -1};
+static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
+    P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 40, -1};
 static const int16_t X_ELECTRO[] = {P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
     KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
 static const int16_t X_TRAP[] = {P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
@@ -219,7 +219,7 @@ static void x_pats(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
     int p, l;
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
-            pats[p][l] = XPAT[g][(i + p) % 6][l];
+            pats[p][l] = XPAT[g][(l == 0 || l == 5) && i >= 6 ? (i + p + 2) % 6 : (i + p) % 6][l];   /* pieces 7..10: the kick and perc of another row (no two pieces play the same six) */
 }
 #undef LV
 #undef TU
@@ -306,32 +306,34 @@ const char *en_piece_name_g(int g, int i)
  * neighbours share them. The pad, drone and acid sounds are the genres' own choices (the original genre's keep theirs). */
 static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {
     {{0}, {0}, {0}, {1, 4, 13, 28, 16}, {0}, {0}, {0}, {0}},
-    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 5, 7}, {8, 5, 1}, {8, 5, 1}, {8, 5, 11}},
+    {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 8, 7}, {8, 8, 1}, {8, 5, 8}, {8, 5, 8}},
     {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
     {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
-    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 16}, {4, 21, 9, 26, 1}, {24, 10, 29, 12, 7}, {4, 12, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
-    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {26, 13, 3, 30, 11}, {12, 10, 2}, {12, 4, 10}, {12, 2, 10}, {12, 11, 5}},
-    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {15, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
+    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 11}, {4, 21, 9, 26, 1}, {0, 10, 29, 2, 7}, {4, 4, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
+    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
+    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
     {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
     {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
-    {{7, 15, 22, 3, 18}, {9, 8, 22, 4, 10}, {11, 18, 16, 24, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
+    {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
 };
 static const uint8_t PLUCK_RATE[EN_NGENRE] = {0, 0, 0, 2, 1, 1, 0, 0, 1, 2};   /* the pluck's rate by genre: 1/8, 1/16, 1/4 */
 static void vary(int g, int i, int16_t *par)
 {
-    const int pw = g * 3 + i;
+    const int pw = g * 3 + i, h = i / 5;
     par[P_CM_SND] = PALETTE[g].pluck[(i * 4 + g) % 5];
     par[P_CM_STYLE] = (int16_t)((i * 2 + g) % EN_NCMSTYLE);
     par[P_CM_RATE] = PLUCK_RATE[g];
     if (g == 0)
         return;                                 /* the original pieces keep their pad, drone, acid and kit */
-    par[P_PADTONE] = PALETTE[g].pad[i % 5];
-    par[P_DR_INST] = PALETTE[g].drone[(i * 2 + g) % 5];
-    par[P_AC_WAVE] = PALETTE[g].acid[(i * 3 + pw) % 5];
+    par[P_PADTONE] = PALETTE[g].pad[(i + 2 * h) % 5];
+    par[P_DR_INST] = PALETTE[g].drone[(i * 2 + g + 2 * h) % 5];
+    par[P_AC_WAVE] = PALETTE[g].acid[(i * 3 + pw + 2 * h) % 5];
     par[P_KIT_KICK] = PALETTE[g].kick[(i + g) % 3];
-    par[P_KIT_SNARE] = PALETTE[g].snare[(i * 2 + g) % 3];
-    par[P_KIT_HAT] = PALETTE[g].hat[(i + 2 * g) % 3];
+    par[P_KIT_SNARE] = PALETTE[g].snare[(i * 2 + g + i / 3) % 3];
+    par[P_KIT_HAT] = PALETTE[g].hat[(i + 2 * g + i / 9) % 3];
     par[P_KIT_PERC] = PALETTE[g].perc[(i * 2 + 2 * g) % 3];
+    par[P_PAN3] = (int16_t)(50 + ((i & 1) ? -14 : 14));    /* the pluck a little off the middle, the acid the other way */
+    par[P_PAN2] = (int16_t)(50 + ((i & 1) ? 8 : -8));
 }
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
 {
