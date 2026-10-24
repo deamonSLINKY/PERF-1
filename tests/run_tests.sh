@@ -40,6 +40,7 @@ run core2 sh -c "$CC -O2 -ffp-contract=off -std=c11 -Wall -Wextra -DEN_HOST -Ifi
     [ \"\${s#* }\" = \"\${d#* }\" ] && [ \"\${s#* }\" = \"\${t#* }\" ] && [ \"\${s#* }\" = \"\${m#* }\" ] && echo \$s \$d \$t \$m"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 if command -v node >/dev/null 2>&1; then run websyx node tests/web_syx_test.js; fi
+run dxproto sh -c "$CC -O2 -Wall -Wextra -Werror -o $OUT/dxproto_test tests/host/dxproto_test.c && $OUT/dxproto_test"
 run params sh -c "python3 tools/make_params.py"
 if command -v node >/dev/null 2>&1; then
     run webvoice sh -c "$CC -O1 -std=c99 -DEN_HOST -Ifirmware/src/dsp -o $OUT/gvoice tests/host/gvoice.c firmware/src/dsp/amb.c -lm && $OUT/gvoice > $OUT/voices.json && node tests/web_voice_test.js $OUT/voices.json"

@@ -420,7 +420,7 @@ static void dx_service(void)
 static void px_service(void)
 {
     static uint32_t dump_i = 0xFFFFFFFFu, vox_req = 0xFFFFFFFFu;
-    uint8_t f[96];
+    uint8_t f[PX_FRAME_MAX];                         /* the longest frame (a voice) fits: dx_proto.h, checked by tests/host/dxproto_test.c */
     while (px_r != px_w) {
         const uint32_t e = px_q[px_r % PX_N];
         RING_PUBLISH();
@@ -433,32 +433,17 @@ static void px_service(void)
             vox_req = e & 0x7Fu;
     }
     if (dump_i < (uint32_t)P_NPARAMS) {
-        uint32_t k, n = (uint32_t)P_NPARAMS - dump_i > 24u ? 24u : (uint32_t)P_NPARAMS - dump_i, o = 0;
-        f[o++] = 0xF0, f[o++] = 0x7D, f[o++] = 0x50, f[o++] = 0x51;
-        f[o++] = (uint8_t)(dump_i >> 7), f[o++] = (uint8_t)(dump_i & 0x7Fu), f[o++] = (uint8_t)n;
-        for (k = 0; k < n; k++) {
-            const uint32_t v = (uint32_t)(ui_param_get((int)(dump_i + k)) + 8192) & 0x3FFFu;
-            f[o++] = (uint8_t)(v >> 7), f[o++] = (uint8_t)(v & 0x7Fu);
-        }
-        f[o++] = 0xF7;
-        if (usb_sysex_try(f, o) == 0)
+        int32_t vals[24];
+        uint32_t k, n = (uint32_t)P_NPARAMS - dump_i > 24u ? 24u : (uint32_t)P_NPARAMS - dump_i;
+        for (k = 0; k < n; k++)
+            vals[k] = ui_param_get((int)(dump_i + k));
+        if (usb_sysex_try(f, px_build_dump(f, dump_i, vals, n)) == 0)
             dump_i += n;
     }
     if (vox_req != 0xFFFFFFFFu) {
-        uint32_t o = 0, k, sum = 0;
-        const uint32_t have = vox_req < (uint32_t)en_user_count();
-        f[o++] = 0xF0, f[o++] = 0x7D, f[o++] = 0x50, f[o++] = 0x58;
-        f[o++] = (uint8_t)vox_req, f[o++] = (uint8_t)en_user_count();
-        if (have) {
-            const uint8_t *d = en_user_get((int)vox_req);
-            for (k = 0; k < 128u; k++) {
-                f[o++] = d[k] & 0x7Fu;
-                sum += d[k] & 0x7Fu;
-            }
-            f[o++] = (uint8_t)((128u - (sum & 0x7Fu)) & 0x7Fu);
-        }
-        f[o++] = 0xF7;
-        if (usb_sysex_try(f, o) == 0)
+        const uint32_t loaded = (uint32_t)en_user_count();
+        const uint8_t *d = vox_req < loaded ? en_user_get((int)vox_req) : 0;
+        if (usb_sysex_try(f, px_build_voice(f, vox_req, loaded, d)) == 0)
             vox_req = 0xFFFFFFFFu;
     }
 }
