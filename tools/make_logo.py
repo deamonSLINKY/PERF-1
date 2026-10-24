@@ -55,14 +55,15 @@ def main():
     open(os.path.join(HERE, "..", "web", "img", "favicon.png"), "wb").write(fav)
     print("slinky.png %d B, favicon.png %d B" % (len(logo), len(fav)))
     if "--inline" in sys.argv:
-        p = os.path.join(HERE, "..", "web", "amb_installer.html")
-        t = open(p, encoding="utf-8").read()
         d1 = "data:image/png;base64," + base64.b64encode(logo).decode()
         d2 = "data:image/png;base64," + base64.b64encode(fav).decode()
-        t = re.sub(r'(<img class="logo" src=")[^"]*(")', lambda m: m.group(1) + d1 + m.group(2), t)
-        t = re.sub(r'(<link rel="icon" type="image/png" href=")[^"]*(")', lambda m: m.group(1) + d2 + m.group(2), t)
-        open(p, "w", encoding="utf-8", newline="\n").write(t)
-        print("inlined into", p)
+        for name in ("amb_installer.html", os.path.join("editor", "index.html")):
+            p = os.path.join(HERE, "..", "web", name)
+            t = open(p, encoding="utf-8").read()
+            t = re.sub(r'(<img class="logo" src=")[^"]*(")', lambda m: m.group(1) + d1 + m.group(2), t)
+            t = re.sub(r'(<link rel="icon" type="image/png" href=")[^"]*(")', lambda m: m.group(1) + d2 + m.group(2), t)
+            open(p, "w", encoding="utf-8", newline="\n").write(t)
+            print("inlined into", p)
 
 
 if __name__ == "__main__":

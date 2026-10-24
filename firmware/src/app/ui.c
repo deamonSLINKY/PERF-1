@@ -4377,6 +4377,14 @@ static void voices_load(void)
     for (i = 0; i < x.n; i++)
         en_user_voice((int)i, x.v[i]);
 }
+void ui_param_set(int p, int v)               /* the editor (main_fm1.c px_service): a parameter as its knob sets it */
+{
+    if ((unsigned)p < (unsigned)P_NPARAMS) {
+        knob_set(p, v);
+        ui.act_t = plat_ms();
+    }
+}
+int ui_param_get(int p) { return (unsigned)p < (unsigned)P_NPARAMS ? proj.par[p] : 0; }
 void ui_voices_changed(int n, int kind)
 {
     char t[16] = "";

@@ -583,6 +583,32 @@ stall:
  * from the others by its header and its length: a 32-voice bulk dump (43 0s 09 20 00, 4096 bytes, a checksum), a single voice (43 0s 00 01 1B, 155, a
  * checksum), or ours (7D 50 56 slot, 128 bytes, a checksum; slot 7F alone clears). One at a time: while one waits to be taken, the next is dropped. */
 #if USB_DX                                       /* the app only (the update loader's has no pool) */
+/* The editor's short messages (F0 7D 50 50 01 p p v v F7: parameter p = value + 8192 as two 7-bit bytes each; F0 7D 50 50 02 F7: send every parameter;
+ * F0 7D 50 56 7E slot F7: send a voice) are caught whole as they pass, even while a voice message waits, into a ring the main loop empties (px_service). */
+#define PX_N 32u
+static uint32_t px_q[PX_N];
+static volatile uint32_t px_w, px_r;
+static uint8_t px_buf[16];
+static uint32_t px_pos;
+static uint8_t px_on;
+static void px_end(void)
+{
+    const uint8_t *m = px_buf;
+    const uint32_t n = px_pos;
+    uint32_t e = 0;
+    px_on = 0;
+    if (n == 8u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x50u && m[3] == 0x01u)
+        e = 1u << 28 | (uint32_t)((m[4] << 7 | m[5]) & 0x3FFF) << 14 | (uint32_t)((m[6] << 7 | m[7]) & 0x3FFF);
+    else if (n == 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x50u && m[3] == 0x02u)
+        e = 2u << 28;
+    else if (n == 5u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x56u && m[3] == 0x7Eu)
+        e = 3u << 28 | (uint32_t)(m[4] & 0x7Fu);
+    if (e && px_w - px_r < PX_N) {
+        px_q[px_w % PX_N] = e;
+        RING_PUBLISH();
+        px_w++;
+    }
+}
 #define DX_MAX 4112u
 static uint8_t dx_buf[DX_MAX] __attribute__((section(".pool.dx")));
 static uint32_t dx_pos;
@@ -621,14 +647,26 @@ static void sysex_byte(uint8_t b)
     if (b == 0xF0u) {
         dx_on = !dx_state;
         dx_pos = 0;
+        px_on = 1;
+        px_pos = 0;
     } else if (b == 0xF7u) {
+        if (px_on)
+            px_end();
         if (dx_on)
             dx_end();
-    } else if (dx_on) {
-        if (dx_pos < DX_MAX)
-            dx_buf[dx_pos++] = b;
-        else
-            dx_on = 0;
+    } else {
+        if (dx_on) {
+            if (dx_pos < DX_MAX)
+                dx_buf[dx_pos++] = b;
+            else
+                dx_on = 0;
+        }
+        if (px_on) {
+            if (px_pos < sizeof px_buf)
+                px_buf[px_pos++] = b;
+            else
+                px_on = 0;
+        }
     }
 #endif
     static const uint8_t UBOOT_KEY[6] = {0xF0, 0x22, 0x24, 0x35, 0x7D, 0xF7};

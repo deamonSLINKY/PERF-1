@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PERF-1 Emulator</title>
-<meta name="description" content="PERF-1, a generative hypnotic techno firmware for the M-VAVE FM-1 (a fork of AMB-1), in your browser: the same code the FM-1 runs.">
+<meta name="description" content="PERF-1, a live-performance generative instrument firmware for the M-VAVE FM-1 (a fork of HYP-1), in your browser: the same code the FM-1 runs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap">
@@ -145,8 +145,8 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 <main>
 <header>
   <h1><a href="../"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="" style="image-rendering:pixelated;vertical-align:middle;margin-right:.5rem">PERF-1</a></h1>
-  <p>hypnotic techno and acid for the FM-1, in the browser: the same code the FM-1 runs</p>
-  <nav><a href="../">Home</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="../board/">Board</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav>
+  <p>a live-performance generative instrument for the FM-1, in the browser: the same code the FM-1 runs</p>
+  <nav><a href="../">Home</a><a href="../install/">Install</a><a href="../editor/">Editor</a><a href="../manual/">Manual</a><a href="../board/">Board</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav>
 </header>
 
 <p class="turn">Turn your phone sideways for bigger controls.</p>
@@ -165,7 +165,8 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 
 <section class="midi" id="midi" aria-labelledby="midi-h">
   <h2 id="midi-h">Play it from your FM-1, or any MIDI controller</h2>
-  <p>Plug the FM-1 in by USB and connect it here (Chrome, Edge or Firefox). <b>With PERF-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel plays this one exactly (buttons, keys, every knob and MASTER), its own sound goes quiet, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back. <b>With M-VAVE's firmware, or any other controller</b>, its keys play the keys here straight away; for the rest, use MIDI learn: click a control here, then move or press the one you want on your controller.</p>
+  <p>Plug the FM-1 in by USB and press Connect MIDI (Chrome, Edge or Firefox; Safari has no Web MIDI). <b>With PERF-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel then plays this emulator exactly (buttons, the 27 keys, every knob and MASTER), its own sound goes quiet, its screen says REMOTE, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back, stopped. (It speaks MIDI channel 16: keys are notes 48 up, buttons CC 102 up, knobs CC 85 up, MASTER CC 7; the lights come back through the FM-1's own MIDI output, which the browser has to see under the same name.)</p>
+  <p><b>With M-VAVE's firmware, or any other keyboard or controller</b>, its notes play the keys here straight away (any channel, folded into F3 to G5). For the rest use MIDI learn: press MIDI learn, click a knob, button or key on the panel, then move or press the control you want on your controller. A knob needs a knob or slider (a CC); a button or key takes a note or a CC (64 and over is down). A learned knob can be absolute or relative (64 &plusmn; n, or 1 up and 127 down): pick it in the list below, which also lets you forget one. What you learn is kept in this browser. MIDI clock, SysEx and program changes are ignored.</p>
   <div class="bar">
     <button id="midiOn" type="button">Connect MIDI</button>
     <span id="midiStatus">Not connected.</span>
@@ -178,130 +179,296 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 <section class="help">
   <div class="knobs">
     <h2>Pages and knobs</h2>
-    <p>SELECT steps through every page in order. The buttons jump to a voice; pressing the same button again steps through that voice's pages (its envelope, its LFO). KNOB 1 is a voice's level. There are ten pieces, 01 to 10 (PRESETS), each with its own settings and its own six drum patterns. Each keeps your changes until the power goes off, unless you store it: on Global, press SAVE. Each power-on starts on a piece at random: as you stored it, or a little changed from its factory settings if you never did.</p>
+    <p>SELECT steps through the 23 pages in this order, and stops at the ends: Tempo, Pad, Pad env, Pad LFO, Chords, Mixer, Drone, Drone env, Drone LFO, Acid, Acid env, Acid line, Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Master, Global, Jam. The line above the knobs shows the page's name and a dot per page at its right, and at its left the voice's sound plus BY HAND, +LINK or an octave (OCT+1, or SONG+1) when they apply. The buttons jump to a group of pages; pressing the same button again steps through the group, and from another page it comes back to where you were in that group. KNOB 1 is a voice's level on its first page. There are ten genres of ten pieces (PRESETS picks piece 01 to 10, GLO + PRESETS the genre), each piece with its own settings and six drum patterns. Changes last until the power goes off unless you store the piece (Global, SAVE; the HYPNO genre only).</p>
     <div class="pages">
       <div>
         <h3>Tempo <span>HOME</span></h3>
         <dl>
-          <dt>Tempo, Evolve</dt><dd>70 to 190 BPM (also HOME + SELECT, from any page); how restless the acid line and the chords are.</dd><dt>Motion, Drift</dt><dd>How far the slow tide swings between sparse and full; how long a chord lasts, 20 s to 5 min.</dd>
+          <dt>Tempo, Evolve</dt><dd>70 to 190 BPM (also HOME + SELECT from any page, or tap tempo: hold GLO and tap E4); how restless the acid line and the chords are.</dd><dt>Motion, Drift</dt><dd>How far the slow tide swings between sparse and full; how long a chord lasts, 20 s to 5 min (with the auto-DJ on SYNC it also sets how long a groove lasts).</dd>
         </dl>
       </div>
       <div>
-        <h3>Pad <span>ENV, ENV, ENV</span></h3>
+        <h3>Pad <span>ENV, ENV, ENV, ENV</span></h3>
         <dl>
-          <dt>Pad</dt><dd>Level, Bright (the filter and the vowel), Sound (Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs, Dark, Dub, Trance, Poly, Hollow, Pings, Hits, Rave, Sine), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack, Hold, Release, Rest.</dd><dt>Pad LFO</dt><dd>Rate (1/4 note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd><dt>Chords</dt><dd>Chord (Auto (sevenths on a 7-note scale, triads on a pentatonic), Triads, 7ths, 9ths (1 3 7 9), Sus (7sus4), Dub (a minor 9 shape on every chord, in the scale or not), Fourths (stacked fourths: an m11)), Voicing (close or open), Drift and Root (as on Tempo and Global).</dd>
+          <dt>Pad</dt><dd>Level, Bright (the pad's filter), Sound (one of 24, see Sounds below), Detune.</dd><dt>Pad env</dt><dd>Each voice's breath: Attack (0.05 to 10 s), Hold (0 to 8 s), Release (0.1 to 12 s), Rest (0 to 6 s).</dd><dt>Pad LFO</dt><dd>Rate (a quarter note to 32 bars), Depth, Shape (sine, triangle, saw, square, sample and hold, drift), Target (filter, level, pan, pitch).</dd><dt>Chords</dt><dd>Chord (Auto: sevenths on a 7-note scale, triads on a pentatonic; Triads; 7ths; 9ths: 1 3 7 9; Sus: 7sus4; Dub: a minor 9 shape on every chord, in the scale or not; Fourths: stacked fourths, an m11), Voicing (close or open), Chorus (0 to 100, the pad's ensemble) and Root (as on Global).</dd>
         </dl>
       </div>
       <div>
-        <h3>Noise <span>SELECT</span></h3>
+        <h3>Mixer <span>SELECT</span></h3>
         <dl>
-          <dt>Level, Colour</dt><dd>A bed of grain: white, pink, brown, blue, violet, grey, black (crackle), yellow (a radio's hiss).</dd><dt>Tone, Pump</dt><dd>A low-pass on it; how hard the kick ducks it.</dd>
+          <dt>Track, Level</dt><dd>Which layer you are mixing (pad, drone, acid, pluck, drums); its level. The page draws a fader and a live meter for each layer and the output's peak.</dd><dt>Pan, Send</dt><dd>L100 to R100 (C leaves the sound as it was); how much of the layer goes to the echo and the reverb (50 as it was, 0 none, 100 twice).</dd>
         </dl>
       </div>
       <div>
         <h3>Drone <span>LFO, LFO, LFO</span></h3>
         <dl>
-          <dt>Drone</dt><dd>Level, Sound (Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ, Rumble, Sub, Square, Hoover, Fifths, Metal, Sync, Bright), Cutoff, Reso. OCT− / OCT+ its octave.</dd><dt>Drone env</dt><dd>Trigger (each chord, or every 1 to 8 bars), Attack, Decay, Amount (on the cutoff).</dd><dt>Drone LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
+          <dt>Drone</dt><dd>Level, Sound (one of 24), Cutoff, Reso. OCT− / OCT+ its octave.</dd><dt>Drone env</dt><dd>Trigger (each chord, every 1, 2, 4 or 8 bars, or off), Attack (0.01 to 4 s), Decay (0.05 to 16 s), Amount (on the cutoff).</dd><dt>Drone LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
         </dl>
       </div>
       <div>
         <h3>Acid <span>ARP, ARP, ARP</span></h3>
         <dl>
-          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Sound (Saw, Square, Driven, Sync, Pluck, PWM, Chip, Sub, Trance, Bleep, Fifth, Bell, Organ, Laser, Fold, Soft).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave (on any Acid page).</dd>
+          <dt>Acid</dt><dd>Level, Cutoff, Reso, Env mod.</dd><dt>Acid env</dt><dd>Decay, Accent, Slide, Sound (one of 31).</dd><dt>Acid line</dt><dd>Density, Length (1 to 16 steps: odd lengths turn against the bar), Range (1 to 3 octaves), Mutate (how often steps are made anew). OCT− / OCT+ move it an octave (on any Acid page).</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Pluck <span>ARP four times, five times</span></h3>
+        <dl>
+          <dt>Pluck</dt><dd>The counter-melody: two plucked voices taking turns on an arpeggio of the chord's tones, fewer notes in a breakdown. Level (30 by default, 0 for none), Sound (see below), Density, Octave (&minus;2 to +2; OCT− / OCT+ move it too).</dd><dt>Pluck 2</dt><dd>Decay, Style (up, down, up-down, random, skip, thirds), Rate (1/8, 1/16, 1/4, 3/16), Range (1 to 3 octaves).</dd>
         </dl>
       </div>
       <div>
         <h3>Drums <span>SEQ (hold: sequencer)</span></h3>
         <dl>
-          <dt>Level, Drive, Swing</dt><dd>The kit's level; the kick's drive; the off sixteenths late.</dd><dt>Pattern</dt><dd>One of six. A new pattern waits for the end of the bar, so turning past others on the way plays none of them.</dd>
+          <dt>Level, Drive, Swing</dt><dd>The kit's level; the kick's drive; how late the off sixteenths come (50 to 75 %).</dd><dt>Pattern</dt><dd>One of six. A new pattern waits for the end of the bar, so turning past others on the way plays none of them.</dd>
         </dl>
       </div>
       <div>
         <h3>Links <span>SEQ, SEQ</span></h3>
         <dl>
-          <dt>The drums into the voices</dt><dd>SEL + SEQ turns them on and off (+LINK shows on the line above the knobs). K&gt;Drone: each kick opens the drone's filter (a rolling bass). S&gt;Pad: each snare or clap flashes the pad open. H&gt;Acid: a hat on an acid note accents it. P&gt;Clock: the acid steps only on the perc lane's hits (free again in a breakdown).</dd>
+          <dt>The drums into the voices</dt><dd>SEL + SEQ turns them on and off (+LINK shows above the knobs). K&gt;Drone: each kick opens the drone's filter (a rolling bass). S&gt;Pad: each snare or clap flashes the pad open. H&gt;Acid: a hat on an acid note accents it (these three are 0 to 100). P&gt;Clock (off or clock): the acid steps only on the perc lane's hits (free again in a breakdown).</dd>
         </dl>
       </div>
       <div>
         <h3>Kit <span>SEQ, SEQ, SEQ</span></h3>
         <dl>
-          <dt>Kick, Snare, Hats, Perc</dt><dd>Each drum's sound: Hypno, House, Techno, Acid, Break, Minimal, Hard or 808 (the snare takes the clap with it, the hats both closed and open). The Break kick also chops and crushes the drums live. SEL + ALGORITHM here: all four at once.</dd>
+          <dt>Kick, Snare, Hats, Perc</dt><dd>Each drum's sound, one of 14 kits (the snare takes the clap with it, the hats both closed and open). The Break kick also chops and crushes the drums live. SEL + ALGORITHM here: all four at once.</dd>
         </dl>
       </div>
       <div>
         <h3>Drum drift <span>SEQ four times</span></h3>
         <dl>
-          <dt>Change, Every</dt><dd>The patterns change by themselves: Off, Next, or Random from the Pool; with each chord change, or every 4–64 bars. A fill rolls in the bar before.</dd><dt>Pool, Mutate</dt><dd>The patterns it uses (1–2 to 1–6); Mutate: Shift moves a hit or two, Morph also adds or takes one (the kick stays put).</dd>
+          <dt>Change, Every</dt><dd>The patterns change by themselves: Off, Next, or Random from the Pool; with each chord change, or every 4, 8, 16, 32 or 64 bars. A fill rolls in the bar before.</dd><dt>Pool, Mutate</dt><dd>The patterns it uses (1-2 up to 1-6); Mutate: Off, Shift moves a hit or two, Morph also adds or takes one (the kick stays put). These four settings stay when you change piece or genre.</dd>
         </dl>
       </div>
       <div>
         <h3>Space <span>SELECT</span></h3>
         <dl>
-          <dt>Echo, Echo time</dt><dd>The tape echo's send; its time, an eighth to a bar.</dd><dt>Reverb, Size</dt><dd>The plate's send; how long it rings, and how often the echo returns.</dd>
+          <dt>Echo, Echo time</dt><dd>The tape echo's send; its time (1/8, 3/16, 1/4, dotted 1/4, 1/2 or a bar).</dd><dt>Reverb, Size</dt><dd>The reverb's send; how long it rings and how often the echo returns.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Reverb <span>SELECT</span></h3>
+        <dl>
+          <dt>Type, Damping</dt><dd>Plate; Shimmer (the tail an octave up, fed back into the tank); Gated (the sound opens the tail and it shuts again after a hold). Damping is how fast the highs die away.</dd><dt>Predelay, Amount</dt><dd>6 to 30 ms; the shimmer's feedback, or the gated tail's hold (80 to 400 ms). The page draws the tail for the type.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Master <span>SELECT</span></h3>
+        <dl>
+          <dt>Ratio, Thresh</dt><dd>The compressor over the whole mix: off, 1.5:1, 2:1, 3:1, 4:1, 6:1 or 10:1; its threshold, &minus;30 to 0 dB.</dd><dt>Make-up, Ceiling</dt><dd>0 to +12 dB; the limiter's ceiling, &minus;12 to 0 dB. The page draws the compressor's curve and live meters for the compressor, the limiter and the output peak. Each genre brings its own compressor settings; MASTER (the knob at the top left) is the volume after all of this.</dd>
         </dl>
       </div>
       <div>
         <h3>Global <span>GLO</span></h3>
         <dl>
-          <dt>Root, Theme</dt><dd>The key's root; the screen's colours (Synth, Acid, Ice, Ember, Phosphor).</dd><dt>Tune, MIDI out</dt><dd>Fine tuning in cents; MIDI out over USB. Theme, Tune and MIDI out are kept across power-offs (written two seconds after a change).</dd><dt>SAVE (here)</dt><dd>Stores the piece as it is: every setting, its six patterns, its drums' sounds. Hold it 1.5 s to put the piece back to its factory settings (and out of the store). The line above the knobs says whether the piece is stored, factory, or changed; a dot in the piece's tag means unstored changes.</dd>
+          <dt>Root, Theme</dt><dd>The key's root; the screen's colours (Synth, Acid, Ice, Ember, Phosphor).</dd><dt>Tune, MIDI out</dt><dd>Fine tuning, &minus;50 to +50 cents; MIDI out over USB (the FM-1 only). Theme, Tune and MIDI out are kept across power-offs (written a couple of seconds after a change).</dd><dt>SAVE (here)</dt><dd>Stores the piece as it is: every setting, its six patterns, its drums' sounds, its scale. Hold it 1.5 s to put the piece back to its factory settings (and out of the store). Only the HYPNO genre stores; the others say NOT STORED. The line above the knobs says whether the piece is stored, factory or changed; a dot in the piece's tag means unstored changes.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Jam <span>SELECT, after Global</span></h3>
+        <dl>
+          <dt>Voice, Keys</dt><dd>What the 27 keys play along with the music: pluck, pad, acid or drone; SCALE (a black key plays the scale tone at or below it, so no wrong notes), CHORDS (a triad of the scale on every key), HARP (the scale's tones, one a key, from C3). The keys never edit the scale here.</dd><dt>Octave, Answer</dt><dd>&minus;2 to +2; with Answer on, once you stop (after two notes or more) the pluck plays your phrase back an octave up on a bar line, once. The voice you play leaves its own line while the page is up.</dd>
         </dl>
       </div>
     </div>
   </div>
-  <div>
+  <div class="knobs">
     <h2>Sounds, and playing a voice</h2>
+    <p>Each voice has its own bank of sounds, stored with the piece. <b>SEL + ALGORITHM</b> steps the sound of the voice on screen (a Pad, Drone, Acid or Pluck page), or the whole kit on the drums' pages; its name shows at the left of the line above the knobs. The Sound knob on the voice's page does the same.</p>
+    <div class="pages">
+      <div>
+        <h3>Pad <span>24 sounds</span></h3>
+        <dl><dd>Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs, Dark, Dub, Trance, Poly, Hollow, Pings, Hits, Rave, Sine, Ooh, Wurli, Mallet, Brass, Fat, Pluck, Chapel, Air.</dd></dl>
+      </div>
+      <div>
+        <h3>Drone <span>24 sounds</span></h3>
+        <dl><dd>Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ, Rumble, Sub, Square, Hoover, Fifths, Metal, Sync, Bright, Wub, Bite, Tine, Clang, Gnarl, Wide, Power, Air.</dd></dl>
+      </div>
+      <div>
+        <h3>Acid <span>31 sounds</span></h3>
+        <dl><dd>Saw, Square, Driven, Sync, Pluck, PWM, Chip, Sub, Trance, Bleep, Fifth, Bell, Organ, Laser, Fold, Soft, Marimba, E.Piano, Kalimba, Brass, Gong, Clav, Vibes, Digital, then Super (five saws spread), CZ (phase distortion), Mini (a monosynth bass), Hyper (a wider Super), CZ Pulse, CZ Bell, Lead.</dd></dl>
+      </div>
+      <div>
+        <h3>Pluck <span>12 + 22, and yours</span></h3>
+        <dl><dd>12 plain: Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass. 22 built-in DX7 voices: DX Tine EP, Glass Bell, Round Bass, Brass Sect, Soft Pad, Wood Bars, Drawbars, Nylon Pick, Brass 2, Solid Bass, Bells, Marimba, Clavinet, Strings, Glass Pad, Sync Lead, Harp, Kalimba, Flute, Steel Drum, Saw Bass, Tubular. After them, up to 16 DX7 voices of your own, which you load into a real FM-1 (see the last section).</dd></dl>
+      </div>
+      <div>
+        <h3>Kits <span>14, for each drum</span></h3>
+        <dl><dd>Hypno, House, Techno, Acid, Break, Minimal, Hard, 808, Dusty, Heavy, 909, Electro, DnB, Trap.</dd></dl>
+      </div>
+    </div>
     <ul>
-      <li>Each voice has sixteen sounds and each drum eight (the Sound knob on the voice's page, the Kit page for the drums), stored with the piece. <b>SEL + ALGORITHM</b> changes the sound of the voice on screen, or the whole kit on the drums' pages; its name shows at the left of the line above the knobs.</li>
-      <li><b>The keys set the scale</b>, on every page. <b>By hand:</b> on a voice's page, hold <b>SEL</b> and press <b>ENV</b> to take that voice (pad, drone or acid) off the algorithm. It goes quiet (BY HAND shows on the line above the knobs), and on its pages the keys play it over the song: the pad up to four notes, the drone and the acid the last key held (the acid sliding between held keys, as a 303). It works while stopped too. SEL + ENV again gives it back.</li>
+      <li><b>The keys set the scale</b> on every page that does not say otherwise: each key adds or removes its note (the root stays, and at least three notes remain). They are lit where the scale is. <b>ALGORITHM</b> picks the mode (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Pent maj, Pent min; the page says Custom once you have edited the scale).</li>
+      <li><b>By hand:</b> on a Pad, Drone or Acid page, hold <b>SEL</b> and press <b>ENV</b> to take that voice off the algorithm. It goes quiet (BY HAND shows above the knobs), and on its pages the keys play it over the song: the pad up to four notes, the drone and the acid the last key held (the acid sliding between held keys, as a 303). It works while stopped too. SEL + ENV again gives it back.</li>
+      <li><b>Jam</b> (the last page on the dial) plays the pluck, pad, acid or drone from all 27 keys, always in the scale, without touching the scale.</li>
     </ul>
   </div>
   <div>
     <h2>The sequencer (hold SEQ)</h2>
     <ul>
-      <li>Six lanes: kick, snare, clap, closed hat, open hat, perc. Sixteen steps.</li>
+      <li>Six lanes: kick, snare, clap, closed hat, open hat, perc. Sixteen steps each.</li>
       <li>The sixteen <b>white keys</b> (the lower row) are the steps of the drum you're on: they light where it hits, and a tap turns a hit on or off. The light running across them is the playhead.</li>
       <li><b>OCT−</b> / <b>OCT+</b> step through the drums. <b>SELECT</b> leaves for the next page.</li>
-      <li>With <b>SEL</b> held: <b>black keys 1–6</b> copy the pattern you're editing into pattern 1–6, <b>OCT−</b> clears the drum's lane, <b>OCT+</b> puts the piece's own lane back, and <b>white keys 1–6</b> pick the pattern to edit.</li>
-      <li>The knobs: the lane's Level, Tune and Decay, and the Pattern. It edits the pattern chosen, even before it plays.</li>
-      <li><b>SEQ</b> again goes back to the Drums page. The patterns and the lanes' sounds are the piece's: store the piece (Global, SAVE) to keep them.</li>
+      <li>The knobs: the lane's Level, Tune (&minus;50 to +50) and Decay, and the Pattern. It edits the pattern chosen, even before it plays.</li>
+      <li>With <b>SEL</b> held: <b>white keys 1–6</b> pick the pattern to edit, <b>black keys 1–6</b> copy the pattern you're editing into pattern 1–6, <b>OCT−</b> clears the drum's lane, <b>OCT+</b> puts the piece's own lane back.</li>
+      <li><b>SEL + a knob</b> (on the lane OCT−/OCT+ chose): <b>KNOB 1</b> fills the lane with a Euclidean pattern of 0 to 16 hits (0 clears it), <b>KNOB 2</b> turns that pattern round, <b>KNOB 3</b> sets the lane's probability in steps of 5 % (a hit sounds that often; the lane's name shows its chance under 100), <b>KNOB 4</b> sets its length, 1 to 16 steps.</li>
+      <li>A lane shorter than 16 counts from the start of the song, not the bar, so a 5-step hat against the 16-step kick comes round again every 80 steps (polymeter). The sequencer marks where it ends (L5) and dims the steps beyond.</li>
+      <li><b>SEQ</b> again goes back to the Drums page. The patterns, probabilities, lengths and the lanes' sounds are the piece's: store the piece (Global, SAVE) to keep them.</li>
     </ul>
   </div>
   <div>
     <h2>Buttons</h2>
     <ul>
-      <li><b>Keys</b> are the scale: each one adds or removes its note (the root stays). On the pages of a voice taken off the algorithm (SEL + ENV on its page) they play that voice instead.</li>
-      <li><b>PLAY</b> plays / stops. <b>REC</b> freezes. <b>EDIT</b> the next chord.</li>
-      <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Drone or Acid page, that voice; on any other page, the whole song. The line above the knobs shows OCT+1 (the voice) or SONG+1 (the song).</li>
-      <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and the drop. Hold it instead for the drop on the next bar. It lights while a breakdown or build runs, and blinks while one waits for the bar.</li>
-      <li><b>FX</b> turns the effects menu on and off. While it is on, each key plays its effect while held; hold SAVE and tap keys to lock effects on.</li>
-      <li><b>ALGORITHM</b> the mode, <b>PRESETS</b> the piece (01 to 10).</li>
-      <li><b>SEL</b> is a shift: hold it and <b>white keys 1–6</b> pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> changes the sound of the voice on screen (the drums: the kit), <b>SEQ</b> turns the links on and off, and <b>ENV</b> takes the voice on screen (pad, drone or acid) off the algorithm to play by hand.</li>
-      <li>On the <b>Global</b> page, <b>SAVE</b> stores the piece instead (held: factory settings). It's written at once: playing, the music fades out for a moment while it's written, then picks up where it was.</li>
+      <li><b>Keys</b> (27, F3 to G5): the scale. On the pages of a voice taken off the algorithm they play that voice; in the sequencer the white ones are the steps; in the FX menu they are effects; on Perform and the visualizers, or with GLO held, they are the track mix; on Jam, an instrument.</li>
+      <li><b>PLAY</b> plays / stops. <b>REC</b> freezes: the chord holds and the reverb rings on (REC lights; press again to thaw). <b>EDIT</b> the next chord, on the next bar.</li>
+      <li><b>HOME</b> Tempo; on Tempo, again for Perform; <b>twice quickly</b> from anywhere for the visualizers; <b>held</b> 0.7 s for the settings page.</li>
+      <li><b>ENV</b> Pad, Pad env, Pad LFO, Chords. <b>LFO</b> Drone, env, LFO. <b>ARP</b> Acid, env, line, Pluck, Pluck 2. <b>SEQ</b> Drums, Links, Kit, Drum drift (held: the sequencer). <b>GLO</b> Global (held: the track mix).</li>
+      <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Drone or Acid page, that voice (the pluck: two either way); on any other page, the whole song. The line above the knobs shows OCT+1 or SONG+1. In the FX menu, OCT− puts everything back: locks off, mutes and solos clear, the FX knobs home (an undo is on GLO + B3).</li>
+      <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and then the drop. Held 0.5 s in a breakdown or build it is the drop, on the next bar. It lights while a breakdown or build runs and blinks while one waits for the bar. On the <b>Global</b> page it stores the piece instead (held: factory settings). It is written at once: playing, the music fades out for a moment while it is written, then picks up where it was.</li>
+      <li><b>FX</b> opens and closes the effects menu (below). <b>ALGORITHM</b> the mode; <b>PRESETS</b> the piece (01 to 10). On Perform and the visualizers ALGORITHM is the mood instead. <b>MASTER</b> is the volume.</li>
+      <li><b>SEL</b> is a shift (hold it alone for 0.4 s and the screen lists what it does): <b>white keys 1–6</b> (F3, G3, A3, B3, C4, D4) pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> changes the sound of the voice on screen (the drums: the kit), <b>SEQ</b> turns the links on and off, <b>ENV</b> takes the voice on screen off the algorithm, <b>FX</b> walks the effects' settings pages, a <b>key in the FX menu</b> opens that effect's page, and <b>GLO</b> is remote mode (on the FM-1 itself).</li>
+      <li>Hold <b>ENV</b>, <b>LFO</b>, <b>ARP</b>, <b>GLO</b>, <b>EDIT</b>, <b>REC</b>, <b>OCT−</b> or <b>OCT+</b> alone for about a second and a card on the screen says what it does.</li>
     </ul>
   </div>
-  <div>
+  <div class="knobs">
     <h2>Effects (FX on)</h2>
-    <ul>
-      <li>Each key plays its effect while held.</li>
-      <li><b>Hold SAVE</b> for lock mode: each key you tap locks its effect on (it turns purple), one at a time or several together; tap a locked one again to unlock it. Keys already held when SAVE goes down lock too. Let go of SAVE and the locks stay while you play other effects on top. Tap a locked effect's key to turn just that one off. Close FX and the locked ones keep playing (FX blinks); open it again and tap a key to turn that one off. SAVE tapped alone is still the breakdown.</li>
-      <li><b>White keys 1–6</b>: beat repeat 1/2, 1/4, 1/6, 1/8, 1/16, 1/32 (from the next sixteenth; the shortest held wins). <b>7</b> reverse, <b>8</b> tape stop.</li>
-      <li><b>White keys 9–14</b>: mute kick, hats, snare (with clap and perc), drone, acid, pad (with the noise). <b>15</b> low-pass, <b>16</b> high-pass.</li>
-      <li><b>Black keys 1–5</b>: gate 1/16, gate 1/8, echo throw, crush, drum fill. <b>6–11</b>: solo, each beside its mute.</li>
-    </ul>
+    <p>FX opens the menu: the 27 keys become effects, named on the screen against their note (F3 is the lowest white key). <b>Tap</b> a key (under a quarter of a second) and it latches on; <b>hold</b> it and it plays only while held; <b>tap a latched key</b> to turn just that one off. The SELECT dial walks four banks (it stops at the ends); the four dots at the right of the line above the knobs show which. Close FX and the latched effects keep playing (FX shows in the header, and the FX button blinks); open it again and tap a key to turn that one off. Each kind of effect has its own colour on the screen: repeats cyan, filters green, gates and pump yellow, mutes red, colour effects pink, transport moves orange, builds violet.</p>
+    <div class="pages">
+      <div>
+        <h3>FX bank <span>FX</span></h3>
+        <dl>
+          <dt>F3 to B3</dt><dd>sweep, gate 1/16, ring mod, gate 1/8, freeze, gate with a pattern, reverse swell.</dd><dt>C4 to E4</dt><dd>talk (a vowel filter), phaser, wah, flanger, reverse.</dd><dt>F4 to B4</dt><dd>tape stop, tape, mute kick, roll (a repeat that speeds up), mute hats, pump, mute snare.</dd><dt>C5 to E5</dt><dd>mute perc, riser (a build), throw (an echo throw), vinyl, drum fill.</dd><dt>F5, G5</dt><dd>low-pass, high-pass (F#5 is spare).</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>BEAT FX <span>FX, SELECT</span></h3>
+        <dl>
+          <dt>F3 to C4</dt><dd>beat repeats 1/2, 1/4, 1/6, 1/8, 1/16, 1/32, then the triplets 1/8T and 1/16T.</dd><dt>D4 to F#4</dt><dd>scatter, brake, spin-back, half time, scratch.</dd><dt>G4 to C5</dt><dd>mute kick, reverse, mute hats, tape stop, mute snare, mute perc (where they are on the first bank, give or take).</dd><dt>C#5 to F5</dt><dd>the drum rolls: hat roll (32nds), hat triplets, snare roll, flam (a grace note before each snare), double kick.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>FLEX BEAT <span>FX, SELECT twice</span></h3>
+        <dl>
+          <dt>F3 to G4</dt><dd>Fifteen one-bar patterns that rework the last stretch of the music on the grid: STUT 16, STUT 32, BT REPT, HF REPT, BT REV, SKIP, TRANCE, GATE 8, DOUBLE, SHUFFLE, BCK-FWD, ROLL OUT, BUILD, SCRATCH, DROPOUT. Tap latches, hold plays; a held one repeats its bar, and the loop ends on the bar line when you let go.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>DJ SNIPS <span>FX, SELECT three times</span></h3>
+        <dl>
+          <dt>F3 to G5</dt><dd>Sounds a DJ throws in, one a key, up to four at once: AIR HORN, HORN LO, HORN HI, HORN MIN, SIREN, SIREN 2, SIREN 3, LASER, LASER LO, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, STAB, BELL, SNR ROLL. They play while a key is down; nothing latches.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>FX knobs <span>FX, or Perform</span></h3>
+        <dl>
+          <dt>Filter, Crush</dt><dd>A DJ filter: left of centre is low-pass, right is high-pass, the middle off; a bit crusher.</dd><dt>Throw, Wash</dt><dd>The echo send; the reverb send. They are never stored, and KNOB shows in the header while one is off its home.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Settings pages <span>SEL + a key, SEL + FX, FX FX</span></h3>
+        <dl>
+          <dt>Getting there</dt><dd>In the FX menu, <b>SEL + a key</b> opens that effect's settings page (an effect with none says so). <b>SEL + FX</b> walks the pages in order from the first, <b>FX pressed twice quickly</b> goes to the page of the effect you used last, and the SELECT dial walks them (22 pages, one dot each). FX alone closes. The effect is on while its page is up, so you hear what you set (for a roll, riser, scatter, brake, half time, scratch, freeze and reverse swell, hold any key to hear it). They are remembered across power-offs.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Settings pages, 1 <span>in dial order</span></h3>
+        <dl>
+          <dt>Gate</dt><dd>The white keys are the 16 steps. Pattern (3-3-3, tres, off-beat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, or your keys' own), Length (2 to 16 steps; 12 or 10 turn against the bar), Targets (what it closes: no drums, pad, drone, acid, drums, hats, kick, all, no kick, kick+drone, pluck), Depth.</dd><dt>Phaser, Flanger</dt><dd>Rate, Depth, Feedbk, Mix.</dd><dt>Vinyl</dt><dd>Level, Crackle, Hiss, Tone.</dd><dt>Tape</dt><dd>Wow, Flutter, Drive, Dull.</dd><dt>Roll</dt><dd>From, To (1/2 down to 1/64), Each (1/2 beat to 4 beats), Swell.</dd><dt>Pump</dt><dd>Depth, Release, Every (1/2, 1/4, 1/8, 1/16), Targets (as the gate's).</dd><dt>Riser</dt><dd>Time (about 1 to 12 s), Filter, Wash, Echo.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Settings pages, 2 <span>in dial order</span></h3>
+        <dl>
+          <dt>Scatter</dt><dd>Chaos, Reverse, Slice (1/32, 1/16, 1/8), Slices (2 to 8).</dd><dt>Brake</dt><dd>Time, Spinbk, Return, Dull.</dd><dt>Halftime</dt><dd>Speed (x1.5, x2, x4), Slide.</dd><dt>Sweep</dt><dd>Every (8 bars down to 1/8), Depth, Reso, Type (low, high, band).</dd><dt>Scratch</dt><dd>Every (1/4 to 1/32), Reach (1/16 to 1/2), Style (baby, pull).</dd><dt>Freeze</dt><dd>Size, Spread, Grains (1 to 4).</dd><dt>Rv swell</dt><dd>Length (1/2 beat, 1 beat, 2 beats), Mix.</dd><dt>Ring mod</dt><dd>Tone, Mix.</dd><dt>Talk, Wah</dt><dd>Talk: Every (2 bars to 1/8), Depth, Reso, Mix. Wah: Sens, Range, Reso, Mix.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Settings pages, 3 <span>not single effects</span></h3>
+        <dl>
+          <dt>Flex</dt><dd>Quant (off, beat, bar: when a pad starts), Mode (one shot or loop), Mix.</dd><dt>Snips</dt><dd>Pitch (normal, up or down an octave), Play (one shot, or held), Echo (dry, some, lots), Level.</dd><dt>Perform</dt><dd>Scenes (at once or next bar), Groove (8, 16, 32, 64 bars or SYNC), Break (short, half, full), Fill (off or on): the auto-DJ's settings.</dd><dt>Settings</dt><dd>Key, Saver, Lights, Genre: see Performing. HOME held opens it.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="knobs">
+    <h2>Performing</h2>
+    <div class="pages">
+      <div>
+        <h3>Perform <span>HOME on Tempo</span></h3>
+        <dl>
+          <dt>The screen</dt><dd>The section (groove, break, build) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (kick, hats, snare, perc, drone, acid, pad, pluck) as live meters, the four scenes, what is on in FX, and the mood bar.</dd><dt>Keys, knobs</dt><dd>The keys are the track mix (below, no GLO needed); the knobs are the FX knobs; ALGORITHM is the <b>mood</b>, chill to peak (0 to 100, 50 leaves the piece as it is): it moves the acid, the pluck, the hats and percussion, the pad's brightness, the drone's cutoff, the drive, the reverb and echo and more together. SELECT goes on to the pages.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Track mix <span>hold GLO, or Perform</span></h3>
+        <dl>
+          <dt>Mute, solo</dt><dd>F3 mute kick (the black key above, F#3, solos it), G3 hats, A3 snare, C4 perc, D4 drone, F4 acid, G4 pad, B4 pluck (F#5 solos it), A4 / A#4 all four drums.</dd><dt>Others</dt><dd>B3 undo (again: redo), E4 tap tempo, C5 to D#5 scenes 1 to 4, E5 reset everything, F5 auto-DJ on / off, G5 new piece each round. Held GLO shows the map, plus the load meter and the auto-DJ's phase.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Scenes <span>GLO + C5 to D#5</span></h3>
+        <dl>
+          <dt>Tap, hold</dt><dd>Tap recalls a scene (at once, or on the next bar: Scenes on the Perform settings page); hold 0.6 s stores the state as it is now: the effects locked on, the mutes and solos, the FX knobs. A recalled scene glides the FX knobs to its values. Scenes are kept until the power goes off.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Auto-DJ <span>GLO + F5</span></h3>
+        <dl>
+          <dt>What it does</dt><dd>Runs the sections by itself on the bar clock: a groove (8, 16, 32 or 64 bars), a drum fill as the groove's last bar, a breakdown (4 bars, half the groove or as long as it, by Break), a four-bar build with the riser rising, and the drop; then again. DJ shows in the header. With G5 on, the next piece comes in on the fill's bar. SAVE by hand just moves it on from there.</dd><dt>SYNC</dt><dd>The fifth Groove setting: the groove lasts until the chord changes (the Drift setting on Tempo sets how long); the bar before is the fill, the change's bar the breakdown.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Breakdown, build, drop <span>SAVE</span></h3>
+        <dl>
+          <dt>By hand</dt><dd>Tap SAVE: a breakdown on the next bar. Tap again: a four-bar build, then the drop. Held: the drop on the next bar. The header says BREAK, BUILD, or BREAK&gt; / BUILD&gt; / DROP&gt; while one waits for the bar. The Key setting can lift the root on each drop (it goes back at the next breakdown).</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Genres <span>GLO + PRESETS, or Settings</span></h3>
+        <dl>
+          <dt>Ten, of ten pieces each</dt><dd>HYPNO (the original techno and acid; pieces 01 to 10; the only one that stores), LOFI (L01 to L10, 70 to 94 BPM, swung), HOUSE (H, 118 to 126), DUBSTEP (D, 136 to 150, half time), JUNGLE (J, 160 to 170), DNB (N, 170 to 178), BREAKS (B, 100 to 135), GARAGE (G, 126 to 138, swung), ELECTRO (E, 118 to 130), TRAP (T, 130 to 150). The dial wraps. The same piece number keeps playing, and the genre brings its own drum patterns, kits, sounds and latched effects (vinyl, tape, pump, phaser). Changes last while you stay in a genre.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Settings <span>HOME held</span></h3>
+        <dl>
+          <dt>Key, Saver</dt><dd>The key change on the drop (same, +2, +3, +5, +7 semitones); the screensaver (off, 1, 3 or 10 minutes: left alone while playing, the visualizers take the whole screen; any key, button or turn brings the page back).</dd><dt>Lights, Genre</dt><dd>Off or show: on the visualizers the keys' lights follow them (chasers and kick / snare flashes in a groove, breathing in a breakdown, filling up through a build); the genre, as GLO + PRESETS. SELECT walks to the other settings pages, FX leaves.</dd>
+        </dl>
+      </div>
+      <div>
+        <h3>Visualizers <span>HOME twice quickly</span></h3>
+        <dl>
+          <dt>Eight</dt><dd>PLASMA, KALEIDO, BARS (a real spectrum), FLUX, DISCO (the mascot dancing over a floor of the drum pattern), LIFE, ORBIT, AUTO (a new one at each section change and every 32 bars). SELECT chooses; the knobs stay the FX knobs, ALGORITHM the mood, the keys the track mix, FX opens its menu over them; HOME leaves for Perform.</dd>
+        </dl>
+      </div>
+    </div>
   </div>
   <div>
     <h2>Mouse, touch and keyboard</h2>
     <ul>
-      <li>Drag a knob up or down, or use the scroll wheel over it. Click or touch buttons and keys; <kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
-      <li>White keys 1–8: <kbd>Q</kbd>–<kbd>I</kbd>, 9–16: <kbd>A</kbd>–<kbd>K</kbd>. Black keys 1–11: <kbd>1</kbd>–<kbd>0</kbd>, <kbd>-</kbd>.</li>
-      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC, <kbd>Esc</kbd> HOME, <kbd>V</kbd> ENV, <kbd>L</kbd> LFO, <kbd>P</kbd> ARP, <kbd>M</kbd> SEQ (hold: the sequencer), <kbd>O</kbd> GLO, <kbd>C</kbd> EDIT, <kbd>`</kbd> FX, <kbd>B</kbd> SAVE, <kbd>Z</kbd> / <kbd>X</kbd> OCT− / OCT+, <kbd>↑</kbd> <kbd>↓</kbd> SELECT.</li>
+      <li>Drag a knob up or down, or use the scroll wheel over it. Click or touch buttons and keys (several fingers at once work); <kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
+      <li>White keys 1–8: <kbd>Q</kbd>–<kbd>I</kbd>, 9–16: <kbd>A</kbd>–<kbd>K</kbd>. Black keys 1–10: <kbd>1</kbd>–<kbd>0</kbd>, black key 11: <kbd>-</kbd>.</li>
+      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC, <kbd>Esc</kbd> HOME, <kbd>V</kbd> ENV, <kbd>L</kbd> LFO, <kbd>P</kbd> ARP, <kbd>M</kbd> SEQ, <kbd>O</kbd> GLO, <kbd>C</kbd> EDIT, <kbd>`</kbd> FX, <kbd>B</kbd> SAVE, <kbd>N</kbd> SEL, <kbd>Z</kbd> / <kbd>X</kbd> OCT− / OCT+. A held key is a held button, so hold <kbd>M</kbd> for the sequencer or <kbd>N</kbd> with another key for SEL combinations.</li>
+      <li><kbd>↑</kbd> <kbd>↓</kbd> turn SELECT. The other knobs (ALGORITHM, PRESETS, KNOB 1–4, MASTER) have no letter: use the mouse, or press <kbd>Tab</kbd> to a knob and turn it with the arrow keys.</li>
+      <li>Hover a control for a one-line tip. Stream view (a button under the panel, or <code>?stream</code> on the address) shows the FM-1 and its screen large on a 16:9 stage for capturing.</li>
     </ul>
   </div>
   <div>
-    <h2>Power-on</h2>
-    <p>Each start shows deamonSLINKY (and its slinky), then PERF-1, then plays a piece at random (any button or key skips ahead). New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
-      It is the firmware, not a recording: what you hear is PERF-1 running, at the FM-1's 44.1 kHz.
-      The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
+    <h2>Power-on, and what is remembered</h2>
+    <p>Each start shows deamonSLINKY (and its slinky), then PERF-1, then plays a piece of the HYPNO genre at random (any button or key skips ahead): as you stored it, or a little changed from its factory settings if you never did. New start powers it off and on. Kept in this browser across power-offs: stored pieces (HYPNO only), the theme, Tune and MIDI out, the effects' settings (every settings page), the performing settings (scene timing, auto-DJ, key change, saver, lights, Jam) and the visualizer. Not kept: what is latched on, the FX knobs, the mood, the scenes, mutes and solos, the genre. Forget stored clears everything kept. It is the firmware, not a recording: what you hear is PERF-1 running, at the FM-1's 44.1 kHz.</p>
+  </div>
+  <div>
+    <h2>What the emulator cannot do</h2>
+    <ul>
+      <li>Load your own DX7 voices, read the load telemetry, or send MIDI out: those need a real FM-1 (the installer page has the DX7 loader and a live status panel). Here the Pluck has its 34 built-in sounds only. MIDI clock, SysEx and program changes are ignored.</li>
+      <li>The load under the pattern (CPU, XR) is only an estimate of this computer's time: XR stays 0 and there is no second core. Writes to flash are your browser's storage.</li>
+      <li>Remote mode is started on the FM-1 (SEL + GLO, with PERF-1 or HYP-1 on it); SEL + GLO on this page does nothing special. MIDI needs Chrome, Edge or Firefox.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Credits</h2>
+    <p>PERF-1 is by deamonSLINKY, a fork of <b>HYP-1</b> by <a href="https://www.redtail.works">RedtailWorks</a> (GPL-3.0). The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
   </div>
 </section>
 <footer class="foot"><span>PERF-1 by deamonSLINKY, based on HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a> (GPL-3.0)</span><a class="yt" href="https://www.youtube.com/@RedtailWorks">Videos on YouTube</a><a href="https://ko-fi.com/redtailworks">Support on Ko-fi</a><a href="https://github.com/RustyPawz/fm1-HYP1">Source</a></footer>
@@ -713,7 +880,7 @@ function onMidi(e, input) {
 function midiStatusText() {
   if (!midi) return;
   const ins = [...midi.inputs.values()].filter((i) => i.state === "connected");
-  if (remote) midiUI.status.innerHTML = `<span class="live">${remote.input.name}: HYP-1 remote, playing this one</span>${remote.out ? "" : " (its lights: no matching output)"}`;
+  if (remote) midiUI.status.innerHTML = `<span class="live">${remote.input.name}: PERF-1 remote, playing this one</span>${remote.out ? "" : " (its lights: no matching output)"}`;
   else if (learning) midiUI.status.textContent = picked ? `${targetName(picked.dataset.t)}: now move or press a control on your controller.` : "Click a control here to learn it.";
   else midiUI.status.textContent = ins.length ? `Listening to ${ins.map((i) => i.name).join(", ")}.` : "No MIDI devices. Plug one in.";
 }

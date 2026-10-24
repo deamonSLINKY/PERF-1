@@ -42,6 +42,10 @@
   progress { width: 100%; height: 6px; margin-top: 14px; accent-color: var(--orange); }
   pre { color: var(--muted); font-size: 12px; white-space: pre-wrap; margin-top: 14px; background: var(--card); border-radius: 6px; padding: 0 .6em; }
   pre:empty { display: none; }
+  #log { display: block; height: 12.5em; overflow-y: auto; overscroll-behavior: contain; margin: 14px 0 0; padding: .5em .8em; border: 1px solid var(--rule);
+         line-height: 1.45; scrollbar-color: var(--purple) var(--card-2); }
+  #log:empty { display: block; }
+  #log:empty::before { content: attr(data-empty); color: var(--rule); }
   h2 { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 2.4rem 0 .8rem;
        padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--purple-2); }
   ol { margin: 0 0 16px; padding-left: 20px; }
@@ -75,7 +79,7 @@
 </head>
 <body>
 <main>
-  <header class="site"><a class="home" href="../"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../install/" aria-current="page">Install</a><a href="../manual/">Manual</a><a href="../board/">Board</a><a href="https://github.com/charlesvestal/fm1-amb">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav></header>
+  <header class="site"><a class="home" href="../"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="../install/" aria-current="page">Install</a><a href="../manual/">Manual</a><a href="../board/">Board</a><a href="https://github.com/charlesvestal/fm1-amb">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav></header>
   <button class="lang" id="lang"></button>
   <h1>Install PERF-1</h1>
   <div class="card">
@@ -94,7 +98,7 @@
   <p><button id="go" disabled data-t="install"></button></p>
   <progress id="bar" max="100" value="0"></progress>
   <p id="status"></p>
-  <pre id="log"></pre>
+  <pre id="log" data-empty="(what is being written shows here)"></pre>
   </div>
   <h2 data-t="voicesh"></h2>
   <div class="card">
@@ -233,7 +237,7 @@ $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; 
 applyLang();
 const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; $("status").textContent = t(k) + arg; };
 const say = (txt) => { lastKey = null; $("status").textContent = txt; };
-const log = (t) => { $("log").textContent += t + "\n"; };
+const log = (t) => { const e = $("log"); e.textContent += t + "\n"; e.scrollTop = e.scrollHeight; };   /* a box of its own size that follows the newest line */
 let image = null;
 const meta = /*META*/;
 

@@ -414,6 +414,55 @@ static void dx_service(void)
     dx_state = 0;
 }
 
+/* THE EDITOR (web/editor): parameter changes, a dump of every parameter, a voice read back. Changes are applied as the knobs would; a dump goes out in
+ * frames of up to 24 parameters (F0 7D 50 51 first-hi first-lo count, then each value + 8192 as two 7-bit bytes, F7), a frame a turn of the loop as the
+ * USB queue has room; a voice goes back as F0 7D 50 58 slot loaded [128 bytes, a checksum] F7 (no bytes when the slot is empty). */
+static void px_service(void)
+{
+    static uint32_t dump_i = 0xFFFFFFFFu, vox_req = 0xFFFFFFFFu;
+    uint8_t f[96];
+    while (px_r != px_w) {
+        const uint32_t e = px_q[px_r % PX_N];
+        RING_PUBLISH();
+        px_r++;
+        if (e >> 28 == 1u)
+            ui_param_set((int)(e >> 14 & 0x3FFFu), (int)(e & 0x3FFFu) - 8192);
+        else if (e >> 28 == 2u)
+            dump_i = 0;
+        else if (e >> 28 == 3u)
+            vox_req = e & 0x7Fu;
+    }
+    if (dump_i < (uint32_t)P_NPARAMS) {
+        uint32_t k, n = (uint32_t)P_NPARAMS - dump_i > 24u ? 24u : (uint32_t)P_NPARAMS - dump_i, o = 0;
+        f[o++] = 0xF0, f[o++] = 0x7D, f[o++] = 0x50, f[o++] = 0x51;
+        f[o++] = (uint8_t)(dump_i >> 7), f[o++] = (uint8_t)(dump_i & 0x7Fu), f[o++] = (uint8_t)n;
+        for (k = 0; k < n; k++) {
+            const uint32_t v = (uint32_t)(ui_param_get((int)(dump_i + k)) + 8192) & 0x3FFFu;
+            f[o++] = (uint8_t)(v >> 7), f[o++] = (uint8_t)(v & 0x7Fu);
+        }
+        f[o++] = 0xF7;
+        if (usb_sysex_try(f, o) == 0)
+            dump_i += n;
+    }
+    if (vox_req != 0xFFFFFFFFu) {
+        uint32_t o = 0, k, sum = 0;
+        const uint32_t have = vox_req < (uint32_t)en_user_count();
+        f[o++] = 0xF0, f[o++] = 0x7D, f[o++] = 0x50, f[o++] = 0x58;
+        f[o++] = (uint8_t)vox_req, f[o++] = (uint8_t)en_user_count();
+        if (have) {
+            const uint8_t *d = en_user_get((int)vox_req);
+            for (k = 0; k < 128u; k++) {
+                f[o++] = d[k] & 0x7Fu;
+                sum += d[k] & 0x7Fu;
+            }
+            f[o++] = (uint8_t)((128u - (sum & 0x7Fu)) & 0x7Fu);
+        }
+        f[o++] = 0xF7;
+        if (usb_sysex_try(f, o) == 0)
+            vox_req = 0xFFFFFFFFu;
+    }
+}
+
 static uint32_t prof_clk(void) { return fm1_ticks(); }
 static void tel_service(void)
 {
@@ -618,6 +667,7 @@ static void fm1_main(void)
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
         tel_service();
         dx_service();
+        px_service();
         if (usb.ota_req) {
             usb.ota_req = 0;
             en_play(0);
