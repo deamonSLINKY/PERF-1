@@ -91,36 +91,62 @@ def main():
     P = param_enum()
     assert len(params) == P["P_NPARAMS"], "the parameter table and the enum disagree"
     groups = ui_tables(P)
-    used = {k["p"] for g in groups for k in g["knobs"]}
-    other = []
-
-    def add(i, label):
-        if i not in used:
-            other.append({"p": i, "label": label})
-            used.add(i)
-
-    for l in range(6):
-        add(P["P_LANE"] + 3 * l, LANES[l] + " level")
-        add(P["P_LANE"] + 3 * l + 1, LANES[l] + " tune")
-        add(P["P_LANE"] + 3 * l + 2, LANES[l] + " decay")
-        add(P["P_PROB"] + l, LANES[l] + " probability")
-        add(P["P_LLEN"] + l, LANES[l] + " length (steps)")
-    for l in range(5):
-        add(P["P_PAN"] + l, LAYERS[l] + " pan")
-        add(P["P_SEND"] + l, LAYERS[l] + " send")
-    nice = {"P_NOISE": "Noise level", "P_NZ_COLOR": "Noise colour", "P_NZ_TONE": "Noise tone", "P_NZ_PUMP": "Noise pump", "P_BASSOCT": "Drone octave",
-            "P_AC_OCT": "Acid octave", "P_OCT": "Song octave", "P_PAD_OCT": "Pad octave", "P_CM_OCT": "Pluck octave", "P_MODE": "Mode (scale)",
-            "P_LINKS": "Links on", "P_PAD_MAN": "Pad by hand", "P_DR_MAN": "Drone by hand", "P_AC_MAN": "Acid by hand", "P_CM_MAN": "Pluck by hand"}
-    for n, v in P.items():
-        if n in ("P_NPARAMS", "P_STYLE", "P_LANE", "P_ECHO") or n.startswith("P_LANE"):
-            if n != "P_ECHO":
-                continue
-        if n != "P_NPARAMS" and v not in used and v < len(params):
-            add(v, nice.get(n, params[v]["n"]))
-    out = {"params": params, "groups": groups, "other": other, "alg": algorithms(), "lanes": LANES, "layers": LAYERS,
+    byname = {g["name"]: g["knobs"] for g in groups}
+    pl = lambda *items: [{"p": P[n], "label": lab} for n, lab in items]
+    ls = lambda base, k, lab: {"p": P[base] + k, "label": lab}
+    tabs = [
+        {"name": "Tempo & global", "sections": [
+            {"name": "Tempo", "knobs": byname["Tempo"]},
+            {"name": "Global", "knobs": byname["Global"]},
+            {"name": "Scale and octave", "knobs": pl(("P_MODE", "Mode (scale)"), ("P_OCT", "Song octave"))}]},
+        {"name": "Pad", "sections": [
+            {"name": "Pad", "knobs": byname["Pad"]},
+            {"name": "Envelope (the breath)", "knobs": byname["Pad env"]},
+            {"name": "LFO", "knobs": byname["Pad LFO"]},
+            {"name": "Chords", "knobs": [k for k in byname["Chords"] if k["label"] != "Root"]},
+            {"name": "Place", "knobs": pl(("P_PAD_OCT", "Octave"), ("P_PAD_MAN", "By hand")) + [ls("P_PAN", 0, "Pan"), ls("P_SEND", 0, "Send")]}]},
+        {"name": "Drone", "sections": [
+            {"name": "Drone", "knobs": byname["Drone"]},
+            {"name": "Envelope", "knobs": byname["Drone env"]},
+            {"name": "LFO", "knobs": byname["Drone LFO"]},
+            {"name": "Place", "knobs": pl(("P_BASSOCT", "Octave"), ("P_DR_MAN", "By hand")) + [ls("P_PAN", 1, "Pan"), ls("P_SEND", 1, "Send")]}]},
+        {"name": "Acid", "sections": [
+            {"name": "Acid", "knobs": byname["Acid"]},
+            {"name": "Envelope and sound", "knobs": byname["Acid env"]},
+            {"name": "The line", "knobs": byname["Acid line"]},
+            {"name": "Place", "knobs": pl(("P_AC_OCT", "Octave"), ("P_AC_MAN", "By hand")) + [ls("P_PAN", 2, "Pan"), ls("P_SEND", 2, "Send")]}]},
+        {"name": "Pluck", "sections": [
+            {"name": "Pluck", "knobs": byname["Pluck"]},
+            {"name": "Behaviour", "knobs": byname["Pluck 2"]},
+            {"name": "Place", "knobs": pl(("P_CM_MAN", "By hand")) + [ls("P_PAN", 3, "Pan"), ls("P_SEND", 3, "Send")]}]},
+        {"name": "Drums", "sections": [
+            {"name": "Drums", "knobs": byname["Drums"]},
+            {"name": "Kit", "knobs": byname["Kit"]},
+            {"name": "Links (drums into voices)", "knobs": pl(("P_LINKS", "Links on")) + byname["Links"]},
+            {"name": "Drum drift", "knobs": byname["Drum drift"]},
+            {"name": "Place", "knobs": [ls("P_PAN", 4, "Pan"), ls("P_SEND", 4, "Send")]}] + [
+            {"name": LANES[l] + " lane", "knobs": [ls("P_LANE", 3 * l, "Level"), ls("P_LANE", 3 * l + 1, "Tune"), ls("P_LANE", 3 * l + 2, "Decay"),
+                                                 ls("P_PROB", l, "Probability"), ls("P_LLEN", l, "Length (steps)")]} for l in range(6)]},
+        {"name": "Space & master", "sections": [
+            {"name": "Space", "knobs": byname["Space"]},
+            {"name": "Reverb", "knobs": byname["Reverb"]},
+            {"name": "Master bus", "knobs": byname["Master"]}]},
+        {"name": "Mixer", "sections": [
+            {"name": "Levels", "knobs": pl(("P_PAD", "Pad"), ("P_BASS", "Drone"), ("P_ACID", "Acid"), ("P_CM_LVL", "Pluck"), ("P_PULSE", "Drums"), ("P_NOISE", "Vinyl"))},
+            {"name": "Pan", "knobs": [ls("P_PAN", k, LAYERS[k]) for k in range(5)]},
+            {"name": "Send (echo and reverb)", "knobs": [ls("P_SEND", k, LAYERS[k]) for k in range(5)]},
+            {"name": "Vinyl", "knobs": pl(("P_NZ_COLOR", "Wear"), ("P_NZ_PUMP", "Pump (the kick ducks it)"))}]},
+    ]
+    placed = {k["p"] for tb in tabs for s in tb["sections"] for k in s["knobs"]}
+    unused = {P["P_NZ_TONE"], P["P_STYLE"]}                     # kept for the saved banks' layout, nothing reads them
+    left = [i for i in range(len(params)) if i not in placed and i not in unused]
+    if left:                                                    # never lose a parameter: whatever no tab has yet
+        tabs[-1]["sections"].append({"name": "More", "knobs": [{"p": i, "label": params[i]["n"]} for i in left]})
+    other = left
+    out = {"params": params, "tabs": tabs, "alg": algorithms(), "lanes": LANES, "layers": LAYERS,
            "enum": {k: v for k, v in P.items() if k in ("P_CM_SND", "P_CM_LVL", "P_NPARAMS")}}
     json.dump(out, open(OUT, "w", encoding="utf-8"), separators=(",", ":"))
-    sys.stdout.write("params.json: %d parameters, %d pages, %d other, %d algorithms (%d B)\n" % (len(params), len(groups), len(other), len(out["alg"]), os.path.getsize(OUT)))
+    sys.stdout.write("params.json: %d parameters, %d tabs, %d sections, %d not on any tab, %d algorithms (%d B)\n" % (len(params), len(tabs), sum(len(x["sections"]) for x in tabs), len(left), len(out["alg"]), os.path.getsize(OUT)))
 
 
 if __name__ == "__main__":

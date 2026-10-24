@@ -168,8 +168,13 @@ static void fm1_fault(const fm1_crash_t *c)
 {
     char b[12];
     uint32_t t0;
-    if (fm1_core1_online())
-        fm1_core1_bar_set();                        /* CPU1's data can go bad too: this boot and the next run on one core */
+    if (fm1_core1_online()) {
+        /* CPU1's data can go bad too, so a crash may bar it: but only when it is to blame (it faulted itself) or when the crashes repeat (the second since power-on):
+         * a crash of the first core alone (a stack overrun in the main loop, say) left the unit on one core, with its xruns, until the power was cycled */
+        const uint32_t n = fm1_core1_crash_note();
+        if (fm1_core1_fault.count || n >= 2u)
+            fm1_core1_bar_set();
+    }
     fm1_core1_stop();
     fm1_audio_stop();
     lcd_fill(0, 0, 240, 240, RGB(160, 0, 0));
@@ -574,6 +579,8 @@ static void fm1_main(void)
         hexs(b + 3, fm1_crash.pc);
         draw_text_box(0, 176, 240, &FONT_S, "RESTARTED AFTER A CRASH", RGB(255, 80, 60), 1);
         draw_text_box(0, 196, 240, &FONT_S, b, C_GRAY, 1);
+        if (fm1_core1_barred())                     /* the second core is held until the power is cycled: say so (it is why the load is higher) */
+            draw_text_box(0, 216, 240, &FONT_S, "ONE CORE: POWER-CYCLE", RGB(255, 212, 71), 1);
         fm1_wdt_feed();
         fm1_delay_ms(2500);
         fm1_wdt_feed();

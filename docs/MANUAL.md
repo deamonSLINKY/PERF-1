@@ -10,7 +10,6 @@ performance into your DAW: the FM-1 is a USB audio and MIDI device.
 PERF-1 is deamonSLINKY's fork of [HYP-1](https://www.redtail.works) by RedtailWorks (GPL-3.0). This
 manual is for **PERF-1 0.11 (experimental)**: it is changing quickly, some of it has been tested only in the
 simulator and the emulator, and it can still crash. Keep a way back to the stock firmware (section 1).
-Ideas and questions go on the [board](../board/).
 
 ![The Tempo page, the home screen](img/perf-screen-home.png)
 
@@ -1085,7 +1084,7 @@ fader) or relative (an endless encoder: pick which in the list). The list is kep
 ## 19. Credits
 
 PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1**, a
-[RedtailWorks](https://www.redtail.works) project (videos on [YouTube](https://www.youtube.com/@RedtailWorks)), itself a fork of
+[RedtailWorks](https://www.redtail.works) project, itself a fork of
 [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal. The platform (USB, update loader, storage, installer) is
 [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic), Hügelton Instruments, which reaches PERF-1 by way of X0X and FoMni
 (the panel calibration is Felucca's; the boot guard, knob acceleration, help cards and anti-aliased drawing came from X0X).
@@ -1099,7 +1098,6 @@ processor core) and the safe core hold are from **Melodee** by Kerem Kilic (Elli
 
 Screen and page fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Licence: GPL-3.0, no warranty.
 
-HYP-1 is free; if it has found a place in your music you can support RedtailWorks on [Ko-fi](https://ko-fi.com/redtailworks).
 
 M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.
 

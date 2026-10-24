@@ -37,7 +37,7 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_NOISE, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_MIXER, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_REVERB, V_MASTER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
                                               "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Reverb", "Master", "Global", "Jam",
@@ -3189,7 +3189,7 @@ static int scope_kind(int v)
     case V_SPACE: return SCOPE_SPACE;
     case V_MASTER: return SCOPE_MASTER;
     case V_REVERB: return SCOPE_REVERB;
-    case V_NOISE: return SCOPE_MIX;
+    case V_MIXER: return SCOPE_MIX;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
     }
@@ -3830,7 +3830,7 @@ static void draw_main(void)
                         (uint32_t)proj.par[P_PL_RATE] << 24);
         if (ui.view == V_MASTER)
             h = hash(h, (uint32_t)(en_comp_gr * 2.0f) | (uint32_t)(en_lim_gr * 2.0f) << 8 | (uint32_t)(en_out_peak * 40.0f) << 16);
-        if (ui.view == V_NOISE) {
+        if (ui.view == V_MIXER) {
             int d;
             float dg = 0.0f;
             for (d = 0; d < EN_NLANE; d++)

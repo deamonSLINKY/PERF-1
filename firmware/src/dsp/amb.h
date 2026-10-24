@@ -70,12 +70,12 @@ void en_style_sounds(int16_t *par);             /* a piece stored with a style (
 
 /* parameters: value ranges in en_param_info() */
 enum {
-    P_PAD, P_ACID, P_BASS, P_PULSE, P_NOISE,              /* the layers' levels */
+    P_PAD, P_ACID, P_BASS, P_PULSE, P_NOISE,              /* the layers' levels (the drone, the drums, and the vinyl) */
     P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT,                 /* tempo */
     P_BRIGHT, P_PADTONE, P_DETUNE,                        /* pad */
     P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST,             /* pad envelope (the breath) */
     P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST,         /* pad LFO */
-    P_NZ_COLOR, P_NZ_TONE, P_NZ_PUMP,                     /* noise */
+    P_NZ_COLOR, P_NZ_TONE, P_NZ_PUMP,                     /* the vinyl (P_NOISE is its level): its wear, (tone: unused, kept for the banks' layout), how hard the kick ducks it */
     P_BASSOCT, P_DR_CUT, P_DR_RES,                        /* drone */
     P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT,              /* drone envelope */
     P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST,         /* drone LFO */

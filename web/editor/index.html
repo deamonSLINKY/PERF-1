@@ -95,7 +95,7 @@
   </div>
 
   <section class="panel" id="p-sound">
-    <p class="muted">Every parameter, on the pages the FM-1 has. Moving a control changes the piece that is playing right now; to keep it, store the piece on the unit (GLO page, SAVE). The pluck's Sound lists the built-in DX voices and the ones you have loaded.</p>
+    <p class="muted">Every parameter, grouped by voice: all of the pad together, all of the drums together, and so on. Moving a control changes the piece that is playing right now; to keep it, store the piece on the unit (GLO page, SAVE). The pluck's Sound lists the built-in DX voices and the ones you have loaded.</p>
     <div class="cols">
       <div class="pages" id="pages"></div>
       <div class="card"><h2 id="pagetitle"></h2><div id="rows"></div></div>
@@ -216,8 +216,7 @@ function onDump(d) {                              /* F0 7D 50 51 first-hi first-
   dumpGot = Math.max(dumpGot, first + n);
   if (dumpGot >= NPARAMS) { renderRows(); $("conn").textContent = "Connected: " + port.inp.name + ". Read " + NPARAMS + " parameters."; }
 }
-const group = (name) => D.groups.find((g) => g.name === name);
-const PAGES = D.groups.map((g) => ({ name: g.name, knobs: g.knobs })).concat([{ name: "Lanes, mixer, more", knobs: D.other }]);
+const PAGES = D.tabs;                             /* a tab a voice (all of the pad together, all of the drums together), in sections */
 let page = 0;
 function renderPages() {
   const box = $("pages");
@@ -235,7 +234,13 @@ function renderRows() {
   $("pagetitle").textContent = g.name;
   const box = $("rows");
   box.textContent = "";
-  g.knobs.forEach((k) => box.append(paramRow(k)));
+  g.sections.forEach((s) => {
+    const h = document.createElement("h3");
+    h.textContent = s.name;
+    h.style.marginTop = "14px";
+    box.append(h);
+    s.knobs.forEach((k) => box.append(paramRow(k)));
+  });
 }
 function paramRow(k) {
   const q = P[k.p], row = document.createElement("div");

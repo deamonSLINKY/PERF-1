@@ -26,18 +26,31 @@
 #include "fm1_core1_stop.h"
 
 /* Carried across soft resets (a crash, the watchdog, an update), lost at power-off. */
-#define FM1_CORE1_BAR_MAGIC 0x52414231u              /* "1BAR" */
-typedef struct { uint32_t magic, barred; } fm1_core1_bar_t;
+#define FM1_CORE1_BAR_MAGIC 0x52414232u              /* "2BAR" (the layout with the crash count) */
+typedef struct { uint32_t magic, barred, crashes; } fm1_core1_bar_t;
 /* Not static, as fm1_crash: the compiler must not assume a zero start. */
 fm1_core1_bar_t fm1_core1_bar __attribute__((section(".noinit")));
 static inline int fm1_core1_barred(void)
 {
     return fm1_core1_bar.magic == FM1_CORE1_BAR_MAGIC && fm1_core1_bar.barred == 1u;
 }
+static inline void fm1_core1_bar_init(void)                /* after a power-off the memory is anything: start clean */
+{
+    if (fm1_core1_bar.magic != FM1_CORE1_BAR_MAGIC) {
+        fm1_core1_bar.magic = FM1_CORE1_BAR_MAGIC;
+        fm1_core1_bar.barred = 0;
+        fm1_core1_bar.crashes = 0;
+    }
+}
 static inline void fm1_core1_bar_set(void)
 {
-    fm1_core1_bar.magic = FM1_CORE1_BAR_MAGIC;
+    fm1_core1_bar_init();
     fm1_core1_bar.barred = 1;
+}
+static inline uint32_t fm1_core1_crash_note(void)           /* a crash of the first core: how many since power-on */
+{
+    fm1_core1_bar_init();
+    return ++fm1_core1_bar.crashes;
 }
 
 typedef void (*fm1_core1_fn)(void *);
