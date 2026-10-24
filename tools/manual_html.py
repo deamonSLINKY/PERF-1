@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
-"""docs/MANUAL.md -> docs/manual.html. The Markdown is the source; run this after editing it.
+"""docs/MANUAL.md -> docs/manual.html (PERF-1's page: the mascot's colours, the slinky logo and favicon
+embedded from web/img). The Markdown is the source; run this after editing it.
 
   tools/manual_html.py [IN.md [OUT.html]] [--fragment]
 
@@ -20,12 +21,13 @@ SRC = Path(__file__).resolve().parents[1]
 PART_COLOURS = {}                                     # (X0X marks its parts with a swatch; AMB-1 has none)
 
 CSS = """
-/* HYP-1's screen: a charcoal ground, a cyberpunk purple, orange for what is live (the names below are
-   inherited from AMB-1: paper the ground, sheet the cards, river the purple, ink the text) */
+/* PERF-1's page: the mascot's colours (the slinky on the boot card): a warm black ground, crimson, light pink,
+   ember yellow for what is live, cream. (The names below are inherited from AMB-1: paper the ground, sheet the
+   cards, river the crimson, ink the text.) */
 :root {
-  --paper: #141318; --sheet: #211e29; --green-1: #2f2840; --green-3: #6b5a8c;
-  --river: #a44cff; --river-2: #c18cff; --ink: #f1ecf4; --muted: #aaa1b8; --rule: #3e3a4c;
-  --orange: #ff8020;
+  --paper: #130a0e; --sheet: #211219; --green-1: #2e1822; --green-3: #9c1d3a;
+  --river: #e0344f; --river-2: #ff8f8f; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
+  --orange: #ffd447; --cream: #f2e6c4; --rust: #9c1d3a;
   color-scheme: dark;
 }
 body {
@@ -33,15 +35,15 @@ body {
   font: 400 18px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding-inline: 16px; padding-block: 32px 64px;
 }
-main { max-width: 46rem; margin: 0 auto; }
+main { max-width: 48rem; margin: 0 auto; }
 h1, h2, h3, th, .site .home { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
 h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 h1 { font-size: 2.1rem; font-weight: 700; margin: 0 0 .6rem; letter-spacing: .05em; text-transform: uppercase; display: flex; align-items: center; gap: .7rem; }
-h1::before { content: ""; width: 34px; height: 5px; flex: none; background: linear-gradient(90deg, var(--orange) 0 62%, var(--river) 62%); }
+h1::before { content: ""; width: 34px; height: 5px; flex: none; background: linear-gradient(90deg, var(--orange) 0 38%, var(--river) 38%); }
 h2 { font-size: 1.3rem; font-weight: 400; margin: 3rem 0 .8rem; padding-top: .8rem; border-top: 1px solid var(--rule);
      text-transform: uppercase; letter-spacing: .04em; }
 h2 .num { color: var(--orange); margin-right: .5em; font-variant-numeric: tabular-nums; }
-h3 { font-size: 1.1rem; font-weight: 600; margin: 2rem 0 .5rem; }
+h3 { font-size: 1.1rem; font-weight: 600; margin: 2rem 0 .5rem; color: var(--cream); }
 p, li { max-width: 65ch; }
 p { margin: 0 0 1rem; }
 ul, ol { padding-left: 1.3rem; margin: 0 0 1rem; }
@@ -66,9 +68,9 @@ td:first-child { white-space: nowrap; }
 .status p { margin: 0; }
 .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .5rem; border-bottom: 1px solid var(--rule); }
 .site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
-.site .home img { image-rendering: pixelated; display: block; }
+.site .home img { image-rendering: pixelated; display: block; width: 46px; height: 46px; }
 .site nav a.yt { color: var(--orange); }
-a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c85420; color: #fff8f0 !important; text-decoration: none; border-radius: 999px; padding: .15em .8em; font-weight: 600; } a.kofi:hover { background: var(--orange, #ff8020); color: #1a0c03 !important; }
+a.kofi { display: inline-flex; align-items: center; gap: .4em; background: var(--rust); color: #fff8f0 !important; text-decoration: none; border-radius: 999px; padding: .15em .8em; font-weight: 600; } a.kofi:hover { background: var(--orange); color: #1a0c03 !important; }
 .site .home:hover { color: var(--river-2); background: none; }
 .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: .92rem; }
 .site nav a { color: var(--ink); text-decoration-color: var(--river-2); text-underline-offset: 3px; }
@@ -84,14 +86,14 @@ details[open] > summary { margin-bottom: .4rem; }
 details > :last-child { margin-bottom: 1rem; }
 .swatch { display: inline-block; width: .7em; height: .7em; margin-right: .4em; vertical-align: .02em; box-shadow: 0 0 0 1px var(--ink); }
 nav.contents ol { columns: 2 14rem; column-gap: 2rem; padding-left: 1.3rem; }
-.figs { display: flex; flex-wrap: wrap; gap: 20px; margin: .4rem 0 1.6rem; }
+.figs { display: flex; flex-wrap: wrap; gap: 16px; margin: .4rem 0 1.6rem; }
 figure { margin: 0; flex: 0 1 auto; }
 figure img { display: block; max-width: 100%; height: auto; }
-figure.shot img { width: 300px; image-rendering: pixelated; border: 1px solid var(--rule); border-radius: 6px; }
+figure.shot img { width: 240px; image-rendering: pixelated; border: 1px solid var(--rule); border-radius: 6px; }
 figure.wide img { border-radius: 10px; }
 figure.wide { flex-basis: 100%; }
 figure.wide img { width: 100%; }
-figcaption { color: var(--muted); font-size: .88rem; margin-top: .4rem; max-width: 300px; }
+figcaption { color: var(--muted); font-size: .88rem; margin-top: .4rem; max-width: 240px; }
 figure.wide figcaption { max-width: none; }
 nav.contents li { break-inside: avoid; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
@@ -114,10 +116,15 @@ def slug(title):
     return f"s{m.group(1)}" if m else re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
 
 
-NAME = "HYP-1"
+NAME = "PERF-1"
+WEB_IMG = SRC / "web" / "img"                         # the slinky (logo) and its favicon, embedded: the page stays one file
 REPO = os.environ.get("REPO_URL", "https://github.com/RustyPawz/fm1-HYP1")
 IMG_BASE = SRC / "docs"
 EMBED = False                                         # --fragment: images as data URIs
+
+
+def data_uri(path):
+    return "data:image/png;base64," + base64.b64encode(Path(path).read_bytes()).decode()
 
 
 def figure(caption, src):
@@ -177,7 +184,7 @@ def convert(md):
         if ln.startswith("# "):                         # the title; AMB-1's own a way home (the site's root)
             t = ln[2:].strip()
             if t == NAME:                               # the site's header (home, the other pages), then the title
-                out.append('<header class="site"><a class="home" href="../"><img src="img/panda.png" width="48" height="38" alt="">HYP-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="HYP-1_Manual.pdf">PDF</a><a href="../board/">Board</a><a href="' + REPO + '">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav></header>')
+                out.append('<header class="site"><a class="home" href="../"><img src="' + data_uri(WEB_IMG / "slinky.png") + '" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a><a href="../board/">Board</a><a href="' + REPO + '">Source</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav></header>')
                 out.append('<h1>Manual</h1>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')
@@ -247,21 +254,22 @@ def main():
     EMBED = fragment
     src = Path(args[0]) if args else SRC / "docs" / "MANUAL.md"
     dst = Path(args[1]) if len(args) > 1 else SRC / "docs" / "manual.html"
-    md = src.read_text()
+    md = src.read_text(encoding="utf-8")
     h1 = re.search(r"^# (.+)$", md, re.M)
     title, what = (f"{NAME} Manual", "The manual") if not h1 or h1.group(1) == NAME else (f"{NAME}: {h1.group(1)}", h1.group(1))
     body = convert(md)
+    FAVICON = data_uri(WEB_IMG / "favicon.png")
     page = (f"<title>{html.escape(title)}</title>\n"
-            f'<meta name="description" content="{html.escape(what)} for {NAME}, hypnotic techno and acid firmware for the M-VAVE FM-1.">\n'
+            f'<meta name="description" content="{html.escape(what)} for {NAME}, live-performance firmware for the M-VAVE FM-1 (a fork of HYP-1).">\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">\n'
-            '<link rel="icon" type="image/png" href="img/favicon.png">\n'
+            f'<link rel="icon" type="image/png" href="{FAVICON}">\n'
             f"<style>{CSS}</style>\n<main>\n{body}\n</main>\n")
     if not fragment:
         head, _, rest = page.partition("<main>")
         page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
                 '<meta name="viewport" content="width=device-width, initial-scale=1">\n' + head +
                 "</head>\n<body>\n<main>" + rest + "</body>\n</html>\n")
-    dst.write_text(page)
+    dst.write_text(page, encoding="utf-8")
     print(f"{dst}: {len(page)} bytes")
 
 
