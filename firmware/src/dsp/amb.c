@@ -2233,7 +2233,7 @@ static inline void reverb_tank(float x, float *ol, float *or_)
  * on the other core (en_core2_attach) while this one renders the voices, the drums and the echoes. Same job, same
  * result, whichever core runs it. The line's slots a job reads and the slots being written are apart (PRE_LP). */
 #define RV_MAX 256
-typedef struct { int n, r0; int fm_on; uint32_t fm_w; } rv_job_t;
+typedef struct { int n, r0; int fm_on; uint32_t fm_w; int bass; } rv_job_t;   /* bass: the job renders the drone and the acid too */
 static rv_job_t rv_job;
 static float rv_wl[RV_MAX] EN_POOL, rv_wr[RV_MAX] EN_POOL;           /* the tank's output for the chunk */
 static int (*c2_submit)(void (*)(void *), void *);
@@ -2249,11 +2249,23 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void),
     c2_alive = alive;
 }
 volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by the first core (set when it has time to spare and the other has not) */
-static int8_t bal_force = -1;                    /* tests: -1 as it decides, 0 or 1 */
-static uint32_t bal_wait, bal_tot, bal_dwell;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
+static int8_t bal_force = -1;                    /* tests: -1 as it decides, else the level */
+static uint8_t bal_lvl = 1;                      /* where the work runs: 0 the pad's chorus on the first core too; 1 the usual; 2 the drone and the acid on the other core as well */
+static uint32_t bal_wait, bal_tot, bal_dwell, bal_block, bal_up_t, bal_back = 40u;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
+volatile uint8_t en_bass_c1;
+static void bal_apply(int l)
+{
+    bal_lvl = (uint8_t)l;
+    en_chorus_c0 = (uint8_t)(l == 0 && par[P_PL_CHO] > 0);
+    en_bass_c1 = (uint8_t)(l == 2);
+}
 void en_balance_force(int v) { bal_force = (int8_t)v; }
-static volatile uint32_t stage_done;             /* the job's first stage (the pad) is done: its outputs may be read */
+static float bass_o[RV_MAX] EN_POOL, acid_o[RV_MAX] EN_POOL, gg_v[RV_MAX] EN_POOL;   /* the drone's and the acid's samples for the chunk, and the gate's gain per sample */
+static float bass_duck;                          /* the sidechain's envelope as the chunk began (what the drone's filter follows: the kick moves it later in the chunk) */
+static volatile uint32_t stage_done, stage2_done;             /* the job's first stage (the pad) is done: its outputs may be read */
 static void render_pad(uint32_t n);
+static void render_bass(uint32_t n);
+static void render_acid(uint32_t n);
 static void reverb_job(void *p)
 {
     const rv_job_t *c = (const rv_job_t *)p;
@@ -2287,6 +2299,13 @@ static void chunk_job(void *p)
     if (c2_fence)
         c2_fence();
     stage_done = 1;
+    if (((const rv_job_t *)p)->bass) {           /* the drone and the acid (the first core needs them after the drums) */
+        render_bass((uint32_t)((const rv_job_t *)p)->n);
+        render_acid((uint32_t)((const rv_job_t *)p)->n);
+        if (c2_fence)
+            c2_fence();
+        stage2_done = 1;
+    }
     reverb_job(p);
     fm_job((const rv_job_t *)p);
 }
@@ -4468,6 +4487,8 @@ static void render_bass(uint32_t n)
     if (amp < 1e-5f && !en_playing && !bass.play) {
         bass.amp = 0.0f;
         en_bass_level = 0.0f;
+        for (j = 0; j < n; j++)
+            bass_o[j] = 0.0f;
         return;
     }
     bass.note += (bass.target - bass.note) * fm_minf((float)n * (bass.play ? GLIDE_K * 12.0f : GLIDE_K), 1.0f);
@@ -4483,7 +4504,7 @@ static void render_bass(uint32_t n)
             float oct, fc;
             oct = (float)par[P_DR_CUT] * 0.075f - 1.5f + DS->cut + (dest == 0 ? 2.5f * depth * drone_lfo.v : 0.0f) +
                   4.0f * (float)par[P_DE_AMT] * 0.01f * bass.env + 0.8f * motion * mod[9].v + 0.8f * arcm -
-                  2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) - 0.35f * duck_env * pulse_vol +
+                  2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) - 0.35f * bass_duck * pulse_vol +
                   4.0f * (float)par[P_LK_KICK] * 0.01f * lk_kick;   /* the links: the kick opens it */
             fc = fm_clampf(f * 2.0f * fm_exp2f(oct), 45.0f, 9000.0f);
             svf_coefs(bass.c1, fc, reso_k);
@@ -4563,11 +4584,7 @@ static void render_bass(uint32_t n)
         x = svf_lp(x, bass.c1, &bass.s[0]);
         x = svf_lp(x, bass.c2, &bass.s[2]);
         amp += (tgt - amp) * rate;
-        x = fm_tanhf(x * drv) * amp * g * TG(TR_DRONE, j);
-        mixl[j] += x;
-        mixr[j] += x;
-        rsend[j] += x * 0.06f;
-        esend[j] += x * 0.04f;
+        bass_o[j] = fm_tanhf(x * drv) * amp * g * TG(TR_DRONE, j);   /* (into the mix by render_chunk, with its sends: 0.06 and 0.04 of it) */
     }
     for (j = 0; j < 4; j++)
         bass.s[j] = fm_flush(bass.s[j]);
@@ -4695,6 +4712,8 @@ static void render_acid(uint32_t n)
     if (amp < 1e-5f && acid.amp_t <= 0.0f) {
         acid.amp = 0.0f;
         en_acid_level = 0.0f;
+        for (j = 0; j < n; j++)
+            acid_o[j] = 0.0f;
         return;
     }
     for (j = 0; j < n; j++) {
@@ -4837,11 +4856,7 @@ static void render_acid(uint32_t n)
         y = fm_tanhf(y * (1.6f + 1.5f * res) * adrv) / fm_minf(adrv, 1.3f);   /* the squelch: driven between the two */
         y = svf_lp(y, acid.c2, &acid.s[2]);
         amp += (acid.amp_t - amp) * 0.006f;     /* ~4 ms edges */
-        y *= amp * vel * g * TG(TR_ACID, j);
-        mixl[j] += y;
-        mixr[j] += y;
-        rsend[j] += y * 0.15f;
-        esend[j] += y * 0.35f;
+        acid_o[j] = y * amp * vel * g * TG(TR_ACID, j);   /* (the sends: 0.15 and 0.35 of it) */
         lvl = fm_maxf(lvl, amp);
     }
     for (j = 0; j < 4; j++)
@@ -5191,7 +5206,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         rv_job.fm_on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
         rv_job.fm_w = fm_ctr & (FM_R - 1);
         pad_lk = lk_snare;
+        rv_job.bass = en_bass_c1;
+        bass_duck = duck_env;
         stage_done = 0;
+        stage2_done = 0;
         rv_c2 = c2_submit && c2_submit(chunk_job, &rv_job);
         if (rv_c2)
             en_c2_jobs++;
@@ -5199,12 +5217,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             chunk_job(&rv_job);
     }
     PT(0);                                      /* the clear, the job's start */
-    mx_begin(1, n);
-    render_bass(n);
-    mx_end(1, n);
-    mx_begin(2, n);
-    render_acid(n);
-    mx_end(2, n);
+    if (!rv_job.bass) {                         /* the drone and the acid here (else the other core's: merged after the drums) */
+        render_bass(n);
+        render_acid(n);
+    }
     PT(1);                                      /* bass, acid */
     mx_begin(3, n);
     render_cm(n);
@@ -5221,7 +5237,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                 c2_join();                      /* retires it */
                 en_c2_lost++;
                 for (j = 0; j < n; j++)
-                    padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = rv_wl[j] = rv_wr[j] = 0.0f;
+                    padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = rv_wl[j] = rv_wr[j] = bass_o[j] = acid_o[j] = 0.0f;
                 plate_init();
                 fm_reset();                      /* (its voices were the other core's too) */
                 for (j = 0; j < FM_R; j++)
@@ -5255,6 +5271,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             gt = odd ? 0.0f : 1.0f;
 
         gg += (gt - gg) * 0.04f;
+        gg_v[j] = gg;
         dk[j] = 1.0f - depth * de;
         de *= duck_dec;
         mixl[j] *= dk[j] * gg;
@@ -5297,6 +5314,28 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     mx_end(4, n);
     PT(5);                                      /* the drums */
+    if (rv_c2 && rv_job.bass) {                 /* the drone and the acid are the other core's: wait for them (the reverb goes on behind) */
+        while (!stage2_done)
+            if (c2_alive && !c2_alive()) {
+                for (j = 0; j < n; j++)
+                    bass_o[j] = acid_o[j] = 0.0f;
+                break;                          /* (the pad's wait retired it: or the join below does) */
+            }
+        if (c2_fence)
+            c2_fence();
+    }
+    {   /* the drone and the acid into the mix as they were before the sidechain: ducked by the kick and gated, their sends gated, the mixer's pan and sends on each */
+        float bl, br, bs, al, ar, as;
+        mx_gains(1, &bl, &br, &bs);
+        mx_gains(2, &al, &ar, &as);
+        for (j = 0; j < n; j++) {
+            const float b = bass_o[j], a = acid_o[j], dg = dk[j] * gg_v[j];
+            mixl[j] += (b * bl + a * al) * dg;
+            mixr[j] += (b * br + a * ar) * dg;
+            rsend[j] += (b * 0.06f * bs + a * 0.15f * as) * gg_v[j];
+            esend[j] += (b * 0.04f * bs + a * 0.35f * as) * gg_v[j];
+        }
+    }
     duck_env = fm_flush(de);
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
         float el, er, xl, xr;
@@ -5330,26 +5369,34 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     en_prof[9]++;
     if (bal_force >= 0) {
-        en_chorus_c0 = (uint8_t)bal_force;
-    } else if (en_prof_clock && rv_c2) {        /* where the chorus runs: the first core takes it when it has waited more than 8 % of a quarter second
-                                                 * (it costs about 9 % of a chunk), gives it back when it waits under 1 % */
+        bal_apply(bal_force);
+    } else if (en_prof_clock && rv_c2) {        /* where the work runs, from how long the first core waited for the other (a quarter second's, summed) */
         bal_tot += pt0_ - bal_t0;
         bal_wait += bal_w;
         if (bal_tot >= 6000000u) {
             const uint32_t frac = bal_wait / (bal_tot / 100u);
             if (bal_dwell)
                 bal_dwell--;
-            if (par[P_PL_CHO] <= 0 || en_shed_level) {
-                en_chorus_c0 = 0;
+            if (bal_block)
+                bal_block--;
+            if (en_shed_level) {                /* the engine is shedding: the chorus is off, the default places */
+                bal_apply(1);
             } else if (!bal_dwell) {
-                if (!en_chorus_c0 && frac > 8u) {
-                    en_chorus_c0 = 1;
-                    bal_dwell = 8;              /* (two seconds before it may move again: it does not flutter between the two) */
-                } else if (en_chorus_c0 && frac < 1u) {
-                    en_chorus_c0 = 0;
+                if (frac > 8u && bal_lvl > 0) {          /* the first core waits: the other has too much: its chorus, or the drone and acid, come back */
+                    bal_apply(bal_lvl - 1);
+                    bal_dwell = 8;                      /* (two seconds before it may move again) */
+                    if (bal_up_t && bal_up_t < 40u) {   /* it came back soon after going: do not try again for a while (10 s, then 20, up to a minute) */
+                        bal_block = bal_back;
+                        bal_back = bal_back < 120u ? bal_back * 2u : 240u;
+                    }
+                } else if (frac < 1u && bal_lvl < 2 && !bal_block) {   /* the first core never waits: the other has room, it takes more */
+                    bal_apply(bal_lvl + 1);
                     bal_dwell = 8;
+                    bal_up_t = 1;
                 }
             }
+            if (bal_up_t)
+                bal_up_t++;
             bal_tot = bal_wait = 0;
         }
     }

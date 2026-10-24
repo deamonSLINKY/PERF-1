@@ -30,8 +30,11 @@ run core2 sh -c "$CC -O2 -ffp-contract=off -std=c11 -Wall -Wextra -DEN_HOST -Ifi
     s=\$($OUT/core2_test 0) && d=\$($OUT/core2_test 1) && t=\$($OUT/core2_test 2) && m=\$($OUT/core2_test 3) && $OUT/core2_test 4 && $OUT/core2_test 5 && \
     [ \"\$($OUT/core2_test 0 - 1 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 2 - 1 | cut -d' ' -f2)\" ] && \
     [ \"\$($OUT/core2_test 0 - 2 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 2 - 2 | cut -d' ' -f2)\" ] && \
-    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 2 - 0 1 | cut -d' ' -f2)\" ] && \
-    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 3 - 0 1 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 2 - 0 0 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 3 - 0 0 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 2 - 0 2 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 3 - 0 2 | cut -d' ' -f2)\" ] && \
+    [ \"\$($OUT/core2_test 0 | cut -d' ' -f2)\" = \"\$($OUT/core2_test 1 - 0 2 | cut -d' ' -f2)\" ] && \
     [ \"\${s#* }\" = \"\${d#* }\" ] && [ \"\${s#* }\" = \"\${t#* }\" ] && [ \"\${s#* }\" = \"\${m#* }\" ] && echo \$s \$d \$t \$m"
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 # the update path, against the firmware package (Felucca's tests; needs ./build.sh)

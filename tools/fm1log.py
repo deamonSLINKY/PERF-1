@@ -62,7 +62,8 @@ def decode(msg):
     if len(raw) < n:
         return None
     d = dict(zip(FIELDS, struct.unpack("<%dI" % len(FIELDS), bytes(raw[:n]))))
-    d["chorus"] = d["shed"] >> 8                  # the pad's chorus on the first core (the firmware balances it)
+    d["chorus"] = d["shed"] >> 8 & 1              # the pad's chorus on the first core (the firmware balances it)
+    d["bass"] = d["shed"] >> 9 & 1                # the drone and the acid on the other core
     d["shed"] &= 0xFF
     return d
 
@@ -99,7 +100,7 @@ def selftest():
     w = list(range(1, len(FIELDS) + 1))
     msg = PREFIX + pack7(struct.pack("<%dI" % len(w), *w))
     d = decode(msg)
-    assert d and d.pop("chorus") == 0 and [d[k] for k in FIELDS] == w, d
+    assert d and d.pop("chorus") == 0 and d.pop("bass") == 0 and [d[k] for k in FIELDS] == w, d
     assert decode([0x00, 0x59, 0x11]) is None
     wb = [1500, 240] + [3000 + 100 * k for k in range(9)]
     assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<11I", *wb))) == tuple(wb)
@@ -149,7 +150,7 @@ def main():
     t0 = time.time()
     with open(out, "w", newline="") as f:
         cw = csv.writer(f)
-        cw.writerow(["t"] + FIELDS + ["chorus", "event"])
+        cw.writerow(["t"] + FIELDS + ["chorus", "bass", "event"])
         try:
             while True:
                 now = time.time()
@@ -179,7 +180,7 @@ def main():
                     if d["gap_us"] > 20000:
                         ev.append("GAP%dms" % (d["gap_us"] // 1000))
                     prev = d
-                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], " ".join(ev)])
+                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"], " ".join(ev)])
                     f.flush()
                     print("\r%6.1fs cpu %3d%% c1 %3d%% xr %-4d max %5.1fms/%.1f gap %5.1fms ui %5.1fms shed %d %s        " % (
                         now - t0, d["cpu"], d["cpu1"], d["xruns"], d["max_us"] / 1000, d["budget_us"] / 1000,
