@@ -20,4 +20,16 @@ expect smp 2
 key 0 up
 key 4 up
 wait 1500
+expect smp 0# the snips' settings page (SEL + a key in this bank): the keys play them there too, to try them out; the page's list and its caption are clear of each other
+press SEL
+tapkey 5
+release SEL
+wait 200
+expect fxpage 20
+key 2 down
+wait 400
+expect smp 1
+shot snips_page.png
+key 2 up
+wait 1500
 expect smp 0

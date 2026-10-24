@@ -95,8 +95,10 @@ static void bank_load(void)
     const uint32_t HDR = 20u;
     int n, i, p, l;
     uint32_t npar, stride;
+    int old_rate;
     memset(&bank, 0, sizeof bank);
     n = plat_store_load(OBJ_PROJ, raw, sizeof raw);
+    old_rate = n >= (int)HDR && rd16(raw + 18) == 0;   /* a bank from before the pluck's Rate was sorted slow to fast: 1/8, 1/16, 1/4, 3/16 */
     npar = n >= (int)HDR ? rd16(raw + 8) : 0u;
     stride = npar * 2u + 2u + 2u * EN_NPAT * EN_NLANE;
     if (n >= (int)HDR && rd32(raw) == BANK_MAGIC && rd32(raw + 4) == BANK_FORMAT && npar >= 1u && npar <= P_NPARAMS &&
@@ -113,6 +115,8 @@ static void bank_load(void)
                 continue;
             for (p = 0; p < P_NPARAMS; p++) {
                 int v = (uint32_t)p < npar ? (int16_t)rd16(q + 2 * p) : en_param_info(p)->def;
+                if (p == P_CM_RATE && old_rate)
+                    v = (v + 2) & 3;      /* (old 0 1 2 3 = 1/8 1/16 1/4 3/16 is now 2 3 0 1) */
                 bad |= v != clamp_par(p, v);
                 s->par[p] = (int16_t)v;
             }
@@ -134,6 +138,7 @@ static void bank_load(void)
         bank.midi = en_param_info(P_MIDI)->def;
         bank.theme = theme;
     }
+    bank.rsv0 = 1;                           /* (older firmware ignores it: its Rate reads the new order, no pieces lost) */
     bank.magic = BANK_MAGIC;
     bank.format = BANK_FORMAT;
     bank.npar = P_NPARAMS;

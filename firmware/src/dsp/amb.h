@@ -230,7 +230,7 @@ enum {
     EN_FXS_SM_MODE, EN_FXS_SM_LOOP, EN_FXS_SM_LEN, EN_FXS_SM_MIX,        /* the sampler: pitch (0) or slice (1), one shot (0) or loop (1), the window (0 full, 1 half, 2 quarter), its mix */
     EN_NFXS
 };
-#define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 50, 45, 25, 80, \
+#define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0xF0, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80}

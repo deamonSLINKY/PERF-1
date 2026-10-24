@@ -6,6 +6,11 @@ press SEL
 tap FX
 release SEL
 wait 100
+# (talk and wah come after the flanger now: two more turns to the same pages)
+spin SELECT 1
+wait 30
+spin SELECT 1
+wait 30
 spin SELECT 1
 wait 30
 spin SELECT 1

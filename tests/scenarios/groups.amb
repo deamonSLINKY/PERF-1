@@ -8,7 +8,7 @@ wait 100
 expect view 2
 tap LFO
 wait 100
-expect view 6
+expect view 5
 tap ENV
 wait 100
 expect view 2
@@ -19,10 +19,10 @@ expect view 3
 tap LFO
 tap LFO
 wait 100
-expect view 7
+expect view 6
 tap ARP
 wait 100
-expect view 9
+expect view 8
 tap LFO
 wait 100
-expect view 7
+expect view 6

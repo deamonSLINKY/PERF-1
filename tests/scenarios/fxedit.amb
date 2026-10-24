@@ -66,6 +66,17 @@ release SEL
 wait 200
 expect fxpage 3
 expect fxmask 1048576
+# talk and wah come next (page numbers 21, 22: the walk's order is not the numbers')
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 21
+press SEL
+tap FX
+release SEL
+wait 200
+expect fxpage 22
 press SEL
 tap FX
 release SEL
@@ -205,21 +216,14 @@ spin K1 1
 wait 50
 expect smpmode 1
 spin K1 -1
-# talk and wah, the last two pages
+# the dial stops at the last page (the sampler's)
 spin SELECT 1
 wait 100
-expect fxpage 21
-spin SELECT 1
-wait 100
-expect fxpage 22
-# the dial stops at the last page
-spin SELECT 1
-wait 100
-expect fxpage 22
+expect fxpage 20
 # the dial back down one page
 spin SELECT -1
 wait 100
-expect fxpage 21
+expect fxpage 19
 spin SELECT 1
 wait 100
 # and the keys again with SEL + FX (from the last page); FX alone closes

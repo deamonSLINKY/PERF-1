@@ -16,6 +16,14 @@ expect fxpage 3
 shot fxs_flanger.png
 spin SELECT 1
 wait 400
+expect fxpage 21
+shot fxs_talk.png
+spin SELECT 1
+wait 400
+expect fxpage 22
+shot fxs_wah.png
+spin SELECT 1
+wait 400
 expect fxpage 4
 shot fxs_vinyl.png
 spin SELECT 1

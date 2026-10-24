@@ -37,10 +37,10 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_MIXER, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_REVERB, V_MASTER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
-static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Mixer", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Reverb", "Master", "Global", "Jam",
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -129,7 +129,7 @@ static const struct {
     {"RING MOD", FX_RING, 0, {{"Tone", KN_PLAIN, EN_FXS_RM_FREQ, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_RM_MIX, 0, 0},
                               {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
-    {"PERFORM", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
+    {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
     {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
                          {"Genre", KN_NAME, 11, GENRE_UI_NAME, 10}}},
@@ -168,7 +168,6 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
     {P_CHORD, P_VOICING, P_PL_CHO, P_ROOT},        /* the harmony together (Root is also on Global), and the pad's chorus (Drift is on Tempo) */
-    {K_MXT, K_MXL, K_MXP, K_MXS},                  /* the mixer: a layer chosen, its level, its place, its send (the level is also on the layer's own page) */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
@@ -184,6 +183,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
     {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
+    {K_MXT, K_MXL, K_MXP, K_MXS},                  /* the mixer: a layer chosen, its level, its place, its send (the level is also on the layer's own page) */
     {P_ROOT, P_THEME, P_TUNE, P_MIDI},
     {K_NONE, K_NONE, K_NONE, K_NONE},              /* Jam: its knobs are the FXP table's last page (view_knob) */
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
@@ -196,7 +196,6 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Chord", "Voicing", "Chorus", "Root"},
-    {"Track", "Level", "Pan", "Send"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -212,6 +211,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Type", "Damping", "Predelay", "Amount"},
     {"Ratio", "Thresh", "Make-up", "Ceiling"},
+    {"Track", "Level", "Pan", "Send"},
     {"Root", "Theme", "Tune", "MIDI out"},
     {"Voice", "Keys", "Octave", "Answer"},
     {"Level", "Tune", "Decay", "Pattern"},
@@ -1214,7 +1214,7 @@ static const uint8_t GENRE_FXS[12] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_D
 static void genre_fx(int g)
 {
 #define SET GENRE_FXS
-    static const uint8_t LOFI[8] = {25, 18, 30, 45, 55, 40, 28, 75};             /* tape and vinyl, gentler */
+    static const uint8_t LOFI[8] = {25, 18, 30, 45, 42, 40, 42, 38};             /* tape and vinyl, gentler (the vinyl: less level, a darker tone, more hiss than crackle) */
     static const uint8_t HOUSE[4] = {50, 45, 1, 0x70};                           /* the pump: depth, release, every quarter, the chords and bass */
     int i;
     ui.fx_lock &= ~(FXB(FX_VINYL) | FXB(FX_TAPE) | FXB(FX_PUMP) | FXB(FX_PHASER));
@@ -1230,7 +1230,7 @@ static void genre_fx(int g)
         ui.fx_lock |= FXB(FX_PUMP);
     } else if (g >= 4) {                         /* the other six: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
         static const uint8_t XFX[6][12] = {
-            {10, 12, 45, 35, 35, 30, 25, 70, 255, 255, 255, 255},     /* jungle: sampled-from-vinyl grit */
+            {10, 12, 45, 35, 32, 30, 38, 45, 255, 255, 255, 255},     /* jungle: sampled-from-vinyl grit */
             {5, 5, 25, 20, 255, 255, 255, 255, 30, 30, 1, 0xF0},      /* dnb: a light pump, a very light tape */
             {20, 15, 60, 30, 255, 255, 255, 255, 255, 255, 255, 255}, /* breaks: tape drive, the phaser */
             {25, 10, 25, 40, 255, 255, 255, 255, 30, 35, 1, 0xF0},    /* garage: a light tape and pump */
@@ -1447,6 +1447,16 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
     *t = 0;
 }
 
+/* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
+{
+    int i;
+    for (i = 0; i < NFXP - 1; i++)
+        if (FX_ORDER[i] == pg)
+            return i;
+    return -1;
+}
 static int fx_page_of(int fx)                   /* the edit page (1 ..) of an effect, 0: it has none */
 {
     int p;
@@ -1954,7 +1964,10 @@ static void input(void)
                 ui.save_held = 1;              /* nor a drop */
             }
             if (i == B_FX && (btn >> B_SEL & 1u)) {   /* shift: the effects' edit pages, one by one, then the keys again */
-                ui.fx_page = ui.fx_menu ? (uint8_t)((ui.fx_page + 1) % NFXP) : 1;   /* (NFXP - 1 pages, then the keys again) */
+                {   /* (the walk's order, then the keys again) */
+                    const int nx = ui.fx_menu ? fx_pos(ui.fx_page) + 1 : 0;
+                    ui.fx_page = (uint8_t)(nx >= 0 && nx < NFXP - 1 ? FX_ORDER[nx] : 0);
+                }
                 ui.fx_menu = 1;
                 ui.lock_mode = 0;
                 say(ui.fx_page ? FXP[ui.fx_page - 1].name : "FX", ui.fx_page ? "EDIT" : "HOLD A KEY");
@@ -2060,7 +2073,7 @@ static void input(void)
     ui.lock_keys &= keys;
     if (!ui.fx_menu || ui.fx_page)
         ui.fx_tap = 0;
-    if (ui.fx_menu && !ui.fx_page && fx_bank == 3) {   /* the sampler: each key down is a note of it (let go: the note off, with the other voices' keys) */
+    if (ui.fx_menu && ((!ui.fx_page && fx_bank == 3) || ui.fx_page == 20)) {   /* the snips (their bank, and their settings page, to try them): each key down is one (let go: the note off, with the other voices' keys) */
         const uint32_t down = ch & keys & ~ui.shift_keys;
         for (i = 0; i < NKEYS; i++)
             if (down >> i & 1u) {
@@ -2188,10 +2201,10 @@ static void input(void)
             fx_bank = (uint8_t)(e > 0 ? (fx_bank < 3 ? fx_bank + 1 : 3) : (fx_bank > 0 ? fx_bank - 1 : 0));
             say(fx_bank == 3 ? "DJ SNIPS" : fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
         } else if (ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
-            const int p = ui.fx_page + (e > 0 ? 1 : -1);
-            if (p >= 1 && p < NFXP) {                 /* (the last, the JAM page's, is not an FX page) */
-                ui.fx_page = (uint8_t)p;
-                say(FXP[p - 1].name, "EDIT");
+            const int pos = fx_pos(ui.fx_page) + (e > 0 ? 1 : -1);
+            if (pos >= 0 && pos < NFXP - 1) {         /* (the JAM page's, the last, is not an FX page) */
+                ui.fx_page = FX_ORDER[pos];
+                say(FXP[ui.fx_page - 1].name, "EDIT");
             }
         } else if (btn >> B_HOME & 1u) {
             turn(EN_SELECT, P_TEMPO, e);
@@ -3156,17 +3169,16 @@ static void draw_fxedit(void)
         cv_text(4, 18, &FONT_B, FXP[p].name, p == 18 ? KC_FLEX : FXP[p].bit < 63 ? fx_color(FXP[p].bit) : K_TEXT);
         if (draw_fxscope(p)) {
             if (p == 18) {
-                cv_text(4, 112, &FONT_XS, "THE LAST PAD'S BAR: TALL = OLDER, BOX = LIVE, DASH = MUTE.", K_DIM);
-                cv_text(4, 126, &FONT_XS, "QUANT: WHEN IT STARTS. MIX: DRY TO WET.", K_DIM);
+                cv_text(4, 112, &FONT_XS, "A LOOK AT THE PAD YOU PLAYED LAST (NOT EDITED):", K_DIM);
+                cv_text(4, 126, &FONT_XS, "TALL = OLDER, BOX = LIVE, DASH = MUTE.", K_DIM);
             } else if (p == 19) {
-                cv_text(4, 112, &FONT_XS, "AIR HORNS, SIRENS, LASERS, DROPS AND MORE. PLAY", K_DIM);
-                cv_text(4, 126, &FONT_XS, "THEM IN THE SNIPS BANK (FX MENU, SELECT DIAL).", K_DIM);
+                cv_text(4, 124, &FONT_XS, "THE KEYS PLAY THEM. THE KNOBS SET HOW.", K_DIM);
             } else {
             cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
             }
         } else {
-            cv_text(4, 50, &FONT_XS, p == 16 ? "PERFORMING SETTINGS: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
+            cv_text(4, 50, &FONT_XS, p == 16 ? "THE AUTO-DJ AND SCENES: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
                                      FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 64, &FONT_XS, p == 16 || p == 17 ? "THE KNOBS SET THEM. DIAL: NEXT PAGE." : "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
         }
@@ -3622,7 +3634,7 @@ static int draw_fxscope(int p)
             cv_text(SC_X + 4, sc_oy + 4, &FONT_L, en_dj_name(held), KC_MOVE);
         } else {
             for (s = 0; s < 27; s++)
-                cv_text(SC_X + 4 + (s / 7) * 54, sc_oy + 2 + (s % 7) * 13, &FONT_XS, en_dj_name(s), K_DIM);
+                cv_text(SC_X + 4 + (s / 7) * 54, sc_oy + 2 + (s % 7) * 11, &FONT_XS, en_dj_name(s), K_DIM);   /* (eleven a row: the caption under it is clear of them) */
         }
         return 1;
     }
@@ -3808,7 +3820,7 @@ static void draw_scope(int kind)
         return;
     }
     if (kind == SCOPE_CMEL) {                    /* the counter-melody: its decay, and the line it plays over a bar (the chord's tones, low to high) */
-        static const uint8_t RATE[4] = {2, 1, 4, 3};
+        static const uint8_t RATE[4] = {4, 3, 2, 1};
         const int st = proj.par[P_CM_STYLE], ri = proj.par[P_CM_RATE] & 3, n = 6;
         const float T = 0.1f * fm_exp2f((float)proj.par[P_CM_DEC] * 0.045f);
         int s, k;
@@ -4250,7 +4262,7 @@ static void draw_knobs(void)
         for (k = 0; k < ndots; k++) {
             int cur, same;
             if (ui.fx_menu) {
-                cur = k == (ui.fx_page ? ui.fx_page - 1 : (int)fx_bank);
+                cur = k == (ui.fx_page ? fx_pos(ui.fx_page) : (int)fx_bank);
                 same = 0;
             } else {
                 cur = k == ui.view || (ui.view == V_SEQ && k == V_DRUMS);

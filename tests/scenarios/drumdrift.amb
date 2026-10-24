@@ -6,7 +6,7 @@ tap SEQ
 tap SEQ
 tap SEQ
 wait 200
-expect view 17
+expect view 16
 spin K1 1
 spin K2 -1
 spin K4 2

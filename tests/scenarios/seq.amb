@@ -51,13 +51,13 @@ shot seq_p3.png
 # SEQ tapped in the sequencer: back to Drums; SELECT from it goes on through the pages
 expect view 23
 turn SELECT 1 100
-expect view 15
+expect view 14
 press SEQ
 wait 500
 release SEQ
 expect view 23
 tap SEQ
-expect view 14
+expect view 13
 # a theme (Global, KNOB 2): the player's, written by itself once stopped
 tap GLO
 spin K2 2

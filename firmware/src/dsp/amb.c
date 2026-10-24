@@ -65,7 +65,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_DD_MUTATE] = {"Mutate", 0, 2, 0},
     [P_CM_LVL] = {"Pluck", 0, 100, 30},     [P_CM_SND] = {"Sound", 0, EN_NCMSND - 1, 1}, [P_CM_DENS] = {"Density", 0, 100, 45},
     [P_CM_OCT] = {"Pluck oct", -2, 2, 0},   [P_CM_DEC] = {"Decay", 0, 100, 45},          [P_CM_STYLE] = {"Style", 0, EN_NCMSTYLE - 1, 0},
-    [P_CM_RATE] = {"Rate", 0, 3, 0},        [P_CM_RANGE] = {"Range", 1, 3, 2},
+    [P_CM_RATE] = {"Rate", 0, 3, 2},        [P_CM_RANGE] = {"Range", 1, 3, 2},
     [P_PROB] = {"Prob", 0, 100, 100},     [P_PROB1] = {"Prob", 0, 100, 100},   [P_PROB2] = {"Prob", 0, 100, 100},
     [P_PROB3] = {"Prob", 0, 100, 100},    [P_PROB4] = {"Prob", 0, 100, 100},   [P_PROB5] = {"Prob", 0, 100, 100},
     [P_PAN] = {"Pan", 0, 100, 50},          [P_PAN1] = {"Pan", 0, 100, 50},        [P_PAN2] = {"Pan", 0, 100, 50},       [P_PAN3] = {"Pan", 0, 100, 50},
@@ -316,7 +316,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
     {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
 };
-static const uint8_t PLUCK_RATE[EN_NGENRE] = {0, 0, 0, 2, 1, 1, 0, 0, 1, 2};   /* the pluck's rate by genre: 1/8, 1/16, 1/4 */
+static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 3, 3, 2, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
 static void vary(int g, int i, int16_t *par)
 {
     const int pw = g * 3 + i, h = i / 5;
@@ -1578,6 +1578,7 @@ enum { SEC_GROOVE = EN_SEC_GROOVE, SEC_BREAK = EN_SEC_BREAK, SEC_BUILD = EN_SEC_
 static int sec, sec_bars, sec_req, pat_now, pat_next;   /* sec_bars: a build's bars left; sec_req: cmd + 1 */
 static uint32_t bars;                           /* bars played (the drone's envelope counts them) */
 static uint8_t fill_hold;
+static uint8_t riser_cut;                         /* the drop: the build's riser is cut at once (its high-pass was thinning the first kick) */
 static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the next bar; this bar's; the DJ follows the chords; the drop's impact is due */
 volatile uint8_t en_sec, en_sec_req;
 volatile uint8_t en_sec_bars;                   /* a build's bars left (the header's countdown) */
@@ -1690,6 +1691,7 @@ static void section_cmd(int c)                  /* the player's: on the bar */
         sec = SEC_GROOVE;
         brk = 0.0f;
         drop_imp = 1;
+        riser_cut = 1;
         if (frand() < 0.4f + 0.5f * evolve)
             change_pending = 1;
     }
@@ -1837,7 +1839,7 @@ const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", 
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
-const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
+const char *const EN_CM_RATE[4] = {"1/4", "3/16", "1/8", "1/16"};   /* slowest to fastest */
 #include "fm6.inc"
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
@@ -1885,7 +1887,7 @@ static void cm_play(int key)                    /* a note played by hand (the JA
 
 static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-melody: st its place in the bar, sw the swing's delay (samples) */
 {
-    static const uint8_t RATE[4] = {2, 1, 4, 3};
+    static const uint8_t RATE[4] = {4, 3, 2, 1};   /* sixteenths between notes, by the Rate knob */
     const int ri = par[P_CM_RATE] < 0 ? 0 : par[P_CM_RATE] > 3 ? 3 : par[P_CM_RATE];
     int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE];
     float dens = (float)par[P_CM_DENS] * 0.01f;
@@ -3527,6 +3529,10 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     throw_key = fm_clampf(throw_key + (m >> FX_THROW & 1u ? dt * 60.0f : -dt * 60.0f), 0.0f, 1.0f);
     vin_m += ((float)(uint32_t)(m >> FX_VINYL & 1u) - vin_m) * fm_minf(dt * 8.0f, 1.0f);   /* the vinyl: ~0.15 s */
     rs_inv = 1.0f / (fm_exp2f((float)fxs_v[EN_FXS_RS_TIME] * 0.036f));          /* 1 .. 12 s to the top (rises a second at a time) */
+    if (riser_cut) {                            /* the drop: gone before the first hit */
+        riser_amt = 0.0f;
+        riser_cut = 0;
+    }
     riser_amt = fm_clampf(riser_amt + (m >> FX_RISER & 1u ? dt * rs_inv : -dt * 2.0f), 0.0f, 1.0f);   /* (and 0.5 s down) */
     rs_filt = (float)fxs_v[EN_FXS_RS_FILT] * 0.009f;                             /* the high-pass: up to 0.9 */
     rs_wash = (float)fxs_v[EN_FXS_RS_WASH] * 0.005f;                             /* the reverb: up to 0.5 */
@@ -4962,7 +4968,8 @@ static inline float nz_sample(nz_t *z, int unused)
         if ((float)(h >> 8) * (1.0f / 16777216.0f) < 5.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
             z->r2 = 0.09f * vn_amp;
     }
-    d = (w - 0.5f * z->pw) * 0.5f;              /* white, the lows only eased (not taken out: that was piercing): a tick with a little body */
+    z->pp += 0.55f * (w - z->pp);               /* a tick's body: noise with its top rolled off (about 5 kHz): full-band white clicks were piercing */
+    d = z->pp * 0.9f;
     o = d * (z->crack + z->r2) + z->y2 + pk;
     z->crack *= z->r1;
     z->r2 *= 0.80f;

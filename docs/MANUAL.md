@@ -213,7 +213,6 @@ chords). On a voice's main page KNOB 1 is its level.
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
 | Chords | ENV x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close / open) | Chorus (0-100) | Root (as on Global) |
-| Mixer | SELECT | Track (pad, drone, acid, pluck, drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
 | Drone | LFO | Level | Sound (24) | Cutoff | Reso |
 | Drone env | LFO x2 | Trigger (chord, 1, 2, 4, 8 bars, off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Drone LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
@@ -221,14 +220,15 @@ chords). On a voice's main page KNOB 1 is its level.
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
 | Pluck | ARP x4 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
-| Pluck 2 | ARP x5 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/8, 1/16, 1/4, 3/16) | Range (1-3 oct) |
+| Pluck 2 | ARP x5 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Drone | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Drum drift | SEQ x4 | Change (off, next, random) | Every (the chord, 4-64 bars) | Pool (patterns 1-2 ... 1-6) | Mutate (off, shift, morph) |
 | Space | SELECT | Echo | Echo time (1/8, 3/16, 1/4, dotted 1/4, 1/2, 1 bar) | Reverb | Size |
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
-| Master | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
+| Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
+| Mixer | SELECT | Track (pad, drone, acid, pluck, drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
 | Global | GLO | Root | Theme (5) | Tune (+-50 cents) | MIDI out (off / on) |
 | Jam | SELECT | Voice (pluck, pad, acid, drone) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off / on) |
 
@@ -236,8 +236,8 @@ Three more screens are off the dial: the **Sequencer** (hold SEQ; section 8), th
 (HOME again from Tempo; section 10) and the **visualizers** (HOME twice quickly; section 13). The Perform screen
 and the visualizers have the FX knobs on their four knobs: Filter, Crush, Throw and Wash (section 9).
 
-The old Noise page is gone: the bed of noise is now the **Vinyl** effect (section 9), and the Mixer page took
-its place on the dial.
+The old Noise page is gone: the bed of noise is now the **Vinyl** effect (section 9). The Mixer page sits between Comp/Limit (the
+master bus; it was called Master) and Global.
 
 ![The Pad page](img/perf-screen-pad.png)
 
@@ -653,7 +653,7 @@ or so and every other one plays out), **Echo** (dry, some, lots: how much goes t
 
 Every effect with settings has a page that draws it. Reach a page by: **SEL + a key** in the FX menu (the effect that key
 plays; an effect with no settings says so), **FX twice quickly** (the effect you used last), **SEL + FX** (walks all 22,
-then back to the keys), or the **SELECT dial** once you are in one (no wrap). **FX** closes. The effect is on while its page
+then back to the keys; Talk and Wah come right after the phaser and flanger), or the **SELECT dial** once you are in one (no wrap). **FX** closes. The effect is on while its page
 is up, so you hear what you edit (the roll, riser, scatter, brake, half time, scratch, freeze and reverse swell need a key
 held to be heard). The dots at the right of the knob strip show where you are among the 22.
 
@@ -675,10 +675,10 @@ held to be heard). The dots at the right of the knob strip show where you are am
 | Freeze | Size | Spread | Grains (1-4) | - |
 | Rv swell | Length (1/2, 1, 2 beats) | Mix | - | - |
 | Ring mod | Tone (40-800 Hz) | Mix | - | - |
-| Perform | Scenes (at once, next bar) | Groove (8, 16, 32, 64 bars, sync) | Break (short, half, full) | Fill (off, on) |
+| Auto DJ | Scenes (at once, next bar) | Groove (8, 16, 32, 64 bars, sync) | Break (short, half, full) | Fill (off, on) |
 | Settings | Key (same, +2, +3, +5, +7) | Saver (off, 1, 3, 10 min) | Lights (off, show) | Genre |
 | Flex | Quant (off, beat, bar) | Mode (one shot, loop) | Mix | - |
-| Snips | Pitch | Play | Echo | Level |
+| Snips | Pitch | Play | Echo | Level (the keys play the snips on this page, to try them) |
 | Talk | Every (2 bars, 1 bar, 1/2, 1/4, 1/8) | Depth | Reso | Mix |
 | Wah | Sens | Range | Reso | Mix |
 
@@ -783,7 +783,7 @@ raises it to 40 so it can be heard.
 
 ![The Mixer page](img/perf-screen-mixer.png)
 
-**Mixer** (SELECT dial, between Chords and Drone) works on one layer at a time. **KNOB 1** chooses the layer (pad,
+**Mixer** (SELECT dial, between Comp/Limit and Global) works on one layer at a time. **KNOB 1** chooses the layer (pad,
 drone, acid, pluck, drums), **KNOB 2** its level (the same level as on the layer's own page), **KNOB 3** its **pan**
 (L100 to R100; it's a balance, the middle leaves the sound as it was), **KNOB 4** its **send**: how much of it goes to the
 echo and the reverb (50 is as it was, 0 none, 100 twice). The page draws a strip a layer: the level it's set to (the fader,
@@ -811,7 +811,7 @@ draws the tail for its type.
 
 ### The master bus
 
-![The Master page](img/perf-screen-master.png)
+![The Comp/Limit page](img/perf-screen-master.png)
 
 After the effects and before the MASTER volume the mix passes a stereo-linked **compressor** and a look-ahead brick-wall
 **limiter**; a soft clip after the volume stays as the last safety.
@@ -904,7 +904,7 @@ pattern, the section), in the theme's colours.
 |---|---|
 | HYPNO pieces you stored (Global, SAVE) | At once (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after the last change. |
-| Every effect's settings, the gate's pattern and targets, the Perform settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights), the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights), the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -966,7 +966,7 @@ Good to know:
 The [editor](../editor/) (Chrome or Edge, the FM-1 on USB, MIDI with SysEx allowed, nothing else holding the FM-1's MIDI port) has two tabs.
 
 **Sound** has every parameter on the pages the FM-1 itself has (Tempo, Pad, Pad env, Pad LFO, Chords, Drone, Drone env, Drone LFO, Acid, Acid env, Acid line,
-Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Master, Global), with the same labels, ranges and value names, and a last page for the rest:
+Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Comp/Limit, Mixer, Global), with the same labels, ranges and value names, and a last page for the rest:
 each drum lane's level, tune, decay, probability and length, each layer's pan and send, the noise, the octaves and the by-hand switches. Moving a control
 changes the piece that is playing, as the knob would; **to keep it, store the piece on the FM-1 itself** (GLO page, SAVE). The page reads the FM-1's values when
 it connects (and again with **Read everything from the FM-1**), so what you see is what it holds. The **↺** button puts a parameter back to its default.

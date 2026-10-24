@@ -130,7 +130,7 @@ def main():
         {"name": "Space & master", "sections": [
             {"name": "Space", "knobs": byname["Space"]},
             {"name": "Reverb", "knobs": byname["Reverb"]},
-            {"name": "Master bus", "knobs": byname["Master"]}]},
+            {"name": "Master bus", "knobs": byname["Comp/Limit"]}]},
         {"name": "Mixer", "sections": [
             {"name": "Levels", "knobs": pl(("P_PAD", "Pad"), ("P_BASS", "Drone"), ("P_ACID", "Acid"), ("P_CM_LVL", "Pluck"), ("P_PULSE", "Drums"), ("P_NOISE", "Vinyl"))},
             {"name": "Pan", "knobs": [ls("P_PAN", k, LAYERS[k]) for k in range(5)]},
