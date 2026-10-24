@@ -119,6 +119,7 @@ enum {
     P_DENS, P_DENS1, P_DENS2, P_DENS3, P_DENS4, P_DENS5,  /* each drum lane's busyness (P_DENS + lane): 50 plays the pattern as written, less takes the least important hits out, more puts hits on the most important empty steps (the pattern itself is never edited) */
     P_LSRC, P_LSRC1, P_LSRC2, P_LSRC3, P_LSRC4, P_LSRC5,  /* the pattern each lane plays (P_LSRC + lane): 0 follows the piece's pattern, 1..6 holds that pattern's lane (from the next bar) */
     P_CH_LOOP,                                            /* the progression: 0 a fresh walk, 1..3 the last 2, 4 or 8 chords repeat, 4..6 the same with now and then one drawn anew */
+    P_AC_RESP,                                            /* the acid's answer: every second time round the line is transformed (0 off, 1 an octave up, 2 a fifth up, 3 mirrored round the chord, 4 sparse) */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -320,6 +321,7 @@ void en_piece(int i, int16_t *par, uint16_t *pool);
  * set; the others are factory sets, kept in RAM while the power is on). */
 #define EN_NGENRE 10
 const char *en_genre_name(int g);
+void en_genre(int g);                          /* the genre playing: its chords move in its own habits (the first bank keeps the original walk) */
 const char *en_piece_name_g(int g, int i);
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool);
 void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE]);

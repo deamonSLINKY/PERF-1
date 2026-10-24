@@ -1318,6 +1318,7 @@ static void genre_step(int d)
 {
     const int g = (proj.genre + d + EN_NGENRE) % EN_NGENRE;
     project_set_genre(g);
+    en_genre(g);
     ui.key_on = 0;
     project_apply();
     mood_apply();
@@ -2402,6 +2403,15 @@ static void input(void)
             if (ui.view == V_SEQ && (btn >> B_SEL & 1u)) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation), the lane's probability and length */
                 ui.btn_used |= 1u << B_SEL;
                 seq_trick((int)i, e);
+                ui.act_t = ui.turn_t = plat_ms();
+                continue;
+            }
+            if (ui.view == V_ACLINE && i == 3 && (btn >> B_SEL & 1u)) {   /* the acid line's answer, SEL + K4: every second time round, changed */
+                char t[12];
+                ui.btn_used |= 1u << B_SEL;
+                knob_set(P_AC_RESP, proj.par[P_AC_RESP] + (e > 0 ? 1 : -1));
+                en_param_text(P_AC_RESP, proj.par[P_AC_RESP], t);
+                say("ACID ANSWER", t);
                 ui.act_t = ui.turn_t = plat_ms();
                 continue;
             }

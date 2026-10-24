@@ -218,7 +218,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Drone LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
-| Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
+| Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate (SEL + K4: the **Answer**, below) |
 | Pluck | ARP x4 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | ARP x5 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
@@ -248,7 +248,7 @@ master bus; it was called Master) and Global.
 
 ![The Chords page](img/perf-screen-chords.png)
 
-**What moves by itself.** The chord changes now and then (Drift sets how long it stays; EDIT moves it on).
+**What moves by itself.** The chord changes now and then (Drift sets how long it stays; EDIT moves it on). Each genre has its own habits in where it goes next on a seven-note scale: lofi and DnB love the fourth up (the ii-V-I turnaround), house loops by steps and thirds, dubstep and trap stay close to home on the dark side, jungle favours the flat seventh; HYPNO keeps the original walk. The **Loop** setting on the Chords page makes the last 2, 4 or 8 chords repeat.
 The pad's voices breathe on unequal cycles and take the new chord's notes as they breathe in. The drone
 follows the chord's root and glides. The acid line's notes are tied to the chord, so the riff transposes;
 Mutate rewrites steps each time round. The pluck plays an arpeggio of the chord's tones. Motion sets how far
@@ -458,6 +458,8 @@ level, decay and density.
 - **Plain (12):** Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep (a plain sine), Glass. All FM at their own ratios, apart from Bleep.
 - **Built-in DX7 voices (22):** DX Tine EP, DX Glass Bell, DX Round Bass, DX Brass Sect, DX Soft Pad, DX Wood Bars, DX Drawbars, DX Nylon Pick, DX Brass 2, DX Solid Bass, DX Bells, DX Marimba, DX Clavinet, DX Strings, DX Glass Pad, DX Sync Lead, DX Harp, DX Kalimba, DX Flute, DX Steel Drum, DX Saw Bass, DX Tubular. A six-voice, six-operator FM engine plays them as a DX7 would (all 32 algorithms, the envelopes with their curves and scaling, velocity, LFO, pitch envelope, feedback). Heavy patches are held to fewer voices (the bells, brass, strings and pads to three or four) to spare the processor.
 - **Yours (up to 16):** DX7 voices you load yourself come after these, named `DX` and the voice's own name (section 15).
+
+**The answer (call and response).** On the Acid line page hold **SEL** and turn **KNOB 4**: every second time round the line it is changed, so the line asks and then answers: **Octave** (the same notes twelve up), **Fifth** (seven up), **Mirror** (the contour upside down round the chord's note) or **Sparse** (only the even steps). Off by default; stored with the piece.
 
 ### The kits: 14
 

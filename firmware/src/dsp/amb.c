@@ -82,6 +82,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_LSRC] = {"Source", 0, 6, 0},        [P_LSRC1] = {"Source", 0, 6, 0},     [P_LSRC2] = {"Source", 0, 6, 0},
     [P_LSRC3] = {"Source", 0, 6, 0},       [P_LSRC4] = {"Source", 0, 6, 0},     [P_LSRC5] = {"Source", 0, 6, 0},
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
+    [P_AC_RESP] = {"Answer", 0, 4, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -484,6 +485,7 @@ void en_param_text(int i, int v, char *b)
     case P_CM_STYLE: s = EN_CM_STYLE[(unsigned)v < EN_NCMSTYLE ? v : 0]; break;
     case P_CM_RATE: s = EN_CM_RATE[v & 3]; break;
     case P_LSRC: case P_LSRC1: case P_LSRC2: case P_LSRC3: case P_LSRC4: case P_LSRC5: { static const char *const S[7] = {"Follow", "Pat 1", "Pat 2", "Pat 3", "Pat 4", "Pat 5", "Pat 6"}; s = S[(unsigned)v < 7u ? v : 0]; break; }
+    case P_AC_RESP: { static const char *const A[5] = {"Off", "Octave", "Fifth", "Mirror", "Sparse"}; s = A[(unsigned)v < 5u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -840,13 +842,13 @@ static float mtof(float n) { return 440.0f * tunefac * fm_exp2f((n - 69.0f) * (1
 
 /* a sine table: 1024 points a turn, plus one */
 #define SN 1024
-static float sint[SN + 1];
+#include "sint_tab.h"                   /* SINT: the table, in flash (it was filled at init, in 4 KB of RAM) */
 static inline float sine(float ph)              /* ph in turns, any value >= 0 */
 {
     float x = (ph - (float)(int)ph) * (float)SN;
     int i = (int)x;
     float f = x - (float)i;
-    return sint[i] + (sint[i + 1] - sint[i]) * f;
+    return SINT[i] + (SINT[i + 1] - SINT[i]) * f;
 }
 
 static inline float sine_any(float ph)          /* ph in turns, any value (FM's phases go below 0) */
@@ -1390,10 +1392,14 @@ static void scale_set(void)
     nsteps = en_scale(pool, steps);
 }
 
-static int acid_note(int s)                     /* acid step s's note: from the chord's degree, in its register */
+static uint32_t ac_loop;                        /* the times round the line (the answer: every second one) */
+static int acid_note(int s, int resp)           /* acid step s's note: from the chord's degree, in its register (resp: the answer's change, 1 .. 3) */
 {
-    int d = deg + ac_off[s], o = d / nsteps, n;
-    n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + ac_oct[s] + par[P_AC_OCT] + par[P_OCT]);   /* the root: C2 .. B2 */
+    int d = resp == 3 ? deg - ac_off[s] : deg + ac_off[s], o, n;   /* (mirrored: the line's contour upside down round the chord's degree) */
+    while (d < 0)
+        d += nsteps * 8;
+    o = d / nsteps - (resp == 3 ? 8 : 0);
+    n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + ac_oct[s] + par[P_AC_OCT] + par[P_OCT]) + (resp == 1 ? 12 : resp == 2 ? 7 : 0);   /* the root: C2 .. B2 */
     while (n > 96)
         n -= 12;
     while (n < 28)
@@ -1462,13 +1468,33 @@ static void drift_reset(void)
     fifth_done = 0;
 }
 
+/* each genre's habits on a 7-note scale: the weight of a move by the interval up from the chord now (a step up, a third, a fourth, a fifth, a sixth,
+ * a step down: a fourth up is the circle of fifths, ii-V-I), and a pull towards the tonic. The first bank keeps the original walk (by degree). */
+static const struct { float mv[6], tonic; } CHM[EN_NGENRE] = {
+    {{0, 0, 0, 0, 0, 0}, 0},                    /* HYPNO: W7 */
+    {{2.5f, 3.0f, 5.0f, 3.5f, 3.0f, 1.5f}, 2.0f},   /* lofi: the jazz turnarounds (a fourth up) */
+    {{4.0f, 2.0f, 2.0f, 2.5f, 4.0f, 4.5f}, 3.0f},   /* house: the loops (i-VII-VI-VII), steps and thirds down, home */
+    {{1.5f, 1.5f, 2.0f, 3.0f, 3.5f, 3.0f}, 4.0f},   /* dubstep: sparse, a fifth and the flat sixth, home */
+    {{2.0f, 1.5f, 2.0f, 3.0f, 3.5f, 4.5f}, 3.0f},   /* jungle: the flat seventh */
+    {{2.0f, 3.0f, 4.5f, 3.0f, 3.5f, 2.0f}, 2.5f},   /* dnb: liquid, a fourth up */
+    {{3.0f, 2.0f, 3.0f, 3.0f, 3.0f, 3.0f}, 2.0f},   /* breaks: even */
+    {{2.5f, 3.5f, 4.5f, 3.0f, 3.0f, 2.0f}, 2.0f},   /* garage: soulful, a fourth up */
+    {{3.0f, 1.5f, 2.5f, 4.0f, 3.0f, 2.5f}, 3.5f},   /* electro: a fifth, home */
+    {{1.5f, 1.5f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.5f},   /* trap: minor, dark, home */
+};
+static volatile uint8_t chord_genre;
+void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
 static void chord_change(void)                  /* to another degree: the near, strong moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
     float w[12], sum = 0.0f, r;
     int i;
+    const int cg = chord_genre;
     for (i = 0; i < nsteps; i++) {
-        w[i] = i == deg ? 0.0f : nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
+        if (nsteps == 7 && cg)
+            w[i] = i == deg ? 0.0f : CHM[cg].mv[(i - deg + 7) % 7 - 1] + (i == 0 ? CHM[cg].tonic : 0.0f);
+        else
+            w[i] = i == deg ? 0.0f : nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
         sum += w[i];
     }
     r = frand() * sum;
@@ -1558,10 +1584,11 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
 {
     int st = ac_pos, len = par[P_AC_LEN], prev = (st + len - 1) % len;
     uint16_t m = (uint16_t)(1u << st);
+    const int resp = par[P_AC_RESP] && (ac_loop & 1u) ? par[P_AC_RESP] : 0;   /* the answer: the second time round */
     en_acid_pos = (uint8_t)st;
     if (acid.play || par[P_AC_MAN]) {           /* the keys have it: the line steps on, unheard */
-    } else if (ac_gate & m) {
-        int n = acid_note(st), slid = (ac_slide >> prev & 1u) && (ac_gate >> prev & 1u) && acid.amp_t > 0.0f;
+    } else if ((ac_gate & m) && !(resp == 4 && (st & 1))) {
+        int n = acid_note(st, resp), slid = (ac_slide >> prev & 1u) && (ac_gate >> prev & 1u) && acid.amp_t > 0.0f;
         float dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
         acid.inc_t = mtof((float)n) * (1.0f / EN_SR);
         if (!slid) {                            /* a new note: the envelope again */
@@ -1586,6 +1613,7 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
     }
     if (++ac_pos >= len) {
         ac_pos = 0;
+        ac_loop++;
         ac_mutate();
     }
 }
@@ -2866,8 +2894,6 @@ static void master_dyn_reset(void);
 void en_init(void)
 {
     int i, l;
-    for (i = 0; i <= SN; i++)
-        sint[i] = fm_sinf((float)i * (FM_TWO_PI / (float)SN));
     plate_init();
     fm_init();
     fm_reset();

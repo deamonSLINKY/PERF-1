@@ -1,0 +1,14 @@
+# The acid's answer (Acid line page, SEL + K4): every second time round the line it is changed. Octave: the same notes twelve up.
+seed 0
+wait 500
+tap GLO
+tap ARP
+tap ARP
+tap ARP
+expect view 10
+press SEL
+spin K4 1
+release SEL
+wait 100
+expect par151 1
+wait 9000
