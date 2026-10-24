@@ -228,18 +228,88 @@ static void fm_reset(void)                       /* a new engine: no voices, no 
 
 /* the 24 voices of Melodee's sets, less the two that were the same sound again (a second Tine EP and a second Drawbars): the patch numbers the pluck
  * knows (0 ..) and where they are in those sets */
-static const uint8_t FM_MAP[EN_NCMFM] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+static const uint8_t FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 /* the voices a patch may use at once: the heaviest (six operators ringing, bells, strings, pads) three; the middle four or five; the rest all six */
-static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3};
+static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 4, 4, 4, 4, 4, 4, 4, 4};   /* (a loaded voice: four) */
+/* the player's voices: 128-byte packed records. The main loop fills a staging slot and posts C_USERVOICE; the engine copies it in between chunks. */
+static uint8_t fm_user[EN_NUSER][128] EN_POOL, fm_stage[EN_NUSER][128] EN_POOL;
+static volatile uint8_t fm_stage_pend, fm_user_n;
+static char fm_uname[EN_NUSER][16];
+static void fm_user_name(int slot)               /* "DX " and the voice's ten characters, trailing spaces gone */
+{
+    int k, n = 10;
+    char *d = fm_uname[slot];
+    d[0] = 'D', d[1] = 'X', d[2] = ' ';
+    while (n > 0 && (fm_user[slot][118 + n - 1] & 0x7Fu) <= 32u)
+        n--;
+    for (k = 0; k < n; k++) {
+        const uint8_t c = fm_user[slot][118 + k] & 0x7Fu;
+        d[3 + k] = c < 32u || c > 126u ? ' ' : (char)c;
+    }
+    if (!n)
+        d[3] = '?', n = 1;
+    d[3 + n] = 0;
+    EN_CM_SOUND[12 + EN_NFMFACT + slot] = d;
+}
+static void fm_user_take(int slot)               /* C_USERVOICE, in the engine's own time */
+{
+    int k;
+    if ((unsigned)slot >= EN_NUSER || !(fm_stage_pend >> slot & 1u))
+        return;
+    for (k = 0; k < 128; k++)
+        fm_user[slot][k] = fm_stage[slot][k] & 0x7Fu;
+    fm_stage_pend &= (uint8_t)~(1u << slot);
+    if (slot >= (int)fm_user_n)
+        fm_user_n = (uint8_t)(slot + 1);
+    fm_user_name(slot);
+    if (fm_cur == EN_NFMFACT + slot)
+        fm_cur = -1;                             /* playing: load it again */
+}
+static void fm_user_wipe(void)
+{
+    int s;
+    fm_user_n = 0;
+    for (s = 0; s < EN_NUSER; s++)
+        EN_CM_SOUND[12 + EN_NFMFACT + s] = "(empty)";
+    if (fm_cur >= EN_NFMFACT)
+        fm_cur = -1;
+}
+static uint8_t fm_req_n;                         /* the main loop's view of how many there will be (the engine takes the voices a chunk later) */
+int en_user_voice(int slot, const uint8_t *p)
+{
+    int k;
+    if ((unsigned)slot >= EN_NUSER || slot > (int)fm_req_n || (fm_stage_pend >> slot & 1u))
+        return 0;
+    if (slot == (int)fm_req_n)
+        fm_req_n++;
+    for (k = 0; k < 128; k++)
+        fm_stage[slot][k] = p[k] & 0x7Fu;
+    fm_stage_pend |= (uint8_t)(1u << slot);
+    post(C_USERVOICE, slot, 0);
+    return 1;
+}
+void en_user_clear(void)
+{
+    fm_req_n = 0;
+    post(C_USERCLEAR, 0, 0);
+}
+int en_user_count(void) { return fm_user_n; }
+int en_ncm_snd(void) { return 12 + EN_NFMFACT + fm_user_n; }
+int en_user_next(void) { return fm_req_n < EN_NUSER ? fm_req_n : EN_NUSER - 1; }   /* where the next single voice goes: appended, or replacing the last */
+const uint8_t *en_user_get(int slot) { return (unsigned)slot < EN_NUSER ? fm_user[slot] : fm_user[0]; }
 static void fm_set_patch(int idx)                /* between chunks: a new patch cuts the notes */
 {
     int k;
     fm_init();
-    if (idx == fm_cur)
-        return;
     if (idx < 0 || idx >= EN_NCMFM)
         idx = 0;
-    {
+    if (idx >= EN_NFMFACT && idx - EN_NFMFACT >= (int)fm_user_n)
+        idx = 0;                                 /* a loaded voice that is not there: the first */
+    if (idx == fm_cur)
+        return;
+    if (idx >= EN_NFMFACT) {
+        fm6_unpack(fm_user[idx - EN_NFMFACT], fm_ed);
+    } else {
         const int src = FM_MAP[idx];
         if (src < (int)FM6_NFACTORY)
             fm6_unpack(FM6_FACTORY[src], fm_ed);
@@ -450,3 +520,34 @@ static inline float fm_next(void)                /* one sample, clipped as the D
 
 /* tests: MARK I on the float buses (1) or the integer ones (0): the output must be the same bits */
 void en_fm_float_path(int v) { fm6_float_path = v; }
+
+/* the DX7's other format: the 155-byte single-voice record -> the 128-byte packed one (the inverse of fm6_unpack) */
+static void fm6_pack(const uint8_t *v, uint8_t *b)
+{
+    uint32_t k, i;
+    for (i = 0; i < 128u; i++)
+        b[i] = 0;
+    for (k = 0; k < 6u; k++) {
+        uint8_t *o = b + k * 17u;
+        const uint8_t *d = v + k * FP_OP;
+        for (i = 0; i < 11u; i++)
+            o[i] = d[i] & 0x7Fu;
+        o[11] = (uint8_t)((d[FP_LC] & 3u) | (d[FP_RC] & 3u) << 2);
+        o[12] = (uint8_t)((d[FP_RS] & 7u) | (d[FP_DET] & 15u) << 3);
+        o[13] = (uint8_t)((d[FP_AMS] & 3u) | (d[FP_KVS] & 7u) << 2);
+        o[14] = d[FP_OL] & 0x7Fu;
+        o[15] = (uint8_t)((d[FP_MODE] & 1u) | (d[FP_FC] & 31u) << 1);
+        o[16] = d[FP_FF] & 0x7Fu;
+    }
+    for (i = 0; i < 9u; i++)
+        b[102 + i] = v[FP_PR1 + i] & 0x7Fu;
+    b[111] = (uint8_t)((v[FP_FB] & 7u) | (v[FP_OKS] & 1u) << 3);
+    for (i = 0; i < 4u; i++)
+        b[112 + i] = v[FP_LFS + i] & 0x7Fu;
+    b[116] = (uint8_t)((v[FP_LKS] & 1u) | (v[FP_LFW] & 7u) << 1 | (v[FP_LPMS] & 7u) << 4);
+    b[117] = v[FP_TRNSP] & 0x7Fu;
+    for (i = 0; i < 10u; i++)
+        b[118 + i] = v[FP_NAME + i] & 0x7Fu;
+}
+void en_voice_unpack(const uint8_t *b, uint8_t *v) { fm6_unpack(b, v); }
+void en_voice_pack(const uint8_t *v, uint8_t *b) { fm6_pack(v, b); }

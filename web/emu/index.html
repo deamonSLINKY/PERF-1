@@ -8,12 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap">
-<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABXElEQVR42mNgGAWjAAeQFlD6Tw89OA369OzIf1IMJEcP1QykxHIWfJKXju8iGLxPP9xjRFdLCmAk5LOVc2MYwpOXMBxV0cWqxvrOZQaYGphjqOIAaQGl/0dVdBnkox0YGBgYGB4uPUDQMOs7l0l2BCMhyx8uPcBgfecyAwMDA0YoYBMn1RFM+CRhvn5yRJXhyRFVDHlc4qQAJmIUydjcZniYwIHpwAQOBhmb2xQ5AGcu2PPyNQpfaFMpg6ZWHIrY9WuLGBi04jDUokcnvihhpHaphmwZLC3hSxd4ywH0XABLdDDQyCuBwq///AJrQj66lIHB+g4D1pDAGwLoFriIi8JzBnIuwOV7fKFDdEGEz8cu4qIEywFCaYCFlIII3cfUAHjTwJ6XrxkY+lZjpAliooBqdQElUUAo+GkaBcRYPjyjgFTHUD0KqFIdk1sQUdUB5NQH5KSBUTAKBhwAAK4G8263HIhkAAAAAElFTkSuQmCC">
 <style>
 /* HYP-1's colours, as its screen: a charcoal ground, a cyberpunk purple (the primary), orange for what
  * is live; one dark look, whatever the viewer's theme. The FM-1 itself keeps its grey. */
-:root { --ground: #141318; --ink: #f1ecf4; --muted: #aaa1b8; --orange: #ff8020; --rule: #3e3a4c; --accent: #ff8020; --river: #a44cff; --river-2: #c18cff;
-        --green-1: #5a2f8f; --card: #26222f; color-scheme: dark; }
+:root { --ground: #130a0e; --ink: #f6ece0; --muted: #bba79a; --orange: #ffd447; --rule: #4a2a35; --accent: #ffd447; --river: #e0344f; --river-2: #ff8f8f;
+        --green-1: #9c1d3a; --card: #2a161f; color-scheme: dark; }
 body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
        font: 400 17px/1.55 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
 h1, h2, h3, .start button, kbd { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif !important; }
@@ -40,9 +40,9 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .ctl { cursor: pointer; }
 .ctl.knob { cursor: ns-resize; }
 .btnface { transition: fill .06s; }
-.lit .btnface { fill: #ff8020; }
+.lit .btnface { fill: #ffd447; }
 .lit text.btn { fill: #241005; }
-.held .btnface, .held .keyface { stroke: #ff8020; stroke-width: 3; }
+.held .btnface, .held .keyface { stroke: #ffd447; stroke-width: 3; }
 .latched .btnface { stroke: #b46cff; stroke-width: 3; }
 .keyface { transition: fill .06s; }
 .lit .keyface.white { fill: #c99cff; }
@@ -75,7 +75,7 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
 .help b { color: var(--ink); }
 .foot { margin-top: 2.4rem; padding-top: 1rem; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; color: var(--muted); font-size: .95rem; }
 .foot a.yt { color: var(--orange); }
-a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #c85420; color: #fff8f0 !important; text-decoration: none; border-radius: 999px; padding: .15em .8em; font-weight: 600; } a.kofi:hover { background: var(--orange, #ff8020); color: #1a0c03 !important; }
+a.kofi { display: inline-flex; align-items: center; gap: .4em; background: #9c1d3a; color: #fff8f0 !important; text-decoration: none; border-radius: 999px; padding: .15em .8em; font-weight: 600; } a.kofi:hover { background: var(--orange, #ff8020); color: #1a0c03 !important; }
 .midi { margin: 1.2rem 0 0; padding: .9rem 1rem; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
 .midi h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
 .midi p { margin: .3rem 0 0; color: var(--muted); font-size: .92rem; max-width: 80ch; }
@@ -144,7 +144,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 <body>
 <main>
 <header>
-  <h1><a href="../"><img src="../img/panda.png" width="48" height="38" alt="">PERF-1</a></h1>
+  <h1><a href="../"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="" style="image-rendering:pixelated;vertical-align:middle;margin-right:.5rem">PERF-1</a></h1>
   <p>hypnotic techno and acid for the FM-1, in the browser: the same code the FM-1 runs</p>
   <nav><a href="../">Home</a><a href="../install/">Install</a><a href="../manual/">Manual</a><a href="../board/">Board</a><a class="yt" href="https://www.youtube.com/@RedtailWorks">YouTube</a><a href="https://www.redtail.works">RedtailWorks</a><a class="kofi" href="https://ko-fi.com/redtailworks"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M3 6h14v6a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V6Zm14 1h1.5a3.5 3.5 0 0 1 0 7H17v-2h1.5a1.5 1.5 0 0 0 0-3H17V7ZM2 20h16v2H2v-2Zm8.2-11.3c-.9-.9-2.4-.3-2.4 1 0 1.5 2.4 3.2 2.4 3.2s2.4-1.7 2.4-3.2c0-1.3-1.5-1.9-2.4-1Z"/></svg>Support</a></nav>
 </header>
@@ -299,7 +299,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
   </div>
   <div>
     <h2>Power-on</h2>
-    <p>Each start shows RedtailWorks (and its red panda), then PERF-1, then plays a piece at random (any button or key skips ahead). New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
+    <p>Each start shows deamonSLINKY (and its slinky), then PERF-1, then plays a piece at random (any button or key skips ahead). New start powers it off and on; stored pieces are kept (in this browser), and Forget stored clears them.
       It is the firmware, not a recording: what you hear is PERF-1 running, at the FM-1's 44.1 kHz.
       The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator.</p>
   </div>

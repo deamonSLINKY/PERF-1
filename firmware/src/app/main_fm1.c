@@ -367,6 +367,53 @@ static void bench_run(uint32_t *w)
     fm1_probe_read(w + 11);                         /* the cache control as the boot left it (stock writes 0x1EEE008, 0x1EEE00C = 0x808080, 0x1EEE010 = 0xFFFF), the PLL, the CPU1 enable */
 }
 
+/* THE PLAYER'S DX7 VOICES. usb.c collects a DX7 SysEx (a 32-voice bulk dump: the first EN_NUSER voices replace the loaded ones; a single voice, appended; or
+ * ours, F0 7D 50 56 slot 128-bytes checksum F7: one slot, or 7F alone to clear), here it is checked and handed to the engine, and the UI keeps them. */
+static void dx_service(void)
+{
+    uint32_t i, k, sum = 0;
+    uint8_t b[128], ack[7];
+    int kind, r;                                     /* r: the voices taken; -1 a bad checksum; -2 not taken */
+    if (dx_state != 2u)
+        return;
+    RING_PUBLISH();
+    kind = dx_kind;
+    if (kind == 1) {                                 /* bulk: 5 header bytes, 4096 data, the checksum */
+        for (i = 0; i < 4096u; i++)
+            sum += dx_buf[5u + i];
+        if (((sum + dx_buf[5u + 4096u]) & 0x7Fu) != 0u) {
+            r = -1;
+        } else {
+            en_user_clear();
+            for (r = 0, k = 0; k < EN_NUSER; k++)
+                r += en_user_voice((int)k, dx_buf + 5u + k * 128u);
+        }
+    } else if (kind == 2) {                          /* a single voice: 155 bytes, packed, appended */
+        for (i = 0; i < 155u; i++)
+            sum += dx_buf[5u + i];
+        if (((sum + dx_buf[5u + 155u]) & 0x7Fu) != 0u) {
+            r = -1;
+        } else {
+            en_voice_pack(dx_buf + 5u, b);
+            r = en_user_voice(en_user_next(), b) ? 1 : -2;
+        }
+    } else if (kind == 3) {                          /* ours: one slot */
+        for (i = 0; i < 128u; i++)
+            sum += dx_buf[4u + i];
+        if (((sum + dx_buf[4u + 128u]) & 0x7Fu) != 0u)
+            r = -1;
+        else
+            r = en_user_voice(dx_buf[3], dx_buf + 4u) ? 1 : -2;
+    } else {
+        en_user_clear();
+        r = 0;
+    }
+    ui_voices_changed(r, kind);
+    ack[0] = 0xF0, ack[1] = 0x7D, ack[2] = 0x50, ack[3] = 0x57, ack[4] = (uint8_t)kind, ack[5] = r < 0 ? 0x7Fu : (uint8_t)r, ack[6] = 0xF7;
+    usb_sysex_try(ack, sizeof ack);                  /* the answer: the page waits for it before the next voice */
+    dx_state = 0;
+}
+
 static uint32_t prof_clk(void) { return fm1_ticks(); }
 static void tel_service(void)
 {
@@ -570,6 +617,7 @@ static void fm1_main(void)
         }
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
         tel_service();
+        dx_service();
         if (usb.ota_req) {
             usb.ota_req = 0;
             en_play(0);

@@ -402,7 +402,7 @@ const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", 
 const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft",
                                               "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
-                                              "Super", "CZ", "Mini"};
+                                              "Super", "CZ", "Mini", "Hyper", "CZ Pulse", "CZ Bell", "Lead"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
                                                    "909", "Electro", "DnB", "Trap"};
 
@@ -726,7 +726,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -998,7 +998,7 @@ static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
 };
 /* the acid's: the oscillator, its drive and level */
 enum { AO_SAW, AO_SQUARE, AO_SYNC, AO_PLUCK, AO_PWM, AO_CHIP, AO_SUB, AO_TRANCE, AO_BLEEP, AO_FIFTH, AO_BELL, AO_ORGAN,
-       AO_LASER, AO_FOLD, AO_SOFT, AO_FMR, AO_SUPER, AO_CZ, AO_MINI };
+       AO_LASER, AO_FOLD, AO_SOFT, AO_FMR, AO_SUPER, AO_CZ, AO_MINI, AO_HYPER, AO_CZP, AO_CZB, AO_LEAD };
 typedef struct { uint8_t osc; float drive, g; } acid_snd_t;
 static const struct { float fr, i0, i1; uint8_t rise; } ACID_FM[EN_NACID] = {   /* AO_FMR: the modulator's ratio, the index (i0 + i1 * the envelope, or its opposite if rise) */
     [16] = {4.0f, 0.05f, 1.3f, 0},   [17] = {1.0f, 0.25f, 0.9f, 0},  [18] = {5.4f, 0.04f, 0.8f, 0},  [19] = {1.0f, 0.4f, 2.0f, 1},
@@ -1025,6 +1025,10 @@ static const acid_snd_t ACID_SOUND[EN_NACID] = {
     {AO_SUPER, 1.1f, 0.7f},    /* Super: five saws spread, a trance lead's wall */
     {AO_CZ, 1.0f, 1.0f},       /* CZ: phase distortion, the saw bending open with the envelope, a resonant sweep on top */
     {AO_MINI, 1.2f, 0.85f},    /* Mini: a virtual analog: two saws a few cents apart and a pulse an octave down, a monosynth's bass */
+    {AO_HYPER, 1.1f, 0.62f},   /* Hyper: five saws spread twice as wide (to +-60 cents), the wall of a hard trance lead */
+    {AO_CZP, 1.0f, 1.0f},      /* CZ Pulse: phase distortion toward a square: the knee squeezes as the envelope falls, a hollow to a buzz */
+    {AO_CZB, 0.9f, 0.95f},     /* CZ Bell: the cosine and a resonance at 3.5 times its pitch, ringing out with the envelope */
+    {AO_LEAD, 1.2f, 0.8f},     /* Lead: two saws seven cents apart and a pulse whose width wanders: a monosynth lead's thickness */
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
@@ -1821,14 +1825,16 @@ static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
     {1.0f, 0.0f, 0.0f, 0, 1.15f},    /* Bleep: a plain sine */
     {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
 };
-const char *const EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
-    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular"};
+const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
+    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular",
+    "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
 const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
 #include "fm6.inc"
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
-static const float FM_GAIN[EN_NCMFM] = {0.60f, 0.96f, 0.73f, 0.95f, 2.56f, 1.87f, 0.76f, 1.26f, 0.94f, 1.33f, 0.75f, 2.55f, 0.88f, 1.22f, 3.84f, 0.85f, 1.32f, 2.13f, 0.67f, 1.58f, 1.62f, 0.73f};   /* tests/host/fmcal.c */
+static const float FM_GAIN[EN_NCMFM] = {0.60f, 0.96f, 0.73f, 0.95f, 2.56f, 1.87f, 0.76f, 1.26f, 0.94f, 1.33f, 0.75f, 2.55f, 0.88f, 1.22f, 3.84f, 0.85f, 1.32f, 2.13f, 0.67f, 1.58f, 1.62f, 0.73f,
+                                         1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* tests/host/fmcal.c (the loaded voices: not levelled) */
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
@@ -4235,6 +4241,8 @@ static void drain(void)
         case C_FILLQ: fill_q = 1; break;
         case C_FLXH: flx_phys = (uint8_t)a; break;
         case C_SHED: en_shed_level = (uint8_t)a; break;
+        case C_USERVOICE: fm_user_take(a); break;
+        case C_USERCLEAR: fm_user_wipe(); break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)
@@ -4839,6 +4847,41 @@ static void render_acid(uint32_t n)
             if (p3 >= 1.0f)
                 p3 -= 1.0f;
             break;
+        case AO_HYPER: {                        /* five saws, twice as wide as Super's */
+            x = 0.38f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0285f) + blep_saw(p3, inc * 0.9720f) + blep_saw(p4, inc * 1.0581f) + blep_saw(p5, inc * 0.9460f));
+            ps += inc * 1.0285f;
+            p3 += inc * 0.9720f;
+            p4 += inc * 1.0581f;
+            p5 += inc * 0.9460f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            if (p3 >= 1.0f)
+                p3 -= (float)(int)p3;
+            if (p4 >= 1.0f)
+                p4 -= (float)(int)p4;
+            if (p5 >= 1.0f)
+                p5 -= (float)(int)p5;
+            break;
+        }
+        case AO_CZP: {                          /* the phase held at half a turn for part of each half: a cosine that flattens into a square as the knee tightens */
+            const float f = 1.0f + 5.0f * (1.0f - acid.env);
+            const float pp = ph < 0.5f ? fm_minf(ph * f, 0.5f) : 1.0f - fm_minf((1.0f - ph) * f, 0.5f);
+            x = sine_any(pp - 0.25f) * 1.05f;
+            break;
+        }
+        case AO_CZB:                            /* the fundamental and a partial at 3.5, windowed by the cycle, its level following the envelope */
+            x = (0.8f * sine_any(ph) + 0.55f * acid.env * sine_any(ph * 3.5f + 0.1f) * (1.0f - ph)) * 1.05f;
+            break;
+        case AO_LEAD: {                         /* two saws 7 cents apart and a pulse of wandering width */
+            float q = ph + pw;
+            if (q >= 1.0f)
+                q -= 1.0f;
+            x = 0.42f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0041f)) + 0.45f * (blep_saw(ph, inc) - blep_saw(q, inc));
+            ps += inc * 1.0041f;
+            if (ps >= 1.0f)
+                ps -= (float)(int)ps;
+            break;
+        }
         case AO_SOFT:                           /* a triangle */
             x = (ph < 0.5f ? 4.0f * ph - 1.0f : 3.0f - 4.0f * ph) * 1.2f;
             break;

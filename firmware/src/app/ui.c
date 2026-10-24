@@ -396,6 +396,7 @@ static struct {
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
     uint8_t glide_on, glide_busy;
+    uint8_t vox_dirty;                 /* the player's DX7 voices changed: written when you leave them alone a moment (voices_save) */
     uint8_t set_dirty;                 /* the effects' / performing settings changed: written when you leave them alone a moment */
     uint32_t fx_open_t;                /* when the FX menu was opened (a second tap soon after goes to the settings) */
     uint8_t fx_lastpg;                 /* the edit page of the effect key pressed last */
@@ -1282,11 +1283,14 @@ static void store_now(const char *done)
 static void settings_save(void);
 /* an autosave while the music plays: the same fade out, write, fade in (the write stops the chip, so unfaded it is a crack and an xrun);
  * kind 1: the effects' and performing settings; 2: the theme, Tune, MIDI out */
+static void voices_save(void);
 static void quiet_write(int kind)
 {
     if (!en_playing) {
         if (kind == 1)
             settings_save();
+        else if (kind == 3)
+            voices_save();
         else
             project_flush_globals();
         return;
@@ -1304,6 +1308,8 @@ static void store_tick(void)                    /* the music faded out (or long 
     ui.store_wait = 0;
     if (ui.store_kind == 1) {
         settings_save();
+    } else if (ui.store_kind == 3) {
+        voices_save();
     } else if (ui.store_kind == 2) {
         project_flush_globals();
     } else {
@@ -1531,7 +1537,8 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
         caps(a, b, sizeof a);
         say(WHO[vc], a);
     } else if (ui.view == V_CMEL || ui.view == V_CMEL2) {   /* the counter-melody's sound */
-        knob_set(P_CM_SND, (proj.par[P_CM_SND] + d + EN_NCMSND) % EN_NCMSND);
+        const int ns = en_ncm_snd(), cur = proj.par[P_CM_SND] < ns ? proj.par[P_CM_SND] : 0;   /* (a loaded voice that is gone: from the first) */
+        knob_set(P_CM_SND, (cur + d + ns) % ns);
         caps(a, EN_CM_SOUND[proj.par[P_CM_SND]], sizeof a);
         say("PLUCK", a);
     } else if (kit_view(ui.view)) {             /* the drums: all four to the next kit */
@@ -4346,6 +4353,54 @@ typedef struct {
 typedef char set_fits[sizeof(set_t) <= PLAT_STORE_MAX ? 1 : -1];
 static set_t set_disk;                           /* as it was last read or written */
 static int set_have;
+/* the player's DX7 voices: the engine's slots, 128 bytes each (en_user_get), in flash (OBJ_VOICES) */
+#define VOX_MAGIC 0x31584F56u                    /* "VOX1" */
+typedef struct { uint32_t magic, n; uint8_t v[EN_NUSER][128]; } vox_t;
+typedef char vox_fits[sizeof(vox_t) <= PLAT_STORE_MAX ? 1 : -1];
+static void voices_save(void)
+{
+    vox_t x;
+    int i, n = en_user_count();
+    memset(&x, 0, sizeof x);
+    x.magic = VOX_MAGIC;
+    x.n = (uint32_t)n;
+    for (i = 0; i < n; i++)
+        memcpy(x.v[i], en_user_get(i), 128);
+    plat_store_save(OBJ_VOICES, &x, sizeof x);
+}
+static void voices_load(void)
+{
+    static vox_t x;
+    uint32_t i;
+    if (plat_store_load(OBJ_VOICES, &x, sizeof x) != (int)sizeof x || x.magic != VOX_MAGIC || x.n > EN_NUSER)
+        return;
+    for (i = 0; i < x.n; i++)
+        en_user_voice((int)i, x.v[i]);
+}
+void ui_voices_changed(int n, int kind)
+{
+    char t[16] = "";
+    if (n < 0) {
+        say("DX7 VOICES", n == -1 ? "BAD CHECKSUM" : "NOT TAKEN");
+        return;
+    }
+    ui.vox_dirty = 1;
+    if (kind == 4 || (kind == 3 && n == 0)) {
+        say("DX7 VOICES", "CLEARED");
+        return;
+    }
+    itoa_u((uint32_t)n, t);
+    {
+        int j = 0;
+        const char *s = kind == 1 ? " LOADED" : kind == 2 ? " ADDED" : " SET";
+        while (t[j])
+            j++;
+        while (*s && j < 15)
+            t[j++] = *s++;
+        t[j] = 0;
+    }
+    say("DX7 VOICES", t);
+}
 static void settings_save(void)
 {
     set_t s;
@@ -4409,6 +4464,11 @@ static void settings_load(void)
 static void autosave(void)
 {
     uint32_t now = plat_ms();
+    if (ui.vox_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {
+        ui.vox_dirty = 0;
+        quiet_write(3);                          /* the player's DX7 voices: kept (playing: faded) */
+        return;
+    }
     if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: longer, each write is a dip) */
         ui.set_dirty = 0;
         quiet_write(1);                          /* the effects' and performing settings: a moment after the last change (playing: faded) */
@@ -4577,6 +4637,7 @@ void ui_init(void)
         ui.jam_oct = 2;                        /* the JAM page: octave 0 */
     }
     settings_load();                             /* the effects' and performing settings as you left them */
+    voices_load();                               /* and the player's DX7 voices */
     ui.touched = -1;
     ui.boot_t = plat_ms();
     ui.theme = (uint8_t)proj.par[P_THEME];

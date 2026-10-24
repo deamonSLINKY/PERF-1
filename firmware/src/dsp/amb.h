@@ -34,8 +34,10 @@
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 24                   /* the sounds each of pad and drone can play */
-#define EN_NACID 27                    /* the acid's (three more: a supersaw, a CZ, a mini) */
-#define EN_NCMFM 22                    /* the counter-melody's six-operator FM sounds (the DX7 voices of fm6.inc): after the plain ones */
+#define EN_NACID 31                    /* the acid's (more: supersaws, CZs, minis) */
+#define EN_NFMFACT 22                  /* the DX7 voices of fm6.inc built in */
+#define EN_NUSER 8                     /* and the ones the player loads (SysEx, en_user_voice), after them */
+#define EN_NCMFM (EN_NFMFACT + EN_NUSER)   /* the counter-melody's six-operator FM sounds: after the plain ones */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
@@ -50,7 +52,18 @@ extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_LANE_NAME[EN_NLANE];
 extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NACID];
 extern const char *const EN_KIT_NAME[EN_NKIT];
-extern const char *const EN_CM_SOUND[EN_NCMSND], *const EN_CM_STYLE[EN_NCMSTYLE], *const EN_CM_RATE[4];
+extern const char *EN_CM_SOUND[EN_NCMSND];     /* (the user voices' names change as they are loaded) */
+extern const char *const EN_CM_STYLE[EN_NCMSTYLE], *const EN_CM_RATE[4];
+/* the player's own DX7 voices: up to EN_NUSER, 128-byte packed records (the DX7's bulk-dump format: a 32-voice bank is 32 of them). en_user_voice may be
+ * called from the main loop; the engine takes the voice between chunks. Slots fill in order (a slot may be replaced, or appended at en_user_count()). */
+int en_user_voice(int slot, const uint8_t *packed128);   /* 1 taken; 0 not (busy, or slot past the end) */
+void en_user_clear(void);                      /* all of them gone */
+int en_user_count(void);                       /* how many are loaded */
+int en_user_next(void);                        /* the slot a single voice goes to: the next free one, or the last when all are in use */
+int en_ncm_snd(void);                          /* how many pluck sounds can be chosen now: the plain ones, the built-in DX voices, the loaded ones */
+const uint8_t *en_user_get(int slot);          /* a loaded voice's 128 bytes (to store) */
+void en_voice_unpack(const uint8_t *packed128, uint8_t *voice155);   /* the DX7's two formats: for single-voice dumps (155 bytes) and the tests */
+void en_voice_pack(const uint8_t *voice155, uint8_t *packed128);
 extern volatile float en_cm_level;             /* the counter-melody's level, for the screen */
 void en_style_sounds(int16_t *par);             /* a piece stored with a style (before 1.0.27): its sounds and
                                                  * kit set as the style had them, the style cleared */

@@ -126,6 +126,10 @@ static uint32_t sx_out_q[SXQ];
 static volatile uint32_t so_w, so_r;
 #endif
 
+#ifndef USB_DX
+#define USB_DX 0                                 /* 1: the app (main.c): DX7 voices over SysEx */
+#endif
+
 /* MIDI rings: 4-byte USB-MIDI event packets */
 #define MQ 64u
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
@@ -575,9 +579,58 @@ stall:
     sie_wr(S_CSR0, 0x60);
 }
 
+/* The DX7's SysEx (the player's own voices, main_fm1.c dx_service): every message's bytes go into dx_buf as they come, and at its end it is told
+ * from the others by its header and its length: a 32-voice bulk dump (43 0s 09 20 00, 4096 bytes, a checksum), a single voice (43 0s 00 01 1B, 155, a
+ * checksum), or ours (7D 50 56 slot, 128 bytes, a checksum; slot 7F alone clears). One at a time: while one waits to be taken, the next is dropped. */
+#if USB_DX                                       /* the app only (the update loader's has no pool) */
+#define DX_MAX 4112u
+static uint8_t dx_buf[DX_MAX] __attribute__((section(".pool.dx")));
+static uint32_t dx_pos;
+static uint8_t dx_on;
+static volatile uint8_t dx_state;                /* 0 free, 2 a message is ready */
+static volatile uint8_t dx_kind;                 /* 1 bulk, 2 single, 3 ours, 4 ours: clear */
+static void dx_end(void)
+{
+    const uint8_t *m = dx_buf;
+    const uint32_t n = dx_pos;
+    uint8_t kind = 0;
+    if (n >= 5u && m[0] == 0x43u && (m[1] & 0xF0u) == 0u) {
+        if (m[2] == 0x09u && m[3] == 0x20u && m[4] == 0x00u && n == 4102u)
+            kind = 1;
+        else if (m[2] == 0x00u && m[3] == 0x01u && m[4] == 0x1Bu && n == 161u)
+            kind = 2;
+    } else if (n >= 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x56u) {
+        if (n == 133u && m[3] < 8u)
+            kind = 3;
+        else if (n == 4u && m[3] == 0x7Fu)
+            kind = 4;
+    }
+    dx_on = 0;
+    if (kind) {
+        dx_kind = kind;
+        RING_PUBLISH();
+        dx_state = 2;
+    }
+}
+#endif
+
 /* SysEx assembly: only short commands matter here */
 static void sysex_byte(uint8_t b)
 {
+#if USB_DX
+    if (b == 0xF0u) {
+        dx_on = !dx_state;
+        dx_pos = 0;
+    } else if (b == 0xF7u) {
+        if (dx_on)
+            dx_end();
+    } else if (dx_on) {
+        if (dx_pos < DX_MAX)
+            dx_buf[dx_pos++] = b;
+        else
+            dx_on = 0;
+    }
+#endif
     static const uint8_t UBOOT_KEY[6] = {0xF0, 0x22, 0x24, 0x35, 0x7D, 0xF7};
     if (b == 0xF0) {
         usb.sx_on = 1;
