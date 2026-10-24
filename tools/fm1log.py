@@ -72,6 +72,22 @@ BENCH_NAMES = ["float mul-add x10 (flash code)", "float mul-add x10 (RAM code)",
                "table lerp (flash table)", "table lerp (RAM table)", "rational soft clip (1 divide)", "integer chain x4", "RAM copy+sum (per word)"]
 
 
+EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
+         "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12"]
+
+
+def decode_extra(msg):
+    """the second frame: the slowest chunk of the window (its stages in us, its total, its info: step 0-3, size 4-11, tick at start 12, the drone and
+    acid on core 2 13, the chorus on core 1 14, shed 15-16, section 17-18) and how many renders took <5, 5-6 ... 11-12, >=12 ms"""
+    msg = list(msg)
+    if msg[:3] != [0x7D, 0x50, 0x5A]:
+        return None
+    raw = unpack7(msg[3:])
+    if len(raw) < 80:
+        return None
+    return dict(zip(EXTRA, struct.unpack("<20I", bytes(raw[:80]))))
+
+
 def decode_bench(msg):
     msg = list(msg)
     if msg[:3] != [0x7D, 0x50, 0x47]:
@@ -106,6 +122,9 @@ def selftest():
     wb = [1500, 240] + [3000 + 100 * k for k in range(9)]
     wb = wb + [7] * 5
     assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<16I", *wb))) == tuple(wb)
+    we = list(range(1, 21))
+    ex = decode_extra(PREFIX[:2] + [0x5A] + pack7(struct.pack("<20I", *we)))
+    assert ex and [ex[k] for k in EXTRA] == we, ex
     print("selftest ok:", len(msg) + 2, "bytes a frame")
 
 
@@ -149,10 +168,11 @@ def main():
     arm = mido.Message("sysex", data=PREFIX + [0x01])
     last_arm = 0.0
     prev = None
+    extra = {}
     t0 = time.time()
     with open(out, "w", newline="") as f:
         cw = csv.writer(f)
-        cw.writerow(["t"] + FIELDS + ["chorus", "bass", "event"])
+        cw.writerow(["t"] + FIELDS + ["chorus", "bass"] + EXTRA + ["event"])
         try:
             while True:
                 now = time.time()
@@ -164,6 +184,9 @@ def main():
                         continue
                     d = decode(m.data)
                     if not d:
+                        ex = decode_extra(m.data)
+                        if ex:
+                            extra = ex
                         continue
                     ev = []
                     if prev:
@@ -182,7 +205,8 @@ def main():
                     if d["gap_us"] > 20000:
                         ev.append("GAP%dms" % (d["gap_us"] // 1000))
                     prev = d
-                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"], " ".join(ev)])
+                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"]] + [extra.get(k, 0) for k in EXTRA] + [" ".join(ev)])
+                    extra = {}
                     f.flush()
                     print("\r%6.1fs cpu %3d%% c1 %3d%% xr %-4d max %5.1fms/%.1f gap %5.1fms ui %5.1fms shed %d %s        " % (
                         now - t0, d["cpu"], d["cpu1"], d["xruns"], d["max_us"] / 1000, d["budget_us"] / 1000,

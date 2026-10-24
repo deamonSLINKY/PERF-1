@@ -4642,7 +4642,7 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
 static void render_fm(uint32_t n)
 {
     const int on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
-    const float g = cm_vol * 0.5f * FM_OUT * (float)FM_GAIN[(on ? par[P_CM_SND] - CM_NPLAIN : 0)];
+    const float g = cm_vol * 0.5f * FM_OUT * (float)FM_GAIN[(on ? (fm_cur >= 0 ? fm_cur : 0) : 0)];   /* (the voice that is loaded: an empty user slot plays the first built-in one, at its own gain) */
     uint32_t j;
     float lvl = 0.0f;
     if (!on) {
@@ -5231,10 +5231,11 @@ static void mx_end(int t, uint32_t n)
 /* the first core's time by stage, for the telemetry (the firmware sets the clock; the host leaves it off): ticks summed since last read */
 uint32_t (*en_prof_clock)(void);
 volatile uint32_t en_prof[EN_NPROF];
-#define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; pt0_ = t1_; } } while (0)
+volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the longest chunk since last read: its stages (ticks), its total, and when it was */
+#define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; cs_[i] = t1_ - pt0_; pt0_ = t1_; } } while (0)
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
-    uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u;
+    uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u, cs_[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
@@ -5412,6 +5413,14 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     en_prof[9]++;
+    if (en_prof_clock && pt0_ - bal_t0 > en_peak_total) {   /* the slowest chunk: which stage, which step, how long it was, what was moved */
+        uint32_t k;
+        for (k = 0; k < 9u; k++)
+            en_peak_stage[k] = cs_[k];
+        en_peak_total = pt0_ - bal_t0;
+        en_peak_info = (uint32_t)((sixteenth - 1u) & 15u) | (n & 0xFFu) << 4 | (step_t < 64 ? 1u << 12 : 0u) | (uint32_t)(rv_job.bass != 0) << 13 |
+                       (uint32_t)(en_chorus_c0 != 0) << 14 | (uint32_t)(en_shed_level & 3) << 15 | (uint32_t)(sec & 3) << 17;
+    }
     if (bal_force >= 0) {
         bal_apply(bal_force);
     } else if (en_prof_clock && rv_c2) {        /* where the work runs, from how long the first core waited for the other (a quarter second's, summed) */

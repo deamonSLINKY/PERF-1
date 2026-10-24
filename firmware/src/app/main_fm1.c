@@ -30,6 +30,7 @@ struct en_dbg {
 } en_dbg __attribute__((section(".noinit")));
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
 static volatile uint32_t tel_isr_in, tel_isr_out;   /* telemetry: ticks in the timer interrupt while a render ran (it nests into it) and outside it */
+static volatile uint32_t tel_hist[9];                  /* telemetry: renders by time: <5 ms, 5-6, ... 11-12, >= 12 ms */
 static volatile uint32_t tel_max_us;                /* telemetry: the longest render (a half block) since the last frame */
 
 static void render_block(int32_t *o)                /* ALNK0: one half, measured */
@@ -58,6 +59,7 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
         en_dbg.max_us = us;
     if (us > tel_max_us)
         tel_max_us = us;
+    tel_hist[us < 5000u ? 0u : us >= 12000u ? 8u : (us - 4000u) / 1000u]++;
     {
         const uint32_t pc = us * 100u / budget;
         if (pc > pk_cur_pct)
@@ -456,7 +458,7 @@ static void px_service(void)
 static uint32_t prof_clk(void) { return fm1_ticks(); }
 static void tel_service(void)
 {
-    static uint8_t on;
+    static uint8_t on, extra;
     static uint32_t until, next, seq;
     uint8_t r = usb.tel_req;
     if (r == 3u) {                                  /* the bench, once */
@@ -483,6 +485,29 @@ static void tel_service(void)
         return;
     if ((int32_t)(fm1_ms - until) > 0) {            /* the host went quiet: stop */
         on = 0;
+        return;
+    }
+    if (extra) {                                    /* the second frame (F0 7D 50 5A): the slowest chunk's stages and when it was, and the histogram of renders */
+        uint32_t w[20], i, o = 4;
+        uint8_t f[4 + 20 * 5 + 2], b[20 * 4];
+        _Static_assert(4 + (20 * 4 * 8 + 6) / 7 + 1 <= 4 + 20 * 5 + 2, "the frame fits its buffer");
+        for (i = 0; i < 9u; i++)
+            w[i] = en_peak_stage[i] / FM1_TICKS_PER_US;
+        w[9] = en_peak_total / FM1_TICKS_PER_US;
+        w[10] = en_peak_info;
+        for (i = 0; i < 9u; i++)
+            w[11 + i] = tel_hist[i];
+        for (i = 0; i < 20u; i++)
+            b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
+        f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x5A;
+        o += ota_pack7(b, sizeof b, f + o);
+        f[o++] = 0xF7;
+        if (usb_sysex_try(f, o) == 0) {
+            en_peak_total = 0;
+            for (i = 0; i < 9u; i++)
+                tel_hist[i] = 0;
+            extra = 0;
+        }
         return;
     }
     if ((int32_t)(fm1_ms - next) < 0)
@@ -531,6 +556,7 @@ static void tel_service(void)
         }
         f[n++] = 0xF7;
         if (usb_sysex_try(f, n) == 0) {
+            extra = 1;
             seq++;
             tel_max_us = 0;
             tel_gap_us = 0;
