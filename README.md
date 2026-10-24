@@ -1,4 +1,12 @@
-# HYP-1: hypnotic techno and acid for the M-VAVE FM-1
+# PERF-1: live-performance firmware for the M-VAVE FM-1
+
+PERF-1 is a live-performance firmware for the M-VAVE FM-1 by deamonSLINKY: ten genres of ten pieces each, a generative pad, drone, acid, pluck and DX7-style FM voice over drums you sequence, an auto-DJ, a web editor with 16 loadable DX7 voices, and USB telemetry. Its install page, emulator, editor and manual are published together on the project site.
+
+It is a fork of **HYP-1** by [RedtailWorks](https://www.redtail.works) (GPL-3.0), itself a fork of [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal. The credits below are kept in full. Everything under "HYP-1" from here on is the upstream project's own README, kept as history; its links point to the upstream project.
+
+---
+
+# HYP-1 (upstream README)
 
 ![HYP-1 running on the FM-1](docs/img/hyp-hero.png)
 
@@ -10,9 +18,6 @@ back up, and record the whole performance into your DAW.
 A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
 by Charles Vestal. Current version: **1.5.0** (each push to `main` builds the next one).
 
-[![HYP-1: five minutes played live on the M-VAVE FM-1 (watch on YouTube)](https://img.youtube.com/vi/0UvGnZE2_VI/maxresdefault.jpg)](https://www.youtube.com/watch?v=0UvGnZE2_VI)
-
-*Five minutes played live on piece 01: [watch on YouTube](https://www.youtube.com/watch?v=0UvGnZE2_VI).*
 
 - **All four firmwares** (HYP-1, LOF-1, ECO-1, GRAV-1) on one page, with the pack's video: <https://rustypawz.github.io/fm1-HYP1/>
 - **OPEN-1**, the next idea: an open-firmware synth under $200, with its goals, specs, mailing list and build log: <https://rustypawz.github.io/fm1-HYP1/open1/>
@@ -20,10 +25,7 @@ by Charles Vestal. Current version: **1.5.0** (each push to `main` builds the ne
 - **Install it** (Chrome or Edge, with the FM-1 plugged in): <https://rustypawz.github.io/fm1-HYP1/install/>
 - **Read the manual**: <https://rustypawz.github.io/fm1-HYP1/manual/>, or the
   [printable PDF](docs/HYP-1_Manual.pdf) with every control numbered and every screen lettered
-- **Watch it**: [a five-minute live take](https://www.youtube.com/watch?v=0UvGnZE2_VI), and more on [YouTube](https://www.youtube.com/@RedtailWorks)
 - **The board**: feature requests (vote with a 👍) and comments: <https://rustypawz.github.io/fm1-HYP1/board/>
-- **Support it**: HYP-1 is free; if it's useful to you, [buy me a coffee on Ko-fi](https://ko-fi.com/redtailworks)
-- **More from RedtailWorks**: <https://www.redtail.works>
 
 Installing it is at your own risk, though it's hard to get stuck: the web installer can put M-VAVE's
 own firmware back, and an FM-1 that fails to start twice comes up in a safe mode the installer can reach.
@@ -161,7 +163,7 @@ the details.
 
 ## Credits
 
-HYP-1 is a [RedtailWorks](https://www.redtail.works) project ([YouTube](https://www.youtube.com/@RedtailWorks)). It is a fork of
+HYP-1 is a [RedtailWorks](https://www.redtail.works) project. It is a fork of
 [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal, whose generative harmony, voices
 and platform work it builds on. The reverb is Jon Dattorro's plate ("Effect Design, Part 1", JAES 1997).
 The platform (hardware layer, USB, update loader, storage, installer) is
