@@ -4642,25 +4642,30 @@ void ui_frame(void)
     glide_tick();
     saver_tick();
     jam_tick();
-    {   /* the load too high for long (the first core past 82%): the engine drops the chorus and holds the DX voices to four, then two; and eases back when it is calm */
-        static uint32_t over_t, calm_t;
-        const uint32_t now = plat_ms(), c = plat_cpu_pct();
+    {   /* a render that ran out of time (an xrun, or the longest render of the last second reaching the deadline): the engine drops the chorus and holds the DX voices to four,
+         * then two; and eases back after eight seconds in which no render came within 12 % of it. (It went by the average CPU before: the logs showed that sat at 70 % in the
+         * heavy pieces, never calm enough to ease back, while the peaks, which are what crack, were rare.) */
+        static uint32_t over_t, calm_t, last_xr;
+        const uint32_t now = plat_ms(), pk = plat_peak_pct(), xr = plat_xruns();
+        const int xrun = xr != last_xr;
+        last_xr = xr;
         if (!en_playing) {
             over_t = calm_t = now;
-        } else if (c > 82u) {
+        } else if (xrun || pk >= 100u) {
             calm_t = now;
-            if (now - over_t > 600u && en_shed_level < 2) {
+            if ((xrun || now - over_t > 600u) && en_shed_level < 2) {
                 en_shed(en_shed_level + 1);
                 over_t = now;
             }
-        } else if (c < 68u) {
+        } else if (pk < 88u) {
             over_t = now;
-            if (now - calm_t > 6000u && en_shed_level > 0) {
+            if (now - calm_t > 8000u && en_shed_level > 0) {
                 en_shed(en_shed_level - 1);
                 calm_t = now;
             }
         } else {
-            over_t = calm_t = now;
+            over_t = now;
+            calm_t = now;
         }
     }
     {   /* the JAM page plays one voice by hand: its own line stops (the engine's hand switch, not the piece's setting), and comes back when you leave */

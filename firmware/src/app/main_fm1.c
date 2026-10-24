@@ -58,6 +58,16 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
         en_dbg.max_us = us;
     if (us > tel_max_us)
         tel_max_us = us;
+    {
+        const uint32_t pc = us * 100u / budget;
+        if (pc > pk_cur_pct)
+            pk_cur_pct = pc;
+        if (++pk_n >= FS / HALF_FRAMES) {           /* a second: the window slides */
+            pk_n = 0;
+            pk_prev_pct = pk_cur_pct;
+            pk_cur_pct = 0;
+        }
+    }
     en_dbg.in_audio = 0;
 }
 

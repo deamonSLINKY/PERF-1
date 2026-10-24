@@ -48,5 +48,6 @@ enum { OBJ_PROJ, OBJ_PANEL, OBJ_SET, OBJ_NOBJ };   /* OBJ_SET: the effects' sett
 /* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
 uint32_t plat_cpu_pct(void);
 uint32_t plat_xruns(void);
+uint32_t plat_peak_pct(void);               /* the longest render of the last second or two, in percent of the time it has: 100 is an xrun */
 uint32_t plat_cpu1_pct(void);                /* the other core's load, in percent of a chunk (0 when it is not there) */
 uint32_t plat_core2(void);                  /* the second core: 0 not in this build, 1 reverbing, 2 not (lost, or barred after a crash) */
