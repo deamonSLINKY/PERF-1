@@ -126,7 +126,8 @@ def main():
             {"name": "Drum drift", "knobs": byname["Drum drift"]},
             {"name": "Place", "knobs": [ls("P_PAN", 4, "Pan"), ls("P_SEND", 4, "Send")]}] + [
             {"name": LANES[l] + " lane", "knobs": [ls("P_LANE", 3 * l, "Level"), ls("P_LANE", 3 * l + 1, "Tune"), ls("P_LANE", 3 * l + 2, "Decay"),
-                                                 ls("P_PROB", l, "Probability"), ls("P_LLEN", l, "Length (steps)")]} for l in range(6)]},
+                                                 ls("P_PROB", l, "Probability"), ls("P_LLEN", l, "Length (steps)"), ls("P_DENS", l, "Density (50: as written)"),
+                                                 ls("P_LSRC", l, "Source pattern")]} for l in range(6)]},
         {"name": "Space & master", "sections": [
             {"name": "Space", "knobs": byname["Space"]},
             {"name": "Reverb", "knobs": byname["Reverb"]},

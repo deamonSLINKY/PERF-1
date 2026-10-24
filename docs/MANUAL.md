@@ -193,7 +193,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 - **Left:** the levels of the pad (P), drone (D), acid (A), pluck (C, for counter-melody) and kit (K).
 - **Middle: the sigil.** A summoning circle turned so the chord's root is always at the top: the twelve notes round it (the scale's lit, the chord's bright), the chord's tones joined into a figure (a triad is a triangle, a seventh a four-sided shape, so you learn a chord's kind by its shape; its name is under the eye). It turns by the interval when the chord changes. Outside it, the 4-bar phrase fills round; then the bar's 16 steps (the kick's larger, the acid's gates tinted, the playhead white). A pentagram turns behind once in 16 bars, and runes flare by the notes the pluck plays. In the middle a demon eye: half open in a groove (its slit pupil widens on the kick, its gaze flips on the snare), shut in a breakdown, wide and trembling in a build (the phrase ring opens in spinning gaps), a white flash and a shock ring on the drop. **SEL + HOME** puts the slinky imp there instead (kept across power-off). When the engine sheds load the pentagram and runes go first. At its top right, the bar filling towards the next chord (or `held` while frozen).
 - **Right:** the drum pattern playing, in a colour per lane, its number (`PAT 1`) and, when one is waiting, `> 3`; under it, the load: `CPU 41 XR 0` and below it `C2 38` and `S1` or `S2` when they apply (section 16).
-- **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit), then `BY HAND`, `+LINK` or `LINKS OFF`, and the octave when it isn't home (`OCT+2` for the page's voice, `SONG-1` for the song); on Global it says what SAVE will do (`01 SAVE: STORE`, `01 STORED`, `01 FACTORY`). On the right: the page's name and **the page dots**, one a page (23 on the SELECT dial): the page you are on bright, the others in its group dimmer. In the FX menu the dots are the four banks; inside an effect's settings, the 22 settings pages.
+- **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit), then `BY HAND`, `+LINK` or `LINKS OFF`, and the octave when it isn't home (`OCT+2` for the page's voice, `SONG-1` for the song); on Global it says what SAVE will do (`01 SAVE: STORE`, `01 STORED`, `01 FACTORY`). On the right: the page's name and **the page dots**, one a page (24 on the SELECT dial): the page you are on bright, the others in its group dimmer. In the FX menu the dots are the four banks; inside an effect's settings, the 22 settings pages.
 - **Bottom:** the four knobs: each value's name, its ring (or pips, for a switch of a few positions) and its value. The one you turned last is lit for a moment.
 - **Pages that shape a sound draw it:** the envelopes and LFOs, the filters' response, the echo and reverb tails, the compressor's curve. The picture follows the knobs as you turn them, with a dot running along it. (It shows the idea, not exact milliseconds.)
 - **Messages** take the header's place for a moment: `PATTERN 3 NEXT BAR`, `STORING`, `KEY CHANGE +5`.
@@ -202,7 +202,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 
 ## 5. The pages
 
-SELECT walks through them in this order (23 pages; the dial stops at the ends). The buttons jump straight to
+SELECT walks through them in this order (24 pages; the dial stops at the ends). The buttons jump straight to
 a voice, and pressing the same button again steps through that voice's envelope and LFO (and, for the pad, the
 chords). On a voice's main page KNOB 1 is its level.
 
@@ -212,7 +212,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Pad | ENV | Level | Bright | Sound (24) | Detune |
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
-| Chords | ENV x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close / open) | Chorus (0-100) | Root (as on Global) |
+| Chords | ENV x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close / open) | Chorus (0-100) | Loop (off; 2, 4 or 8 chords repeat; with a ~, now and then one is drawn anew) |
 | Drone | LFO | Level | Sound (24) | Cutoff | Reso |
 | Drone env | LFO x2 | Trigger (chord, 1, 2, 4, 8 bars, off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Drone LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
@@ -225,6 +225,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Links | SEQ x2 | K>Drone | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Drum drift | SEQ x4 | Change (off, next, random) | Every (the chord, 4-64 bars) | Pool (patterns 1-2 ... 1-6) | Mutate (off, shift, morph) |
+| Groove | SEQ x5 | Lane (kick ... perc) | Density (0-100; 50 as written) | Source (follow, or pattern 1-6) | All dens (every lane's density) |
 | Space | SELECT | Echo | Echo time (1/8, 3/16, 1/4, dotted 1/4, 1/2, 1 bar) | Reverb | Size |
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
@@ -549,6 +550,8 @@ the acid.
 | KNOB 3 | Sets the lane's **probability** in steps of 5 %: a hit sounds that often. The lane's name shows its chance when it is under 100. Rolls and fills held on top still sound. |
 | KNOB 4 | Sets the lane's **length**, 1-16 steps (polymeter). Shown as `L5` under the lane's name, with a mark where it ends and the steps beyond it dimmed. 16 is the bar. A shorter lane counts steps from the start of the song, not the bar, so a 5-step hat against the 16-step kick comes round again every 80 steps. |
 
+**The groove: density and a lane's own pattern.** The **Groove** page (SEQ five times, or the dial after Drum drift) draws every lane as it plays: a bright hit as written, a white one added, a dash one taken out. **Density** (50 plays the lane exactly as written; the pattern itself is never edited) takes the hits of least importance out first as you turn it down (the off-sixteenths, then the off-eighths, the beats last) and puts hits on the most important empty steps as you turn it up (at 100, half of them). **All dens** moves every lane at once. **Source** makes a lane play another pattern's lane from the next bar (take the hats from pattern 4 while the kick stays on pattern 1; on the sequencer, **black keys 1-6** set the lane you are on, **black 7** sets it back to following the piece; a pinned lane has its pattern's number after its name). Density and source are stored with the piece, and scenes carry them.
+
 Probability and length are stored with the piece. The Euclidean fill and rotation edit the pattern, so
 they stay in it if you store the piece.
 
@@ -728,7 +731,7 @@ keys; the load meter is at its top right. A mute is latched; the black key above
 | F4 / F#4 | Acid | A4 / A#4 | Mute / solo all four drums |
 | G4 / G#4 | Pad | B4 | Mute the pluck |
 
-- **Scenes:** a scene is which effects are latched, the mutes and solos, and where the FX knobs are. **Tap** a scene
+- **Scenes:** a scene is which effects are latched, the mutes and solos, where the FX knobs are, and the groove (each lane's density and source pattern, and the pattern playing: from the next bar). **Tap** a scene
   key to recall it (on the next bar while playing, if Perform's Scenes is on `NEXT BAR`, the default; else at once; the FX knobs
   glide to their values over about a second); **hold** it for 0.6 s to store the state as it is now. Scenes are kept
   until power-off.
@@ -841,7 +844,7 @@ Hold **SEL** and:
 
 | With | Does |
 |---|---|
-| White keys 1-6 (F3 G3 A3 B3 C4 D4) | Pattern 1-6, on the bar. The keys light the one chosen; the one still playing blinks. |
+| White keys 1-6 (F3 G3 A3 B3 C4 D4) | Pattern 1-6, on the bar. The keys light the one chosen; the one still playing blinks. Tap: it stays. Held (past a quarter of a second): that pattern plays only while the key is down, and the one before comes back from the bar after you let go: a pattern 5 or 6 as a held variation. |
 | PRESETS | The next or previous piece, on the next bar (`PIECE 03 NEXT BAR` until it comes). |
 | ALGORITHM | The sound of the voice on screen (pad, drone, acid, pluck); on the drums' pages, the whole kit. |
 | SEQ | The links on and off. |
@@ -851,7 +854,7 @@ Hold **SEL** and:
 | HOME | The sigil's middle: the eye or the imp. |
 | GLO | Remote: the FM-1 plays the emulator (see 17). Stopped only (it stops the music): playing, it says `STOP FIRST`. |
 | EDIT | A secret. Stopped only: it starts the music itself. |
-| Black keys 1-6 (sequencer) | Copy the pattern you're editing into pattern 1-6. |
+| Black keys 1-6 (sequencer) | Copy the pattern you're editing into pattern 1-6. (Without SEL, in the sequencer, the black keys choose the lane's source: see below.) |
 | OCT- (sequencer) | Clear this drum's lane. |
 | OCT+ (sequencer) | This drum's lane back to the piece's own. |
 | KNOB 1-4 (sequencer) | Euclid, rotation, probability, lane length. |

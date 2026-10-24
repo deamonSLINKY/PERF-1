@@ -38,14 +38,14 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -167,7 +167,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
-    {P_CHORD, P_VOICING, P_PL_CHO, P_ROOT},        /* the harmony together (Root is also on Global), and the pad's chorus (Drift is on Tempo) */
+    {P_CHORD, P_VOICING, P_PL_CHO, P_CH_LOOP},     /* the harmony together, the pad's chorus, and how many chords repeat (Root is on Global, Drift on Tempo) */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
@@ -180,6 +180,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
+    {K_GRT, K_GRD, K_GRS, K_GRA},                  /* the groove: a lane chosen, its density, the pattern it plays, and all lanes' density */
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
     {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
@@ -195,7 +196,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Bright", "Sound", "Detune"},
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
-    {"Chord", "Voicing", "Chorus", "Root"},
+    {"Chord", "Voicing", "Chorus", "Loop"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -208,6 +209,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
     {"Change", "Every", "Pool", "Mutate"},
+    {"Lane", "Density", "Source", "All dens"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Type", "Damping", "Predelay", "Amount"},
     {"Ratio", "Thresh", "Make-up", "Ceiling"},
@@ -222,7 +224,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 5}, {B_SEQ, V_DRUMS, 4}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 5}, {B_SEQ, V_DRUMS, 5}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -403,6 +405,11 @@ static struct {
     uint32_t fx_open_t;                /* when the FX menu was opened (a second tap soon after goes to the settings) */
     uint8_t fx_lastpg;                 /* the edit page of the effect key pressed last */
     uint8_t mix_trk;                   /* the mixer page's layer: pad, drone, acid, pluck, drums (0..4) */
+    uint8_t gr_all;                    /* the groove page's all-lanes density, as last set */
+    int8_t pat_key;                    /* a pattern key (SEL + white 1-6) held: a tap keeps the pattern, a hold plays it only while down */
+    uint8_t pat_rev, pat_held, pat_up; /* the pattern to go back to (+1), the one held, and the key let go after a hold */
+    uint32_t pat_t;
+    uint8_t scene_g[4][13];            /* a scene's groove: the lanes' densities, their sources, the pattern */
     uint8_t jam_man;                   /* the voice the JAM page has taken off its line (1 + voice), 0 none */
     uint8_t jam_voice, jam_mode, jam_oct, jam_ans;   /* the JAM page: the voice (pluck, pad, acid, drone), the keys (scale, chords, harp), the octave (0..4: -2..+2), the answer */
     uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
@@ -817,6 +824,10 @@ static int knob_par(int k)                     /* a knob's parameter (the sequen
         static const uint8_t LV[5] = {P_PAD, P_BASS, P_ACID, P_CM_LVL, P_PULSE};
         return LV[ui.mix_trk % 5u];
     }
+    if (k == K_GRD)
+        return P_DENS + (int)(ui.lane % EN_NLANE);
+    if (k == K_GRS)
+        return P_LSRC + (int)(ui.lane % EN_NLANE);
     if (k == K_MXP)
         return P_PAN + (int)(ui.mix_trk % 5u);
     if (k == K_MXS)
@@ -829,6 +840,10 @@ static int knob_get(int k)
     int p = knob_par(k);
     if (k == K_MXT)
         return ui.mix_trk;
+    if (k == K_GRT)
+        return ui.lane;
+    if (k == K_GRA)
+        return ui.gr_all;
     if (k >= K_FXP)
         return fxp_get(k);
     if (k >= K_FXF)
@@ -841,6 +856,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_MXT) {
         *lo = 0;
         *hi = 4;
+        return;
+    }
+    if (k == K_GRT || k == K_GRA) {
+        *lo = 0;
+        *hi = k == K_GRT ? EN_NLANE - 1 : 100;
         return;
     }
     if (k >= K_FXP) {
@@ -866,6 +886,20 @@ static void knob_text(int k, char *b)
             n++;
         }
         b[n] = 0;
+        return;
+    }
+    if (k == K_GRT) {                            /* the groove's lane */
+        const char *s = LANE_SHORT[ui.lane % EN_NLANE];
+        int n = 0;
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
+        return;
+    }
+    if (k == K_GRA) {
+        itoa_u((uint32_t)ui.gr_all, b);
         return;
     }
     if (k >= K_FXP) {
@@ -902,6 +936,18 @@ static void knob_set(int k, int v)
     int lo, hi, p = knob_par(k);
     if (k == K_MXT) {
         ui.mix_trk = (uint8_t)(v < 0 ? 0 : v > 4 ? 4 : v);
+        return;
+    }
+    if (k == K_GRT) {
+        ui.lane = (uint8_t)(v < 0 ? 0 : v > EN_NLANE - 1 ? EN_NLANE - 1 : v);
+        return;
+    }
+    if (k == K_GRA) {                            /* every lane's density at once */
+        int l;
+        v = v < 0 ? 0 : v > 100 ? 100 : v;
+        ui.gr_all = (uint8_t)v;
+        for (l = 0; l < EN_NLANE; l++)
+            knob_set(P_DENS + l, v);
         return;
     }
     if (k >= K_FXP) {
@@ -967,6 +1013,7 @@ static void turn(int role, int k, int32_t e)
 /* Four scenes (GLO held, C5 .. D#5): what is locked on in FX, the mutes and solos, the FX knobs. A tap
  * recalls one, a hold of 0.6 s stores the state as it is now. They are kept until power-off. */
 #define SCENE_HOLD 600u
+static void pat_name(int i, char *t);
 static void scene_store(int s)
 {
     int k;
@@ -975,6 +1022,11 @@ static void scene_store(int s)
     ui.scene_s[s] = ui.trk_s;
     for (k = 0; k < 4; k++)
         ui.scene_k[s][k] = ui.fxk[k];
+    for (k = 0; k < EN_NLANE; k++) {           /* the groove: densities, sources, the pattern */
+        ui.scene_g[s][k] = (uint8_t)proj.par[P_DENS + k];
+        ui.scene_g[s][6 + k] = (uint8_t)proj.par[P_LSRC + k];
+    }
+    ui.scene_g[s][12] = (uint8_t)proj.par[P_PATTERN];
     ui.scene_set |= (uint8_t)(1u << s);
     {
         char t[12] = "SCENE 1";
@@ -992,6 +1044,11 @@ static void scene_apply(int s)
     ui.trk_m = ui.scene_m[s];
     ui.trk_s = ui.scene_s[s];
     en_trk(ui.trk_m, ui.trk_s);
+    for (k = 0; k < EN_NLANE; k++) {           /* the groove: from the next bar (the engine's own wait) */
+        knob_set(P_DENS + k, ui.scene_g[s][k]);
+        knob_set(P_LSRC + k, ui.scene_g[s][6 + k]);
+    }
+    knob_set(P_PATTERN, ui.scene_g[s][12]);
     for (k = 0; k < 4; k++) {                  /* the FX knobs glide there (glide_tick) */
         ui.glide_t[k] = ui.scene_k[s][k];
         ui.glide_f[k] = (float)ui.fxk[k];
@@ -1078,6 +1135,13 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
 {
     static uint8_t last = 255;
     uint8_t p = en_drum_pos;
+    if (ui.pat_rev && ui.pat_up && (!en_playing || en_pat_now == ui.pat_held)) {   /* a held pattern, let go: the one before, from the next bar */
+        char t[16];
+        knob_set(P_PATTERN, ui.pat_rev - 1);
+        pat_name(ui.pat_rev - 1, t);
+        say(t, en_playing ? "BACK, NEXT BAR" : 0);
+        ui.pat_rev = ui.pat_up = 0;
+    }
     if (!ui.dj_on)
         ui.dj_fill = 0;
     if (!en_playing) {
@@ -1491,6 +1555,12 @@ static void shift_key(int key)                  /* a key pressed with SEL held *
     }
     for (i = 0; i < EN_NPAT; i++)
         if (WHITE_KEY[i] == key) {               /* white 1-6: the pattern */
+            if (!ui.pat_rev)
+                ui.pat_rev = (uint8_t)(proj.par[P_PATTERN] + 1);   /* (a tap keeps it; held, it plays only while down: the key's release says which) */
+            ui.pat_key = (int8_t)key;
+            ui.pat_held = (uint8_t)i;
+            ui.pat_up = 0;
+            ui.pat_t = plat_ms();
             knob_set(P_PATTERN, i);
             pat_name(i, t);
             say(t, en_playing && en_pat_now != i ? "NEXT BAR" : 0);
@@ -2050,6 +2120,13 @@ static void input(void)
     ch = keys ^ ui.keys;
     ui.keys = keys;
     ui.shift_keys &= keys;                     /* let go: no longer the shift's */
+    if (ui.pat_key >= 0 && !(keys >> ui.pat_key & 1u)) {   /* the pattern key let go: a tap kept its pattern; a hold sends it back, once it has played */
+        ui.pat_key = -1;
+        if (plat_ms() - ui.pat_t < TAP_MS)
+            ui.pat_rev = 0;
+        else
+            ui.pat_up = 1;
+    }
     if ((btn >> B_SEL & 1u) && (ch & keys)) {  /* SEL held: the keys pressed are the shift's */
         ui.shift_keys |= ch & keys;
         ui.btn_used |= 1u << B_SEL;
@@ -2171,6 +2248,23 @@ static void input(void)
                     for (s = 0; s < 16; s++)
                         if (WHITE_KEY[s] == i)
                             step_toggle(s);
+                    for (s = 0; s < 7; s++)      /* black 1-6: the lane plays that pattern's, from the next bar; black 7: it follows the piece's again */
+                        if (BLACK_KEY[s] == i) {
+                            char t[16] = "";
+                            int j = 0;
+                            const char *q = LANE_SHORT[ui.lane];
+                            while (*q)
+                                t[j++] = *q++;
+                            t[j] = 0;
+                            knob_set(P_LSRC + ui.lane, s < 6 ? s + 1 : 0);
+                            if (s < 6) {
+                                char u[12] = "PATTERN 1";
+                                u[8] = (char)('1' + s);
+                                say(t, u);
+                            } else {
+                                say(t, "FOLLOWS THE PIECE");
+                            }
+                        }
                 } else if (ui.view == V_JAM) {   /* the JAM page: the key plays the voice chosen */
                     jam_down((int)i);
                 } else if (by_hand(voice_of(ui.view))) {   /* a voice off the algorithm, its page: the key plays it */
@@ -2976,7 +3070,13 @@ static void draw_seq(void)
         int32_t y = 18 + l * 20, sel = l == ui.lane;
         if (sel)                                /* the keys' lane */
             cv_rect(0, y + 1, 240, 17, K_PANEL);
-        cv_text(4, y + 3, &FONT_XS, LANE_SHORT[l], sel ? K_TEXT : K_DIM);
+        {
+            const int32_t nx = cv_text(4, y + 3, &FONT_XS, LANE_SHORT[l], sel ? K_TEXT : K_DIM);
+            if (proj.par[P_LSRC + l]) {          /* its own pattern's lane: the number after the name */
+                char d[2] = {(char)('0' + proj.par[P_LSRC + l]), 0};
+                cv_text(nx + 1, y + 3, &FONT_XS, d, K_ACC);
+            }
+        }
         if (proj.par[P_PROB + l] < 100) {        /* thinned: its chance, under the name */
             char pt[6];
             int j = 0;
@@ -3420,7 +3520,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -3435,6 +3535,7 @@ static int scope_kind(int v)
     case V_MASTER: return SCOPE_MASTER;
     case V_REVERB: return SCOPE_REVERB;
     case V_MIXER: return SCOPE_MIX;
+    case V_GROOVE: return SCOPE_GROOVE;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
     }
@@ -3707,6 +3808,39 @@ static void draw_scope(int kind)
         }
         scope_trace(col);
         cv_rect(SC_X, SC_Y + SC_H - 6, (int32_t)(gap * (float)SC_W), 2, K_ACC);   /* the predelay */
+        return;
+    }
+    if (kind == SCOPE_GROOVE) {                  /* the groove: each lane as it plays (a hit added: bright; one taken out: a dash), the lane chosen framed, its source and density */
+        int l, s;
+        cv_text(6, 2, &FONT_B, "GROOVE", K_ACC);
+        cv_text(6 + text_w(&FONT_B, "GROOVE") + 8, 6, &FONT_XS, "DENSITY, SOURCE: PER LANE", K_DIM);
+        for (l = 0; l < EN_NLANE; l++) {
+            const int src = proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now, dens = proj.par[P_DENS + l];
+            const uint16_t wr = en_pats[src][l], pl = en_lane_mask(l, src, dens);
+            const int32_t y = 22 + l * 17, sel = l == (int)ui.lane;
+            char tx[6];
+            if (sel)
+                cv_rect(0, y - 1, 240, 16, K_PANEL);
+            cv_text(4, y + 2, &FONT_XS, LANE_SHORT[l], sel ? K_TEXT : K_DIM);
+            for (s = 0; s < 16; s++) {
+                const int32_t x = 44 + s * 9;
+                const int on = pl >> s & 1, was = wr >> s & 1;
+                if (on)
+                    cv_rect(x, y + 1, 7, 11, was ? LANE_COL(l) : K_TEXT);
+                else if (was)
+                    cv_rect(x, y + 5, 7, 3, K_LINE);
+                else
+                    cv_rect(x + 3, y + 6, 1, 1, K_LINE);
+                if (en_playing && s == (int)en_lane_pos[l])
+                    cv_rect(x, y + 13, 7, 1, K_TEXT);
+            }
+            tx[0] = proj.par[P_LSRC + l] ? 'P' : '=';
+            tx[1] = proj.par[P_LSRC + l] ? (char)('0' + proj.par[P_LSRC + l]) : 0;
+            tx[2] = 0;
+            cv_text(192, y + 2, &FONT_XS, tx, proj.par[P_LSRC + l] ? K_ACC : K_DIM);
+            itoa_u((uint32_t)dens, tx);
+            cv_text(212, y + 2, &FONT_XS, tx, dens == 50 ? K_DIM : K_ACC);
+        }
         return;
     }
     if (kind == SCOPE_MIX) {                     /* the mixer: a strip a layer, its level set and its level now, the output last */
@@ -4073,6 +4207,12 @@ static void draw_main(void)
         h = hash(h, (uint32_t)proj.par[P_CM_DEC] | (uint32_t)proj.par[P_CM_STYLE] << 8 | (uint32_t)proj.par[P_CM_RATE] << 12 | (uint32_t)proj.par[P_CM_RANGE] << 16);
         h = hash(h, (uint32_t)proj.par[P_AC_ENV] | (uint32_t)proj.par[P_ECHO] << 8 | (uint32_t)proj.par[P_SIZE] << 16 |
                         (uint32_t)proj.par[P_PL_RATE] << 24);
+        if (ui.view == V_GROOVE) {
+            int l;
+            for (l = 0; l < EN_NLANE; l++)
+                h = hash(h, (uint32_t)proj.par[P_DENS + l] | (uint32_t)proj.par[P_LSRC + l] << 8 | (uint32_t)en_pats[en_pat_now][l] << 16 | (uint32_t)en_lane_pos[l] << 11);
+            h = hash(h, (uint32_t)ui.lane | (uint32_t)en_pat_now << 4 | (uint32_t)en_playing << 8);
+        }
         if (ui.view == V_MASTER)
             h = hash(h, (uint32_t)(en_comp_gr * 2.0f) | (uint32_t)(en_lim_gr * 2.0f) << 8 | (uint32_t)(en_out_peak * 40.0f) << 16);
         if (ui.view == V_MIXER) {
@@ -4102,7 +4242,7 @@ static void draw_main(void)
     if (ui.view == V_SEQ) {
         h = hash(h, ui.lane | (uint32_t)proj.par[P_PATTERN] << 16);
         for (i = 0; i < EN_NLANE; i++)
-            h = hash(h, (uint32_t)proj.par[P_PROB + i] | (uint32_t)proj.par[P_LLEN + i] << 8);
+            h = hash(h, (uint32_t)proj.par[P_PROB + i] | (uint32_t)proj.par[P_LLEN + i] << 8 | (uint32_t)proj.par[P_LSRC + i] << 16);
         if (h == ui.sig[1])
             return;
         ui.sig[1] = h;
@@ -4885,6 +5025,8 @@ void ui_init(void)
         en_mute(0);
     memset(&rm, 0, sizeof rm);
     memset(&ui, 0, sizeof ui);
+    ui.pat_key = -1;                             /* (no pattern key held) */
+    ui.gr_all = 50;
     {   /* the effects' settings start at the engine's defaults; the gate at its first pattern, on the synths */
         int i;
         for (i = 0; i < EN_NFXS; i++)

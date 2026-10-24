@@ -116,6 +116,9 @@ enum {
     P_PL_CHO,                                             /* the pad's ensemble chorus: three modulated delays a side, how much of them */
     P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL,           /* the master bus: compressor ratio (Off .. 10:1), threshold, make-up gain, and the limiter's ceiling */
     P_LLEN, P_LLEN1, P_LLEN2, P_LLEN3, P_LLEN4, P_LLEN5,  /* each drum lane's length in steps (P_LLEN + lane), 16 the bar: shorter ones run against it (polymeter) */
+    P_DENS, P_DENS1, P_DENS2, P_DENS3, P_DENS4, P_DENS5,  /* each drum lane's busyness (P_DENS + lane): 50 plays the pattern as written, less takes the least important hits out, more puts hits on the most important empty steps (the pattern itself is never edited) */
+    P_LSRC, P_LSRC1, P_LSRC2, P_LSRC3, P_LSRC4, P_LSRC5,  /* the pattern each lane plays (P_LSRC + lane): 0 follows the piece's pattern, 1..6 holds that pattern's lane (from the next bar) */
+    P_CH_LOOP,                                            /* the progression: 0 a fresh walk, 1..3 the last 2, 4 or 8 chords repeat, 4..6 the same with now and then one drawn anew */
     P_NPARAMS
 };
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
@@ -276,6 +279,8 @@ extern uint32_t (*en_prof_clock)(void);        /* the firmware's tick counter, f
 extern volatile uint32_t en_prof[EN_NPROF];
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
+uint16_t en_lane_mask(int lane, int pat, int dens);   /* a lane of pattern pat as it plays at density dens (50: as written; the screen's preview too) */
+extern volatile uint8_t en_lane_src[EN_NLANE]; /* the pattern each lane plays now */
 extern volatile uint8_t en_lane_pos[EN_NLANE]; /* each lane's step (its own length: P_LLEN + lane) */
 extern volatile float en_drum_glow[EN_NDRUM];
 extern volatile uint8_t en_pat_now, en_pat_next;

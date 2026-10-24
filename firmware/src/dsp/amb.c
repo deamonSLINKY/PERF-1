@@ -77,6 +77,11 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_MC_RATIO] = {"Ratio", 0, 6, 1},     [P_MC_THR] = {"Thresh", 0, 100, 60}, [P_MC_MAKE] = {"Make-up", 0, 100, 10}, [P_ML_CEIL] = {"Ceiling", 0, 100, 100},
     [P_LLEN] = {"Length", 1, 16, 16},      [P_LLEN1] = {"Length", 1, 16, 16},   [P_LLEN2] = {"Length", 1, 16, 16},
     [P_LLEN3] = {"Length", 1, 16, 16},     [P_LLEN4] = {"Length", 1, 16, 16},   [P_LLEN5] = {"Length", 1, 16, 16},
+    [P_DENS] = {"Density", 0, 100, 50},    [P_DENS1] = {"Density", 0, 100, 50}, [P_DENS2] = {"Density", 0, 100, 50},
+    [P_DENS3] = {"Density", 0, 100, 50},   [P_DENS4] = {"Density", 0, 100, 50}, [P_DENS5] = {"Density", 0, 100, 50},
+    [P_LSRC] = {"Source", 0, 6, 0},        [P_LSRC1] = {"Source", 0, 6, 0},     [P_LSRC2] = {"Source", 0, 6, 0},
+    [P_LSRC3] = {"Source", 0, 6, 0},       [P_LSRC4] = {"Source", 0, 6, 0},     [P_LSRC5] = {"Source", 0, 6, 0},
+    [P_CH_LOOP] = {"Loop", 0, 6, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -478,6 +483,8 @@ void en_param_text(int i, int v, char *b)
     case P_CM_SND: s = EN_CM_SOUND[(unsigned)v < EN_NCMSND ? v : 0]; break;
     case P_CM_STYLE: s = EN_CM_STYLE[(unsigned)v < EN_NCMSTYLE ? v : 0]; break;
     case P_CM_RATE: s = EN_CM_RATE[v & 3]; break;
+    case P_LSRC: case P_LSRC1: case P_LSRC2: case P_LSRC3: case P_LSRC4: case P_LSRC5: { static const char *const S[7] = {"Follow", "Pat 1", "Pat 2", "Pat 3", "Pat 4", "Pat 5", "Pat 6"}; s = S[(unsigned)v < 7u ? v : 0]; break; }
+    case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
     case P_LK_PERC: s = v ? "Clock" : "Off"; break;
@@ -1472,6 +1479,25 @@ static void chord_change(void)                  /* to another degree: the near, 
     }
     if (i >= nsteps)
         i = deg == 0 ? (nsteps > 1 ? 1 : 0) : 0;
+    {   /* the progression loop: the last 2, 4 or 8 chords repeat (4..6: now and then one is drawn anew) */
+        static uint8_t dh[8], dh_n, dh_i, dh_ln;
+        const int lp = par[P_CH_LOOP], ln = lp ? 2 << ((lp - 1) % 3) : 0, dv = lp > 3 ? 25 : 0;
+        if (ln != dh_ln) {
+            dh_ln = (uint8_t)ln;
+            dh_n = dh_i = 0;
+        }
+        if (ln && dh_n >= ln) {                  /* the loop is full: its next chord (or, now and then, a new one in its place) */
+            const int k = dh_i % ln;
+            dh_i = (uint8_t)(k + 1);
+            if (dv && frand() * 100.0f < (float)dv)
+                dh[k] = (uint8_t)i;
+            else if (dh[k] < nsteps)
+                i = dh[k];
+        } else if (ln) {                         /* filling it */
+            dh[dh_n++] = (uint8_t)i;
+            dh_i = 0;
+        }
+    }
     deg = i;
     pad_retarget();
     pad_leave();
@@ -1596,6 +1622,34 @@ volatile int8_t en_dd_left = -1;
 volatile uint32_t en_dd_changes, en_dd_mutations;
 static int dd_len(void) { static const uint8_t L[6] = {0, 4, 8, 16, 32, 64}; return L[(unsigned)par[P_DD_EVERY] < 6u ? par[P_DD_EVERY] : 0]; }
 static int bits16(uint32_t b) { int n = 0; while (b) { n += (int)(b & 1u); b >>= 1; } return n; }
+volatile uint8_t en_lane_src[EN_NLANE];
+static uint8_t lane_src[EN_NLANE];              /* the pattern each lane plays (P_LSRC, taken at the bar) */
+/* a lane of a pattern as it plays at a density: 50 as written; below, the hits of least importance go first (the off sixteenths, then the off
+ * eighths, the quarters last); above, hits arrive on the most important empty steps (up to half of them, at 100). The pattern is never edited. */
+uint16_t en_lane_mask(int l, int pat, int dens)
+{
+    static const uint8_t IMP[16] = {0, 8, 4, 12, 2, 10, 6, 14, 1, 3, 5, 7, 9, 11, 13, 15};   /* the steps, most important first */
+    uint32_t b = en_pats[(unsigned)pat < EN_NPAT ? pat : 0][(unsigned)l < EN_NLANE ? l : 0];
+    int pop = bits16(b), n, k;
+    if (dens == 50)
+        return (uint16_t)b;
+    if (dens < 50) {
+        n = (pop * (50 - dens) + 25) / 50;
+        for (k = 15; k >= 0 && n > 0; k--)
+            if (b >> IMP[k] & 1u) {
+                b &= ~(1u << IMP[k]);
+                n--;
+            }
+    } else {
+        n = ((16 - pop) * (dens - 50) + 50) / 100;
+        for (k = 0; k < 16 && n > 0; k++)
+            if (!(b >> IMP[k] & 1u)) {
+                b |= 1u << IMP[k];
+                n--;
+            }
+    }
+    return (uint16_t)b;
+}
 
 static void dd_mutate(int p)
 {
@@ -1993,6 +2047,8 @@ static void tick(void)
         }
         dd_bar();                               /* drum drift: a fill coming, or a change now */
         pat_now = pat_next;                     /* a new pattern: on the bar */
+        for (l = 0; l < EN_NLANE; l++)          /* each lane's own source, from this bar */
+            en_lane_src[l] = lane_src[l] = (uint8_t)(par[P_LSRC + l] ? par[P_LSRC + l] - 1 : pat_now);
         if (tb && bars % (uint32_t)tb == 0u)
             bass.env_up = 1;                    /* the drone's envelope: every 1 .. 8 bars */
         bars++;
@@ -2002,7 +2058,7 @@ static void tick(void)
     for (l = 0; l < EN_NDRUM; l++) {
         const int llen = par[P_LLEN + l] < 16 && par[P_LLEN + l] >= 1 ? par[P_LLEN + l] : 16;
         const int ls = llen < 16 ? (int)(sixteenth % (uint32_t)llen) : st;   /* a shorter lane runs against the bar: polymeter */
-        int hit = (int)(en_pats[pat_now][l] >> ls & 1u), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
+        int hit = (int)(en_lane_mask(l, lane_src[l], par[P_DENS + l]) >> ls & 1u), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
         en_lane_pos[l] = (uint8_t)ls;
         const uint64_t fxm = fx_on;
         float vel = 0.9f;
@@ -2884,6 +2940,8 @@ static void play_start(int from_top)
         bars = 0;
         ac_pos = 0;
         pat_now = pat_next;
+        for (i = 0; i < EN_NLANE; i++)
+            en_lane_src[i] = lane_src[i] = (uint8_t)(par[P_LSRC + i] ? par[P_LSRC + i] - 1 : pat_now);
         pad_lfo.ph = drone_lfo.ph = 0.0f;
     }
     pulse_left = 0.0f;

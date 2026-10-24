@@ -1,0 +1,85 @@
+# Arrange: a lane's density (the pattern as written is never edited; 50 plays it as written), a lane's own source pattern (from the next bar),
+# a pattern key held (plays that pattern only while down), scenes that carry the groove, the progression loop.
+seed 0
+wait 3000
+# the Groove page (SEQ x5: the dial, 17): the kick lane (the first), its density
+turn SELECT 17 100
+expect view 17
+expect lanemask0 0x1111
+spin K2 -25
+wait 100
+expect par138 25
+# a quarter of the way down: the hits of least importance go first, the beat's own stay
+expect lanemask0 0x0101
+expect lanewrit0 0x1111
+shot groove.png
+# up past 50: hits arrive on the most important empty steps
+spin K2 50
+wait 100
+expect par138 75
+expect lanemask0 0x1555
+# back: as written
+spin K2 -25
+wait 100
+expect lanemask0 0x1111
+# all lanes at once
+spin K4 -10
+wait 100
+expect par141 40
+spin K4 10
+wait 100
+expect par141 50
+# the snare lane's source: pattern 2, from the next bar
+spin K1 1
+spin K3 2
+wait 100
+expect par145 2
+wait 4000
+expect lanesrc1 1
+spin K3 -2
+wait 4000
+expect lanesrc1 0
+# a pattern key held (SEL + white 3): that pattern while it is down, then back to the one before
+press SEL
+key w2 down
+wait 100
+expect par48 2
+expect patkey 1
+wait 600
+key w2 up
+release SEL
+wait 100
+expect patkey 2
+wait 5000
+expect par48 0
+expect patkey 0
+# a tap keeps it
+press SEL
+tapkey w3
+release SEL
+wait 5000
+expect par48 3
+# the progression loop (Chords page K4: 2 chords): after two new chords the progression repeats, A B A B A B
+turn SELECT -100 10
+turn SELECT 4 100
+expect view 4
+turn K4 1
+expect par150 1
+tap EDIT
+wait 2500
+expect chordroot 4
+tap EDIT
+wait 2500
+expect chordroot 9
+tap EDIT
+wait 2500
+expect chordroot 4
+tap EDIT
+wait 2500
+expect chordroot 9
+tap EDIT
+wait 2500
+expect chordroot 4
+tap EDIT
+wait 2500
+expect chordroot 9

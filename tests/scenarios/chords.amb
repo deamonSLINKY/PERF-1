@@ -38,9 +38,9 @@ turn K2 1
 expect par93 1
 wait 200
 expect chordiv 0x429
-# Root here is the Global page's
+# Loop: how many chords repeat (Root is the Global page's)
 turn K4 2
-expect par71 11
+expect par150 2
 expect edited 1
 # by hand from here too (a pad page)
 press SEL

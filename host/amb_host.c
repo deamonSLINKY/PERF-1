@@ -568,6 +568,14 @@ static int expect(const char *what, const char *val)
         got = proj.par[P_TEMPO];
     else if (!strcmp(what, "pat"))                /* the drum pattern playing (0..5) */
         got = en_pat_now;
+    else if (!strncmp(what, "lanesrc", 7) && what[7] >= '0' && what[7] <= '5')   /* the pattern lane N plays (0..5) */
+        got = en_lane_src[what[7] - '0'];
+    else if (!strncmp(what, "lanemask", 8) && what[8] >= '0' && what[8] <= '5')  /* lane N of the pattern playing, at its density, as it would sound (a 16-bit mask) */
+        got = en_lane_mask(what[8] - '0', en_lane_src[what[8] - '0'], proj.par[P_DENS + (what[8] - '0')]);
+    else if (!strncmp(what, "lanewrit", 8) && what[8] >= '0' && what[8] <= '5')  /* the same, as written */
+        got = en_pats[en_lane_src[what[8] - '0']][what[8] - '0'];
+    else if (!strcmp(what, "patkey"))             /* the held pattern's state: 1 a pattern key is down, 2 one let go and waiting to go back */
+        got = ui.pat_key >= 0 ? 1 : ui.pat_up ? 2 : 0;
     else if (!strcmp(what, "patnext"))            /* the one waiting for the bar */
         got = en_pat_next;
     else if (!strncmp(what, "lane", 4))           /* laneL: lane L's steps in the pattern chosen (bits) */

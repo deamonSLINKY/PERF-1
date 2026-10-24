@@ -22,7 +22,7 @@ expect enpar122 0
 tap GLO
 spin SELECT 1
 wait 100
-expect view 22
+expect view 23
 expect jamv 0
 wait 100
 expect enpar122 1
