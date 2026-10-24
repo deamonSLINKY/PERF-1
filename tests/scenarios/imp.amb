@@ -1,0 +1,47 @@
+# The Imp skin (theme 6, Global K2): the header's coil and beat bar, the knob strip's tabs and large values. Screenshots only: look at them.
+seed 0
+wait 3000
+tap GLO
+spin K2 5
+wait 100
+expect theme 5
+shot imp_global.png
+tap HOME
+wait 600
+shot imp_tempo.png
+tap ENV
+wait 600
+shot imp_pad.png
+tap LFO
+wait 600
+shot imp_drone.png
+tap ARP
+wait 600
+shot imp_acid.png
+tap ARP
+tap ARP
+tap ARP
+wait 600
+shot imp_pluck.png
+tap SEQ
+wait 600
+shot imp_drums.png
+tap SEQ
+tap SEQ
+tap SEQ
+tap SEQ
+wait 600
+shot imp_groove.png
+turn SELECT 3 100
+wait 300
+shot imp_space.png
+turn SELECT 3 100
+wait 300
+shot imp_mixer.png
+tap FX
+wait 300
+shot imp_fx.png
+tap FX
+tap HOME
+wait 300
+shot imp_perform.png

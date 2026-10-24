@@ -30,7 +30,7 @@
 #define EN_NPAT 6                      /* drum patterns */
 #define EN_NSTEP 16
 #define EN_NPAD 4                      /* pad voices */
-#define EN_NTHEME 5                    /* the screen's colour themes (the UI's; kept with the settings) */
+#define EN_NTHEME 6                    /* the screen's colour themes (the UI's; kept with the settings) */
 #define EN_NSTYLE 5                    /* the old styles (before 1.0.27): a stored piece's is turned into sounds
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 24                   /* the sounds each of pad and drone can play */

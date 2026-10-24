@@ -318,6 +318,7 @@ static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
  * the drums' colour, and a colour for the sections and freeze. Each layer has a dark tint for shapes at rest. */
 typedef struct {
     uint16_t bg, panel, line, dim, text, acc, pad, pad_t, acid, acid_t, bass, bass_t, pulse, pulse_t, frost;
+    uint8_t skin;                      /* 1: the Imp look (the header's coil, the knob strip's tabs and big values) */
 } theme_t;
 static const theme_t THEMES[EN_NTHEME] = {
     /* Synth: charcoal, a cyberpunk purple, orange */
@@ -340,6 +341,10 @@ static const theme_t THEMES[EN_NTHEME] = {
     {RGB(6, 14, 8), RGB(14, 32, 18), RGB(26, 58, 32), RGB(80, 160, 96), RGB(170, 255, 190), RGB(220, 255, 120),
      RGB(60, 255, 120), RGB(14, 70, 30), RGB(150, 255, 170), RGB(24, 76, 40), RGB(30, 190, 90), RGB(10, 56, 26),
      RGB(120, 220, 140), RGB(20, 52, 28), RGB(240, 255, 140)},
+    /* Imp: warm black, bone, crimson, lime, pink; ember is for "now" (the playhead, the knob you touched) */
+    {RGB(20, 14, 12), RGB(42, 30, 27), RGB(78, 56, 49), RGB(166, 140, 126), RGB(244, 232, 200), RGB(255, 212, 71),
+     RGB(242, 230, 196), RGB(86, 78, 62), RGB(182, 242, 60), RGB(60, 80, 22), RGB(224, 52, 79), RGB(84, 22, 32),
+     RGB(255, 143, 143), RGB(88, 52, 52), RGB(150, 210, 255), 1},
 };
 static const theme_t *th = &THEMES[0];
 #define K_BG (th->bg)
@@ -2656,6 +2661,30 @@ static void draw_mascot(int32_t x, int32_t y, int sleepy)
 /* the header: the piece in a tag, its root and mode; on the right, the tempo with a beat light (a play
  * triangle while stopped), the section and a dot while the kit is unsaved. Messages take its place
  * for a moment. */
+/* THE IMP SKIN (theme 6; the old five keep the old look): the header gets a beat bar along its top (sixteen ticks, the beats taller, the step
+ * playing lit) and a coil along its bottom, the slinky's spring, that stretches on the kick. */
+#define IMP_TEAL RGB(111, 224, 210)
+static void imp_header(void)
+{
+    const float kg = fm_clampf(en_drum_glow[0], 0.0f, 1.0f);
+    const float amp = 1.0f + 2.2f * kg, st = 0.33f;
+    const float ph = (float)(plat_ms() % 1200u) * (FM_TWO_PI / 1200.0f);
+    float s = fm_sinf(ph), c = fm_cosf(ph);
+    const float ss = fm_sinf(st), cs = fm_cosf(st);
+    const uint16_t cc = mix(K_LINE, K_BASS, 7 + q16(kg) * 9 / 16);
+    int32_t x;
+    int i;
+    for (i = 0; i < 16; i++)                     /* the bar's sixteen steps */
+        cv_rect(i * 15 + 1, 0, 13, i % 4 ? 1 : 2, en_playing && i == (int)en_drum_pos ? K_ACC : K_LINE);
+    for (x = 0; x < 240; x++) {                  /* the coil */
+        const int32_t y = 26 + (int32_t)(s * amp + (s < 0.0f ? -0.5f : 0.5f));
+        const float ns = s * cs + c * ss;
+        c = c * cs - s * ss;
+        s = ns;
+        cv_pset(x, y, cc);
+    }
+}
+
 static void draw_header(void)
 {
     char t[24];
@@ -2675,6 +2704,8 @@ static void draw_header(void)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
                     (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 12);
+    if (th->skin)                               /* the coil moves: 15 a second, and on the kick; the beat bar on each step */
+        h = hash(h, (uint32_t)(plat_ms() / 66u) | (uint32_t)q16(en_drum_glow[0]) << 20 | (uint32_t)(en_playing ? en_drum_pos + 1u : 0u) << 25);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -2776,6 +2807,8 @@ static void draw_header(void)
         w = cv_text(w + 10, 8, &FONT_XS, EN_NOTE_NAME[proj.par[P_ROOT]], K_TEXT);
         cv_text(w + 3, 8, &FONT_XS, mode_name(), K_DIM);
     }
+    if (th->skin)
+        imp_header();
     cv_blit(0, 0);
 }
 
@@ -3786,7 +3819,7 @@ static void draw_scope(int kind)
         const int ty = proj.par[P_RV_TYPE] < 0 ? 0 : proj.par[P_RV_TYPE] > 2 ? 2 : proj.par[P_RV_TYPE];
         const float len = 0.25f + 0.75f * (float)proj.par[P_SIZE] * 0.01f, amt = (float)proj.par[P_RV_X] * 0.01f,
                     gap = (6.0f + 24.0f * (float)proj.par[P_RV_PRE] * 0.01f) * (1.0f / 30.0f) * 0.2f, hold = 0.12f + 0.45f * amt;
-        col = KC_COLOR;
+        col = th->skin ? IMP_TEAL : KC_COLOR;
         cv_text(6, 2, &FONT_B, "REVERB", col);
         cv_text(6 + text_w(&FONT_B, "REVERB") + 8, 6, &FONT_XS, TY[ty], K_TEXT);
         cv_text(6, SC_Y + SC_H + 6, &FONT_XS, ty == 1 ? "AN OCTAVE UP, BLOOMING IN THE TAIL" : ty == 2 ? "CUT OFF AFTER THE HOLD" : "THE PLATE'S TAIL, AFTER THE PREDELAY", K_DIM);
@@ -3958,7 +3991,7 @@ static void draw_scope(int kind)
         const int st = proj.par[P_CM_STYLE], ri = proj.par[P_CM_RATE] & 3, n = 6;
         const float T = 0.1f * fm_exp2f((float)proj.par[P_CM_DEC] * 0.045f);
         int s, k;
-        col = KC_COLOR;
+        col = th->skin ? IMP_TEAL : KC_COLOR;
         for (x = 0; x < SC_W; x++) {
             const float u = (float)x / (float)(SC_W - 1);
             sc_y[x] = (uint8_t)(scope_expo(u * 1.2f / T, 10.0f) * (float)(SC_H - 8) * 0.45f);
@@ -4287,10 +4320,42 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     const int g = group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
     switch (g >= 0 ? GROUP[g].btn : -1) {
     case B_LFO: return K_BASS;
-    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? KC_COLOR : K_ACID;
-    case B_SEQ: return RGB(255, 160, 60);
+    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? (th->skin ? IMP_TEAL : KC_COLOR) : K_ACID;
+    case B_SEQ: return th->skin ? K_PULSE : RGB(255, 160, 60);
     case B_HOME: return KC_REPEAT;
     default: return ui.view == V_JAM ? KC_MOVE : perf_like() ? KC_FILTER : K_PAD;
+    }
+}
+
+/* the accordion tabs (the Imp skin's knob strip): a chip a group of pages; the one you are in opens to its name and a pip a page */
+static void imp_tabs(void)
+{
+    static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
+        {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"DRONE", 'D', V_DRONE, 3}, {"ACID", 'A', V_ACID, 3}, {"PLUCK", 'L', V_CMEL, 2},
+        {"DRUMS", 'R', V_DRUMS, 5}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
+    const uint16_t col[10] = {K_TEXT, K_PAD, K_BASS, K_ACID, IMP_TEAL, K_PULSE, K_FROST, K_DIM, K_TEXT, KC_MOVE};
+    const int v = ui.view == V_SEQ ? V_DRUMS : ui.view >= V_PERF ? V_TEMPO : (int)ui.view;
+    int32_t x = 3;
+    int i;
+    for (i = 0; i < 10; i++) {
+        const int on = v >= TB[i].first && v < TB[i].first + TB[i].n;
+        if (on) {
+            const int32_t w = text_w(&FONT_XS, TB[i].name) + 9 + (TB[i].n > 1 ? TB[i].n * 5 + 1 : 0);
+            int p;
+            char l[2] = {0, 0};
+            cv_round(x, 12, w, 12, 2, col[i]);
+            cv_text(x + 4, 13, &FONT_XS, TB[i].name, K_BG);
+            for (p = 0; TB[i].n > 1 && p < TB[i].n; p++)
+                cv_rect(x + w - 3 - (TB[i].n - p) * 5 + 1, 16, 3, 5, p == v - TB[i].first ? K_BG : mix(col[i], K_BG, 9));
+            (void)l;
+            x += w + 3;
+        } else {
+            char l[2] = {TB[i].ltr, 0};
+            cv_rect(x, 12, 14, 12, K_PANEL);
+            cv_text(x + 4, 13, &FONT_XS, l, K_DIM);
+            cv_rect(x, 22, 14, 2, col[i]);
+            x += 17;
+        }
     }
 }
 
@@ -4399,7 +4464,9 @@ static void draw_knobs(void)
         }
         if (xt >= xl + 6)                        /* (a long sound name, BY HAND or the store's state would run into it) */
             cv_text(xt, -1, &FONT_XS, t, K_ACC);
-        for (k = 0; k < ndots; k++) {
+        if (th->skin && !ui.fx_menu)
+            imp_tabs();                          /* (the Imp skin: tabs, a chip a group) */
+        else for (k = 0; k < ndots; k++) {
             int cur, same;
             if (ui.fx_menu) {
                 cur = k == (ui.fx_page ? fx_pos(ui.fx_page) : (int)fx_bank);
@@ -4408,7 +4475,7 @@ static void draw_knobs(void)
                 cur = k == ui.view || (ui.view == V_SEQ && k == V_DRUMS);
                 same = group_of(k) >= 0 && group_of(k) == group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
             }
-            cv_rect(xd + k * 5, 3, 3, 4, cur ? K_ACC : same ? K_DIM : K_LINE);
+            cv_rect(xd + k * 5, th->skin ? 17 : 3, 3, 4, cur ? K_ACC : same ? K_DIM : K_LINE);
         }
     }
     for (i = 0; i < 4; i++) {
@@ -4418,6 +4485,35 @@ static void draw_knobs(void)
         uint16_t bg = hot ? K_PANEL : K_BG, fill = hot ? K_ACC : view_color();
         if (k == K_NONE)
             continue;
+        if (th->skin) {                          /* the Imp skin: the label, the value large, a bar under it */
+            char vt[16];
+            int32_t bw = 0;
+            knob_range(k, &lo, &hi);
+            v = knob_get(k);
+            if (i)
+                cv_rect(x, 27, 1, 40, K_LINE);
+            if (hot)
+                cv_round(x + 3, 25, 54, 43, 3, K_PANEL);
+            caps(t, view_label((int)i), sizeof t);
+            text_c(cx, 26, &FONT_XS, t, hot ? K_TEXT : K_DIM);
+            knob_text(k, t);
+            caps(vt, t, sizeof vt);
+            if (text_w(&FONT_M, vt) <= 56)
+                text_c(cx, 34, &FONT_M, vt, hot ? K_ACC : K_TEXT);
+            else
+                text_c(cx, 39, &FONT_B, vt, hot ? K_ACC : K_TEXT);
+            cv_rect(cx - 24, 63, 48, 3, hot ? K_BG : K_LINE);
+            if (hi > lo) {
+                if (lo < 0) {                    /* bipolar: from the middle */
+                    const int32_t m = 24 + (int32_t)(v - lo) * 48 / (hi - lo) - 24;
+                    cv_rect(cx - 24 + (m < 24 ? m : 24), 63, m < 24 ? 24 - m : m - 24, 3, fill);
+                } else {
+                    bw = (int32_t)(v - lo) * 48 / (hi - lo);
+                    cv_rect(cx - 24, 63, bw, 3, fill);
+                }
+            }
+            continue;
+        }
         if (i)
             cv_rect(x, 16, 1, 46, K_LINE);
         if (hot)

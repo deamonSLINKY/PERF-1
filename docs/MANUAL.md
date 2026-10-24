@@ -230,7 +230,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
 | Mixer | SELECT | Track (pad, drone, acid, pluck, drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
-| Global | GLO | Root | Theme (5) | Tune (+-50 cents) | MIDI out (off / on) |
+| Global | GLO | Root | Theme (6) | Tune (+-50 cents) | MIDI out (off / on) |
 | Jam | SELECT | Voice (pluck, pad, acid, drone) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off / on) |
 
 Three more screens are off the dial: the **Sequencer** (hold SEQ; section 8), the **Perform** screen
@@ -924,7 +924,9 @@ vinyl and pump settings when you switch to it; the settings you saved while in H
 
 ![Global](img/perf-screen-global.png)
 
-**Global** (GLO): **Root**, **Theme** (Synth, Acid, Ice, Ember, Phosphor), **Tune** (+-50 cents) and **MIDI out**.
+**Global** (GLO): **Root**, **Theme** (Synth, Acid, Ice, Ember, Phosphor, Imp), **Tune** (+-50 cents) and **MIDI out**.
+
+**Imp** is a new look (experimental: the other five are the look so far). Warm black, one colour per voice everywhere (the pad bone, the drone crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header gets a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) in place of the 24 dots, and the knobs show their values large with a bar under them.
 The theme, Tune and MIDI out are yours across all pieces.
 
 **MIDI out** (USB): the pad's notes on channel 1, the drone on 3, the acid on 4, the drums on 10 (General MIDI notes),
