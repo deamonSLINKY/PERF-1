@@ -164,9 +164,9 @@ const TEXT = {
     leave: "書き込み中です。ページを閉じないでください。",
     license: "GPL-3.0、無保証。ソース:",
     voicesh: "DX7 の音色を読み込む",
-    voicesinfo: "DX7 の SysEx ファイル（.syx）を選ぶと、音色の一覧が出ます。最大 8 つを選んで FM-1 に送ります。PLUCK のページで SEL + ALGORITHM を回すと選べます（「DX」の名前）。電源を切っても残ります。",
+    voicesinfo: "DX7 の SysEx ファイル（.syx）を選ぶと、音色の一覧が出ます。最大 16 個を選んで FM-1 に送ります。PLUCK のページで SEL + ALGORITHM を回すと選べます（「DX」の名前）。電源を切っても残ります。",
     vsend: "選んだ音色を送る", vclear: "読み込んだ音色を消す",
-    vnone: "音色が見つかりません。", vfound: " 個の音色。8 つまで選べます。", vsel: " 個選択中",
+    vnone: "音色が見つかりません。", vfound: " 個の音色。16 個まで選べます。", vsel: " 個選択中",
     vsending: "送信中: ", vdone: "FM-1 に送りました: ", vnoans: "FM-1 から返事がありません（古いファームウェアかもしれません）。", vcleared: "消しました。",
     vbad: "FM-1 が受け取りませんでした。",
     statush: "FM-1 の状態（リアルタイム）",
@@ -208,9 +208,9 @@ const TEXT = {
     leave: "Writing. Do not close the page.",
     license: "GPL-3.0, no warranty. Source:",
     voicesh: "Load DX7 voices",
-    voicesinfo: "Choose DX7 SysEx files (.syx: a 32-voice bank, or single voices) and the voices in them are listed. Pick up to 8 and send them to the FM-1; they come after the built-in DX sounds on the pluck page (SEL + ALGORITHM), named \"DX ...\", and are kept when the power is off.",
+    voicesinfo: "Choose DX7 SysEx files (.syx: a 32-voice bank, or single voices) and the voices in them are listed. Pick up to 16 and send them to the FM-1; they come after the built-in DX sounds on the pluck page (SEL + ALGORITHM), named \"DX ...\", and are kept when the power is off.",
     vsend: "Send the chosen voices", vclear: "Clear the loaded voices",
-    vnone: "No voices found in that file.", vfound: " voices. Choose up to 8.", vsel: " chosen",
+    vnone: "No voices found in that file.", vfound: " voices. Choose up to 16.", vsel: " chosen",
     vsending: "Sending: ", vdone: "Sent to the FM-1: ", vnoans: "The FM-1 did not answer (an older firmware?).", vcleared: "Cleared.",
     vbad: "The FM-1 did not take it.",
     statush: "Live status",
@@ -271,7 +271,7 @@ function waitAck(ms) {
   });
 }
 
-/* ---- the DX7 voices: .syx files -> a list -> up to 8 sent as the firmware takes them (F0 7D 50 56 slot, 128 bytes, a checksum, F7; 7F alone clears) */
+/* ---- the DX7 voices: .syx files -> a list -> up to 16 sent as the firmware takes them (F0 7D 50 56 slot, 128 bytes, a checksum, F7; 7F alone clears) */
 const nameOf = (a, off) => String.fromCharCode(...Array.from(a.slice(off, off + 10)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd() || "(no name)";
 function parseSyx(buf, file) {
   const out = [];
@@ -310,7 +310,7 @@ function vrender() {
 function vcount() {
   const boxes = [...$("vlist").querySelectorAll("input")];
   const on = boxes.filter((b) => b.checked).length;
-  boxes.forEach((b) => { b.disabled = !b.checked && on >= 8; });
+  boxes.forEach((b) => { b.disabled = !b.checked && on >= 16; });
   $("vsend").disabled = on === 0;
   $("vstatus").textContent = voices.length ? voices.length + t("vfound") + (on ? "  " + on + t("vsel") : "") : "";
 }
@@ -322,7 +322,7 @@ $("syxfile").addEventListener("change", async (e) => {
 });
 const vmsg = (slot, p) => { let s = 0; for (const b of p) s += b; return [0xF0, 0x7D, 0x50, 0x56, slot, ...p, (128 - (s & 0x7F)) & 0x7F, 0xF7]; };
 $("vsend").addEventListener("click", async () => {
-  const pick = [...$("vlist").querySelectorAll("input:checked")].slice(0, 8).map((b) => voices[+b.dataset.i]);
+  const pick = [...$("vlist").querySelectorAll("input:checked")].slice(0, 16).map((b) => voices[+b.dataset.i]);
   let msg = "";
   try {
     const p = await openPort();

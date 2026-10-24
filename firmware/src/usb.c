@@ -600,7 +600,7 @@ static void dx_end(void)
         else if (m[2] == 0x00u && m[3] == 0x01u && m[4] == 0x1Bu && n == 161u)
             kind = 2;
     } else if (n >= 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x56u) {
-        if (n == 133u && m[3] < 8u)
+        if (n == 133u && m[3] < 16u)
             kind = 3;
         else if (n == 4u && m[3] == 0x7Fu)
             kind = 4;

@@ -230,10 +230,11 @@ static void fm_reset(void)                       /* a new engine: no voices, no 
  * knows (0 ..) and where they are in those sets */
 static const uint8_t FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 /* the voices a patch may use at once: the heaviest (six operators ringing, bells, strings, pads) three; the middle four or five; the rest all six */
-static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 4, 4, 4, 4, 4, 4, 4, 4};   /* (a loaded voice: four) */
+static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};   /* (a loaded voice: four) */
 /* the player's voices: 128-byte packed records. The main loop fills a staging slot and posts C_USERVOICE; the engine copies it in between chunks. */
 static uint8_t fm_user[EN_NUSER][128] EN_POOL, fm_stage[EN_NUSER][128] EN_POOL;
-static volatile uint8_t fm_stage_pend, fm_user_n;
+static volatile uint16_t fm_stage_pend;
+static volatile uint8_t fm_user_n;
 static char fm_uname[EN_NUSER][16];
 static void fm_user_name(int slot)               /* "DX " and the voice's ten characters, trailing spaces gone */
 {
@@ -258,7 +259,7 @@ static void fm_user_take(int slot)               /* C_USERVOICE, in the engine's
         return;
     for (k = 0; k < 128; k++)
         fm_user[slot][k] = fm_stage[slot][k] & 0x7Fu;
-    fm_stage_pend &= (uint8_t)~(1u << slot);
+    fm_stage_pend &= (uint16_t)~(1u << slot);
     if (slot >= (int)fm_user_n)
         fm_user_n = (uint8_t)(slot + 1);
     fm_user_name(slot);
@@ -284,7 +285,7 @@ int en_user_voice(int slot, const uint8_t *p)
         fm_req_n++;
     for (k = 0; k < 128; k++)
         fm_stage[slot][k] = p[k] & 0x7Fu;
-    fm_stage_pend |= (uint8_t)(1u << slot);
+    fm_stage_pend |= (uint16_t)(1u << slot);
     post(C_USERVOICE, slot, 0);
     return 1;
 }

@@ -1827,6 +1827,7 @@ static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
 };
 const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
     "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular",
+    "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
 const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
@@ -1834,7 +1835,7 @@ const char *const EN_CM_RATE[4] = {"1/8", "1/16", "1/4", "3/16"};
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
 static const float FM_GAIN[EN_NCMFM] = {0.60f, 0.96f, 0.73f, 0.95f, 2.56f, 1.87f, 0.76f, 1.26f, 0.94f, 1.33f, 0.75f, 2.55f, 0.88f, 1.22f, 3.84f, 0.85f, 1.32f, 2.13f, 0.67f, 1.58f, 1.62f, 0.73f,
-                                         1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* tests/host/fmcal.c (the loaded voices: not levelled) */
+                                         1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* tests/host/fmcal.c (the loaded voices: not levelled) */
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
