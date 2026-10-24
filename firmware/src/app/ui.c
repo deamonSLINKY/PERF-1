@@ -390,6 +390,7 @@ static struct {
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
     uint8_t viz;                       /* the visualizer on the SELECT dial (VZ_*) */
+    uint8_t centre_imp;                /* the sigil's middle: the eye (0) or the imp (SEL + HOME); kept with the visualizer's byte */
     uint8_t eu_n[EN_NLANE], eu_r[EN_NLANE];   /* the sequencer's Euclid tricks: each lane's hits and rotation, as last set */
     uint8_t flex_last;                 /* the Flex Beat pad pressed last (0..14) */
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
@@ -1961,6 +1962,12 @@ static void input(void)
             }
             if (i == B_SEQ)
                 ui.seq_held = 0;
+            if (i == B_HOME && (btn >> B_SEL & 1u)) {   /* shift: the sigil's middle, the eye or the imp */
+                ui.centre_imp = (uint8_t)!ui.centre_imp;
+                ui.set_dirty = 1;
+                ui.btn_used |= m | 1u << B_SEL;
+                say("SIGIL", ui.centre_imp ? "THE IMP" : "THE EYE");
+            }
 #ifndef EN_WEB
             if (i == B_GLO && (btn >> B_SEL & 1u)) {   /* shift: remote, the panel plays the browser (stopped only: it stops the music) */
                 if (en_playing) {
@@ -2556,6 +2563,7 @@ static void draw_header(void)
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
+    h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
@@ -2574,6 +2582,13 @@ static void draw_header(void)
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
         }
+        if (en_sec == EN_SEC_GROOVE && !en_sec_req && en_playing && ui.dj_on && ui.dj_len != 4 && (int)DJ_G() - (int)ui.dj_n <= 8 && (int)DJ_G() > (int)ui.dj_n) {   /* the auto-DJ: the last bars before its breakdown */
+            const int left = (int)DJ_G() - (int)ui.dj_n;
+            t[0] = 'B', t[1] = 'R', t[2] = 'E', t[3] = 'A', t[4] = 'K', t[5] = ' ', t[6] = 'I', t[7] = 'N', t[8] = ' ', t[9] = (char)('0' + left), t[10] = 0;
+            x -= text_w(&FONT_XS, t);
+            cv_text(x, 8, &FONT_XS, t, K_DIM);
+            x -= 10;
+        }
         if (en_sec != EN_SEC_GROOVE || en_sec_req) {   /* the section, or the one coming on the bar */
             const char *sn = en_sec == EN_SEC_BREAK ? "BREAK" : en_sec == EN_SEC_BUILD ? "BUILD" :
                              en_sec_req == EN_CMD_BREAK + 1 ? "BREAK>" : "";
@@ -2581,6 +2596,16 @@ static void draw_header(void)
                 sn = "DROP>";
             else if (en_sec == EN_SEC_BREAK && en_sec_req == EN_CMD_BUILD + 1)
                 sn = "BUILD>";
+            else if (en_sec == EN_SEC_BUILD && en_sec_bars) {   /* the build: the bars to the drop */
+                t[0] = 'D', t[1] = 'R', t[2] = 'O', t[3] = 'P', t[4] = ' ', t[5] = (char)('0' + (en_sec_bars > 9 ? 9 : en_sec_bars)), t[6] = 0;
+                sn = t;
+            } else if (en_sec == EN_SEC_BREAK && ui.dj_on && ui.dj_len != 4) {   /* the auto-DJ's breakdown: the bars to its build */
+                const int left = dj_break_len(DJ_G()) - (int)ui.dj_n;
+                if (left > 0 && left <= 9) {
+                    t[0] = 'B', t[1] = 'R', t[2] = 'E', t[3] = 'A', t[4] = 'K', t[5] = ' ', t[6] = (char)('0' + left), t[7] = 0;
+                    sn = t;
+                }
+            }
             if (*sn) {
                 x -= text_w(&FONT_XS, sn);
                 cv_text(x, 8, &FONT_XS, sn, K_FROST);
@@ -2660,55 +2685,201 @@ static void polar(int32_t cx, int32_t cy, float r, int i, int n, int32_t *x, int
     *y = cy - (int32_t)(sy + (sy < 0.0f ? -0.5f : 0.5f));
 }
 
-static void draw_ring(void)
+/* THE SIGIL (the middle of the home screen; it replaced HYP-1's ring of dots): a summoning circle turned so the chord's root is at the
+ * top, the chord's tones joined into a figure (a triad a triangle, a seventh a four-sided shape: the chord's kind read as a shape, its name
+ * under the eye). Outside, the 4-bar phrase drawing itself round; then the bar's 16 steps (the kick's larger, the acid's gates tinted, the
+ * playhead white); a pentagram turning once in 16 bars behind it; runes flaring by the notes the pluck plays. In the middle a demon eye
+ * (SEL + HOME: the slinky imp instead): half open in a groove, its slit pupil widening on the kick and its gaze flipping on the snare;
+ * shut in a breakdown; wide and trembling in a build, the phrase ring opening in spinning gaps; a white flash and a shock ring on the
+ * drop. When the engine sheds load the pentagram and the runes go first. */
+static struct {
+    float rot;                                   /* the circle's turn (radians), easing to the chord's root */
+    uint32_t t, drop_t;
+    int8_t gaze;
+    uint8_t sn_hi, last_sec, cm_seen, rn_i;
+    struct { uint8_t pc, kind; uint32_t t; } rn[5];
+} sg = {0.0f, 0, 0, 2, 0, 0, 0, 0, {{0, 0, 0}}};
+static void sg_pt(float r, float a, int32_t *x, int32_t *y)
 {
-    uint32_t abs_pool = pool_abs(), chord = 0;
-    int i, len = en_acid_len ? en_acid_len : 16, s, g = q16(en_acid_glow);
+    const float sx = fm_sinf(a) * r, sy = fm_cosf(a) * r;
+    *x = CX + (int32_t)(sx + (sx < 0.0f ? -0.5f : 0.5f));
+    *y = CY - (int32_t)(sy + (sy < 0.0f ? -0.5f : 0.5f));
+}
+static void sg_line2(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c)   /* two pixels thick: read across a dark room */
+{
+    cv_line(x0, y0, x1, y1, c);
+    cv_line(x0 + 1, y0, x1 + 1, y1, c);
+    cv_line(x0, y0 + 1, x1, y1 + 1, c);
+}
+static const uint8_t RUNE[8][5] = {              /* 5 x 5, a row a byte (bit 4 the left) */
+    {0x04, 0x0E, 0x15, 0x04, 0x04}, {0x11, 0x0A, 0x04, 0x0A, 0x11}, {0x1C, 0x12, 0x1C, 0x12, 0x1C}, {0x04, 0x06, 0x05, 0x04, 0x04},
+    {0x11, 0x1B, 0x15, 0x11, 0x11}, {0x0E, 0x11, 0x04, 0x11, 0x0E}, {0x10, 0x18, 0x14, 0x12, 0x11}, {0x04, 0x0A, 0x11, 0x0A, 0x04}};
+static void draw_sigil(void)
+{
+    static const uint8_t EYE[9] = {12, 12, 11, 11, 10, 9, 7, 5, 2};   /* the eye's half-width, from its middle row out (scaled to its opening) */
+    static const uint8_t IRIS[6] = {5, 5, 5, 4, 3, 2};
+    const uint32_t now = plat_ms(), abs_pool = pool_abs();
+    const float step = FM_TWO_PI / 12.0f;
+    const int shed = en_shed_level > 0, play = en_playing;
+    uint32_t chord = 0;
+    int32_t px[12], py[12];
+    int i, n = 0;
     for (i = 0; i < EN_NPAD; i++)
         chord |= 1u << (en_chord[i] % 12u);
-    if (en_playing && en_drum_glow[0] > 0.04f) {  /* the kick's pulse: a ring of dots swelling outwards, fading */
-        const float kg = fm_clampf(en_drum_glow[0], 0.0f, 1.0f);
-        const uint16_t pc = mix(K_BG, RGB(255, 160, 60), q16(kg));
-        int k;
-        for (k = 0; k < 48; k++) {
+    {   /* the turn: the chord's root to the top, the short way round, eased over a fraction of a second */
+        float d = -(float)(en_chord_root % 12) * step - sg.rot, k = (float)(now - sg.t) * (1.0f / 160.0f);
+        while (d > FM_PI)
+            d -= FM_TWO_PI;
+        while (d < -FM_PI)
+            d += FM_TWO_PI;
+        sg.rot += d * (k > 1.0f ? 1.0f : k);
+        if (sg.rot > FM_PI)
+            sg.rot -= FM_TWO_PI;
+        else if (sg.rot < -FM_PI)
+            sg.rot += FM_TWO_PI;
+        sg.t = now;
+    }
+    if (play && en_sec == EN_SEC_GROOVE && sg.last_sec != EN_SEC_GROOVE)
+        sg.drop_t = now;                         /* the drop */
+    sg.last_sec = en_sec;
+    {   /* the gaze flips on each snare */
+        const int hi = en_drum_glow[1] > 0.5f;
+        if (hi && !sg.sn_hi)
+            sg.gaze = (int8_t)-sg.gaze;
+        sg.sn_hi = (uint8_t)hi;
+    }
+    if (en_cm_count != sg.cm_seen) {             /* a pluck note: a rune by it */
+        sg.cm_seen = en_cm_count;
+        sg.rn[sg.rn_i].pc = (uint8_t)(en_cm_note % 12u);
+        sg.rn[sg.rn_i].kind = (uint8_t)(en_cm_count & 7u);
+        sg.rn[sg.rn_i].t = now;
+        sg.rn_i = (uint8_t)((sg.rn_i + 1u) % 5u);
+    }
+    if (!shed) {                                 /* the pentagram, turning once in 16 bars */
+        const float pa = (float)(en_bars & 255u) * (FM_TWO_PI / 256.0f);
+        int32_t sx[5], sy[5];
+        for (i = 0; i < 5; i++)
+            sg_pt(36.0f, pa + (float)i * (FM_TWO_PI / 5.0f), &sx[i], &sy[i]);
+        for (i = 0; i < 5; i++)
+            cv_line(sx[i], sy[i], sx[(i + 2) % 5], sy[(i + 2) % 5], mix(K_BG, K_LINE, 9));
+    }
+    {   /* the phrase: 64 dots, filled through 4 bars (thin in a breakdown, opening in spinning gaps in a build) */
+        const int lit = play ? (int)(((en_bars >> 4) & 3u) * 16u + (en_bars & 15u)) : -1, spin = (int)(now / 60u);
+        for (i = 0; i < 64; i++) {
             int32_t x, y;
-            polar(CX, CY, 52.0f + (1.0f - kg) * 6.0f, k, 48, &x, &y);
-            cv_rect(x, y, 2, 2, pc);
+            if (play && en_sec == EN_SEC_BUILD && ((i + spin) & 7) < 2)
+                continue;
+            if (en_sec == EN_SEC_BREAK && (i & 1))
+                continue;
+            sg_pt(57.0f, (float)i * (FM_TWO_PI / 64.0f), &x, &y);
+            if (i <= lit)
+                cv_rect(x, y, 2, 2, en_sec == EN_SEC_BREAK ? K_DIM : K_ACC);
+            else
+                cv_rect(x, y, 1, 1, K_LINE);
         }
     }
-    for (s = 0; s < len; s++) {                 /* the acid loop */
-        int32_t x, y;
-        int cur = en_playing && s == en_acid_pos;
-        polar(CX, CY, 46.0f, s, len, &x, &y);
-        if (en_acid_gate >> s & 1u)
-            cv_disc(x, y, (en_acid_acc >> s & 1u) ? 3 : 2, cur ? mix(K_ACID, K_ACC, g) : mix(K_ACID_T, K_ACID, 10));
-        else
-            cv_rect(x, y, 2, 2, cur ? K_ACC : K_LINE);
+    {   /* the bar: the kick's steps, the acid's gates, the playhead */
+        const uint32_t kick = en_pats[en_pat_now][0];
+        for (i = 0; i < 16; i++) {
+            int32_t x, y;
+            sg_pt(48.0f, (float)i * (FM_TWO_PI / 16.0f), &x, &y);
+            if (play && i == en_drum_pos)
+                cv_disc(x, y, 2, K_TEXT);
+            else if (kick >> i & 1u)
+                cv_disc(x, y, 2, mix(K_BG, RGB(255, 160, 60), 6 + q16(en_drum_glow[0]) * 10 / 16));
+            else if (en_acid_gate >> (i % (en_acid_len ? en_acid_len : 16)) & 1u)
+                cv_rect(x, y, 2, 2, mix(K_ACID_T, K_ACID, 8));
+            else
+                cv_rect(x, y, 1, 1, K_LINE);
+        }
     }
-    for (i = 0; i < 12; i++) {                  /* the scale: C at the top */
-        int32_t x, y;
-        int in = (int)(abs_pool >> i & 1u), ch = (int)(chord >> i & 1u);
-        polar(CX, CY, 28.0f, i, 12, &x, &y);
-        if (i == proj.par[P_ROOT])
-            cv_disc(x, y, 5, K_TEXT);           /* the root: ringed */
+    for (i = 0; i < 12; i++)                     /* the twelve notes, turned */
+        sg_pt(36.0f, (float)i * step + sg.rot, &px[i], &py[i]);
+    {   /* the figure: the chord's tones joined round the circle */
+        const uint16_t fc = en_frozen ? K_FROST : mix(K_PAD_T, K_PAD, 8 + q16(en_pad_level) * 8 / 16);
+        int first = -1, prev = -1;
+        for (i = 0; i < 12; i++)
+            if (chord >> i & 1u) {
+                if (prev >= 0)
+                    sg_line2(px[prev], py[prev], px[i], py[i], fc);
+                else
+                    first = i;
+                prev = i;
+                n++;
+            }
+        if (n > 2)
+            sg_line2(px[prev], py[prev], px[first], py[first], fc);
+    }
+    for (i = 0; i < 12; i++) {
+        const int in = (int)(abs_pool >> i & 1u), ch = (int)(chord >> i & 1u);
+        if (i == (int)(en_chord_root % 12))
+            cv_disc(px[i], py[i], 5, K_TEXT);    /* the chord's root: ringed, at the top */
         if (ch)
-            cv_disc(x, y, 4, mix(K_PAD_T, K_PAD, 6 + q16(en_pad_level) * 10 / 16));
+            cv_disc(px[i], py[i], 3, mix(K_PAD_T, K_PAD, 10 + q16(en_pad_level) * 6 / 16));
         else if (in)
-            cv_disc(x, y, 3, mix(K_PAD_T, K_PAD, 7));
+            cv_disc(px[i], py[i], 2, mix(K_PAD_T, K_PAD, 6));
         else
-            cv_disc(x, y, 1, K_LINE);
+            cv_rect(px[i], py[i], 1, 1, K_LINE);
     }
-    {   /* the chord's name, in the middle */
+    if (!shed)                                   /* the runes, fading over 0.7 s */
+        for (i = 0; i < 5; i++) {
+            const uint32_t age = now - sg.rn[i].t;
+            int32_t x, y, r, c;
+            if (!sg.rn[i].t || age >= 700u)
+                continue;
+            sg_pt(44.0f, (float)sg.rn[i].pc * step + sg.rot + 0.16f, &x, &y);
+            for (r = 0; r < 5; r++)
+                for (c = 0; c < 5; c++)
+                    if (RUNE[sg.rn[i].kind][r] >> (4 - c) & 1u)
+                        cv_pset(x - 2 + c, y - 2 + r, mix(K_BG, K_ACC, 16 - (int)(age * 16u / 700u)));
+        }
+    if (ui.centre_imp) {                         /* the imp, summoned into it */
+        cv_rect(CX - 13, CY - 14, 27, 27, K_BG);
+        draw_mascot(CX - 11, CY - 12, play && en_sec == EN_SEC_BREAK);
+    } else {                                     /* the eye */
+        const uint32_t dage = now - sg.drop_t;
+        const int flash = sg.drop_t && dage < 450u;
+        const int open = flash ? 8 : !play || en_sec == EN_SEC_BREAK ? 0 : en_sec == EN_SEC_BUILD ? 8 : 5;
+        const int32_t ex = CX + (play && en_sec == EN_SEC_BUILD ? (int32_t)(ui.frame & 1u) * 2 - 1 : 0);
+        int j;
+        cv_rect(ex - 14, CY - open - 2, 29, 2 * open + 5, K_BG);   /* a dark surround, so the figure never runs through it */
+        if (!open) {                             /* shut: a lid and its lashes */
+            cv_rect(ex - 11, CY, 23, 1, K_DIM);
+            for (j = -2; j <= 2; j++)
+                cv_rect(ex + j * 4, CY + 1, 1, 2, K_DIM);
+        } else {
+            const int ir = open < 5 ? open : 5, gx = flash ? 0 : sg.gaze;
+            const int pw = 1 + (int)(fm_clampf(en_drum_glow[0], 0.0f, 1.0f) * 3.0f);
+            for (j = -open; j <= open; j++) {
+                const int a = j < 0 ? -j : j, w = EYE[a * 8 / open];
+                cv_rect(ex - w, CY + j, 2 * w + 1, 1, flash ? K_TEXT : mix(K_BG, RGB(255, 60, 40), 6));
+                if (!flash && a <= ir)
+                    cv_rect(ex + gx - IRIS[a], CY + j, 2 * IRIS[a] + 1, 1, K_ACC);
+            }
+            if (!flash)
+                cv_rect(ex + gx - pw / 2, CY - ir + 1, pw, 2 * ir - 1, K_BG);   /* the slit, wider on the kick */
+        }
+        if (flash) {                             /* the shock ring */
+            const float r = 20.0f + (float)dage * (40.0f / 450.0f);
+            const uint16_t c = mix(K_TEXT, K_BG, (int)(dage * 16u / 450u));
+            for (j = 0; j < 48; j++) {
+                int32_t x, y;
+                sg_pt(r, (float)j * (FM_TWO_PI / 48.0f), &x, &y);
+                cv_rect(x, y, 2, 2, c);
+            }
+        }
+    }
+    {   /* the chord's name, under the eye */
         char nm[16];
         int pcs[EN_NPAD + 1], k;
+        int32_t w;
         pcs[0] = en_chord_root;
         for (k = 0; k < EN_NPAD; k++)
             pcs[k + 1] = en_chord[k] % 12;
         en_chord_name(pcs, EN_NPAD + 1, nm);
-        if (text_w(&FONT_B, nm) <= 40)
-            text_c(CX, CY - 8, &FONT_B, nm, en_frozen ? K_FROST : K_TEXT);
-        else
-            text_c(CX, CY - 6, &FONT_XS, nm, en_frozen ? K_FROST : K_TEXT);
+        w = text_w(&FONT_XS, nm);
+        cv_rect(CX - w / 2 - 2, CY + 15, w + 4, 11, K_BG);
+        text_c(CX, CY + 16, &FONT_XS, nm, en_frozen ? K_FROST : K_TEXT);
     }
 }
 
@@ -3937,6 +4108,7 @@ static void draw_main(void)
                     (uint32_t)q16(en_acid_level) << 18);
     for (i = 0; i < 5; i++)
         h = hash(h, (uint32_t)proj.par[i]);
+    h = hash(h, (en_playing ? plat_ms() / 66u : 0u) | (uint32_t)en_sec << 28 | (uint32_t)ui.centre_imp << 30 | (uint32_t)en_shed_level << 26);   /* the sigil moves: 15 frames a second while playing */
     if (h == ui.sig[1])
         return;
     ui.sig[1] = h;
@@ -3949,7 +4121,7 @@ static void draw_main(void)
         if (f > 0)
             cv_rect(232 - w, 8, f, 4, K_PAD);
     }
-    draw_ring();
+    draw_sigil();
     draw_meters();
     draw_kit();
     cv_blit(0, MAIN_Y);
@@ -4498,7 +4670,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.viz = ui.viz;
+    s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
         set_have = 1;
@@ -4533,7 +4705,8 @@ static void settings_load(void)
         ui.gx_pat = s.gx_pat;
         en_gate_pat(ui.gx_pat);
     }
-    ui.viz = (uint8_t)(s.viz % VZ_N);
+    ui.viz = (uint8_t)((s.viz & 0x7Fu) % VZ_N);
+    ui.centre_imp = (uint8_t)(s.viz >> 7);
     ui.set_dirty = 0;
 }
 

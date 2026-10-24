@@ -163,6 +163,8 @@ enum { EN_SEC_GROOVE, EN_SEC_BREAK, EN_SEC_BUILD };
 enum { EN_CMD_BREAK, EN_CMD_BUILD, EN_CMD_DROP };
 void en_section(int cmd);
 extern volatile uint8_t en_sec;                /* the section now: EN_SEC_* (UI) */
+extern volatile uint8_t en_sec_bars;           /* a build's bars left, 0 otherwise (UI) */
+extern volatile uint8_t en_cm_note, en_cm_count;   /* the pluck's last note, and a count of its notes (UI) */
 extern volatile uint8_t en_sec_req;            /* a command waiting for the bar: EN_CMD_* + 1, or 0 (UI) */
 
 /* performance effects, held: one bit each, all at once as a mask (the UI sends it every frame). The

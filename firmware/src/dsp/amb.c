@@ -1580,6 +1580,8 @@ static uint32_t bars;                           /* bars played (the drone's enve
 static uint8_t fill_hold;
 static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the next bar; this bar's; the DJ follows the chords; the drop's impact is due */
 volatile uint8_t en_sec, en_sec_req;
+volatile uint8_t en_sec_bars;                   /* a build's bars left (the header's countdown) */
+volatile uint8_t en_cm_note, en_cm_count;       /* the pluck's last note and a count of its notes (the sigil's runes) */
 
 /* DRUM DRIFT, as GRAV-1's Drift and LOF-1's: at each bar, a count to the next change; the bar before it a
  * fill (the snare and hats rolling in its second half); then the next pattern, or another from 1..Pool.
@@ -1669,6 +1671,7 @@ static void drum_publish(void)
 {
     en_pulse_rest = (uint8_t)(sec == SEC_BREAK);
     en_sec = (uint8_t)sec;
+    en_sec_bars = (uint8_t)(sec == SEC_BUILD ? sec_bars : 0);
     en_sec_req = (uint8_t)sec_req;
     en_pat_now = (uint8_t)pat_now;
     en_pat_next = (uint8_t)pat_next;
@@ -1855,6 +1858,8 @@ volatile float en_cm_level;
 static void cm_trigger(int note, float vel)     /* a note: the next voice, its decay as the Decay knob has it */
 {
     const int voice = cm_alt ^= 1;
+    en_cm_note = (uint8_t)note;                 /* (for the screen: the sigil's rune at this note) */
+    en_cm_count++;
     const float dec = 0.1f * fm_exp2f((float)par[P_CM_DEC] * 0.045f);   /* the time to silence: 0.1 .. 2.2 s */
     if (par[P_CM_SND] >= CM_NPLAIN) {            /* a DX voice: the key is down for as long as the Decay knob says (the patch's own envelopes do the rest) */
         const float d = (float)par[P_CM_DEC] * 0.01f;

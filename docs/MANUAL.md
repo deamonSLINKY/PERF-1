@@ -182,7 +182,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 
 | Mark | Means |
 |---|---|
-| BREAK, BUILD | The section; `BREAK>`, `BUILD>`, `DROP>` while one waits for the bar. |
+| BREAK, BUILD | The section; `BREAK>`, `BUILD>`, `DROP>` while one waits for the bar. In a build, `DROP 3`: the bars to the drop. With the auto-DJ: `BREAK IN 4` in the groove's last bars, `BREAK 2` (the bars to its build) in its breakdown. |
 | KNOB | An FX knob is off its home (a forgotten filter is not a mystery). |
 | KEY | The drop's key change is on. |
 | S1> to S4> | A scene waiting for the bar. |
@@ -191,7 +191,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 | a small dot | Something is waiting to be written to flash (the theme, Tune, MIDI out, a piece). |
 
 - **Left:** the levels of the pad (P), drone (D), acid (A), pluck (C, for counter-melody) and kit (K).
-- **Middle:** the scale as a ring with the chord's name in it; around it, the acid loop, one dot a step; a ring of dots swells out and fades with every kick. At its top right, the bar filling towards the next chord (or `held` while frozen).
+- **Middle: the sigil.** A summoning circle turned so the chord's root is always at the top: the twelve notes round it (the scale's lit, the chord's bright), the chord's tones joined into a figure (a triad is a triangle, a seventh a four-sided shape, so you learn a chord's kind by its shape; its name is under the eye). It turns by the interval when the chord changes. Outside it, the 4-bar phrase fills round; then the bar's 16 steps (the kick's larger, the acid's gates tinted, the playhead white). A pentagram turns behind once in 16 bars, and runes flare by the notes the pluck plays. In the middle a demon eye: half open in a groove (its slit pupil widens on the kick, its gaze flips on the snare), shut in a breakdown, wide and trembling in a build (the phrase ring opens in spinning gaps), a white flash and a shock ring on the drop. **SEL + HOME** puts the slinky imp there instead (kept across power-off). When the engine sheds load the pentagram and runes go first. At its top right, the bar filling towards the next chord (or `held` while frozen).
 - **Right:** the drum pattern playing, in a colour per lane, its number (`PAT 1`) and, when one is waiting, `> 3`; under it, the load: `CPU 41 XR 0` and below it `C2 38` and `S1` or `S2` when they apply (section 16).
 - **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit), then `BY HAND`, `+LINK` or `LINKS OFF`, and the octave when it isn't home (`OCT+2` for the page's voice, `SONG-1` for the song); on Global it says what SAVE will do (`01 SAVE: STORE`, `01 STORED`, `01 FACTORY`). On the right: the page's name and **the page dots**, one a page (23 on the SELECT dial): the page you are on bright, the others in its group dimmer. In the FX menu the dots are the four banks; inside an effect's settings, the 22 settings pages.
 - **Bottom:** the four knobs: each value's name, its ring (or pips, for a switch of a few positions) and its value. The one you turned last is lit for a moment.
@@ -848,6 +848,7 @@ Hold **SEL** and:
 | ENV | On a voice's page: that voice (pad, drone or acid) off the algorithm, played by hand; again, back. |
 | FX | The effects' settings pages, one by one, then the keys again. |
 | A key in the FX menu | That effect's settings page. |
+| HOME | The sigil's middle: the eye or the imp. |
 | GLO | Remote: the FM-1 plays the emulator (see 17). Stopped only (it stops the music): playing, it says `STOP FIRST`. |
 | EDIT | A secret. Stopped only: it starts the music itself. |
 | Black keys 1-6 (sequencer) | Copy the pattern you're editing into pattern 1-6. |
