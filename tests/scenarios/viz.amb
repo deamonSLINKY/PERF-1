@@ -13,10 +13,11 @@ wait 100
 expect fxk0 10
 turn ALGO 5
 wait 100
-expect mood 60spin SELECT 1
+expect mood 60
+spin SELECT 1
 wait 1500
 expect view 25
-shot viz_tunnel.png
+shot viz_kaleido.png
 spin SELECT 1
 wait 1500
 expect view 25
@@ -24,7 +25,7 @@ shot viz_bars.png
 spin SELECT 1
 wait 1500
 expect view 25
-shot viz_stars.png
+shot viz_flux.png
 spin SELECT 1
 wait 1500
 expect view 25
