@@ -42,7 +42,7 @@ void plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
 int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, < 0 = none / bad */
 int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok */
 #define PLAT_STORE_MAX 3840u           /* bytes per object */
-enum { OBJ_PROJ, OBJ_PANEL, OBJ_SET, OBJ_VOICES, OBJ_NOBJ };   /* OBJ_SET: the effects' settings and the performing settings (0xDE000, 2 sectors); OBJ_VOICES: the player's DX7 voices (0x97000, 2 sectors) */
+enum { OBJ_PROJ, OBJ_PANEL, OBJ_SET, OBJ_VOICES, OBJ_GLOB, OBJ_G1, OBJ_G2, OBJ_G3, OBJ_G4, OBJ_G5, OBJ_G6, OBJ_G7, OBJ_G8, OBJ_G9, OBJ_NOBJ };   /* OBJ_GLOB: Tune, MIDI out, the theme (0x99000); OBJ_G1 .. G9: genres 1 to 9's saved pieces (0x9B000 on, 2 sectors each; the original genre's is OBJ_PROJ) */   /* OBJ_SET: the effects' settings and the performing settings (0xDE000, 2 sectors); OBJ_VOICES: the player's DX7 voices (0x97000, 2 sectors) */
 /* flash: OBJ_PROJ 0xFC000, OBJ_PANEL 0xDC000 (2 sectors each, inside Felucca's data area) */
 
 /* audio load in % of the render budget, and xruns since boot (device: from the ISR) */

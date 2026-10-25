@@ -22,13 +22,14 @@ turn PRESET 1
 wait 200
 expect piece 1
 expect tempo 78
-# a store is refused in this bank
+# a store works in every bank (piece 1 here: bit 1); undone, so the rest of this scenario sees the factory pieces
 tap GLO
 press SAVE
 wait 200
 release SAVE
 wait 500
-expect saved 0
+expect saved 2
+expect dirty 0
 # the next genre: house (the pump latched), then dubstep (nothing latched)
 press GLO
 turn PRESET 1

@@ -48,7 +48,9 @@ static uint32_t st_crc32(const void *p, uint32_t n)   /* zlib CRC-32, 4 bits per
 
 static uint32_t st_sector(uint32_t obj, uint32_t copy)  /* flash offset of copy A (0) / B (1) */
 {
-    return (obj == OBJ_PANEL ? 0xDC000u : obj == OBJ_SET ? 0xDE000u : obj == OBJ_VOICES ? 0x97000u : 0xFC000u) + copy * ST_SECTOR;
+    const uint32_t base = obj == OBJ_PANEL ? 0xDC000u : obj == OBJ_SET ? 0xDE000u : obj == OBJ_VOICES ? 0x97000u : obj == OBJ_GLOB ? 0x99000u :
+                          obj >= OBJ_G1 ? 0x9B000u + (obj - OBJ_G1) * 2u * ST_SECTOR : 0xFC000u;   /* (the genres' pieces, the player's three: the free flash 0x99000 .. 0xDBFFF) */
+    return base + copy * ST_SECTOR;
 }
 
 static uint8_t st_buf[ST_PAYLOAD_MAX] __attribute__((aligned(4)));

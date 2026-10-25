@@ -117,7 +117,7 @@ hardware upstream; treat it as a last resort, not a guarantee. Otherwise recover
 7. Press **FX**: tap a key to latch its effect, hold it to play it.
 8. **HOME** is the Tempo page; **HOME** again (not too quickly) is the Perform screen; **HOME** twice quickly
    is the visualizers; hold **HOME** for the settings.
-9. Like a HYPNO piece? Go to **Global** (GLO) and press **SAVE** to store it. (Only the HYPNO bank stores.)
+9. Like a HYPNO piece? Go to **Global** (GLO) and press **SAVE** to store it. (Every genre stores: a piece stored in lofi or house stays there.)
 
 ---
 
@@ -304,7 +304,7 @@ shows a made-up title when you pick it (`VELVET RAIN`), the same one every time.
 
 | Genre | Pieces | BPM | What it is |
 |---|---|---|---|
-| HYPNO | 01-10 | 118-138 | The original hypnotic techno and acid set. The only bank that stores. |
+| HYPNO | 01-10 | 118-138 | The original hypnotic techno and acid set. |
 | LOFI | L01-L10 | 70-94 | Swung boom-bap: Rhodes in 7ths and 9ths over a warm bass, a soft sparse lead, the Dusty kit; vinyl and tape latched on. |
 | HOUSE | H01-H10 | 118-126 | Four on the floor, claps on 2 and 4, off-beat open hats, stabs and organ, a sub or square bass, the House kit; the pump latched on. |
 | DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, the drone as a wobble bass (its LFO on the cutoff), a harsh lead, dark pads, chords in fourths. |
@@ -319,14 +319,14 @@ Inside a genre the pieces differ in sound as well as in key and tempo: each genr
 the pad, drone, acid, pluck and kits, and a piece takes one of each by its number. The pluck's sound, style and
 rate vary by piece in every genre. Each genre also brings its own compressor settings (section 11).
 
-**Storing (HYPNO only):** go to **Global** and press **SAVE**. The piece is stored as it is: every page's
-values, the scale and mode, its voices' sounds and kit, its patterns and its drums' sounds. The line above the
-knobs says `01 SAVE: STORE` while it has changes, then `01 STORED`. In any other genre SAVE says `NOT STORED, ONLY THE
-FIRST BANK`: edits there last while you stay in that genre (moving between its pieces keeps them), and are gone
-when you change genre or switch off. Going back to HYPNO brings back what you had there.
+**Storing (every genre):** go to **Global** and press **SAVE**. The piece is stored as it is: every page's
+values, the scale and mode, its voices' sounds and kit, its patterns and its drums' sounds, in the genre you are in: the stored piece takes the
+place of that genre's factory piece (piece 3 of lofi stored is piece 3 of lofi from then on; each genre has its own place in memory). The line
+above the knobs says `01 SAVE: STORE` while it has changes, then `01 STORED`. Changes you don't store last while you stay in that genre
+(moving between its pieces keeps them) and are gone when you change genre or switch off (the original genre's come back when you return to it).
 
 **Factory:** on Global, hold SAVE for 1.5 seconds (the screen says `HOLD: FACTORY`): the piece goes back to how
-it shipped, and out of the store.
+it shipped, and out of the store (the slot goes back to the factory piece).
 
 **When it's written:** at once. The FM-1 can't make sound while it writes to its memory, so a store made while
 playing fades the music out (`STORING`), writes it, and fades back in exactly where it was: a pause of a
@@ -908,7 +908,7 @@ pattern, the section), in the theme's colours.
 
 | Kept | When it's written |
 |---|---|
-| HYPNO pieces you stored (Global, SAVE) | At once (section 6). |
+| The pieces you stored (Global, SAVE), in any genre | At once (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after the last change. |
 | Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights), the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
 | Your DX7 voices | The same. |
@@ -918,7 +918,7 @@ pattern, the section), in the theme's colours.
 for the write, as for a store (a flash write stops the chip, so it fades out, writes and fades back in).
 
 **Not kept:** the genre (it always starts in HYPNO), anything latched in FX, the FX knobs, the mood, mutes and solos, scenes,
-the auto-DJ being on, edits to a piece you haven't stored, and every edit in any genre but HYPNO. A genre sets its own tape,
+the auto-DJ being on, edits to a piece you haven't stored, A genre sets its own tape,
 vinyl and pump settings when you switch to it; the settings you saved while in HYPNO come back when you return.
 
 ---
@@ -1075,8 +1075,8 @@ fader) or relative (an endless encoder: pick which in the list). The list is kep
 
 - **No sound:** check MASTER, and that PLAY is lit. A piece's layer levels can be at 0: each voice's page has its level on KNOB 1 (and the Mixer shows them all). A voice marked `BY HAND` is silent until you play it (SEL + ENV puts it back); a track muted on the mix map (GLO held) or an effect latched in FX can silence things (the header shows `FX`); the voice you play on the Jam page stops its own line while that page is up; REMOTE silences the FM-1 on purpose.
 - **A short dip or a tick when you change a setting or store a piece:** expected. A flash write stops the chip, so the music fades out, writes and fades back in. Settings are written a couple of seconds after your last change, so a burst of edits is one dip.
-- **A stored piece came back as it was before:** it was stored while playing and the power went off before the write finished. Only HYPNO pieces store; in another genre SAVE says `NOT STORED`.
-- **My changes vanished:** only the HYPNO bank stores; edits in any other genre are gone when you change genre or switch off. See "What is remembered" (section 13).
+- **A stored piece came back as it was before:** it was stored while playing and the power went off before the write finished. Stores are written at once, with a short dip in the sound: do not switch off during it.
+- **My changes vanished:** only a piece you stored (Global, SAVE) is kept; changes you did not store are gone when you change genre or switch off. See "What is remembered" (section 13).
 - **The installer doesn't find the FM-1:** use Chrome or Edge, a USB data cable (not charge-only), and close any DAW holding its MIDI port. Allow MIDI with SysEx for the page.
 - **The installer offers an old version:** hard-refresh the page (Ctrl+F5, or Cmd+Shift+R).
 - **An install was cut off:** run it again; the FM-1 stays in update mode until a write finishes. If it doesn't come back at all, see "Recovering an FM-1 that won't start" in section 1.

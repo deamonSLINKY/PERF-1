@@ -72,6 +72,11 @@ int main(void)
     char name[16];
 
     /* Euclid: the classic patterns */
+    {   /* the stored form keeps a setting in a byte, its value less its lowest: every setting's range must fit (project.c pack_slot) */
+        int k;
+        for (k = 0; k < P_NPARAMS; k++)
+            CHECK(en_param_info(k)->hi - en_param_info(k)->lo <= 255, "param %d range %d..%d does not fit a byte", k, en_param_info(k)->lo, en_param_info(k)->hi);
+    }
     CHECK(en_euclid(3, 8, 0) == pat("x..x..x."), "E(3,8) %x", en_euclid(3, 8, 0));
     CHECK(en_euclid(5, 8, 0) == pat("x.xx.xx."), "E(5,8) %x", en_euclid(5, 8, 0));
     CHECK(en_euclid(4, 16, 0) == pat("x...x...x...x..."), "E(4,16)");

@@ -1,0 +1,64 @@
+# Every genre stores (0.12.5): lofi piece 3 with its pad level changed, saved; another genre and back brings it as saved; so does a power cycle.
+seed 0
+wait 3000
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+turn PRESET 2
+wait 200
+expect piece 2
+tap ENV
+spin K1 -10
+wait 100
+expect edited 4
+expect par0 44
+tap GLO
+tap SAVE
+wait 500
+expect saved 4
+expect dirty 0
+expect edited 0
+# house and back: the stored piece, not the recipe
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 2
+expect saved 0
+press GLO
+turn PRESET -1
+release GLO
+wait 300
+expect genre 1
+expect saved 4
+expect par0 44
+# a power cycle: the original genre again at power-on, lofi by the dial: still saved
+reboot
+wait 500
+expect genre 0
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+expect saved 4
+turn PRESET 2
+wait 200
+expect piece 2
+expect par0 44
+# factory on it frees the slot, and that stays
+tap GLO
+press SAVE
+wait 1800
+release SAVE
+wait 600
+expect saved 0
+reboot
+wait 500
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect saved 0

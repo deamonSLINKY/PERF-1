@@ -1342,6 +1342,10 @@ static void genre_fx(int g)
 }
 static void genre_step(int d)
 {
+    if (ui.store_wait) {                         /* a store is being written (the fade): the genre's object is the one it goes to */
+        say("STORING", "ONE MOMENT");
+        return;
+    }
     const int g = (proj.genre + d + EN_NGENRE) % EN_NGENRE;
     project_set_genre(g);
     en_genre(g);
@@ -1457,10 +1461,6 @@ void ui_flush(void)
 static void piece_store(void)                   /* Global, SAVE: the piece as it is, stored */
 {
     char t[12] = "STORED ";
-    if (proj.genre) {
-        say("NOT STORED", "ONLY THE FIRST BANK");
-        return;
-    }
     project_piece_save();
     caps(t + 7, piece_name(proj.piece), 4);
     store_now(t);
