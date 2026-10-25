@@ -1,4 +1,4 @@
-# Genres: GLO held + the PRESETS dial switches the bank of ten pieces (the original, lofi, house, dubstep, jungle, dnb, breaks, garage, electro, trap); the same piece
+# Genres: GLO held + the PRESETS dial switches the bank of ten pieces (sixteen banks) (the original, lofi, house, dubstep, jungle, dnb, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop); the same piece
 # number plays. A genre brings its effects (lofi: the vinyl and the tape latched; house: the pump). Only the first bank stores.
 seed 0
 wait 3000
@@ -86,6 +86,43 @@ release GLO
 wait 300
 expect genre 9
 expect tempo 134
+# the six after them (disco, funk, reggae, synthwave, amapiano, trip-hop)
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 10
+expect tempo 120
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 11
+expect tempo 104
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 12
+expect tempo 72
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 13
+expect tempo 112
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 14
+expect tempo 110
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 15
+expect tempo 78
 # round to the first again; its piece 1 as it was
 press GLO
 turn PRESET 1

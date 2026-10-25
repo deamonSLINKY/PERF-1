@@ -199,30 +199,61 @@ static const int16_t X_ELECTRO[] = {P_CM_VU, 65, P_CM_LOOP, 1, P_BL_MODE, 3, P_B
     KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
 static const int16_t X_TRAP[] = {P_CM_VU, 40, P_BL_MODE, 2, P_BL_LEN, 90, P_BL_MOVE, 8, P_BL_GLIDE, 25, P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
     KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 30, P_RV_TYPE, 1, P_RV_X, 30, P_RV_DAMP, 40, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40, -1};
-static const int16_t *const XBASE[6] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP};
-static const uint8_t XROW[6][10][7] = {
+static const int16_t X_DISCO[] = {P_PULSE, 80, P_DRIVE, 20, P_SWING, 8, P_PAD, 50, P_ACID, 45, P_BASS, 75, P_AC_DENS, 55, P_AC_LEN, 16, P_ECHO, 25, P_REVERB, 30,
+    KIT(1), P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_BL_MODE, 6, P_BL_LEN, 35, P_BL_MOVE, 10, P_CM_VU, 50, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 32, -1};
+static const int16_t X_FUNK[] = {P_PULSE, 78, P_DRIVE, 25, P_SWING, 20, P_PAD, 40, P_ACID, 50, P_BASS, 78, P_AC_DENS, 60, P_AC_LEN, 16, P_AC_MUT, 20, P_ECHO, 20, P_REVERB, 20,
+    KIT(4), P_PATTERN, 0, P_EVOLVE, 35, P_BL_MODE, 6, P_BL_LEN, 28, P_BL_MOVE, 25, P_CM_VU, 45, P_GHOST, 65, P_HUMAN, 25, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
+static const int16_t X_REGGAE[] = {P_PULSE, 72, P_DRIVE, 15, P_SWING, 30, P_PAD, 45, P_ACID, 30, P_BASS, 85, P_AC_DENS, 35, P_AC_LEN, 16, P_ECHO, 55, P_REVERB, 35,
+    KIT(8), P_PATTERN, 0, P_EVOLVE, 30, P_BL_MODE, 6, P_BL_LEN, 55, P_BL_MOVE, 15, P_CM_VU, 50, P_HUMAN, 30, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 35, -1};
+static const int16_t X_SYNTHWAVE[] = {P_PULSE, 78, P_DRIVE, 35, P_SWING, 0, P_PAD, 55, P_ACID, 50, P_BASS, 72, P_AC_DENS, 70, P_AC_LEN, 16, P_ECHO, 35, P_REVERB, 45, P_SIZE, 70,
+    KIT(11), P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 60, P_RV_TYPE, 2, P_RV_X, 40, P_BL_MODE, 3, P_BL_LEN, 28, P_BL_MOVE, 12, P_CM_VU, 60, P_MC_RATIO, 3, P_MC_THR, 46, P_MC_MAKE, 32, -1};
+static const int16_t X_AMAPIANO[] = {P_PULSE, 70, P_DRIVE, 15, P_SWING, 25, P_PAD, 45, P_ACID, 40, P_BASS, 80, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 30, P_REVERB, 40, P_PL_CHO, 25,
+    KIT(5), P_PATTERN, 0, P_EVOLVE, 35, P_BL_MODE, 6, P_BL_LEN, 45, P_BL_MOVE, 12, P_BL_GLIDE, 35, P_CM_VU, 50, P_HUMAN, 20, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 35, -1};
+static const int16_t X_TRIPHOP[] = {P_PULSE, 72, P_DRIVE, 40, P_SWING, 18, P_PAD, 50, P_ACID, 25, P_BASS, 80, P_AC_DENS, 25, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 50, P_SIZE, 70, P_RV_DAMP, 55,
+    P_NOISE, 20, P_NZ_COLOR, 7, KIT(8), P_PATTERN, 0, P_EVOLVE, 30, P_BL_MODE, 1, P_BL_LEN, 75, P_BL_MOVE, 12, P_CM_VU, 55, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 30,
+    P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 32, -1};
+static const int16_t *const XBASE[12] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP};
+static const uint8_t XROW[12][10][7] = {
     {{165, 5, 5, 5, 8, 4, 9}, {168, 7, 2, 4, 7, 9, 13}, {162, 2, 1, 2, 0, 1, 4}, {170, 9, 5, 1, 14, 11, 3}, {160, 0, 7, 5, 8, 9, 11}, {166, 4, 2, 6, 11, 4, 14}, {164, 10, 5, 1, 2, 1, 9}, {168, 6, 1, 3, 3, 9, 4}, {170, 1, 5, 4, 7, 2, 13}, {160, 8, 2, 5, 8, 4, 9}},
     {{174, 9, 1, 3, 0, 9, 4}, {172, 2, 5, 2, 1, 1, 15}, {174, 5, 3, 3, 3, 9, 11}, {175, 4, 2, 6, 7, 4, 14}, {174, 0, 5, 4, 11, 3, 2}, {176, 7, 1, 2, 5, 9, 4}, {170, 10, 5, 3, 2, 1, 15}, {175, 6, 2, 4, 7, 13, 13}, {172, 11, 1, 2, 0, 9, 11}, {178, 3, 5, 6, 11, 2, 14}},
     {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 7, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 7, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
     {{130, 5, 1, 3, 0, 9, 4}, {132, 9, 5, 2, 4, 5, 11}, {128, 0, 4, 3, 1, 9, 12}, {134, 2, 1, 2, 5, 10, 4}, {130, 7, 5, 3, 0, 4, 15}, {136, 10, 1, 2, 1, 9, 11}, {126, 4, 5, 3, 4, 5, 12}, {132, 1, 4, 2, 5, 9, 4}, {130, 6, 1, 3, 3, 1, 15}, {138, 10, 5, 2, 0, 10, 11}},
     {{118, 9, 5, 1, 2, 10, 13}, {120, 2, 2, 6, 3, 6, 3}, {122, 0, 1, 4, 14, 11, 9}, {124, 4, 5, 1, 2, 10, 13}, {125, 7, 2, 6, 3, 6, 3}, {126, 5, 1, 4, 14, 11, 9}, {127, 11, 5, 1, 2, 10, 13}, {128, 9, 2, 6, 3, 6, 3}, {129, 6, 1, 4, 14, 11, 9}, {130, 2, 5, 1, 2, 10, 13}},
     {{130, 1, 5, 6, 7, 9, 11}, {134, 5, 5, 4, 12, 9, 4}, {136, 9, 2, 1, 2, 9, 15}, {138, 3, 5, 6, 13, 3, 11}, {140, 7, 7, 4, 7, 9, 4}, {140, 11, 5, 1, 12, 9, 15}, {142, 6, 2, 6, 2, 9, 11}, {144, 0, 5, 4, 13, 3, 4}, {146, 4, 7, 1, 7, 9, 15}, {150, 10, 5, 6, 12, 9, 11}},
+    {{118, 9, 1, 2, 2, 10, 21}, {120, 2, 4, 3, 19, 9, 4}, {122, 7, 1, 2, 17, 1, 17}, {116, 4, 5, 2, 2, 5, 19}, {124, 0, 0, 3, 13, 10, 21}, {112, 5, 1, 2, 19, 17, 4}, {120, 10, 4, 2, 0, 9, 12}, {126, 3, 5, 3, 2, 10, 21}, {114, 6, 1, 2, 17, 5, 17}, {122, 11, 4, 2, 19, 1, 19}},
+    {{100, 4, 4, 2, 17, 17, 21}, {104, 9, 1, 3, 4, 5, 4}, {96, 2, 7, 2, 13, 10, 19}, {108, 7, 4, 2, 0, 9, 21}, {102, 0, 1, 3, 19, 17, 17}, {98, 5, 5, 2, 17, 5, 21}, {106, 10, 4, 2, 4, 10, 4}, {110, 3, 1, 3, 13, 9, 19}, {100, 11, 7, 2, 19, 17, 21}, {104, 6, 4, 2, 0, 5, 17}},
+    {{76, 9, 5, 1, 13, 9, 12}, {72, 4, 1, 2, 6, 1, 21}, {80, 2, 4, 1, 17, 8, 15}, {74, 7, 5, 2, 21, 7, 4}, {78, 0, 6, 1, 19, 9, 16}, {70, 5, 1, 2, 13, 5, 12}, {82, 10, 4, 1, 6, 9, 21}, {84, 3, 5, 1, 17, 1, 15}, {74, 6, 7, 2, 21, 8, 4}, {78, 11, 1, 1, 19, 7, 16}},
+    {{108, 9, 5, 1, 10, 0, 26}, {112, 4, 5, 2, 20, 10, 24}, {104, 0, 0, 1, 2, 5, 25}, {116, 7, 1, 2, 9, 1, 30}, {100, 2, 5, 1, 5, 22, 26}, {110, 5, 1, 2, 10, 0, 24}, {118, 10, 5, 1, 20, 10, 25}, {106, 3, 0, 2, 2, 5, 28}, {114, 6, 5, 1, 9, 1, 30}, {102, 11, 1, 2, 5, 22, 26}},
+    {{112, 9, 5, 3, 0, 9, 16}, {110, 4, 1, 3, 5, 1, 4}, {108, 2, 7, 2, 16, 8, 18}, {113, 7, 5, 3, 2, 21, 15}, {111, 0, 6, 2, 23, 9, 16}, {109, 5, 1, 3, 0, 1, 4}, {114, 10, 5, 3, 5, 9, 18}, {112, 3, 7, 2, 16, 8, 15}, {110, 6, 5, 3, 2, 21, 16}, {115, 11, 1, 3, 23, 9, 4}},
+    {{84, 9, 5, 2, 7, 9, 15}, {78, 4, 2, 3, 2, 1, 17}, {72, 2, 1, 2, 16, 8, 4}, {88, 7, 5, 3, 5, 3, 20}, {80, 0, 5, 2, 1, 9, 11}, {70, 5, 2, 2, 7, 1, 15}, {86, 10, 1, 3, 2, 8, 17}, {76, 3, 5, 2, 16, 3, 4}, {82, 6, 2, 3, 5, 9, 20}, {74, 11, 5, 2, 7, 1, 11}},
 };
-static const uint16_t XPAT[6][6][6] = {
+static const uint16_t XPAT[12][6][6] = {
     {{0x0C05, 0x1010, 0x8280, 0x5555, 0x0000, 0x0000}, {0x4C45, 0x1010, 0x8280, 0x5555, 0x0000, 0x0000}, {0x0405, 0x4010, 0x0280, 0x5555, 0x0000, 0x0000}, {0x040C, 0x4010, 0x0282, 0x4044, 0x0400, 0x0000}, {0x0401, 0x1010, 0x8288, 0x5555, 0x0000, 0x4040}, {0x0005, 0xF550, 0x0000, 0x0155, 0x0000, 0x0000}},
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0401, 0x1010, 0x8080, 0xFF7F, 0x0000, 0x4040}, {0x0405, 0x1010, 0x8080, 0xFFFF, 0x0000, 0x0000}, {0x0401, 0x1010, 0x0000, 0x4444, 0x0000, 0x8008}, {0x0409, 0x1010, 0x0000, 0x5555, 0x0000, 0x4080}, {0x4041, 0x0100, 0x0100, 0x5555, 0x1000, 0x0000}},
     {{0x2445, 0x1010, 0x8A80, 0xDF7F, 0x2080, 0x0000}, {0x4181, 0x1010, 0x0000, 0x51D5, 0x0400, 0x0000}, {0x0C83, 0x1010, 0x0000, 0x0000, 0x5555, 0x0000}, {0x0501, 0x9090, 0x0000, 0x5555, 0x0000, 0x0000}, {0x4405, 0x1010, 0x1010, 0x5555, 0x8000, 0x0080}, {0x0005, 0xF510, 0x1000, 0x0155, 0x0000, 0x0000}},
     {{0x0401, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0421, 0x1010, 0x0000, 0x1313, 0x4044, 0x8880}, {0x1111, 0x8080, 0x1010, 0x4444, 0x0000, 0x0000}, {0x0449, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0401, 0x9244, 0x1010, 0x0111, 0x4000, 0x0000}, {0x0401, 0xF010, 0x0000, 0x1111, 0x0044, 0x0000}},
     {{0x2449, 0x0000, 0x1010, 0x4444, 0x0000, 0x0200}, {0x0909, 0x0000, 0x1010, 0x5555, 0x0000, 0x4040}, {0x0505, 0x1010, 0x1010, 0x5555, 0x0000, 0x8040}, {0x2449, 0x1000, 0x0010, 0x4444, 0x0000, 0x1449}, {0x050B, 0x0000, 0x1010, 0xFFFF, 0x0000, 0x0000}, {0x0109, 0xF000, 0x1110, 0x0055, 0x0000, 0x0000}},
     {{0x1001, 0x0000, 0x0100, 0x5555, 0x0000, 0x0000}, {0x0481, 0x0100, 0x0100, 0x5555, 0x0000, 0x0000}, {0x0009, 0x0100, 0x0100, 0xF555, 0x0000, 0x0000}, {0x2041, 0x0100, 0x0100, 0x5575, 0x0000, 0x0000}, {0x0401, 0x0100, 0x0100, 0x1111, 0x0000, 0x0000}, {0x0801, 0xD100, 0x0100, 0xFF55, 0x0000, 0x0000}},
+    {{0x1111, 0x1010, 0x1010, 0x5555, 0x4444, 0x0000}, {0x1111, 0x1010, 0x1010, 0xFFFF, 0x4444, 0x2222}, {0x1111, 0x1010, 0x1010, 0x7777, 0x4444, 0x0A0A}, {0x1151, 0x1010, 0x1010, 0x5555, 0x4444, 0x2020}, {0x1111, 0x1010, 0x1010, 0xDDDD, 0x4040, 0x0000}, {0x9111, 0x1010, 0x3030, 0xFFFF, 0x4444, 0x2222}},
+    {{0x0405, 0x1010, 0x0000, 0xFFFF, 0x0000, 0x0000}, {0x0485, 0x1010, 0x0000, 0xFFFF, 0x2000, 0x0220}, {0x4411, 0x1010, 0x0000, 0x7777, 0x0020, 0x0000}, {0x0525, 0x9010, 0x0000, 0xFFFF, 0x0000, 0x8888}, {0x0409, 0x1090, 0x0000, 0xDDDD, 0x4000, 0x0000}, {0x2485, 0x1210, 0x0000, 0xFFFF, 0x0020, 0x2424}},
+    {{0x0100, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0000, 0xFFFF, 0x0000, 0x0000}, {0x1111, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0101, 0x0100, 0x0000, 0x5555, 0x4000, 0x0000}, {0x1111, 0x1010, 0x0000, 0xFFFF, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0100, 0x5D5D, 0x0000, 0x2020}},
+    {{0x1111, 0x1010, 0x1010, 0x5555, 0x0000, 0x0000}, {0x1111, 0x1010, 0x1010, 0xFFFF, 0x0000, 0x0808}, {0x1151, 0x1010, 0x1010, 0x5555, 0x4000, 0x0000}, {0x1111, 0x1010, 0x1010, 0x5D5D, 0x0000, 0x8080}, {0x0101, 0x0100, 0x0100, 0x5555, 0x0000, 0x0000}, {0x1115, 0x1010, 0x1010, 0xFFFF, 0x4040, 0x0000}},
+    {{0x1111, 0x0000, 0x1010, 0x5555, 0x0000, 0x2424}, {0x1101, 0x0000, 0x1010, 0x7777, 0x0000, 0x2A2A}, {0x1111, 0x0100, 0x1010, 0xFFFF, 0x0000, 0x8484}, {0x1151, 0x0000, 0x1010, 0x5D5D, 0x4000, 0x2424}, {0x1111, 0x1000, 0x1010, 0x5555, 0x0000, 0x0A0A}, {0x1131, 0x0000, 0x1010, 0xDDDD, 0x0000, 0x2222}},
+    {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0481, 0x1010, 0x0000, 0x5D5D, 0x0000, 0x0220}, {0x0109, 0x1010, 0x0000, 0x5555, 0x4000, 0x0000}, {0x0421, 0x9010, 0x0000, 0xDDDD, 0x0000, 0x8080}, {0x0201, 0x1010, 0x1010, 0x5555, 0x0040, 0x0000}, {0x4401, 0x1090, 0x0000, 0xFFFF, 0x0000, 0x2020}},
 };
-static const char *const XNAME[6][10] = {
+static const char *const XNAME[12][10] = {
     {"J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10"},
     {"N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10"},
     {"B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10"},
     {"G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08", "G09", "G10"},
     {"E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09", "E10"},
     {"T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09", "T10"},
+    {"S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"},
+    {"F01", "F02", "F03", "F04", "F05", "F06", "F07", "F08", "F09", "F10"},
+    {"R01", "R02", "R03", "R04", "R05", "R06", "R07", "R08", "R09", "R10"},
+    {"W01", "W02", "W03", "W04", "W05", "W06", "W07", "W08", "W09", "W10"},
+    {"A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"},
+    {"P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10"},
 };
 static void x_pats(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
 {
@@ -302,7 +333,7 @@ static const char *const PIECE_NAME[EN_NPIECES] = {"01", "02", "03", "04", "05",
 
 const char *en_piece_name(int i) { return PIECE_NAME[(unsigned)i < EN_NPIECES ? i : 0]; }
 static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES, HOUSE_PIECES, DUB_PIECES};
-static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP"};
+static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
 const char *en_genre_name(int g) { return GENRE_NAME[(unsigned)g < EN_NGENRE ? g : 0]; }
 const char *en_piece_name_g(int g, int i)
 {
@@ -325,8 +356,14 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
     {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
     {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
+    {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 17}, {21, 4, 17, 19, 12}, {24, 15, 25, 12, 5}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
+    {{17, 4, 13, 19, 0}, {17, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {24, 19, 15, 12, 7}, {4, 8, 4}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},
+    {{13, 6, 17, 21, 19}, {9, 1, 8, 7, 5}, {12, 21, 15, 4, 16}, {18, 30, 31, 19, 1}, {8, 5, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 5}},
+    {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {27, 12, 26, 8, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
+    {{0, 5, 16, 2, 23}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 30, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
+    {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {2, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
 };
-static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 3, 3, 2, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
+static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 3, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
 static void vary(int g, int i, int16_t *par)
 {
     const int pw = g * 3 + i, h = i / 5;
@@ -417,6 +454,18 @@ void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
             mod[1][s] = (uint8_t)(3u << 6);                 /* jungle, DnB, breaks: the backbeat accented */
         if (g == 8 && s == 0)
             mod[0][s] = (uint8_t)(3u << 6);
+        if (g == 10 && (s & 3) == 2)
+            mod[3][s] = (uint8_t)(3u << 6);                 /* disco: the open off-beat hats accented */
+        if (g >= 11 && g <= 15 && g != 10 && (s & 1))
+            mod[3][s] = (uint8_t)(2u << 6);                 /* funk, reggae, synthwave, amapiano, trip-hop: the off-beat hats soft */
+        if ((g == 11 || g == 13) && (s == 4 || s == 12))
+            mod[1][s] = (uint8_t)(3u << 6);                 /* funk and synthwave: the backbeat accented */
+        if (g == 12)
+            mod[1][s] = (uint8_t)(1u << 3);                 /* reggae: the rim a touch late */
+        if (g == 15)
+            mod[1][s] = (uint8_t)(2u << 3);                 /* trip-hop: the snare laid back */
+        if (g == 14)
+            mod[5][s] = (uint8_t)(2u << 6);                 /* amapiano: the shakers soft */
     }
     if (g == 9) {
         mod[3][7] = 2u;
@@ -1610,6 +1659,12 @@ static const struct { float mv[6], tonic; } CHM[EN_NGENRE] = {
     {{2.5f, 3.5f, 4.5f, 3.0f, 3.0f, 2.0f}, 2.0f},   /* garage: soulful, a fourth up */
     {{3.0f, 1.5f, 2.5f, 4.0f, 3.0f, 2.5f}, 3.5f},   /* electro: a fifth, home */
     {{1.5f, 1.5f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.5f},   /* trap: minor, dark, home */
+    {{2.5f, 3.0f, 5.0f, 3.5f, 3.0f, 1.5f}, 2.5f},   /* disco: circle of fifths, ii-V */
+    {{1.5f, 2.5f, 3.0f, 2.5f, 2.0f, 2.0f}, 4.0f},   /* funk: the dorian vamp, mostly home */
+    {{3.0f, 1.5f, 3.5f, 3.0f, 2.0f, 2.0f}, 3.5f},   /* reggae: one and four, five */
+    {{1.5f, 3.0f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.0f},   /* synthwave: i-VI-III-VII */
+    {{2.5f, 3.0f, 5.0f, 3.5f, 3.0f, 1.5f}, 2.0f},   /* amapiano: jazzy turnarounds */
+    {{1.5f, 1.5f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.5f},   /* trip-hop: minor, sparse, home */
 };
 static volatile uint8_t chord_genre;
 void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
@@ -2228,10 +2283,11 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
  * for Length and let go; each note opens the filter again (the Drone env page's attack and decay). 1 Root: the genre's rhythm. 2 Kick: where the kick
  * hits. 3 Eighths. 4 Off-beat. 5 Walk: a note a beat, root, third or fifth, fifth, then an approach to the next. 6 Riff: the genre's figure.
  * Move is how often a note goes up an octave, to the fifth or to the scale note below the root instead. A breakdown plays none. */
-static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x2421, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401};
+static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x2421, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401, 0x5555, 0x4529, 0x0149, 0x5555, 0x2449, 0x0401};
 static const struct { uint16_t mask; int8_t iv[4]; } BL_RIFF[EN_NGENRE] = {
     {0x5555, {0, 0, 12, 0}},  {0x0421, {0, 7, 5, 0}},   {0x4444, {0, 0, 12, 0}},  {0x0401, {0, 0, -2, 0}},  {0x2421, {0, 0, 0, 3}},
-    {0x0441, {0, 0, 7, 5}},   {0x1121, {0, 0, 12, 7}},  {0x0449, {0, 7, 0, 12}},  {0x5555, {0, 0, 12, 0}},  {0x2401, {0, 0, 12, 7}}};
+    {0x0441, {0, 0, 7, 5}},   {0x1121, {0, 0, 12, 7}},  {0x0449, {0, 7, 0, 12}},  {0x5555, {0, 0, 12, 0}},  {0x2401, {0, 0, 12, 7}},
+    {0x5555, {0, 12, 0, 12}}, {0x4529, {0, 12, 0, 7}},  {0x0149, {0, 0, 7, 5}},   {0x5555, {0, 0, 12, 0}},  {0x2449, {0, 0, 7, 0}},   {0x0401, {0, 0, -2, 0}}};
 static int bl_fit(int n)
 {
     while (n < 24)
@@ -2321,7 +2377,7 @@ static void flx_tick(int st);
 static uint64_t fx_on;
 /* The pad's comping: the steps of the bar its stabs fall on. Comp 2 .. 8 chooses one; Auto takes the genre's (hypnotic: the off-beats, as ever). */
 static const uint16_t COMP_MASK[7] = {0x4444, 0x1111, 0x4949, 0x0041, 0x2448, 0x0401, 0x5555};   /* off-beat, on-beat, 3-3-2, Charleston, syncopated, sparse, eighths */
-static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4144, 0x0408, 0x4949, 0x2448, 0x1111, 0x0401};
+static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4144, 0x0408, 0x4949, 0x2448, 0x1111, 0x0401, 0x4545, 0x2448, 0x4444, 0x0401, 0x2448, 0x0401};
 static uint16_t comp_mask(void)
 {
     const int c = par[P_PAD_COMP];
@@ -2330,8 +2386,8 @@ static uint16_t comp_mask(void)
 static int comp_hit(int st) { return comp_mask() >> st & 1; }
 
 /* The genre's ghost notes: steps where a soft snare (or kick) may sound that the pattern does not have, with the chance Ghosts gives (at 100: six in ten). */
-static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0x8280, 0x8200, 0xC288, 0x0408, 0, 0};
-static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0x0A00, 0, 0x2200, 0, 0, 0};
+static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0x8280, 0x8200, 0xC288, 0x0408, 0, 0, 0, 0x8A48, 0, 0, 0, 0x8280};
+static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0x0A00, 0, 0x2200, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0x4400};
 
 static void tick(void)
 {

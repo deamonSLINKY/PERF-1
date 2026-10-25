@@ -328,7 +328,7 @@ const char *en_piece_name(int i);
 void en_piece(int i, int16_t *par, uint16_t *pool);
 /* genres: banks of ten pieces, each with its own recipes and drum patterns (the first, 0, is the original techno and acid
  * set; the others are factory sets, kept in RAM while the power is on). */
-#define EN_NGENRE 10
+#define EN_NGENRE 16
 const char *en_genre_name(int g);
 void en_genre(int g);                          /* the genre playing: its chords move in its own habits (the first bank keeps the original walk) */
 const char *en_piece_name_g(int g, int i);
