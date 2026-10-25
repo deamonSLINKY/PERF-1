@@ -10,7 +10,7 @@ body:
     attributes:
       label: Version
       description: The site footer, or the PERF-1 card when the FM-1 starts.
-      placeholder: "0.6.0"
+      placeholder: "0.13.0"
     validations:
       required: true
   - type: dropdown

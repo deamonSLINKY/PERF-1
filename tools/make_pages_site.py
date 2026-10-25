@@ -80,10 +80,11 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <a class="card" href="editor/"><b>Editor</b><span>Every parameter, and a DX7 voice editor with live preview on the unit.</span></a>
 <a class="card" href="manual/"><b>Manual</b><span>Every control, page and setting.</span></a>
 <a class="card" href="firmware/{name}"><b>Download the package</b><span>{name} ({len(raw) // 1024} KB), for the installer or tools/fm1_install.py.</span></a>
-<a class="card" href="{REPO}"><b>Source on GitHub</b><span>GPL-3.0. Build it yourself; issues and ideas welcome.</span></a>
+<a class="card" href="{REPO}/issues/new/choose"><b>Feedback and ideas</b><span>Comments, suggestions, ideas and bug reports: open an issue. Everyone is welcome to help.</span></a>
+<a class="card" href="{REPO}"><b>Source on GitHub</b><span>GPL-3.0. Read it, build it, send changes.</span></a>
 </div>
 <p class="small">Installing firmware is at your own risk, though the installer can restore the stock firmware and an FM-1 that fails to start twice comes up in a safe mode the installer can reach. Read the manual's section 1 first.</p>
-<p class="small">PERF-1 is a fork of HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a>, itself a fork of AMB-1 by Charles Vestal, built on Felucca by Leo Kuroshita (Hügelton Instruments). GPL-3.0-only; see LICENSING.md in the repository. "M-VAVE" and "FM-1" are trademarks of their owners: PERF-1 is independent firmware, not affiliated with or endorsed by them.</p>
+<p class="small">PERF-1 is a fork of HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a>, itself a fork of AMB-1 by Charles Vestal, built on Felucca by Leo Kuroshita (Hügelton Instruments); the six-operator FM engine is Melodee's by Kerem Kilic (Ellic Studio), after Dexed. GPL-3.0-only; see LICENSING.md in the repository. "M-VAVE" and "FM-1" are trademarks of their owners: PERF-1 is independent firmware, not affiliated with or endorsed by them.</p>
 </main></body></html>
 ''', encoding="utf-8", newline="\n")
 print(f"site: {OUT}: index, install/, emu/, editor/, manual/, firmware/{name} ({len(raw)} B, {product})")

@@ -2,13 +2,13 @@
 
 ## A note on version numbers
 
-**0.6.0 is the first public release.** Its code is identical to the last development build, which was numbered **0.12.8** in the experimental line.
+**0.13.0 is the first public release.** Its code is identical to the last development build, 0.12.8.
 
-Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8 on its own. The commit messages in the git history use those development numbers, so you will see 0.9.x, 0.10.x, 0.11.x and 0.12.x there; they are all contained in 0.6.0. From here releases continue from 0.6.0 (0.6.1, ...) and the development numbers are retired.
+Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
-The unit reports its version as `FM-1_7XXYYZZ` (0.6.0 is `FM-1_7000600`); the installer checks it.
+The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## 0.6.0
+## 0.13.0
 
 What the development builds added, in the order they came (the numbers are the development builds):
 

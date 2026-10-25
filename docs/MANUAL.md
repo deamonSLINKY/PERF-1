@@ -1096,6 +1096,8 @@ fader) or relative (an endless encoder: pick which in the list). The list is kep
 
 ## 19. Credits
 
+**Feedback and contributing.** Comments, ideas and bug reports are welcome, and anyone is invited to help: [open an issue on GitHub](https://github.com/deamonSLINKY/PERF-1/issues/new/choose) (the source is at <https://github.com/deamonSLINKY/PERF-1>). A bug report is most useful with the version (the boot card), the genre and piece, and, for anything about load or crackles, a status log (section 16).
+
 PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1**, a
 [RedtailWorks](https://www.redtail.works) project, itself a fork of
 [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal. The platform (USB, update loader, storage, installer) is
