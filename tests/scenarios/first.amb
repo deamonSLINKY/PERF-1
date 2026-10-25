@@ -37,29 +37,29 @@ tap LFO
 expect view 7
 shot drone_lfo.png
 tap ARP
-expect view 8
+expect view 9
 shot acid.png
 tap ARP
 tap ARP
-expect view 10
+expect view 11
 shot acid_line.png
 tap SEQ
-expect view 14
+expect view 15
 shot drums.png
 tap GLO
-expect view 24
+expect view 25
 shot global.png
 # SELECT: the pages in order, Noise, Space and the Master (compressor, limiter) among them
 turn SELECT -1 100
-expect view 23
+expect view 24
 shot master.png
 turn SELECT -1 100
-expect view 22
+expect view 23
 shot reverb.png
 turn SELECT -1 100
-expect view 21
+expect view 22
 shot space.png
-turn SELECT -16 100
+turn SELECT -17 100
 expect view 5
 shot noise.png
 turn SELECT -9 100

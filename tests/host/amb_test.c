@@ -19,11 +19,21 @@ static int fails;
     } while (0)
 
 static uint32_t midi_count;
+static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's note-ons (0x92) and the kicks counted, and the notes' range */
 static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
-    if (st == 0x99u && d1 == 36u)
+    if (st == 0x92u) {
+        bass_n++;
+        if (d1 < bass_lo)
+            bass_lo = d1;
+        if (d1 > bass_hi)
+            bass_hi = d1;
+    }
+    if (st == 0x99u && d1 == 36u) {
         kick_last = blk_now;
+        kick_n++;
+    }
     if (st == 0x99u && d1 == 42u && hat_n < 512u) {
         hat_t[hat_n] = blk_now - kick_last;
         hat_v[hat_n++] = d2;
@@ -804,6 +814,44 @@ int main(void)
         CHECK(delay > 30.0f && delay < 50.0f, "push 6: the hats are %.1f blocks late (expected about 40)", (double)delay);
         CHECK(mean_v[3] < mean_v[0] * 0.6f, "ghost level: mean velocity %.1f against %.1f", (double)mean_v[3], (double)mean_v[0]);
         memset((void *)en_mod, 0, sizeof en_mod);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+    /* the bass line (the drone's modes), 4 s at 128 bpm from the MIDI out: Drone plays no notes of its own, Kick plays one on each kick, Eighths about 17,
+     * Off-beat about 8, Walk about 8, and every note stays in the bass range (C1 .. B5) */
+    {
+        int m, blk;
+        uint32_t nn[7], kk[7], lo = 999, hi = 0;
+        for (m = 0; m < 7; m++) {
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            en_set(P_BL_MODE, m);
+            en_set(P_BL_MOVE, 60);
+            en_play(1);
+            run(4.0f);
+            bass_n = kick_n = 0;
+            bass_lo = 999;
+            bass_hi = 0;
+            for (blk = 0; blk < 2756; blk++) {
+                blk_now = (uint32_t)blk;
+                en_render(buf, 64, 2048);
+            }
+            nn[m] = bass_n;
+            kk[m] = kick_n;
+            if (m && bass_lo < lo)
+                lo = bass_lo;
+            if (m && bass_hi > hi)
+                hi = bass_hi;
+        }
+        CHECK(nn[0] <= 2u, "bass line: Drone played %u notes of its own", nn[0]);
+        CHECK(kk[2] >= 4u && nn[2] + 1u >= kk[2] && nn[2] <= kk[2] + 1u, "bass line, Kick: %u notes for %u kicks", nn[2], kk[2]);
+        CHECK(nn[3] >= 14u && nn[3] <= 20u, "bass line, Eighths: %u notes (expected about 17)", nn[3]);
+        CHECK(nn[4] >= 6u && nn[4] <= 10u, "bass line, Off-beat: %u notes (expected about 8)", nn[4]);
+        CHECK(nn[5] >= 6u && nn[5] <= 10u, "bass line, Walk: %u notes (expected about 8)", nn[5]);
+        CHECK(nn[1] > 2u && nn[6] > 2u, "bass line, Root %u and Riff %u notes", nn[1], nn[6]);
+        CHECK(lo >= 24u && hi <= 83u, "bass line: notes %u .. %u outside C1 .. B5", lo, hi);
         en_init();
         en_play(1);
         run(1.0f);

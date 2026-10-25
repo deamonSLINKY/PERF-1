@@ -109,6 +109,7 @@ def main():
             {"name": "Drone", "knobs": byname["Drone"]},
             {"name": "Envelope", "knobs": byname["Drone env"]},
             {"name": "LFO", "knobs": byname["Drone LFO"]},
+            {"name": "Bass line (the drone as notes)", "knobs": byname["Bass line"]},
             {"name": "Place", "knobs": pl(("P_BASSOCT", "Octave"), ("P_DR_MAN", "By hand")) + [ls("P_PAN", 1, "Pan"), ls("P_SEND", 1, "Send")]}]},
         {"name": "Acid", "sections": [
             {"name": "Acid", "knobs": byname["Acid"]},

@@ -120,6 +120,7 @@ enum {
     P_LSRC, P_LSRC1, P_LSRC2, P_LSRC3, P_LSRC4, P_LSRC5,  /* the pattern each lane plays (P_LSRC + lane): 0 follows the piece's pattern, 1..6 holds that pattern's lane (from the next bar) */
     P_CH_LOOP,                                            /* the progression: 0 a fresh walk, 1..3 the last 2, 4 or 8 chords repeat, 4..6 the same with now and then one drawn anew */
     P_AC_RESP,                                            /* the acid's answer: every second time round the line is transformed (type * 5 + direction: 0 off; types 1 octave, 2 fifth, 3 third (in the scale), 4 mirror, 5 reverse, 6 rotate, 7 sparse, 8 accents; direction 0 .. 4: down 2, down, same, up, up 2) */
+    P_BL_MODE, P_BL_LEN, P_BL_MOVE, P_BL_GLIDE,           /* the drone as a bass line: its mode (0 drone, 1 root on the genre's rhythm, 2 on the kick, 3 eighths, 4 off-beat, 5 walking, 6 the genre's riff), how long a note holds, how much it moves (octaves, fifths, approach notes), its glide */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */

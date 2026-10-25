@@ -83,6 +83,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_LSRC3] = {"Source", 0, 6, 0},       [P_LSRC4] = {"Source", 0, 6, 0},     [P_LSRC5] = {"Source", 0, 6, 0},
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
     [P_AC_RESP] = {"Answer", 0, 44, 0},
+    [P_BL_MODE] = {"Mode", 0, 6, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -131,7 +132,7 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     TU(1), -10, DE(1), 60, DE(0), 60, -1};
 /* LOFI: ten pieces, 68 .. 94 beats a minute, swung, the Rhodes in sevenths and ninths over a warm bass, a soft sparse lead, the
  * dusty kit; each piece the base with a few changed (its key, mode, sounds and tempo). The patterns are made below. */
-#define LOFI_BASE P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
+#define LOFI_BASE P_BL_MODE, 1, P_BL_LEN, 65, P_BL_MOVE, 20, P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
     P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
     P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
     P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(0), 92, LV(1), 55, \
@@ -148,7 +149,7 @@ static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_
 static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
 /* HOUSE: ten pieces, 118 .. 126 beats a minute, four on the floor, a clap on 2 and 4, open hats on the off-beats, stabs and
  * organ chords, a sub or square bass, a plucked line rolling in sixteenths; the pump (latched with the genre) ducks the chords. */
-#define HOUSE_BASE P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
+#define HOUSE_BASE P_BL_MODE, 4, P_BL_LEN, 40, P_BL_MOVE, 25, P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
     P_AC_RES, 40, P_AC_ENV, 40, P_AC_DENS, 45, P_AC_LEN, 16, P_AC_MUT, 25, P_BASS, 70, P_DR_INST, 9, P_DR_CUT, 40, P_PULSE, 80, \
     KIT(1), P_DRIVE, 35, P_SWING, 12, P_ECHO, 30, P_ETIME, 3, P_REVERB, 30, P_SIZE, 50, P_EVOLVE, 45, P_MOTION, 50, P_PATTERN, 0, \
     LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45, P_PL_CHO, 35, P_RV_DAMP, 30, P_RV_PRE, 60, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 35
@@ -166,7 +167,7 @@ static const int16_t *const HOUSE_PIECES[EN_NPIECES] = {PH_01, PH_02, PH_03, PH_
 static const char *const HOUSE_NAME[EN_NPIECES] = {"H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10"};
 /* DUBSTEP: ten pieces at 136 .. 150, the beat in half time (the snare on the third beat), a deep sub kick, the drone as the wobble
  * bass (its LFO, a quarter or half note, on its cutoff), a harsh lead, dark pads in the minor modes. */
-#define DUB_BASE P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
+#define DUB_BASE P_BL_MODE, 2, P_BL_LEN, 85, P_BL_MOVE, 10, P_BL_GLIDE, 20, P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
     P_AC_RES, 60, P_AC_ENV, 60, P_AC_DENS, 40, P_AC_LEN, 8, P_AC_MUT, 30, P_BASS, 85, P_DR_INST, 4, P_DR_CUT, 40, P_DR_RES, 55, \
     P_DL_RATE, 0, P_DL_SHAPE, 1, P_DL_DEPTH, 85, P_DL_DEST, 0, P_PULSE, 85, KIT(9), P_DRIVE, 60, P_SWING, 0, P_ECHO, 45, P_ETIME, 3, \
     P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45, P_PL_CHO, 30, P_RV_DAMP, 65, P_RV_PRE, 80, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40
@@ -192,9 +193,9 @@ static const int16_t X_BREAKS[] = {P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD,
     KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_PL_CHO, 20, P_RV_TYPE, 2, P_RV_X, 35, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
 static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
     P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 40, -1};
-static const int16_t X_ELECTRO[] = {P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
+static const int16_t X_ELECTRO[] = {P_BL_MODE, 3, P_BL_LEN, 30, P_BL_MOVE, 35, P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
     KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
-static const int16_t X_TRAP[] = {P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
+static const int16_t X_TRAP[] = {P_BL_MODE, 2, P_BL_LEN, 90, P_BL_MOVE, 8, P_BL_GLIDE, 25, P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
     KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 30, P_RV_TYPE, 1, P_RV_X, 30, P_RV_DAMP, 40, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40, -1};
 static const int16_t *const XBASE[6] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP};
 static const uint8_t XROW[6][10][7] = {
@@ -527,6 +528,7 @@ void en_param_text(int i, int v, char *b)
         *o = 0;
         return;
     }
+    case P_BL_MODE: { static const char *const M[7] = {"Drone", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -1363,6 +1365,8 @@ static struct {
     uint8_t midi_note, rest, env_up;            /* env_up: attacking */
     uint8_t play;                               /* played from the keys */
 } bass;
+static float bl_env, bl_gate;                   /* the bass line's envelope, 0..1, and the samples its note still holds */
+static uint8_t bl_up, bl_kick, bl_beat;         /* attacking; the kick hit this step; the notes since the bar (the riff's place) */
 static float bass_vol, reso_k = 1.0f;
 static const float GLIDE_K = 1.0f / (0.6f * EN_SR);
 static float brk;                               /* the sections, smoothed: +1 breakdown, -0.5 build, 0 groove */
@@ -1558,7 +1562,7 @@ static void bass_to(int pc)
     while (n > 83)
         n -= 12;
     bass.gtarget = (float)n;
-    if (bass.play)                              /* the keys have it: the root waits */
+    if (bass.play || par[P_BL_MODE])            /* the keys have it: the root waits (a bass line plays its own notes) */
         return;
     bass.target = (float)n;
     if (en_playing && bass.midi_note != n) {
@@ -2172,6 +2176,91 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
 }
 
 
+/* ------------------------------------------------------------ the bass line --- */
+/* The drone as a bass line (P_BL_MODE): a note on the steps its mode chooses, on the chord's root (or a chord tone, an octave, an approach note), held
+ * for Length and let go; each note opens the filter again (the Drone env page's attack and decay). 1 Root: the genre's rhythm. 2 Kick: where the kick
+ * hits. 3 Eighths. 4 Off-beat. 5 Walk: a note a beat, root, third or fifth, fifth, then an approach to the next. 6 Riff: the genre's figure.
+ * Move is how often a note goes up an octave, to the fifth or to the scale note below the root instead. A breakdown plays none. */
+static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x2421, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401};
+static const struct { uint16_t mask; int8_t iv[4]; } BL_RIFF[EN_NGENRE] = {
+    {0x5555, {0, 0, 12, 0}},  {0x0421, {0, 7, 5, 0}},   {0x4444, {0, 0, 12, 0}},  {0x0401, {0, 0, -2, 0}},  {0x2421, {0, 0, 0, 3}},
+    {0x0441, {0, 0, 7, 5}},   {0x1121, {0, 0, 12, 7}},  {0x0449, {0, 7, 0, 12}},  {0x5555, {0, 0, 12, 0}},  {0x2401, {0, 0, 12, 7}}};
+static int bl_fit(int n)
+{
+    while (n < 24)
+        n += 12;
+    while (n > 83)
+        n -= 12;
+    return n;
+}
+static int bl_below(int root)                   /* the scale note just below the root (a semitone below if the scale has none within two) */
+{
+    int d;
+    for (d = 1; d <= 2; d++)
+        if (pool >> (((root - d - par[P_ROOT]) % 12 + 12) % 12) & 1u)
+            return root - d;
+    return root - 1;
+}
+static void bl_note(int n)
+{
+    n = bl_fit(n);
+    bass.target = (float)n;
+    if (!par[P_BL_GLIDE] || bass.note < 1.0f)
+        bass.note = (float)n;
+    midi(0x82, bass.midi_note, 0);
+    midi(0x92, (uint32_t)n, 90);
+    bass.midi_note = (uint8_t)n;
+    bass.env_up = 1;
+    bl_up = 1;
+    bl_gate = (0.25f + 0.0475f * (float)par[P_BL_LEN]) * step_len;
+}
+static void bl_step(int st)
+{
+    const int mode = par[P_BL_MODE], g = chord_genre;
+    int hit = 0, iv = 0, root;
+    if (!mode || bass.play || par[P_DR_MAN] || !en_playing || !nsteps)
+        return;
+    if (st == 0)
+        bl_beat = 0;
+    if (sec == SEC_BREAK)
+        return;
+    switch (mode) {
+    case 1: hit = BL_ROOT[g] >> st & 1; break;
+    case 2: hit = bl_kick && sec != SEC_BUILD; break;
+    case 3: hit = !(st & 1); break;
+    case 4: hit = (st & 3) == 2; break;
+    case 5: hit = !(st & 3); break;
+    default: hit = BL_RIFF[g].mask >> st & 1; break;
+    }
+    if (drop_imp && st == 0)
+        hit = 1;
+    if (!hit)
+        return;
+    root = bl_fit(36 + chord_pcs[0] % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
+    if (mode == 5) {                            /* the walk */
+        const int beat = st >> 2, three = chord_nt > 1 ? root + (chord_pcs[1] - chord_pcs[0] + 12) % 12 : root + 3,
+                  five = chord_nt > 2 ? root + (chord_pcs[2] - chord_pcs[0] + 12) % 12 : root + 7;
+        int n = root;
+        if (beat == 1)
+            n = frand() < 0.5f ? three : five;
+        else if (beat == 2)
+            n = five;
+        else if (beat == 3 && frand() * 100.0f < (float)par[P_BL_MOVE] + 20.0f)
+            n = bl_below(root);
+        bl_note(n);
+        bl_beat++;
+        return;
+    }
+    if (mode == 6)
+        iv = BL_RIFF[g].iv[bl_beat & 3];
+    if (frand() * 100.0f < (float)par[P_BL_MOVE]) {   /* a move: the octave, the fifth, or the note below the root */
+        const float r = frand();
+        iv = r < 0.5f ? 12 : r < 0.8f ? (chord_nt > 2 ? (chord_pcs[2] - chord_pcs[0] + 12) % 12 : 7) : bl_below(root) - root;
+    }
+    bl_note(root + iv);
+    bl_beat++;
+}
+
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
 static uint32_t sixteenth;
 static int32_t step_t;                          /* samples into this sixteenth (the gate's clock) */
@@ -2290,8 +2379,11 @@ static void tick(void)
             hit = 1;
             vel = l == L_KICK ? 1.0f : 0.95f;
         }
-        if (l == L_KICK && hit)
-            kick_age = 0.0f;
+        if (l == L_KICK) {
+            bl_kick = (uint8_t)(hit != 0);
+            if (hit)
+                kick_age = 0.0f;
+        }
         if (l == L_HAT && (fxm & (FXB(FX_HATROLL) | FXB(FX_HATTRIP)))) {     /* HAT ROLL / HAT TRIP: every step, in 32nds or triplets */
             hit = 1;
             vel = (st & 1) ? 0.5f : 0.65f;
@@ -2343,6 +2435,7 @@ static void tick(void)
             }
         }
     }
+    bl_step(st);
     if (pad_stabs() && !par[P_PAD_MAN] && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: the off-beats, more with Evolve */
         ((st & 3) == 2 || ((st == 7 || st == 15) && frand() < 0.35f * evolve))) {
         int i;
@@ -2794,6 +2887,13 @@ static void apply(int p, int v)
             if (p == P_OCT)
                 bass_to(bass.midi_note % 12);
         }
+        break;
+    case P_BL_MODE:                              /* back to the drone: the root again; a line starts from silence */
+        bl_up = 0;
+        bl_env = 0.0f;
+        bl_gate = 0.0f;
+        if (nsteps)
+            bass_to(chord_pcs[0]);
         break;
     case P_DR_RES: reso_k = 1.5f - 0.0138f * (float)v; break;   /* none .. near singing (k 1.5 .. 0.12) */
     case P_AC_LEN:
@@ -4830,6 +4930,7 @@ static void render_bass(uint32_t n)
                 tgt = (en_playing && !par[P_DR_MAN]) || bass.play ? 1.0f : 0.0f,
                 rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),
                 fmi = 0.5f + 2.2f * bass.env + 0.3f * arcm, pw = 0.5f + 0.3f * mod[9].v;
+    const int bl_on = par[P_BL_MODE] && !bass.play;    /* the drone as a bass line: its notes' envelope in the loop */
     float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, mp = bass.mph, amp = bass.amp, f, i0, i1, i2, mi;
     if (amp < 1e-5f && !en_playing && !bass.play) {
         bass.amp = 0.0f;
@@ -4838,7 +4939,12 @@ static void render_bass(uint32_t n)
             bass_o[j] = 0.0f;
         return;
     }
-    bass.note += (bass.target - bass.note) * fm_minf((float)n * (bass.play ? GLIDE_K * 12.0f : GLIDE_K), 1.0f);
+    {
+        float gk = bass.play ? GLIDE_K * 12.0f : GLIDE_K;
+        if (bl_on)                              /* a bass line: no glide is the note itself; else its time, 10 .. 410 ms */
+            gk = par[P_BL_GLIDE] ? 1.0f / ((0.01f + 0.004f * (float)par[P_BL_GLIDE]) * EN_SR) : 1.0f;
+        bass.note += (bass.target - bass.note) * fm_minf((float)n * gk, 1.0f);
+    }
     f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f));   /* the LFO on the pitch: a semitone at most */
     i0 = f * (osc == DO_FIFTHS ? 1.49831f : osc == DO_REESE || osc == DO_HOOVER ? 0.9862f : 0.99481f) *
          (1.0f / EN_SR);                        /* -9, 0, +9 cents (Reese and Hoover: 24; Fifths: a fifth) */
@@ -4931,6 +5037,21 @@ static void render_bass(uint32_t n)
         x = svf_lp(x, bass.c1, &bass.s[0]);
         x = svf_lp(x, bass.c2, &bass.s[2]);
         amp += (tgt - amp) * rate;
+        if (bl_on) {                            /* the line's note: 4 ms attack, a slow fall while it holds, 30 ms release after */
+            if (bl_up) {
+                bl_env += 1.0f / (0.004f * EN_SR);
+                if (bl_env >= 1.0f) {
+                    bl_env = 1.0f;
+                    bl_up = 0;
+                }
+            } else if (bl_gate > 0.0f) {
+                bl_gate -= 1.0f;
+                bl_env *= 0.99994785f;
+            } else {
+                bl_env *= 0.9948f;
+            }
+            x *= bl_env;
+        }
         bass_o[j] = fm_tanhf(x * drv) * amp * g * TG(TR_DRONE, j);   /* (into the mix by render_chunk, with its sends: 0.06 and 0.04 of it) */
     }
     for (j = 0; j < 4; j++)
@@ -4941,7 +5062,7 @@ static void render_bass(uint32_t n)
     bass.sph = sp;
     bass.mph = mp;
     bass.amp = amp;
-    en_bass_level = amp;
+    en_bass_level = bl_on ? amp * bl_env : amp;
 }
 
 static void render_dj(uint32_t n)               /* the snips, into the mix and its sends, before the sidechain */

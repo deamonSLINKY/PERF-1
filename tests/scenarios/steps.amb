@@ -2,8 +2,8 @@
 # step) and a level; a white key chooses the step; stored with the piece (Global, SAVE) and back after a power cycle.
 seed 0
 wait 3000
-turn SELECT 19 100
-expect view 19
+turn SELECT 20 100
+expect view 20
 expect mod0_2 0
 # the kick lane, step 3 (the third white key, key 4): x4, push 2, ghost
 tapkey 4

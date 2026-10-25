@@ -27,14 +27,14 @@ shot sound_drone.png
 # the acid: its Sound is KNOB 4 on Acid env
 tap ARP
 tap ARP
-expect view 9
+expect view 10
 turn K4 2
 expect par40 2
 # the kit: SEQ three times; one drum, then all four at once with SEL + ALGORITHM
 tap SEQ
 tap SEQ
 tap SEQ
-expect view 16
+expect view 17
 turn K1 1
 expect par85 1
 expect par86 0

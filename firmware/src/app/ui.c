@@ -37,10 +37,10 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Drone LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -171,6 +171,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
+    {P_BL_MODE, P_BL_LEN, P_BL_MOVE, P_BL_GLIDE},   /* the drone as a bass line: its mode, how long a note holds, how much it moves, its glide */
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
@@ -202,6 +203,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
+    {"Mode", "Length", "Move", "Glide"},
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
@@ -228,7 +230,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 6}, {B_SEQ, V_DRUMS, 6}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 6}, {B_SEQ, V_DRUMS, 6}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -1710,7 +1712,7 @@ static int voice_of(int v)                      /* the voice page v belongs to (
 {
     if (v >= V_PAD && v <= V_CHORDS)
         return EN_V_PAD;
-    if (v >= V_DRONE && v <= V_DRLFO)
+    if (v >= V_DRONE && v <= V_DRBASS)
         return EN_V_DRONE;
     if (v >= V_ACID && v <= V_ACLINE)
         return EN_V_ACID;
@@ -1755,7 +1757,7 @@ static int oct_par(int v)                       /* what OCT moves on page v */
 {
     if (v >= V_PAD && v <= V_CHORDS)
         return P_PAD_OCT;
-    if (v >= V_DRONE && v <= V_DRLFO)
+    if (v >= V_DRONE && v <= V_DRBASS)
         return P_BASSOCT;
     if (v >= V_ACID && v <= V_ACLINE)
         return P_AC_OCT;

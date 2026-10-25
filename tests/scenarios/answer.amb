@@ -6,7 +6,7 @@ tap ARP
 tap ARP
 tap ARP
 tap ARP
-expect view 11
+expect view 12
 expect par76 0
 # an octave, up one (kind 1 * 5 + direction 3)
 spin K1 1
