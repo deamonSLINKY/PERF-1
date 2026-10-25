@@ -926,9 +926,9 @@ vinyl and pump settings when you switch to it; the settings you saved while in H
 
 ![Global](img/perf-screen-global.png)
 
-**Global** (GLO): **Root**, **Theme** (Synth, Acid, Ice, Ember, Phosphor, Imp), **Tune** (+-50 cents) and **MIDI out**.
+**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor), **Tune** (+-50 cents) and **MIDI out**.
 
-**Imp** is a new look (experimental: the other five are the look so far). Warm black, one colour per voice everywhere (the pad bone, the drone crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header gets a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) in place of the 24 dots, and the knobs show their values large with a bar under them.
+**The look** is Imp in every theme; the themes are its colour variations. Warm black, one colour per voice everywhere (in Imp: the pad bone, the drone crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header has a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick; a piece waiting for the bar shows as `>08` beside the key and mode. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) and shows the knobs' values large with a bar under them; hold **SEL** and the tabs give way to a one-line hint of what shift does on this page.
 The theme, Tune and MIDI out are yours across all pieces.
 
 **MIDI out** (USB): the pad's notes on channel 1, the drone on 3, the acid on 4, the drums on 10 (General MIDI notes),

@@ -1,10 +1,10 @@
-# The Imp skin (theme 6, Global K2): the header's coil and beat bar, the knob strip's tabs and large values. Screenshots only: look at them.
+# The look (Imp, the first theme: the header's coil and beat bar, the knob strip's tabs and large values), then its colour variations (Global K2).
+# Screenshots only: look at them.
 seed 0
 wait 3000
+expect theme 0
 tap GLO
-spin K2 5
-wait 100
-expect theme 5
+wait 300
 shot imp_global.png
 tap HOME
 wait 600
@@ -45,3 +45,42 @@ tap FX
 tap HOME
 wait 300
 shot imp_perform.png
+# the colour variations: Synth, Acid, Ice, Ember, Phosphor
+tap GLO
+spin K2 1
+wait 100
+expect theme 1
+tap HOME
+wait 600
+shot theme_synth.png
+tap GLO
+spin K2 1
+wait 100
+tap HOME
+wait 600
+shot theme_acid.png
+tap GLO
+spin K2 1
+wait 100
+tap HOME
+wait 600
+shot theme_ice.png
+tap GLO
+spin K2 1
+wait 100
+tap HOME
+wait 600
+shot theme_ember.png
+tap GLO
+spin K2 1
+wait 100
+expect theme 5
+tap HOME
+wait 600
+shot theme_phosphor.png
+# SEL held on a voice page: the footer hint
+tap ENV
+press SEL
+wait 300
+shot imp_hint.png
+release SEL

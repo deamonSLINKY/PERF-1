@@ -313,38 +313,37 @@ static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 #define FACTORY_HOLD 1500u             /* SAVE held this long on Global: the piece to its factory settings */
 
 /* ---------------------------------------------------------------- themes --- */
-/* five looks for the screen (Global > Theme): a ground, its panel and lines, the text, an accent for what is
+/* six palettes for the screen (Global > Theme; the look, Imp, is the same in all of them): a ground, its panel and lines, the text, an accent for what is
  * happening now, a primary for the music in three shades (the pad and the chord; the acid; the drone),
  * the drums' colour, and a colour for the sections and freeze. Each layer has a dark tint for shapes at rest. */
 typedef struct {
-    uint16_t bg, panel, line, dim, text, acc, pad, pad_t, acid, acid_t, bass, bass_t, pulse, pulse_t, frost;
-    uint8_t skin;                      /* 1: the Imp look (the header's coil, the knob strip's tabs and big values) */
+    uint16_t bg, panel, line, dim, text, acc, pad, pad_t, acid, acid_t, bass, bass_t, pulse, pulse_t, frost, pluck;
 } theme_t;
 static const theme_t THEMES[EN_NTHEME] = {
-    /* Synth: charcoal, a cyberpunk purple, orange */
-    {RGB(22, 21, 27), RGB(40, 36, 50), RGB(62, 56, 76), RGB(142, 134, 162), RGB(238, 234, 246), RGB(255, 128, 32),
-     RGB(164, 76, 255), RGB(68, 40, 104), RGB(214, 128, 255), RGB(78, 50, 104), RGB(118, 70, 214), RGB(52, 36, 88),
-     RGB(206, 196, 226), RGB(66, 60, 82), RGB(255, 150, 64)},
-    /* Acid: black, a 303's yellow-green, hot pink */
-    {RGB(12, 13, 10), RGB(30, 34, 24), RGB(52, 60, 40), RGB(140, 152, 118), RGB(236, 242, 222), RGB(255, 60, 160),
-     RGB(196, 255, 40), RGB(54, 72, 16), RGB(240, 255, 120), RGB(70, 80, 30), RGB(120, 200, 30), RGB(40, 62, 14),
-     RGB(210, 220, 190), RGB(56, 62, 46), RGB(255, 90, 180)},
-    /* Ice: deep navy, cyan, a cold pink */
-    {RGB(10, 16, 28), RGB(22, 34, 54), RGB(38, 56, 84), RGB(120, 150, 186), RGB(226, 240, 255), RGB(255, 84, 130),
-     RGB(0, 200, 255), RGB(10, 56, 84), RGB(120, 228, 255), RGB(26, 70, 96), RGB(40, 130, 230), RGB(16, 44, 82),
-     RGB(196, 216, 236), RGB(48, 64, 86), RGB(255, 120, 160)},
-    /* Ember: black-brown, red, amber */
-    {RGB(20, 12, 10), RGB(40, 24, 20), RGB(70, 40, 34), RGB(170, 130, 116), RGB(250, 232, 220), RGB(255, 176, 32),
-     RGB(255, 46, 66), RGB(92, 20, 26), RGB(255, 110, 90), RGB(96, 38, 32), RGB(200, 40, 40), RGB(72, 18, 18),
-     RGB(230, 200, 186), RGB(82, 56, 50), RGB(255, 200, 80)},
-    /* Phosphor: a green screen's black, its green, a brighter green */
-    {RGB(6, 14, 8), RGB(14, 32, 18), RGB(26, 58, 32), RGB(80, 160, 96), RGB(170, 255, 190), RGB(220, 255, 120),
-     RGB(60, 255, 120), RGB(14, 70, 30), RGB(150, 255, 170), RGB(24, 76, 40), RGB(30, 190, 90), RGB(10, 56, 26),
-     RGB(120, 220, 140), RGB(20, 52, 28), RGB(240, 255, 140)},
     /* Imp: warm black, bone, crimson, lime, pink; ember is for "now" (the playhead, the knob you touched) */
     {RGB(20, 14, 12), RGB(42, 30, 27), RGB(78, 56, 49), RGB(166, 140, 126), RGB(244, 232, 200), RGB(255, 212, 71),
      RGB(242, 230, 196), RGB(86, 78, 62), RGB(182, 242, 60), RGB(60, 80, 22), RGB(224, 52, 79), RGB(84, 22, 32),
-     RGB(255, 143, 143), RGB(88, 52, 52), RGB(150, 210, 255), 1},
+     RGB(255, 143, 143), RGB(88, 52, 52), RGB(150, 210, 255), RGB(111, 224, 210)},
+    /* Synth: charcoal, a cyberpunk purple, orange */
+    {RGB(22, 21, 27), RGB(40, 36, 50), RGB(62, 56, 76), RGB(142, 134, 162), RGB(238, 234, 246), RGB(255, 128, 32),
+     RGB(164, 76, 255), RGB(68, 40, 104), RGB(214, 128, 255), RGB(78, 50, 104), RGB(118, 70, 214), RGB(52, 36, 88),
+     RGB(206, 196, 226), RGB(66, 60, 82), RGB(255, 150, 64), RGB(96, 224, 200)},
+    /* Acid: black, a 303's yellow-green, hot pink */
+    {RGB(12, 13, 10), RGB(30, 34, 24), RGB(52, 60, 40), RGB(140, 152, 118), RGB(236, 242, 222), RGB(255, 60, 160),
+     RGB(196, 255, 40), RGB(54, 72, 16), RGB(240, 255, 120), RGB(70, 80, 30), RGB(120, 200, 30), RGB(40, 62, 14),
+     RGB(210, 220, 190), RGB(56, 62, 46), RGB(255, 90, 180), RGB(110, 230, 240)},
+    /* Ice: deep navy, cyan, a cold pink */
+    {RGB(10, 16, 28), RGB(22, 34, 54), RGB(38, 56, 84), RGB(120, 150, 186), RGB(226, 240, 255), RGB(255, 84, 130),
+     RGB(0, 200, 255), RGB(10, 56, 84), RGB(120, 228, 255), RGB(26, 70, 96), RGB(40, 130, 230), RGB(16, 44, 82),
+     RGB(196, 216, 236), RGB(48, 64, 86), RGB(255, 120, 160), RGB(255, 196, 110)},
+    /* Ember: black-brown, red, amber */
+    {RGB(20, 12, 10), RGB(40, 24, 20), RGB(70, 40, 34), RGB(170, 130, 116), RGB(250, 232, 220), RGB(255, 176, 32),
+     RGB(255, 46, 66), RGB(92, 20, 26), RGB(255, 110, 90), RGB(96, 38, 32), RGB(200, 40, 40), RGB(72, 18, 18),
+     RGB(230, 200, 186), RGB(82, 56, 50), RGB(255, 200, 80), RGB(110, 220, 200)},
+    /* Phosphor: a green screen's black, its green, a brighter green */
+    {RGB(6, 14, 8), RGB(14, 32, 18), RGB(26, 58, 32), RGB(80, 160, 96), RGB(170, 255, 190), RGB(220, 255, 120),
+     RGB(60, 255, 120), RGB(14, 70, 30), RGB(150, 255, 170), RGB(24, 76, 40), RGB(30, 190, 90), RGB(10, 56, 26),
+     RGB(120, 220, 140), RGB(20, 52, 28), RGB(240, 255, 140), RGB(200, 240, 150)},
 };
 static const theme_t *th = &THEMES[0];
 #define K_BG (th->bg)
@@ -2486,7 +2485,7 @@ static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s
     cv_text(cx - text_w(f, s) / 2, y, f, s, c);
 }
 
-/* anti-aliased drawing (X0X's): a pixel blended over the canvas, a disc, and a knob's ring */
+/* a pixel blended over the canvas (16 steps from the canvas to the colour) */
 static void px_blend(int32_t x, int32_t y, uint16_t c, uint32_t a)
 {
     uint16_t *q;
@@ -2503,67 +2502,6 @@ static void px_blend(int32_t x, int32_t y, uint16_t c, uint32_t a)
     *q = swap16((uint32_t)(((((c >> 11) * a + (bg >> 11) * (16u - a)) >> 4) << 11) |
                            (((((c >> 5) & 63u) * a + ((bg >> 5) & 63u) * (16u - a)) >> 4) << 5) |
                            (((c & 31u) * a + (bg & 31u) * (16u - a)) >> 4)));
-}
-
-static void disc(float cx, float cy, float r, uint16_t c)
-{
-    int32_t x0 = (int32_t)fm_floorf(cx - r - 1.0f), x1 = (int32_t)(cx + r + 1.0f);
-    int32_t y0 = (int32_t)fm_floorf(cy - r - 1.0f), y1 = (int32_t)(cy + r + 1.0f), x, y;
-    for (y = y0; y <= y1; y++)
-        for (x = x0; x <= x1; x++) {
-            float dx = (float)x + 0.5f - cx, dy = (float)y + 0.5f - cy, d = fm_sqrtf(dx * dx + dy * dy);
-            px_blend(x, y, c, (uint32_t)(fm_clampf(r - d + 0.5f, 0.0f, 1.0f) * 16.0f + 0.5f));
-        }
-}
-
-/* atan2 in turns, 0..1 from +x going clockwise on screen (y down) */
-static float turns(float y, float x)
-{
-    float ax = fm_fabsf(x), ay = fm_fabsf(y), a = ax < ay ? ax / (ay + 1e-9f) : ay / (ax + 1e-9f), s = a * a, r;
-    r = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * a + a;   /* atan on [0, 1] */
-    if (ay > ax)
-        r = 1.57079637f - r;
-    if (x < 0.0f)
-        r = FM_PI - r;
-    if (y < 0.0f)
-        r = FM_TWO_PI - r;
-    return r * (1.0f / FM_TWO_PI);
-}
-
-/* a knob: a 270-degree track from 7:30 to 4:30, anti-aliased, round ends; the value filled from
- * the start (or from the top, for a centred value) and a round handle */
-static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint16_t fill, uint16_t bg, int bipolar)
-{
-    const float th_ = 3.4f, a0 = 0.375f, sweep = 0.75f;
-    float ro = (float)r, ri = ro - th_, rm = ro - th_ * 0.5f, fx = (float)cx + 0.5f, fy = (float)cy + 0.5f, lo, hi;
-    int32_t x, y;
-    v = fm_clampf(v, 0.0f, 1.0f);
-    lo = bipolar ? (v < 0.5f ? v : 0.5f) : 0.0f;
-    hi = bipolar ? (v < 0.5f ? 0.5f : v) : v;
-    for (y = -r - 1; y <= r + 1; y++)
-        for (x = -r - 1; x <= r + 1; x++) {
-            float dx = (float)x, dy = (float)y, d = fm_sqrtf(dx * dx + dy * dy), t, a;
-            a = fm_clampf(ro + 0.5f - d, 0.0f, 1.0f) * fm_clampf(d - ri + 0.5f, 0.0f, 1.0f);
-            if (a <= 0.0f)
-                continue;
-            t = turns(dy, dx) - a0;
-            if (t < 0.0f)
-                t += 1.0f;
-            t /= sweep;
-            if (t > 1.0f)
-                continue;
-            px_blend(cx + x, cy + y, (t >= lo && t <= hi) ? fill : track, (uint32_t)(a * 16.0f + 0.5f));
-        }
-    {
-        float e0 = a0 * FM_TWO_PI, e1 = (a0 + sweep) * FM_TWO_PI, ev = (a0 + sweep * v) * FM_TWO_PI;
-        float el = (a0 + sweep * lo) * FM_TWO_PI;
-        disc(fx + fm_cosf(e0) * rm - 0.5f, fy + fm_sinf(e0) * rm - 0.5f, th_ * 0.5f, lo <= 0.0f && hi > 0.0f ? fill : track);
-        disc(fx + fm_cosf(e1) * rm - 0.5f, fy + fm_sinf(e1) * rm - 0.5f, th_ * 0.5f, hi >= 1.0f ? fill : track);
-        if (hi > lo)
-            disc(fx + fm_cosf(el) * rm - 0.5f, fy + fm_sinf(el) * rm - 0.5f, th_ * 0.5f, fill);
-        disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th_ * 0.5f + 1.3f, bg);
-        disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th_ * 0.5f + 0.6f, fill);
-    }
 }
 
 static void caps(char *d, const char *s, int n)  /* s in capitals, at most n - 1 characters */
@@ -2671,9 +2609,9 @@ static void draw_mascot(int32_t x, int32_t y, int sleepy)
 /* the header: the piece in a tag, its root and mode; on the right, the tempo with a beat light (a play
  * triangle while stopped), the section and a dot while the kit is unsaved. Messages take its place
  * for a moment. */
-/* THE IMP SKIN (theme 6; the old five keep the old look): the header gets a beat bar along its top (sixteen ticks, the beats taller, the step
+/* THE HEADER'S EXTRAS: the header has a beat bar along its top (sixteen ticks, the beats taller, the step
  * playing lit) and a coil along its bottom, the slinky's spring, that stretches on the kick. */
-#define IMP_TEAL RGB(111, 224, 210)
+#define IMP_TEAL (th->pluck)                    /* the pluck's colour in the theme */
 static void imp_header(void)
 {
     const float kg = fm_clampf(en_drum_glow[0], 0.0f, 1.0f);
@@ -2714,8 +2652,8 @@ static void draw_header(void)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
                     (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 12);
-    if (th->skin)                               /* the coil moves: 15 a second, and on the kick; the beat bar on each step */
-        h = hash(h, (uint32_t)(plat_ms() / 66u) | (uint32_t)q16(en_drum_glow[0]) << 20 | (uint32_t)(en_playing ? en_drum_pos + 1u : 0u) << 25);
+    h = hash(h, (uint32_t)(plat_ms() / 66u) | (uint32_t)q16(en_drum_glow[0]) << 20 | (uint32_t)(en_playing ? en_drum_pos + 1u : 0u) << 25);
+    h = hash(h, ui.piece_q);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -2815,10 +2753,18 @@ static void draw_header(void)
         if (proj.edited >> proj.piece & 1u)
             cv_round(4 + w - 10, 12, 4, 4, 1, K_BG);
         w = cv_text(w + 10, 8, &FONT_XS, EN_NOTE_NAME[proj.par[P_ROOT]], K_TEXT);
-        cv_text(w + 3, 8, &FONT_XS, mode_name(), K_DIM);
+        w = cv_text(w + 3, 8, &FONT_XS, mode_name(), K_DIM);
+        if (ui.piece_q) {                         /* a piece waiting for the bar: 07>08 */
+            char q[8] = ">";
+            int j = 1;
+            const char *s = piece_name(ui.piece_q - 1);
+            while (*s && j < 7)
+                q[j++] = *s++;
+            q[j] = 0;
+            cv_text(w + 8, 8, &FONT_XS, q, K_ACC);
+        }
     }
-    if (th->skin)
-        imp_header();
+    imp_header();
     cv_blit(0, 0);
 }
 
@@ -3829,7 +3775,7 @@ static void draw_scope(int kind)
         const int ty = proj.par[P_RV_TYPE] < 0 ? 0 : proj.par[P_RV_TYPE] > 2 ? 2 : proj.par[P_RV_TYPE];
         const float len = 0.25f + 0.75f * (float)proj.par[P_SIZE] * 0.01f, amt = (float)proj.par[P_RV_X] * 0.01f,
                     gap = (6.0f + 24.0f * (float)proj.par[P_RV_PRE] * 0.01f) * (1.0f / 30.0f) * 0.2f, hold = 0.12f + 0.45f * amt;
-        col = th->skin ? IMP_TEAL : KC_COLOR;
+        col = IMP_TEAL;
         cv_text(6, 2, &FONT_B, "REVERB", col);
         cv_text(6 + text_w(&FONT_B, "REVERB") + 8, 6, &FONT_XS, TY[ty], K_TEXT);
         cv_text(6, SC_Y + SC_H + 6, &FONT_XS, ty == 1 ? "AN OCTAVE UP, BLOOMING IN THE TAIL" : ty == 2 ? "CUT OFF AFTER THE HOLD" : "THE PLATE'S TAIL, AFTER THE PREDELAY", K_DIM);
@@ -4001,7 +3947,7 @@ static void draw_scope(int kind)
         const int st = proj.par[P_CM_STYLE], ri = proj.par[P_CM_RATE] & 3, n = 6;
         const float T = 0.1f * fm_exp2f((float)proj.par[P_CM_DEC] * 0.045f);
         int s, k;
-        col = th->skin ? IMP_TEAL : KC_COLOR;
+        col = IMP_TEAL;
         for (x = 0; x < SC_W; x++) {
             const float u = (float)x / (float)(SC_W - 1);
             sc_y[x] = (uint8_t)(scope_expo(u * 1.2f / T, 10.0f) * (float)(SC_H - 8) * 0.45f);
@@ -4330,8 +4276,8 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     const int g = group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
     switch (g >= 0 ? GROUP[g].btn : -1) {
     case B_LFO: return K_BASS;
-    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? (th->skin ? IMP_TEAL : KC_COLOR) : K_ACID;
-    case B_SEQ: return th->skin ? K_PULSE : RGB(255, 160, 60);
+    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? IMP_TEAL : K_ACID;
+    case B_SEQ: return K_PULSE;
     case B_HOME: return KC_REPEAT;
     default: return ui.view == V_JAM ? KC_MOVE : perf_like() ? KC_FILTER : K_PAD;
     }
@@ -4384,7 +4330,7 @@ static void draw_knobs(void)
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
-    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1 | (uint32_t)ui.fx_page << 2 | (uint32_t)fx_bank << 10);
+    h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1 | (uint32_t)ui.fx_page << 2 | (uint32_t)fx_bank << 10 | (uint32_t)(ui.btn >> B_SEL & 1u) << 20);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -4474,8 +4420,11 @@ static void draw_knobs(void)
         }
         if (xt >= xl + 6)                        /* (a long sound name, BY HAND or the store's state would run into it) */
             cv_text(xt, -1, &FONT_XS, t, K_ACC);
-        if (th->skin && !ui.fx_menu)
-            imp_tabs();                          /* (the Imp skin: tabs, a chip a group) */
+        if (!ui.fx_menu && (ui.btn >> B_SEL & 1u))
+            cv_text(4, 14, &FONT_XS, ui.view == V_SEQ ? "SEL: KEYS=PATTERNS KNOBS=TRICKS" :
+                                     voice_of(ui.view) >= 0 ? "SEL: ALGO=SOUND ENV=HAND PRE=PIECE" : "SEL: PRESETS=PIECE ALGO=SOUND", K_ACC);   /* the footer hint: what shift does here */
+        else if (!ui.fx_menu)
+            imp_tabs();                          /* tabs, a chip a group */
         else for (k = 0; k < ndots; k++) {
             int cur, same;
             if (ui.fx_menu) {
@@ -4485,17 +4434,17 @@ static void draw_knobs(void)
                 cur = k == ui.view || (ui.view == V_SEQ && k == V_DRUMS);
                 same = group_of(k) >= 0 && group_of(k) == group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
             }
-            cv_rect(xd + k * 5, th->skin ? 17 : 3, 3, 4, cur ? K_ACC : same ? K_DIM : K_LINE);
+            cv_rect(xd + k * 5, 17, 3, 4, cur ? K_ACC : same ? K_DIM : K_LINE);
         }
     }
     for (i = 0; i < 4; i++) {
         int k = view_knob((int)i), lo, hi, v, hot = now_touch && ui.touched == (int)i;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
-        uint16_t bg = hot ? K_PANEL : K_BG, fill = hot ? K_ACC : view_color();
+        const uint16_t fill = hot ? K_ACC : view_color();
         if (k == K_NONE)
             continue;
-        if (th->skin) {                          /* the Imp skin: the label, the value large, a bar under it */
+        {                                        /* the label, the value large, a bar under it */
             char vt[16];
             int32_t bw = 0;
             knob_range(k, &lo, &hi);
@@ -4522,25 +4471,7 @@ static void draw_knobs(void)
                     cv_rect(cx - 24, 63, bw, 3, fill);
                 }
             }
-            continue;
         }
-        if (i)
-            cv_rect(x, 16, 1, 46, K_LINE);
-        if (hot)
-            cv_round(x + 3, 11, 54, 57, 3, K_PANEL);
-        knob_range(k, &lo, &hi);
-        v = knob_get(k);
-        caps(t, view_label((int)i), sizeof t);
-        text_c(cx, 12, &FONT_XS, t, hot ? K_TEXT : K_DIM);
-        if (hi - lo < 6) {                       /* a switch: its positions as pips */
-            int n = hi - lo + 1, j, pw = n > 4 ? 6 : 9, gap = 3, w0 = n * (pw + gap) - gap;
-            for (j = 0; j < n; j++)
-                cv_rect(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, j == v - lo ? fill : K_LINE);
-        } else {
-            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, lo < 0);
-        }
-        knob_text(k, t);
-        text_c(cx, 50, &FONT_B, t, hot ? K_ACC : K_TEXT);
     }
     cv_blit(0, KNB_Y);
 }

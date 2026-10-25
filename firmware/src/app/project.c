@@ -95,9 +95,10 @@ static void bank_load(void)
     const uint32_t HDR = 20u;
     int n, i, p, l;
     uint32_t npar, stride;
-    int old_rate;
+    int old_rate, old_theme;
     memset(&bank, 0, sizeof bank);
     n = plat_store_load(OBJ_PROJ, raw, sizeof raw);
+    old_theme = n >= (int)HDR && rd16(raw + 18) < 2;                 /* the themes were in the order Synth, Acid, Ice, Ember, Phosphor, Imp */
     old_rate = n >= (int)HDR && rd16(raw + 18) == 0;   /* a bank from before the pluck's Rate was sorted slow to fast: 1/8, 1/16, 1/4, 3/16 */
     npar = n >= (int)HDR ? rd16(raw + 8) : 0u;
     stride = npar * 2u + 2u + 2u * EN_NPAT * EN_NLANE;
@@ -107,6 +108,8 @@ static void bank_load(void)
         bank.tune = (int16_t)rd16(raw + 12);
         bank.midi = (int16_t)rd16(raw + 14);
         bank.theme = (int16_t)rd16(raw + 16);
+        if (old_theme)
+            bank.theme = (int16_t)(bank.theme >= 5 ? 0 : bank.theme + 1);   /* (Imp is the first now, the others one on) */
         for (i = 0; i < NPIECES; i++) {
             const uint8_t *q = raw + HDR + (uint32_t)i * stride;
             slot_t *s = &bank.slot[i];
@@ -138,7 +141,7 @@ static void bank_load(void)
         bank.midi = en_param_info(P_MIDI)->def;
         bank.theme = theme;
     }
-    bank.rsv0 = 1;                           /* (older firmware ignores it: its Rate reads the new order, no pieces lost) */
+    bank.rsv0 = 2;                           /* (older firmware ignores it: its Rate reads the new order, no pieces lost) */
     bank.magic = BANK_MAGIC;
     bank.format = BANK_FORMAT;
     bank.npar = P_NPARAMS;
