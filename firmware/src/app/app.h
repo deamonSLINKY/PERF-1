@@ -15,6 +15,7 @@ typedef struct {
     int16_t par[P_NPARAMS];
     uint16_t pool;
     uint16_t pats[EN_NPAT][EN_NLANE];    /* its six drum patterns */
+    uint8_t mod[EN_NLANE][16];           /* its step tricks (en_mod): a lane's ratchet, push and level on each of its steps */
 } slot_t;
 
 typedef struct {

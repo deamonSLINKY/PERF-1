@@ -20,8 +20,9 @@ project_t proj;
 #define IMG_REC 376u
 #define IMG_LEN (IMG_HDR + NPIECES * IMG_REC)
 #define REC_PAR (2u + 2u * EN_NPAT * EN_NLANE)   /* the settings follow the pool and the patterns */
+#define REC_MOD (IMG_REC - EN_NLANE * 16u)       /* the step tricks end the record (a record from before them has zeros here) */
 typedef char img_fits[IMG_LEN <= PLAT_STORE_MAX ? 1 : -1];
-typedef char rec_fits[REC_PAR + P_NPARAMS <= IMG_REC ? 1 : -1];
+typedef char rec_fits[REC_PAR + P_NPARAMS <= REC_MOD ? 1 : -1];
 static uint8_t image[PLAT_STORE_MAX];        /* the playing genre's object, as it is in flash (and as the next save writes it: its first IMG_LEN bytes; the old bank is read here whole first) */
 static uint16_t saved;                       /* bit i: piece i is in the image */
 static uint8_t pending, pending_glob;        /* the pieces; the player's three (theme, Tune, MIDI out) */
@@ -50,6 +51,7 @@ static void recipe(int i, slot_t *s)
 {
     en_piece_g(proj.genre, i, s->par, &s->pool);
     en_piece_pats_g(proj.genre, i, s->pats);
+    en_piece_mods_g(proj.genre, i, s->mod);
 }
 
 static int16_t clamp_par(int p, int v)
@@ -77,6 +79,9 @@ static void take(int i)                      /* piece i's slot into play (its pa
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             en_pats[p][l] = s->pats[p][l];
+    for (l = 0; l < EN_NLANE; l++)
+        for (p = 0; p < 16; p++)
+            en_mod[l][p] = s->mod[l][p];
 }
 
 static void keep(void)                       /* the piece playing, into its slot */
@@ -89,6 +94,9 @@ static void keep(void)                       /* the piece playing, into its slot
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             s->pats[p][l] = en_pats[p][l];
+    for (l = 0; l < EN_NLANE; l++)
+        for (p = 0; p < 16; p++)
+            s->mod[l][p] = en_mod[l][p];
 }
 
 static uint16_t rd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
@@ -117,6 +125,9 @@ static void pack_slot(const slot_t *s, uint8_t *rec)
         const int v = s->par[p] - en_param_info(p)->lo;
         rec[REC_PAR + p] = (uint8_t)(v < 0 ? 0 : v > 255 ? 255 : v);
     }
+    for (l = 0; l < EN_NLANE; l++)
+        for (p = 0; p < 16; p++)
+            rec[REC_MOD + l * 16 + p] = s->mod[l][p];
 }
 static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
 {
@@ -125,6 +136,9 @@ static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
         for (l = 0; l < EN_NLANE; l++)
             s->pats[p][l] = rd16(rec + 2 + 2 * (p * EN_NLANE + l));
     s->pool = rd16(rec);
+    for (l = 0; l < EN_NLANE; l++)
+        for (p = 0; p < 16; p++)
+            s->mod[l][p] = rec[REC_MOD + l * 16 + p];
     for (p = 0; (uint32_t)p < npar && p < P_NPARAMS; p++) {
         const int v = en_param_info(p)->lo + rec[REC_PAR + p];
         if (p == P_AC_CHANCE && v > 1) {         /* (a development build kept a chance here, 100: now the sync, bars) */

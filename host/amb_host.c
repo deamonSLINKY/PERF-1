@@ -574,6 +574,8 @@ static int expect(const char *what, const char *val)
         got = en_lane_mask(what[8] - '0', en_lane_src[what[8] - '0'], proj.par[P_DENS + (what[8] - '0')]);
     else if (!strncmp(what, "lanewrit", 8) && what[8] >= '0' && what[8] <= '5')  /* the same, as written */
         got = en_pats[en_lane_src[what[8] - '0']][what[8] - '0'];
+    else if (!strncmp(what, "mod", 3) && what[3] >= '0' && what[3] <= '5' && what[4] == '_')   /* a lane's step trick byte: modL_S (lane L, step S, 0 .. 15) */
+        got = en_mod[what[3] - '0'][atoi(what + 5) & 15];
     else if (!strcmp(what, "patkey"))             /* the held pattern's state: 1 a pattern key is down, 2 one let go and waiting to go back */
         got = ui.pat_key >= 0 ? 1 : ui.pat_up ? 2 : 0;
     else if (!strcmp(what, "patnext"))            /* the one waiting for the bar */

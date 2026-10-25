@@ -91,6 +91,7 @@ int en_par_sticky(int p) { return en_par_global(p) || (p >= P_DD_CHANGE && p <= 
 /* the pieces' factory drum patterns: six for each piece (tools/gen_pats.py writes them) */
 #include "pats.h"
 volatile uint16_t en_pats[EN_NPAT][EN_NLANE];
+volatile uint8_t en_mod[EN_NLANE][16];          /* a piece's step tricks, a byte a lane step: ratchet (bits 0-2), push (3-5), level (6-7); 0: none (the UI edits) */
 
 /* the pieces: each the defaults above with a few changed (a parameter, its value; -1 ends), its own
  * kit's sound (the lanes) among them. Numbered on the screen; the names are for reading here. */
@@ -388,6 +389,31 @@ void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
             pats[p][l] = EN_PIECE_PATS[i][p][l];
 }
 void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]) { en_piece_pats_g(0, i, pats); }
+/* A genre's factory step tricks (en_mod; the same for each of its pieces): the feel a genre has that a grid of hits cannot say. Byte: ratchet | push << 3 | level << 6.
+ * Lofi: the snare and clap laid back, the off-beat hats soft. House and garage: the off-beat hats soft (garage: the snare a touch late). Trap: triplets and a swell
+ * on the hat's last beat. The other genres are as the pattern says. A trick on a step with no hit does nothing. */
+void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
+{
+    int s, l;
+    (void)i;
+    for (l = 0; l < EN_NLANE; l++)
+        for (s = 0; s < 16; s++)
+            mod[l][s] = 0;
+    for (s = 0; s < 16; s++) {
+        if (g == 1) {
+            mod[1][s] = (uint8_t)(2u << 3);
+            mod[2][s] = (uint8_t)(2u << 3);
+        }
+        if ((g == 1 || g == 2 || g == 7) && (s & 1))
+            mod[3][s] = (uint8_t)(2u << 6);
+        if (g == 7)
+            mod[1][s] = (uint8_t)(1u << 3);
+    }
+    if (g == 9) {
+        mod[3][7] = 2u;
+        mod[3][15] = 7u;
+    }
+}
 
 static const char *const ETIME_NAME[6] = {"1/8", "3/16", "1/4", "1/4.", "1/2", "1 bar"};
 static const float ETIME_BEATS[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
@@ -1385,6 +1411,9 @@ typedef struct {
     float ph, inc, inc_end, amp, adec, idx, x1, x2, att, mph[4], pend, t, hp, ph2, inc2;
     int32_t wait, wait2;                        /* swing, rolls: samples until a hit that waits (pend, pend2: its velocity) */
     float pend2;
+    int32_t rgap;                               /* a ratchet: the samples between its hits, the hits still to come (rn), and what each is of the one before (rmul) */
+    float rmul;
+    uint8_t rn;
     uint8_t on, note;
 } drum_t;
 static drum_t drum[EN_NDRUM];
@@ -1951,6 +1980,36 @@ static void drum_hit(int d, float vel, int32_t wait)   /* wait: a swung sixteent
     }
 }
 
+/* A step's ratchet (en_mod): the hit and the hits that follow it inside the step. Each row: the hits to come after the first, the step's
+ * division between them (0: a flam's 20 ms), what the first is of the velocity (rf) and each hit of the one before (rm). */
+static const struct { uint8_t n, div; float rf, rm; } RATCHET[8] = {
+    {0, 0, 1.0f, 1.0f},   {1, 2, 1.0f, 0.8f},  {2, 3, 1.0f, 0.8f},  {3, 4, 1.0f, 0.8f},
+    {5, 6, 1.0f, 0.88f},  {1, 0, 0.4f, 2.5f},  {2, 3, 0.5f, 1.4f},  {3, 4, 0.4f, 1.35f}};
+static void drum_chain(int d, float vel)        /* a hit of a ratchet has sounded: the next one waits */
+{
+    drum_t *v = &drum[d];
+    if (v->rn) {
+        v->rn--;
+        v->wait = v->rgap;
+        v->pend = vel * v->rmul;
+    }
+}
+static void drum_ratchet(int d, float vel, int32_t wait, int r)   /* wait: the swing and the step's push */
+{
+    drum_t *v = &drum[d];
+    const float v1 = vel * RATCHET[r].rf;
+    v->rn = RATCHET[r].n;
+    v->rgap = RATCHET[r].div ? (int32_t)(step_len / (float)RATCHET[r].div) : (int32_t)(0.02f * EN_SR);
+    v->rmul = RATCHET[r].rm;
+    if (wait > 0) {
+        v->wait = wait;
+        v->pend = v1;
+    } else {
+        drum_fire(d, v1);
+        drum_chain(d, v1);
+    }
+}
+
 static int32_t cm_wait, cm_pnote;                /* a pluck note that waits for the swing */
 static float cm_pvel;
 static void cm_trigger(int note, float vel);
@@ -1976,8 +2035,10 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
     }
     for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (drum[d].wait -= k) <= 0) {
+            const float pv = drum[d].pend;
             drum[d].wait = 0;
-            drum_fire(d, drum[d].pend);
+            drum_fire(d, pv);
+            drum_chain(d, pv);
         }
         if (drum[d].wait2 > 0 && (drum[d].wait2 -= k) <= 0) {
             drum[d].wait2 = 0;
@@ -2195,6 +2256,8 @@ static void tick(void)
         en_lane_pos[l] = (uint8_t)ls;
         const uint64_t fxm = fx_on;
         float vel = 0.9f;
+        int32_t push = 0;
+        int rat = 0;
         if (sec == SEC_BREAK) {
             hit = 0;
         } else if (sec == SEC_BUILD) {
@@ -2243,11 +2306,19 @@ static void tick(void)
             dbl = 3;
         if (hit && l == L_KICK && (fxm & FXB(FX_DBLKICK)))                  /* DBL KICK: and again half a step on */
             dbl = 1;
+        if (hit && sec == SEC_GROOVE && !fill_hold && !fill_bar && !(dd_fill && st >= 8) && !drop_imp) {   /* the step's tricks: its level, push and ratchet (not in a fill, a build or the drop's own hits) */
+            static const float LV[4] = {1.0f, 0.4f, 0.7f, 1.12f};
+            const uint32_t md = en_mod[l][ls & 15];
+            vel = fm_minf(vel * LV[md >> 6 & 3u], 1.0f);
+            push = (int32_t)((float)(md >> 3 & 7u) * step_len * (1.0f / 12.0f));
+            rat = (int)(md & 7u);
+        }
         if (hit && (l == L_HAT || l == L_OHAT))
             lk_hat = 1;
         if (hit && l == L_PERC)
             perc_hit = 1;
         if (hit) {
+            drum[l].rn = 0;                     /* a ratchet still coming ends where a new hit lands */
             vel *= l == L_HAT || l == L_OHAT ? pa : 1.0f;
             if (dbl == 3) {                     /* a flam: the grace note now, the hit 20 ms on */
                 drum_fire(l, vel * 0.4f);
@@ -2261,12 +2332,14 @@ static void tick(void)
                     drum[l].wait2 = (int32_t)(step_len * 0.6667f);
                     drum[l].pend2 = vel * 0.6f;
                 }
-            } else if (chop > 0.0f && !sw && (l == L_SNARE || l == L_KICK || l == L_HAT) && frand() < 0.2f * chop) {
+            } else if (rat && !dbl) {           /* the step's ratchet */
+                drum_ratchet(l, vel, sw + push, rat);
+            } else if (chop > 0.0f && !sw && !push && (l == L_SNARE || l == L_KICK || l == L_HAT) && frand() < 0.2f * chop) {
                 drum_fire(l, vel);              /* a 32nd roll: the hit, and again half a step on */
                 drum[l].wait = (int32_t)(0.5f * step_len);
                 drum[l].pend = vel * 0.7f;
             } else {
-                drum_hit(l, vel, sw);
+                drum_hit(l, vel, sw + push);
             }
         }
     }
@@ -2989,7 +3062,7 @@ static void quiet(void)
     bass.play = 0;
     acid.play = 0;
     for (i = 0; i < EN_NDRUM; i++)
-        drum[i].on = 0, drum[i].wait = 0;
+        drum[i].on = 0, drum[i].wait = 0, drum[i].rn = 0;
     for (i = 0; i < EN_NPAD; i++)
         pad[i].amp = 0.0f;
     bass.amp = 0.0f;
@@ -3098,7 +3171,7 @@ static void play_stop(void)
 {
     int d;
     for (d = 0; d < EN_NDRUM; d++)
-        drum[d].wait = drum[d].wait2 = 0;        /* a swung hit still waiting stays unplayed */
+        drum[d].wait = drum[d].wait2 = 0, drum[d].rn = 0;        /* a swung hit still waiting stays unplayed */
     en_playing = 0;
     pad_gate = 0.0f;
     acid.amp_t = 0.0f;

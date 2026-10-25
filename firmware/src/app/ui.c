@@ -38,20 +38,20 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
  * the four knobs, the effect itself held on while the page is up, so it is heard as it is edited. K_FXP + 4 *
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
-enum { K_FXP = 220 };
+enum { K_FXP = 230 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
 #define NFXP 23
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
@@ -182,6 +182,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {K_GRT, K_GRD, K_GRS, K_GRA},                  /* the groove: a lane chosen, its density, the pattern it plays, and all lanes' density */
+    {K_GRT, K_STR, K_STP, K_STV},                  /* the steps: the lane, and the step chosen (a white key): its ratchet, its push, its level */
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
     {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
@@ -212,6 +213,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Kick", "Snare", "Hats", "Perc"},
     {"Change", "Every", "Pool", "Mutate"},
     {"Lane", "Density", "Source", "All dens"},
+    {"Lane", "Ratchet", "Push", "Level"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Type", "Damping", "Predelay", "Amount"},
     {"Ratio", "Thresh", "Make-up", "Ceiling"},
@@ -226,7 +228,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 6}, {B_SEQ, V_DRUMS, 5}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 6}, {B_SEQ, V_DRUMS, 6}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -432,6 +434,7 @@ static struct {
     uint32_t fx_tap;                   /* FX keys down that may yet be a tap (a latch) */
     uint32_t fx_down_t[NKEYS];
     uint8_t lane;                      /* the sequencer's lane (OCT- / OCT+) */
+    uint8_t stp;                       /* the Steps page's step (a white key) */
     uint8_t save_global;               /* SAVE went down on Global: the piece is stored when it comes up */
     uint8_t store_wait;                /* a store while playing: the music fading out to write it (store_tick) */
     uint8_t store_kind;                /* and what: 0 the piece's, 1 the settings, 2 the globals (quiet_write) */
@@ -859,6 +862,12 @@ static int knob_get(int k)
         return ui.lane;
     if (k == K_GRA)
         return ui.gr_all;
+    if (k == K_STR)
+        return en_mod[ui.lane % EN_NLANE][ui.stp & 15] & 7;
+    if (k == K_STP)
+        return en_mod[ui.lane % EN_NLANE][ui.stp & 15] >> 3 & 7;
+    if (k == K_STV)
+        return en_mod[ui.lane % EN_NLANE][ui.stp & 15] >> 6;
     if (k >= K_FXP)
         return fxp_get(k);
     if (k >= K_FXF)
@@ -881,6 +890,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_GRT || k == K_GRA) {
         *lo = 0;
         *hi = k == K_GRT ? EN_NLANE - 1 : 100;
+        return;
+    }
+    if (k == K_STR || k == K_STP || k == K_STV) {
+        *lo = 0;
+        *hi = k == K_STV ? 3 : 7;
         return;
     }
     if (k >= K_FXP) {
@@ -932,6 +946,23 @@ static void knob_text(int k, char *b)
     }
     if (k == K_GRA) {
         itoa_u((uint32_t)ui.gr_all, b);
+        return;
+    }
+    if (k == K_STR || k == K_STP || k == K_STV) {
+        static const char *const RN[8] = {"Off", "x2", "x3", "x4", "x6", "Flam", "Swell 3", "Swell 4"};
+        static const char *const LN[4] = {"Normal", "Ghost", "Soft", "Accent"};
+        const int v = knob_get(k);
+        const char *s = k == K_STR ? RN[v] : k == K_STV ? LN[v] : 0;
+        int n = 0;
+        if (!s) {
+            itoa_u((uint32_t)v, b);
+            return;
+        }
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
         return;
     }
     if (k >= K_FXP) {
@@ -987,6 +1018,16 @@ static void knob_set(int k, int v)
         ui.gr_all = (uint8_t)v;
         for (l = 0; l < EN_NLANE; l++)
             knob_set(P_DENS + l, v);
+        return;
+    }
+    if (k == K_STR || k == K_STP || k == K_STV) {   /* the chosen step's trick: ratchet (bits 0-2), push (3-5), level (6-7) */
+        const int sh = k == K_STR ? 0 : k == K_STP ? 3 : 6, mx = k == K_STV ? 3 : 7;
+        volatile uint8_t *m = &en_mod[ui.lane % EN_NLANE][ui.stp & 15];
+        v = v < 0 ? 0 : v > mx ? mx : v;
+        if ((int)(*m >> sh & (uint8_t)mx) != v) {
+            *m = (uint8_t)((*m & ~(mx << sh)) | v << sh);
+            edited();
+        }
         return;
     }
     if (k >= K_FXP) {
@@ -2318,6 +2359,11 @@ static void input(void)
                                 say(t, "FOLLOWS THE PIECE");
                             }
                         }
+                } else if (ui.view == V_STEPS) { /* the Steps page: a white key chooses the step */
+                    int s;
+                    for (s = 0; s < 16; s++)
+                        if (WHITE_KEY[s] == i)
+                            ui.stp = (uint8_t)s;
                 } else if (ui.view == V_JAM) {   /* the JAM page: the key plays the voice chosen */
                     jam_down((int)i);
                 } else if (by_hand(voice_of(ui.view))) {   /* a voice off the algorithm, its page: the key plays it */
@@ -3548,7 +3594,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -3564,6 +3610,7 @@ static int scope_kind(int v)
     case V_REVERB: return SCOPE_REVERB;
     case V_MIXER: return SCOPE_MIX;
     case V_GROOVE: return SCOPE_GROOVE;
+    case V_STEPS: return SCOPE_STEPS;
     case V_ACANS: return SCOPE_ACANS;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
@@ -3918,6 +3965,70 @@ static void draw_scope(int kind)
             cv_text(192, y + 2, &FONT_XS, tx, proj.par[P_LSRC + l] ? K_ACC : K_DIM);
             itoa_u((uint32_t)dens, tx);
             cv_text(212, y + 2, &FONT_XS, tx, dens == 50 ? K_DIM : K_ACC);
+        }
+        return;
+    }
+    if (kind == SCOPE_STEPS) {                   /* the steps: the lane's sixteen steps as they play, each with its level (height), push (shift) and ratchet (the bars under it); the step chosen framed */
+        static const uint8_t NH[8] = {1, 2, 3, 4, 6, 2, 3, 4};                            /* a ratchet's hits */
+        static const uint8_t RV[8][6] = {{9, 0, 0, 0, 0, 0}, {9, 7, 0, 0, 0, 0}, {9, 7, 5, 0, 0, 0}, {9, 7, 5, 4, 0, 0},
+                                         {9, 8, 7, 6, 5, 4}, {3, 9, 0, 0, 0, 0}, {4, 6, 9, 0, 0, 0}, {3, 5, 7, 9, 0, 0}};   /* and their heights */
+        static const uint8_t LH[4] = {36, 12, 22, 46};                                    /* a level's height */
+        const int l = ui.lane % EN_NLANE, src = proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now;
+        const uint16_t pl = en_lane_mask(l, src, proj.par[P_DENS + l]);
+        int s;
+        char tx[24];
+        cv_text(6, 2, &FONT_B, "STEPS", LANE_COL(l));
+        cv_text(6 + text_w(&FONT_B, "STEPS") + 8, 6, &FONT_XS, "RATCHET, PUSH, LEVEL: PER STEP", K_DIM);
+        cv_text(4, 22, &FONT_XS, LANE_SHORT[l], K_TEXT);
+        cv_text(34, 22, &FONT_XS, "KEYS CHOOSE THE STEP", K_DIM);
+        for (s = 0; s < 16; s++) {
+            const int32_t x0 = 16 + s * 13;
+            const uint32_t md = en_mod[l][s];
+            const int on = pl >> s & 1, rt = (int)(md & 7u), pu = (int)(md >> 3 & 7u), lv = (int)(md >> 6), cur = s == (int)(ui.stp & 15u);
+            if (cur)
+                cv_rect(x0 - 1, 34, 13, 70, K_PANEL);
+            if (s % 4 == 0)
+                cv_rect(x0 - 1, 33, 1, 72, K_LINE);
+            if (on)
+                cv_rect(x0 + pu, 80 - LH[lv], 6, LH[lv], lv == 1 ? mix(K_BG, LANE_COL(l), 10) : LANE_COL(l));
+            else
+                cv_rect(x0 + 4, 79, 2, 1, K_LINE);
+            if (md && !on)
+                cv_rect(x0 + 2, 84, 7, 1, K_DIM);      /* (a trick on a step with no hit: it waits for one) */
+            if (pu)
+                cv_rect(x0, 81, 1 + pu, 1, K_TEXT);     /* the push, from the grid line to where it lands */
+            if (rt) {
+                int h;
+                for (h = 0; h < NH[rt]; h++) {
+                    const int32_t hh = (int32_t)RV[rt][h], hx = x0 + (NH[rt] > 1 ? h * 10 / (NH[rt] - 1) : 0);
+                    cv_rect(hx, 96 - hh, 2, hh, on ? K_ACC : K_DIM);
+                }
+            }
+            if (en_playing && s == (int)en_lane_pos[l])
+                cv_rect(x0, 100, 11, 2, K_TEXT);
+            if (cur)
+                cv_rect(x0 - 1, 103, 13, 1, K_ACC);
+        }
+        {
+            static const char *const RN[8] = {"NO RATCHET", "X2", "X3", "X4", "X6", "FLAM", "SWELL 3", "SWELL 4"};
+            static const char *const LN[4] = {"NORMAL", "GHOST", "SOFT", "ACCENT"};
+            const uint32_t md = en_mod[l][ui.stp & 15];
+            int n = 0;
+            const char *p = "STEP ";
+            while (*p)
+                tx[n++] = *p++;
+            itoa_u((uint32_t)(ui.stp & 15u) + 1u, tx + n);
+            cv_text(4, 112, &FONT_XS, tx, K_TEXT);
+            cv_text(48, 112, &FONT_XS, RN[md & 7u], md & 7u ? K_ACC : K_DIM);
+            n = 0;
+            tx[n++] = 'P';
+            tx[n++] = 'U';
+            tx[n++] = 'S';
+            tx[n++] = 'H';
+            tx[n++] = ' ';
+            itoa_u(md >> 3 & 7u, tx + n);
+            cv_text(112, 112, &FONT_XS, tx, md >> 3 & 7u ? K_ACC : K_DIM);
+            cv_text(160, 112, &FONT_XS, LN[md >> 6], md >> 6 ? K_ACC : K_DIM);
         }
         return;
     }
@@ -4291,6 +4402,12 @@ static void draw_main(void)
                 h = hash(h, (uint32_t)proj.par[P_DENS + l] | (uint32_t)proj.par[P_LSRC + l] << 8 | (uint32_t)en_pats[en_pat_now][l] << 16 | (uint32_t)en_lane_pos[l] << 11);
             h = hash(h, (uint32_t)ui.lane | (uint32_t)en_pat_now << 4 | (uint32_t)en_playing << 8);
         }
+        if (ui.view == V_STEPS) {
+            int s;
+            for (s = 0; s < 16; s++)
+                h = hash(h, (uint32_t)en_mod[ui.lane % EN_NLANE][s]);
+            h = hash(h, (uint32_t)ui.lane | (uint32_t)ui.stp << 4 | (uint32_t)en_pat_now << 8 | (uint32_t)en_lane_pos[ui.lane % EN_NLANE] << 12 | (uint32_t)proj.par[P_DENS + ui.lane % EN_NLANE] << 20);
+        }
         if (ui.view == V_MASTER)
             h = hash(h, (uint32_t)(en_comp_gr * 2.0f) | (uint32_t)(en_lim_gr * 2.0f) << 8 | (uint32_t)(en_out_peak * 40.0f) << 16);
         if (ui.view == V_MIXER) {
@@ -4633,6 +4750,12 @@ static void leds(void)
         for (i = 0; i < NKEYS; i++)
             if (ui.fx_mask >> KEY_FX[fx_bank][i] & 1u)
                 k |= 1u << i;
+    } else if (ui.view == V_STEPS) {             /* the steps: the step chosen lit, the lane's hits dim among them (the playhead too) */
+        const int l = ui.lane % EN_NLANE;
+        const uint16_t pl = en_lane_mask(l, proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now, proj.par[P_DENS + l]);
+        for (i = 0; i < 16; i++)
+            if ((i == (uint32_t)(ui.stp & 15u)) || ((pl >> i & 1u) ^ (uint32_t)(en_playing && i == en_lane_pos[l])))
+                k |= 1u << WHITE_KEY[i];
     } else if (ui.view == V_SEQ) {               /* the sequencer: the lane's hits on the white keys, the playhead */
         uint16_t bits = en_pats[seq_pat()][ui.lane];
         for (i = 0; i < 16; i++)

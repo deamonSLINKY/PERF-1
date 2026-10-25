@@ -290,6 +290,7 @@ extern volatile float en_drum_glow[EN_NDRUM];
 extern volatile uint8_t en_pat_now, en_pat_next;
 extern volatile int8_t en_dd_left;             /* drum drift: bars to the change (1: the fill bar), -1 none */
 extern volatile uint32_t en_dd_changes, en_dd_mutations;   /* changes made and mutations since start */      /* the pattern playing; the one waiting for the bar */
+extern volatile uint8_t en_mod[EN_NLANE][16];   /* a piece's step tricks: ratchet (bits 0-2: off, x2, x3, x4, x6, flam, swell x3, swell x4), push (3-5: n/12 of a step late), level (6-7: normal, ghost, soft, accent) */
 extern volatile uint16_t en_pats[EN_NPAT][EN_NLANE];   /* the patterns: bit s, a hit on step s (the UI edits) */
 extern volatile uint32_t en_bars;              /* sixteenths played since start (for tests) */
 extern volatile float en_arc;                  /* the arc, -1 sparse .. +1 full (times Motion) */
@@ -328,4 +329,5 @@ void en_genre(int g);                          /* the genre playing: its chords 
 const char *en_piece_name_g(int g, int i);
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool);
 void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE]);
+void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16]);   /* its factory step tricks (en_mod) */
 void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]);   /* its factory drum patterns */

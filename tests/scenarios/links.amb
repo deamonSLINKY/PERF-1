@@ -34,4 +34,4 @@ expect par78 80
 press SEQ
 wait 500
 release SEQ
-expect view 25
+expect view 26

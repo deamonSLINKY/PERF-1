@@ -1,0 +1,48 @@
+# The Steps page (the dial, after Groove): a lane's sixteen steps, each with a ratchet (hits inside the step), a push (late, in twelfths of a
+# step) and a level; a white key chooses the step; stored with the piece (Global, SAVE) and back after a power cycle.
+seed 0
+wait 3000
+turn SELECT 19 100
+expect view 19
+expect mod0_2 0
+# the kick lane, step 3 (the third white key, key 4): x4, push 2, ghost
+tapkey 4
+spin K2 3
+wait 100
+expect mod0_2 3
+spin K3 2
+wait 100
+expect mod0_2 19
+spin K4 1
+wait 100
+expect mod0_2 83
+expect edited 1
+shot steps.png
+# another lane, step 13 (key 21): flam, and it leaves the kick's alone
+spin K1 1
+tapkey 21
+spin K2 5
+wait 100
+expect mod1_12 5
+expect mod0_2 83
+# the top of each knob stays on it
+spin K2 20
+spin K3 20
+spin K4 20
+wait 100
+expect mod1_12 255
+spin K2 -20
+spin K3 -20
+spin K4 -20
+wait 100
+expect mod1_12 0
+# stored with the piece, and back after a power cycle
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+expect dirty 0
+reboot
+wait 500
+expect mod0_2 83
+expect mod1_12 0

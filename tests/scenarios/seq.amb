@@ -7,7 +7,7 @@ expect lane0 4369
 press SEQ
 wait 500
 release SEQ
-expect view 25
+expect view 26
 expect seqlane 0
 # a kick on step 3: the third white key (A3, key 4)
 tapkey 4
@@ -49,13 +49,13 @@ wait 2500
 expect pat 2
 shot seq_p3.png
 # SEQ tapped in the sequencer: back to Drums; SELECT from it goes on through the pages
-expect view 25
+expect view 26
 turn SELECT 1 100
 expect view 15
 press SEQ
 wait 500
 release SEQ
-expect view 25
+expect view 26
 tap SEQ
 expect view 14
 # a theme (Global, KNOB 2): the player's, written by itself once stopped

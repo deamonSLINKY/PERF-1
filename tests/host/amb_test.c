@@ -19,11 +19,15 @@ static int fails;
     } while (0)
 
 static uint32_t midi_count;
+static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
-    (void)st;
-    (void)d1;
-    (void)d2;
+    if (st == 0x99u && d1 == 36u)
+        kick_last = blk_now;
+    if (st == 0x99u && d1 == 42u && hat_n < 512u) {
+        hat_t[hat_n] = blk_now - kick_last;
+        hat_v[hat_n++] = d2;
+    }
     midi_count++;
 }
 
@@ -758,6 +762,48 @@ int main(void)
             run(0.5f);
         }
         CHECK(n[1] > n[0] * 3 / 2 && n[2] > n[1], "hat rolls: %d hits (none held), %d (roll), %d (triplets): expected more with each", n[0], n[1], n[2]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+    /* the step tricks (en_mod) on the hat lane, 4 s at 128 bpm, read from the MIDI out: a ratchet is more hits (x4: more than twice as many), a push
+     * delays them (6 twelfths of a step, 58 ms, about 40 blocks of 64 frames), a ghost level is much quieter */
+    {
+        int v, s, blk;
+        uint32_t cnt[5], i;
+        float mean_v[5], delay = 0.0f;
+        float since[5];
+        for (v = 0; v < 5; v++) {
+            float sv = 0.0f;
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            memset((void *)en_mod, 0, sizeof en_mod);
+            for (s = 0; s < 16; s++)
+                en_mod[3][s] = (uint8_t)(v == 1 ? 3 : v == 2 ? 6 << 3 : v == 3 ? 1 << 6 : v == 4 ? 4 : 0);   /* none, x4, push 6, ghost, x6 */
+            en_play(1);
+            run(4.0f);                       /* (the first bar's hits are the start's own: no tricks there) */
+            hat_n = 0;
+            kick_last = 0;
+            for (blk = 0; blk < 2756; blk++) {
+                blk_now = (uint32_t)blk;
+                en_render(buf, 64, 2048);
+            }
+            cnt[v] = hat_n;
+            for (i = 0; i < hat_n; i++)
+                sv += (float)hat_v[i];
+            mean_v[v] = hat_n ? sv / (float)hat_n : 0.0f;
+            since[v] = 0.0f;
+            for (i = 0; i < hat_n; i++)
+                since[v] += (float)hat_t[i];
+            since[v] = hat_n ? since[v] / (float)hat_n : 0.0f;
+        }
+        delay = since[2] - since[0];
+        CHECK(cnt[0] >= 6u && cnt[1] > cnt[0] * 2u, "ratchet x4: %u hat hits against %u without", cnt[1], cnt[0]);
+        CHECK(cnt[4] > cnt[1], "ratchet x6: %u hat hits (x4: %u)", cnt[4], cnt[1]);
+        CHECK(delay > 30.0f && delay < 50.0f, "push 6: the hats are %.1f blocks late (expected about 40)", (double)delay);
+        CHECK(mean_v[3] < mean_v[0] * 0.6f, "ghost level: mean velocity %.1f against %.1f", (double)mean_v[3], (double)mean_v[0]);
+        memset((void *)en_mod, 0, sizeof en_mod);
         en_init();
         en_play(1);
         run(1.0f);
