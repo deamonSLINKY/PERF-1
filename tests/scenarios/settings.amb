@@ -1,4 +1,4 @@
-# 0.9.4: FX twice quickly opens the settings of the effect used last (the first page if none); HOME held opens SETTINGS (key change, saver, lights, genre);
+# FX twice quickly opens the settings of the effect used last (the first page if none); HOME held opens SETTINGS (key change, saver, lights, genre);
 # the genre knob switches the bank. (fxpage: -1 the menu closed, 0 the keys, 1.. an effect's edit page.)
 seed 0
 wait 3000

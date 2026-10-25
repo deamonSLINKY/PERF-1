@@ -1,4 +1,4 @@
-# 0.9.1: the drum drift's settings stay when the piece or the genre changes; the JAM page takes the voice it plays off its line (and gives it back);
+# The drum drift's settings stay when the piece or the genre changes; the JAM page takes the voice it plays off its line (and gives it back);
 # the mood reaches the pluck. (Parameters: 94 drum drift Change, 122 the pluck's hand switch, 111 acid hand.)
 seed 0
 wait 3000
