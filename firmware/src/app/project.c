@@ -127,17 +127,21 @@ static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
     s->pool = rd16(rec);
     for (p = 0; (uint32_t)p < npar && p < P_NPARAMS; p++) {
         const int v = en_param_info(p)->lo + rec[REC_PAR + p];
+        if (p == P_AC_CHANCE && v > 1) {         /* (0.12.6 kept a chance here, 100: now the sync, bars) */
+            s->par[p] = 0;
+            continue;
+        }
         bad |= v > en_param_info(p)->hi;
         s->par[p] = clamp_par(p, v);
     }
     return !bad && pool_ok(s->pool);
 }
-static void ans_old(slot_t *s)                /* the acid answer before 0.12.6: 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down; and its chance (the old style's place) */
+static void ans_old(slot_t *s)                /* the acid answer before 0.12.6: 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down; and the old style's place (now its sync: bars) */
 {
     static const uint8_t M[7] = {0, 8, 13, 22, 37, 6, 11};   /* kind * 5 + direction (3 up, 1 down, 2 the same) */
     const int v = s->par[P_AC_RESP];
     s->par[P_AC_RESP] = (int16_t)(v >= 0 && v < 7 ? M[v] : 0);
-    s->par[P_AC_CHANCE] = 100;
+    s->par[P_AC_CHANCE] = 0;
 }
 static void image_header(int g)
 {
@@ -186,7 +190,7 @@ static void old_bank_load(int n)
                     v = 0;
                 if (p == P_CM_RATE && old_rate)
                     v = (v + 2) & 3;      /* (old 0 1 2 3 = 1/8 1/16 1/4 3/16 is now 2 3 0 1) */
-                bad |= v != clamp_par(p, v);
+                bad |= p != P_STYLE && v != clamp_par(p, v);   /* (the old style is converted below) */
                 s->par[p] = (int16_t)v;
             }
             en_style_sounds(s->par);         /* stored with a style (before 1.0.27): its sounds and kit */

@@ -52,7 +52,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_SIZE] = {"Size", 0, 100, 70},
     [P_ROOT] = {"Root", 0, 11, 9},          [P_MODE] = {"Mode", 0, EN_NMODES - 1, 5}, [P_TUNE] = {"Tune", -50, 50, 0},
     [P_MIDI] = {"MIDI out", 0, 1, 1},       [P_THEME] = {"Theme", 0, EN_NTHEME - 1, 0},
-    [P_STYLE] = {"Chance", 0, 100, 100},      /* (was the style, kept to read old banks; now the acid answer's chance: P_AC_CHANCE) */
+    [P_STYLE] = {"Sync", 0, 1, 0},            /* (was the style, kept to read old banks; now the acid answer's sync, P_AC_CHANCE: 0 the bar, 1 the loop) */
     [P_LINKS] = {"Links", 0, 1, 0},         [P_LK_KICK] = {"Kick", 0, 100, 50},    [P_LK_SNARE] = {"Snare", 0, 100, 40},
     [P_LK_HAT] = {"Hats", 0, 100, 50},      [P_LK_PERC] = {"Perc", 0, 1, 0},
     [P_OCT] = {"Song oct", -3, 3, 0},       [P_PAD_OCT] = {"Pad oct", -3, 3, 0},
@@ -485,6 +485,7 @@ void en_param_text(int i, int v, char *b)
     case P_CM_STYLE: s = EN_CM_STYLE[(unsigned)v < EN_NCMSTYLE ? v : 0]; break;
     case P_CM_RATE: s = EN_CM_RATE[v & 3]; break;
     case P_LSRC: case P_LSRC1: case P_LSRC2: case P_LSRC3: case P_LSRC4: case P_LSRC5: { static const char *const S[7] = {"Follow", "Pat 1", "Pat 2", "Pat 3", "Pat 4", "Pat 5", "Pat 6"}; s = S[(unsigned)v < 7u ? v : 0]; break; }
+    case P_STYLE: s = v ? "Loop" : "Bar"; break;
     case P_AC_EVERY: { static const char *const E[8] = {"2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "Drift"}; s = E[(unsigned)v < 8u ? v : 0]; break; }
     case P_AC_RESP: {                            /* type and direction: "Oct +", "Mirr =", "Rev -2" */
         static const char *const T[9] = {"Off", "Oct", "5th", "3rd", "Mirr", "Rev", "Rot", "Spar", "Acc"}, *const D[5] = {"-2", "-", "=", "+", "+2"};
@@ -1412,8 +1413,9 @@ static void scale_set(void)
  * degrees of the scale, and for the others an octave). It is counted in BARS, so the line's length does not matter, and it can follow the drum
  * drift (Every: Drift): the bar before the drums change. Mirror turns the contour upside down round the line's own middle, so it stays in the
  * line's register. Where a move would leave the register (28 .. 96) it goes the other way. */
-static uint8_t ac_ans_bar;                      /* this bar is an answer's (set at the bar line) */
-volatile uint8_t en_acid_ans;                   /* the same, for the screen */
+static uint8_t ac_ans_bar, ac_ans_loop, ac_fill_bar;   /* this bar (Sync: Bar) or this loop (Sync: Loop) is an answer's; the bar before the drums change */
+static uint32_t ac_loop;                        /* the times round the line */
+volatile uint8_t en_acid_ans;                   /* the answer sounding now, for the screen */
 static int acid_raw(int s, int dd)              /* step s's note, the chord's degree moved dd degrees, in the register (no answer) */
 {
     int d = deg + ac_off[s] + dd, o, n;
@@ -1661,7 +1663,17 @@ static void ac_mutate(void)                     /* the loop's end: Mutate (a dej
 
 static void acid_step(void)                     /* a sixteenth of the acid line */
 {
-    const int len = par[P_AC_LEN], st = ac_pos, v = ac_ans_bar ? par[P_AC_RESP] : 0, type = v / 5;
+    const int len = par[P_AC_LEN], st = ac_pos;
+    int v, type;
+    if (st == 0 && par[P_AC_CHANCE]) {          /* Sync: Loop: the whole loop is the answer, every 2nd .. 8th time round, or the loop that starts in the bar before the drums change */
+        const uint32_t ev = (uint32_t)par[P_AC_EVERY];
+        int due = 0;
+        if (par[P_AC_RESP] >= 5)
+            due = ev >= 7 ? (ac_fill_bar ? 1 : (!par[P_DD_CHANGE] && ac_loop % 8u == 7u)) : ac_loop % (ev + 2u) == ev + 1u;
+        ac_ans_loop = en_acid_ans = (uint8_t)due;
+    }
+    v = (par[P_AC_CHANCE] ? ac_ans_loop : ac_ans_bar) ? par[P_AC_RESP] : 0;
+    type = v / 5;
     const int ss = acid_src(st, len, type), prev = type == 5 ? (ss + 1) % len : (ss + len - 1) % len;   /* (the step it reads, and the one played before it) */
     const uint16_t m = (uint16_t)(1u << ss);
     en_acid_pos = (uint8_t)st;
@@ -1692,6 +1704,7 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
     }
     if (++ac_pos >= len) {
         ac_pos = 0;
+        ac_loop++;
         ac_mutate();
     }
 }
@@ -2152,18 +2165,19 @@ static void tick(void)
             sec_req = 0;
         }
         dd_bar();                               /* drum drift: a fill coming, or a change now */
-        {   /* the acid's answer: this bar? (every 2nd .. 8th bar, or the bar before the drums change) */
+        {   /* the acid's answer, Sync: Bar: this bar? (every 2nd .. 8th bar, or the bar before the drums change); Sync: Loop is decided where the line starts (acid_step) */
             const int rv = par[P_AC_RESP], ev = par[P_AC_EVERY];
-            int due = 0;
-            if (rv >= 5) {
-                if (ev >= 7)
-                    due = dd_fill ? 1 : (!par[P_DD_CHANGE] && bars % 8u == 7u);   /* (with drum drift not changing patterns: every 8th bar) */
-                else
-                    due = bars % ((uint32_t)ev + 2u) == (uint32_t)ev + 1u;
-                if (due && par[P_STYLE] < 100 && frand() * 100.0f >= (float)par[P_STYLE])   /* the chance (P_AC_CHANCE) */
-                    due = 0;
+            ac_fill_bar = dd_fill;
+            if (!par[P_AC_CHANCE]) {
+                int due = 0;
+                if (rv >= 5) {
+                    if (ev >= 7)
+                        due = dd_fill ? 1 : (!par[P_DD_CHANGE] && bars % 8u == 7u);   /* (with drum drift not changing patterns: every 8th bar) */
+                    else
+                        due = bars % ((uint32_t)ev + 2u) == (uint32_t)ev + 1u;
+                }
+                ac_ans_bar = en_acid_ans = (uint8_t)due;
             }
-            ac_ans_bar = en_acid_ans = (uint8_t)due;
         }
         pat_now = pat_next;                     /* a new pattern: on the bar */
         for (l = 0; l < EN_NLANE; l++)          /* each lane's own source, from this bar */

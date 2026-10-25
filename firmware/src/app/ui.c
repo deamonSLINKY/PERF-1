@@ -174,7 +174,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
-    {K_ACT, P_AC_EVERY, K_ACD, P_AC_CHANCE},       /* the answer: its kind, how often (in bars, or before a drum change), which way (one value with the kind: P_AC_RESP), how likely */
+    {K_ACT, P_AC_EVERY, K_ACD, P_AC_CHANCE},       /* the answer: its kind, how often (in bars, or before a drum change), which way (one value with the kind: P_AC_RESP), bar or loop */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
@@ -204,7 +204,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
-    {"Answer", "Every", "Direction", "Chance"},
+    {"Answer", "Every", "Direction", "Sync"},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
     {"Level", "Drive", "Swing", "Pattern"},
@@ -3840,8 +3840,9 @@ static void draw_scope(int kind)
         static const char *const RD[5] = {"DOWN 2", "DOWN", "SAME REGISTER", "UP", "UP 2"};
         const int resp = proj.par[P_AC_RESP], rk = resp / 5, len = en_acid_len ? en_acid_len : 16;
         int row, s;
-        static const char *const ORD[8] = {"EVERY 2ND BAR", "EVERY 3RD BAR", "EVERY 4TH BAR", "EVERY 5TH BAR", "EVERY 6TH BAR", "EVERY 7TH BAR", "EVERY 8TH BAR", "BAR BEFORE A DRUM CHANGE"};
-        const char *tx = ORD[proj.par[P_AC_EVERY] < 0 ? 0 : proj.par[P_AC_EVERY] > 7 ? 7 : proj.par[P_AC_EVERY]];
+        static const char *const ORD[16] = {"EVERY 2ND BAR", "EVERY 3RD BAR", "EVERY 4TH BAR", "EVERY 5TH BAR", "EVERY 6TH BAR", "EVERY 7TH BAR", "EVERY 8TH BAR", "BAR BEFORE A DRUM CHANGE",
+                                            "EVERY 2ND LOOP", "EVERY 3RD LOOP", "EVERY 4TH LOOP", "EVERY 5TH LOOP", "EVERY 6TH LOOP", "EVERY 7TH LOOP", "EVERY 8TH LOOP", "LOOP AFTER A DRUM FILL"};
+        const char *tx = ORD[(proj.par[P_AC_EVERY] < 0 ? 0 : proj.par[P_AC_EVERY] > 7 ? 7 : proj.par[P_AC_EVERY]) + (proj.par[P_AC_CHANCE] ? 8 : 0)];
         cv_text(6, 2, &FONT_B, "ANSWER", K_ACID);
         cv_text(6 + text_w(&FONT_B, "ANSWER") + 8, 6, &FONT_XS, resp ? "THE LINE ASKS, THEN ANSWERS" : "OFF: TURN ANSWER", K_DIM);
         for (row = 0; row < 2; row++) {

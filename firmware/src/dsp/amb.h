@@ -122,7 +122,7 @@ enum {
     P_AC_RESP,                                            /* the acid's answer: every second time round the line is transformed (type * 5 + direction: 0 off; types 1 octave, 2 fifth, 3 third (in the scale), 4 mirror, 5 reverse, 6 rotate, 7 sparse, 8 accents; direction 0 .. 4: down 2, down, same, up, up 2) */
     P_NPARAMS
 };
-#define P_AC_CHANCE P_STYLE                           /* the acid answer's chance (0 .. 100: how often an answer that is due plays); it took the place of the old style, which only the oldest banks have */
+#define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
 #define P_LANE_TUNE(l) (P_LANE + 3 * (l) + 1)
 #define P_LANE_DEC(l) (P_LANE + 3 * (l) + 2)
