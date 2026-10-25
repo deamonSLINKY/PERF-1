@@ -84,6 +84,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
     [P_AC_RESP] = {"Answer", 0, 44, 0},
     [P_CM_VU] = {"Deja vu", 0, 100, 0},   [P_CM_LOOP] = {"Loop", 0, 3, 2},       [P_CM_LEAP] = {"Leaps", 0, 100, 0},   [P_AC_CHG] = {"Mutates", 0, 3, 0},
+    [P_PAD_COMP] = {"Comp", 0, 8, 0},     [P_GHOST] = {"Ghosts", 0, 100, 0},   [P_ACCENT] = {"Accents", 0, 100, 50}, [P_HUMAN] = {"Humanize", 0, 100, 0},
     [P_BL_MODE] = {"Mode", 0, 6, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
@@ -133,7 +134,7 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     TU(1), -10, DE(1), 60, DE(0), 60, -1};
 /* LOFI: ten pieces, 68 .. 94 beats a minute, swung, the Rhodes in sevenths and ninths over a warm bass, a soft sparse lead, the
  * dusty kit; each piece the base with a few changed (its key, mode, sounds and tempo). The patterns are made below. */
-#define LOFI_BASE P_CM_VU, 50, P_BL_MODE, 1, P_BL_LEN, 65, P_BL_MOVE, 20, P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
+#define LOFI_BASE P_CM_VU, 50, P_GHOST, 60, P_HUMAN, 35,  P_BL_MODE, 1, P_BL_LEN, 65, P_BL_MOVE, 20, P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
     P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
     P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
     P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(0), 92, LV(1), 55, \
@@ -150,7 +151,7 @@ static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_
 static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
 /* HOUSE: ten pieces, 118 .. 126 beats a minute, four on the floor, a clap on 2 and 4, open hats on the off-beats, stabs and
  * organ chords, a sub or square bass, a plucked line rolling in sixteenths; the pump (latched with the genre) ducks the chords. */
-#define HOUSE_BASE P_CM_VU, 60, P_CM_LOOP, 1, P_BL_MODE, 4, P_BL_LEN, 40, P_BL_MOVE, 25, P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
+#define HOUSE_BASE P_CM_VU, 60, P_GHOST, 25, P_HUMAN, 10,  P_CM_LOOP, 1, P_BL_MODE, 4, P_BL_LEN, 40, P_BL_MOVE, 25, P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
     P_AC_RES, 40, P_AC_ENV, 40, P_AC_DENS, 45, P_AC_LEN, 16, P_AC_MUT, 25, P_BASS, 70, P_DR_INST, 9, P_DR_CUT, 40, P_PULSE, 80, \
     KIT(1), P_DRIVE, 35, P_SWING, 12, P_ECHO, 30, P_ETIME, 3, P_REVERB, 30, P_SIZE, 50, P_EVOLVE, 45, P_MOTION, 50, P_PATTERN, 0, \
     LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45, P_PL_CHO, 35, P_RV_DAMP, 30, P_RV_PRE, 60, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 35
@@ -186,13 +187,13 @@ static const int16_t *const DUB_PIECES[EN_NPIECES] = {PD_01, PD_02, PD_03, PD_04
 static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"};
 /* the other six genres (4 .. 9: JUNGLE, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
  * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
-static const int16_t X_JUNGLE[] = {P_CM_VU, 30, P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
+static const int16_t X_JUNGLE[] = {P_CM_VU, 30, P_GHOST, 55, P_HUMAN, 15, P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
     KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 25, P_RV_DAMP, 50, P_RV_PRE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
-static const int16_t X_DNB[] = {P_CM_VU, 40, P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
+static const int16_t X_DNB[] = {P_CM_VU, 40, P_GHOST, 40, P_HUMAN, 10, P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
     KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 45, P_RV_TYPE, 1, P_RV_X, 25, P_RV_DAMP, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
-static const int16_t X_BREAKS[] = {P_CM_VU, 30, P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
+static const int16_t X_BREAKS[] = {P_CM_VU, 30, P_GHOST, 70, P_HUMAN, 25, P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
     KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_PL_CHO, 20, P_RV_TYPE, 2, P_RV_X, 35, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
-static const int16_t X_GARAGE[] = {P_CM_VU, 50, P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
+static const int16_t X_GARAGE[] = {P_CM_VU, 50, P_GHOST, 45, P_HUMAN, 20, P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
     P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 40, -1};
 static const int16_t X_ELECTRO[] = {P_CM_VU, 65, P_CM_LOOP, 1, P_BL_MODE, 3, P_BL_LEN, 30, P_BL_MOVE, 35, P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
     KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
@@ -406,10 +407,16 @@ void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
             mod[1][s] = (uint8_t)(2u << 3);
             mod[2][s] = (uint8_t)(2u << 3);
         }
-        if ((g == 1 || g == 2 || g == 7) && (s & 1))
-            mod[3][s] = (uint8_t)(2u << 6);
         if (g == 7)
             mod[1][s] = (uint8_t)(1u << 3);
+        if ((g == 1 || g == 2 || g == 7 || (g >= 4 && g <= 6) || g == 9) && (s & 1))
+            mod[3][s] = (uint8_t)(2u << 6);                 /* the off-beat hats soft */
+        if ((g == 2 || g == 8) && (s & 3) == 2)
+            mod[3][s] = (uint8_t)(3u << 6);                 /* house and electro: the hats' off-beat accented */
+        if (g >= 4 && g <= 6 && (s == 4 || s == 12))
+            mod[1][s] = (uint8_t)(3u << 6);                 /* jungle, DnB, breaks: the backbeat accented */
+        if (g == 8 && s == 0)
+            mod[0][s] = (uint8_t)(3u << 6);
     }
     if (g == 9) {
         mod[3][7] = 2u;
@@ -531,6 +538,7 @@ void en_param_text(int i, int v, char *b)
     }
     case P_CM_LOOP: { static const char *const L[4] = {"4", "8", "16", "32"}; s = L[(unsigned)v < 4u ? v : 0]; break; }
     case P_AC_CHG: { static const char *const C[4] = {"All", "Notes", "Rhythm", "Accents"}; s = C[(unsigned)v < 4u ? v : 0]; break; }
+    case P_PAD_COMP: { static const char *const C[9] = {"Auto", "Hold", "Off-beat", "On-beat", "3-3-2", "Charleston", "Syncop", "Sparse", "Eighths"}; s = C[(unsigned)v < 9u ? v : 0]; break; }
     case P_BL_MODE: { static const char *const M[7] = {"Drone", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
@@ -1089,7 +1097,11 @@ static const acid_snd_t ACID_SOUND[EN_NACID] = {
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
-static int pad_stabs(void) { return PAD_SOUND[pad_snd()].stabs; }
+static int pad_stabs(void)                      /* Comp: Hold never stabs, a rhythm always does, Auto as the sound is */
+{
+    const int c = par[P_PAD_COMP];
+    return c == 1 ? 0 : c >= 2 ? 1 : PAD_SOUND[pad_snd()].stabs;
+}
 static int pad_osc(void) { return PAD_SOUND[pad_snd()].osc; }
 static uint8_t stabs_were;                      /* the pad was stabbing (to start the breaths again after) */
 
@@ -2307,6 +2319,20 @@ static void var_leave(void);
 static void rvs_engage(void);
 static void flx_tick(int st);
 static uint64_t fx_on;
+/* The pad's comping: the steps of the bar its stabs fall on. Comp 2 .. 8 chooses one; Auto takes the genre's (hypnotic: the off-beats, as ever). */
+static const uint16_t COMP_MASK[7] = {0x4444, 0x1111, 0x4949, 0x0041, 0x2448, 0x0401, 0x5555};   /* off-beat, on-beat, 3-3-2, Charleston, syncopated, sparse, eighths */
+static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4144, 0x0408, 0x4949, 0x2448, 0x1111, 0x0401};
+static uint16_t comp_mask(void)
+{
+    const int c = par[P_PAD_COMP];
+    return c >= 2 ? COMP_MASK[c - 2] : COMP_GENRE[chord_genre];
+}
+static int comp_hit(int st) { return comp_mask() >> st & 1; }
+
+/* The genre's ghost notes: steps where a soft snare (or kick) may sound that the pattern does not have, with the chance Ghosts gives (at 100: six in ten). */
+static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0x8280, 0x8200, 0xC288, 0x0408, 0, 0};
+static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0x0A00, 0, 0x2200, 0, 0, 0};
+
 static void tick(void)
 {
     static const uint8_t TRIG_BARS[6] = {0, 1, 2, 4, 8, 0};
@@ -2408,6 +2434,11 @@ static void tick(void)
                 vel = 0.5f;
             }
         }
+        if (!hit && par[P_GHOST] && sec == SEC_GROOVE && !fill_hold && !fill_bar && !(dd_fill && st >= 8) && (l == L_SNARE || l == L_KICK) &&
+            ((l == L_SNARE ? GHOST_SN[chord_genre] : GHOST_KK[chord_genre]) >> ls & 1u) && frand() * 100.0f < 0.6f * (float)par[P_GHOST]) {   /* a ghost note */
+            hit = 1;
+            vel = 0.22f + 0.2f * frand();
+        }
         if (hit && par[P_PROB + l] < 100 && frand() * 100.0f >= (float)par[P_PROB + l])   /* the lane's probability: some hits do not sound */
             hit = 0;
         if (drop_imp && st == 0 && (l == L_KICK || l == L_CLAP || l == L_OHAT)) {   /* the drop lands */
@@ -2436,9 +2467,14 @@ static void tick(void)
         if (hit && sec == SEC_GROOVE && !fill_hold && !fill_bar && !(dd_fill && st >= 8) && !drop_imp) {   /* the step's tricks: its level, push and ratchet (not in a fill, a build or the drop's own hits) */
             static const float LV[4] = {1.0f, 0.4f, 0.7f, 1.12f};
             const uint32_t md = en_mod[l][ls & 15];
-            vel = fm_minf(vel * LV[md >> 6 & 3u], 1.0f);
+            vel = fm_clampf(vel * (1.0f + (LV[md >> 6 & 3u] - 1.0f) * (float)par[P_ACCENT] * 0.02f), 0.05f, 1.0f);   /* (Accents 50: as marked) */
             push = (int32_t)((float)(md >> 3 & 7u) * step_len * (1.0f / 12.0f));
             rat = (int)(md & 7u);
+        }
+        if (hit && par[P_HUMAN]) {              /* looseness: a little softer, a little late, never on the same terms twice */
+            const float hm = (float)par[P_HUMAN] * 0.01f;
+            vel *= 1.0f - 0.2f * hm * frand();
+            push += (int32_t)(frand() * hm * 0.12f * step_len);
         }
         if (hit && (l == L_HAT || l == L_OHAT))
             lk_hat = 1;
@@ -2471,8 +2507,8 @@ static void tick(void)
         }
     }
     bl_step(st);
-    if (pad_stabs() && !par[P_PAD_MAN] && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: the off-beats, more with Evolve */
-        ((st & 3) == 2 || ((st == 7 || st == 15) && frand() < 0.35f * evolve))) {
+    if (pad_stabs() && !par[P_PAD_MAN] && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: a rhythm (Comp; Auto: the genre's), the off-beats with more with Evolve */
+        (comp_hit(st) || (comp_mask() == 0x4444u && par[P_PAD_COMP] == 0 && (st == 7 || st == 15) && frand() < 0.35f * evolve))) {
         int i;
         stab_env = st & 1 ? 0.7f : 1.0f;
         stab_k = fm_expf(-6.9f * 32.0f / (0.08f * fm_exp2f((float)par[P_PE_REL] * 0.04f) * EN_SR));

@@ -5,7 +5,7 @@ wait 3000
 press SEQ
 wait 500
 release SEQ
-expect view 28
+expect view 29
 expect lane0 0x1111
 press SEL
 spin K1 -16

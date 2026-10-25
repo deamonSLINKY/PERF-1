@@ -1,0 +1,24 @@
+# The Feel page (the SEQ button's seventh page, after Steps): the genre's ghost notes, how much the accents and ghosts count (50 as marked), the pad's
+# comping rhythm (auto, hold, off-beat .. eighths) and a little looseness.
+seed 0
+wait 3000
+turn SELECT 22 100
+expect view 22
+expect par161 0
+expect par162 50
+spin K1 40
+wait 100
+expect par161 40
+spin K2 10
+wait 100
+expect par162 60
+spin K3 2
+wait 100
+expect par160 2
+spin K4 30
+wait 100
+expect par163 30
+shot feel.png
+spin K3 20
+wait 100
+expect par160 8

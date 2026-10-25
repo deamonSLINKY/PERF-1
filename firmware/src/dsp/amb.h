@@ -123,6 +123,8 @@ enum {
     P_BL_MODE, P_BL_LEN, P_BL_MOVE, P_BL_GLIDE,           /* the drone as a bass line: its mode (0 drone, 1 root on the genre's rhythm, 2 on the kick, 3 eighths, 4 off-beat, 5 walking, 6 the genre's riff), how long a note holds, how much it moves (octaves, fifths, approach notes), its glide */
     P_CM_VU, P_CM_LOOP, P_CM_LEAP,                        /* the pluck's deja vu: how often a note is the one the loop heard last time round (0 always new .. 100 locked), the loop's length in notes (4, 8, 16, 32), and how often a new note leaps an octave */
     P_AC_CHG,                                             /* what the acid's Mutate changes: 0 everything, 1 the notes, 2 the rhythm, 3 the accents and slides */
+    P_PAD_COMP,                                           /* the pad's comping: 0 auto (a stab sound plays its genre's rhythm), 1 hold (never stabs), 2 .. 8 stabs on a rhythm (off-beat, on-beat, 3-3-2, Charleston, syncopated, sparse, eighths) */
+    P_GHOST, P_ACCENT, P_HUMAN,                           /* the feel: how often the genre's ghost notes sound (snare, kick), how much the steps' accents and ghosts (en_mod levels) count (50 as marked), and a little looseness in time and velocity */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */

@@ -19,10 +19,18 @@ static int fails;
     } while (0)
 
 static uint32_t midi_count;
+static uint32_t snare_n, snare_min = 999, pad_n;   /* snare note-ons (GM 38), the softest, and the pad's (0x90) */
 static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's note-ons (0x92) and the kicks counted, and the notes' range */
 static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
+    if (st == 0x99u && d1 == 38u) {
+        snare_n++;
+        if (d2 < snare_min)
+            snare_min = d2;
+    }
+    if (st == 0x90u)
+        pad_n++;
     if (st == 0x92u) {
         bass_n++;
         if (d1 < bass_lo)
@@ -855,6 +863,47 @@ int main(void)
         CHECK(tot[0] > 40 && same[0] * 10 < tot[0] * 5, "deja vu 0: %d of %d notes repeated a loop on", same[0], tot[0]);
         CHECK(tot[1] > 40 && same[1] * 10 > tot[1] * 9, "deja vu 100, loop 8: only %d of %d notes repeated", same[1], tot[1]);
         CHECK(tot[2] > 40 && same[2] * 10 > tot[2] * 9, "deja vu 100, loop 4: only %d of %d notes repeated", same[2], tot[2]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+    /* the feel: in lofi, Ghosts at 100 add soft snares the pattern does not have (more snare hits, the softest under velocity 50), at 0 none; the pad's Comp on
+     * a stab sound: Eighths stabs far more often than Sparse, and Hold does not stab at all (counted by the pad's notes, 4 s at 128 bpm) */
+    {
+        int gh, blk;
+        uint32_t sn[2], smin[2], pd[3];
+        for (gh = 0; gh < 2; gh++) {
+            en_init();
+            en_genre(1);
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            en_set(P_GHOST, gh ? 100 : 0);
+            en_play(1);
+            run(4.0f);
+            snare_n = 0;
+            snare_min = 999;
+            for (blk = 0; blk < 5512; blk++)
+                en_render(buf, 64, 2048);
+            sn[gh] = snare_n;
+            smin[gh] = snare_min;
+        }
+        CHECK(sn[1] > sn[0] + 1u && smin[1] < 50u && smin[0] > 50u, "ghosts: %u snare hits at 100 (softest %u), %u at 0 (softest %u)", sn[1], smin[1], sn[0], smin[0]);
+        for (gh = 0; gh < 3; gh++) {
+            en_init();
+            en_genre(0);
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            en_set(P_PADTONE, 6);
+            en_set(P_PAD_COMP, gh == 0 ? 8 : gh == 1 ? 7 : 1);
+            en_play(1);
+            run(4.0f);
+            pad_n = 0;
+            for (blk = 0; blk < 5512; blk++)
+                en_render(buf, 64, 2048);
+            pd[gh] = pad_n;
+        }
+        CHECK(pd[0] > pd[1] * 2u && pd[1] > 3u && pd[2] < pd[1], "comping: %u pad notes on eighths, %u sparse, %u on hold", pd[0], pd[1], pd[2]);
+        en_genre(0);
         en_init();
         en_play(1);
         run(1.0f);

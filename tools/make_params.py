@@ -126,6 +126,7 @@ def main():
             {"name": "Kit", "knobs": byname["Kit"]},
             {"name": "Links (drums into voices)", "knobs": pl(("P_LINKS", "Links on")) + byname["Links"]},
             {"name": "Drum drift", "knobs": byname["Drum drift"]},
+            {"name": "Feel (ghost notes, accents, the pad's comping)", "knobs": byname["Feel"]},
             {"name": "Place", "knobs": [ls("P_PAN", 4, "Pan"), ls("P_SEND", 4, "Send")]}] + [
             {"name": LANES[l] + " lane", "knobs": [ls("P_LANE", 3 * l, "Level"), ls("P_LANE", 3 * l + 1, "Tune"), ls("P_LANE", 3 * l + 2, "Decay"),
                                                  ls("P_PROB", l, "Probability"), ls("P_LLEN", l, "Length (steps)"), ls("P_DENS", l, "Density (50: as written)"),
