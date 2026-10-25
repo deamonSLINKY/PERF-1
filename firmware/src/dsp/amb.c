@@ -757,7 +757,7 @@ static uint8_t muted;                            /* remote: no sound, no MIDI (C
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
 volatile uint8_t en_hushed;                      /* faded right out: the flash can be written */
-#define QN 256u                                  /* more than every parameter at once (project_apply), with room */
+#define QN 1024u                                 /* about seven times every parameter at once (project_apply, a piece, a genre): a quick flick of PRESETS filled 256 and dropped commands */
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
 static void post(uint32_t c, int a, int b)
@@ -4528,6 +4528,7 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
  * Synthi's filter below half, then tape). No chorus: a modulated delay against pure tones beats (on
  * the FM-1's speaker above all), and that read as pulsing. The width comes from the voices' places,
  * the echo's two heads and the plate. */
+static uint32_t pad_ctl[EN_NPAD], dr_ctl, ac_ctl;      /* the control steps' counts (every 32 samples), kept across chunks */
 static float padl[BLK] EN_POOL, padr[BLK] EN_POOL;
 static float plp[4];
 static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL, pad_rs[BLK] EN_POOL, pad_es[BLK] EN_POOL;   /* the pad's contribution to the mix, the reverb send and the echo send */
@@ -4632,7 +4633,7 @@ static void render_pad(uint32_t n)
         gr = fm_sinf((pn + 1.0f) * (FM_PI / 4.0f)) * g;
         for (j = 0; j < n; j++) {
             float x, v1, v2, v3, b1, l1, b2;
-            if (!(j & 31u)) {
+            if (!(pad_ctl[i]++ & 31u)) {         /* (counted across chunks: a chunk is cut at every swung hit and clock pulse, and a count from each chunk's start ran the envelopes fast) */
                 float br;
                 pad_coefs(v, i);
                 ar = 0.01f;
@@ -4773,7 +4774,7 @@ static void render_bass(uint32_t n)
     mi = osc == DO_METAL ? i1 * 1.4142f : osc == DO_FMR ? i1 * DRONE_FR[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0] : i1 * (1.5f + 2.5f * bass.env);   /* Metal's and FMR's modulator; Sync's slave */
     for (j = 0; j < n; j++) {
         float x;
-        if (!(j & 31u)) {                       /* the filter, every 32 samples */
+        if (!(dr_ctl++ & 31u)) {                /* the filter, every 32 samples (counted across chunks) */
             float oct, fc;
             oct = (float)par[P_DR_CUT] * 0.075f - 1.5f + DS->cut + (dest == 0 ? 2.5f * depth * drone_lfo.v : 0.0f) +
                   4.0f * (float)par[P_DE_AMT] * 0.01f * bass.env + 0.8f * motion * mod[9].v + 0.8f * arcm -
@@ -4991,7 +4992,7 @@ static void render_acid(uint32_t n)
     }
     for (j = 0; j < n; j++) {
         float x, y;
-        if (!(j & 31u)) {                       /* the cutoff: its knob, the envelope, an accent's push */
+        if (!(ac_ctl++ & 31u)) {                /* the cutoff: its knob, the envelope, an accent's push (every 32 samples, counted across chunks) */
             float oct = base + envmod * acid.env * (1.0f + accamt * acid.acc) + 1.2f * accamt * acid.acc * acid.env;
             float fc = fm_clampf(60.0f * fm_exp2f(oct), 50.0f, 14000.0f);
             svf_coefs(acid.c1, fc, k1);

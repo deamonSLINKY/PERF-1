@@ -490,9 +490,14 @@ static int pool_count(uint32_t p)
         n += (int)(p >> i & 1u);
     return n;
 }
+static const uint8_t KEY_SH[5] = {0, 2, 3, 5, 7};   /* the drop's key change: semitones up */
+static int sound_root(void)                     /* the root that sounds: the piece's, or while the drop's key change is on, moved up (the keys, the ring and JAM follow it) */
+{
+    return ui.key_on ? (proj.par[P_ROOT] + KEY_SH[ui.key_set % 5]) % 12 : proj.par[P_ROOT];
+}
 static uint32_t pool_abs(void)                 /* the pool as absolute pitch classes */
 {
-    uint32_t p = proj.pool, r = (uint32_t)proj.par[P_ROOT];
+    uint32_t p = proj.pool, r = (uint32_t)sound_root();
     return ((p << r) | (p >> (12u - r))) & 0xFFFu;
 }
 static const char *mode_name(void)
@@ -1210,8 +1215,7 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
  * own root (the Global page) stays. */
 static void key_tick(void)
 {
-    static const uint8_t SH[5] = {0, 2, 3, 5, 7};
-    const int sec = en_playing ? en_sec : EN_SEC_GROOVE, sh = SH[ui.key_set % 5];
+    const int sec = en_playing ? en_sec : EN_SEC_GROOVE, sh = KEY_SH[ui.key_set % 5];
     if (sec != ui.sec_last) {
         if (sec == EN_SEC_GROOVE && ui.sec_last != EN_SEC_GROOVE && sh && en_playing && !ui.key_on) {
             char t[8] = "+0";
@@ -1234,7 +1238,7 @@ static void key_tick(void)
 /* ------------------------------------------------------------- the pool --- */
 static void toggle_note(int pc)                 /* a key: its note in or out of the scale */
 {
-    int rel = (pc - proj.par[P_ROOT] + 12) % 12;
+    int rel = (pc - sound_root() + 12) % 12;
     uint32_t p = proj.pool ^ (1u << rel);
     if (rel == 0) {
         say("THE ROOT STAYS", "(GLOBAL)");
@@ -4175,7 +4179,7 @@ static void draw_scope(int kind)
 
 static void draw_main(void)
 {
-    uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)proj.par[P_ROOT] << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
+    uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)sound_root() << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
                                         (uint32_t)en_playing << 17 | (uint32_t)proj.par[P_MODE] << 20), i;
     if (ui.frame % 2u)                           /* 30 frames a second is plenty */
         return;
@@ -4688,7 +4692,7 @@ static int jam_notes(int i, uint8_t *out)       /* the notes of key i: 1 (scale,
     const int oct = 12 * ((int)ui.jam_oct - 2), base = 53 + i + oct;
     int m, r, n = 0, cnt = 0, t[5];
     if (ui.jam_mode == 2) {                      /* harp: the i-th tone of the scale up from the root, from C3 */
-        for (m = 48 + proj.par[P_ROOT]; m < 128; m++)
+        for (m = 48 + sound_root(); m < 128; m++)
             if (pool >> (m % 12) & 1u) {
                 if (cnt == i) {
                     r = m + oct;
