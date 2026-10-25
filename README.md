@@ -50,7 +50,7 @@ The screen is drawn in one look (warm black, one colour per voice: the pad bone,
 
 ## Install
 
-Use the web installer, <https://deamonslinky.github.io/PERF-1/install/>, in Chrome or Edge with the FM-1 plugged in. **Installing firmware is at your own risk.** The installer checks the package against the unit, can put M-VAVE's own firmware back, and an FM-1 that fails to start twice comes up in a safe mode the installer can reach. Read section 1 of the manual first, and keep a way to restore the stock firmware to hand. `BUILDING.md` ends with what the install does and does not protect against.
+Use the web installer, <https://deamonslinky.github.io/PERF-1/install/>, in Chrome or Edge with the FM-1 plugged in. **Installing firmware is at your own risk.** The installer checks the package against the unit, can put M-VAVE's own firmware back, and an FM-1 that fails to start twice comes up in a safe mode the installer can reach. Read section 1 of the manual first, and keep a way to restore the stock firmware to hand. PERF-1 keeps its own pieces, settings and DX7 voices and does not read the projects or samples of other firmwares (HYP-1, AMB-1 or the stock one); what is stored may be lost when you switch either way, so keep copies of anything you care about (your `.syx` voice files, for one). `BUILDING.md` ends with what the install does and does not protect against.
 
 ## Under the hood
 
