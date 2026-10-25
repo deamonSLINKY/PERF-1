@@ -83,6 +83,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_LSRC3] = {"Source", 0, 6, 0},       [P_LSRC4] = {"Source", 0, 6, 0},     [P_LSRC5] = {"Source", 0, 6, 0},
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
     [P_AC_RESP] = {"Answer", 0, 44, 0},
+    [P_CM_VU] = {"Deja vu", 0, 100, 0},   [P_CM_LOOP] = {"Loop", 0, 3, 2},       [P_CM_LEAP] = {"Leaps", 0, 100, 0},   [P_AC_CHG] = {"Mutates", 0, 3, 0},
     [P_BL_MODE] = {"Mode", 0, 6, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
@@ -132,7 +133,7 @@ static const int16_t PC_DEEP_FIELD[] = {P_TEMPO, 118, P_ROOT, 3, P_PAD, 60, P_BR
     TU(1), -10, DE(1), 60, DE(0), 60, -1};
 /* LOFI: ten pieces, 68 .. 94 beats a minute, swung, the Rhodes in sevenths and ninths over a warm bass, a soft sparse lead, the
  * dusty kit; each piece the base with a few changed (its key, mode, sounds and tempo). The patterns are made below. */
-#define LOFI_BASE P_BL_MODE, 1, P_BL_LEN, 65, P_BL_MOVE, 20, P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
+#define LOFI_BASE P_CM_VU, 50, P_BL_MODE, 1, P_BL_LEN, 65, P_BL_MOVE, 20, P_PADTONE, 0, P_PAD, 54, P_BRIGHT, 30, P_DETUNE, 35, P_CHORD, EN_CH_7TH, P_VOICING, 1, P_PE_ATK, 25, P_PE_REL, 50, \
     P_ACID, 28, P_AC_WAVE, 15, P_AC_CUT, 30, P_AC_RES, 18, P_AC_ENV, 25, P_AC_DEC, 55, P_AC_SLIDE, 35, P_AC_DENS, 28, \
     P_AC_LEN, 12, P_AC_MUT, 15, P_BASS, 58, P_DR_INST, 1, P_DR_CUT, 30, P_DR_RES, 10, P_PULSE, 68, KIT(8), P_DRIVE, 20, \
     P_SWING, 38, P_REVERB, 34, P_SIZE, 55, P_ECHO, 32, P_ETIME, 3, P_EVOLVE, 30, P_MOTION, 30, P_PATTERN, 0, LV(0), 92, LV(1), 55, \
@@ -149,7 +150,7 @@ static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_
 static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
 /* HOUSE: ten pieces, 118 .. 126 beats a minute, four on the floor, a clap on 2 and 4, open hats on the off-beats, stabs and
  * organ chords, a sub or square bass, a plucked line rolling in sixteenths; the pump (latched with the genre) ducks the chords. */
-#define HOUSE_BASE P_BL_MODE, 4, P_BL_LEN, 40, P_BL_MOVE, 25, P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
+#define HOUSE_BASE P_CM_VU, 60, P_CM_LOOP, 1, P_BL_MODE, 4, P_BL_LEN, 40, P_BL_MOVE, 25, P_PADTONE, 6, P_PAD, 52, P_BRIGHT, 40, P_CHORD, EN_CH_7TH, P_VOICING, 0, P_ACID, 38, P_AC_WAVE, 4, P_AC_CUT, 45, \
     P_AC_RES, 40, P_AC_ENV, 40, P_AC_DENS, 45, P_AC_LEN, 16, P_AC_MUT, 25, P_BASS, 70, P_DR_INST, 9, P_DR_CUT, 40, P_PULSE, 80, \
     KIT(1), P_DRIVE, 35, P_SWING, 12, P_ECHO, 30, P_ETIME, 3, P_REVERB, 30, P_SIZE, 50, P_EVOLVE, 45, P_MOTION, 50, P_PATTERN, 0, \
     LV(0), 90, LV(2), 72, LV(3), 50, LV(4), 55, LV(5), 45, P_PL_CHO, 35, P_RV_DAMP, 30, P_RV_PRE, 60, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 35
@@ -167,7 +168,7 @@ static const int16_t *const HOUSE_PIECES[EN_NPIECES] = {PH_01, PH_02, PH_03, PH_
 static const char *const HOUSE_NAME[EN_NPIECES] = {"H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10"};
 /* DUBSTEP: ten pieces at 136 .. 150, the beat in half time (the snare on the third beat), a deep sub kick, the drone as the wobble
  * bass (its LFO, a quarter or half note, on its cutoff), a harsh lead, dark pads in the minor modes. */
-#define DUB_BASE P_BL_MODE, 2, P_BL_LEN, 85, P_BL_MOVE, 10, P_BL_GLIDE, 20, P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
+#define DUB_BASE P_CM_VU, 40, P_BL_MODE, 2, P_BL_LEN, 85, P_BL_MOVE, 10, P_BL_GLIDE, 20, P_PADTONE, 7, P_PAD, 32, P_BRIGHT, 25, P_CHORD, EN_CH_4THS, P_VOICING, 1, P_ACID, 42, P_AC_WAVE, 14, P_AC_CUT, 55, \
     P_AC_RES, 60, P_AC_ENV, 60, P_AC_DENS, 40, P_AC_LEN, 8, P_AC_MUT, 30, P_BASS, 85, P_DR_INST, 4, P_DR_CUT, 40, P_DR_RES, 55, \
     P_DL_RATE, 0, P_DL_SHAPE, 1, P_DL_DEPTH, 85, P_DL_DEST, 0, P_PULSE, 85, KIT(9), P_DRIVE, 60, P_SWING, 0, P_ECHO, 45, P_ETIME, 3, \
     P_REVERB, 45, P_SIZE, 70, P_EVOLVE, 35, P_MOTION, 40, P_PATTERN, 0, LV(0), 95, LV(1), 70, LV(3), 40, LV(4), 45, P_PL_CHO, 30, P_RV_DAMP, 65, P_RV_PRE, 80, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40
@@ -185,17 +186,17 @@ static const int16_t *const DUB_PIECES[EN_NPIECES] = {PD_01, PD_02, PD_03, PD_04
 static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"};
 /* the other six genres (4 .. 9: JUNGLE, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
  * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
-static const int16_t X_JUNGLE[] = {P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
+static const int16_t X_JUNGLE[] = {P_CM_VU, 30, P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
     KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 25, P_RV_DAMP, 50, P_RV_PRE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
-static const int16_t X_DNB[] = {P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
+static const int16_t X_DNB[] = {P_CM_VU, 40, P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
     KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 45, P_RV_TYPE, 1, P_RV_X, 25, P_RV_DAMP, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
-static const int16_t X_BREAKS[] = {P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
+static const int16_t X_BREAKS[] = {P_CM_VU, 30, P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
     KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_PL_CHO, 20, P_RV_TYPE, 2, P_RV_X, 35, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
-static const int16_t X_GARAGE[] = {P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
+static const int16_t X_GARAGE[] = {P_CM_VU, 50, P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
     P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 40, -1};
-static const int16_t X_ELECTRO[] = {P_BL_MODE, 3, P_BL_LEN, 30, P_BL_MOVE, 35, P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
+static const int16_t X_ELECTRO[] = {P_CM_VU, 65, P_CM_LOOP, 1, P_BL_MODE, 3, P_BL_LEN, 30, P_BL_MOVE, 35, P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
     KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
-static const int16_t X_TRAP[] = {P_BL_MODE, 2, P_BL_LEN, 90, P_BL_MOVE, 8, P_BL_GLIDE, 25, P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
+static const int16_t X_TRAP[] = {P_CM_VU, 40, P_BL_MODE, 2, P_BL_LEN, 90, P_BL_MOVE, 8, P_BL_GLIDE, 25, P_PULSE, 85, P_DRIVE, 35, P_SWING, 0, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 40, P_ACID, 35, P_BASS, 88, P_AC_DENS, 20, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
     KIT(13), LV(0), 95, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 30, P_RV_TYPE, 1, P_RV_X, 30, P_RV_DAMP, 40, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 40, -1};
 static const int16_t *const XBASE[6] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP};
 static const uint8_t XROW[6][10][7] = {
@@ -528,6 +529,8 @@ void en_param_text(int i, int v, char *b)
         *o = 0;
         return;
     }
+    case P_CM_LOOP: { static const char *const L[4] = {"4", "8", "16", "32"}; s = L[(unsigned)v < 4u ? v : 0]; break; }
+    case P_AC_CHG: { static const char *const C[4] = {"All", "Notes", "Rhythm", "Accents"}; s = C[(unsigned)v < 4u ? v : 0]; break; }
     case P_BL_MODE: { static const char *const M[7] = {"Drone", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
@@ -1648,25 +1651,32 @@ static void chord_change(void)                  /* to another degree: the near, 
 }
 
 /* ----------------------------------------------------------- the acid line --- */
-static void ac_roll(int st)                     /* a step made anew */
+static void ac_roll_w(int st, int what)         /* a step made anew: what 0 all of it, 1 the note, 2 the rhythm (whether it sounds), 3 the accent and the slide */
 {
     float dens = (float)par[P_AC_DENS] * 0.01f;
     uint16_t m = (uint16_t)(1u << st);
-    if (frand() < (st == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens))   /* the first step: more often a note */
-        ac_gate |= m;
-    else
-        ac_gate &= (uint16_t)~m;
-    ac_off[st] = (int8_t)(frand() < 0.8f ? 2 * irand(chord_nt) : irand(nsteps));   /* a chord tone, or now and then not */
-    ac_oct[st] = (int8_t)(frand() < 0.55f ? 0 : irand(par[P_AC_RANGE]));
-    if (frand() < 0.3f)
-        ac_accent |= m;
-    else
-        ac_accent &= (uint16_t)~m;
-    if (frand() < (float)par[P_AC_SLIDE] * 0.007f)
-        ac_slide |= m;
-    else
-        ac_slide &= (uint16_t)~m;
+    if (what == 0 || what == 2) {
+        if (frand() < (st == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens))   /* the first step: more often a note */
+            ac_gate |= m;
+        else
+            ac_gate &= (uint16_t)~m;
+    }
+    if (what <= 1) {
+        ac_off[st] = (int8_t)(frand() < 0.8f ? 2 * irand(chord_nt) : irand(nsteps));   /* a chord tone, or now and then not */
+        ac_oct[st] = (int8_t)(frand() < 0.55f ? 0 : irand(par[P_AC_RANGE]));
+    }
+    if (what == 0 || what == 3) {
+        if (frand() < 0.3f)
+            ac_accent |= m;
+        else
+            ac_accent &= (uint16_t)~m;
+        if (frand() < (float)par[P_AC_SLIDE] * 0.007f)
+            ac_slide |= m;
+        else
+            ac_slide &= (uint16_t)~m;
+    }
 }
+static void ac_roll(int st) { ac_roll_w(st, 0); }
 
 static void ac_publish(void)
 {
@@ -1690,7 +1700,7 @@ static void ac_mutate(void)                     /* the loop's end: Mutate (a dej
     int st;
     for (st = 0; st < par[P_AC_LEN]; st++)
         if (frand() < m)
-            ac_roll(st);
+            ac_roll_w(st, par[P_AC_CHG] > 0 && par[P_AC_CHG] < 4 ? par[P_AC_CHG] : 0);
     ac_publish();
 }
 
@@ -2093,6 +2103,8 @@ static float fm_ol[BLK_FM] EN_POOL, fm_or[BLK_FM] EN_POOL, fm_rs[BLK_FM] EN_POOL
 static struct { float ph, ps, inc, env, dm, vel; uint32_t age; } cm[2];
 static float cm_vol;
 static int cm_i, cm_alt;
+static uint8_t cm_f[32], cm_g[32], cm_ix[32], cm_vl[32];   /* the pluck's loop (deja vu): a slot heard (f), its gate, its place in the chord's tones (octave leap in bit 7 and 6: up, down), its velocity */
+static uint32_t cm_k;                           /* the slot the next note is in */
 volatile float en_cm_level;
 
 static void cm_trigger(int note, float vel)     /* a note: the next voice, its decay as the Decay knob has it */
@@ -2127,18 +2139,30 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
 {
     static const uint8_t RATE[4] = {4, 3, 2, 1};   /* sixteenths between notes, by the Rate knob */
     const int ri = par[P_CM_RATE] < 0 ? 0 : par[P_CM_RATE] > 3 ? 3 : par[P_CM_RATE];
-    int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE];
-    float dens = (float)par[P_CM_DENS] * 0.01f;
+    int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE], slot, replay, leap = 0;
+    float dens = (float)par[P_CM_DENS] * 0.01f, vel;
     const int base = 60 + 12 * (par[P_OCT] + par[P_CM_OCT]);
     /* on the bar's grid, whatever has gone before (a stop, a new piece): every 2nd, 1st, 4th sixteenth; the dotted eighth 0 3 6 9 12 each bar */
     if (RATE[ri] == 3 ? (st % 3 != 0 || st > 12) : st % RATE[ri])
         return;
     if (par[P_CM_LVL] == 0 || par[P_CM_MAN] || chord_nt < 1)
         return;
-    if (sec == SEC_BREAK)
-        dens *= 0.4f;
-    if (frand() >= (cm_i == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens))
-        return;
+    /* DEJA VU (after Marbles): the notes of the last 4, 8, 16 or 32 are kept, and each comes round again with the chance Deja vu gives (the chord
+     * it is played over is the chord of now, so the phrase follows the harmony); 0 makes every note new */
+    slot = (int)(cm_k++ % (4u << (par[P_CM_LOOP] < 0 ? 0 : par[P_CM_LOOP] > 3 ? 3 : par[P_CM_LOOP])));
+    replay = par[P_CM_VU] > 0 && cm_f[slot] && frand() * 100.0f < (float)par[P_CM_VU];
+    if (replay) {
+        if (!cm_g[slot] || (sec == SEC_BREAK && frand() >= 0.4f))
+            return;
+    } else {
+        if (sec == SEC_BREAK)
+            dens *= 0.4f;
+        const int sound = frand() < (cm_i == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens);
+        cm_f[slot] = 1;
+        cm_g[slot] = (uint8_t)sound;
+        if (!sound)
+            return;
+    }
     for (o = 0; o < range; o++)                 /* the chord's tones over the octaves, low to high */
         for (k = 0; k < chord_nt && n < 12; k++)
             arp[n++] = base + chord_pcs[k] + 12 * o;
@@ -2148,20 +2172,31 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
             arp[o + 1] = arp[o];
         arp[o + 1] = t;
     }
-    switch (par[P_CM_STYLE]) {
-    case 1: idx = n - 1 - cm_i % n; cm_i++; break;
-    case 2: {                                    /* up and down, not repeating the ends */
-        const int per = n > 1 ? 2 * n - 2 : 1, q = cm_i % per;
-        idx = q < n ? q : per - q;
-        cm_i++;
-        break;
+    if (replay) {
+        idx = (cm_ix[slot] & 15) % n;
+        leap = cm_ix[slot] & 32 ? 1 : cm_ix[slot] & 64 ? -1 : 0;
+        vel = (float)cm_vl[slot] * (1.0f / 255.0f);
+    } else {
+        switch (par[P_CM_STYLE]) {
+        case 1: idx = n - 1 - cm_i % n; cm_i++; break;
+        case 2: {                                /* up and down, not repeating the ends */
+            const int per = n > 1 ? 2 * n - 2 : 1, q = cm_i % per;
+            idx = q < n ? q : per - q;
+            cm_i++;
+            break;
+        }
+        case 3: idx = irand(n); cm_i++; break;
+        case 4: idx = cm_i % n; cm_i += 2; break;
+        case 5: idx = cm_i % n; cm_i += 3; break;
+        default: idx = cm_i % n; cm_i++; break;
+        }
+        if (par[P_CM_LEAP] && frand() * 100.0f < (float)par[P_CM_LEAP])   /* a leap: this note an octave away */
+            leap = frand() < 0.7f ? 1 : -1;
+        vel = 0.7f + 0.3f * frand();
+        cm_ix[slot] = (uint8_t)(idx | (leap > 0 ? 32 : leap < 0 ? 64 : 0));
+        cm_vl[slot] = (uint8_t)(vel * 255.0f);
     }
-    case 3: idx = irand(n); cm_i++; break;
-    case 4: idx = cm_i % n; cm_i += 2; break;
-    case 5: idx = cm_i % n; cm_i += 3; break;
-    default: idx = cm_i % n; cm_i++; break;
-    }
-    note = arp[idx];
+    note = arp[idx] + 12 * leap;
     while (note > 100)
         note -= 12;
     while (note < 36)
@@ -2169,9 +2204,9 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
     if (sw > 0) {                               /* the off sixteenths are late, as the drums' are */
         cm_wait = sw;
         cm_pnote = note;
-        cm_pvel = 0.7f + 0.3f * frand();
+        cm_pvel = vel;
     } else {
-        cm_trigger(note, 0.7f + 0.3f * frand());
+        cm_trigger(note, vel);
     }
 }
 
@@ -2887,6 +2922,9 @@ static void apply(int p, int v)
             if (p == P_OCT)
                 bass_to(bass.midi_note % 12);
         }
+        break;
+    case P_CM_LOOP:                              /* a new length (or a new piece): the loop is forgotten, the next notes are heard afresh */
+        { int q; for (q = 0; q < 32; q++) cm_f[q] = 0; cm_k = 0; }
         break;
     case P_BL_MODE:                              /* back to the drone: the root again; a line starts from silence */
         bl_up = 0;

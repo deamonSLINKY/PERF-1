@@ -3,17 +3,17 @@
 wait 3000
 tap HOME
 wait 100
-expect view 28
+expect view 29
 press GLO
 wait 600
 shot keymap_perf_glo.png
 release GLO
 wait 100
-expect view 28
+expect view 29
 # a tap of GLO is still the Global page
 tap GLO
 wait 100
-expect view 25
+expect view 26
 tap HOME
 wait 100
 press SEL
@@ -27,7 +27,7 @@ press SEQ
 wait 600
 release SEQ
 wait 100
-expect view 27
+expect view 28
 press SEL
 wait 600
 shot keymap_shift_seq.png

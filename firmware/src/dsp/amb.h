@@ -121,6 +121,8 @@ enum {
     P_CH_LOOP,                                            /* the progression: 0 a fresh walk, 1..3 the last 2, 4 or 8 chords repeat, 4..6 the same with now and then one drawn anew */
     P_AC_RESP,                                            /* the acid's answer: every second time round the line is transformed (type * 5 + direction: 0 off; types 1 octave, 2 fifth, 3 third (in the scale), 4 mirror, 5 reverse, 6 rotate, 7 sparse, 8 accents; direction 0 .. 4: down 2, down, same, up, up 2) */
     P_BL_MODE, P_BL_LEN, P_BL_MOVE, P_BL_GLIDE,           /* the drone as a bass line: its mode (0 drone, 1 root on the genre's rhythm, 2 on the kick, 3 eighths, 4 off-beat, 5 walking, 6 the genre's riff), how long a note holds, how much it moves (octaves, fifths, approach notes), its glide */
+    P_CM_VU, P_CM_LOOP, P_CM_LEAP,                        /* the pluck's deja vu: how often a note is the one the loop heard last time round (0 always new .. 100 locked), the loop's length in notes (4, 8, 16, 32), and how often a new note leaps an octave */
+    P_AC_CHG,                                             /* what the acid's Mutate changes: 0 everything, 1 the notes, 2 the rhythm, 3 the accents and slides */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */

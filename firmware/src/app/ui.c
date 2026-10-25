@@ -37,10 +37,10 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2, V_CMVU,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Drone LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Deja vu", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -178,6 +178,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {K_ACT, P_AC_EVERY, K_ACD, P_AC_CHANCE},       /* the answer: its kind, how often (in bars, or before a drum change), which way (one value with the kind: P_AC_RESP), bar or loop */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
+    {P_CM_VU, P_CM_LOOP, P_CM_LEAP, P_AC_CHG},     /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps, and what the acid's Mutate changes */
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
@@ -210,6 +211,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Answer", "Every", "Direction", "Sync"},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
+    {"Pluck vu", "Loop", "Leaps", "Acid mut"},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
@@ -230,7 +232,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 6}, {B_SEQ, V_DRUMS, 6}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 7}, {B_SEQ, V_DRUMS, 6}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -1735,7 +1737,7 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
         en_param_text(p, proj.par[p], b);
         caps(a, b, sizeof a);
         say(WHO[vc], a);
-    } else if (ui.view == V_CMEL || ui.view == V_CMEL2) {   /* the counter-melody's sound */
+    } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU) {   /* the counter-melody's sound */
         const int ns = en_ncm_snd(), cur = proj.par[P_CM_SND] < ns ? proj.par[P_CM_SND] : 0;   /* (a loaded voice that is gone: from the first) */
         knob_set(P_CM_SND, (cur + d + ns) % ns);
         caps(a, EN_CM_SOUND[proj.par[P_CM_SND]], sizeof a);
@@ -1761,7 +1763,7 @@ static int oct_par(int v)                       /* what OCT moves on page v */
         return P_BASSOCT;
     if (v >= V_ACID && v <= V_ACLINE)
         return P_AC_OCT;
-    if (v == V_CMEL || v == V_CMEL2)
+    if (v == V_CMEL || v == V_CMEL2 || v == V_CMVU)
         return P_CM_OCT;
     return P_OCT;
 }
@@ -4484,7 +4486,7 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     const int g = group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
     switch (g >= 0 ? GROUP[g].btn : -1) {
     case B_LFO: return K_BASS;
-    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 ? IMP_TEAL : K_ACID;
+    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU ? IMP_TEAL : K_ACID;
     case B_SEQ: return K_PULSE;
     case B_HOME: return KC_REPEAT;
     default: return ui.view == V_JAM ? KC_MOVE : perf_like() ? KC_FILTER : K_PAD;
@@ -4591,7 +4593,7 @@ static void draw_knobs(void)
             if (vc >= 0) {
                 en_param_text(SOUND_PAR[vc], proj.par[SOUND_PAR[vc]], t);
                 caps(u, t, sizeof u);
-            } else if (ui.view == V_CMEL || ui.view == V_CMEL2) {
+            } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU) {
                 caps(u, EN_CM_SOUND[(unsigned)proj.par[P_CM_SND] < EN_NCMSND ? proj.par[P_CM_SND] : 0], sizeof u);
             } else if (kit_view(ui.view)) {
                 int k = proj.par[P_KIT_KICK];

@@ -34,7 +34,7 @@ expect par40 2
 tap SEQ
 tap SEQ
 tap SEQ
-expect view 17
+expect view 18
 turn K1 1
 expect par85 1
 expect par86 0

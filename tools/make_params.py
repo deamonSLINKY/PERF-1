@@ -119,6 +119,7 @@ def main():
         {"name": "Pluck", "sections": [
             {"name": "Pluck", "knobs": byname["Pluck"]},
             {"name": "Behaviour", "knobs": byname["Pluck 2"]},
+            {"name": "Deja vu (and the acid's Mutates)", "knobs": byname["Deja vu"]},
             {"name": "Place", "knobs": pl(("P_CM_MAN", "By hand")) + [ls("P_PAN", 3, "Pan"), ls("P_SEND", 3, "Send")]}]},
         {"name": "Drums", "sections": [
             {"name": "Drums", "knobs": byname["Drums"]},

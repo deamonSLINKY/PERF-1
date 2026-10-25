@@ -818,6 +818,47 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the pluck's deja vu: a random pluck (Style Random, every note chosen from nine tones) at Deja vu 0 repeats its note 8 slots on only by chance, locked
+     * (100) it comes round every time; a loop of 4 repeats at a distance of 4. Counted over 12 s of eighths at 120 bpm, the chord held (Drift at the top). */
+    {
+        int vu, lp, blk, same[3], tot[3];
+        for (vu = 0; vu < 3; vu++) {
+            uint8_t seq[160], last = 0, cnt = 0;
+            int ns = 0, i, dist;
+            lp = vu == 2 ? 0 : 1;
+            en_init();
+            en_set(P_TEMPO, 120);
+            en_set(P_DRIFT, 100);
+            en_set(P_CM_LVL, 60);
+            en_set(P_CM_DENS, 100);
+            en_set(P_CM_STYLE, 3);
+            en_set(P_CM_RATE, 2);
+            en_set(P_CM_RANGE, 3);
+            en_set(P_CM_LOOP, lp);
+            en_set(P_CM_VU, vu == 0 ? 0 : 100);
+            en_play(1);
+            for (blk = 0; blk < 30000 && ns < 150; blk++) {
+                en_render(buf, 64, 2048);
+                if (blk > 100 && en_cm_count != cnt) {
+                    seq[ns++] = en_cm_note;
+                }
+                cnt = en_cm_count;
+                (void)last;
+            }
+            dist = lp == 0 ? 4 : 8;
+            same[vu] = tot[vu] = 0;
+            for (i = 16; i + dist < ns; i++) {
+                tot[vu]++;
+                same[vu] += seq[i] == seq[i + dist];
+            }
+        }
+        CHECK(tot[0] > 40 && same[0] * 10 < tot[0] * 5, "deja vu 0: %d of %d notes repeated a loop on", same[0], tot[0]);
+        CHECK(tot[1] > 40 && same[1] * 10 > tot[1] * 9, "deja vu 100, loop 8: only %d of %d notes repeated", same[1], tot[1]);
+        CHECK(tot[2] > 40 && same[2] * 10 > tot[2] * 9, "deja vu 100, loop 4: only %d of %d notes repeated", same[2], tot[2]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the bass line (the drone's modes), 4 s at 128 bpm from the MIDI out: Drone plays no notes of its own, Kick plays one on each kick, Eighths about 17,
      * Off-beat about 8, Walk about 8, and every note stays in the bass range (C1 .. B5) */
     {
