@@ -5,7 +5,7 @@ tap HOME
 wait 100
 tap HOME
 wait 100
-expect view 26
+expect view 27
 shot viz_plasma.png
 # the knobs are the FX knobs (the filter), ALGORITHM the mood
 spin K1 10
@@ -16,36 +16,36 @@ wait 100
 expect mood 60
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_kaleido.png
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_bars.png
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_flux.png
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_disco.png
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_life.png
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_orbit.png
 spin SELECT 1
 wait 1500
-expect view 26
+expect view 27
 shot viz_auto.png
 spin SELECT 1
 wait 300
-expect view 26
+expect view 27
 # HOME leaves them: the perform screen
 tap HOME
 wait 100
-expect view 25
+expect view 26

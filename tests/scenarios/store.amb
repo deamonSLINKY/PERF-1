@@ -17,7 +17,7 @@ expect par52 50
 expect edited 1
 # Global: SAVE while playing stores it at once: the music hushes, the store is written, the music comes back
 tap GLO
-expect view 22
+expect view 23
 shot global_edited.png
 expect sec 0
 tap SAVE
@@ -65,12 +65,12 @@ seed 3
 reboot
 wait 300
 expect piece 7
-expect tempo 123
+expect tempo 129
 # (HOME on the tempo page is the perform screen now: to the tempo page by way of Global)
 tap GLO
 tap HOME
 spin K1 5
-expect tempo 128
+expect tempo 134
 tap GLO
 tap SAVE
 wait 300
@@ -81,7 +81,7 @@ wait 300
 expect piece 7
 expect saved 0x81
 # as stored, not nudged again
-expect tempo 128
+expect tempo 134
 seed 0
 reboot
 wait 300

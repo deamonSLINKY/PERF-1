@@ -113,7 +113,7 @@ def main():
         {"name": "Acid", "sections": [
             {"name": "Acid", "knobs": byname["Acid"]},
             {"name": "Envelope and sound", "knobs": byname["Acid env"]},
-            {"name": "The line", "knobs": byname["Acid line"] + pl(("P_AC_RESP", "Answer (every 2nd time round)"))},
+            {"name": "The line", "knobs": byname["Acid line"] + pl(("P_AC_RESP", "Answer"), ("P_AC_EVERY", "Answer every (2nd .. 8th time round)"))},
             {"name": "Place", "knobs": pl(("P_AC_OCT", "Octave"), ("P_AC_MAN", "By hand")) + [ls("P_PAN", 2, "Pan"), ls("P_SEND", 2, "Send")]}]},
         {"name": "Pluck", "sections": [
             {"name": "Pluck", "knobs": byname["Pluck"]},
@@ -139,7 +139,7 @@ def main():
             {"name": "Vinyl", "knobs": pl(("P_NZ_COLOR", "Wear"), ("P_NZ_PUMP", "Pump (the kick ducks it)"))}]},
     ]
     placed = {k["p"] for tb in tabs for s in tb["sections"] for k in s["knobs"]}
-    unused = {P["P_NZ_TONE"], P["P_STYLE"]}                     # kept for the saved banks' layout, nothing reads them
+    unused = {P["P_STYLE"]}                     # kept for the saved banks' layout, nothing reads them
     left = [i for i in range(len(params)) if i not in placed and i not in unused]
     if left:                                                    # never lose a parameter: whatever no tab has yet
         tabs[-1]["sections"].append({"name": "More", "knobs": [{"p": i, "label": params[i]["n"]} for i in left]})

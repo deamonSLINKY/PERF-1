@@ -95,9 +95,10 @@ static void bank_load(void)
     const uint32_t HDR = 20u;
     int n, i, p, l;
     uint32_t npar, stride;
-    int old_rate, old_theme;
+    int old_rate, old_theme, old_tone;
     memset(&bank, 0, sizeof bank);
     n = plat_store_load(OBJ_PROJ, raw, sizeof raw);
+    old_tone = n >= (int)HDR && rd16(raw + 18) < 3;                    /* P_AC_EVERY was the old unused tone (50) */
     old_theme = n >= (int)HDR && rd16(raw + 18) < 2;                 /* the themes were in the order Synth, Acid, Ice, Ember, Phosphor, Imp */
     old_rate = n >= (int)HDR && rd16(raw + 18) == 0;   /* a bank from before the pluck's Rate was sorted slow to fast: 1/8, 1/16, 1/4, 3/16 */
     npar = n >= (int)HDR ? rd16(raw + 8) : 0u;
@@ -118,6 +119,8 @@ static void bank_load(void)
                 continue;
             for (p = 0; p < P_NPARAMS; p++) {
                 int v = (uint32_t)p < npar ? (int16_t)rd16(q + 2 * p) : en_param_info(p)->def;
+                if (p == P_AC_EVERY && old_tone)
+                    v = 0;
                 if (p == P_CM_RATE && old_rate)
                     v = (v + 2) & 3;      /* (old 0 1 2 3 = 1/8 1/16 1/4 3/16 is now 2 3 0 1) */
                 bad |= v != clamp_par(p, v);
@@ -141,7 +144,7 @@ static void bank_load(void)
         bank.midi = en_param_info(P_MIDI)->def;
         bank.theme = theme;
     }
-    bank.rsv0 = 2;                           /* (older firmware ignores it: its Rate reads the new order, no pieces lost) */
+    bank.rsv0 = 3;                           /* (older firmware ignores it: its Rate reads the new order, no pieces lost) */
     bank.magic = BANK_MAGIC;
     bank.format = BANK_FORMAT;
     bank.npar = P_NPARAMS;
@@ -154,7 +157,7 @@ static void bank_load(void)
 void project_start(uint32_t seed)
 {
     static const uint8_t NUDGE[] = {P_PAD, P_ACID, P_BASS, P_PULSE, P_NOISE, P_EVOLVE, P_DRIFT, P_MOTION, P_BRIGHT,
-                                    P_DETUNE, P_NZ_TONE, P_DR_CUT, P_DR_RES, P_DE_AMT, P_DL_DEPTH, P_AC_CUT, P_AC_RES,
+                                    P_DETUNE, P_DR_CUT, P_DR_RES, P_DE_AMT, P_DL_DEPTH, P_AC_CUT, P_AC_RES,
                                     P_AC_ENV, P_AC_DEC, P_AC_DENS, P_AC_MUT, P_ECHO, P_REVERB, P_SIZE, P_DRIVE};
     uint32_t r = seed, i;
     memset(&proj, 0, sizeof proj);

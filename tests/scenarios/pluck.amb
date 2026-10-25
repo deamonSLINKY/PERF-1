@@ -7,6 +7,8 @@ tap ARP
 expect view 10
 tap ARP
 expect view 11
+tap ARP
+expect view 12
 expect par98 30
 turn K1 1
 expect par98 31
@@ -19,7 +21,7 @@ turn ALGO 1
 release SEL
 expect par99 4
 tap ARP
-expect view 12
+expect view 13
 turn K2 1
 expect par103 1
 turn K3 1

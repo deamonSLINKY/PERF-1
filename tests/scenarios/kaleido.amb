@@ -5,10 +5,10 @@ tap HOME
 wait 100
 tap HOME
 wait 100
-expect view 26
+expect view 27
 spin SELECT 1
 wait 7000
-expect view 26
+expect view 27
 shot viz_kaleido.png
 spin SELECT 1
 wait 3000

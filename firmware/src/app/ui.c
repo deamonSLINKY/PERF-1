@@ -37,15 +37,15 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_CMEL, V_CMEL2,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Drone LFO", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Drums", "Links", "Kit", "Drum drift", "Groove", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -56,7 +56,7 @@ enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, 
 #define NFXP 23
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
-static const char *const PRATE_NAME[4] = {"1/2", "1/4", "1/8", "1/16"};                        /* the pump's period, in notes */
+static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
 static const char *const SSIZE_NAME[3] = {"1/32", "1/16", "1/8"};                               /* the scatter's slice */
 static const char *const HSPEED_NAME[3] = {"X1.5", "X2", "X4"};                                 /* half time: how much slower */
 static const char *const SWRATE_NAME[7] = {"8 BARS", "4 BARS", "2 BARS", "1 BAR", "1/2", "1/4", "1/8"};              /* the sweep's period */
@@ -109,7 +109,7 @@ static const struct {
     {"ROLL", FX_ROLL, 1, {{"From", KN_NAME, EN_FXS_RL_START, RATE_NAME, 7}, {"To", KN_NAME, EN_FXS_RL_END, RATE_NAME, 7},
                           {"Each", KN_NAME, EN_FXS_RL_TIME, RTIME_NAME, 4}, {"Swell", KN_PLAIN, EN_FXS_RL_SWELL, 0, 0}}},
     {"PUMP", FX_PUMP, 0, {{"Depth", KN_PLAIN, EN_FXS_PM_DEPTH, 0, 0}, {"Release", KN_PLAIN, EN_FXS_PM_REL, 0, 0},
-                          {"Every", KN_NAME, EN_FXS_PM_RATE, PRATE_NAME, 4}, {"Targets", KN_PTGT, 0, 0, 0}}},
+                          {"Every", KN_NAME, EN_FXS_PM_RATE, PRATE_NAME, 5}, {"Targets", KN_PTGT, 0, 0, 0}}},
     {"RISER", FX_RISER, 1, {{"Time", KN_SEC, EN_FXS_RS_TIME, 0, 0}, {"Filter", KN_PLAIN, EN_FXS_RS_FILT, 0, 0},
                             {"Wash", KN_PLAIN, EN_FXS_RS_WASH, 0, 0}, {"Echo", KN_PLAIN, EN_FXS_RS_ECHO, 0, 0}}},
     {"SCATTER", FX_SCATTER, 1, {{"Chaos", KN_PLAIN, EN_FXS_SC_CHAOS, 0, 0}, {"Reverse", KN_PLAIN, EN_FXS_SC_REV, 0, 0},
@@ -174,6 +174,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
+    {K_ACT, P_AC_EVERY, K_ACD, K_NONE},            /* the answer: its kind, how often, which way (one value, P_AC_RESP) */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
@@ -203,6 +204,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
+    {"Answer", "Every", "Direction", ""},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
     {"Level", "Drive", "Swing", "Pattern"},
@@ -224,7 +226,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 5}, {B_SEQ, V_DRUMS, 5}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 3}, {B_ARP, V_ACID, 6}, {B_SEQ, V_DRUMS, 5}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -844,6 +846,10 @@ static int knob_get(int k)
     int p = knob_par(k);
     if (k == K_MXT)
         return ui.mix_trk;
+    if (k == K_ACT)                              /* the answer's kind: Off, Octave, Fifth, Mirror, Sparse */
+        return proj.par[P_AC_RESP] == 5 ? 1 : proj.par[P_AC_RESP] == 6 ? 2 : proj.par[P_AC_RESP];
+    if (k == K_ACD)
+        return proj.par[P_AC_RESP] >= 5;
     if (k == K_GRT)
         return ui.lane;
     if (k == K_GRA)
@@ -860,6 +866,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_MXT) {
         *lo = 0;
         *hi = 4;
+        return;
+    }
+    if (k == K_ACT || k == K_ACD) {
+        *lo = 0;
+        *hi = k == K_ACT ? 4 : 1;
         return;
     }
     if (k == K_GRT || k == K_GRA) {
@@ -884,6 +895,17 @@ static void knob_text(int k, char *b)
     int p = knob_par(k);
     if (k == K_MXT) {
         const char *s = MXT_NAME[ui.mix_trk % 5u];
+        int n = 0;
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
+        return;
+    }
+    if (k == K_ACT || k == K_ACD) {              /* the answer's kind, and its direction (which only the octave and the fifth have) */
+        static const char *const AT[5] = {"Off", "Octave", "Fifth", "Mirror", "Sparse"};
+        const char *s = k == K_ACT ? AT[knob_get(K_ACT)] : proj.par[P_AC_RESP] >= 5 ? "Down" : (proj.par[P_AC_RESP] == 1 || proj.par[P_AC_RESP] == 2) ? "Up" : "-";
         int n = 0;
         while (s[n]) {
             b[n] = s[n];
@@ -940,6 +962,11 @@ static void knob_set(int k, int v)
     int lo, hi, p = knob_par(k);
     if (k == K_MXT) {
         ui.mix_trk = (uint8_t)(v < 0 ? 0 : v > 4 ? 4 : v);
+        return;
+    }
+    if (k == K_ACT || k == K_ACD) {              /* one value: 0 off, 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down */
+        const int dn = k == K_ACD ? v > 0 : proj.par[P_AC_RESP] >= 5, ty = k == K_ACT ? (v < 0 ? 0 : v > 4 ? 4 : v) : knob_get(K_ACT);
+        knob_set(P_AC_RESP, ty == 1 ? (dn ? 5 : 1) : ty == 2 ? (dn ? 6 : 2) : ty);
         return;
     }
     if (k == K_GRT) {
@@ -1372,10 +1399,25 @@ static void quiet_write(int kind)
     ui.store_wait = 1;
     ui.store_t = plat_ms();
 }
-static void store_tick(void)                    /* the music faded out (or long enough): write, then back in */
+static void store_tick(int force)               /* the music faded out (or long enough): write, then back in */
 {
-    if (!ui.store_wait || (!en_hushed && plat_ms() - ui.store_t < 150u))
+    static uint32_t hushed_at;
+    if (!ui.store_wait) {
+        hushed_at = 0;
         return;
+    }
+    if (!force) {
+        if (!en_hushed && plat_ms() - ui.store_t < 150u)
+            return;
+        if (en_hushed) {                         /* faded right out in the render: the audio already queued still plays out (about two halves), and a write
+                                                  * stops the chip for ~20 ms: wait it out, or the last of the fade loops through the write as a click */
+            if (!hushed_at)
+                hushed_at = plat_ms();
+            if (plat_ms() - hushed_at < 35u)
+                return;
+        }
+    }
+    hushed_at = 0;
     ui.store_wait = 0;
     if (ui.store_kind == 1) {
         settings_save();
@@ -1397,8 +1439,7 @@ static void store_tick(void)                    /* the music faded out (or long 
 void ui_flush(void)
 {
     if (ui.store_wait) {
-        ui.store_t = plat_ms() - 150u;
-        store_tick();
+        store_tick(1);
     }
     if (ui.vox_dirty) {
         ui.vox_dirty = 0;
@@ -2402,15 +2443,6 @@ static void input(void)
             if (ui.view == V_SEQ && (btn >> B_SEL & 1u)) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation), the lane's probability and length */
                 ui.btn_used |= 1u << B_SEL;
                 seq_trick((int)i, e);
-                ui.act_t = ui.turn_t = plat_ms();
-                continue;
-            }
-            if (ui.view == V_ACLINE && i == 3 && (btn >> B_SEL & 1u)) {   /* the acid line's answer, SEL + K4: every second time round, changed */
-                char t[12];
-                ui.btn_used |= 1u << B_SEL;
-                knob_set(P_AC_RESP, proj.par[P_AC_RESP] + (e > 0 ? 1 : -1));
-                en_param_text(P_AC_RESP, proj.par[P_AC_RESP], t);
-                say("ACID ANSWER", t);
                 ui.act_t = ui.turn_t = plat_ms();
                 continue;
             }
@@ -3509,7 +3541,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -3525,6 +3557,7 @@ static int scope_kind(int v)
     case V_REVERB: return SCOPE_REVERB;
     case V_MIXER: return SCOPE_MIX;
     case V_GROOVE: return SCOPE_GROOVE;
+    case V_ACANS: return SCOPE_ACANS;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
     }
@@ -3623,7 +3656,7 @@ static int draw_fxscope(int p)
         return 1;
     }
     case 6: {                                    /* the pump: the level ducking at each hit, coming back with the release */
-        const int dips = 2 << (ui.fxs[EN_FXS_PM_RATE] & 3);
+        const int dips = ui.fxs[EN_FXS_PM_RATE] >= 4 ? 4 : 2 << (ui.fxs[EN_FXS_PM_RATE] & 3);   /* (Kick: shown as four to the bar) */
         const float depth = FS(EN_FXS_PM_DEPTH), k = 1.0f + (1.0f - FS(EN_FXS_PM_REL)) * 14.0f;
         for (x = 0; x < SC_W; x++) {
             const float u = (float)x / (float)(SC_W - 1) * (float)dips, f = u - fm_floorf(u);
@@ -3797,6 +3830,40 @@ static void draw_scope(int kind)
         }
         scope_trace(col);
         cv_rect(SC_X, SC_Y + SC_H - 6, (int32_t)(gap * (float)SC_W), 2, K_ACC);   /* the predelay */
+        return;
+    }
+    if (kind == SCOPE_ACANS) {                   /* the acid's answer: the line as it is played (the call), and as it is answered, a dot a step at its note's height */
+        static const char *const RN[5] = {"AS IT IS", "OCTAVE", "FIFTH", "MIRROR", "SPARSE"};
+        const int resp = proj.par[P_AC_RESP], rk = resp == 5 ? 1 : resp == 6 ? 2 : resp, len = en_acid_len ? en_acid_len : 16;
+        int row, s;
+        static const char *const ORD[7] = {"EVERY 2ND LOOP", "EVERY 3RD LOOP", "EVERY 4TH LOOP", "EVERY 5TH LOOP", "EVERY 6TH LOOP", "EVERY 7TH LOOP", "EVERY 8TH LOOP"};
+        const char *tx = ORD[proj.par[P_AC_EVERY] < 0 ? 0 : proj.par[P_AC_EVERY] > 6 ? 6 : proj.par[P_AC_EVERY]];
+        cv_text(6, 2, &FONT_B, "ANSWER", K_ACID);
+        cv_text(6 + text_w(&FONT_B, "ANSWER") + 8, 6, &FONT_XS, resp ? (resp >= 5 ? "DOWN: THE LINE ASKS, THEN ANSWERS" : "THE LINE ASKS, THEN ANSWERS") : "OFF: TURN ANSWER", K_DIM);
+        for (row = 0; row < 2; row++) {
+            const int32_t top = row ? 78 : 30, h = 36;
+            const int r = row ? resp : 0;
+            cv_text(4, top - 8, &FONT_XS, row ? RN[rk] : "CALL", row ? K_ACC : K_DIM);
+            if (row)
+                cv_text(236 - text_w(&FONT_XS, tx), top - 8, &FONT_XS, tx, K_DIM);
+            cv_rect(10, top + h, 220, 1, K_LINE);
+            for (s = 0; s < 16; s++) {
+                const int n = en_acid_preview(s, r);
+                const int32_t x = 12 + s * 13;
+                if (s >= len) {
+                    cv_rect(x + 4, top + h - 1, 3, 1, K_LINE);
+                    continue;
+                }
+                if (n < 0) {
+                    cv_rect(x + 4, top + h - 1, 3, 1, K_LINE);
+                } else {
+                    const int32_t y = top + h - 3 - (int32_t)(n - 28) * (h - 5) / 68;
+                    cv_rect(x, y, 10, 3, row ? K_ACC : K_ACID);
+                }
+                if (en_playing && s == (int)en_acid_pos)
+                    cv_rect(x, top + h + 2, 10, 1, K_TEXT);
+            }
+        }
         return;
     }
     if (kind == SCOPE_GROOVE) {                  /* the groove: each lane as it plays (a hit added: bright; one taken out: a dash), the lane chosen framed, its source and density */
@@ -4287,7 +4354,7 @@ static uint16_t view_color(void)                /* the page's voice in its colou
 static void imp_tabs(void)
 {
     static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-        {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"DRONE", 'D', V_DRONE, 3}, {"ACID", 'A', V_ACID, 3}, {"PLUCK", 'L', V_CMEL, 2},
+        {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"DRONE", 'D', V_DRONE, 3}, {"ACID", 'A', V_ACID, 4}, {"PLUCK", 'L', V_CMEL, 2},
         {"DRUMS", 'R', V_DRUMS, 5}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
     const uint16_t col[10] = {K_TEXT, K_PAD, K_BASS, K_ACID, IMP_TEAL, K_PULSE, K_FROST, K_DIM, K_TEXT, KC_MOVE};
     const int v = ui.view == V_SEQ ? V_DRUMS : ui.view >= V_PERF ? V_TEMPO : (int)ui.view;
@@ -5117,7 +5184,7 @@ void ui_frame(void)
         ui.sig[0] = ui.sig[1] = ui.sig[2] = 0;
         lcd_fill(0, 0, 240, 240, K_BG);
     }
-    store_tick();
+    store_tick(0);
     {   /* drum drift changed the pattern: the knob follows, and says so */
         static uint32_t seen;
         if (en_dd_changes != seen) {

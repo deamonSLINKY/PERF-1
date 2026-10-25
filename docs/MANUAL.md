@@ -193,7 +193,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 - **Left:** the levels of the pad (P), drone (D), acid (A), pluck (C, for counter-melody) and kit (K).
 - **Middle: the sigil.** A summoning circle turned so the chord's root is always at the top: the twelve notes round it (the scale's lit, the chord's bright), the chord's tones joined into a figure (a triad is a triangle, a seventh a four-sided shape, so you learn a chord's kind by its shape; its name is under the eye). It turns by the interval when the chord changes. Outside it, the 4-bar phrase fills round; then the bar's 16 steps (the kick's larger, the acid's gates tinted, the playhead white). A pentagram turns behind once in 16 bars, and runes flare by the notes the pluck plays. In the middle a demon eye: half open in a groove (its slit pupil widens on the kick, its gaze flips on the snare), shut in a breakdown, wide and trembling in a build (the phrase ring opens in spinning gaps), a white flash and a shock ring on the drop. **SEL + HOME** puts the slinky imp there instead (kept across power-off). When the engine sheds load the pentagram and runes go first. At its top right, the bar filling towards the next chord (or `held` while frozen).
 - **Right:** the drum pattern playing, in a colour per lane, its number (`PAT 1`) and, when one is waiting, `> 3`; under it, the load: `CPU 41 XR 0` and below it `C2 38` and `S1` or `S2` when they apply (section 16).
-- **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit), then `BY HAND`, `+LINK` or `LINKS OFF`, and the octave when it isn't home (`OCT+2` for the page's voice, `SONG-1` for the song); on Global it says what SAVE will do (`01 SAVE: STORE`, `01 STORED`, `01 FACTORY`). On the right: the page's name and **the page dots**, one a page (24 on the SELECT dial): the page you are on bright, the others in its group dimmer. In the FX menu the dots are the four banks; inside an effect's settings, the 22 settings pages.
+- **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit), then `BY HAND`, `+LINK` or `LINKS OFF`, and the octave when it isn't home (`OCT+2` for the page's voice, `SONG-1` for the song); on Global it says what SAVE will do (`01 SAVE: STORE`, `01 STORED`, `01 FACTORY`). On the right: the page's name and **the page dots**, one a page (25 on the SELECT dial): the page you are on bright, the others in its group dimmer. In the FX menu the dots are the four banks; inside an effect's settings, the 22 settings pages.
 - **Bottom:** the four knobs: each value's name, its ring (or pips, for a switch of a few positions) and its value. The one you turned last is lit for a moment.
 - **Pages that shape a sound draw it:** the envelopes and LFOs, the filters' response, the echo and reverb tails, the compressor's curve. The picture follows the knobs as you turn them, with a dot running along it. (It shows the idea, not exact milliseconds.)
 - **Messages** take the header's place for a moment: `PATTERN 3 NEXT BAR`, `STORING`, `KEY CHANGE +5`.
@@ -202,7 +202,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 
 ## 5. The pages
 
-SELECT walks through them in this order (24 pages; the dial stops at the ends). The buttons jump straight to
+SELECT walks through them in this order (25 pages; the dial stops at the ends). The buttons jump straight to
 a voice, and pressing the same button again steps through that voice's envelope and LFO (and, for the pad, the
 chords). On a voice's main page KNOB 1 is its level.
 
@@ -218,9 +218,10 @@ chords). On a voice's main page KNOB 1 is its level.
 | Drone LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
-| Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate (SEL + K4: the **Answer**, below) |
-| Pluck | ARP x4 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
-| Pluck 2 | ARP x5 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
+| Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
+| Acid answer | ARP x4 | Answer (off, octave, fifth, mirror, sparse) | Every (the 2nd ... 8th time round the line) | Direction (up, down) | - |
+| Pluck | ARP x5 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
+| Pluck 2 | ARP x6 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Drone | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
@@ -459,7 +460,7 @@ level, decay and density.
 - **Built-in DX7 voices (22):** DX Tine EP, DX Glass Bell, DX Round Bass, DX Brass Sect, DX Soft Pad, DX Wood Bars, DX Drawbars, DX Nylon Pick, DX Brass 2, DX Solid Bass, DX Bells, DX Marimba, DX Clavinet, DX Strings, DX Glass Pad, DX Sync Lead, DX Harp, DX Kalimba, DX Flute, DX Steel Drum, DX Saw Bass, DX Tubular. A six-voice, six-operator FM engine plays them as a DX7 would (all 32 algorithms, the envelopes with their curves and scaling, velocity, LFO, pitch envelope, feedback). Heavy patches are held to fewer voices (the bells, brass, strings and pads to three or four) to spare the processor.
 - **Yours (up to 16):** DX7 voices you load yourself come after these, named `DX` and the voice's own name (section 15).
 
-**The answer (call and response).** On the Acid line page hold **SEL** and turn **KNOB 4**: every second time round the line it is changed, so the line asks and then answers: **Octave** (the same notes twelve up), **Fifth** (seven up), **Mirror** (the contour upside down round the chord's note) or **Sparse** (only the even steps). Off by default; stored with the piece.
+**The answer (call and response).** The **Acid answer** page (ARP four times) makes the line ask and then answer: on every 2nd (3rd ... 8th) time round it is changed, so with Every on 4th you hear the same call three times and the answer on the fourth. **Answer** chooses how: **Octave** (the same notes twelve up or down), **Fifth** (seven up or down), **Mirror** (the contour upside down round the chord's note) or **Sparse** (only the even steps); **Direction** is up or down for the octave and the fifth. Where the move would leave the acid's register (a low line answered downwards) the answer goes the other way, so it never folds back onto the call. The page draws the call and its answer, a dot a step at its note's height. Off by default; stored with the piece (the editor has it under Acid).
 
 ### The kits: 14
 
@@ -670,7 +671,7 @@ held to be heard). The dots at the right of the knob strip show where you are am
 | Vinyl | Level | Crackle | Hiss | Tone |
 | Tape | Wow | Flutter | Drive | Dull |
 | Roll | From (1/2 to 1/64) | To | Each (1/2, 1, 2 or 4 beats at a rate) | Swell |
-| Pump | Depth | Release | Every (1/2, 1/4, 1/8, 1/16) | Targets |
+| Pump | Depth | Release | Every (1/2, 1/4, 1/8, 1/16, or KICK: on every kick, wherever the kicks are) | Targets |
 | Riser | Time (about 1-12 s) | Filter | Wash | Echo |
 | Scatter | Chaos | Reverse | Slice (1/32, 1/16, 1/8) | Slices (2-8) |
 | Brake | Time | Spin back | Return | Dull |

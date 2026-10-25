@@ -1,14 +1,21 @@
-# The acid's answer (Acid line page, SEL + K4): every second time round the line it is changed. Octave: the same notes twelve up.
+# The acid's answer (the fourth acid page, ARP x4): its kind (K1), how often (K2), which way (K3). The line asks, then answers.
 seed 0
 wait 500
 tap GLO
 tap ARP
 tap ARP
 tap ARP
-expect view 10
-press SEL
-spin K4 1
-release SEL
+tap ARP
+expect view 11
+spin K1 1
 wait 100
 expect par151 1
+shot answer_page.png
+# which way: down
+spin K3 1
+wait 100
+expect par151 5
+spin K2 2
+wait 100
+expect par21 2
 wait 9000
