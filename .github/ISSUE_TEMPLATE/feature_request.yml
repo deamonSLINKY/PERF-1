@@ -1,5 +1,5 @@
 name: Feature request
-description: An idea for HYP-1. (You can also post it on the board, where others can vote for it.)
+description: An idea for PERF-1.
 labels: [idea]
 body:
   - type: textarea

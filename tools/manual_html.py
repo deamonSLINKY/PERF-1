@@ -117,7 +117,7 @@ def slug(title):
 
 NAME = "PERF-1"
 WEB_IMG = SRC / "web" / "img"                         # the slinky (logo) and its favicon, embedded: the page stays one file
-REPO = os.environ.get("REPO_URL", "https://github.com/RustyPawz/fm1-HYP1")
+REPO = os.environ.get("REPO_URL", "https://github.com/deamonSLINKY/PERF-1")
 IMG_BASE = SRC / "docs"
 EMBED = False                                         # --fragment: images as data URIs
 

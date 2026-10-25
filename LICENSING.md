@@ -1,9 +1,9 @@
-# HYP-1 licensing
+# PERF-1 licensing
 
-HYP-1 (a RedtailWorks fork of Charles Vestal's AMB-1) is free software under the GNU General Public
+PERF-1 (by deamonSLINKY) is a fork of HYP-1 by RedtailWorks, itself a fork of Charles Vestal's AMB-1. It is free software under the GNU General Public
 License, version 3 only
 (`GPL-3.0-only`, full text in `LICENSE`). It is built on Felucca's platform layer (through X0X and FoMni)
-and keeps Felucca's licence. If you distribute HYP-1, or firmware derived from it, you must give
+and keeps Felucca's licence. If you distribute PERF-1, or firmware derived from it, you must give
 your recipients its complete corresponding source under the same licence.
 
 ## Where the code comes from
@@ -11,10 +11,10 @@ your recipients its complete corresponding source under the same licence.
 | What | Origin | Licence |
 | --- | --- | --- |
 | Platform: `firmware/hal/`, `firmware/loader/`, `firmware/src/{libc,lcd,gfx,usb,storage,ota,midi_uart}.c`, `tools/` (build, package, install, rescue), `web/fm1*.js` | [Felucca](https://github.com/hugelton/Felucca), Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments, as changed for [X0X](https://github.com/charlesvestal/fm1-x0x) and FoMni, then AMB-1 | GPL-3.0-only |
-| `firmware/src/app/{panel,plat_fm1,main_fm1}.c`, `host/amb_host.c`, `web/emu/`, `tools/{make_pages,manual_html}.py`, `tools/publish_pages.sh` | adapted from X0X (itself from Felucca's `panel.c`, `main.c`, `audio.c`) | GPL-3.0-only |
+| `firmware/src/app/{panel,plat_fm1,main_fm1}.c`, `host/amb_host.c`, `web/emu/`, `tools/manual_html.py` | adapted from X0X (itself from Felucca's `panel.c`, `main.c`, `audio.c`) | GPL-3.0-only |
 | Dattorro's plate reverb in `firmware/src/dsp/amb.c` | from [FoMni](https://github.com/charlesvestal/fm1-fomni) | GPL-3.0-only |
 | The idea of a browser emulator for FM-1 firmware (`web/emu/`) | [Groove OS](https://www.groove-os.com/) by Peter Gombos, whose site runs its firmware in the browser; no code from it | credit only |
-| Everything else in `firmware/src/{app,dsp}`, `tests/` | AMB-1 (Charles Vestal), HYP-1 changes (RedtailWorks) | GPL-3.0-only |
+| Everything else in `firmware/src/{app,dsp}`, `tests/` | AMB-1 (Charles Vestal), HYP-1 changes (RedtailWorks), PERF-1 changes (deamonSLINKY) | GPL-3.0-only |
 
 ## Third-party material
 
@@ -28,9 +28,9 @@ your recipients its complete corresponding source under the same licence.
 ## Trademarks
 
 "Felucca" and "Hügelton Instruments" are names of Hügelton Instruments.
-"M-VAVE" and "FM-1" are trademarks of their respective owners. HYP-1 is independent firmware; it is
+"M-VAVE" and "FM-1" are trademarks of their respective owners. PERF-1 is independent firmware; it is
 not affiliated with, endorsed by or supported by any of them.
 
 ## Radio
 
-HYP-1 never enables the Bluetooth / Wi-Fi radio of the hardware.
+PERF-1 never enables the Bluetooth / Wi-Fi radio of the hardware.

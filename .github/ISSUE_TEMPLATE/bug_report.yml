@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in HYP-1 doesn't work as the manual says, sounds wrong, or crackles.
+description: Something in PERF-1 doesn't work as the manual says, sounds wrong, or crackles.
 labels: [bug]
 body:
   - type: markdown
@@ -9,8 +9,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: The landing page's footer, or the HYP-1 card when the FM-1 starts.
-      placeholder: "1.0.21"
+      description: The site footer, or the PERF-1 card when the FM-1 starts.
+      placeholder: "0.6.0"
     validations:
       required: true
   - type: dropdown
@@ -24,11 +24,11 @@ body:
     id: what
     attributes:
       label: What happened, and what you expected
-      description: The piece, style and tempo help a lot, and the page you were on.
+      description: The genre, piece and tempo help a lot (and a status log if it is about load or crackles), and the page you were on.
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: How to make it happen again
-      placeholder: "1. Piece 04, Techno style\n2. Hold SEQ, OCT+ twice\n3. ..."
+      placeholder: "1. Lofi L04\n2. Hold SEQ, OCT+ twice\n3. ..."

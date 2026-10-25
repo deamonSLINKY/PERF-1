@@ -1,175 +1,31 @@
 # PERF-1: live-performance firmware for the M-VAVE FM-1
 
-PERF-1 is a live-performance firmware for the M-VAVE FM-1 by deamonSLINKY: ten genres of ten pieces each, a generative pad, drone, acid, pluck and DX7-style FM voice over drums you sequence, an auto-DJ, a web editor with 16 loadable DX7 voices, and USB telemetry. Its install page, emulator, editor and manual are published together on the project site.
+PERF-1 turns the M-VAVE FM-1 into a self-playing groovebox you perform on: ten genres of ten generative pieces, a pad, a drone, an acid line and a pluck (or one of 22 DX7-style voices, or your own) over drums you sequence, with an auto-DJ that takes the set through breakdowns, builds and drops. By **deamonSLINKY**.
 
-It is a fork of **HYP-1** by [RedtailWorks](https://www.redtail.works) (GPL-3.0), itself a fork of [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal. The credits below are kept in full. Everything under "HYP-1" from here on is the upstream project's own README, kept as history; its links point to the upstream project.
+**Site (install, emulator, editor, manual):** <https://deamonslinky.github.io/PERF-1/>
 
----
-
-# HYP-1 (upstream README)
-
-![HYP-1 running on the FM-1](docs/img/hyp-hero.png)
-
-HYP-1 turns the M-VAVE FM-1 into a hypnotic techno and acid machine. It plays from the moment it's
-switched on: a breathing pad, a deep drone, a generative 303 line and a bed of grain, over drums you
-sequence. You shape the voices like a small modular, flip patterns on the bar, break it down and build it
-back up, and record the whole performance into your DAW.
-
-A [RedtailWorks](https://www.redtail.works) project, forked from [AMB-1](https://github.com/charlesvestal/fm1-amb)
-by Charles Vestal. Current version: **1.5.0** (each push to `main` builds the next one).
-
-
-- **All four firmwares** (HYP-1, LOF-1, ECO-1, GRAV-1) on one page, with the pack's video: <https://rustypawz.github.io/fm1-HYP1/>
-- **OPEN-1**, the next idea: an open-firmware synth under $200, with its goals, specs, mailing list and build log: <https://rustypawz.github.io/fm1-HYP1/open1/>
-- **Try it in your browser** (no FM-1 needed): <https://rustypawz.github.io/fm1-HYP1/emu/>
-- **Install it** (Chrome or Edge, with the FM-1 plugged in): <https://rustypawz.github.io/fm1-HYP1/install/>
-- **Read the manual**: <https://rustypawz.github.io/fm1-HYP1/manual/>, or the
-  [printable PDF](docs/HYP-1_Manual.pdf) with every control numbered and every screen lettered
-- **The board**: feature requests (vote with a 👍) and comments: <https://rustypawz.github.io/fm1-HYP1/board/>
-
-Installing it is at your own risk, though it's hard to get stuck: the web installer can put M-VAVE's
-own firmware back, and an FM-1 that fails to start twice comes up in a safe mode the installer can reach.
-
-
-## Also here: LOF-1 (experimental)
-
-[`lof1/`](lof1/) holds **LOF-1**, a second RedtailWorks firmware for the FM-1: a lofi groovebox. You play the
-lead on the keys and a tired jazz band follows: it hears which chord your notes imply and the comp, bass
-and drums move with it on the beat; an Answer voice replies to your phrases, and when the keys rest a ghost
-takes the lead. Under it all, a record, a cassette, a reel or a radio. Twenty lead instruments, a scale of your own set on the keys, ten
-presets, chords on the keys, FX on the keys with locks, a drum sequencer, MIDI clock in and notes out. It's
-**experimental**: built and tested in the simulator and the browser emulator, not yet on a real FM-1, and
-numbered 0.x until it has been. The same workflow builds it, and the site has it under
-[`lof/`](https://rustypawz.github.io/fm1-HYP1/lof/): the dropdown at the top of every page switches between
-HYP-1, LOF-1, ECO-1 and GRAV-1.
-
-## And ECO-1 (experimental)
-
-[`eco1/`](eco1/) holds **ECO-1**, a third RedtailWorks firmware for the FM-1: a small plant whose three
-leaves fire notes as light and water charge them, a stem that drones beneath, and weather (rain, wind,
-gusts, a day and night) that plays it. Eight plants, each in its own place on the screen; MIDI clock in,
-MIDI out per voice with the plant's signals as CCs. Experimental and numbered 0.x like LOF-1, built by the
-same workflow, and on the site under [`eco/`](https://rustypawz.github.io/fm1-HYP1/eco/).
-
-## And GRAV-1 (experimental)
-
-[`grav1/`](grav1/) holds **GRAV-1**, a fourth RedtailWorks firmware for the FM-1: a star and its planets play
-slow, dark, spacey ambient. The star is a bed of coloured noise drawn in its colour; up to six planets orbit
-it, each a voice (sixteen instruments, half of them dark) playing a phrase round its orbit, warm near the star and cold far out. A
-drum sequencer sets their years and so their orbits, bigger planets swell smaller ones as they pass, dormant
-worlds wake in the tides, and dust clouds, asteroids and comets drift through. Ten systems, seven screen
-themes, MIDI clock in and MIDI out. Experimental and numbered 0.x, built by the same workflow, and on the site
-under [`grav/`](https://rustypawz.github.io/fm1-HYP1/grav/).
+- **Install it** from the site, in Chrome or Edge with the FM-1 on USB (<https://deamonslinky.github.io/PERF-1/install/>). Installing firmware is at your own risk; the installer can restore M-VAVE's own firmware, and an FM-1 that fails to start twice comes up in a safe mode the installer can reach. Read section 1 of the manual first.
+- **Try it in the browser** (no FM-1 needed): the same code with sound, at `/emu/`.
+- **Manual:** `docs/MANUAL.md` (the site has it as a page with screenshots).
+- **Editor:** every parameter, and a DX7 voice editor for the 16 voice slots (algorithms, envelopes, live to the pluck, `.syx` in and out), at `/editor/`.
 
 ## What it does
 
-- **Pad**: four breathing voices playing the chords (Auto, triads, 7ths, 9ths, sus, dub minor 9 stabs, fourths; close or open voicing) in sixteen sounds (Rhodes, sung voices, strings, glass, organ, warm, stabs,
-  dark, dub chords, trance supersaw, poly, hollow, bell and organ stabs, rave stabs, sine) with their own envelope page (attack, hold,
-  release, rest) and LFO page (rate, depth, shape, target).
-- **Drone**: sixteen sounds (saws, warm, grit, dirty, Reese, pulse, FM, organ, rumble, sub, square, hoover, fifths, metal, sync, bright) and a sub through a resonant 24 dB low-pass, with an envelope (on each chord
-  or every 1–8 bars) and an LFO (a 16-bar sweep on the cutoff by default).
-- **Acid**: a generative 303-style line: 1–16 steps of chord tones with accents and slides, resonant
-  filter, envelope, sixteen sounds (saw, square, driven, sync, pluck, PWM, chip, sub, and arp leads: trance, bleep, fifth, bell, organ, laser, fold, soft). Mutate rewrites steps as it plays.
-- **Noise**: eight colours (white, pink, brown, blue, violet, grey, crackle, radio hiss), a tone filter
-  and its own sidechain pump.
-- **Drums**: a 16-step sequencer with six lanes (kick, snare, clap, closed hat, open hat, perc), six
-  patterns per piece, a level, tune and decay per lane, and a kit: each drum's sound from eight (Hypno,
-  House, Techno, Acid, Break, Minimal, Hard, 808). Hold SEQ: the 16 white keys are the steps.
-- **Ten pieces** (01–10), each with its own settings, patterns and drum sounds. On Global, SAVE stores
-  the piece at once (playing, the music pauses for a fraction of a second while it's written, then carries on where it was).
-- **The keys** set the scale, as on AMB-1. **By hand**: on a voice's page, SEL + ENV takes the pad, drone or acid
-  off the algorithm, and on its pages the keys play it over the song (the pad up to four notes, the drone
-  and the acid one, the acid sliding 303-style); SEL + ENV again gives it back. **SEL + ALGORITHM**
-  changes the sound of the voice on screen, or the whole kit on the drums' pages. Tempo runs from 70 to 190.
-- **Links** (SEL + SEQ, amounts on the Links page): the drums patched into the voices. Each kick opens
-  the drone's filter, each snare or clap flashes the pad, hats accent the acid, and the perc lane can
-  clock the acid line.
-- **Performance**: SAVE for a breakdown on the next bar, again for a four-bar build and the drop; an FX
-  menu of momentary effects on the keys (beat repeat, reverse, tape stop, mutes and solos, filters,
-  trance gate, echo throw, crush, fill), hold SAVE and tap effects to lock any number on (they keep playing after FX closes); SEL as a shift (patterns on keys 1–6,
-  pieces on the bar, copy, clear and restore lanes).
-- **Remote** (SEL + GLO): plug the FM-1 in and its panel plays HYP-1 in the [emulator](https://rustypawz.github.io/fm1-HYP1/emu/)
-  over USB MIDI, lights and all. With M-VAVE's firmware or any controller, the keys play straight away and
-  MIDI learn maps the rest.
-- Five screen themes, a boot sequence (the RedtailWorks card with its pixel red panda, then HYP-1), Chakra Petch (SIL OFL) as the screen's font.
+- **Ten genres of ten pieces:** HYPNO (the original techno and acid set), lofi, house, dubstep, jungle, DnB, breaks, garage, electro and trap, each with its own sounds, drum patterns, effects and chord habits. **Any piece can be stored** (Global, SAVE); each genre has its own place in flash.
+- **Voices:** 24 pads, 24 drones, 31 acid sounds, 14 drum kits; the pluck is 12 plain sounds, 22 DX7-style voices from a built-in FM engine, and up to 16 DX7 voices of your own (load a `.syx` bank from the installer, the editor or any MIDI librarian).
+- **The acid answers:** the line asks and then answers (octave, fifth, scale third, mirror, reverse, rotate, sparse, accents; up or down; every 2nd to 8th bar or loop, or in the bar before the drums change).
+- **Sequencer:** six drum lanes of sixteen steps and six patterns; Euclidean fill and rotation, per-lane probability, length (polymeter), density and source pattern; drum drift (patterns that change and mutate by themselves); held pattern keys.
+- **Performing:** break, build and drop on one button; an auto-DJ (groove, fill, breakdown, build, drop; follows the chords or a count); scenes; undo; a Mood macro; JAM keys; a four-bank FX menu (beat repeats, filters, gates, a pump that can follow the kick, tape, vinyl, phaser, flanger, talk and wah, scatter and brake, 15 one-bar Flex Beat patterns, and 27 DJ snips including air and rave horns).
+- **Screen:** the Imp look in six palettes, with the sigil in the middle of the home screen (a summoning circle that turns to the chord's root, draws the chord as a shape and watches the section with a demon eye).
+- **MIDI and USB:** MIDI clock in, notes and clock out over USB, the FM-1's TRS jack as MIDI in, USB audio, a remote mode that plays the browser emulator, and USB telemetry (`tools/fm1log.py`).
+- **Two cores:** the reverb (and, under load, more) runs on the FM-1's second core; the engine sheds work before it drops audio, and shows its load on the Global mix map.
 
-![Pad: Glass, Drone: Reese, Acid: Sync, Kit: Techno](docs/img/hyp-sounds.png)
+## Building it
 
-| | |
-|---|---|
-| ![The sequencer](docs/img/hyp-device-seq.png) | ![The FX menu](docs/img/hyp-device-fx.png) |
-| ![Playing the drone](docs/img/hyp-device-play.png) | ![The themes](docs/img/hyp-themes.png) |
+`BUILDING.md` has the toolchain (JieLi's, Linux x86-64), the build and the tests. In short: `tools/release.sh 0.6.0` builds and tests everything, `python3 tools/make_pages_site.py 0.6.0 build/site` makes the site.
 
-## In short
+## Credits and licence
 
-| | |
-|---|---|
-| SELECT | The pages in order; with HOME held, the tempo |
-| HOME · ENV · LFO · ARP · SEQ · GLO | Tempo · Pad · Drone · Acid · Drums (again: Links, then Kit; hold: sequencer) · Global; press again for each voice's env and LFO |
-| KNOB 1–4 | The page's four values |
-| PRESETS · ALGORITHM | The piece · the mode (with SEL: the piece on the next bar · the voice's sound, or the kit) |
-| SAVE | Breakdown / build / drop; on Global, store the piece |
-| FX | The effects menu |
-| SEL | Shift (SEL + SEQ: the links on and off; SEL + GLO: remote, the panel plays the emulator) |
-| PLAY · REC · EDIT | Play / stop · freeze · the next chord |
-| Keys | The scale; on the pages of a voice played by hand (SEL + ENV on its page), that voice; in the sequencer the steps; in FX the effects |
-| OCT− / OCT+ | ±3 octaves: the page's voice (pad, drone, acid), or the whole song on any other page; in the sequencer, the drum |
+PERF-1 is a fork of **HYP-1** by [RedtailWorks](https://www.redtail.works), itself a fork of **AMB-1** by Charles Vestal, built on the platform layer of **Felucca** by Leo Kuroshita (Hügelton Instruments) through X0X and FoMni. The reverb is Jon Dattorro's plate ("Effect Design, Part 1", JAES 1997). The git history keeps every author's commits. The idea of a browser emulator for FM-1 firmware comes from Groove OS by Peter Gombos (no code taken). The community reverse-engineering of the chip, [AL-255/FM-1-RE](https://github.com/AL-255/FM-1-RE), informed the hardware work.
 
-## Versions
-
-Each push to `main` is a new build, numbered from the workflow's run: 1.0.1 to 1.0.32, then 1.5.0 on (1.5.N; after 1.5.99, 1.6.0). The installer always offers the latest.
-
-| Version | What came in |
-|---|---|
-| 1.5.0 | Locked FX play on after the FX menu closes (FX blinks; reopen it and tap a key to stop one). The version moves to 1.5: everything since the first tour (16 sounds a voice, 8 kits, playing by hand, Chords, storing at once, the USB remote) |
-| 1.0.32 | Chords page (ENV ×4): the kind of chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths), close or open voicing, with Drift and Root; piece 06 plays dub chord stabs (issue #3) |
-| 1.0.31 | A store (Global, SAVE) is written at once: playing, the music fades out, it's written, and the song picks up where it was. The emulator's help no longer says SEL + LFO / ARP |
-| 1.0.30 | Twice the sounds: sixteen each for pad, drone and acid (dub, trance and rave chords; rumble, hoover and fifths basses; trance, bleep, bell and laser arps) and three more kits (Minimal, Hard, 808); old style code cleared out |
-| 1.0.29 | SEL + ENV on any voice's page (pad, drone or acid, any of its three) takes that voice by hand and back; SEL + LFO / ARP no longer do |
-| 1.0.28 | The keys set the scale again everywhere; a voice is played by hand only when taken off the algorithm (SEL + a voice button), which silences its generated part |
-| 1.0.27 | The voice bank: eight sounds each for pad, drone and acid, a kit of five sounds per drum (the styles become sounds; stored styles carry over), and the keys play the voice on screen |
-| 1.0.25 – 1.0.26 | ECO-1 (experimental) built alongside, with a HYP-1 / ECO-1 dropdown on the site |
-| 1.0.22 – 1.0.24 | The board (feature requests, comments); a Ko-fi button |
-| 1.0.21 | The documentation brought up to date; the live take on the site |
-| 1.0.17 – 1.0.20 | The video tools (sequencer, voices, links, the live take); no firmware change |
-| 1.0.16 | One look across the site (the installer restyled), the red panda as its mark and favicon, YouTube links |
-| 1.0.15 | Boot: a pixel red panda on the RedtailWorks card, then a HYP-1 card (any button skips) |
-| 1.0.13 – 1.0.14 | Remote: SEL + GLO, the FM-1's panel plays the browser emulator over USB MIDI; MIDI learn in the emulator; a vertical tour video |
-| 1.0.11 – 1.0.12 | A safety review: the audio's buffers off the interrupt stack, fuzzed storage, sanitizers clean |
-| 1.0.10 | FX: tapping a locked effect turns just that one off |
-| 1.0.9 | OCT− / OCT+: the page's voice or the whole song, three octaves each way |
-| 1.0.8 | Theme, Tune and MIDI out kept across power-off, even when changed while playing |
-| 1.0.7 | Links (the drums into the voices) and FX lock mode |
-| 1.0.5 – 1.0.6 | HYP-1: styles, ten pieces with their own drums, storing on Global, shift; the site |
-
-## Building and testing
-
-Every push to `main` builds the firmware on GitHub (`.github/workflows/firmware.yml`): JieLi's
-toolchain, the tests, and the site (installer, emulator, manual, download) published to GitHub Pages.
-Each build is numbered 1.B.N from the run. To build locally (see [BUILDING.md](BUILDING.md)):
-
-```
-tests/run_tests.sh      # the instrument, the platform pieces, the app in a simulator, the web builds
-./build.sh              # build/amb.fwsc
-python3 tools/fm1_install.py build/amb.fwsc     # install it over USB
-```
-
-`build/host/amb_host SCRIPT OUTDIR` runs the whole app on a computer from a script
-(`tests/scenarios/*.amb`), with audio and screenshots coming out. `web/emu/build_clang.sh` builds the
-same code for the browser with plain clang. The drum patterns are written as grids in
-`tools/gen_pats.py`; the site's pictures come from `tools/site/mockups.py`, its videos from
-`tools/site/video.py` (all from the firmware itself, in the simulator). [BUILDING.md](BUILDING.md) has
-the details.
-
-## Credits
-
-HYP-1 is a [RedtailWorks](https://www.redtail.works) project. It is a fork of
-[AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal, whose generative harmony, voices
-and platform work it builds on. The reverb is Jon Dattorro's plate ("Effect Design, Part 1", JAES 1997).
-The platform (hardware layer, USB, update loader, storage, installer) is
-[Felucca](https://github.com/hugelton/Felucca)'s by Leo Kuroshita (Hügelton Instruments), by way of
-[X0X](https://github.com/charlesvestal/fm1-x0x) and FoMni-1. The idea of running FM-1 firmware in the
-browser comes from [Groove OS](https://www.groove-os.com/). GPL-3.0-only; see [LICENSING.md](LICENSING.md).
-
-M-VAVE and FM-1 are trademarks of their owners. HYP-1 is not affiliated with M-VAVE or Hügelton
-Instruments.
+GPL-3.0-only (`LICENSE`); the code's origins and the third-party material (fonts, the JieLi SDK) are in `LICENSING.md`. "M-VAVE" and "FM-1" are trademarks of their owners; PERF-1 is independent firmware, not affiliated with or endorsed by them.
