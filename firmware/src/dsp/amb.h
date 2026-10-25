@@ -119,9 +119,10 @@ enum {
     P_DENS, P_DENS1, P_DENS2, P_DENS3, P_DENS4, P_DENS5,  /* each drum lane's busyness (P_DENS + lane): 50 plays the pattern as written, less takes the least important hits out, more puts hits on the most important empty steps (the pattern itself is never edited) */
     P_LSRC, P_LSRC1, P_LSRC2, P_LSRC3, P_LSRC4, P_LSRC5,  /* the pattern each lane plays (P_LSRC + lane): 0 follows the piece's pattern, 1..6 holds that pattern's lane (from the next bar) */
     P_CH_LOOP,                                            /* the progression: 0 a fresh walk, 1..3 the last 2, 4 or 8 chords repeat, 4..6 the same with now and then one drawn anew */
-    P_AC_RESP,                                            /* the acid's answer: every second time round the line is transformed (0 off, 1 an octave up, 2 a fifth up, 3 mirrored round the chord, 4 sparse, 5 an octave down, 6 a fifth down) */
+    P_AC_RESP,                                            /* the acid's answer: every second time round the line is transformed (type * 5 + direction: 0 off; types 1 octave, 2 fifth, 3 third (in the scale), 4 mirror, 5 reverse, 6 rotate, 7 sparse, 8 accents; direction 0 .. 4: down 2, down, same, up, up 2) */
     P_NPARAMS
 };
+#define P_AC_CHANCE P_STYLE                           /* the acid answer's chance (0 .. 100: how often an answer that is due plays); it took the place of the old style, which only the oldest banks have */
 #define P_LANE_LVL(l) (P_LANE + 3 * (l))
 #define P_LANE_TUNE(l) (P_LANE + 3 * (l) + 1)
 #define P_LANE_DEC(l) (P_LANE + 3 * (l) + 2)
@@ -280,7 +281,8 @@ extern uint32_t (*en_prof_clock)(void);        /* the firmware's tick counter, f
 extern volatile uint32_t en_prof[EN_NPROF];
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
-int en_acid_preview(int step, int resp);       /* the acid line's note at a step as the call (resp 0) or an answer (1 .. 4) would play it, -1: a rest */
+extern volatile uint8_t en_acid_ans;           /* this bar the acid answers (UI) */
+int en_acid_preview(int step, int answer);     /* the acid line's note at a step as the call (answer 0) or an answer (P_AC_RESP's value) would play it, -1: a rest */
 uint16_t en_lane_mask(int lane, int pat, int dens);   /* a lane of pattern pat as it plays at density dens (50: as written; the screen's preview too) */
 extern volatile uint8_t en_lane_src[EN_NLANE]; /* the pattern each lane plays now */
 extern volatile uint8_t en_lane_pos[EN_NLANE]; /* each lane's step (its own length: P_LLEN + lane) */

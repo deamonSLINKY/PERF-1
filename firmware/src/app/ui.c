@@ -174,7 +174,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
-    {K_ACT, P_AC_EVERY, K_ACD, K_NONE},            /* the answer: its kind, how often, which way (one value, P_AC_RESP) */
+    {K_ACT, P_AC_EVERY, K_ACD, P_AC_CHANCE},       /* the answer: its kind, how often (in bars, or before a drum change), which way (one value with the kind: P_AC_RESP), how likely */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
@@ -204,7 +204,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
-    {"Answer", "Every", "Direction", ""},
+    {"Answer", "Every", "Direction", "Chance"},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
     {"Level", "Drive", "Swing", "Pattern"},
@@ -846,10 +846,10 @@ static int knob_get(int k)
     int p = knob_par(k);
     if (k == K_MXT)
         return ui.mix_trk;
-    if (k == K_ACT)                              /* the answer's kind: Off, Octave, Fifth, Mirror, Sparse */
-        return proj.par[P_AC_RESP] == 5 ? 1 : proj.par[P_AC_RESP] == 6 ? 2 : proj.par[P_AC_RESP];
+    if (k == K_ACT)                              /* the answer's kind (P_AC_RESP is kind * 5 + direction) */
+        return proj.par[P_AC_RESP] / 5;
     if (k == K_ACD)
-        return proj.par[P_AC_RESP] >= 5;
+        return proj.par[P_AC_RESP] >= 5 ? proj.par[P_AC_RESP] % 5 : 3;
     if (k == K_GRT)
         return ui.lane;
     if (k == K_GRA)
@@ -870,7 +870,7 @@ static void knob_range(int k, int *lo, int *hi)
     }
     if (k == K_ACT || k == K_ACD) {
         *lo = 0;
-        *hi = k == K_ACT ? 4 : 1;
+        *hi = k == K_ACT ? 8 : 4;
         return;
     }
     if (k == K_GRT || k == K_GRA) {
@@ -904,8 +904,9 @@ static void knob_text(int k, char *b)
         return;
     }
     if (k == K_ACT || k == K_ACD) {              /* the answer's kind, and its direction (which only the octave and the fifth have) */
-        static const char *const AT[5] = {"Off", "Octave", "Fifth", "Mirror", "Sparse"};
-        const char *s = k == K_ACT ? AT[knob_get(K_ACT)] : proj.par[P_AC_RESP] >= 5 ? "Down" : (proj.par[P_AC_RESP] == 1 || proj.par[P_AC_RESP] == 2) ? "Up" : "-";
+        static const char *const AT[9] = {"Off", "Octave", "Fifth", "Third", "Mirror", "Reverse", "Rotate", "Sparse", "Accents"};
+        static const char *const AD[5] = {"Down 2", "Down", "Same", "Up", "Up 2"};
+        const char *s = k == K_ACT ? AT[knob_get(K_ACT)] : proj.par[P_AC_RESP] >= 5 ? AD[proj.par[P_AC_RESP] % 5] : "-";
         int n = 0;
         while (s[n]) {
             b[n] = s[n];
@@ -965,8 +966,10 @@ static void knob_set(int k, int v)
         return;
     }
     if (k == K_ACT || k == K_ACD) {              /* one value: 0 off, 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down */
-        const int dn = k == K_ACD ? v > 0 : proj.par[P_AC_RESP] >= 5, ty = k == K_ACT ? (v < 0 ? 0 : v > 4 ? 4 : v) : knob_get(K_ACT);
-        knob_set(P_AC_RESP, ty == 1 ? (dn ? 5 : 1) : ty == 2 ? (dn ? 6 : 2) : ty);
+        const int cur = proj.par[P_AC_RESP], ty = k == K_ACT ? (v < 0 ? 0 : v > 8 ? 8 : v) : cur / 5, dr = k == K_ACD ? (v < 0 ? 0 : v > 4 ? 4 : v) : (cur >= 5 ? cur % 5 : 3);
+        if (k == K_ACD && cur < 5)                /* (no answer: the direction has nothing to turn) */
+            return;
+        knob_set(P_AC_RESP, ty ? ty * 5 + dr : 0);
         return;
     }
     if (k == K_GRT) {
@@ -3833,17 +3836,31 @@ static void draw_scope(int kind)
         return;
     }
     if (kind == SCOPE_ACANS) {                   /* the acid's answer: the line as it is played (the call), and as it is answered, a dot a step at its note's height */
-        static const char *const RN[5] = {"AS IT IS", "OCTAVE", "FIFTH", "MIRROR", "SPARSE"};
-        const int resp = proj.par[P_AC_RESP], rk = resp == 5 ? 1 : resp == 6 ? 2 : resp, len = en_acid_len ? en_acid_len : 16;
+        static const char *const RN[9] = {"AS IT IS", "OCTAVE", "FIFTH", "THIRD", "MIRROR", "REVERSE", "ROTATE", "SPARSE", "ACCENTS"};
+        static const char *const RD[5] = {"DOWN 2", "DOWN", "SAME REGISTER", "UP", "UP 2"};
+        const int resp = proj.par[P_AC_RESP], rk = resp / 5, len = en_acid_len ? en_acid_len : 16;
         int row, s;
-        static const char *const ORD[7] = {"EVERY 2ND LOOP", "EVERY 3RD LOOP", "EVERY 4TH LOOP", "EVERY 5TH LOOP", "EVERY 6TH LOOP", "EVERY 7TH LOOP", "EVERY 8TH LOOP"};
-        const char *tx = ORD[proj.par[P_AC_EVERY] < 0 ? 0 : proj.par[P_AC_EVERY] > 6 ? 6 : proj.par[P_AC_EVERY]];
+        static const char *const ORD[8] = {"EVERY 2ND BAR", "EVERY 3RD BAR", "EVERY 4TH BAR", "EVERY 5TH BAR", "EVERY 6TH BAR", "EVERY 7TH BAR", "EVERY 8TH BAR", "BAR BEFORE A DRUM CHANGE"};
+        const char *tx = ORD[proj.par[P_AC_EVERY] < 0 ? 0 : proj.par[P_AC_EVERY] > 7 ? 7 : proj.par[P_AC_EVERY]];
         cv_text(6, 2, &FONT_B, "ANSWER", K_ACID);
-        cv_text(6 + text_w(&FONT_B, "ANSWER") + 8, 6, &FONT_XS, resp ? (resp >= 5 ? "DOWN: THE LINE ASKS, THEN ANSWERS" : "THE LINE ASKS, THEN ANSWERS") : "OFF: TURN ANSWER", K_DIM);
+        cv_text(6 + text_w(&FONT_B, "ANSWER") + 8, 6, &FONT_XS, resp ? "THE LINE ASKS, THEN ANSWERS" : "OFF: TURN ANSWER", K_DIM);
         for (row = 0; row < 2; row++) {
             const int32_t top = row ? 78 : 30, h = 36;
             const int r = row ? resp : 0;
-            cv_text(4, top - 8, &FONT_XS, row ? RN[rk] : "CALL", row ? K_ACC : K_DIM);
+            if (row && resp) {
+                char lb[28];
+                const char *q = RN[rk], *d = RD[resp % 5];
+                int j = 0;
+                while (*q)
+                    lb[j++] = *q++;
+                lb[j++] = ' ';
+                while (*d && j < 26)
+                    lb[j++] = *d++;
+                lb[j] = 0;
+                cv_text(4, top - 8, &FONT_XS, lb, en_acid_ans ? K_TEXT : K_ACC);
+            } else {
+                cv_text(4, top - 8, &FONT_XS, row ? RN[0] : "CALL", en_acid_ans && !row ? K_DIM : row ? K_ACC : K_ACID);
+            }
             if (row)
                 cv_text(236 - text_w(&FONT_XS, tx), top - 8, &FONT_XS, tx, K_DIM);
             cv_rect(10, top + h, 220, 1, K_LINE);

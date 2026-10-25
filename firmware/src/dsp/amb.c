@@ -30,7 +30,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_PE_REST] = {"Rest", 0, 100, 20},
     [P_PL_RATE] = {"Rate", 0, 7, 4},        [P_PL_DEPTH] = {"Depth", 0, 100, 25},  [P_PL_SHAPE] = {"Shape", 0, 5, 0},
     [P_PL_DEST] = {"Target", 0, 3, 0},
-    [P_NZ_COLOR] = {"Wear", 0, 7, 1},     [P_AC_EVERY] = {"Every", 0, 6, 0},    [P_NZ_PUMP] = {"Pump", 0, 100, 60},
+    [P_NZ_COLOR] = {"Wear", 0, 7, 1},     [P_AC_EVERY] = {"Every", 0, 7, 0},    [P_NZ_PUMP] = {"Pump", 0, 100, 60},
     [P_BASSOCT] = {"Octave", -3, 3, 0},     [P_DR_CUT] = {"Cutoff", 0, 100, 45},   [P_DR_RES] = {"Reso", 0, 100, 45},
     [P_DE_TRIG] = {"Trigger", 0, 5, 0},     [P_DE_ATK] = {"Attack", 0, 100, 25},   [P_DE_DEC] = {"Decay", 0, 100, 55},
     [P_DE_AMT] = {"Amount", 0, 100, 35},
@@ -52,7 +52,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_SIZE] = {"Size", 0, 100, 70},
     [P_ROOT] = {"Root", 0, 11, 9},          [P_MODE] = {"Mode", 0, EN_NMODES - 1, 5}, [P_TUNE] = {"Tune", -50, 50, 0},
     [P_MIDI] = {"MIDI out", 0, 1, 1},       [P_THEME] = {"Theme", 0, EN_NTHEME - 1, 0},
-    [P_STYLE] = {"Style", 0, EN_NSTYLE - 1, 0},
+    [P_STYLE] = {"Chance", 0, 100, 100},      /* (was the style, kept to read old banks; now the acid answer's chance: P_AC_CHANCE) */
     [P_LINKS] = {"Links", 0, 1, 0},         [P_LK_KICK] = {"Kick", 0, 100, 50},    [P_LK_SNARE] = {"Snare", 0, 100, 40},
     [P_LK_HAT] = {"Hats", 0, 100, 50},      [P_LK_PERC] = {"Perc", 0, 1, 0},
     [P_OCT] = {"Song oct", -3, 3, 0},       [P_PAD_OCT] = {"Pad oct", -3, 3, 0},
@@ -82,7 +82,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_LSRC] = {"Source", 0, 6, 0},        [P_LSRC1] = {"Source", 0, 6, 0},     [P_LSRC2] = {"Source", 0, 6, 0},
     [P_LSRC3] = {"Source", 0, 6, 0},       [P_LSRC4] = {"Source", 0, 6, 0},     [P_LSRC5] = {"Source", 0, 6, 0},
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
-    [P_AC_RESP] = {"Answer", 0, 6, 0},
+    [P_AC_RESP] = {"Answer", 0, 44, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -485,8 +485,21 @@ void en_param_text(int i, int v, char *b)
     case P_CM_STYLE: s = EN_CM_STYLE[(unsigned)v < EN_NCMSTYLE ? v : 0]; break;
     case P_CM_RATE: s = EN_CM_RATE[v & 3]; break;
     case P_LSRC: case P_LSRC1: case P_LSRC2: case P_LSRC3: case P_LSRC4: case P_LSRC5: { static const char *const S[7] = {"Follow", "Pat 1", "Pat 2", "Pat 3", "Pat 4", "Pat 5", "Pat 6"}; s = S[(unsigned)v < 7u ? v : 0]; break; }
-    case P_AC_EVERY: { static const char *const E[7] = {"2nd", "3rd", "4th", "5th", "6th", "7th", "8th"}; s = E[(unsigned)v < 7u ? v : 0]; break; }
-    case P_AC_RESP: { static const char *const A[7] = {"Off", "Octave up", "Fifth up", "Mirror", "Sparse", "Octave dn", "Fifth dn"}; s = A[(unsigned)v < 7u ? v : 0]; break; }
+    case P_AC_EVERY: { static const char *const E[8] = {"2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "Drift"}; s = E[(unsigned)v < 8u ? v : 0]; break; }
+    case P_AC_RESP: {                            /* type and direction: "Oct +", "Mirr =", "Rev -2" */
+        static const char *const T[9] = {"Off", "Oct", "5th", "3rd", "Mirr", "Rev", "Rot", "Spar", "Acc"}, *const D[5] = {"-2", "-", "=", "+", "+2"};
+        const char *q = T[(unsigned)v < 45u ? v / 5 : 0];
+        char *o = b;
+        while (*q)
+            *o++ = *q++;
+        if (v >= 5) {
+            *o++ = ' ';
+            for (q = D[v % 5]; *q; q++)
+                *o++ = *q;
+        }
+        *o = 0;
+        return;
+    }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -1394,24 +1407,83 @@ static void scale_set(void)
     nsteps = en_scale(pool, steps);
 }
 
-static uint32_t ac_loop;                        /* the times round the line (the answer: every second one) */
-static int acid_note(int s, int resp)           /* acid step s's note: from the chord's degree, in its register (resp: the answer's change, 1 .. 3) */
+/* THE ANSWER. The acid line asks (the call) and now and then answers: a value type * 5 + dir (0 off; types 1 octave, 2 fifth, 3 third in the scale,
+ * 4 mirror, 5 reverse, 6 rotate, 7 sparse, 8 accents; dir 0 .. 4 is two steps down, one, the same, one up, two up: a step is an octave, a fifth, two
+ * degrees of the scale, and for the others an octave). It is counted in BARS, so the line's length does not matter, and it can follow the drum
+ * drift (Every: Drift): the bar before the drums change. Mirror turns the contour upside down round the line's own middle, so it stays in the
+ * line's register. Where a move would leave the register (28 .. 96) it goes the other way. */
+static uint8_t ac_ans_bar;                      /* this bar is an answer's (set at the bar line) */
+volatile uint8_t en_acid_ans;                   /* the same, for the screen */
+static int acid_raw(int s, int dd)              /* step s's note, the chord's degree moved dd degrees, in the register (no answer) */
 {
-    const int dn = resp >= 5, kind = resp == 5 ? 1 : resp == 6 ? 2 : resp;   /* 5, 6: the octave, the fifth, down */
-    int d = kind == 3 ? deg - ac_off[s] : deg + ac_off[s], o, n, off = kind == 1 ? 12 : kind == 2 ? 7 : 0;   /* (mirrored: the line's contour upside down round the chord's degree) */
-    while (d < 0)
-        d += nsteps * 8;
-    o = d / nsteps - (kind == 3 ? 8 : 0);
+    int d = deg + ac_off[s] + dd, o, n;
+    d += nsteps * 8;
+    o = d / nsteps - 8;
     n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + ac_oct[s] + par[P_AC_OCT] + par[P_OCT]);   /* the root: C2 .. B2 */
     while (n > 96)
         n -= 12;
     while (n < 28)
         n += 12;
-    if (off) {                                  /* the answer: up or down by its interval; where that leaves the register, the other way (folded back, it would sound as the call did) */
-        const int to = dn ? n - off : n + off;
-        n = to >= 28 && to <= 96 ? to : (dn ? n + off : n - off);
+    return n;
+}
+static int ac_centre(void)                      /* the middle of the line's notes (for the mirror) */
+{
+    int s, lo = 127, hi = 0, len = par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN] > EN_NSTEP ? EN_NSTEP : par[P_AC_LEN];
+    for (s = 0; s < len; s++)
+        if (ac_gate >> s & 1u) {
+            const int n = acid_raw(s, 0);
+            lo = n < lo ? n : lo;
+            hi = n > hi ? n : hi;
+        }
+    return hi >= lo ? (lo + hi) / 2 : 60;
+}
+static int acid_note(int s, int v)              /* acid step s's note, as the call (v 0) or as answer v plays it */
+{
+    const int type = v / 5, ds = v % 5 - 2;
+    int n, sh = 0;
+    if (!type) {
+        return acid_raw(s, 0);
+    } else if (type == 3) {
+        n = acid_raw(s, 2 * ds);
+    } else {
+        n = acid_raw(s, 0);
+        if (type == 4) {                        /* mirror: round the line's middle, then folded into the register */
+            n = 2 * ac_centre() - n;
+            while (n > 96)
+                n -= 12;
+            while (n < 28)
+                n += 12;
+        }
+        sh = type == 1 ? 12 * ds : type == 2 ? 7 * ds : type >= 4 ? 12 * ds : 0;
+    }
+    if (sh) {
+        int to = n + sh;
+        if (to < 28 || to > 96)
+            to = n - sh;                        /* the other way (folded back, it would sound as the call did) */
+        while (to > 96)
+            to -= 12;
+        while (to < 28)
+            to += 12;
+        n = to;
     }
     return n;
+}
+/* the line's step st when answer v plays: which step of the line it reads (reverse and rotate move them) and whether it sounds */
+static int acid_src(int st, int len, int type)
+{
+    return type == 5 ? len - 1 - st : type == 6 ? ((st - 4) % len + len) % len : st;
+}
+static int acid_gate(int st, int len, int v)
+{
+    const int type = v / 5, ss = acid_src(st, len, type);
+    return (ac_gate >> ss & 1u) && !(type == 7 && (st & 1)) && !(type == 8 && !(ac_accent >> ss & 1u));
+}
+int en_acid_preview(int st, int v)
+{
+    const int len = par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN] > EN_NSTEP ? EN_NSTEP : par[P_AC_LEN], n = (unsigned)st < EN_NSTEP ? st : 0;
+    if (n >= len || nsteps < 1 || !acid_gate(n, len, v))
+        return -1;
+    return acid_note(acid_src(n, len, v / 5), v);
 }
 
 static void pad_retarget(void)                  /* the chord's tones to the four voices */
@@ -1561,14 +1633,6 @@ static void ac_roll(int st)                     /* a step made anew */
         ac_slide &= (uint16_t)~m;
 }
 
-int en_acid_preview(int st, int resp)
-{
-    const int n = (unsigned)st < EN_NSTEP ? st : 0;
-    if (!(ac_gate >> n & 1u) || (resp == 4 && (n & 1)) || nsteps < 1)
-        return -1;
-    return acid_note(n, resp);
-}
-
 static void ac_publish(void)
 {
     en_acid_gate = ac_gate;
@@ -1597,14 +1661,13 @@ static void ac_mutate(void)                     /* the loop's end: Mutate (a dej
 
 static void acid_step(void)                     /* a sixteenth of the acid line */
 {
-    int st = ac_pos, len = par[P_AC_LEN], prev = (st + len - 1) % len;
-    uint16_t m = (uint16_t)(1u << st);
-    const uint32_t ev = (uint32_t)par[P_AC_EVERY] + 2u;
-    const int resp = par[P_AC_RESP] && ac_loop % ev == ev - 1u ? par[P_AC_RESP] : 0;   /* the answer: the 2nd (3rd .. 8th) time round */
+    const int len = par[P_AC_LEN], st = ac_pos, v = ac_ans_bar ? par[P_AC_RESP] : 0, type = v / 5;
+    const int ss = acid_src(st, len, type), prev = type == 5 ? (ss + 1) % len : (ss + len - 1) % len;   /* (the step it reads, and the one played before it) */
+    const uint16_t m = (uint16_t)(1u << ss);
     en_acid_pos = (uint8_t)st;
     if (acid.play || par[P_AC_MAN]) {           /* the keys have it: the line steps on, unheard */
-    } else if ((ac_gate & m) && !(resp == 4 && (st & 1))) {
-        int n = acid_note(st, resp), slid = (ac_slide >> prev & 1u) && (ac_gate >> prev & 1u) && acid.amp_t > 0.0f;
+    } else if (acid_gate(st, len, v)) {
+        int n = acid_note(ss, v), slid = (ac_slide >> prev & 1u) && (ac_gate >> prev & 1u) && acid.amp_t > 0.0f;
         float dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
         acid.inc_t = mtof((float)n) * (1.0f / EN_SR);
         if (!slid) {                            /* a new note: the envelope again */
@@ -1629,7 +1692,6 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
     }
     if (++ac_pos >= len) {
         ac_pos = 0;
-        ac_loop++;
         ac_mutate();
     }
 }
@@ -2090,6 +2152,19 @@ static void tick(void)
             sec_req = 0;
         }
         dd_bar();                               /* drum drift: a fill coming, or a change now */
+        {   /* the acid's answer: this bar? (every 2nd .. 8th bar, or the bar before the drums change) */
+            const int rv = par[P_AC_RESP], ev = par[P_AC_EVERY];
+            int due = 0;
+            if (rv >= 5) {
+                if (ev >= 7)
+                    due = dd_fill ? 1 : (!par[P_DD_CHANGE] && bars % 8u == 7u);   /* (with drum drift not changing patterns: every 8th bar) */
+                else
+                    due = bars % ((uint32_t)ev + 2u) == (uint32_t)ev + 1u;
+                if (due && par[P_STYLE] < 100 && frand() * 100.0f >= (float)par[P_STYLE])   /* the chance (P_AC_CHANCE) */
+                    due = 0;
+            }
+            ac_ans_bar = en_acid_ans = (uint8_t)due;
+        }
         pat_now = pat_next;                     /* a new pattern: on the bar */
         for (l = 0; l < EN_NLANE; l++)          /* each lane's own source, from this bar */
             en_lane_src[l] = lane_src[l] = (uint8_t)(par[P_LSRC + l] ? par[P_LSRC + l] - 1 : pat_now);
@@ -3312,9 +3387,9 @@ static void flx_tick(int st)                    /* on every sixteenth */
  * zaps, beeps, a whoop, a dub siren, a drop, a riser, a rewind, a crash, a rave stab, a bell, a snare roll. Up to four at once. Held mode (the page's Play):
  * the sounds that go on (horns, sirens, the dub siren, the riser, the roll) sound as long as the key is down; the others play out. One shot: every one plays
  * out (the long ones for at most a second or so). Pitch: the page's octave, up or down. Echo: how much of them goes to the echo and the reverb. Level. */
-enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL };
+enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL, DJ_BLAST, DJ_RAVE, DJ_RSTAB };
 static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] = {
-    {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_HORN, 349.0f, 0.0f, "HORN LO"}, {DJ_HORN, 622.0f, 0.0f, "HORN HI"}, {DJ_HORN, 466.0f, 1.0f, "HORN MIN"},
+    {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 466.0f, 0.0f, "AIR BLAST"}, {DJ_HORN, 466.0f, 1.0f, "HORN MIN"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
     {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_SIREN, 700.0f, 0.4f, "SIREN 3"},
     {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_LASER, 1400.0f, 0.1f, "LASER LO"},
     {DJ_ZAP, 3000.0f, 0.15f, "ZAP"}, {DJ_ZAP, 6000.0f, 0.08f, "ZAP HI"},
@@ -3323,7 +3398,7 @@ static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] =
     {DJ_DUB, 1400.0f, 0.9f, "DUB SIREN"}, {DJ_DUB, 900.0f, 1.6f, "DUB LOW"},
     {DJ_DROP, 140.0f, 1.2f, "DROP"}, {DJ_DROP, 100.0f, 2.4f, "DROP LONG"},
     {DJ_RISER, 0.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 0.9f, "CRASH"},
-    {DJ_STAB, 220.0f, 0.0f, "STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
+    {DJ_RSTAB, 233.0f, 0.0f, "RAVE STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
 const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
 typedef struct { uint8_t on, held, key, type, hold_mode; float hz, aux, t, ph, ph2, ph3, env, z, z2; uint32_t age; } dj_t;
 static dj_t djv[4];
@@ -3374,19 +3449,68 @@ static float dj_voice(dj_t *v, float *amp)
     const float t = v->t * (1.0f / EN_SR), inc = v->hz * (1.0f / EN_SR), n = frand() * 2.0f - 1.0f;
     float y = 0.0f, a = 1.0f;
     switch (v->type) {
-    case DJ_HORN: {                             /* an air horn: three reeds (a chord), each a little out of tune with the others, scooping up into pitch, through a nasal
-                                                 * resonance (a state-variable filter, ~1.5 kHz) and a soft clip: the brass buzz of a DJ's horn, not a low-passed organ */
-        const float r2 = v->aux > 0.5f ? 1.189f : 1.26f, sc = 1.0f - 0.09f * fm_expf(-t * 28.0f);
-        const float i1 = inc * sc * 0.997f, i2 = inc * r2 * sc * 1.003f, i3 = inc * 1.5f * sc;
-        float x = (blep_saw(v->ph, i1) + blep_saw(v->ph2, i2) + blep_saw(v->ph3, i3)) * 0.42f, hp;
+    case DJ_HORN: case DJ_BLAST: {              /* AN AIR HORN (held, or a short blast): three reeds (a chord: the minor one for aux 1), each a pulse (two band-limited saws
+                                                 * offset 40%), a free octave on the root, the pitch scooping up into the note and running out of air, a noise blat at the
+                                                 * start, an asymmetric clip and a bright resonance (a state-variable filter near 2 kHz): the structure is from the research
+                                                 * (research/audit/horns.md), the numbers are first guesses to tune by ear */
+        const int bl = v->type == DJ_BLAST;
+        const float r2 = v->aux > 0.5f ? 1.189f : 1.26f, e1 = fm_expf(-t * 30.0f);
+        const float tl = t > 0.30f ? (t - 0.30f) * 4.0f : 0.0f, tail = tl > 1.0f ? 1.0f : tl;   /* the blast's air dying */
+        float sc = (1.0f - 0.06f * e1) * (1.0f + 0.0015f * sine(dj_wrap(t * 6.3f)));
+        float x, u, hp, f;
+        sc *= bl ? 1.0f - 0.05f * tail * tail : 1.0f - 0.012f * (1.0f - fm_expf(-t * 0.7f));
+        {
+            const float i1 = inc * sc * 0.9965f, i2 = inc * r2 * sc, i3 = inc * 1.498f * sc * 1.0035f;
+            x = (blep_saw(v->ph, i1) - blep_saw(dj_wrap(v->ph + 0.4f), i1)) + (blep_saw(v->ph2, i2) - blep_saw(dj_wrap(v->ph2 + 0.4f), i2)) * 0.9f +
+                (blep_saw(v->ph3, i3) - blep_saw(dj_wrap(v->ph3 + 0.4f), i3)) * 0.85f + blep_saw(dj_wrap(v->ph * 2.0f), 2.0f * i1) * 0.25f;
+            v->ph = dj_wrap(v->ph + i1);
+            v->ph2 = dj_wrap(v->ph2 + i2);
+            v->ph3 = dj_wrap(v->ph3 + i3);
+        }
+        x += n * (0.25f * fm_expf(-t * 45.0f) + 0.02f);
+        x *= 0.33f;
+        u = 2.4f * x + 0.25f;
+        x = u / (1.0f + fm_fabsf(u)) - 0.2f;
+        f = 0.26f + 0.06f * (1.0f - e1) - (bl ? 0.14f * tail : 0.0f);
+        v->z += f * v->z2;
+        hp = x - v->z - 0.45f * v->z2;
+        v->z2 += f * hp;
+        y = 0.35f * x + 0.45f * v->z + 1.1f * v->z2;
+        if (bl) {
+            a = (t < 0.006f ? t * 166.0f : 1.0f) * (t < 0.32f ? 1.0f : fm_expf(-(t - 0.32f) * 12.0f));
+            if (t > 0.9f)
+                v->on = 0;
+        } else {
+            a = t * 80.0f < 1.0f ? t * 80.0f : 1.0f;
+        }
+        break;
+    }
+    case DJ_RAVE: case DJ_RSTAB: {              /* THE RAVE HORN (the hoover, held, or a stab): two pulse-width-modulated pulses detuned either way, a square sub-octave,
+                                                 * the pitch diving from above into the note, a low-pass whose cutoff falls fast, and grit */
+        const int st = v->type == DJ_RSTAB;
+        const float e1 = fm_expf(-t * (st ? 28.0f : 14.0f)), sc = 1.0f + (st ? 0.35f : 0.50f) * e1, lr = st ? 7.0f : 4.6f;
+        const float i1 = inc * sc * 1.0105f, i2 = inc * sc * 0.9895f;
+        const float w1 = 0.50f + 0.28f * sine(dj_wrap(t * lr)), w2 = 0.50f - 0.28f * sine(dj_wrap(t * lr + 0.25f));
+        float x, hp, u;
+        const float f = st ? 0.08f + 0.45f * fm_expf(-t * 18.0f) : 0.10f + 0.40f * fm_expf(-t * 9.0f);
+        x = (blep_saw(v->ph, i1) - blep_saw(dj_wrap(v->ph + w1), i1)) + (blep_saw(v->ph2, i2) - blep_saw(dj_wrap(v->ph2 + w2), i2)) +
+            0.7f * (blep_saw(v->ph3, i1 * 0.5f) - blep_saw(dj_wrap(v->ph3 + 0.5f), i1 * 0.5f));
         v->ph = dj_wrap(v->ph + i1);
         v->ph2 = dj_wrap(v->ph2 + i2);
-        v->ph3 = dj_wrap(v->ph3 + i3);
-        v->z += 0.22f * v->z2;
-        hp = x - v->z - 0.55f * v->z2;
-        v->z2 += 0.22f * hp;
-        x = 0.55f * v->z + 1.3f * v->z2;
-        y = x / (1.0f + fm_fabsf(x)) * 1.5f;
+        v->ph3 = dj_wrap(v->ph3 + i1 * 0.5f);
+        x *= 0.4f;
+        v->z += f * v->z2;
+        hp = x - v->z - 0.5f * v->z2;
+        v->z2 += f * hp;
+        u = 3.0f * v->z;
+        y = u / (1.0f + fm_fabsf(u)) * 1.4f;
+        if (st) {
+            a = (t < 0.003f ? t * 333.0f : 1.0f) * fm_expf(-t * 9.0f);
+            if (t > 0.45f)
+                v->on = 0;
+        } else {
+            a = t * 200.0f < 1.0f ? t * 200.0f : 1.0f;
+        }
         break;
     }
     case DJ_SIREN: {                            /* a sine swept up and down */
@@ -4745,7 +4869,7 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
             continue;
         for (j = 0; j < n && d->on; j++) {
             float a, y = dj_voice(d, &a);
-            const int sustained = d->type == DJ_HORN || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
+            const int sustained = d->type == DJ_HORN || d->type == DJ_RAVE || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
             /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
             const int gate = !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
             d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : 0.00025f);
@@ -5668,12 +5792,6 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     int32_t *const out0 = out;
     const uint32_t n0 = n;
     drain();
-    if (hush && hush_g <= 0.0f) {               /* hushed: the music holds still (the song resumes where it was) */
-        for (n = 0; n < 2 * n0; n++)
-            out0[n] = 0;
-        en_hushed = 1;
-        return;
-    }
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;

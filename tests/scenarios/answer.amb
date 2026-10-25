@@ -1,4 +1,4 @@
-# The acid's answer (the fourth acid page, ARP x4): its kind (K1), how often (K2), which way (K3). The line asks, then answers.
+# The acid's answer (the fourth acid page, ARP x4): its kind (K1), how often in bars (K2), which way (K3), how likely (K4). The line asks, then answers.
 seed 0
 wait 500
 tap GLO
@@ -7,15 +7,37 @@ tap ARP
 tap ARP
 tap ARP
 expect view 11
+expect par76 100
+# an octave, up one (kind 1 * 5 + direction 3)
 spin K1 1
 wait 100
-expect par151 1
+expect par151 8
 shot answer_page.png
-# which way: down
+# up two
 spin K3 1
 wait 100
-expect par151 5
+expect par151 9
+# Mirror (kind 4), the direction kept (4): the contour round the line's middle, two octaves up from there
+spin K1 3
+wait 100
+expect par151 24
+shot answer_mirror.png
+# Reverse, Rotate, Sparse, Accents follow
+spin K1 1
+wait 100
+expect par151 29
+shot answer_reverse.png
+spin K1 3
+wait 100
+expect par151 44
+# every 4th bar, then before a drum change; the chance
 spin K2 2
 wait 100
 expect par21 2
+spin K2 5
+wait 100
+expect par21 7
+spin K4 -40
+wait 100
+expect par76 60
 wait 9000

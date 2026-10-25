@@ -132,6 +132,13 @@ static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
     }
     return !bad && pool_ok(s->pool);
 }
+static void ans_old(slot_t *s)                /* the acid answer before 0.12.6: 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down; and its chance (the old style's place) */
+{
+    static const uint8_t M[7] = {0, 8, 13, 22, 37, 6, 11};   /* kind * 5 + direction (3 up, 1 down, 2 the same) */
+    const int v = s->par[P_AC_RESP];
+    s->par[P_AC_RESP] = (int16_t)(v >= 0 && v < 7 ? M[v] : 0);
+    s->par[P_AC_CHANCE] = 100;
+}
 static void image_header(int g)
 {
     memset(image, 0, IMG_HDR);
@@ -141,6 +148,7 @@ static void image_header(int g)
     wr16(image + 6, P_NPARAMS);
     wr16(image + 8, saved);
     wr16(image + 10, IMG_REC);
+    image[12] = 1;                           /* 1: the acid answer in its present form (kind * 5 + direction) */
 }
 
 /* the old bank (OBJ_PROJ, 16-bit settings): its pieces into the slots, as before: read field by field, so a bank written with fewer
@@ -182,6 +190,7 @@ static void old_bank_load(int n)
                 s->par[p] = (int16_t)v;
             }
             en_style_sounds(s->par);         /* stored with a style (before 1.0.27): its sounds and kit */
+            ans_old(s);
             q += 2u * npar;
             s->pool = rd16(q);
             q += 2;
@@ -211,12 +220,16 @@ static void image_load(int g)
         (uint32_t)n >= IMG_LEN) {
         const uint32_t npar = rd16(image + 6);
         const uint16_t sv = rd16(image + 8);
+        const int enc = image[12];
         for (i = 0; i < NPIECES; i++)
             if (sv >> i & 1u) {
-                if (unpack_slot(image + IMG_HDR + (uint32_t)i * IMG_REC, npar, &proj.slot[i]))
+                if (unpack_slot(image + IMG_HDR + (uint32_t)i * IMG_REC, npar, &proj.slot[i])) {
                     saved |= (uint16_t)(1u << i);
-                else
+                    if (!enc)
+                        ans_old(&proj.slot[i]);
+                } else {
                     recipe(i, &proj.slot[i]);       /* out of range: not saved */
+                }
             }
     } else {
         if (g == 0 && n > 0)

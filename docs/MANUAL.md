@@ -460,7 +460,7 @@ level, decay and density.
 - **Built-in DX7 voices (22):** DX Tine EP, DX Glass Bell, DX Round Bass, DX Brass Sect, DX Soft Pad, DX Wood Bars, DX Drawbars, DX Nylon Pick, DX Brass 2, DX Solid Bass, DX Bells, DX Marimba, DX Clavinet, DX Strings, DX Glass Pad, DX Sync Lead, DX Harp, DX Kalimba, DX Flute, DX Steel Drum, DX Saw Bass, DX Tubular. A six-voice, six-operator FM engine plays them as a DX7 would (all 32 algorithms, the envelopes with their curves and scaling, velocity, LFO, pitch envelope, feedback). Heavy patches are held to fewer voices (the bells, brass, strings and pads to three or four) to spare the processor.
 - **Yours (up to 16):** DX7 voices you load yourself come after these, named `DX` and the voice's own name (section 15).
 
-**The answer (call and response).** The **Acid answer** page (ARP four times) makes the line ask and then answer: on every 2nd (3rd ... 8th) time round it is changed, so with Every on 4th you hear the same call three times and the answer on the fourth. **Answer** chooses how: **Octave** (the same notes twelve up or down), **Fifth** (seven up or down), **Mirror** (the contour upside down round the chord's note) or **Sparse** (only the even steps); **Direction** is up or down for the octave and the fifth. Where the move would leave the acid's register (a low line answered downwards) the answer goes the other way, so it never folds back onto the call. The page draws the call and its answer, a dot a step at its note's height. Off by default; stored with the piece (the editor has it under Acid).
+**The answer (call and response).** The **Acid answer** page (ARP four times) makes the line ask and then answer. **Every** counts in bars (the 2nd to the 8th bar, so the line's length does not matter: with Every on 4th you hear the call three bars and the answer in the fourth), or **Drift**: the bar before the drums change, so the answer comes in with the pattern change (with drum drift not changing patterns it falls back to every 8th bar). **Answer** is how the line is changed: **Octave**, **Fifth** (seven semitones), **Third** (two degrees up or down the scale, so it stays in key), **Mirror** (the contour upside down round the line's own middle, so it stays in the line's register), **Reverse** (the line backwards), **Rotate** (the line displaced a beat), **Sparse** (only the even steps) or **Accents** (only the accented notes). **Direction** is down 2, down, the same, up or up 2: for the octave, fifth and third a step of the interval, for the others (mirror, reverse, rotate, sparse, accents) octaves. Where the move would leave the acid's register (a low line answered downwards) the answer goes the other way, so it never folds back onto the call. **Chance** is how often an answer that is due plays (100: always). The page draws the call and its answer, a dot a step at its note's height. Off by default; stored with the piece (the editor has it under Acid).
 
 ### The kits: 14
 
@@ -646,9 +646,9 @@ plays, so the slices are the last 8 sixteenths (fewer at slow tempos).
 
 ![The DJ SNIPS bank](img/perf-screen-snips.png)
 
-The 27 keys, F3 to G5, are sounds a DJ throws in, made on the spot: AIR HORN, HORN LO, HORN HI, HORN MIN, SIREN, SIREN 2,
+The 27 keys, F3 to G5, are sounds a DJ throws in, made on the spot: AIR HORN (held), AIR BLAST (a short blast), HORN MIN (a minor chord, held), RAVE HORN (the hoover, held), SIREN, SIREN 2,
 SIREN 3, LASER, LASER LO, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP
-LONG, RISER, REWIND, CRASH, STAB (a minor rave chord), BELL and SNR ROLL (a snare roll that speeds up). Up to four at
+LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover as a stab), BELL and SNR ROLL (a snare roll that speeds up). Up to four at
 once. They play while held (they aren't latched). The snips page sets **Pitch** (normal, an octave up or down), **Play**
 (HELD: the horns, sirens, dub siren, riser and roll sound as long as the key is down; ONE SHOT: they sound for a second
 or so and every other one plays out), **Echo** (dry, some, lots: how much goes to the echo and the reverb) and **Level**.
