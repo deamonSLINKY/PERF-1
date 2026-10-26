@@ -22,7 +22,7 @@ FM6 = os.path.join(ROOT, "firmware", "src", "dsp", "fm6_core.inc")
 OUT = os.path.join(ROOT, "build", "params.json")
 
 LANES = ["Kick", "Snare", "Clap", "Hat", "Open hat", "Perc"]
-LAYERS = ["Pad", "Drone", "Acid", "Pluck", "Drums"]
+LAYERS = ["Pad", "Bass", "Acid", "Pluck", "Drums"]
 
 
 def strip_comments(t):
@@ -105,11 +105,11 @@ def main():
             {"name": "LFO", "knobs": byname["Pad LFO"]},
             {"name": "Chords", "knobs": [k for k in byname["Chords"] if k["label"] != "Root"]},
             {"name": "Place", "knobs": pl(("P_PAD_OCT", "Octave"), ("P_PAD_MAN", "By hand")) + [ls("P_PAN", 0, "Pan"), ls("P_SEND", 0, "Send")]}]},
-        {"name": "Drone", "sections": [
-            {"name": "Drone", "knobs": byname["Drone"]},
-            {"name": "Envelope", "knobs": byname["Drone env"]},
-            {"name": "LFO", "knobs": byname["Drone LFO"]},
-            {"name": "Bass line (the drone as notes)", "knobs": byname["Bass line"]},
+        {"name": "Bass", "sections": [
+            {"name": "Bass", "knobs": byname["Bass"]},
+            {"name": "Envelope", "knobs": byname["Bass env"]},
+            {"name": "LFO", "knobs": byname["Bass LFO"]},
+            {"name": "Bass line (the bass as notes)", "knobs": byname["Bass line"]},
             {"name": "Place", "knobs": pl(("P_BASSOCT", "Octave"), ("P_DR_MAN", "By hand")) + [ls("P_PAN", 1, "Pan"), ls("P_SEND", 1, "Send")]}]},
         {"name": "Acid", "sections": [
             {"name": "Acid", "knobs": byname["Acid"]},
@@ -137,7 +137,7 @@ def main():
             {"name": "Reverb", "knobs": byname["Reverb"]},
             {"name": "Master bus", "knobs": byname["Comp/Limit"]}]},
         {"name": "Mixer", "sections": [
-            {"name": "Levels", "knobs": pl(("P_PAD", "Pad"), ("P_BASS", "Drone"), ("P_ACID", "Acid"), ("P_CM_LVL", "Pluck"), ("P_PULSE", "Drums"), ("P_NOISE", "Vinyl"))},
+            {"name": "Levels", "knobs": pl(("P_PAD", "Pad"), ("P_BASS", "Bass"), ("P_ACID", "Acid"), ("P_CM_LVL", "Pluck"), ("P_PULSE", "Drums"), ("P_NOISE", "Vinyl"))},
             {"name": "Pan", "knobs": [ls("P_PAN", k, LAYERS[k]) for k in range(5)]},
             {"name": "Send (echo and reverb)", "knobs": [ls("P_SEND", k, LAYERS[k]) for k in range(5)]},
             {"name": "Vinyl", "knobs": pl(("P_NZ_COLOR", "Wear"), ("P_NZ_PUMP", "Pump (the kick ducks it)"))}]},

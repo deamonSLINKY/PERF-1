@@ -175,7 +175,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
 <section class="help">
   <div class="knobs">
     <h2>Pages and knobs</h2>
-    <p>SELECT steps through the 23 pages in this order, and stops at the ends: Tempo, Pad, Pad env, Pad LFO, Chords, Mixer, Drone, Drone env, Drone LFO, Acid, Acid env, Acid line, Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Master, Global, Jam. The line above the knobs shows the page's name and a dot per page at its right, and at its left the voice's sound plus BY HAND, +LINK or an octave (OCT+1, or SONG+1) when they apply. The buttons jump to a group of pages; pressing the same button again steps through the group, and from another page it comes back to where you were in that group. KNOB 1 is a voice's level on its first page. There are ten genres of ten pieces (PRESETS picks piece 01 to 10, GLO + PRESETS the genre), each piece with its own settings and six drum patterns. Changes last until the power goes off unless you store the piece (Global, SAVE; the HYPNO genre only).</p>
+    <p>SELECT steps through the 23 pages in this order, and stops at the ends: Tempo, Pad, Pad env, Pad LFO, Chords, Mixer, Bass, Bass env, Bass LFO, Acid, Acid env, Acid line, Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Master, Global, Jam. The line above the knobs shows the page's name and a dot per page at its right, and at its left the voice's sound plus BY HAND, +LINK or an octave (OCT+1, or SONG+1) when they apply. The buttons jump to a group of pages; pressing the same button again steps through the group, and from another page it comes back to where you were in that group. KNOB 1 is a voice's level on its first page. There are ten genres of ten pieces (PRESETS picks piece 01 to 10, GLO + PRESETS the genre), each piece with its own settings and six drum patterns. Changes last until the power goes off unless you store the piece (Global, SAVE; the HYPNO genre only).</p>
     <div class="pages">
       <div>
         <h3>Tempo <span>HOME</span></h3>
@@ -192,13 +192,13 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
       <div>
         <h3>Mixer <span>SELECT</span></h3>
         <dl>
-          <dt>Track, Level</dt><dd>Which layer you are mixing (pad, drone, acid, pluck, drums); its level. The page draws a fader and a live meter for each layer and the output's peak.</dd><dt>Pan, Send</dt><dd>L100 to R100 (C leaves the sound as it was); how much of the layer goes to the echo and the reverb (50 as it was, 0 none, 100 twice).</dd>
+          <dt>Track, Level</dt><dd>Which layer you are mixing (pad, bass, acid, pluck, drums); its level. The page draws a fader and a live meter for each layer and the output's peak.</dd><dt>Pan, Send</dt><dd>L100 to R100 (C leaves the sound as it was); how much of the layer goes to the echo and the reverb (50 as it was, 0 none, 100 twice).</dd>
         </dl>
       </div>
       <div>
-        <h3>Drone <span>LFO, LFO, LFO</span></h3>
+        <h3>Bass <span>LFO, LFO, LFO</span></h3>
         <dl>
-          <dt>Drone</dt><dd>Level, Sound (one of 24), Cutoff, Reso. OCT− / OCT+ its octave.</dd><dt>Drone env</dt><dd>Trigger (each chord, every 1, 2, 4 or 8 bars, or off), Attack (0.01 to 4 s), Decay (0.05 to 16 s), Amount (on the cutoff).</dd><dt>Drone LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
+          <dt>Bass</dt><dd>Level, Sound (one of 24), Cutoff, Reso. OCT− / OCT+ its octave.</dd><dt>Bass env</dt><dd>Trigger (each chord, every 1, 2, 4 or 8 bars, or off), Attack (0.01 to 4 s), Decay (0.05 to 16 s), Amount (on the cutoff).</dd><dt>Bass LFO</dt><dd>Rate, Depth, Shape, Target (cutoff, pitch, level, drive). By default a 16-bar sine on the cutoff.</dd>
         </dl>
       </div>
       <div>
@@ -222,7 +222,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
       <div>
         <h3>Links <span>SEQ, SEQ</span></h3>
         <dl>
-          <dt>The drums into the voices</dt><dd>SEL + SEQ turns them on and off (+LINK shows above the knobs). K&gt;Drone: each kick opens the drone's filter (a rolling bass). S&gt;Pad: each snare or clap flashes the pad open. H&gt;Acid: a hat on an acid note accents it (these three are 0 to 100). P&gt;Clock (off or clock): the acid steps only on the perc lane's hits (free again in a breakdown).</dd>
+          <dt>The drums into the voices</dt><dd>SEL + SEQ turns them on and off (+LINK shows above the knobs). K&gt;Bass: each kick opens the bass's filter (a rolling bass). S&gt;Pad: each snare or clap flashes the pad open. H&gt;Acid: a hat on an acid note accents it (these three are 0 to 100). P&gt;Clock (off or clock): the acid steps only on the perc lane's hits (free again in a breakdown).</dd>
         </dl>
       </div>
       <div>
@@ -264,21 +264,21 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
       <div>
         <h3>Jam <span>SELECT, after Global</span></h3>
         <dl>
-          <dt>Voice, Keys</dt><dd>What the 27 keys play along with the music: pluck, pad, acid or drone; SCALE (a black key plays the scale tone at or below it, so no wrong notes), CHORDS (a triad of the scale on every key), HARP (the scale's tones, one a key, from C3). The keys never edit the scale here.</dd><dt>Octave, Answer</dt><dd>&minus;2 to +2; with Answer on, once you stop (after two notes or more) the pluck plays your phrase back an octave up on a bar line, once. The voice you play leaves its own line while the page is up.</dd>
+          <dt>Voice, Keys</dt><dd>What the 27 keys play along with the music: pluck, pad, acid or bass; SCALE (a black key plays the scale tone at or below it, so no wrong notes), CHORDS (a triad of the scale on every key), HARP (the scale's tones, one a key, from C3). The keys never edit the scale here.</dd><dt>Octave, Answer</dt><dd>&minus;2 to +2; with Answer on, once you stop (after two notes or more) the pluck plays your phrase back an octave up on a bar line, once. The voice you play leaves its own line while the page is up.</dd>
         </dl>
       </div>
     </div>
   </div>
   <div class="knobs">
     <h2>Sounds, and playing a voice</h2>
-    <p>Each voice has its own bank of sounds, stored with the piece. <b>SEL + ALGORITHM</b> steps the sound of the voice on screen (a Pad, Drone, Acid or Pluck page), or the whole kit on the drums' pages; its name shows at the left of the line above the knobs. The Sound knob on the voice's page does the same.</p>
+    <p>Each voice has its own bank of sounds, stored with the piece. <b>SEL + ALGORITHM</b> steps the sound of the voice on screen (a Pad, Bass, Acid or Pluck page), or the whole kit on the drums' pages; its name shows at the left of the line above the knobs. The Sound knob on the voice's page does the same.</p>
     <div class="pages">
       <div>
         <h3>Pad <span>24 sounds</span></h3>
         <dl><dd>Rhodes, Voices, Strings, Glass, Organ, Warm, Stabs, Dark, Dub, Trance, Poly, Hollow, Pings, Hits, Rave, Sine, Ooh, Wurli, Mallet, Brass, Fat, Pluck, Chapel, Air.</dd></dl>
       </div>
       <div>
-        <h3>Drone <span>24 sounds</span></h3>
+        <h3>Bass <span>24 sounds</span></h3>
         <dl><dd>Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ, Rumble, Sub, Square, Hoover, Fifths, Metal, Sync, Bright, Wub, Bite, Tine, Clang, Gnarl, Wide, Power, Air.</dd></dl>
       </div>
       <div>
@@ -296,8 +296,8 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
     </div>
     <ul>
       <li><b>The keys set the scale</b> on every page that does not say otherwise: each key adds or removes its note (the root stays, and at least three notes remain). They are lit where the scale is. <b>ALGORITHM</b> picks the mode (Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, Pent maj, Pent min; the page says Custom once you have edited the scale).</li>
-      <li><b>By hand:</b> on a Pad, Drone or Acid page, hold <b>SEL</b> and press <b>ENV</b> to take that voice off the algorithm. It goes quiet (BY HAND shows above the knobs), and on its pages the keys play it over the song: the pad up to four notes, the drone and the acid the last key held (the acid sliding between held keys, as a 303). It works while stopped too. SEL + ENV again gives it back.</li>
-      <li><b>Jam</b> (the last page on the dial) plays the pluck, pad, acid or drone from all 27 keys, always in the scale, without touching the scale.</li>
+      <li><b>By hand:</b> on a Pad, Bass or Acid page, hold <b>SEL</b> and press <b>ENV</b> to take that voice off the algorithm. It goes quiet (BY HAND shows above the knobs), and on its pages the keys play it over the song: the pad up to four notes, the bass and the acid the last key held (the acid sliding between held keys, as a 303). It works while stopped too. SEL + ENV again gives it back.</li>
+      <li><b>Jam</b> (the last page on the dial) plays the pluck, pad, acid or bass from all 27 keys, always in the scale, without touching the scale.</li>
     </ul>
   </div>
   <div>
@@ -319,8 +319,8 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
       <li><b>Keys</b> (27, F3 to G5): the scale. On the pages of a voice taken off the algorithm they play that voice; in the sequencer the white ones are the steps; in the FX menu they are effects; on Perform and the visualizers, or with GLO held, they are the track mix; on Jam, an instrument.</li>
       <li><b>PLAY</b> plays / stops. <b>REC</b> freezes: the chord holds and the reverb rings on (REC lights; press again to thaw). <b>EDIT</b> the next chord, on the next bar.</li>
       <li><b>HOME</b> Tempo; on Tempo, again for Perform; <b>twice quickly</b> from anywhere for the visualizers; <b>held</b> 0.7 s for the settings page.</li>
-      <li><b>ENV</b> Pad, Pad env, Pad LFO, Chords. <b>LFO</b> Drone, env, LFO. <b>ARP</b> Acid, env, line, Pluck, Pluck 2. <b>SEQ</b> Drums, Links, Kit, Drum drift (held: the sequencer). <b>GLO</b> Global (held: the track mix).</li>
-      <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Drone or Acid page, that voice (the pluck: two either way); on any other page, the whole song. The line above the knobs shows OCT+1 or SONG+1. In the FX menu, OCT− puts everything back: locks off, mutes and solos clear, the FX knobs home (an undo is on GLO + B3).</li>
+      <li><b>ENV</b> Pad, Pad env, Pad LFO, Chords. <b>LFO</b> Bass, env, LFO. <b>ARP</b> Acid, env, line, Pluck, Pluck 2. <b>SEQ</b> Drums, Links, Kit, Drum drift (held: the sequencer). <b>GLO</b> Global (held: the track mix).</li>
+      <li><b>OCT−</b> / <b>OCT+</b>: an octave down or up, to three either way. On a Pad, Bass or Acid page, that voice (the pluck: two either way); on any other page, the whole song. The line above the knobs shows OCT+1 or SONG+1. In the FX menu, OCT− puts everything back: locks off, mutes and solos clear, the FX knobs home (an undo is on GLO + B3).</li>
       <li><b>SAVE</b> is the breakdown: tap it and the breakdown starts on the next bar and lasts until you tap again, which brings a four-bar build and then the drop. Held 0.5 s in a breakdown or build it is the drop, on the next bar. It lights while a breakdown or build runs and blinks while one waits for the bar. On the <b>Global</b> page it stores the piece instead (held: factory settings). It is written at once: playing, the music fades out for a moment while it is written, then picks up where it was.</li>
       <li><b>FX</b> opens and closes the effects menu (below). <b>ALGORITHM</b> the mode; <b>PRESETS</b> the piece (01 to 10). On Perform and the visualizers ALGORITHM is the mood instead. <b>MASTER</b> is the volume.</li>
       <li><b>SEL</b> is a shift (hold it alone for 0.4 s and the screen lists what it does): <b>white keys 1–6</b> (F3, G3, A3, B3, C4, D4) pick pattern 1–6 (lit: the one chosen; it waits for the bar), <b>PRESETS</b> picks a piece that comes in on the next bar instead of at once, <b>ALGORITHM</b> changes the sound of the voice on screen (the drums: the kit), <b>SEQ</b> turns the links on and off, <b>ENV</b> takes the voice on screen off the algorithm, <b>FX</b> walks the effects' settings pages, a <b>key in the FX menu</b> opens that effect's page, and <b>GLO</b> is remote mode (on the FM-1 itself).</li>
@@ -370,7 +370,7 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
       <div>
         <h3>Settings pages, 1 <span>in dial order</span></h3>
         <dl>
-          <dt>Gate</dt><dd>The white keys are the 16 steps. Pattern (3-3-3, tres, off-beat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, or your keys' own), Length (2 to 16 steps; 12 or 10 turn against the bar), Targets (what it closes: no drums, pad, drone, acid, drums, hats, kick, all, no kick, kick+drone, pluck), Depth.</dd><dt>Phaser, Flanger</dt><dd>Rate, Depth, Feedbk, Mix.</dd><dt>Vinyl</dt><dd>Level, Crackle, Hiss, Tone.</dd><dt>Tape</dt><dd>Wow, Flutter, Drive, Dull.</dd><dt>Roll</dt><dd>From, To (1/2 down to 1/64), Each (1/2 beat to 4 beats), Swell.</dd><dt>Pump</dt><dd>Depth, Release, Every (1/2, 1/4, 1/8, 1/16), Targets (as the gate's).</dd><dt>Riser</dt><dd>Time (about 1 to 12 s), Filter, Wash, Echo.</dd>
+          <dt>Gate</dt><dd>The white keys are the 16 steps. Pattern (3-3-3, tres, off-beat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, or your keys' own), Length (2 to 16 steps; 12 or 10 turn against the bar), Targets (what it closes: no drums, pad, bass, acid, drums, hats, kick, all, no kick, kick+bass, pluck), Depth.</dd><dt>Phaser, Flanger</dt><dd>Rate, Depth, Feedbk, Mix.</dd><dt>Vinyl</dt><dd>Level, Crackle, Hiss, Tone.</dd><dt>Tape</dt><dd>Wow, Flutter, Drive, Dull.</dd><dt>Roll</dt><dd>From, To (1/2 down to 1/64), Each (1/2 beat to 4 beats), Swell.</dd><dt>Pump</dt><dd>Depth, Release, Every (1/2, 1/4, 1/8, 1/16), Targets (as the gate's).</dd><dt>Riser</dt><dd>Time (about 1 to 12 s), Filter, Wash, Echo.</dd>
         </dl>
       </div>
       <div>
@@ -393,13 +393,13 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
       <div>
         <h3>Perform <span>HOME on Tempo</span></h3>
         <dl>
-          <dt>The screen</dt><dd>The section (groove, break, build) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (kick, hats, snare, perc, drone, acid, pad, pluck) as live meters, the four scenes, what is on in FX, and the mood bar.</dd><dt>Keys, knobs</dt><dd>The keys are the track mix (below, no GLO needed); the knobs are the FX knobs; ALGORITHM is the <b>mood</b>, chill to peak (0 to 100, 50 leaves the piece as it is): it moves the acid, the pluck, the hats and percussion, the pad's brightness, the drone's cutoff, the drive, the reverb and echo and more together. SELECT goes on to the pages.</dd>
+          <dt>The screen</dt><dd>The section (groove, break, build) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (kick, hats, snare, perc, bass, acid, pad, pluck) as live meters, the four scenes, what is on in FX, and the mood bar.</dd><dt>Keys, knobs</dt><dd>The keys are the track mix (below, no GLO needed); the knobs are the FX knobs; ALGORITHM is the <b>mood</b>, chill to peak (0 to 100, 50 leaves the piece as it is): it moves the acid, the pluck, the hats and percussion, the pad's brightness, the bass's cutoff, the drive, the reverb and echo and more together. SELECT goes on to the pages.</dd>
         </dl>
       </div>
       <div>
         <h3>Track mix <span>hold GLO, or Perform</span></h3>
         <dl>
-          <dt>Mute, solo</dt><dd>F3 mute kick (the black key above, F#3, solos it), G3 hats, A3 snare, C4 perc, D4 drone, F4 acid, G4 pad, B4 pluck (F#5 solos it), A4 / A#4 all four drums.</dd><dt>Others</dt><dd>B3 undo (again: redo), E4 tap tempo, C5 to D#5 scenes 1 to 4, E5 reset everything, F5 auto-DJ on / off, G5 new piece each round. Held GLO shows the map, plus the load meter and the auto-DJ's phase.</dd>
+          <dt>Mute, solo</dt><dd>F3 mute kick (the black key above, F#3, solos it), G3 hats, A3 snare, C4 perc, D4 bass, F4 acid, G4 pad, B4 pluck (F#5 solos it), A4 / A#4 all four drums.</dd><dt>Others</dt><dd>B3 undo (again: redo), E4 tap tempo, C5 to D#5 scenes 1 to 4, E5 reset everything, F5 auto-DJ on / off, G5 new piece each round. Held GLO shows the map, plus the load meter and the auto-DJ's phase.</dd>
         </dl>
       </div>
       <div>
@@ -566,7 +566,7 @@ function hit(c, cls) {
   c.hit = d;
 }
 // what each control does, on hover (the Buttons list below says the same)
-const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO, chords); with SEL: the voice on screen by hand", LFO: "Drone (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV the voice on screen by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
+const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO, chords); with SEL: the voice on screen by hand", LFO: "Bass (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV the voice on screen by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
   ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links, Kit, Drum drift); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
   "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
   MASTER: "Volume" };

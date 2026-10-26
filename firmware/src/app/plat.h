@@ -28,6 +28,7 @@ uint32_t plat_ms(void);
 uint32_t plat_buttons(void);           /* held: bit B_* */
 uint32_t plat_keys(void);              /* held: bit k = key k (0 = F3) */
 int32_t plat_enc(int role);            /* detents since the last call, + = clockwise; EN_* */
+uint32_t plat_battery(void);           /* the battery divider's ADC reading, 0..1023 (smoothed, about a second), 0xFFFFFFFF when there is none */
 uint32_t plat_master(void);            /* MASTER pot, 0..4096 gain Q12 */
 uint32_t plat_seed(void);              /* at power-on: a seed, different each time (0 on the host: no chance) */
 void plat_leds(uint32_t buttons, uint32_t keys);   /* lit: bit B_*, bit key */

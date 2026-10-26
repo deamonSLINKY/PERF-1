@@ -21,7 +21,7 @@ const uint16_t EN_MODE_POOL[EN_NMODES] = {
 const char *const EN_LANE_NAME[EN_NLANE] = {"Kick", "Snare", "Clap", "Hat", "Open hat", "Perc"};
 
 static const en_param_t PARAMS[P_NPARAMS] = {
-    [P_PAD] = {"Pad", 0, 100, 45},          [P_ACID] = {"Acid", 0, 100, 55},       [P_BASS] = {"Drone", 0, 100, 65},
+    [P_PAD] = {"Pad", 0, 100, 45},          [P_ACID] = {"Acid", 0, 100, 55},       [P_BASS] = {"Bass", 0, 100, 65},
     [P_PULSE] = {"Drums", 0, 100, 75},      [P_NOISE] = {"Vinyl", 0, 100, 20},
     [P_TEMPO] = {"Tempo", 70, 190, 128},   [P_EVOLVE] = {"Evolve", 0, 100, 40},   [P_MOTION] = {"Motion", 0, 100, 60},
     [P_DRIFT] = {"Drift", 0, 100, 60},
@@ -59,7 +59,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_DR_INST] = {"Sound", 0, EN_NSOUND - 1, 0},
     [P_KIT_KICK] = {"Kick", 0, EN_NKIT - 1, 0}, [P_KIT_SNARE] = {"Snare", 0, EN_NKIT - 1, 0},
     [P_KIT_HAT] = {"Hats", 0, EN_NKIT - 1, 0},  [P_KIT_PERC] = {"Perc", 0, EN_NKIT - 1, 0},
-    [P_PAD_MAN] = {"Pad hand", 0, 1, 0},     [P_DR_MAN] = {"Drone hand", 0, 1, 0}, [P_AC_MAN] = {"Acid hand", 0, 1, 0},
+    [P_PAD_MAN] = {"Pad hand", 0, 1, 0},     [P_DR_MAN] = {"Bass hand", 0, 1, 0}, [P_AC_MAN] = {"Acid hand", 0, 1, 0},
     [P_CHORD] = {"Chord", 0, EN_NCHORD - 1, 0}, [P_VOICING] = {"Voicing", 0, 1, 0},
     [P_DD_CHANGE] = {"Change", 0, 2, 0}, [P_DD_EVERY] = {"Every", 0, 5, 2}, [P_DD_POOL] = {"Pool", 2, EN_NPAT, 4},
     [P_DD_MUTATE] = {"Mutate", 0, 2, 0},
@@ -595,7 +595,7 @@ void en_param_text(int i, int v, char *b)
     case P_SLICE: { static const char *const S[10] = {"Off", "Halves", "Stutter", "Reverse", "Delay", "Beats", "Mirror", "Double", "Swap", "Auto"}; s = S[(unsigned)v < 10u ? v : 0]; break; }
     case P_TIME: { static const char *const T[3] = {"Normal", "Half", "Double"}; s = T[(unsigned)v < 3u ? v : 0]; break; }
     case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
-    case P_BL_MODE: { static const char *const M[7] = {"Drone", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
+    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -1519,6 +1519,8 @@ static void scale_set(void)
  * line's register. Where a move would leave the register (28 .. 96) it goes the other way. */
 static uint8_t ac_ans_bar, ac_ans_loop, ac_fill_bar;   /* this bar (Sync: Bar) or this loop (Sync: Loop) is an answer's; the bar before the drums change */
 static uint32_t ac_loop;                        /* the times round the line */
+static uint32_t ac_bar0, ac_loop0;               /* the bar and the loop the answer's counting starts from (the beginning of the next bar, of the next loop, after its settings change) */
+static uint8_t ac_resync_bar, ac_resync_loop;
 volatile uint8_t en_acid_ans;                   /* the answer sounding now, for the screen */
 static int acid_raw(int s, int dd)              /* step s's note, the chord's degree moved dd degrees, in the register (no answer) */
 {
@@ -1782,11 +1784,15 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
 {
     const int len = par[P_AC_LEN], st = ac_pos;
     int v, type;
+    if (st == 0 && ac_resync_loop) {            /* the answer's settings changed: its count starts at this loop */
+        ac_loop0 = ac_loop;
+        ac_resync_loop = 0;
+    }
     if (st == 0 && par[P_AC_CHANCE]) {          /* Sync: Loop: the whole loop is the answer, every 2nd .. 8th time round, or the loop that starts in the bar before the drums change */
         const uint32_t ev = (uint32_t)par[P_AC_EVERY];
         int due = 0;
         if (par[P_AC_RESP] >= 5)
-            due = ev >= 7 ? (ac_fill_bar ? 1 : (!par[P_DD_CHANGE] && ac_loop % 8u == 7u)) : ac_loop % (ev + 2u) == ev + 1u;
+            due = ev >= 7 ? (ac_fill_bar ? 1 : (!par[P_DD_CHANGE] && (ac_loop - ac_loop0) % 8u == 7u)) : (ac_loop - ac_loop0) % (ev + 2u) == ev + 1u;
         ac_ans_loop = en_acid_ans = (uint8_t)due;
     }
     v = (par[P_AC_CHANCE] ? ac_ans_loop : ac_ans_bar) ? par[P_AC_RESP] : 0;
@@ -2264,10 +2270,13 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         case 5: idx = cm_i % n; cm_i += 3; break;
         default: idx = cm_i % n; cm_i++; break;
         }
+        if (par[P_CM_VU] > 0 && (cm_ix[slot] & 128) && frand() < 0.5f) {   /* a morph: not the note heard here, nor a new one, but its neighbour in the chord's tones */
+            idx = ((cm_ix[slot] & 15) % n + (frand() < 0.5f ? 1 : n - 1)) % n;
+        }
         if (par[P_CM_LEAP] && frand() * 100.0f < (float)par[P_CM_LEAP])   /* a leap: this note an octave away */
             leap = frand() < 0.7f ? 1 : -1;
         vel = 0.7f + 0.3f * frand();
-        cm_ix[slot] = (uint8_t)(idx | (leap > 0 ? 32 : leap < 0 ? 64 : 0));
+        cm_ix[slot] = (uint8_t)(idx | (leap > 0 ? 32 : leap < 0 ? 64 : 0) | 128);
         cm_vl[slot] = (uint8_t)(vel * 255.0f);
     }
     note = arp[idx] + 12 * leap;
@@ -2483,14 +2492,18 @@ static void tick(void)
         dd_bar();                               /* drum drift: a fill coming, or a change now */
         {   /* the acid's answer, Sync: Bar: this bar? (every 2nd .. 8th bar, or the bar before the drums change); Sync: Loop is decided where the line starts (acid_step) */
             const int rv = par[P_AC_RESP], ev = par[P_AC_EVERY];
+            if (ac_resync_bar) {                /* the answer's settings changed: its count starts at this bar */
+                ac_bar0 = bars;
+                ac_resync_bar = 0;
+            }
             ac_fill_bar = dd_fill;
             if (!par[P_AC_CHANCE]) {
                 int due = 0;
                 if (rv >= 5) {
                     if (ev >= 7)
-                        due = dd_fill ? 1 : (!par[P_DD_CHANGE] && bars % 8u == 7u);   /* (with drum drift not changing patterns: every 8th bar) */
+                        due = dd_fill ? 1 : (!par[P_DD_CHANGE] && (bars - ac_bar0) % 8u == 7u);   /* (with drum drift not changing patterns: every 8th bar) */
                     else
-                        due = bars % ((uint32_t)ev + 2u) == (uint32_t)ev + 1u;
+                        due = (bars - ac_bar0) % ((uint32_t)ev + 2u) == (uint32_t)ev + 1u;
                 }
                 ac_ans_bar = en_acid_ans = (uint8_t)due;
             }
@@ -3053,7 +3066,6 @@ static void apply(int p, int v)
     case P_NOISE: noise_vol = (float)(v * v) * 0.0001f; break;
     case P_DETUNE: detune = 0.00144f * fm_exp2f((float)v * 0.0332f); break;   /* 2.5 .. 25 cents */
     case P_NZ_COLOR: nz_color = v; break;
-    case P_AC_EVERY: break;                     /* (read where the acid steps) */
     case P_NZ_PUMP: nz_pump = (float)v * 0.01f; break;
     case P_BASSOCT:
         if (nsteps)
@@ -3069,6 +3081,9 @@ static void apply(int p, int v)
             if (p == P_OCT)
                 bass_to(bass.midi_note % 12);
         }
+        break;
+    case P_AC_RESP: case P_AC_EVERY: case P_STYLE:   /* the answer's count starts again at the next bar and the next loop (it was out of step with them when the settings changed mid-way) */
+        ac_resync_bar = ac_resync_loop = 1;
         break;
     case P_CHAIN:                                /* the chain starts over at the next bar */
         chain_i = 0;
@@ -4408,6 +4423,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
 #define LKS 8                                   /* the window's sub-blocks of 8 samples */
 static float lk_l[LK], lk_r[LK], lk_gm[LK], lk_sub[LKS];
 static float lk_cur = 1.0f, lk_sum = (float)LK, lk_rs = 1.0f, cp_env;
+static uint32_t lk_chk;
 static float cp_g = 1.0f, lk_subm = 1.0f;       /* the compressor's gain at the end of the last block; the minimum of lk_sub (it changes every 8 samples) */
 static uint32_t lk_i, lk_n, lk_si;
 static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, cp_kr = 0.0005f, lk_ceil = 1.0f;
@@ -4481,6 +4497,10 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
             g0 += gs;
             l = pl[j + i] * g0 * cp_make;
             r = pr[j + i] * g0 * cp_make;
+            if (!(fm_fabsf(l) < 64.0f))         /* a sample that is not a number (or absurd) never reaches the limiter: its sums would keep it for good, and the output would stay silent */
+                l = 0.0f;
+            if (!(fm_fabsf(r) < 64.0f))
+                r = 0.0f;
             /* the limiter: the audio goes into the delay, the gain is figured for what is coming */
             p = fm_maxf(fm_fabsf(l), fm_fabsf(r));
             gq = p > lk_ceil ? lk_ceil / p : 1.0f;
@@ -4503,6 +4523,20 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
                 lk_subm = mn;
             }
             lk_i = (lk_i + 1u) & (LK - 1u);
+            if (!(++lk_chk & 1023u)) {          /* the running sum is made exact now and then (it drifts), and a sum or a smoothed gain gone wrong is put right */
+                float sm = 0.0f;
+                uint32_t k;
+                for (k = 0; k < LK; k++)
+                    sm += lk_gm[k];
+                lk_sum = sm;
+            }
+            if (!(lk_sum > 0.0f && lk_sum < (float)LK * 1.001f) || !(lk_rs > 0.0f && lk_rs < 1.001f)) {
+                uint32_t k;
+                for (k = 0; k < LK; k++)
+                    lk_gm[k] = 1.0f;
+                lk_sum = (float)LK;
+                lk_rs = lk_cur = lk_subm = 1.0f;
+            }
             avg = lk_sum * (1.0f / (float)LK);
             if (avg < lk_rs)                    /* quick down, ~60 ms back up */
                 lk_rs = avg;

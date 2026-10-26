@@ -56,36 +56,54 @@ release GLO
 wait 300
 expect genre 4
 expect tempo 168
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 5
 expect tempo 172
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 6
 expect tempo 110
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 7
 expect tempo 132
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 8
 expect tempo 120
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 9
 expect tempo 134
+peakreset
+wait 2500
+expect peak_db_min -40
 # the six after them (disco, funk, reggae, synthwave, amapiano, trip-hop)
 press GLO
 turn PRESET 1
@@ -93,36 +111,54 @@ release GLO
 wait 300
 expect genre 10
 expect tempo 120
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 11
 expect tempo 104
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 12
 expect tempo 72
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 13
 expect tempo 112
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 14
 expect tempo 110
+peakreset
+wait 2500
+expect peak_db_min -40
 press GLO
 turn PRESET 1
 release GLO
 wait 300
 expect genre 15
 expect tempo 78
+peakreset
+wait 2500
+expect peak_db_min -40
 # round to the first again; its piece 1 as it was
 press GLO
 turn PRESET 1

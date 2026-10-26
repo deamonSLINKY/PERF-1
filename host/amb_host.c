@@ -21,6 +21,7 @@
  *   reboot                       re-run boot (power off and on)
  *   seed N                       the seed the next boot uses (0: the first piece, exact)
  *   restore OBJ [bad]            write an object back as a restored backup's (checked first); expect rsvalid, rsstate, storelock
+ *   battery N                    the battery divider's reading, 0..1023 (default: none)
  *   storefuzz SEED               fill the project object with random damage (for the sanitizer runs)
  *   bank76 P N                   write a bank as the firmware before styles did (76 settings a piece),
  *                                piece P stored with its Pad at N
@@ -75,6 +76,8 @@ int32_t plat_enc(int role)
     return v;
 }
 uint32_t plat_master(void) { return master; }
+static uint32_t host_batt = 0xFFFFFFFFu;
+uint32_t plat_battery(void) { return host_batt; }
 void plat_leds(uint32_t b, uint32_t k)
 {
     lit_btn = b;
@@ -855,6 +858,8 @@ int main(int argc, char **argv)
             autopilot = atoi(a);
         } else if (!strcmp(cmd, "splash")) {         /* splash MS: the next boot's RedtailWorks card */
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
+        } else if (!strcmp(cmd, "battery")) {        /* battery N: the divider's ADC reading (0..1023; the indicator shows from about 500) */
+            host_batt = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "seed")) {           /* seed N: the next power-on's (reboot) */
             host_seed = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "reboot")) {

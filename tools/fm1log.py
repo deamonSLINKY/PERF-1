@@ -21,7 +21,7 @@ import time
 PREFIX = [0x7D, 0x50, 0x46]
 FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing",
           "stores", "store_us", "crashes", "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece",
-          "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums", "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out"]
+          "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums", "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt"]
 
 
 def pack7(data):

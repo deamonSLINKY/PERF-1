@@ -1,0 +1,13 @@
+# The battery indicator in the header (left of the mascot): shown once the divider's reading is plausible, its fill the charge; a low one in the accent colour.
+seed 0
+wait 3000
+shot battery_none.png
+battery 600
+wait 600
+shot battery_mid.png
+battery 520
+wait 600
+shot battery_low.png
+battery 700
+wait 600
+shot battery_full.png

@@ -1,7 +1,7 @@
 # PERF-1
 
 PERF-1 turns the M-VAVE FM-1 into a live-performance machine for hypnotic techno, acid, lofi, house,
-dubstep, jungle and more. It plays from the moment it's switched on: a breathing pad, a deep drone, a
+dubstep, jungle and more. It plays from the moment it's switched on: a breathing pad, a deep bass, a
 generative 303 line and a plucked counter-melody, over drums you sequence. You shape the voices like a
 small modular, flip patterns on the bar, break it down and build it back up, throw beat repeats, gates,
 tape stops and DJ air horns over it, mix it, or let the auto-DJ run the set, and record the whole
@@ -110,7 +110,7 @@ hardware upstream; treat it as a last resort, not a guarantee. Otherwise recover
 3. Press **SEQ** for the drums, hold it for the step sequencer, and tap the white keys to change the beat.
 4. Tap keys to change the scale: each adds or removes its note. Turn **PRESETS** for another piece; hold
    **GLO** and turn **PRESETS** for another genre. On a voice's page, hold **SEL** and turn **ALGORITHM** for its other sounds.
-5. Want to play the drone yourself? Press **LFO** for its page, then hold **SEL** and press **ENV**: it leaves the
+5. Want to play the bass yourself? Press **LFO** for its page, then hold **SEL** and press **ENV**: it leaves the
    algorithm and the keys play it. **SEL** + **ENV** again gives it back. The **JAM** page (SELECT dial, after
    Global) is a keyboard that never edits the scale.
 6. Tap **SAVE** for a breakdown on the next bar; tap it again for a four-bar build and the drop.
@@ -130,12 +130,12 @@ hardware upstream; treat it as a last resort, not a guarantee. Otherwise recover
 | PRESETS | The piece, 1 to 10. With SEL held: the piece changes on the next bar. With GLO held: the genre. |
 | ALGORITHM | The mode of the scale. With SEL held: the sound of the voice on screen (on the drums' pages, the whole kit). On Perform and the visualizers: the mood. |
 | KNOB 1-4 | The four values (a, b, c, d) of the page on screen. |
-| OCT- | An octave down (to -3): on a voice's pages, that voice (pad, drone, acid; the pluck to -2); on any other page, the whole song. In the sequencer: the previous drum. In the FX menu: everything off. |
+| OCT- | An octave down (to -3): on a voice's pages, that voice (pad, bass, acid; the pluck to -2); on any other page, the whole song. In the sequencer: the previous drum. In the FX menu: everything off. |
 | OCT+ | An octave up (to +3), the same way. In the sequencer: the next drum. |
 | FX | The effects menu, on and off. Twice quickly: the settings of the effect you used last. |
 | SEL | Shift, held (see 12. Shift). |
 | ENV | Pad; again Pad env, again Pad LFO, again Chords. With SEL held: the voice on screen off the algorithm, played by hand (again: back). |
-| LFO | Drone; again Drone env, again Drone LFO. |
+| LFO | Bass; again Bass env, again Bass LFO. |
 | ARP | Acid; again Acid env, Acid line, Pluck, Pluck 2. |
 | EDIT | The next chord, on the next bar. |
 | GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter; with PRESETS, the genre. With SEL held: remote (see 17). |
@@ -190,7 +190,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 | FX | Effects are latched on and the menu is closed (the FX button blinks too). |
 | a small dot | Something is waiting to be written to flash (the theme, Tune, MIDI out, a piece). |
 
-- **Left:** the levels of the pad (P), drone (D), acid (A), pluck (C, for counter-melody) and kit (K).
+- **Left:** the levels of the pad (P), bass (D), acid (A), pluck (C, for counter-melody) and kit (K).
 - **Middle: the sigil.** A summoning circle turned so the chord's root is always at the top: the twelve notes round it (the scale's lit, the chord's bright), the chord's tones joined into a figure (a triad is a triangle, a seventh a four-sided shape, so you learn a chord's kind by its shape; its name is under the eye). It turns by the interval when the chord changes. Outside it, the 4-bar phrase fills round; then the bar's 16 steps (the kick's larger, the acid's gates tinted, the playhead white). A pentagram turns behind once in 16 bars, and runes flare by the notes the pluck plays. In the middle a demon eye: half open in a groove (its slit pupil widens on the kick, its gaze flips on the snare), shut in a breakdown, wide and trembling in a build (the phrase ring opens in spinning gaps), a white flash and a shock ring on the drop. **SEL + HOME** puts the slinky imp there instead (kept across power-off). When the engine sheds load the pentagram and runes go first. At its top right, the bar filling towards the next chord (or `held` while frozen).
 - **Right:** the drum pattern playing, in a colour per lane, its number (`PAT 1`) and, when one is waiting, `> 3`; under it, the load: `CPU 41 XR 0` and below it `C2 38` and `S1` or `S2` when they apply (section 16).
 - **The line above the knobs:** on the left, the sound of the voice on screen (on the drums' pages, the kit), then `BY HAND`, `+LINK` or `LINKS OFF`, and the octave when it isn't home (`OCT+2` for the page's voice, `SONG-1` for the song); on Global it says what SAVE will do (`01 SAVE: STORE`, `01 STORED`, `01 FACTORY`). On the right: the page's name and **the page dots**, one a page (25 on the SELECT dial): the page you are on bright, the others in its group dimmer. In the FX menu the dots are the four banks; inside an effect's settings, the 22 settings pages.
@@ -213,10 +213,10 @@ chords). On a voice's main page KNOB 1 is its level.
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
 | Chords | ENV x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close / open) | Chorus (0-100) | Loop (off; 2, 4 or 8 chords repeat; with a ~, now and then one is drawn anew) |
-| Drone | LFO | Level | Sound (24) | Cutoff | Reso |
-| Drone env | LFO x2 | Trigger (chord, 1, 2, 4, 8 bars, off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
-| Drone LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
-| Bass line | LFO x4 | Mode (drone, root, kick, eighths, off-beat, walk, riff) | Length (how long a note holds) | Move (octaves, fifths, approach notes) | Glide |
+| Bass | LFO | Level | Sound (24) | Cutoff | Reso |
+| Bass env | LFO x2 | Trigger (chord, 1, 2, 4, 8 bars, off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
+| Bass LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
+| Bass line | LFO x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff) | Length (how long a note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
@@ -225,7 +225,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Pluck 2 | ARP x6 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
 | Deja vu | ARP x7 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Acid mut (what the acid's Mutate changes: all, notes, rhythm, accents) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
-| Links | SEQ x2 | K>Drone | S>Pad | H>Acid | P>Clock (off / clock) |
+| Links | SEQ x2 | K>Bass | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Drum drift | SEQ x4 | Change (off, next, random) | Every (the chord, 4-64 bars) | Pool (patterns 1-2 ... 1-6) | Mutate (off, shift, morph) |
 | Groove | SEQ x5 | Lane (kick ... perc) | Density (0-100; 50 as written) | Source (follow, or pattern 1-6) | All dens (every lane's density) |
@@ -235,9 +235,9 @@ chords). On a voice's main page KNOB 1 is its level.
 | Space | SELECT | Echo | Echo time (1/8, 3/16, 1/4, dotted 1/4, 1/2, 1 bar) | Reverb | Size |
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
-| Mixer | SELECT | Track (pad, drone, acid, pluck, drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
+| Mixer | SELECT | Track (pad, bass, acid, pluck, drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
 | Global | GLO | Root | Theme (6) | Tune (+-50 cents) | MIDI out (off / on) |
-| Jam | SELECT | Voice (pluck, pad, acid, drone) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off / on) |
+| Jam | SELECT | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off / on) |
 
 Three more screens are off the dial: the **Sequencer** (hold SEQ; section 8), the **Perform** screen
 (HOME again from Tempo; section 10) and the **visualizers** (HOME twice quickly; section 13). The Perform screen
@@ -255,7 +255,7 @@ master bus; it was called Master) and Global.
 ![The Chords page](img/perf-screen-chords.png)
 
 **What moves by itself.** The chord changes now and then (Drift sets how long it stays; EDIT moves it on). Each genre has its own habits in where it goes next on a seven-note scale: lofi and DnB love the fourth up (the ii-V-I turnaround), house loops by steps and thirds, dubstep and trap stay close to home on the dark side, jungle favours the flat seventh; HYPNO keeps the original walk. The **Loop** setting on the Chords page makes the last 2, 4 or 8 chords repeat.
-The pad's voices breathe on unequal cycles and take the new chord's notes as they breathe in. The drone
+The pad's voices breathe on unequal cycles and take the new chord's notes as they breathe in. The bass
 follows the chord's root and glides. The acid line's notes are tied to the chord, so the riff transposes;
 Mutate rewrites steps each time round. The pluck plays an arpeggio of the chord's tones. Motion sets how far
 a slow tide swings between sparse and full, over a minute or two. Evolve makes the acid and the chords more
@@ -266,9 +266,9 @@ tap **E4** four times or so. Over MIDI, an outside clock drives it and the scree
 
 ### Octaves
 
-**OCT- / OCT+** move an octave at a time, three down to three up. On the Pad, Drone or Acid pages (or their env
+**OCT- / OCT+** move an octave at a time, three down to three up. On the Pad, Bass or Acid pages (or their env
 and LFO pages) they move that voice alone; on the Pluck pages they move the pluck, two down to two up; on any
-other page, Tempo among them, they move the whole song (pad, drone and acid together). The line above the knobs
+other page, Tempo among them, they move the whole song (pad, bass and acid together). The line above the knobs
 shows it when it isn't home: `OCT+2` for the page's voice, `SONG-1` for the song. The octaves are stored with the
 piece. Going down, each voice stops at the bottom of what you can hear (about C1), so -2 and -3 may sound alike.
 
@@ -312,7 +312,7 @@ shows a made-up title when you pick it (`VELVET RAIN`), the same one every time.
 | HYPNO | 01-10 | 118-138 | The original hypnotic techno and acid set. |
 | LOFI | L01-L10 | 70-94 | Swung boom-bap: Rhodes in 7ths and 9ths over a warm bass, a soft sparse lead, the Dusty kit; vinyl and tape latched on. |
 | HOUSE | H01-H10 | 118-126 | Four on the floor, claps on 2 and 4, off-beat open hats, stabs and organ, a sub or square bass, the House kit; the pump latched on. |
-| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, the drone as a wobble bass (its LFO on the cutoff), a harsh lead, dark pads, chords in fourths. |
+| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, the bass as a wobble bass (its LFO on the cutoff), a harsh lead, dark pads, chords in fourths. |
 | JUNGLE | J01-J10 | 160-170 | The Amen break and its variants, the Break kit chopped, a tear-out fill; vinyl and tape latched on. |
 | DNB | N01-N10 | 170-178 | Two-step, liquid, roller, neuro, jump-up and half-time; the DnB kit, a shimmer reverb, a light pump and tape. |
 | BREAKS | B01-B10 | 100-135 | Patterns after classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat) and a big-beat stomp (some are approximations); the Break kit, a gated reverb, tape and the phaser latched on. |
@@ -327,7 +327,7 @@ shows a made-up title when you pick it (`VELVET RAIN`), the same one every time.
 | TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back, ghosts, vinyl noise, a pluck loop that comes round again, minor and sparse. |
 
 Inside a genre the pieces differ in sound as well as in key and tempo: each genre has a palette of sounds for
-the pad, drone, acid, pluck and kits, and a piece takes one of each by its number. The pluck's sound, style and
+the pad, bass, acid, pluck and kits, and a piece takes one of each by its number. The pluck's sound, style and
 rate vary by piece in every genre. Each genre also brings its own compressor settings (section 11).
 
 The six after TRAP (disco, funk, reggae, synthwave, amapiano, trip-hop) use the same drum kits as the others; a kit of their own for the roots genres is planned.
@@ -400,7 +400,7 @@ and filter carry over to the new sound.
 | 23 | Chapel | Drawbars with the top closed: a church organ |
 | 24 | Air | An open sine: breath |
 
-### The drone: 24 sounds
+### The bass: 24 sounds
 
 | # | Sound | What it is |
 |---|---|---|
@@ -429,15 +429,15 @@ and filter carry over to the new sound.
 | 23 | Power | The root and its fifth, driven |
 | 24 | Air | A soft open sine |
 
-### The drone as a bass line
+### The bass as a line
 
 ![The Bass line page](img/perf-screen-bassline.png)
 
-The drone can play notes instead of a held tone. The **Bass line** page (LFO four times) turns it into a bass line that follows the chord:
+The bass can play notes instead of one held tone. The **Bass line** page (LFO four times) turns it into a bass line that follows the chord:
 
 | Mode | The notes fall |
 |---|---|
-| Drone | (the original: one long note that glides to each chord's root) |
+| Hold | (the original: one long note that glides to each chord's root) |
 | Root | on the genre's own bass rhythm (hypnotic: the beats; lofi: a lazy three; DnB: a roll; ...) |
 | Kick | on every kick hit, as an 808 or a sub does |
 | Eighths | on every eighth |
@@ -445,9 +445,9 @@ The drone can play notes instead of a held tone. The **Bass line** page (LFO fou
 | Walk | on the beats: the root, then the third or fifth, then the fifth, then the scale note below the root, leading to the next |
 | Riff | on the genre's figure: disco bounces the octave, funk and amapiano syncopate, reggae leans on the fifth |
 
-**Length** is how long a note holds (a quarter step to five steps) before it lets go; **Move** is how often a note goes up an octave, to the fifth or to the scale note below the root instead (in Walk, how often the last beat steps below); **Glide** is the slide from note to note (0 plays each note as it is; 100 takes about 0.4 s). Each note opens the drone's filter again, with the **Drone env** page's attack and decay, so that page still shapes the sound; its Trigger setting does not apply. The sound, cutoff and reso are the **Drone** page's. A breakdown plays no notes; a build plays none in Kick mode. A drone played by hand from the keys is not a bass line.
+**Length** is how long a note holds (a quarter step to five steps) before it lets go; **Move** is how often a note goes up an octave, to the fifth or to the scale note below the root instead (in Walk, how often the last beat steps below); **Glide** is the slide from note to note (0 plays each note as it is; 100 takes about 0.4 s). Each note opens the bass's filter again, with the **Bass env** page's attack and decay, so that page still shapes the sound; its Trigger setting does not apply. The sound, cutoff and reso are the **Bass** page's. A breakdown plays no notes; a build plays none in Kick mode. A bass played by hand from the keys is not a bass line.
 
-New pieces start as a bass line in lofi (Root), house (Off-beat), dubstep and trap (Kick, long, a little glide), electro and synthwave (Eighths), disco, funk, reggae and amapiano (Riff), and trip-hop (Root); the other genres keep the drone. Every note stays between C1 and B5.
+New pieces start as a bass line in lofi (Root), house (Off-beat), dubstep and trap (Kick, long, a little glide), electro and synthwave (Eighths), disco, funk, reggae and amapiano (Riff), and trip-hop (Root); the other genres keep the bass. Every note stays between C1 and B5.
 
 ### The acid: 31 sounds
 
@@ -534,16 +534,16 @@ Techno kick under House hats is fine.
 
 ### Playing a voice by hand
 
-![Help card for the LFO button, which also says how to play the drone](img/perf-screen-help.png)
+![Help card for the LFO button, which also says how to play the bass](img/perf-screen-help.png)
 
 The keys set the scale, as ever. To play a voice yourself, take it off the algorithm: go to any of its pages
-(**ENV** the pad, **LFO** the drone, **ARP** the acid), hold **SEL** and press **ENV**. It goes quiet and the line
+(**ENV** the pad, **LFO** the bass, **ARP** the acid), hold **SEL** and press **ENV**. It goes quiet and the line
 above the knobs says `BY HAND`. On a page that isn't a voice's, SEL + ENV just says so. Now, while its pages are on
-screen (Pad, Pad env, Pad LFO or Chords; the drone's three; the acid's three), the keys play it over the rest of
+screen (Pad, Pad env, Pad LFO or Chords; the bass's three; the acid's three), the keys play it over the rest of
 the song:
 
 - **Pad:** up to four notes at once, each on one of its voices, with the Pad env's Attack and Release (quicker than the breaths).
-- **Drone:** the last key held, two octaves down; the envelope opens on each new press.
+- **Bass:** the last key held, two octaves down; the envelope opens on each new press.
 - **Acid:** the last key held, an octave down, with its filter and envelope. A second key while one is held slides to it, as a 303 does.
 
 Everything else carries on with the algorithm: the other voices, the chords, the drums. The keys follow the
@@ -563,7 +563,7 @@ page (SEQ, then SEQ again) sets each one, 0 being none. They're stored with the 
 
 | Link | What it does |
 |---|---|
-| K>Drone | Each kick opens the drone's filter, falling back over the beat: a rolling bass that follows your kick pattern. The amount sets how far and how long. |
+| K>Bass | Each kick opens the bass's filter, falling back over the beat: a rolling bass that follows your kick pattern. The amount sets how far and how long. |
 | S>Pad | Each snare or clap flashes the pad's filter open and swells it a little, so the pad answers the backbeat. |
 | H>Acid | A hat landing on an acid note accents it: busier hats, a squelchier 303. |
 | P>Clock | The acid line steps only when the perc lane hits, so the perc pattern in the sequencer becomes the acid's rhythm. In a breakdown or build, with the drums out, it runs free again. |
@@ -748,7 +748,7 @@ held to be heard). The dots at the right of the knob strip show where you are am
 
 | Page | a | b | c | d |
 |---|---|---|---|---|
-| Gate | Pattern (3-3-3, tres, offbeat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, custom) | Length (2-16 steps) | Targets (no drums, pad, drone, acid, drums, hats, kick, all, no kick, kick+drone, pluck) | Depth |
+| Gate | Pattern (3-3-3, tres, offbeat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, custom) | Length (2-16 steps) | Targets (no drums, pad, bass, acid, drums, hats, kick, all, no kick, kick+bass, pluck) | Depth |
 | Phaser | Rate | Depth | Feedback | Mix |
 | Flanger | Rate | Depth | Feedback | Mix |
 | Vinyl | Level | Crackle | Hiss | Tone |
@@ -781,8 +781,8 @@ share this page. The settings, the gate's pattern and targets are kept across po
 
 ![A build](img/perf-screen-perform.png)
 
-- **Breakdown: tap SAVE.** The drums drop out on the next bar, the drone closes and the pad rises, for as long as you leave it.
-- **Build: tap SAVE again.** A four-bar snare roll with the drone opening, then the drop.
+- **Breakdown: tap SAVE.** The drums drop out on the next bar, the bass closes and the pad rises, for as long as you leave it.
+- **Build: tap SAVE again.** A four-bar snare roll with the bass opening, then the drop.
 - **Drop: hold SAVE.** Straight back in on the next bar. SAVE lights during a breakdown or build and blinks while one waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on; press again to let it move.
 - **Next chord: EDIT.** Moves on at the next bar.
@@ -797,7 +797,7 @@ There's no song saving: record the audio (or MIDI out) into your DAW and keep th
 ### The Perform screen
 
 Press **HOME** on the Tempo page (or **HOME** on any page, then again). It shows the section (GROOVE, BREAK, BUILD) and
-the auto-DJ's place in it, the bar's sixteen steps, the eight tracks (kick, hats, snare, perc, drone, acid, pad, pluck:
+the auto-DJ's place in it, the bar's sixteen steps, the eight tracks (kick, hats, snare, perc, bass, acid, pad, pluck:
 level, muted with a line through it, soloed filled), the four scenes, which effects are on, and the **mood**. Its
 keys are the track mix (the GLO layer, below), its knobs the FX knobs, and **ALGORITHM** is the mood.
 
@@ -813,7 +813,7 @@ keys; the load meter is at its top right. A mute is latched; the black key above
 | A3 / A#3 | Snare (with the clap) | F5 | Auto-DJ on / off |
 | B3 | Undo (again: redo) | F#5 | Solo the pluck |
 | C4 / C#4 | Perc | G5 | DJ new pieces on / off |
-| D4 / D#4 | Drone | E4 | Tap tempo |
+| D4 / D#4 | Bass | E4 | Tap tempo |
 | F4 / F#4 | Acid | A4 / A#4 | Mute / solo all four drums |
 | G4 / G#4 | Pad | B4 | Mute the pluck |
 
@@ -849,7 +849,7 @@ by hand just moves the DJ on from there. If the drop's key change is on (section
 
 On the Perform screen and the visualizers, **ALGORITHM** is a macro: 0 chill, 50 (the middle, the default) leaves the
 piece as it is, 100 peak. It moves each of these by its share of the distance from 50: acid density and cutoff, the hats'
-and perc's levels, the pad's brightness, the pluck's density, level and decay (shorter at peak), the drone's cutoff, drive,
+and perc's levels, the pad's brightness, the pluck's density, level and decay (shorter at peak), the bass's cutoff, drive,
 reverb and echo (less at peak), Evolve and the drums' level. It moves what the engine plays, not what is stored, and it
 stays where you left it when you change piece. It isn't remembered at power-off.
 
@@ -858,7 +858,7 @@ stays where you left it when you change piece. It isn't remembered at power-off.
 ![The Jam page](img/perf-screen-jam.png)
 
 The **Jam** page (SELECT dial, after Global) turns the 27 keys into an instrument to play along with the music; the
-keys never edit the scale there. **Voice:** the pluck, the pad, the acid or the drone (the one you pick stops playing its
+keys never edit the scale there. **Voice:** the pluck, the pad, the acid or the bass (the one you pick stops playing its
 own line while the page is up, and gets it back when you leave). **Keys:** *Scale* (every key a note of the scale: a black
 key plays the scale tone at or below it, so there are no wrong notes), *Chords* (every key a triad of the scale) or *Harp*
 (the keys are the scale's tones, one a key, from C3). **Octave:** -2 to +2. **Answer:** after you stop (at least two
@@ -873,7 +873,7 @@ raises it to 40 so it can be heard.
 ![The Mixer page](img/perf-screen-mixer.png)
 
 **Mixer** (SELECT dial, between Comp/Limit and Global) works on one layer at a time. **KNOB 1** chooses the layer (pad,
-drone, acid, pluck, drums), **KNOB 2** its level (the same level as on the layer's own page), **KNOB 3** its **pan**
+bass, acid, pluck, drums), **KNOB 2** its level (the same level as on the layer's own page), **KNOB 3** its **pan**
 (L100 to R100; it's a balance, the middle leaves the sound as it was), **KNOB 4** its **send**: how much of it goes to the
 echo and the reverb (50 is as it was, 0 none, 100 twice). The page draws a strip a layer: the level it's set to (the fader,
 with its number), the level that sounds (the meter beside it), an `M` when the track is muted, its name in the accent when
@@ -932,9 +932,9 @@ Hold **SEL** and:
 |---|---|
 | White keys 1-6 (F3 G3 A3 B3 C4 D4) | Pattern 1-6, on the bar. The keys light the one chosen; the one still playing blinks. Tap: it stays. Held (past a quarter of a second): that pattern plays only while the key is down, and the one before comes back from the bar after you let go: a pattern 5 or 6 as a held variation. |
 | PRESETS | The next or previous piece, on the next bar (`PIECE 03 NEXT BAR` until it comes). |
-| ALGORITHM | The sound of the voice on screen (pad, drone, acid, pluck); on the drums' pages, the whole kit. |
+| ALGORITHM | The sound of the voice on screen (pad, bass, acid, pluck); on the drums' pages, the whole kit. |
 | SEQ | The links on and off. |
-| ENV | On a voice's page: that voice (pad, drone or acid) off the algorithm, played by hand; again, back. |
+| ENV | On a voice's page: that voice (pad, bass or acid) off the algorithm, played by hand; again, back. |
 | FX | The effects' settings pages, one by one, then the keys again. |
 | A key in the FX menu | That effect's settings page. |
 | HOME | The sigil's middle: the eye or the imp. |
@@ -1020,10 +1020,10 @@ Switching to another firmware, or reinstalling, can lose what PERF-1 has stored.
 
 **Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor), **Tune** (+-50 cents) and **MIDI out**.
 
-**The look** is Imp in every theme; the themes are its colour variations. Warm black, one colour per voice everywhere (in Imp: the pad bone, the drone crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header has a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick; a piece waiting for the bar shows as `>08` beside the key and mode. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) and shows the knobs' values large with a bar under them; hold **SEL** and the tabs give way to a one-line hint of what shift does on this page.
+**The look** is Imp in every theme; the themes are its colour variations. Warm black, one colour per voice everywhere (in Imp: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header has a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick; a piece waiting for the bar shows as `>08` beside the key and mode. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) and shows the knobs' values large with a bar under them; hold **SEL** and the tabs give way to a one-line hint of what shift does on this page.
 The theme, Tune and MIDI out are yours across all pieces.
 
-**MIDI out** (USB): the pad's notes on channel 1, the drone on 3, the acid on 4, the drums on 10 (General MIDI notes),
+**MIDI out** (USB): the pad's notes on channel 1, the bass on 3, the acid on 4, the drums on 10 (General MIDI notes),
 and MIDI clock with start, continue and stop. The pluck and the DJ snips are not sent. Notes you play by hand go on their voice's channel.
 MIDI out can be switched off on Global.
 
@@ -1064,7 +1064,7 @@ Good to know:
 
 The [editor](../editor/) (Chrome or Edge, the FM-1 on USB, MIDI with SysEx allowed, nothing else holding the FM-1's MIDI port) has two tabs.
 
-**Sound** has every parameter on the pages the FM-1 itself has (Tempo, Pad, Pad env, Pad LFO, Chords, Drone, Drone env, Drone LFO, Acid, Acid env, Acid line,
+**Sound** has every parameter on the pages the FM-1 itself has (Tempo, Pad, Pad env, Pad LFO, Chords, Bass, Bass env, Bass LFO, Acid, Acid env, Acid line,
 Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Comp/Limit, Mixer, Global), with the same labels, ranges and value names, and a last page for the rest:
 each drum lane's level, tune, decay, probability and length, each layer's pan and send, the noise, the octaves and the by-hand switches. Moving a control
 changes the piece that is playing, as the knob would; **to keep it, store the piece on the FM-1 itself** (GLO page, SAVE). The page reads the FM-1's values when
@@ -1089,7 +1089,7 @@ the top right of the mix map, with the auto-DJ's phase beneath it.
 |---|---|
 | CPU nn | The share of the render's time budget the first core is using, measured inside the audio interrupt (it includes waiting for the second core). Drawing the screen doesn't count. |
 | XR n | **Xruns**: renders that ran late. Each is a click or a tick. |
-| C2 nn | The second core is working, and nn % of a chunk's time goes on its job (the pad with its chorus, the DX voices, the reverb, and at times the drone and acid: the engine moves some of this work between the cores as the load changes). `C1` instead: it stopped after a fault and everything runs on one core until power-off. |
+| C2 nn | The second core is working, and nn % of a chunk's time goes on its job (the pad with its chorus, the DX voices, the reverb, and at times the bass and acid: the engine moves some of this work between the cores as the load changes). `C1` instead: it stopped after a fault and everything runs on one core until power-off. |
 | S1 | **Load shedding, level 1:** the engine eased off to keep up: the pad's chorus is off and the DX voices are held to four. |
 | S2 | Level 2: the DX voices held to two. |
 

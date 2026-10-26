@@ -39,8 +39,8 @@
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2, V_CMVU,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_PHRASE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
-static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Deja vu", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Bass", "Bass env",
+                                              "Bass LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Deja vu", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
@@ -160,8 +160,8 @@ static const struct {
 static const struct {
     const char *name;
     uint8_t mask;                       /* a bit a track (EN_TR_*) */
-} GX_TGT[NTGT] = {{"NO DRUMS", 0xF0}, {"PAD", 0x40}, {"DRONE", 0x10}, {"ACID", 0x20}, {"DRUMS", 0x0F},
-                    {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0xFF}, {"NO KICK", 0xFE}, {"KICK+DRN", 0x11}, {"PLUCK", 0x80}};
+} GX_TGT[NTGT] = {{"NO DRUMS", 0xF0}, {"PAD", 0x40}, {"BASS", 0x10}, {"ACID", 0x20}, {"DRUMS", 0x0F},
+                    {"HATS", 0x02}, {"KICK", 0x01}, {"ALL", 0xFF}, {"NO KICK", 0xFE}, {"KICK+BASS", 0x11}, {"PLUCK", 0x80}};
 static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_TEMPO, P_EVOLVE, P_MOTION, P_DRIFT},
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
@@ -215,7 +215,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Decay", "Style", "Rate", "Range"},
     {"Pluck vu", "Loop", "Leaps", "Acid mut"},
     {"Level", "Drive", "Swing", "Pattern"},
-    {"K>Drone", "S>Pad", "H>Acid", "P>Clock"},
+    {"K>Bass", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
     {"Change", "Every", "Pool", "Mutate"},
     {"Lane", "Density", "Source", "All dens"},
@@ -312,7 +312,7 @@ static const int8_t MIXK[NKEYS] = {
     3, 11, 4, 12, 29,                      /* C4 .. E4: perc, drone; tap tempo */
     5, 13, 6, 14, 16, 17, 7,               /* F4 .. B4: acid, pad, the drums, the pluck's mute */
     20, 21, 22, 23, 24, 25, 15, 27};       /* C5 .. G5: scenes 1-4, reset all, the auto-DJ (on, length, new pieces) */
-static const char *const MIX_NAME[8] = {"KICK", "HATS", "SNARE", "PERC", "DRONE", "ACID", "PAD", "PLUCK"};
+static const char *const MIX_NAME[8] = {"KICK", "HATS", "SNARE", "PERC", "BASS", "ACID", "PAD", "PLUCK"};
 /* the white keys, in order: the sequencer's steps; the black keys, in order */
 static const uint8_t WHITE_KEY[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
@@ -418,6 +418,7 @@ static struct {
     uint8_t glide_on, glide_busy;
     uint8_t vox_dirty;                 /* the player's DX7 voices changed: written when you leave them alone a moment (voices_save) */
     uint8_t set_dirty;                 /* the effects' / performing settings changed: written when you leave them alone a moment */
+    uint8_t set_lazy;                  /* a cosmetic setting changed (the visualizer, the sigil): written when the music is stopped or with the next write, never as a dip in the music of its own */
     uint32_t fx_open_t;                /* when the FX menu was opened (a second tap soon after goes to the settings) */
     uint8_t fx_lastpg;                 /* the edit page of the effect key pressed last */
     uint8_t mix_trk;                   /* the mixer page's layer: pad, drone, acid, pluck, drums (0..4) */
@@ -858,7 +859,7 @@ static int knob_par(int k)                     /* a knob's parameter (the sequen
         return P_SEND + (int)(ui.mix_trk % 5u);
     return k < P_NPARAMS ? k : -1;
 }
-static const char *const MXT_NAME[5] = {"PAD", "DRONE", "ACID", "PLUCK", "DRUMS"};
+static const char *const MXT_NAME[5] = {"PAD", "BASS", "ACID", "PLUCK", "DRUMS"};
 static int knob_get(int k)
 {
     int p = knob_par(k);
@@ -1380,7 +1381,7 @@ static const uint8_t GENRE_FXS[12] = {EN_FXS_TP_WOW, EN_FXS_TP_FLUT, EN_FXS_TP_D
 static void genre_fx(int g)
 {
 #define SET GENRE_FXS
-    static const uint8_t LOFI[8] = {25, 18, 30, 45, 42, 40, 42, 38};             /* tape and vinyl, gentler (the vinyl: less level, a darker tone, more hiss than crackle) */
+    static const uint8_t LOFI[8] = {25, 18, 30, 45, 40, 28, 42, 38};             /* tape and vinyl, gentler (the vinyl: less level, a darker tone, more hiss than crackle) */
     static const uint8_t HOUSE[4] = {50, 45, 1, 0x70};                           /* the pump: depth, release, every quarter, the chords and bass */
     int i;
     ui.fx_lock &= ~(FXB(FX_VINYL) | FXB(FX_TAPE) | FXB(FX_PUMP) | FXB(FX_PHASER));
@@ -1394,15 +1395,21 @@ static void genre_fx(int g)
         for (i = 0; i < 4; i++)
             fxs_put(SET[8 + i], HOUSE[i]);
         ui.fx_lock |= FXB(FX_PUMP);
-    } else if (g >= 4) {                         /* the other six: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
-        static const uint8_t XFX[6][12] = {
-            {10, 12, 45, 35, 32, 30, 38, 45, 255, 255, 255, 255},     /* jungle: sampled-from-vinyl grit */
+    } else if (g >= 4 && g - 4 < 12) {           /* the others: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
+        static const uint8_t XFX[12][12] = {
+            {10, 12, 45, 35, 30, 22, 38, 45, 255, 255, 255, 255},     /* jungle: sampled-from-vinyl grit */
             {5, 5, 25, 20, 255, 255, 255, 255, 30, 30, 1, 0xF0},      /* dnb: a light pump, a very light tape */
             {20, 15, 60, 30, 255, 255, 255, 255, 255, 255, 255, 255}, /* breaks: tape drive, the phaser */
             {25, 10, 25, 40, 255, 255, 255, 255, 30, 35, 1, 0xF0},    /* garage: a light tape and pump */
             {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* electro: the phaser alone */
-            {255, 255, 255, 255, 255, 255, 255, 255, 45, 55, 0, 0x50}};     /* trap: a pump under the 808 */
-        static const uint8_t XLK[6] = {3, 6, 10, 6, 8, 4};
+            {255, 255, 255, 255, 255, 255, 255, 255, 45, 55, 0, 0x50},      /* trap: a pump under the 808 */
+            {255, 255, 255, 255, 255, 255, 255, 255, 35, 45, 1, 0x70},      /* disco: a light pump on the quarters */
+            {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* funk: nothing latched */
+            {12, 14, 20, 35, 255, 255, 255, 255, 255, 255, 255, 255},       /* reggae: a light tape (and the long echo) */
+            {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* synthwave: nothing latched (the chorus and the gated reverb are in the piece) */
+            {255, 255, 255, 255, 255, 255, 255, 255, 30, 40, 1, 0x70},      /* amapiano: a soft pump */
+            {18, 14, 28, 40, 30, 22, 36, 36, 255, 255, 255, 255}};          /* trip-hop: the vinyl and the tape, gentler than lofi's */
+        static const uint8_t XLK[12] = {3, 6, 10, 6, 8, 4, 4, 0, 2, 0, 4, 3};
         for (i = 0; i < 12; i++)
             if (XFX[g - 4][i] != 255)
                 fxs_put(SET[i], XFX[g - 4][i]);
@@ -1547,8 +1554,8 @@ void ui_flush(void)
         ui.vox_dirty = 0;
         voices_save();
     }
-    if (ui.set_dirty) {
-        ui.set_dirty = 0;
+    if (ui.set_dirty || ui.set_lazy) {
+        ui.set_dirty = ui.set_lazy = 0;
         settings_save();
     }
     if (project_pending())
@@ -1776,7 +1783,7 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
     char a[16], b[16];
     int vc = voice_of(ui.view);
     if (vc >= 0) {
-        static const char *const WHO[3] = {"PAD", "DRONE", "ACID"};
+        static const char *const WHO[3] = {"PAD", "BASS", "ACID"};
         int p = SOUND_PAR[vc];
         const int ns = vc == 2 ? EN_NACID : EN_NSOUND;
         knob_set(p, (proj.par[p] + d + ns) % ns);
@@ -1906,7 +1913,7 @@ static void button(int b)
             char t[12];                          /* (en_param_text writes up to 10) */
             knob_set(p, proj.par[p] + (b == B_OCTUP ? 1 : -1));
             en_param_text(p, proj.par[p], t);
-            say(p == P_PAD_OCT ? "PAD OCTAVE" : p == P_BASSOCT ? "DRONE OCTAVE" : p == P_AC_OCT ? "ACID OCTAVE" : p == P_CM_OCT ? "PLUCK OCTAVE" : "SONG OCTAVE", t);
+            say(p == P_PAD_OCT ? "PAD OCTAVE" : p == P_BASSOCT ? "BASS OCTAVE" : p == P_AC_OCT ? "ACID OCTAVE" : p == P_CM_OCT ? "PLUCK OCTAVE" : "SONG OCTAVE", t);
         }
         break;
     case B_SAVE:                                 /* nothing is saved by it: SAVE is the breakdown (and the build) */
@@ -2191,7 +2198,7 @@ static void input(void)
                 ui.seq_held = 0;
             if (i == B_HOME && (btn >> B_SEL & 1u)) {   /* shift: the sigil's middle, the eye or the imp */
                 ui.centre_imp = (uint8_t)!ui.centre_imp;
-                ui.set_dirty = 1;
+                ui.set_lazy = 1;
                 ui.btn_used |= m | 1u << B_SEL;
                 say("SIGIL", ui.centre_imp ? "THE IMP" : "THE EYE");
             }
@@ -2220,7 +2227,7 @@ static void input(void)
             if (i == B_ENV && (btn >> B_SEL & 1u)) {
                 /* shift: the voice whose page is on screen off the algorithm (silent but for the keys on its
                  * pages), or back on it */
-                static const char *const WHO[3] = {"PAD", "DRONE", "ACID"};
+                static const char *const WHO[3] = {"PAD", "BASS", "ACID"};
                 int vc = voice_of(ui.view), k;
                 if (vc < 0) {
                     say("BY HAND", "ON A VOICE'S PAGE");
@@ -2462,7 +2469,7 @@ static void input(void)
             }
         } else if (ui.view == V_VIZ) {            /* the visualizers: the next one */
             ui.viz = (uint8_t)((ui.viz + (e > 0 ? 1 : VZ_N - 1)) % VZ_N);
-            ui.set_dirty = 1;
+            ui.set_lazy = 1;
             say("VISUAL", VZ_NAME[ui.viz]);
         } else {
             int v = (ui.view == V_SEQ ? V_DRUMS : ui.view == V_PERF ? V_TEMPO : (int)ui.view) + (e > 0 ? 1 : -1);   /* (out of the sequencer and the perform screen too) */
@@ -2768,6 +2775,8 @@ static void imp_header(void)
     }
 }
 
+#define BATT_EMPTY 512u                         /* the divider's reading at a flat battery, and at a full one: a guess (a 1:2 divider, 3.3 V on 10 bits, 3.3 V to 4.2 V) until the telemetry's batt column says */
+#define BATT_FULL 650u
 static void draw_header(void)
 {
     char t[24];
@@ -2783,6 +2792,7 @@ static void draw_header(void)
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
+    h = hash(h, plat_battery() >> 2);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
@@ -2798,6 +2808,17 @@ static void draw_header(void)
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
     } else {
         int32_t x = 207, w;
+        const uint32_t bv = plat_battery();
+        if (bv != 0xFFFFFFFFu && bv > 100u) {      /* the battery, left of the mascot: a cell with its charge (uncalibrated: the divider's reading, BATT_EMPTY .. BATT_FULL, is in the telemetry as batt) */
+            const int pct = bv <= BATT_EMPTY ? 0 : bv >= BATT_FULL ? 100 : (int)((bv - BATT_EMPTY) * 100u / (BATT_FULL - BATT_EMPTY));
+            const uint16_t bc = pct < 15 ? K_ACC : pct < 35 ? K_FROST : K_DIM;
+            cv_rect(x - 14, 12, 12, 7, bc);
+            cv_rect(x - 13, 13, 10, 5, K_BG);
+            cv_rect(x - 2, 14, 2, 3, bc);
+            if (pct > 0)
+                cv_rect(x - 12, 14, 1 + pct * 8 / 100, 3, pct < 15 ? K_ACC : K_TEXT);
+            x -= 20;
+        }
         draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 3, en_playing && en_sec == EN_SEC_BREAK);
         if (project_pending()) {                   /* not yet in flash (the theme, Tune, MIDI out: two seconds on) */
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
@@ -3114,9 +3135,9 @@ static void draw_sigil(void)
     }
 }
 
-static void draw_meters(void)                    /* left: the five layers (pad, drone, acid, pluck, drums) */
+static void draw_meters(void)                    /* left: the five layers (pad, bass, acid, pluck, drums) */
 {
-    static const char *const L[5] = {"P", "D", "A", "C", "K"};
+    static const char *const L[5] = {"P", "B", "A", "C", "D"};
     uint16_t c[5], t[5];
     float lv[5], dm = 0.0f;
     int i;
@@ -3255,7 +3276,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_HOME: L("TEMPO"); L("TEMPO, EVOLVE, MOTION, DRIFT"); L("+ SELECT: TEMPO"); break;
     case B_ENV: L("PAD; AGAIN: ENV, LFO,"); L("THEN THE CHORDS"); L("SEL + ENV ON A VOICE'S"); L("PAGE: PLAY IT BY HAND"); break;
     case B_ARP: L("THE ACID; AGAIN: ITS ENV,"); L("ITS LINE, THEN THE PLUCK"); L("(THE COUNTER-MELODY)"); L("SEL + ALGO: ITS SOUND"); break;
-    case B_LFO: L("THE DRONE; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
+    case B_LFO: L("THE BASS; AGAIN: ITS"); L("ENVELOPE, THEN ITS LFO"); L("SEL + ENV: BY HAND"); L("SEL + ALGO: ITS SOUND"); break;
     case B_GLO: {                                /* and the audio's load, for testing on the device */
         static char cpu[40];
         cpu_line(cpu);
@@ -4250,7 +4271,7 @@ static void draw_scope(int kind)
             const float a = (float)proj.par[P_DE_ATK] * 0.01f, d = (float)proj.par[P_DE_DEC] * 0.01f,
                         m = 0.15f + 0.85f * (float)proj.par[P_DE_AMT] * 0.01f, wa = 0.05f + 0.30f * a, wd = 0.65f;
             col = K_BASS;
-            title = "DRONE ENVELOPE", sub = "ATTACK  DECAY  AMOUNT";
+            title = "BASS ENVELOPE", sub = "ATTACK  DECAY  AMOUNT";
             for (x = 0; x < SC_W; x++) {
                 const float u = (float)x / (float)(SC_W - 1);
                 float y;
@@ -4281,7 +4302,7 @@ static void draw_scope(int kind)
                   rate = proj.par[pl ? P_PL_RATE : P_DL_RATE] & 7, dep = proj.par[pl ? P_PL_DEPTH : P_DL_DEPTH];
         const float cyc = 8.0f * fm_exp2f(-(float)rate * 0.5f), amp = 0.06f + 0.94f * (float)dep * 0.01f;
         col = pl ? K_PAD : K_BASS;
-        title = pl ? "PAD LFO" : "DRONE LFO";
+        title = pl ? "PAD LFO" : "BASS LFO";
         sub = LFO_SHAPE_NAME_UI[(unsigned)shape < 6u ? shape : 0];
         for (x = 0; x < SC_W; x++) {
             const float u = (float)x / (float)(SC_W - 1), w = lfo_wave(shape, u * cyc + tk);
@@ -4298,7 +4319,7 @@ static void draw_scope(int kind)
                   env = ac ? proj.par[P_AC_ENV] : 0;
         int pass;
         col = ac ? K_ACID : K_BASS;
-        title = ac ? "ACID FILTER" : "DRONE FILTER";
+        title = ac ? "ACID FILTER" : "BASS FILTER";
         sub = ac ? "CUTOFF  RESO  ENV MOD (DIM: PEAK)" : "CUTOFF  RESO";
         cv_text(6, 2, &FONT_B, title, col);
         cv_text(6, SC_Y + SC_H + 6, &FONT_XS, sub, K_DIM);
@@ -4543,8 +4564,8 @@ static uint16_t view_color(void)                /* the page's voice in its colou
 static void imp_tabs(void)
 {
     static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-        {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"DRONE", 'D', V_DRONE, 3}, {"ACID", 'A', V_ACID, 4}, {"PLUCK", 'L', V_CMEL, 2},
-        {"DRUMS", 'R', V_DRUMS, 5}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
+        {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 4}, {"PLUCK", 'L', V_CMEL, 3},
+        {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
     const uint16_t col[10] = {K_TEXT, K_PAD, K_BASS, K_ACID, IMP_TEAL, K_PULSE, K_FROST, K_DIM, K_TEXT, KC_MOVE};
     const int v = ui.view == V_SEQ ? V_DRUMS : ui.view >= V_PERF ? V_TEMPO : (int)ui.view;
     int32_t x = 3;
@@ -4713,10 +4734,17 @@ static void draw_knobs(void)
             text_c(cx, 26, &FONT_XS, t, hot ? K_TEXT : K_DIM);
             knob_text(k, t);
             caps(vt, t, sizeof vt);
-            if (text_w(&FONT_M, vt) <= 56)
-                text_c(cx, 34, &FONT_M, vt, hot ? K_ACC : K_TEXT);
-            else
-                text_c(cx, 39, &FONT_B, vt, hot ? K_ACC : K_TEXT);
+            {                                    /* the value in the largest type that fits its card (a long name steps down: M, B, S, then XS) */
+                const felucca_font_t *vf = &FONT_M;
+                int32_t vy = 34;
+                if (text_w(vf, vt) > 56)
+                    vf = &FONT_B, vy = 39;
+                if (text_w(vf, vt) > 56)
+                    vf = &FONT_S, vy = 39;
+                if (text_w(vf, vt) > 56)
+                    vf = &FONT_XS, vy = 41;
+                text_c(cx, vy, vf, vt, hot ? K_ACC : K_TEXT);
+            }
             cv_rect(cx - 24, 63, 48, 3, hot ? K_BG : K_LINE);
             if (hi > lo) {
                 if (lo < 0) {                    /* bipolar: from the middle */
@@ -4848,7 +4876,7 @@ static void glide_tick(void)
  * note of the scale: a black key is the scale tone at or below it, so there are no wrong notes), CHORDS (every key a triad of the scale), HARP (the
  * keys are the scale's tones, one a key, up from the root). OCTAVE. ANSWER: when you stop (after at least two notes), the pluck plays your phrase
  * back an octave up on the next bar, once, and waits for the next. The scale is still the page's own: this page never edits it. */
-static const char *const JV_NAME[4] = {"PLUCK", "PAD", "ACID", "DRONE"};
+static const char *const JV_NAME[4] = {"PLUCK", "PAD", "ACID", "BASS"};
 static const char *const JM_NAME[3] = {"SCALE", "CHORDS", "HARP"};
 static const char *const JO_NAME[5] = {"-2", "-1", "0", "+1", "+2"};
 static int jam_snap(int m, uint32_t pool)       /* the note, or the scale tone below it */
@@ -5143,6 +5171,7 @@ static void settings_save(void)
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
         set_have = 1;
+        ui.set_lazy = 0;
     }
 }
 static void settings_load(void)
@@ -5189,6 +5218,8 @@ static void autosave(void)
         quiet_write(3);                          /* the player's DX7 voices: kept (playing: faded) */
         return;
     }
+    if (ui.set_lazy && !en_playing)
+        ui.set_dirty = 1;                        /* (stopped: a write costs the music nothing) */
     if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: longer, each write is a dip) */
         ui.set_dirty = 0;
         quiet_write(1);                          /* the effects' and performing settings: a moment after the last change (playing: faded) */

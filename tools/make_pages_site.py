@@ -73,7 +73,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <img class="logo" src="img/slinky.png" alt="the PERF-1 slinky">
 <h1>PERF<span>-1</span></h1>
 <p class="tag">Custom live-performance firmware for the M-VAVE FM-1, by deamonSLINKY. Version <span class="v">{ver}</span>.</p>
-<p>Ten genres of ten generative pieces (pad, drone, acid, a pluck or DX7 voice, drums you can sequence), an auto-DJ with breakdowns, builds and drops, 27 effects, 24 beat FX, 15 flex beats and 27 DJ snips, scenes, a web editor and your own DX7 voices over USB.</p>
+<p>Ten genres of ten generative pieces (pad, bass, acid, a pluck or DX7 voice, drums you can sequence), an auto-DJ with breakdowns, builds and drops, 27 effects, 24 beat FX, 15 flex beats and 27 DJ snips, scenes, a web editor and your own DX7 voices over USB.</p>
 <div class="grid">
 <a class="card" href="install/"><b>Install</b><span>The web installer (Chrome or Edge, FM-1 on USB). It can put M-VAVE's own firmware back.</span></a>
 <a class="card" href="emu/"><b>Try it in your browser</b><span>The same code the FM-1 runs, with sound. No FM-1 needed.</span></a>

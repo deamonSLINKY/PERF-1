@@ -576,8 +576,8 @@ static void tel_service(void)
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
-        uint32_t w[34], i;
-        uint8_t f[4 + 34 * 5 + 2];
+        uint32_t w[35], i;
+        uint8_t f[4 + 35 * 5 + 2];
         uint32_t n = 4;
         w[0] = seq;
         w[1] = fm1_ms;
@@ -609,11 +609,12 @@ static void tel_service(void)
         en_prof[9] = 0;
         w[32] = tel_isr_in / FM1_TICKS_PER_US;      /* the timer interrupt: us nested into renders, and outside them */
         w[33] = tel_isr_out / FM1_TICKS_PER_US;
+        w[34] = batt_raw;                           /* the battery divider's reading (0xFFFFFFFF: none yet) */
         tel_isr_in = tel_isr_out = 0;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
         {
-            uint8_t b[34 * 4];
-            for (i = 0; i < 34u; i++)
+            uint8_t b[35 * 4];
+            for (i = 0; i < 35u; i++)
                 b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
             n += ota_pack7(b, sizeof b, f + n);
         }
@@ -724,6 +725,18 @@ static void fm1_main(void)
                 knob += (a * 16 - knob) / 8;
                 k10 = (uint32_t)(knob / 16);
                 master_q12 = (k10 * k10) >> 8;           /* 0 .. ~4096 */
+            }
+        }
+        {   /* the battery divider, once a second, smoothed (the indicator's, and the telemetry's) */
+            static uint32_t bt;
+            static int32_t bs = -1;
+            if (fm1_ms - bt >= 1000u) {
+                const int32_t a = fm1_adc_read(FM1_ADC_BATT);
+                bt = fm1_ms;
+                if (a >= 0) {
+                    bs = bs < 0 ? a * 16 : bs + (a * 16 - bs) / 4;
+                    batt_raw = (uint32_t)(bs / 16);
+                }
             }
         }
         {   /* OCT- + OCT+ held 5 s: update mode (Felucca's, unchanged) */
