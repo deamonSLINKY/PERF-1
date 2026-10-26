@@ -127,6 +127,7 @@ enum {
     P_GHOST, P_ACCENT, P_HUMAN,                           /* the feel: how often the genre's ghost notes sound (snare, kick), how much the steps' accents and ghosts (en_mod levels) count (50 as marked), and a little looseness in time and velocity */
     P_CHAIN, P_SLICE, P_TIME,                             /* the phrase: a chain of patterns by bar (0 off, 1 .. 9 a preset), a slice permutation of the drum steps (0 off, 1 .. 8, 9 a new one each fourth bar), the pattern's time (0 normal, 1 half, 2 double) */
     P_COND, P_COND1, P_COND2, P_COND3, P_COND4, P_COND5,  /* each drum lane's condition (P_COND + lane): 0 always, 1 odd bars, 2 even bars, 1 of 4, 4 of 4, 1 of 8, fill bars only, not in fills */
+    P_AC_LOCK,                                            /* the acid line held: 0 free (it evolves with Mutate, a new one with each piece), 1 frozen (as it is: Mutate leaves it, and it is stored with the piece) */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */
@@ -276,6 +277,11 @@ extern volatile float en_drift;                /* 0..1: how far to the next chor
 extern volatile float en_pad_level, en_bass_level;
 extern volatile float en_acid_level;
 extern volatile uint8_t en_acid_len, en_acid_pos;    /* the acid loop's length and step */
+extern volatile uint8_t en_acid_off[EN_NSTEP], en_acid_oct[EN_NSTEP];   /* the line's steps: scale steps above the chord, the octave */
+extern volatile uint16_t en_acid_slide;        /* the steps that slide into the next */
+void en_acid_step(int s, int off, int oct, int gate, int accent, int slide);   /* set a step of the line (the Acid steps page); the line is then the player's, until a new piece */
+int en_acid_pack(uint8_t *b18);                /* the line as stored: 16 steps of nine bits (18 bytes) */
+void en_acid_unpack(const uint8_t *b18);       /* and back into the engine (a stored piece's frozen line) */
 extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; those accented */
 extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */

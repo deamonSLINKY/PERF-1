@@ -1,0 +1,43 @@
+# The Acid steps page (the ARP button's fifth page, after Acid answer): a white key chooses a step of the acid line; the knobs set its kind (rest, note, accent,
+# slide, accent and slide), its note (scale steps above the chord) and its octave; Frozen holds the line (an edit freezes it) and stores it with the piece.
+seed 0
+wait 3000
+turn SELECT 13 100
+expect view 13
+expect par173 0
+# step 3 (the third white key, key 4): an accent, five scale steps up, two octaves up
+tapkey 4
+spin K1 -10
+wait 100
+expect acidkind2 0
+spin K1 2
+wait 100
+expect acidkind2 2
+spin K2 -20
+spin K2 5
+wait 100
+expect acidoff2 5
+spin K3 -5
+spin K3 2
+wait 100
+expect acidoct2 2
+# an edit froze the line
+expect par173 1
+shot acsteps.png
+# stored with the piece, and back after a power cycle
+tap GLO
+tap SAVE
+wait 500
+reboot
+wait 500
+expect par173 1
+expect acidkind2 2
+expect acidoff2 5
+expect acidoct2 2
+# frozen: it does not change (Mutate at the top, ten seconds on)
+turn SELECT 11 100
+expect view 11
+spin K4 100
+wait 10000
+expect acidkind2 2
+expect acidoff2 5

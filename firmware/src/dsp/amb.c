@@ -88,6 +88,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CHAIN] = {"Chain", 0, 9, 0},         [P_SLICE] = {"Slice", 0, 9, 0},       [P_TIME] = {"Time", 0, 2, 0},
     [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
     [P_COND4] = {"Cond", 0, 7, 0},          [P_COND5] = {"Cond", 0, 7, 0},
+    [P_AC_LOCK] = {"Frozen", 0, 1, 0},
     [P_BL_MODE] = {"Mode", 0, 6, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
@@ -595,6 +596,7 @@ void en_param_text(int i, int v, char *b)
     case P_SLICE: { static const char *const S[10] = {"Off", "Halves", "Stutter", "Reverse", "Delay", "Beats", "Mirror", "Double", "Swap", "Auto"}; s = S[(unsigned)v < 10u ? v : 0]; break; }
     case P_TIME: { static const char *const T[3] = {"Normal", "Half", "Double"}; s = T[(unsigned)v < 3u ? v : 0]; break; }
     case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
+    case P_AC_LOCK: s = v ? "Frozen" : "Free"; break;
     case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
@@ -847,7 +849,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1727,6 +1729,43 @@ static void chord_change(void)                  /* to another degree: the near, 
 }
 
 /* ----------------------------------------------------------- the acid line --- */
+int en_acid_pack(uint8_t *b)
+{
+    uint32_t acc = 0, bits = 0, o = 0;
+    int s;
+    for (s = 0; s < EN_NSTEP; s++) {
+        const uint32_t v = (en_acid_off[s] & 15u) | (uint32_t)(en_acid_oct[s] & 3u) << 4 | (uint32_t)(en_acid_gate >> s & 1u) << 6 |
+                           (uint32_t)(en_acid_acc >> s & 1u) << 7 | (uint32_t)(en_acid_slide >> s & 1u) << 8;
+        acc |= v << bits;
+        bits += 9;
+        while (bits >= 8) {
+            b[o++] = (uint8_t)acc;
+            acc >>= 8;
+            bits -= 8;
+        }
+    }
+    return (int)o;
+}
+void en_acid_unpack(const uint8_t *b)
+{
+    uint32_t acc = 0, bits = 0, i = 0;
+    int s;
+    for (s = 0; s < EN_NSTEP; s++) {
+        uint32_t v;
+        while (bits < 9) {
+            acc |= (uint32_t)b[i++] << bits;
+            bits += 8;
+        }
+        v = acc & 0x1FFu;
+        acc >>= 9;
+        bits -= 9;
+        post(C_ACSTEP, s, (int)((v & 15u) | (v >> 4 & 3u) << 4 | (v >> 6 & 1u) << 6 | (v >> 7 & 1u) << 7 | (v >> 8 & 1u) << 8));
+    }
+}
+void en_acid_step(int s, int off, int oct, int gate, int accent, int slide)
+{
+    post(C_ACSTEP, s & 15, (off & 15) | (oct & 3) << 4 | (gate ? 1 : 0) << 6 | (accent ? 1 : 0) << 7 | (slide ? 1 : 0) << 8);
+}
 static void ac_roll_w(int st, int what)         /* a step made anew: what 0 all of it, 1 the note, 2 the rhythm (whether it sounds), 3 the accent and the slide */
 {
     float dens = (float)par[P_AC_DENS] * 0.01f;
@@ -1754,11 +1793,29 @@ static void ac_roll_w(int st, int what)         /* a step made anew: what 0 all 
 }
 static void ac_roll(int st) { ac_roll_w(st, 0); }
 
+volatile uint8_t en_acid_off[EN_NSTEP], en_acid_oct[EN_NSTEP];
+volatile uint16_t en_acid_slide;
 static void ac_publish(void)
 {
+    int s;
     en_acid_gate = ac_gate;
     en_acid_acc = ac_accent;
+    en_acid_slide = ac_slide;
+    for (s = 0; s < EN_NSTEP; s++) {
+        en_acid_off[s] = (uint8_t)ac_off[s];
+        en_acid_oct[s] = (uint8_t)ac_oct[s];
+    }
     en_acid_len = (uint8_t)par[P_AC_LEN];
+}
+static void ac_step_set(int s, int off, int oct, int gate, int accent, int slide)   /* the player's edit of a step */
+{
+    const uint16_t m = (uint16_t)(1u << s);
+    ac_off[s] = (int8_t)off;
+    ac_oct[s] = (int8_t)oct;
+    ac_gate = (uint16_t)(gate ? ac_gate | m : ac_gate & ~m);
+    ac_accent = (uint16_t)(accent ? ac_accent | m : ac_accent & ~m);
+    ac_slide = (uint16_t)(slide ? ac_slide | m : ac_slide & ~m);
+    ac_publish();
 }
 
 static void ac_regrow(void)
@@ -1771,6 +1828,10 @@ static void ac_regrow(void)
 
 static void ac_mutate(void)                     /* the loop's end: Mutate (a deja-vu knob) re-rolls steps: 0 holds the line, 100 renews it every loop */
 {
+    if (par[P_AC_LOCK]) {                       /* frozen: the line as it is */
+        ac_publish();
+        return;
+    }
     const float k = (float)par[P_AC_MUT] * 0.01f;
     float m = k * k + (par[P_AC_MUT] ? 0.05f * evolve : 0.0f);     /* (squared: 25 is as it was, the top reaches every step) */
     int st;
@@ -3202,7 +3263,10 @@ static void regrow(void)                        /* a new piece: a fresh acid lin
     pad_handoff();
     bass_to(chord_pcs[0]);
     bass.rest = 0;
-    ac_regrow();
+    if (!par[P_AC_LOCK])                        /* a frozen line is the piece's own (project_apply loaded it) */
+        ac_regrow();
+    else
+        ac_publish();
     ac_pos = 0;
     sec = SEC_GROOVE;
     sec_req = 0;
@@ -4906,6 +4970,7 @@ static void drain(void)
         case C_SHED: en_shed_level = (uint8_t)a; break;
         case C_USERVOICE: fm_user_take(a); break;
         case C_USERCLEAR: fm_user_wipe(); break;
+        case C_ACSTEP: ac_step_set(a & 15, b & 15, b >> 4 & 3, b >> 6 & 1, b >> 7 & 1, b >> 8 & 1); break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)

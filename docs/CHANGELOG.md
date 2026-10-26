@@ -17,6 +17,10 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 - **Six more genres** (0.13.5): disco, funk, reggae, synthwave, amapiano and trip-hop, sixteen in all, each with its own flash object.
 - **Phrase page** (0.13.6): a chain of patterns by bar (nine presets, the Amen's 1 1 3 4 among them), eight slice permutations of the drum steps (and an automatic one), half and double time, and a condition for each drum lane (odd or even bars, first or last of four, first of eight, fills only, not in fills).
 - **Backup and restore** (0.13.7): the installer page saves everything the FM-1 has stored (pieces in every genre, settings, DX7 voices, theme, Tune, MIDI out) to a `.p1bak` file and puts it back, so switching firmware does not lose it. SysEx messages `7D 50 42`/`43`/`44`; each store is checked as its loader would take it, then written through the usual A/B commit, and the unit restarts.
+- **Acid steps page and freeze** (0.13.12): the acid line shown as sixteen steps you can edit (rest, note, accent, slide, note, octave), frozen so Mutate leaves it, and stored with the piece (18 bytes in the record's spare room).
+- **Eight new DX voices** (0.13.11): steel, clean, muted and drive guitars, slap bass, synth brass, sax and muted trumpet (thirty built in); the player's own voices shift up eight places in stored pieces and are renumbered when an older piece loads.
+- **Seamless saves** (0.13.9): a flash erase in slices with the chip's erase-suspend command, so a store while playing no longer fades the music; the old fade and blocking erase come back if the chip cannot suspend.
+- **Fixes** (0.13.8): the new genres' effect tables, a limiter made safe against a bad sample, vinyl crackle, drone renamed bass everywhere, a battery indicator, long knob values fit their card.
 - Ideas from **Tuna** by delirioux (GPL-3.0), written afresh for PERF-1's engine; credited in the manual and LICENSING.
 
 ## 0.13.0

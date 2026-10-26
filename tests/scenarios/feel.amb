@@ -2,8 +2,8 @@
 # comping rhythm (auto, hold, off-beat .. eighths) and a little looseness.
 seed 0
 wait 3000
-turn SELECT 22 100
-expect view 22
+turn SELECT 23 100
+expect view 23
 expect par161 0
 expect par162 50
 spin K1 40

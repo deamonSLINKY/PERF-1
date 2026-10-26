@@ -114,7 +114,7 @@ def main():
         {"name": "Acid", "sections": [
             {"name": "Acid", "knobs": byname["Acid"]},
             {"name": "Envelope and sound", "knobs": byname["Acid env"]},
-            {"name": "The line", "knobs": byname["Acid line"] + pl(("P_AC_RESP", "Answer"), ("P_AC_EVERY", "Answer every (bars; or before a drum change)"), ("P_STYLE", "Answer sync (0 bar, 1 loop)"))},
+            {"name": "The line", "knobs": byname["Acid line"] + pl(("P_AC_RESP", "Answer"), ("P_AC_EVERY", "Answer every (bars; or before a drum change)"), ("P_STYLE", "Answer sync (0 bar, 1 loop)"), ("P_AC_LOCK", "Frozen (the line held and stored with the piece)"))},
             {"name": "Place", "knobs": pl(("P_AC_OCT", "Octave"), ("P_AC_MAN", "By hand")) + [ls("P_PAN", 2, "Pan"), ls("P_SEND", 2, "Send")]}]},
         {"name": "Pluck", "sections": [
             {"name": "Pluck", "knobs": byname["Pluck"]},

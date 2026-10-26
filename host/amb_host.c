@@ -464,6 +464,20 @@ static int expect(const char *what, const char *val)
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
         got = proj.pool;
+    else if (!strcmp(what, "acidgate"))           /* the acid line's steps that play (a 16-bit mask) */
+        got = en_acid_gate;
+    else if (!strncmp(what, "acidoff", 7))        /* the acid line's step N: scale steps above the chord */
+        got = en_acid_off[atoi(what + 7) & 15];
+    else if (!strncmp(what, "acidoct", 7))        /* its octave */
+        got = en_acid_oct[atoi(what + 7) & 15];
+    else if (!strncmp(what, "acidkind", 8)) {     /* the acid line's step N as the page says: 0 rest, 1 note, 2 accent, 3 slide, 4 accent and slide */
+        const int s = atoi(what + 8) & 15, g = en_acid_gate >> s & 1, ac = en_acid_acc >> s & 1, sl = en_acid_slide >> s & 1;
+        got = !g ? 0 : ac ? (sl ? 4 : 2) : (sl ? 3 : 1);
+    }
+    else if (!strcmp(what, "acidacc"))
+        got = en_acid_acc;
+    else if (!strcmp(what, "acidslide"))
+        got = en_acid_slide;
     else if (!strcmp(what, "hushed"))             /* the output is faded out (a store waiting to write) */
         got = en_hushed;
     else if (!strcmp(what, "storewait"))          /* a store is waiting for the fade */

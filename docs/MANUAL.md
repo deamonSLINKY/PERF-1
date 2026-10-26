@@ -202,7 +202,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 
 ## 5. The pages
 
-SELECT walks through them in this order (30 pages; the dial stops at the ends). The buttons jump straight to
+SELECT walks through them in this order (31 pages; the dial stops at the ends). The buttons jump straight to
 a voice, and pressing the same button again steps through that voice's envelope and LFO (and, for the pad, the
 chords). On a voice's main page KNOB 1 is its level.
 
@@ -221,9 +221,10 @@ chords). On a voice's main page KNOB 1 is its level.
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
 | Acid answer | ARP x4 | Answer (off, octave, fifth, mirror, sparse) | Every (the 2nd ... 8th time round the line) | Direction (up, down) | - |
-| Pluck | ARP x5 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
-| Pluck 2 | ARP x6 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
-| Deja vu | ARP x7 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Acid mut (what the acid's Mutate changes: all, notes, rhythm, accents) |
+| Acid steps | ARP x5 | Step (the step chosen with a white key: rest, note, accent, slide, accent + slide) | Note (0-11 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
+| Pluck | ARP x6 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
+| Pluck 2 | ARP x7 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
+| Deja vu | ARP x8 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Acid mut (what the acid's Mutate changes: all, notes, rhythm, accents) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Bass | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
@@ -498,6 +499,21 @@ level, decay and density.
 **The answer (call and response).** The **Acid answer** page (ARP four times) makes the line ask and then answer. **Every** is how often: the 2nd to the 8th bar (or loop, see Sync: with Every on 4th you hear the call three times and the answer the fourth), or **Drift**: the bar before the drums change, so the answer comes in with the pattern change (with drum drift not changing patterns it falls back to every 8th). **Answer** is how the line is changed: **Octave**, **Fifth** (seven semitones), **Third** (two degrees up or down the scale, so it stays in key), **Mirror** (the contour upside down round the line's own middle, so it stays in the line's register), **Reverse** (the line backwards), **Rotate** (the line displaced a beat), **Sparse** (only the even steps) or **Accents** (only the accented notes). **Direction** is down 2, down, the same, up or up 2: for the octave, fifth and third a step of the interval, for the others (mirror, reverse, rotate, sparse, accents) octaves. Where the move would leave the acid's register (a low line answered downwards) the answer goes the other way, so it never folds back onto the call. **Sync** is what Every counts: **Bar** (the answer is a bar, so with a line of 12 or 10 steps it begins and ends mid-line) or **Loop** (the answer is the whole line, counted in times round it, and with Drift it is the loop that starts in the bar before the drums change; use Loop for lines that are not 16 steps). The page draws the call and its answer, a dot a step at its note's height. Off by default; stored with the piece (the editor has it under Acid).
 
 The eight newest built-in DX voices are guitars, a bass and brass: **Steel Gtr** (a strummed steel string, long ring), **Clean Gtr** (an electric that holds, a little chorus), **Muted Gtr** (the funk chank, over in a tenth of a second), **Drive Gtr** (a feedback chain for a distorted string, held), **Slap Bass**, **Synth Brass** (a swell, the bite coming up), **Sax** (a reed with a delayed vibrato) and **Mute Trumpet** (the thin, nasal vowel of a mute). They are first drafts, written for PERF-1 and tuned by numbers rather than by ear, and are used in the disco, funk, reggae, synthwave, amapiano and trip-hop genres; tell the maker what you think of them. For more, load your own: the installer page takes any DX7 `.syx` bank or single voice (section 15), and there are large free collections of them, such as [Bobby Blues' DX7 archive](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html), [Soundarchive](https://www.soundarchive.co/yamaha-dx7) and [Yamaha Black Boxes](https://yamahablackboxes.com/collection/yamaha-dx7-synthesizer/patches/) (the licence of each bank is its author's: PERF-1 does not include any).
+
+### Acid steps: freeze the line and edit it
+
+![The Acid steps page](img/perf-screen-acsteps.png)
+
+The acid line is made up as it goes and rewritten a little each time round (Mutate). To keep a line you like, and to shape it, use the **Acid steps** page (ARP five times, after Acid answer). It draws the line as sixteen bars, a step each: the height is the note, the accent in the bright colour, a short tail where a step slides into the next, a dash for a rest, and a mark under the step playing. A **white key** chooses a step; the knobs set it:
+
+| Knob | Does |
+|---|---|
+| Step | **Rest**, **Note**, **Accent**, **Slide** (it slides into the next) or **Acc+Slide**. |
+| Note | The note, 0 to 11 scale steps above the chord (the line follows the chord, so it moves with it). |
+| Octave | 0 to 3 octaves up (on top of the Acid octave). |
+| Frozen | **Free**: the line evolves (Mutate) and a new one grows with each piece. **Frozen**: the line is held as it is, Mutate leaves it alone, and it is **stored with the piece** (Global, SAVE) and comes back with it. |
+
+Any edit freezes the line (it would otherwise be rewritten); turn Frozen back to Free to let it evolve again. Freeze it without editing by turning Frozen to Frozen on the line you are hearing. The line's length, the answer (section 7) and the Acid octave work on a frozen line as on any other. The steps beyond the Length are drawn dim and do not play. A piece stored in an earlier version has a free line.
 
 ### Deja vu: loops in the pluck, and what the acid mutates
 

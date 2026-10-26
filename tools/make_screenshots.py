@@ -24,7 +24,7 @@ MANUAL = {                                  # docs/img/perf-screen-NAME.png: sce
     "glo-mix": "keymap/keymap_perf_glo", "shift": "keymap/keymap_shift", "perform": "perf/perf_screen", "settings": "settings/settings",
     "store": "store/global_stored", "breakdown": "sections/breakdown", "build": "sections/build", "jam": "jam/jam_pluck",
     "remote": "remote/remote_link", "saver": "stage/saver", "help": "help/help_lfo", "viz-disco": "viz/viz_disco",
-    "viz-kaleido": "viz/viz_kaleido", "groove": "arrange/groove", "acid-answer": "answer/answer_page", "steps": "steps/steps", "phrase": "phrase/phrase", "feel": "feel/feel", "bassline": "bassline/bassline", "dejavu": "dejavu/dejavu",
+    "viz-kaleido": "viz/viz_kaleido", "groove": "arrange/groove", "acid-answer": "answer/answer_page", "steps": "steps/steps", "acsteps": "acsteps/acsteps", "phrase": "phrase/phrase", "feel": "feel/feel", "bassline": "bassline/bassline", "dejavu": "dejavu/dejavu",
 }
 BG = (20, 14, 12)
 

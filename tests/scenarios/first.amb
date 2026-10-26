@@ -44,22 +44,22 @@ tap ARP
 expect view 11
 shot acid_line.png
 tap SEQ
-expect view 16
+expect view 17
 shot drums.png
 tap GLO
-expect view 28
+expect view 29
 shot global.png
 # SELECT: the pages in order, Noise, Space and the Master (compressor, limiter) among them
 turn SELECT -1 100
-expect view 27
+expect view 28
 shot master.png
 turn SELECT -1 100
-expect view 26
+expect view 27
 shot reverb.png
 turn SELECT -1 100
-expect view 25
+expect view 26
 shot space.png
-turn SELECT -20 100
+turn SELECT -21 100
 expect view 5
 shot noise.png
 turn SELECT -9 100

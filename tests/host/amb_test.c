@@ -983,6 +983,48 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the acid line frozen: it is packed into 18 bytes and comes back as it was (steps set one at a time), and with Frozen on Mutate at its top leaves it alone for
+     * 20 s at 128 bpm, while free it is rewritten */
+    {
+        int fr, s, ok = 1, blk;
+        uint8_t pk[18], pk2[18], before[18], after[18];
+        for (fr = 0; fr < 2; fr++) {
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_AC_MUT, 100);
+            en_set(P_AC_LEN, 16);
+            en_set(P_AC_LOCK, fr);
+            for (s = 0; s < 16; s++)
+                en_acid_step(s, (s * 5) % 12, s & 3, s % 3 != 0, s % 4 == 1, s % 5 == 2);
+            run(0.2f);
+            en_acid_pack(before);
+            en_play(1);
+            for (blk = 0; blk < 7000; blk++)
+                en_render(buf, 256, 2048);
+            en_acid_pack(after);
+            if (fr == 0)
+                ok = ok && memcmp(before, after, 18) != 0;
+            else
+                ok = ok && !memcmp(before, after, 18);
+        }
+        CHECK(ok, "acid frozen: the line %s with Mutate at 100", ok ? "behaved" : "changed when frozen or held when free");
+        en_init();
+        for (s = 0; s < 16; s++)
+            en_acid_step(s, (s * 7) % 12, (s >> 1) & 3, (s & 1) ^ 1, s == 3 || s == 9, s == 5);
+        run(0.2f);
+        en_acid_pack(pk);
+        en_init();
+        en_acid_unpack(pk);
+        run(0.2f);
+        en_acid_pack(pk2);
+        CHECK(!memcmp(pk, pk2, 18), "acid frozen: the packed line did not survive unpack and pack");
+        for (s = 0; s < 16; s++)
+            ok = ok && en_acid_off[s] == (uint8_t)((s * 7) % 12) && en_acid_oct[s] == (uint8_t)((s >> 1) & 3);
+        CHECK(ok, "acid frozen: the steps' notes and octaves come back");
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the bass line (the drone's modes), 4 s at 128 bpm from the MIDI out: Drone plays no notes of its own, Kick plays one on each kick, Eighths about 17,
      * Off-beat about 8, Walk about 8, and every note stays in the bass range (C1 .. B5) */
     {
