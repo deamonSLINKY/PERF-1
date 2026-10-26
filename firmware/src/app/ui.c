@@ -2775,8 +2775,6 @@ static void imp_header(void)
     }
 }
 
-#define BATT_EMPTY 512u                         /* the divider's reading at a flat battery, and at a full one: a guess (a 1:2 divider, 3.3 V on 10 bits, 3.3 V to 4.2 V) until the telemetry's batt column says */
-#define BATT_FULL 650u
 static void draw_header(void)
 {
     char t[24];
@@ -2792,7 +2790,7 @@ static void draw_header(void)
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
-    h = hash(h, plat_battery() >> 2);
+    h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
@@ -2809,14 +2807,20 @@ static void draw_header(void)
     } else {
         int32_t x = 207, w;
         const uint32_t bv = plat_battery();
-        if (bv != 0xFFFFFFFFu && bv > 100u) {      /* the battery, left of the mascot: a cell with its charge (uncalibrated: the divider's reading, BATT_EMPTY .. BATT_FULL, is in the telemetry as batt) */
-            const int pct = bv <= BATT_EMPTY ? 0 : bv >= BATT_FULL ? 100 : (int)((bv - BATT_EMPTY) * 100u / (BATT_FULL - BATT_EMPTY));
-            const uint16_t bc = pct < 15 ? K_ACC : pct < 35 ? K_FROST : K_DIM;
+        if (bv != 0xFFFFFFFFu && bv > 100u) {      /* the battery, left of the mascot: a cell, its charge in three steps (the stock firmware's own: the divider's reading under 531 is the last, 561 and 591 the others), a bolt in it while USB powers the unit */
+            const int lvl = bv >= 591u ? 3 : bv >= 561u ? 2 : bv >= 531u ? 1 : 0;
+            const uint16_t bc = lvl == 0 ? K_ACC : lvl == 1 ? K_FROST : K_DIM;
+            int j;
             cv_rect(x - 14, 12, 12, 7, bc);
             cv_rect(x - 13, 13, 10, 5, K_BG);
             cv_rect(x - 2, 14, 2, 3, bc);
-            if (pct > 0)
-                cv_rect(x - 12, 14, 1 + pct * 8 / 100, 3, pct < 15 ? K_ACC : K_TEXT);
+            for (j = 0; j < lvl; j++)
+                cv_rect(x - 12 + 3 * j, 14, 2, 3, K_TEXT);
+            if (plat_usb_power()) {                /* a bolt over it */
+                cv_rect(x - 8, 13, 2, 3, K_ACC);
+                cv_rect(x - 9, 15, 4, 1, K_ACC);
+                cv_rect(x - 8, 16, 2, 2, K_ACC);
+            }
             x -= 20;
         }
         draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 3, en_playing && en_sec == EN_SEC_BREAK);

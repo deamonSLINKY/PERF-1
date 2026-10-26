@@ -79,6 +79,8 @@ int32_t plat_enc(int role)
 uint32_t plat_master(void) { return master; }
 static uint32_t host_batt = 0xFFFFFFFFu;
 uint32_t plat_battery(void) { return host_batt; }
+static int host_usb;
+int plat_usb_power(void) { return host_usb; }
 void plat_leds(uint32_t b, uint32_t k)
 {
     lit_btn = b;
@@ -865,6 +867,8 @@ int main(int argc, char **argv)
             autopilot = atoi(a);
         } else if (!strcmp(cmd, "splash")) {         /* splash MS: the next boot's RedtailWorks card */
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
+        } else if (!strcmp(cmd, "usbpower")) {       /* usbpower 0/1: a USB host powers the unit (a bolt in the battery) */
+            host_usb = atoi(a);
         } else if (!strcmp(cmd, "seamless")) {       /* seamless 0/1: a flash write does not stop the audio (as the unit's sliced erase): no fade around a store */
             host_seamless = atoi(a);
         } else if (!strcmp(cmd, "battery")) {        /* battery N: the divider's ADC reading (0..1023; the indicator shows from about 500) */

@@ -11,3 +11,6 @@ shot battery_low.png
 battery 700
 wait 600
 shot battery_full.png
+usbpower 1
+wait 600
+shot battery_usb.png

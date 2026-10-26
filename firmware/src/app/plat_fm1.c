@@ -42,6 +42,7 @@ static volatile uint32_t master_q12 = 2048;
 uint32_t plat_master(void) { return master_q12; }
 static volatile uint32_t batt_raw = 0xFFFFFFFFu;
 uint32_t plat_battery(void) { return batt_raw; }
+int plat_usb_power(void) { return usb.config && !usb.suspended; }
 
 /* LEDs: the picture is built off-line and copied one byte per column (Felucca: clearing
  * and relighting would let the 10 kHz scan catch the dark gap and flicker) */
