@@ -202,7 +202,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 
 ## 5. The pages
 
-SELECT walks through them in this order (29 pages; the dial stops at the ends). The buttons jump straight to
+SELECT walks through them in this order (30 pages; the dial stops at the ends). The buttons jump straight to
 a voice, and pressing the same button again steps through that voice's envelope and LFO (and, for the pad, the
 chords). On a voice's main page KNOB 1 is its level.
 
@@ -231,6 +231,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Groove | SEQ x5 | Lane (kick ... perc) | Density (0-100; 50 as written) | Source (follow, or pattern 1-6) | All dens (every lane's density) |
 | Steps | SEQ x6 | Lane | Ratchet (off, x2, x3, x4, x6, flam, swell 3, swell 4) | Push (0-7 twelfths of a step late) | Level (normal, ghost, soft, accent) |
 | Feel | SEQ x7 | Ghosts (0-100) | Accents (0-100; 50 as marked) | Pad comp (auto, hold, 7 rhythms) | Humanize (0-100) |
+| Phrase | SEQ x8 | Chain (off, 9 chains of patterns) | Slice (off, 8 permutations, auto) | Time (normal, half, double) | Cond (the lane chosen: always, 1:2 ...) |
 | Space | SELECT | Echo | Echo time (1/8, 3/16, 1/4, dotted 1/4, 1/2, 1 bar) | Reverb | Size |
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
@@ -626,6 +627,19 @@ The **Feel** page (SEQ seven times) holds what makes a groove human:
 - **Accents** (0-100; 50 is as marked): how much the Steps page's accents and ghosts count. 0 plays every level alike; 100 exaggerates them.
 - **Pad comp:** the rhythm of the pad's stabs, for stab-type pad sounds (Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass, Pluck). **Auto** takes the genre's own; **Hold** never stabs (a stab sound plays as a held pad); the others force the stabs on any pad sound: **Off-beat**, **On-beat**, **3-3-2**, **Charleston**, **Syncopated**, **Sparse**, **Eighths**.
 - **Humanize** (0-100): a little looseness, each hit a touch softer and a touch late.
+
+### Phrase: chains, slices, half and double time, conditions
+
+![The Phrase page](img/perf-screen-phrase.png)
+
+The **Phrase** page (SEQ eight times) shapes what the patterns do over several bars:
+
+- **Chain** plays a different pattern each bar, round and round: **12** (patterns 1, 2), **1112**, **1123**, **1134** (the Amen's), **1213**, **1234**, **1232**, **1115**, or **123456**. While a chain is on, it chooses the pattern at every bar line (the Pattern knob, held pattern keys and drum drift's changes give way to it; drift's fills still come); off, the patterns are yours again. Turning it on or changing it starts it from its first bar.
+- **Slice** reads the drum steps in another order (the drums only; a lane with its own length keeps its steps): **Halves** (the two halves of the bar swapped), **Stutter** (the first beat of each half repeated), **Reverse** (the bar backwards), **Delay** (the back half an eighth late), **Beats** (the middle two beats swapped), **Mirror** (the second half backwards), **Double** (the first half twice), **Swap** (the beats within each half swapped). **Auto** gives the last bar of every four a different one, drawn at random.
+- **Time** reads the pattern at half speed (**Half**: over two bars, the hats in eighths: DnB into drumstep) or twice (**Double**: twice in a bar; a hit on an odd step joins the step before).
+- **Cond** is the condition of the lane chosen (on Groove, Steps or the sequencer; the knob shows its first letters): **Always**, **1:2** (odd bars: the first, third ...), **2:2** (even bars), **1:4** (the first bar of four), **4:4** (the last of four), **1:8** (the first of eight), **Fill** (the lane's pattern hits sound only in fill bars) or **No fill**. A condition decides whether the pattern's hit sounds; fills still add theirs.
+
+Everything on this page is stored with the piece (the chain and the slice as numbers; the conditions one a lane).
 
 ---
 
