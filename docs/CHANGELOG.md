@@ -8,6 +8,15 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
+## 0.14.0 (in development; the builds 0.13.1 .. 0.13.5 are its steps)
+
+- **Steps page** (0.13.1): a ratchet (x2, x3, x4, x6, flam, swells), a push (late, in twelfths of a step) and a level (ghost, soft, accent) for each step of each lane, stored with the piece in the record's spare bytes (older pieces load with none); some genres ship with tricks.
+- **Bass line page** (0.13.2): the drone as notes (Root, Kick, Eighths, Off-beat, Walk, Riff) with Length, Move and Glide, a genre's own rhythm and riff; lofi, house, dubstep, electro, trap and the newer genres start as a bass line.
+- **Deja vu page** (0.13.3): the pluck remembers its last 4 to 32 notes and brings each round again with a chance (Deja vu, Loop, Leaps); Acid mut chooses what the acid's Mutate changes (all, notes, rhythm, accents).
+- **Feel page** (0.13.4): the genre's ghost notes, how much accents and ghosts count, the pad's comping rhythm (auto, hold, seven rhythms), humanize; per-genre comping, ghost steps and accents.
+- **Six more genres** (0.13.5): disco, funk, reggae, synthwave, amapiano and trip-hop, sixteen in all, each with its own flash object.
+- Ideas from **Tuna** by delirioux (GPL-3.0), written afresh for PERF-1's engine; credited in the manual and LICENSING.
+
 ## 0.13.0
 
 What the development builds added, in the order they came (the numbers are the development builds):

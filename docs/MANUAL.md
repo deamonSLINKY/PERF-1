@@ -8,7 +8,7 @@ tape stops and DJ air horns over it, mix it, or let the auto-DJ run the set, and
 performance into your DAW: the FM-1 is a USB audio and MIDI device.
 
 PERF-1 is deamonSLINKY's fork of [HYP-1](https://www.redtail.works) by RedtailWorks (GPL-3.0). This
-manual is for **PERF-1 0.11 (experimental)**: it is changing quickly, some of it has been tested only in the
+manual is for **PERF-1 0.14 (development)**: it is changing quickly, some of it has been tested only in the
 simulator and the emulator, and it can still crash. Keep a way back to the stock firmware (section 1).
 
 ![The Tempo page, the home screen](img/perf-screen-home.png)
@@ -202,7 +202,7 @@ Holding OCT- and OCT+ while you **switch the FM-1 on** is a different thing: har
 
 ## 5. The pages
 
-SELECT walks through them in this order (25 pages; the dial stops at the ends). The buttons jump straight to
+SELECT walks through them in this order (29 pages; the dial stops at the ends). The buttons jump straight to
 a voice, and pressing the same button again steps through that voice's envelope and LFO (and, for the pad, the
 chords). On a voice's main page KNOB 1 is its level.
 
@@ -216,17 +216,21 @@ chords). On a voice's main page KNOB 1 is its level.
 | Drone | LFO | Level | Sound (24) | Cutoff | Reso |
 | Drone env | LFO x2 | Trigger (chord, 1, 2, 4, 8 bars, off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Drone LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
+| Bass line | LFO x4 | Mode (drone, root, kick, eighths, off-beat, walk, riff) | Length (how long a note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
 | Acid answer | ARP x4 | Answer (off, octave, fifth, mirror, sparse) | Every (the 2nd ... 8th time round the line) | Direction (up, down) | - |
 | Pluck | ARP x5 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | ARP x6 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
+| Deja vu | ARP x7 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Acid mut (what the acid's Mutate changes: all, notes, rhythm, accents) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Drone | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Drum drift | SEQ x4 | Change (off, next, random) | Every (the chord, 4-64 bars) | Pool (patterns 1-2 ... 1-6) | Mutate (off, shift, morph) |
 | Groove | SEQ x5 | Lane (kick ... perc) | Density (0-100; 50 as written) | Source (follow, or pattern 1-6) | All dens (every lane's density) |
+| Steps | SEQ x6 | Lane | Ratchet (off, x2, x3, x4, x6, flam, swell 3, swell 4) | Push (0-7 twelfths of a step late) | Level (normal, ghost, soft, accent) |
+| Feel | SEQ x7 | Ghosts (0-100) | Accents (0-100; 50 as marked) | Pad comp (auto, hold, 7 rhythms) | Humanize (0-100) |
 | Space | SELECT | Echo | Echo time (1/8, 3/16, 1/4, dotted 1/4, 1/2, 1 bar) | Reverb | Size |
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
@@ -294,7 +298,7 @@ page also has **Root** (the same as on Global). For dub techno, try Chord on Dub
 
 ![Storing a piece on Global](img/perf-screen-store.png)
 
-There are ten **genres**, each a bank of ten **pieces**. Turn **PRESETS** for another piece in the bank
+There are sixteen **genres**, each a bank of ten **pieces**. Turn **PRESETS** for another piece in the bank
 (01-10 wrap round); hold **GLO** and turn **PRESETS** for another bank (it wraps too), or use the Genre knob
 on the settings page. The same piece number keeps playing, in the new genre, and the genre's own effects come
 with it (the lofi bank latches vinyl and tape on, house latches the pump on, and so on). Switching clears the
@@ -314,10 +318,18 @@ shows a made-up title when you pick it (`VELVET RAIN`), the same one every time.
 | GARAGE | G01-G10 | 126-138 | Swung two-step, skippy, speed garage, a conga kick, rim Q&A (Minimal snare, House hats); tape and a light pump. |
 | ELECTRO | E01-E10 | 118-130 | A syncopated kick, the clap on the backbeat, the Electro kit, a gated reverb; the phaser latched on. |
 | TRAP | T01-T10 | 130-150 | The long 808 (the Trap kit), the clap on beat 3, hat rolls; a shimmer reverb and a pump under the 808. |
+| DISCO | S01-S10 | 112-126 | Four on the floor, accented open off-beat hats, an octave-bouncing bass, strings and brass stabs, Wurli and clav, a little swing. |
+| FUNK | F01-F10 | 96-110 | Syncopated sixteenths, ghost snares and soft kick pickups, a funk bass figure, a clav line, sixteenth comping, the Break kit. |
+| REGGAE | R01-R10 | 70-84 | One-drop, steppers and rockers, the rim a touch late, a melodic bass, an off-beat skank, a long echo, the Dusty kit. |
+| SYNTHWAVE | W01-W10 | 100-118 | Driving eighth-note bass, a gated reverb, a big accented snare, lots of chorus, arpeggiating acid. (On the screen: SYNTHWV.) |
+| AMAPIANO | A01-A10 | 108-115 | A soft kick with shakers, a gliding syncopated bass (the log drum's part), jazzy 9ths, marimba and kalimba plucks. (AMAPI.) |
+| TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back, ghosts, vinyl noise, a pluck loop that comes round again, minor and sparse. |
 
 Inside a genre the pieces differ in sound as well as in key and tempo: each genre has a palette of sounds for
 the pad, drone, acid, pluck and kits, and a piece takes one of each by its number. The pluck's sound, style and
 rate vary by piece in every genre. Each genre also brings its own compressor settings (section 11).
+
+The six after TRAP (disco, funk, reggae, synthwave, amapiano, trip-hop) use the same drum kits as the others; a kit of their own for the roots genres is planned.
 
 **Storing (every genre):** go to **Global** and press **SAVE**. The piece is stored as it is: every page's
 values, the scale and mode, its voices' sounds and kit, its patterns and its drums' sounds, in the genre you are in: the stored piece takes the
@@ -416,6 +428,26 @@ and filter carry over to the new sound.
 | 23 | Power | The root and its fifth, driven |
 | 24 | Air | A soft open sine |
 
+### The drone as a bass line
+
+![The Bass line page](img/perf-screen-bassline.png)
+
+The drone can play notes instead of a held tone. The **Bass line** page (LFO four times) turns it into a bass line that follows the chord:
+
+| Mode | The notes fall |
+|---|---|
+| Drone | (the original: one long note that glides to each chord's root) |
+| Root | on the genre's own bass rhythm (hypnotic: the beats; lofi: a lazy three; DnB: a roll; ...) |
+| Kick | on every kick hit, as an 808 or a sub does |
+| Eighths | on every eighth |
+| Off-beat | on the off-beat eighths (house) |
+| Walk | on the beats: the root, then the third or fifth, then the fifth, then the scale note below the root, leading to the next |
+| Riff | on the genre's figure: disco bounces the octave, funk and amapiano syncopate, reggae leans on the fifth |
+
+**Length** is how long a note holds (a quarter step to five steps) before it lets go; **Move** is how often a note goes up an octave, to the fifth or to the scale note below the root instead (in Walk, how often the last beat steps below); **Glide** is the slide from note to note (0 plays each note as it is; 100 takes about 0.4 s). Each note opens the drone's filter again, with the **Drone env** page's attack and decay, so that page still shapes the sound; its Trigger setting does not apply. The sound, cutoff and reso are the **Drone** page's. A breakdown plays no notes; a build plays none in Kick mode. A drone played by hand from the keys is not a bass line.
+
+New pieces start as a bass line in lofi (Root), house (Off-beat), dubstep and trap (Kick, long, a little glide), electro and synthwave (Eighths), disco, funk, reggae and amapiano (Riff), and trip-hop (Root); the other genres keep the drone. Every note stays between C1 and B5.
+
 ### The acid: 31 sounds
 
 | # | Sound | What it is |
@@ -463,6 +495,14 @@ level, decay and density.
 ![The Acid answer page](img/perf-screen-acid-answer.png)
 
 **The answer (call and response).** The **Acid answer** page (ARP four times) makes the line ask and then answer. **Every** is how often: the 2nd to the 8th bar (or loop, see Sync: with Every on 4th you hear the call three times and the answer the fourth), or **Drift**: the bar before the drums change, so the answer comes in with the pattern change (with drum drift not changing patterns it falls back to every 8th). **Answer** is how the line is changed: **Octave**, **Fifth** (seven semitones), **Third** (two degrees up or down the scale, so it stays in key), **Mirror** (the contour upside down round the line's own middle, so it stays in the line's register), **Reverse** (the line backwards), **Rotate** (the line displaced a beat), **Sparse** (only the even steps) or **Accents** (only the accented notes). **Direction** is down 2, down, the same, up or up 2: for the octave, fifth and third a step of the interval, for the others (mirror, reverse, rotate, sparse, accents) octaves. Where the move would leave the acid's register (a low line answered downwards) the answer goes the other way, so it never folds back onto the call. **Sync** is what Every counts: **Bar** (the answer is a bar, so with a line of 12 or 10 steps it begins and ends mid-line) or **Loop** (the answer is the whole line, counted in times round it, and with Drift it is the loop that starts in the bar before the drums change; use Loop for lines that are not 16 steps). The page draws the call and its answer, a dot a step at its note's height. Off by default; stored with the piece (the editor has it under Acid).
+
+### Deja vu: loops in the pluck, and what the acid mutates
+
+![The Deja vu page](img/perf-screen-dejavu.png)
+
+The pluck normally chooses each note afresh. The **Deja vu** page (ARP seven times) makes it remember: it keeps the last 4, 8, 16 or 32 notes (**Loop**), and each time one comes round again, **Pluck vu** is the chance it is the same note, rest or leap as last time (0: every note is new, 100: the loop is locked and repeats exactly). The chord it is played over is the chord of now, so a locked phrase follows the harmony. **Leaps** is how often a new note jumps an octave. Changing the loop's length, or a new piece, forgets the loop.
+
+The acid has always had this in its **Mutate** (Acid line page): each time round it rewrites a few steps. **Acid mut** on this page chooses what a rewrite changes: **All** (as before), **Notes** only (the rhythm stays, the notes drift: the classic acid), **Rhythm** only (the same notes come and go), or **Accents** (only the accents and slides).
 
 ### The kits: 14
 
@@ -561,6 +601,31 @@ the acid.
 
 Probability and length are stored with the piece. The Euclidean fill and rotation edit the pattern, so
 they stay in it if you store the piece.
+
+### Steps: ratchets, push and level
+
+![The Steps page](img/perf-screen-steps.png)
+
+Under the six patterns each lane has **step tricks**: a **ratchet**, a **push** and a **level** for each of its sixteen steps, on the **Steps** page (SEQ six times, or the dial after Groove). KNOB 1 chooses the lane; a **white key** chooses the step (the key lights, and the page shows the lane as it plays); the other knobs set that step:
+
+| Knob | Does |
+|---|---|
+| Ratchet | The hit is repeated inside its step: **x2**, **x3**, **x4**, **x6**, a **flam** (a quiet grace note just before), or a **swell** (three or four hits getting louder). |
+| Push | The hit lands late, 0 to 7 twelfths of a step (a laid-back snare; at 128 BPM about 10 ms a step). It can only be late, not early. |
+| Level | **Normal**, **ghost** (very soft), **soft** or **accent**. |
+
+The page draws each step as a bar (its height the level, shifted by its push) with the ratchet's hits as small bars under it. The tricks belong to the lane's steps, whatever pattern plays, and are stored with the piece (a piece stored in 0.13 simply has none). They apply to the hits the pattern makes; a trick on a step with no hit waits for one. They do not apply in fills, builds, breakdowns, or to the hits the drop lands on, and the first bar after PLAY plays without them. Some genres ship with tricks: the off-beat hats soft (lofi, house, garage and most of the rest), the hats' off-beat accented (disco, house, electro), the backbeat accented (jungle, DnB, breaks, funk, synthwave), the snare laid back (lofi, trip-hop, reggae's rim a touch), trap's triplets and a swell on its last hat beat.
+
+### Feel: ghosts, accents, comping and looseness
+
+![The Feel page](img/perf-screen-feel.png)
+
+The **Feel** page (SEQ seven times) holds what makes a groove human:
+
+- **Ghosts** (0-100): the genre's ghost notes, soft snares (and soft kicks in lofi, jungle, breaks, funk, trip-hop) on steps the pattern does not have. At 100 about six in ten of those steps sound. Lofi, house, jungle, DnB, breaks, garage, funk and trip-hop have ghost steps; the others are unchanged.
+- **Accents** (0-100; 50 is as marked): how much the Steps page's accents and ghosts count. 0 plays every level alike; 100 exaggerates them.
+- **Pad comp:** the rhythm of the pad's stabs, for stab-type pad sounds (Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass, Pluck). **Auto** takes the genre's own; **Hold** never stabs (a stab sound plays as a held pad); the others force the stabs on any pad sound: **Off-beat**, **On-beat**, **3-3-2**, **Charleston**, **Syncopated**, **Sparse**, **Eighths**.
+- **Humanize** (0-100): a little looseness, each hit a touch softer and a touch late.
 
 ---
 
@@ -1110,6 +1175,8 @@ processor core) and the safe core hold are from **Melodee** by Kerem Kilic (Elli
 [Groove OS](https://www.groove-os.com/)'s emulator. What is known about the FM-1's hardware comes largely from the
 [FM-1-RE](https://github.com/AL-255/FM-1-RE) reverse-engineering work; the rescue route uses
 [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter)'s protocol and JieLi's flash loader from kagaimiq's jl-uboot-tool.
+
+The bass modes, the pad's comping rhythms, the ghost notes and accents of the genres, and the deja vu loop in the pluck follow ideas in **Tuna** by delirioux ([github.com/delirioux/tuna](https://github.com/delirioux/tuna), GPL-3.0), a generative firmware for the FM-1 on Felucca, whose random section is a port of **Marbles** by Emilie Gillet (Mutable Instruments, MIT); PERF-1's versions are written for its own engine.
 
 Screen and page fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Licence: GPL-3.0, no warranty.
 
