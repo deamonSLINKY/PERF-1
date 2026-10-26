@@ -1,0 +1,26 @@
+# The Phrase page (the SEQ button's eighth page, after Feel): a chain of patterns by bar, a slice permutation of the drum steps, half or double time, and the
+# condition of the lane chosen (the kick here: 1:2 plays it every other bar).
+seed 0
+wait 3000
+turn SELECT 23 100
+expect view 23
+expect par164 0
+spin K1 4
+wait 100
+expect par164 4
+spin K2 3
+wait 100
+expect par165 3
+spin K3 1
+wait 100
+expect par166 1
+spin K4 1
+wait 100
+expect par167 1
+shot phrase.png
+# the chain plays patterns 1 1 3 4 by the bar: the pattern 3 comes on the third bar (about 6 s at 128), the kick's 1:2 and the others stay set
+wait 8000
+expect par164 4
+spin K1 20
+wait 100
+expect par164 9

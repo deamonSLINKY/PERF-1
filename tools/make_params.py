@@ -127,9 +127,10 @@ def main():
             {"name": "Links (drums into voices)", "knobs": pl(("P_LINKS", "Links on")) + byname["Links"]},
             {"name": "Drum drift", "knobs": byname["Drum drift"]},
             {"name": "Feel (ghost notes, accents, the pad's comping)", "knobs": byname["Feel"]},
+            {"name": "Phrase (chain, slice, time)", "knobs": [k for k in byname["Phrase"] if k["label"] != "Cond"]},
             {"name": "Place", "knobs": [ls("P_PAN", 4, "Pan"), ls("P_SEND", 4, "Send")]}] + [
             {"name": LANES[l] + " lane", "knobs": [ls("P_LANE", 3 * l, "Level"), ls("P_LANE", 3 * l + 1, "Tune"), ls("P_LANE", 3 * l + 2, "Decay"),
-                                                 ls("P_PROB", l, "Probability"), ls("P_LLEN", l, "Length (steps)"), ls("P_DENS", l, "Density (50: as written)"),
+                                                 ls("P_PROB", l, "Probability"), ls("P_LLEN", l, "Length (steps)"), ls("P_DENS", l, "Density (50: as written)"), ls("P_COND", l, "Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"),
                                                  ls("P_LSRC", l, "Source pattern")]} for l in range(6)]},
         {"name": "Space & master", "sections": [
             {"name": "Space", "knobs": byname["Space"]},

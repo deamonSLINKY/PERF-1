@@ -38,14 +38,14 @@
 
 /* --------------------------------------------------------------- pages --- */
 enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_CMEL, V_CMEL2, V_CMVU,
-       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
+       V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_PHRASE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Drone", "Drone env",
-                                              "Drone LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Deja vu", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Drone LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Pluck", "Pluck 2", "Deja vu", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -186,6 +186,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {K_GRT, K_GRD, K_GRS, K_GRA},                  /* the groove: a lane chosen, its density, the pattern it plays, and all lanes' density */
     {K_GRT, K_STR, K_STP, K_STV},                  /* the steps: the lane, and the step chosen (a white key): its ratchet, its push, its level */
     {P_GHOST, P_ACCENT, P_PAD_COMP, P_HUMAN},      /* the feel: the genre's ghost notes, how much accents and ghosts count, the pad's comping rhythm, looseness */
+    {P_CHAIN, P_SLICE, P_TIME, K_PCOND},           /* the phrase: a chain of patterns, a slice permutation, half or double time, and the lane chosen's condition */
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
     {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
@@ -220,6 +221,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Lane", "Density", "Source", "All dens"},
     {"Lane", "Ratchet", "Push", "Level"},
     {"Ghosts", "Accents", "Pad comp", "Humanize"},
+    {"Chain", "Slice", "Time", "Cond"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Type", "Damping", "Predelay", "Amount"},
     {"Ratio", "Thresh", "Make-up", "Ceiling"},
@@ -234,7 +236,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 7}, {B_SEQ, V_DRUMS, 7}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 7}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -848,6 +850,8 @@ static int knob_par(int k)                     /* a knob's parameter (the sequen
         return P_DENS + (int)(ui.lane % EN_NLANE);
     if (k == K_GRS)
         return P_LSRC + (int)(ui.lane % EN_NLANE);
+    if (k == K_PCOND)
+        return P_COND + (int)(ui.lane % EN_NLANE);
     if (k == K_MXP)
         return P_PAN + (int)(ui.mix_trk % 5u);
     if (k == K_MXS)
@@ -992,6 +996,19 @@ static void knob_text(int k, char *b)
             v *= 2;
         }
         itoa_u((uint32_t)v, b + n);
+        return;
+    }
+    if (k == K_PCOND) {                          /* the lane chosen's condition: its two letters, then the condition */
+        char c[12];
+        int n = 0;
+        const char *s = LANE_SHORT[ui.lane % EN_NLANE];
+        b[n++] = s[0];
+        b[n++] = s[1] ? s[1] : ' ';
+        b[n++] = ' ';
+        en_param_text(p, proj.par[p], c);
+        for (k = 0; c[k] && n < 9; k++)
+            b[n++] = c[k];
+        b[n] = 0;
         return;
     }
     if (p >= 0)

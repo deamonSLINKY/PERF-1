@@ -125,6 +125,8 @@ enum {
     P_AC_CHG,                                             /* what the acid's Mutate changes: 0 everything, 1 the notes, 2 the rhythm, 3 the accents and slides */
     P_PAD_COMP,                                           /* the pad's comping: 0 auto (a stab sound plays its genre's rhythm), 1 hold (never stabs), 2 .. 8 stabs on a rhythm (off-beat, on-beat, 3-3-2, Charleston, syncopated, sparse, eighths) */
     P_GHOST, P_ACCENT, P_HUMAN,                           /* the feel: how often the genre's ghost notes sound (snare, kick), how much the steps' accents and ghosts (en_mod levels) count (50 as marked), and a little looseness in time and velocity */
+    P_CHAIN, P_SLICE, P_TIME,                             /* the phrase: a chain of patterns by bar (0 off, 1 .. 9 a preset), a slice permutation of the drum steps (0 off, 1 .. 8, 9 a new one each fourth bar), the pattern's time (0 normal, 1 half, 2 double) */
+    P_COND, P_COND1, P_COND2, P_COND3, P_COND4, P_COND5,  /* each drum lane's condition (P_COND + lane): 0 always, 1 odd bars, 2 even bars, 1 of 4, 4 of 4, 1 of 8, fill bars only, not in fills */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */

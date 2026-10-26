@@ -85,6 +85,9 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_AC_RESP] = {"Answer", 0, 44, 0},
     [P_CM_VU] = {"Deja vu", 0, 100, 0},   [P_CM_LOOP] = {"Loop", 0, 3, 2},       [P_CM_LEAP] = {"Leaps", 0, 100, 0},   [P_AC_CHG] = {"Mutates", 0, 3, 0},
     [P_PAD_COMP] = {"Comp", 0, 8, 0},     [P_GHOST] = {"Ghosts", 0, 100, 0},   [P_ACCENT] = {"Accents", 0, 100, 50}, [P_HUMAN] = {"Humanize", 0, 100, 0},
+    [P_CHAIN] = {"Chain", 0, 9, 0},         [P_SLICE] = {"Slice", 0, 9, 0},       [P_TIME] = {"Time", 0, 2, 0},
+    [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
+    [P_COND4] = {"Cond", 0, 7, 0},          [P_COND5] = {"Cond", 0, 7, 0},
     [P_BL_MODE] = {"Mode", 0, 6, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
@@ -588,6 +591,10 @@ void en_param_text(int i, int v, char *b)
     case P_CM_LOOP: { static const char *const L[4] = {"4", "8", "16", "32"}; s = L[(unsigned)v < 4u ? v : 0]; break; }
     case P_AC_CHG: { static const char *const C[4] = {"All", "Notes", "Rhythm", "Accents"}; s = C[(unsigned)v < 4u ? v : 0]; break; }
     case P_PAD_COMP: { static const char *const C[9] = {"Auto", "Hold", "Off-beat", "On-beat", "3-3-2", "Charleston", "Syncop", "Sparse", "Eighths"}; s = C[(unsigned)v < 9u ? v : 0]; break; }
+    case P_CHAIN: { static const char *const C[10] = {"Off", "12", "1112", "1123", "1134", "1213", "1234", "1232", "1115", "123456"}; s = C[(unsigned)v < 10u ? v : 0]; break; }
+    case P_SLICE: { static const char *const S[10] = {"Off", "Halves", "Stutter", "Reverse", "Delay", "Beats", "Mirror", "Double", "Swap", "Auto"}; s = S[(unsigned)v < 10u ? v : 0]; break; }
+    case P_TIME: { static const char *const T[3] = {"Normal", "Half", "Double"}; s = T[(unsigned)v < 3u ? v : 0]; break; }
+    case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
     case P_BL_MODE: { static const char *const M[7] = {"Drone", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
@@ -2389,6 +2396,48 @@ static int comp_hit(int st) { return comp_mask() >> st & 1; }
 static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0x8280, 0x8200, 0xC288, 0x0408, 0, 0, 0, 0x8A48, 0, 0, 0, 0x8280};
 static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0x0A00, 0, 0x2200, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0x4400};
 
+/* THE PHRASE. Chain: from the bar line the pattern is the chain's next (the bars of 1 2 / 1 1 1 2 / 1 1 2 3 / the Amen's 1 1 3 4 / 1 2 1 3 / 1 2 3 4 / 1 2 3 2 / 1 1 1 5 /
+ * all six), so a piece has a phrase of its own and drum drift's changes give way to it. Slice: the drum steps read in another order (halves swapped, a beat stuttered,
+ * the bar backwards ...), the drums only. Time: half reads the pattern over two bars, double twice in a bar (an odd step joins the one before). A lane with its own
+ * length (polymeter) keeps its steps. Cond: a lane's hits sound only in some bars (odd, even, the first or last of four, the first of eight) or only in fills. */
+static const uint8_t CHAIN[9][7] = {{2, 1, 2}, {4, 1, 1, 1, 2}, {4, 1, 1, 2, 3}, {4, 1, 1, 3, 4}, {4, 1, 2, 1, 3}, {4, 1, 2, 3, 4}, {4, 1, 2, 3, 2}, {4, 1, 1, 1, 5}, {6, 1, 2, 3, 4, 5, 6}};
+static const uint8_t SLICE[8][16] = {
+    {8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7},   {0, 1, 2, 3, 0, 1, 2, 3, 8, 9, 10, 11, 8, 9, 10, 11}, {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0},
+    {0, 1, 2, 3, 4, 5, 6, 7, 6, 7, 8, 9, 10, 11, 12, 13},    {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15}, {0, 1, 2, 3, 4, 5, 6, 7, 7, 6, 5, 4, 3, 2, 1, 0},
+    {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7},        {4, 5, 6, 7, 0, 1, 2, 3, 12, 13, 14, 15, 8, 9, 10, 11}};
+static uint8_t chain_i, slice_perm;              /* the chain's place; the slice in force this bar (0 none) */
+static int pat_bit(uint16_t m, int ls, int poly) /* the lane's hit on step ls of its bar */
+{
+    const int tm = par[P_TIME];
+    if (poly)
+        return m >> ls & 1;
+    if (tm == 1) {
+        if (sixteenth & 1u)                     /* (each step is two sixteenths long: it sounds on the first) */
+            return 0;
+        ls = (int)(sixteenth >> 1 & 15u);
+    } else if (tm == 2) {
+        const int s2 = (ls & 7) * 2;
+        return ((m >> s2) | (m >> (s2 + 1))) & 1;
+    }
+    if (slice_perm)
+        ls = SLICE[slice_perm - 1][ls & 15];
+    return m >> ls & 1;
+}
+static int cond_ok(int l, int fill)              /* the lane's condition (bars counted from the start; `bars` has moved on at the bar line) */
+{
+    const uint32_t n = bars - 1u;
+    switch (par[P_COND + l]) {
+    case 1: return !(n & 1u);
+    case 2: return n & 1u;
+    case 3: return n % 4u == 0u;
+    case 4: return n % 4u == 3u;
+    case 5: return n % 8u == 0u;
+    case 6: return fill;
+    case 7: return !fill;
+    default: return 1;
+    }
+}
+
 static void tick(void)
 {
     static const uint8_t TRIG_BARS[6] = {0, 1, 2, 4, 8, 0};
@@ -2446,6 +2495,12 @@ static void tick(void)
                 ac_ans_bar = en_acid_ans = (uint8_t)due;
             }
         }
+        if (par[P_CHAIN] > 0 && par[P_CHAIN] <= 9) {   /* the chain: this bar's pattern, whatever was asked */
+            const uint8_t *ch = CHAIN[par[P_CHAIN] - 1];
+            pat_next = (int)ch[1 + chain_i % ch[0]] - 1;
+            chain_i = (uint8_t)((chain_i + 1u) % ch[0]);
+        }
+        slice_perm = (uint8_t)(par[P_SLICE] == 9 ? (bars % 4u == 3u ? 1 + irand(8) : 0) : par[P_SLICE]);
         pat_now = pat_next;                     /* a new pattern: on the bar */
         for (l = 0; l < EN_NLANE; l++)          /* each lane's own source, from this bar */
             en_lane_src[l] = lane_src[l] = (uint8_t)(par[P_LSRC + l] ? par[P_LSRC + l] - 1 : pat_now);
@@ -2458,7 +2513,7 @@ static void tick(void)
     for (l = 0; l < EN_NDRUM; l++) {
         const int llen = par[P_LLEN + l] < 16 && par[P_LLEN + l] >= 1 ? par[P_LLEN + l] : 16;
         const int ls = llen < 16 ? (int)(sixteenth % (uint32_t)llen) : st;   /* a shorter lane runs against the bar: polymeter */
-        int hit = (int)(en_lane_mask(l, lane_src[l], par[P_DENS + l]) >> ls & 1u), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
+        int hit = pat_bit(en_lane_mask(l, lane_src[l], par[P_DENS + l]), ls, llen < 16) && (!par[P_COND + l] || cond_ok(l, fill_hold || fill_bar || (dd_fill && st >= 8))), dbl = 0;   /* dbl: a roll's extra hits (1: one at half a step; 2: two, in triplets; 3: a flam) */
         en_lane_pos[l] = (uint8_t)ls;
         const uint64_t fxm = fx_on;
         float vel = 0.9f;
@@ -3015,6 +3070,9 @@ static void apply(int p, int v)
                 bass_to(bass.midi_note % 12);
         }
         break;
+    case P_CHAIN:                                /* the chain starts over at the next bar */
+        chain_i = 0;
+        break;
     case P_CM_LOOP:                              /* a new length (or a new piece): the loop is forgotten, the next notes are heard afresh */
         { int q; for (q = 0; q < 32; q++) cm_f[q] = 0; cm_k = 0; }
         break;
@@ -3375,6 +3433,8 @@ static void play_start(int from_top)
         sixteenth = 0;
         bars = 0;
         ac_pos = 0;
+        chain_i = 0;
+        slice_perm = 0;
         pat_now = pat_next;
         for (i = 0; i < EN_NLANE; i++)
             en_lane_src[i] = lane_src[i] = (uint8_t)(par[P_LSRC + i] ? par[P_LSRC + i] - 1 : pat_now);

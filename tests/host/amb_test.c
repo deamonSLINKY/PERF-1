@@ -908,6 +908,81 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the phrase: Chain 1 1 3 4 (preset 4) plays patterns 0 0 2 3 bar after bar (sampled mid-bar, 12 bars at 128 bpm); Time half plays the kick pattern 1 1 1 1 over two
+     * bars (half the kicks), double twice in the bar (twice); a lane's condition 1:2 sounds it every other bar; a Slice (reverse) moves the kick from step 0 to step 15 */
+    {
+        int c, blk, seq[16], ns = 0, ok = 1, m, i;
+        uint32_t kc[5];
+        for (c = 0; c < 1; c++) {
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_CHAIN, 4);
+            en_play(1);
+            for (blk = 0; blk < 17000 && ns < 12; blk++) {
+                en_render(buf, 64, 2048);
+                if ((en_bars % 16u) == 8u && (ns == 0 || seq[ns - 1] >= 0)) {
+                    seq[ns++] = en_pat_now;
+                    while ((en_bars % 16u) == 8u && blk < 17000) {
+                        en_render(buf, 64, 2048);
+                        blk++;
+                    }
+                }
+            }
+            for (i = 1; i + 4 < ns; i++)
+                ok &= seq[i] == seq[i + 4];
+            CHECK(ns >= 10 && ok && seq[2] == 2 && seq[3] == 3 && seq[0] != seq[2], "chain 1 1 3 4: patterns %d %d %d %d %d %d %d %d", seq[0], seq[1], seq[2], seq[3], seq[4], seq[5], seq[6], seq[7]);
+        }
+        for (m = 0; m < 5; m++) {
+            int q;
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            for (q = 0; q < EN_NPAT; q++)
+                en_pats[q][0] = 0x1111;
+            en_set(P_TIME, m == 1 ? 1 : m == 2 ? 2 : 0);
+            en_set(P_COND, m == 3 ? 1 : 0);
+            en_play(1);
+            run(4.0f);
+            kick_n = 0;
+            for (blk = 0; blk < 5512 * 3; blk++)
+                en_render(buf, 64, 2048);
+            kc[m] = kick_n;
+            if (m == 4) {
+                uint32_t last = 0, gap = 0, first_after = 0;
+                int j;
+                en_init();
+                en_set(P_TEMPO, 128);
+                en_set(P_MIDI, 1);
+                for (q = 0; q < EN_NPAT; q++)
+                    en_pats[q][0] = 0x0001;
+                en_play(1);
+                run(5.0f);
+                kick_last = 0;
+                for (blk = 0; blk < 3000; blk++) {
+                    blk_now = (uint32_t)blk;
+                    if (blk == 1500)
+                        en_set(P_SLICE, 3);
+                    en_render(buf, 64, 2048);
+                    if (kick_last && kick_last != last) {
+                        if (last && !gap && first_after) {
+                        }
+                        if (last && kick_last > 1500 && !first_after)
+                            first_after = kick_last, gap = first_after - last;
+                        last = kick_last;
+                    }
+                }
+                j = (int)gap - 1292;
+                kc[4] = (uint32_t)(j < 0 ? -j : j);
+            }
+        }
+        CHECK(kc[0] > 20u && kc[1] * 10u < kc[0] * 6u && kc[1] * 10u > kc[0] * 4u, "time half: %u kicks, %u at normal", kc[1], kc[0]);
+        CHECK(kc[2] * 10u > kc[0] * 17u, "time double: %u kicks, %u at normal", kc[2], kc[0]);
+        CHECK(kc[3] * 10u < kc[0] * 6u && kc[3] * 10u > kc[0] * 4u, "condition 1:2: %u kicks, %u always", kc[3], kc[0]);
+        CHECK(kc[4] > 40u, "slice reverse: the first kick after was %u blocks off a bar", kc[4]);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the bass line (the drone's modes), 4 s at 128 bpm from the MIDI out: Drone plays no notes of its own, Kick plays one on each kick, Eighths about 17,
      * Off-beat about 8, Walk about 8, and every note stays in the bass range (C1 .. B5) */
     {
