@@ -35,7 +35,7 @@
                                         * and a kit (en_style_sounds); they were kits 0..4 */
 #define EN_NSOUND 24                   /* the sounds each of pad and drone can play */
 #define EN_NACID 31                    /* the acid's (more: supersaws, CZs, minis) */
-#define EN_NFMFACT 22                  /* the DX7 voices of fm6.inc built in */
+#define EN_NFMFACT 30                  /* the DX7 voices of fm6.inc built in */
 #define EN_NUSER 16                     /* and the ones the player loads (SysEx, en_user_voice), after them */
 #define EN_NCMFM (EN_NFMFACT + EN_NUSER)   /* the counter-melody's six-operator FM sounds: after the plain ones */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */

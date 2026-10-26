@@ -867,6 +867,11 @@ int main(int argc, char **argv)
             autopilot = atoi(a);
         } else if (!strcmp(cmd, "splash")) {         /* splash MS: the next boot's RedtailWorks card */
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
+        } else if (!strcmp(cmd, "setpar")) {         /* setpar N V: parameter N set as its knob sets it */
+            ui_param_set(atoi(a), atoi(b));
+        } else if (!strcmp(cmd, "oldimage")) {       /* the first genre's stored bank marked as written before the pluck's DX voices were thirty (the sounds renumber on the next load) */
+            if (store_len[OBJ_PROJ] > 13)
+                store[OBJ_PROJ][13] = 0;
         } else if (!strcmp(cmd, "usbpower")) {       /* usbpower 0/1: a USB host powers the unit (a bolt in the battery) */
             host_usb = atoi(a);
         } else if (!strcmp(cmd, "seamless")) {       /* seamless 0/1: a flash write does not stop the audio (as the unit's sliced erase): no fade around a store */

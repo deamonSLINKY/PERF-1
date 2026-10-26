@@ -359,12 +359,12 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
     {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 17}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
     {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
-    {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 17}, {21, 4, 17, 19, 12}, {24, 15, 25, 12, 5}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
-    {{17, 4, 13, 19, 0}, {17, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {24, 19, 15, 12, 7}, {4, 8, 4}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},
-    {{13, 6, 17, 21, 19}, {9, 1, 8, 7, 5}, {12, 21, 15, 4, 16}, {18, 30, 31, 19, 1}, {8, 5, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 5}},
-    {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {27, 12, 26, 8, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
-    {{0, 5, 16, 2, 23}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 30, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
-    {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {2, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
+    {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 17}, {21, 4, 17, 19, 12}, {35, 24, 39, 15, 25}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
+    {{17, 4, 13, 19, 0}, {17, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {36, 24, 35, 41, 12}, {4, 8, 4}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},
+    {{13, 6, 17, 21, 19}, {9, 1, 8, 7, 5}, {12, 21, 15, 4, 16}, {34, 35, 18, 30, 31}, {8, 5, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 5}},
+    {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {39, 27, 12, 26, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
+    {{0, 5, 16, 2, 23}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
+    {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {35, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
 };
 static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 3, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
 static void vary(int g, int i, int16_t *par)
@@ -2163,7 +2163,7 @@ static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
     {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
 };
 const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
-    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular",
+    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
@@ -2172,6 +2172,7 @@ const char *const EN_CM_RATE[4] = {"1/4", "3/16", "1/8", "1/16"};   /* slowest t
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
 static const float FM_GAIN[EN_NCMFM] = {0.60f, 0.96f, 0.73f, 0.95f, 2.56f, 1.87f, 0.76f, 1.26f, 0.94f, 1.33f, 0.75f, 2.55f, 0.88f, 1.22f, 3.84f, 0.85f, 1.32f, 2.13f, 0.67f, 1.58f, 1.62f, 0.73f,
+                                         0.49f, 0.51f, 1.80f, 0.64f, 0.93f, 0.57f, 0.95f, 1.12f,   /* (the eight newer DX voices, from fmcal; the muted guitar's is its peak's, its rms is only a click) */
                                          1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* tests/host/fmcal.c (the loaded voices: not levelled) */
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */

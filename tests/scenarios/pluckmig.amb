@@ -1,0 +1,24 @@
+# A piece stored when twenty-two DX voices were built in: the pluck's sound numbers from 34 up (the player's own voices) are eight places on, since thirty are now
+# (the bank written by this firmware has its mark in the header; one marked as older is renumbered when it loads).
+seed 0
+wait 3000
+setpar 99 34
+wait 100
+expect par99 34
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+# as written now: it comes back as it is
+reboot
+wait 500
+expect par99 34
+# as an older firmware wrote it: a user voice's number, renumbered
+setpar 99 34
+tap GLO
+tap SAVE
+wait 500
+oldimage
+reboot
+wait 500
+expect par99 42

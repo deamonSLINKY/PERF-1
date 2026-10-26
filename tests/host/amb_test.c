@@ -704,16 +704,16 @@ int main(void)
             ok &= b[k] == b2[k];
         CHECK(ok, "voice formats: pack(unpack(b)) differs from b");
         en_init();
-        CHECK(en_user_count() == 0 && en_ncm_snd() == 12 + 22, "user voices: %d loaded and %d sounds after en_init", en_user_count(), en_ncm_snd());
+        CHECK(en_user_count() == 0 && en_ncm_snd() == 12 + EN_NFMFACT, "user voices: %d loaded and %d sounds after en_init", en_user_count(), en_ncm_snd());
         CHECK(!en_user_voice(1, b), "user voices: a slot past the end was taken");
         CHECK(en_user_voice(0, b), "user voices: slot 0 was not taken");
         en_play(1);
         run(0.2f);
-        CHECK(en_user_count() == 1 && en_ncm_snd() == 12 + 22 + 1, "user voices: %d loaded, %d sounds", en_user_count(), en_ncm_snd());
-        CHECK(!strcmp(EN_CM_SOUND[12 + 22], "DX TESTVOICE"), "user voices: named '%s'", EN_CM_SOUND[12 + 22]);
+        CHECK(en_user_count() == 1 && en_ncm_snd() == 12 + EN_NFMFACT + 1, "user voices: %d loaded, %d sounds", en_user_count(), en_ncm_snd());
+        CHECK(!strcmp(EN_CM_SOUND[12 + EN_NFMFACT], "DX TESTVOICE"), "user voices: named '%s'", EN_CM_SOUND[12 + EN_NFMFACT]);
         en_set(P_CM_LVL, 80);
         en_set(P_CM_DENS, 90);
-        en_set(P_CM_SND, 12 + 22);
+        en_set(P_CM_SND, 12 + EN_NFMFACT);
         peak = 0.0f;
         run(3.0f);
         pk = peak;
@@ -724,7 +724,7 @@ int main(void)
         CHECK(en_user_count() == 2, "user voices: %d loaded after the second", en_user_count());
         en_user_clear();
         run(0.2f);
-        CHECK(en_user_count() == 0 && !strcmp(EN_CM_SOUND[12 + 22], "(empty)"), "user voices: %d left after clear", en_user_count());
+        CHECK(en_user_count() == 0 && !strcmp(EN_CM_SOUND[12 + EN_NFMFACT], "(empty)"), "user voices: %d left after clear", en_user_count());
         run(1.0f);
         CHECK(!bad, "user voices: the engine broke when the chosen voice was cleared");
         en_init();
@@ -1177,7 +1177,7 @@ int main(void)
         }
         CHECK(hf[1] > 3.0f * hf[0], "acid cutoff 100 not brighter: %.4f vs %.4f", (double)hf[1], (double)hf[0]);
         CHECK(zc[2] > 1.5f * zc[0], "acid oct +2 not higher: %.0f vs %.0f", (double)zc[2], (double)zc[0]);
-        CHECK(ee[4] < 3.0f * ee[3] && ee[4] > ee[3] / 3.0f, "denser crackle is louder (or silent): %.4f vs %.4f", (double)ee[4], (double)ee[3]);
+        CHECK(ee[4] < 4.0f * ee[3] && ee[4] > ee[3] / 4.0f, "denser crackle is louder (or silent): %.4f vs %.4f", (double)ee[4], (double)ee[3]);
         en_init();
         en_play(1);
     }

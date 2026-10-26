@@ -150,6 +150,11 @@ static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
     }
     return !bad && pool_ok(s->pool);
 }
+static void pluck_old(slot_t *s)               /* a piece stored when twenty-two DX voices were built in: the player's own voices (34 on) are now eight places up */
+{
+    if (s->par[P_CM_SND] >= 12 + 22)
+        s->par[P_CM_SND] = (int16_t)(s->par[P_CM_SND] + (EN_NFMFACT - 22));
+}
 static void ans_old(slot_t *s)                /* the acid answer in the development builds before 0.6.0: 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down; and the old style's place (now its sync: bars) */
 {
     static const uint8_t M[7] = {0, 8, 13, 22, 37, 6, 11};   /* kind * 5 + direction (3 up, 1 down, 2 the same) */
@@ -167,6 +172,7 @@ static void image_header(int g)
     wr16(image + 8, saved);
     wr16(image + 10, IMG_REC);
     image[12] = 1;                           /* 1: the acid answer in its present form (kind * 5 + direction) */
+    image[13] = 1;                           /* 1: the pluck's sounds numbered with thirty built-in DX voices (0: twenty-two, the player's own voices from 34, not 42) */
 }
 
 /* the old bank (OBJ_PROJ, 16-bit settings): its pieces into the slots, as before: read field by field, so a bank written with fewer
@@ -209,6 +215,7 @@ static void old_bank_load(int n)
             }
             en_style_sounds(s->par);         /* stored with a style (before 1.0.27): its sounds and kit */
             ans_old(s);
+            pluck_old(s);
             q += 2u * npar;
             s->pool = rd16(q);
             q += 2;
@@ -245,6 +252,8 @@ static void image_load(int g)
                     saved |= (uint16_t)(1u << i);
                     if (!enc)
                         ans_old(&proj.slot[i]);
+                    if (!image[13])
+                        pluck_old(&proj.slot[i]);
                 } else {
                     recipe(i, &proj.slot[i]);       /* out of range: not saved */
                 }

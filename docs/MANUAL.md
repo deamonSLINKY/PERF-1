@@ -477,7 +477,7 @@ New pieces start as a bass line in lofi (Root), house (Off-beat), dubstep and tr
 | 30 | CZ Bell | A partial at 3.5 times the pitch, ringing with the envelope |
 | 31 | Lead | Two saws and a wandering pulse |
 
-### The pluck: 12 + 22 + up to 16 sounds
+### The pluck: 12 + 30 + up to 16 sounds
 
 ![The Pluck page draws its decay and the line it plays over a bar](img/perf-screen-pluck.png)
 
@@ -496,6 +496,8 @@ level, decay and density.
 ![The Acid answer page](img/perf-screen-acid-answer.png)
 
 **The answer (call and response).** The **Acid answer** page (ARP four times) makes the line ask and then answer. **Every** is how often: the 2nd to the 8th bar (or loop, see Sync: with Every on 4th you hear the call three times and the answer the fourth), or **Drift**: the bar before the drums change, so the answer comes in with the pattern change (with drum drift not changing patterns it falls back to every 8th). **Answer** is how the line is changed: **Octave**, **Fifth** (seven semitones), **Third** (two degrees up or down the scale, so it stays in key), **Mirror** (the contour upside down round the line's own middle, so it stays in the line's register), **Reverse** (the line backwards), **Rotate** (the line displaced a beat), **Sparse** (only the even steps) or **Accents** (only the accented notes). **Direction** is down 2, down, the same, up or up 2: for the octave, fifth and third a step of the interval, for the others (mirror, reverse, rotate, sparse, accents) octaves. Where the move would leave the acid's register (a low line answered downwards) the answer goes the other way, so it never folds back onto the call. **Sync** is what Every counts: **Bar** (the answer is a bar, so with a line of 12 or 10 steps it begins and ends mid-line) or **Loop** (the answer is the whole line, counted in times round it, and with Drift it is the loop that starts in the bar before the drums change; use Loop for lines that are not 16 steps). The page draws the call and its answer, a dot a step at its note's height. Off by default; stored with the piece (the editor has it under Acid).
+
+The eight newest built-in DX voices are guitars, a bass and brass: **Steel Gtr** (a strummed steel string, long ring), **Clean Gtr** (an electric that holds, a little chorus), **Muted Gtr** (the funk chank, over in a tenth of a second), **Drive Gtr** (a feedback chain for a distorted string, held), **Slap Bass**, **Synth Brass** (a swell, the bite coming up), **Sax** (a reed with a delayed vibrato) and **Mute Trumpet** (the thin, nasal vowel of a mute). They are first drafts, written for PERF-1 and tuned by numbers rather than by ear, and are used in the disco, funk, reggae, synthwave, amapiano and trip-hop genres; tell the maker what you think of them. For more, load your own: the installer page takes any DX7 `.syx` bank or single voice (section 15), and there are large free collections of them, such as [Bobby Blues' DX7 archive](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html), [Soundarchive](https://www.soundarchive.co/yamaha-dx7) and [Yamaha Black Boxes](https://yamahablackboxes.com/collection/yamaha-dx7-synthesizer/patches/) (the licence of each bank is its author's: PERF-1 does not include any).
 
 ### Deja vu: loops in the pluck, and what the acid mutates
 

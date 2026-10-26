@@ -228,9 +228,9 @@ static void fm_reset(void)                       /* a new engine: no voices, no 
 
 /* the 24 voices of Melodee's sets, less the two that were the same sound again (a second Tine EP and a second Drawbars): the patch numbers the pluck
  * knows (0 ..) and where they are in those sets */
-static const uint8_t FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+static const uint8_t FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 /* the voices a patch may use at once: the heaviest (six operators ringing, bells, strings, pads) three; the middle four or five; the rest all six */
-static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};   /* (a loaded voice: four) */
+static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 6, 6, 6, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};   /* (a loaded voice: four) */
 /* the player's voices: 128-byte packed records. The main loop fills a staging slot and posts C_USERVOICE; the engine copies it in between chunks. */
 static uint8_t fm_user[EN_NUSER][128] EN_POOL, fm_stage[EN_NUSER][128] EN_POOL;
 static volatile uint16_t fm_stage_pend;
