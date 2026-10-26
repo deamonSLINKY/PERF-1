@@ -1,0 +1,13 @@
+# A store while the music plays, when the flash write does not stop the audio (the unit's sliced erase: `seamless 1`): written at once, no fade out, no waiting.
+# (Without it, `seamless 0`, the music fades out for the write, as store.amb checks.)
+seed 0
+wait 3000
+seamless 1
+tap GLO
+tap SAVE
+wait 60
+expect saved 1
+expect dirty 0
+expect storewait 0
+expect hushed 0
+expect playing 1

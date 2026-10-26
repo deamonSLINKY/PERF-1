@@ -44,6 +44,7 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, <
 int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok */
 int plat_store_restore(uint32_t obj, const void *src, uint32_t len);   /* a restored backup's object: written, and no other store is written after it (the unit restarts) */
 int plat_store_locked(void);
+int plat_store_seamless(void);        /* a flash write does not stop the audio (the erase goes in slices with the interrupts on between): no fade around it */
 #define PLAT_STORE_MAX 3840u           /* bytes per object */
 enum { OBJ_PROJ, OBJ_PANEL, OBJ_SET, OBJ_VOICES, OBJ_GLOB, OBJ_G1, OBJ_G2, OBJ_G3, OBJ_G4, OBJ_G5, OBJ_G6, OBJ_G7, OBJ_G8, OBJ_G9, OBJ_G10, OBJ_G11, OBJ_G12, OBJ_G13, OBJ_G14, OBJ_G15, OBJ_NOBJ };   /* OBJ_GLOB: Tune, MIDI out, the theme (0x99000); OBJ_G1 .. G9: genres 1 to 9's saved pieces (0x9B000 on, 2 sectors each; the original genre's is OBJ_PROJ) */   /* OBJ_SET: the effects' settings and the performing settings (0xDE000, 2 sectors); OBJ_VOICES: the player's DX7 voices (0x97000, 2 sectors) */
 /* flash: OBJ_PROJ 0xFC000, OBJ_PANEL 0xDC000 (2 sectors each, inside Felucca's data area) */

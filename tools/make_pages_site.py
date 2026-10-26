@@ -57,7 +57,7 @@ for img in (SRC / "docs" / "img").glob("perf-screen-*.png"):
 (OUT / "index.html").write_text(f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PERF-1</title><link rel="icon" href="img/favicon.png">
-<meta name="description" content="PERF-1: live-performance firmware for the M-VAVE FM-1: ten genres of generative pieces, an auto-DJ, effects, a web editor and DX7 voices.">
+<meta name="description" content="PERF-1: live-performance firmware for the M-VAVE FM-1: sixteen genres of generative pieces, an auto-DJ, effects, a web editor and DX7 voices.">
 <style>
 :root{{--bg:#140e0c;--panel:#2a1e1b;--line:#4e3831;--text:#f4e8c8;--dim:#a68c7e;--acc:#ffd447;--red:#e0344f}}
 @media (prefers-color-scheme:light){{:root{{--bg:#f6efe2;--panel:#ebe0cc;--line:#cdbb9f;--text:#2a1c16;--dim:#7a6657;--acc:#a86b00;--red:#b3203a}}}}
@@ -73,7 +73,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <img class="logo" src="img/slinky.png" alt="the PERF-1 slinky">
 <h1>PERF<span>-1</span></h1>
 <p class="tag">Custom live-performance firmware for the M-VAVE FM-1, by deamonSLINKY. Version <span class="v">{ver}</span>.</p>
-<p>Ten genres of ten generative pieces (pad, bass, acid, a pluck or DX7 voice, drums you can sequence), an auto-DJ with breakdowns, builds and drops, 27 effects, 24 beat FX, 15 flex beats and 27 DJ snips, scenes, a web editor and your own DX7 voices over USB.</p>
+<p>Sixteen genres of ten generative pieces (pad, bass, acid, a pluck or DX7 voice, drums you can sequence), an auto-DJ with breakdowns, builds and drops, 27 effects, 24 beat FX, 15 flex beats and 27 DJ snips, scenes, a web editor and your own DX7 voices over USB.</p>
 <div class="grid">
 <a class="card" href="install/"><b>Install</b><span>The web installer (Chrome or Edge, FM-1 on USB). It can put M-VAVE's own firmware back.</span></a>
 <a class="card" href="emu/"><b>Try it in your browser</b><span>The same code the FM-1 runs, with sound. No FM-1 needed.</span></a>

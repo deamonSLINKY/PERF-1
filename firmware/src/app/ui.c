@@ -1451,7 +1451,7 @@ static void store_now(const char *done)
         ui.store_msg[i] = done[i];
     ui.store_msg[i] = 0;
     ui.store_kind = 0;
-    if (en_playing) {
+    if (en_playing && !plat_store_seamless()) {
         en_hush(1);
         ui.store_wait = 1;
         ui.store_t = plat_ms();
@@ -1469,7 +1469,7 @@ static uint8_t rs_state;                         /* 0 none, 1 waiting for the mu
 static void voices_save(void);
 static void quiet_write(int kind)
 {
-    if (!en_playing) {
+    if (!en_playing || plat_store_seamless()) {  /* (seamless: the audio goes on through the write, nothing to fade) */
         if (kind == 1)
             settings_save();
         else if (kind == 3)
@@ -1530,7 +1530,7 @@ void ui_restore_start(uint32_t obj, const uint8_t *b, uint32_t len)
     rs_obj = obj, rs_buf = b, rs_len = len;
     rs_state = 1;
     ui.store_kind = 4;
-    if (en_playing) {
+    if (en_playing && !plat_store_seamless()) {
         en_hush(1);
         ui.store_wait = 1;
         ui.store_t = plat_ms();

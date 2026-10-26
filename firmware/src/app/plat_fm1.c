@@ -111,6 +111,7 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? s
 static volatile uint32_t tel_stores, tel_store_us;       /* telemetry: flash writes so far, and how long the last one stopped the chip */
 static uint8_t store_lock;                               /* a backup was restored: what is in RAM is out of date, so nothing more is written until the restart */
 int plat_store_locked(void) { return store_lock; }
+int plat_store_seamless(void) { return flash_ok && !susp_bad; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
     uint32_t t0, r;

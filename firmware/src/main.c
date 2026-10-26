@@ -67,11 +67,34 @@ static int st_read(uint32_t off, void *dst, uint32_t n)   /* 256-byte IRQ-off wi
     }
     return 0;
 }
+static uint8_t susp_bad;                          /* the part did not suspend an erase: back to the blocking one, with the audio stopped */
+static uint8_t susp_used;                         /* an erase has been sliced (the first one is the test: if the part cannot, that one is heard) */
 static int st_erase(uint32_t off)
 {
     uint32_t took;
     if (!FL_STORE_OK(off, 0x1000u))
         return -8;
+    if (!susp_bad) {                              /* in slices of about 1.2 ms with the interrupts on between, so the audio goes on */
+        uint32_t first = 1u;
+        int rc;
+        for (;;) {
+            uint32_t f = irq_save();
+            rc = FL_FAR(fl_erase_slice_ram)(off, first, 1200u);
+            irq_restore(f);
+            first = 0u;
+            susp_used = 1;
+            if (rc == 1) {                         /* suspended: the audio's interrupt may run now, and the main loop's keeper */
+                const uint32_t t0 = fm1_ticks();
+                fm1_wdt_feed();
+                while ((uint32_t)(fm1_ticks() - t0) < 2500u * FM1_TICKS_PER_US)
+                    ;
+                continue;
+            }
+            if (rc == 2)
+                susp_bad = 1;
+            return rc == 2 ? 0 : rc;
+        }
+    }
     audio_silence();
     return fl_erase4k(off, &took);
 }

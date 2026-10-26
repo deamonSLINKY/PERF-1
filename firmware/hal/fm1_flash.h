@@ -180,6 +180,67 @@ static RAMFN int fl_erase4k_ram(uint32_t off, uint32_t *took_us)
     return rc;
 }
 
+/* A 4 KB erase in slices, for the audio's sake (the part's erase suspend, 75h, and resume, 7Ah): each call runs the erase for about slice_us with the XIP off, then
+ * suspends it and returns with XIP back on, so the caller can let interrupts run (the audio renders in one) before the next. The first call starts the erase; the
+ * others resume it. Returns 0 when the erase is done, 1 when it is suspended and wants another call, 2 when the part did not suspend (it was waited out here, with
+ * the audio stopped: the caller stops slicing), < 0 on an error. The sector is the caller's alone while it is suspended: only reads of other places in between. */
+static RAMFN int fl_erase_slice_ram(uint32_t off, uint32_t first, uint32_t slice_us)
+{
+    fl_saved_t s;
+    uint32_t t0, dt;
+    int rc;
+    if (!FL_RANGE_OK(off, 0x1000u) || (off & 0xFFFu))
+        return -1;
+    if (fl_enter(&s))
+        return -2;
+    if (first) {
+        fl_wren();
+        if (!(fl_rdsr(0x05) & 2u)) {
+            fl_exit(&s);
+            return -3;
+        }
+        fl_cs(0); fl_tx(0x20); fl_addr(off); fl_cs(1);
+        fl_inval(off, 4096u);
+    } else {
+        fl_cs(0); fl_tx(0x7A); fl_cs(1);          /* resume */
+    }
+    t0 = T4_CNT;
+    for (;;) {
+        dt = (T4_CNT - t0) / 24u;
+        if (!(fl_rdsr(0x05) & 1u)) {              /* done */
+            fl_exit(&s);
+            return 0;
+        }
+        if (dt >= slice_us)
+            break;
+    }
+    fl_cs(0); fl_tx(0x75); fl_cs(1);              /* suspend: busy drops within 20 us when the part takes it */
+    t0 = T4_CNT;
+    for (;;) {
+        dt = (T4_CNT - t0) / 24u;
+        if (!(fl_rdsr(0x05) & 1u)) {
+            fl_exit(&s);
+            return 1;                             /* (or the erase just ended: the next call finds it done) */
+        }
+        if (dt > 150u)
+            break;
+    }
+    rc = fl_wait_ready(500000u, &dt);             /* it did not suspend: wait the erase out */
+    fl_exit(&s);
+    return rc ? rc : 2;
+}
+
+static RAMFN void fl_resume_ram(void)             /* at boot: an erase suspended when the unit last reset is let finish (a suspended part refuses new work) */
+{
+    fl_saved_t s;
+    uint32_t dt;
+    if (fl_enter(&s))
+        return;
+    fl_cs(0); fl_tx(0x7A); fl_cs(1);
+    fl_wait_ready(500000u, &dt);
+    fl_exit(&s);
+}
+
 static RAMFN int fl_prog_ram(uint32_t off, const uint8_t *src, uint32_t n, uint32_t *took_us)
 {
     fl_saved_t s; int rc; uint32_t i;

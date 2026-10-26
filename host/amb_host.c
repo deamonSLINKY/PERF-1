@@ -21,6 +21,7 @@
  *   reboot                       re-run boot (power off and on)
  *   seed N                       the seed the next boot uses (0: the first piece, exact)
  *   restore OBJ [bad]            write an object back as a restored backup's (checked first); expect rsvalid, rsstate, storelock
+ *   seamless 0/1                 a store without the fade (the sliced erase)
  *   battery N                    the battery divider's reading, 0..1023 (default: none)
  *   storefuzz SEED               fill the project object with random damage (for the sanitizer runs)
  *   bank76 P N                   write a bank as the firmware before styles did (76 settings a piece),
@@ -129,6 +130,8 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max)
     return n;
 }
 static int store_lock, rs_valid;                 /* a restored object was written (nothing else is until the restart); the last restore's check */
+static int host_seamless;
+int plat_store_seamless(void) { return host_seamless; }
 int plat_store_locked(void) { return store_lock; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
@@ -459,6 +462,10 @@ static int expect(const char *what, const char *val)
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
         got = proj.pool;
+    else if (!strcmp(what, "hushed"))             /* the output is faded out (a store waiting to write) */
+        got = en_hushed;
+    else if (!strcmp(what, "storewait"))          /* a store is waiting for the fade */
+        got = ui.store_wait;
     else if (!strcmp(what, "dirty"))              /* the bank has changes not yet in flash */
         got = project_pending();
     else if (!strcmp(what, "saved"))              /* the pieces in the bank (bit i: piece i) */
@@ -858,6 +865,8 @@ int main(int argc, char **argv)
             autopilot = atoi(a);
         } else if (!strcmp(cmd, "splash")) {         /* splash MS: the next boot's RedtailWorks card */
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
+        } else if (!strcmp(cmd, "seamless")) {       /* seamless 0/1: a flash write does not stop the audio (as the unit's sliced erase): no fade around a store */
+            host_seamless = atoi(a);
         } else if (!strcmp(cmd, "battery")) {        /* battery N: the divider's ADC reading (0..1023; the indicator shows from about 500) */
             host_batt = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "seed")) {           /* seed N: the next power-on's (reboot) */
