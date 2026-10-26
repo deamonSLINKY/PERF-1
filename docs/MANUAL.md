@@ -990,6 +990,14 @@ for the write, as for a store (a flash write stops the chip, so it fades out, wr
 the auto-DJ being on, edits to a piece you haven't stored, A genre sets its own tape,
 vinyl and pump settings when you switch to it; the settings you saved while in HYPNO come back when you return.
 
+### Backing up and restoring
+
+Switching to another firmware, or reinstalling, can lose what PERF-1 has stored. The installer page's **Back up and restore** card (below the DX7 voices) keeps it:
+
+- **Save a backup** reads everything the FM-1 has stored (the pieces you saved in every genre, the settings, the DX7 voices, the theme, Tune and MIDI out) and saves it as a `.p1bak` file. Do it *before* you install anything else. Unsaved changes to a piece are not in it (store them first, section 6), and neither is the panel's calibration, which is the unit's own.
+- **Restore the chosen backup** (choose the file first) writes everything in it back, one store at a time, then the FM-1 restarts. It replaces what is stored now. The music fades out for each write; nothing else is stored until the restart. A file from an older PERF-1 loads in a newer one; a store the firmware does not recognise is refused, never written.
+- Only PERF-1 reads these files, and the firmware that is on the FM-1 must be PERF-1 0.14 or later to take part (an older one does not answer, and the page says so).
+
 ---
 
 ## 14. Themes and MIDI

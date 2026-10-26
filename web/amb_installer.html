@@ -107,6 +107,14 @@
   <p><button id="vsend" disabled data-t="vsend"></button> <button id="vclear" class="alt" data-t="vclear"></button></p>
   <p id="vstatus" class="small"></p>
   </div>
+  <h2 data-t="bkh"></h2>
+  <div class="card">
+  <p class="small" data-t="bkinfo"></p>
+  <p><button id="bksave" data-t="bksave"></button></p>
+  <p><input type="file" id="bkfile" accept=".p1bak"> <button id="bkrestore" disabled class="alt" data-t="bkrestore"></button></p>
+  <progress id="bkbar" max="100" value="0"></progress>
+  <p id="bkstatus" class="small"></p>
+  </div>
   <h2 data-t="statush"></h2>
   <div class="card">
   <p class="small" data-t="statusinfo"></p>
@@ -173,6 +181,14 @@ const TEXT = {
     vnone: "音色が見つかりません。", vfound: " 個の音色。16 個まで選べます。", vsel: " 個選択中",
     vsending: "送信中: ", vdone: "FM-1 に送りました: ", vnoans: "FM-1 から返事がありません（古いファームウェアかもしれません）。", vcleared: "消しました。",
     vbad: "FM-1 が受け取りませんでした。",
+    bkh: "ピースと設定のバックアップ",
+    bkinfo: "FM-1 に保存されているもの（全ジャンルで保存したピース、設定、DX7 の音色、テーマとチューニング）をファイルに保存し、あとで戻せます。別のファームウェアを試して、戻ってきても失われません。このファイルを読めるのは PERF-1 だけです。復元すると今の内容は置き換わり、FM-1 が再起動します。（保存していないピースの変更と、パネルの調整値は含まれません。）",
+    bksave: "バックアップを保存", bkrestore: "選んだバックアップを復元",
+    bkreading: "読み込み中: ", bksaved: "保存しました: ", bkwriting: "書き込み中: ", bkrestored: "復元しました。FM-1 が再起動します。",
+    bknoans: "FM-1 から返事がありません（バックアップに対応していない古いファームウェアかもしれません）。",
+    bkbad: "FM-1 が受け付けませんでした: ", bkbadfile: "PERF-1 のバックアップではないか、壊れています。",
+    bkconfirm: "FM-1 に保存されているものをすべてこのバックアップで置き換えますか？ 終わると FM-1 が再起動します。",
+    bkloaded: " 個の保存内容", bkempty: "FM-1 にはまだ何も保存されていません。",
     statush: "FM-1 の状態（リアルタイム）",
     statusinfo: "USB でつないだ PERF-1 の負荷をここに表示します。CSV に保存することもできます（tools/fm1log.py と同じ内容）。",
     stgo: "表示を始める", ststop: "止める", stsave: "CSV を保存", stwait: "FM-1 の返事を待っています…",
@@ -217,6 +233,14 @@ const TEXT = {
     vnone: "No voices found in that file.", vfound: " voices. Choose up to 16.", vsel: " chosen",
     vsending: "Sending: ", vdone: "Sent to the FM-1: ", vnoans: "The FM-1 did not answer (an older firmware?).", vcleared: "Cleared.",
     vbad: "The FM-1 did not take it.",
+    bkh: "Back up and restore your pieces",
+    bkinfo: "Saves everything the FM-1 has stored (the pieces you saved in every genre, your settings, your DX7 voices, the theme and tuning) to a file, and puts it back, so you can try another firmware and come back without losing them. Only PERF-1 reads these files. A restore replaces what is stored now, then the FM-1 restarts. (Unsaved changes to a piece and the panel's calibration are not included.)",
+    bksave: "Save a backup", bkrestore: "Restore the chosen backup",
+    bkreading: "Reading: ", bksaved: "Saved: ", bkwriting: "Writing: ", bkrestored: "Restored. The FM-1 restarts now.",
+    bknoans: "The FM-1 did not answer (an older firmware without backup?).",
+    bkbad: "The FM-1 did not accept it: ", bkbadfile: "That is not a PERF-1 backup, or it is damaged.",
+    bkconfirm: "Replace everything stored on the FM-1 with this backup? The FM-1 restarts afterwards.",
+    bkloaded: " stores in this backup", bkempty: "Nothing is stored on the FM-1 yet.",
     statush: "Live status",
     statusinfo: "Shows how hard the PERF-1 on the USB cable is working, as it plays: the same numbers tools/fm1log.py logs. Save them as a CSV for a bug report.",
     stgo: "Start", ststop: "Stop", stsave: "Save CSV", stwait: "Waiting for the FM-1\u2026",
@@ -245,7 +269,7 @@ const meta = /*META*/;
 const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing", "stores", "store_us", "crashes",
   "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece", "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums",
   "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out"];
-const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP"];
+const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
 let port = null;
 async function openPort() {
   if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
@@ -255,12 +279,14 @@ async function openPort() {
   const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
   const inp = pick(midi.inputs), out = pick(midi.outputs);
   if (!inp || !out) throw new Error(t("notfound"));
-  port = { inp, out, waiters: [], onstatus: null };
+  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onframe: null };
   inp.onmidimessage = (ev) => {
     const d = ev.data;
     if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
     if (d[3] === 0x57) { const w = port.waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }       /* the answer to a voice message */
     else if (d[3] === 0x46 && port.onstatus) port.onstatus(d);                                      /* a status frame */
+    else if (d[3] === 0x43 && port.onframe) port.onframe(d);                                        /* a frame of an object being backed up */
+    else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }   /* the answer to a chunk or a write */
   };
   return port;
 }
@@ -351,6 +377,106 @@ $("vclear").addEventListener("click", async () => {
     p.out.send([0xF0, 0x7D, 0x50, 0x56, 0x7F, 0xF7]);
     $("vstatus").textContent = (await waitAck(2000)) ? t("vcleared") : t("vnoans");
   } catch (err) { $("vstatus").textContent = err.message; }
+});
+
+/* ---- backup and restore: everything the FM-1 has stored, to a file and back (web/fm1backup.js; the protocol is in firmware/src/backup_proto.h) */
+function waitBk(ms) {
+  return new Promise((res) => {
+    const w = (a) => { clearTimeout(tm); res(a); };
+    port.bkwait.push(w);
+    const tm = setTimeout(() => { const i = port.bkwait.indexOf(w); if (i >= 0) port.bkwait.splice(i, 1); res(null); }, ms);
+  });
+}
+const bkProgress = (i, n) => { $("bkbar").value = Math.round((100 * i) / n); };
+function bkReadObject(p, obj) {                       /* its bytes (none: an empty array), or undefined when the FM-1 goes quiet */
+  return new Promise((resolve) => {
+    const got = new Map();
+    let tm;
+    const finish = (r) => { clearTimeout(tm); p.onframe = null; resolve(r); };
+    const arm = () => { clearTimeout(tm); tm = setTimeout(() => finish(undefined), 3000); };
+    p.onframe = (d) => {
+      const f = bkParseFrame(d);
+      if (!f || f.obj !== obj) return;
+      got.set(f.idx, f.data);
+      arm();
+      if (f.len === 0) return finish(new Uint8Array(0));
+      if (got.size === Math.ceil(f.len / BK_FRAME)) {
+        const out = new Uint8Array(f.len);
+        let total = 0;
+        for (let i = 0; i < got.size; i++) {
+          const c = got.get(i);
+          if (!c || i * BK_FRAME + c.length > f.len) return finish(undefined);
+          out.set(c, i * BK_FRAME);
+          total += c.length;
+        }
+        finish(total === f.len ? out : undefined);
+      }
+    };
+    arm();
+    p.out.send(bkReadMsg(obj));
+  });
+}
+$("bksave").addEventListener("click", async () => {
+  try {
+    const p = await openPort();
+    $("bksave").disabled = true;
+    const objs = [];
+    for (let i = 0; i < BK_OBJECTS.length; i++) {
+      $("bkstatus").textContent = t("bkreading") + BK_OBJECTS[i].name;
+      bkProgress(i, BK_OBJECTS.length);
+      const d = await bkReadObject(p, BK_OBJECTS[i].id);
+      if (d === undefined) throw new Error(t("bknoans"));
+      if (d.length) objs.push({ id: BK_OBJECTS[i].id, data: d });                 /* (nothing stored there: left out) */
+    }
+    bkProgress(1, 1);
+    if (!objs.length) throw new Error(t("bkempty"));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([bkEncode(objs, { app: "PERF-1", page: meta.version, created: new Date().toISOString() })], { type: "application/octet-stream" }));
+    a.download = "perf1-backup-" + new Date().toISOString().slice(0, 10) + ".p1bak";
+    a.click();
+    $("bkstatus").textContent = t("bksaved") + objs.length + t("bkloaded");
+  } catch (err) { $("bkstatus").textContent = err.message; }
+  $("bksave").disabled = false;
+});
+let bkLoaded = null;
+$("bkfile").addEventListener("change", async (e) => {
+  bkLoaded = null;
+  $("bkrestore").disabled = true;
+  if (!e.target.files[0]) return;
+  try {
+    bkLoaded = bkDecode(new Uint8Array(await e.target.files[0].arrayBuffer()));
+    $("bkstatus").textContent = bkLoaded.objs.length + t("bkloaded") + (bkLoaded.info.created ? " (" + bkLoaded.info.created.slice(0, 10) + ")" : "");
+    $("bkrestore").disabled = !bkLoaded.objs.length;
+  } catch (err) { $("bkstatus").textContent = t("bkbadfile"); }
+});
+$("bkrestore").addEventListener("click", async () => {
+  if (!bkLoaded || !confirm(t("bkconfirm"))) return;
+  const objs = bkLoaded.objs;
+  try {
+    const p = await openPort();
+    $("bkrestore").disabled = true;
+    writing = true;
+    for (let i = 0; i < objs.length; i++) {
+      const o = objs[i], len = o.data.length;
+      $("bkstatus").textContent = t("bkwriting") + bkName(o.id);
+      bkProgress(i, objs.length);
+      for (let idx = 0; idx * BK_CHUNK < len; idx++) {
+        p.out.send(bkChunkMsg(o.id, idx, len, o.data.subarray(idx * BK_CHUNK, Math.min(len, (idx + 1) * BK_CHUNK))));
+        const a = await waitBk(3000);
+        if (!a) throw new Error(t("bknoans"));
+        if (a.status !== 0) throw new Error(t("bkbad") + bkName(o.id));
+      }
+      p.out.send(bkCommitMsg(o.id, len));
+      const a = await waitBk(10000);                                              /* (a store while playing fades the music out first) */
+      if (!a) throw new Error(t("bknoans"));
+      if (a.status !== 0) throw new Error(t("bkbad") + bkName(o.id));
+    }
+    bkProgress(1, 1);
+    p.out.send(bkRestartMsg());
+    writing = false;
+    releasePort();
+    $("bkstatus").textContent = t("bkrestored");
+  } catch (err) { writing = false; $("bkstatus").textContent = err.message; $("bkrestore").disabled = false; }
 });
 
 /* ---- the live status: the unit sends a frame four times a second while this page asks (every 3 s) */

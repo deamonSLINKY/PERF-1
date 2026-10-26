@@ -1454,6 +1454,9 @@ static void store_now(const char *done)
     }
 }
 static void settings_save(void);
+static const uint8_t *rs_buf;                    /* a restore waiting to be written (backup_proto.h): the object, its bytes and how long */
+static uint32_t rs_obj, rs_len;
+static uint8_t rs_state;                         /* 0 none, 1 waiting for the music to fade, 2 written, 3 not written */
 /* an autosave while the music plays: the same fade out, write, fade in (the write stops the chip, so unfaded it is a crack and an xrun);
  * kind 1: the effects' and performing settings; 2: the theme, Tune, MIDI out */
 static void voices_save(void);
@@ -1500,6 +1503,8 @@ static void store_tick(int force)               /* the music faded out (or long 
         voices_save();
     } else if (ui.store_kind == 2) {
         project_flush_globals();
+    } else if (ui.store_kind == 4) {
+        rs_state = plat_store_restore(rs_obj, rs_buf, rs_len) == 0 ? 2 : 3;
     } else {
         const int r = project_flush();
         if (ui.store_msg[0])
@@ -1508,6 +1513,28 @@ static void store_tick(int force)               /* the music faded out (or long 
     ui.store_kind = 0;
     en_hush(0);
 }
+
+/* RESTORE (backup_proto.h, main_fm1.c): an object from a backup, checked as the loaders check it, then written (the music fades out for it as for any store).
+ * Afterwards nothing else is written until the unit restarts: what is in RAM is the old state. */
+void ui_restore_start(uint32_t obj, const uint8_t *b, uint32_t len)
+{
+    if (ui.store_wait)
+        store_tick(1);
+    rs_obj = obj, rs_buf = b, rs_len = len;
+    rs_state = 1;
+    ui.store_kind = 4;
+    if (en_playing) {
+        en_hush(1);
+        ui.store_wait = 1;
+        ui.store_t = plat_ms();
+        say("RESTORING", 0);
+    } else {
+        rs_state = plat_store_restore(rs_obj, rs_buf, rs_len) == 0 ? 2 : 3;
+        ui.store_kind = 0;
+        say("RESTORING", rs_state == 2 ? "DONE" : "NOT WRITTEN");
+    }
+}
+int ui_restore_state(void) { return rs_state; }
 
 /* an update session is coming (the music already stopped): what waits for flash is written now and a store's fade is undone, since
  * ui_init afterwards starts from nothing (left alone, a store caught mid-fade kept the output hushed and unsaved voices were lost) */
@@ -5043,6 +5070,24 @@ static void voices_load(void)
     for (i = 0; i < x.n; i++)
         en_user_voice((int)i, x.v[i]);
 }
+int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
+{
+    if (obj == OBJ_PROJ || obj >= OBJ_G1) {      /* a genre's pieces (the original genre's may still be the old bank) */
+        const int g = obj == OBJ_PROJ ? 0 : (int)(obj - OBJ_G1) + 1;
+        if (obj >= OBJ_NOBJ || g >= EN_NGENRE || len < 20u)
+            return 0;
+        if (rd32(b) == IMG_MAGIC)
+            return len >= IMG_LEN && b[4] == IMG_VER && b[5] == (uint8_t)g && rd16(b + 10) == IMG_REC;
+        return obj == OBJ_PROJ && (rd32(b) == BANK_MAGIC || rd32(b) == OLD_KIT_MAGIC);
+    }
+    if (obj == OBJ_GLOB)
+        return len == sizeof(glob_t) && rd32(b) == GLOB_MAGIC;
+    if (obj == OBJ_VOICES)
+        return len == sizeof(vox_t) && rd32(b) == VOX_MAGIC && rd32(b + 4) <= EN_NUSER;
+    if (obj == OBJ_SET)
+        return len == sizeof(set_t) && rd32(b) == SET_MAGIC && rd16(b + 4) == EN_NFXS && rd16(b + 6) == 12u;
+    return 0;                                    /* (not the panel's calibration: it is this unit's own) */
+}
 void ui_param_set(int p, int v)               /* the editor (main_fm1.c px_service): a parameter as its knob sets it */
 {
     if ((unsigned)p < (unsigned)P_NPARAMS) {
@@ -5297,6 +5342,7 @@ void ui_init(void)
         en_mute(0);
     memset(&rm, 0, sizeof rm);
     memset(&ui, 0, sizeof ui);
+    rs_state = 0;
     ui.pat_key = -1;                             /* (no pattern key held) */
     ui.gr_all = 50;
     {   /* the effects' settings start at the engine's defaults; the gate at its first pattern, on the synths */

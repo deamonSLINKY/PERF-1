@@ -20,6 +20,7 @@
  *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound
  *   reboot                       re-run boot (power off and on)
  *   seed N                       the seed the next boot uses (0: the first piece, exact)
+ *   restore OBJ [bad]            write an object back as a restored backup's (checked first); expect rsvalid, rsstate, storelock
  *   storefuzz SEED               fill the project object with random damage (for the sanitizer runs)
  *   bank76 P N                   write a bank as the firmware before styles did (76 settings a piece),
  *                                piece P stored with its Pad at N
@@ -124,10 +125,24 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max)
     memcpy(dst, store[obj], (size_t)n);
     return n;
 }
+static int store_lock, rs_valid;                 /* a restored object was written (nothing else is until the restart); the last restore's check */
+int plat_store_locked(void) { return store_lock; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
     if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
         return -1;
+    if (store_lock)
+        return -8;
+    memcpy(store[obj], src, len);
+    store_len[obj] = (int)len;
+    store_writes++;
+    return 0;
+}
+int plat_store_restore(uint32_t obj, const void *src, uint32_t len)
+{
+    if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
+        return -1;
+    store_lock = 1;
     memcpy(store[obj], src, len);
     store_len[obj] = (int)len;
     store_writes++;
@@ -576,6 +591,12 @@ static int expect(const char *what, const char *val)
         got = en_pats[en_lane_src[what[8] - '0']][what[8] - '0'];
     else if (!strncmp(what, "mod", 3) && what[3] >= '0' && what[3] <= '5' && what[4] == '_')   /* a lane's step trick byte: modL_S (lane L, step S, 0 .. 15) */
         got = en_mod[what[3] - '0'][atoi(what + 5) & 15];
+    else if (!strcmp(what, "rsvalid"))            /* the last restore command's check: 1 valid */
+        got = rs_valid;
+    else if (!strcmp(what, "rsstate"))            /* 0 none, 1 waiting, 2 written, 3 not written */
+        got = ui_restore_state();
+    else if (!strcmp(what, "storelock"))
+        got = store_lock;
     else if (!strcmp(what, "patkey"))             /* the held pattern's state: 1 a pattern key is down, 2 one let go and waiting to go back */
         got = ui.pat_key >= 0 ? 1 : ui.pat_up ? 2 : 0;
     else if (!strcmp(what, "patnext"))            /* the one waiting for the bar */
@@ -798,6 +819,14 @@ int main(int argc, char **argv)
             }
 #undef FZ
             plat_store_save(OBJ_PROJ, bk, n);
+        } else if (!strcmp(cmd, "restore")) {          /* restore OBJ [bad]: the object as it is in flash, checked and written back as a backup's (bad: one byte changed) */
+            static uint8_t tmp[PLAT_STORE_MAX];
+            const int o = atoi(a), n = plat_store_load((uint32_t)o, tmp, sizeof tmp);
+            if (b[0] == 'b' && n > 0)
+                tmp[0] ^= 0xFFu;
+            rs_valid = n > 0 && ui_restore_valid((uint32_t)o, tmp, (uint32_t)n);
+            if (rs_valid)
+                ui_restore_start((uint32_t)o, tmp, (uint32_t)n);
         } else if (!strcmp(cmd, "bank76")) {
             static uint8_t bk[PLAT_STORE_MAX];
             static int16_t par[P_NPARAMS];
@@ -829,6 +858,7 @@ int main(int argc, char **argv)
         } else if (!strcmp(cmd, "seed")) {           /* seed N: the next power-on's (reboot) */
             host_seed = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "reboot")) {
+            store_lock = 0;
             memset(&proj, 0, sizeof proj);
             boot();
         } else if (!strcmp(cmd, "echo"))

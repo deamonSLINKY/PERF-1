@@ -579,7 +579,7 @@ stall:
     sie_wr(S_CSR0, 0x60);
 }
 
-/* The DX7's SysEx (the player's own voices, main_fm1.c dx_service): every message's bytes go into dx_buf as they come, and at its end it is told
+/* (A restore's chunk, 7D 50 42 03 ..., comes the same way: kind 5.) The DX7's SysEx (the player's own voices, main_fm1.c dx_service): every message's bytes go into dx_buf as they come, and at its end it is told
  * from the others by its header and its length: a 32-voice bulk dump (43 0s 09 20 00, 4096 bytes, a checksum), a single voice (43 0s 00 01 1B, 155, a
  * checksum), or ours (7D 50 56 slot, 128 bytes, a checksum; slot 7F alone clears). One at a time: while one waits to be taken, the next is dropped. */
 #if USB_DX                                       /* the app only (the update loader's has no pool) */
@@ -603,6 +603,12 @@ static void px_end(void)
         e = 2u << 28;
     else if (n == 5u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x56u && m[3] == 0x7Eu)
         e = 3u << 28 | (uint32_t)(m[4] & 0x7Fu);
+    else if (n == 5u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x01u)         /* backup: read an object */
+        e = 4u << 28 | (uint32_t)(m[4] & 0x7Fu);
+    else if (n == 7u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x04u)         /* restore: the object is complete, write it */
+        e = 5u << 28 | (uint32_t)(m[4] & 0x1Fu) << 14 | (uint32_t)((m[5] << 7 | m[6]) & 0x3FFF);
+    else if (n == 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x05u)         /* restore: restart */
+        e = 6u << 28;
     if (e && px_w - px_r < PX_N) {
         px_q[px_w % PX_N] = e;
         RING_PUBLISH();
@@ -630,6 +636,8 @@ static void dx_end(void)
             kind = 3;
         else if (n == 4u && m[3] == 0x7Fu)
             kind = 4;
+    } else if (n >= 12u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x03u) {   /* a chunk of a restore (backup_proto.h) */
+        kind = 5;
     }
     dx_on = 0;
     if (kind) {

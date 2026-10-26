@@ -40,7 +40,7 @@ shutil.copy(SRC / "web" / "img" / "slinky.png", OUT / "img" / "slinky.png")
 shutil.copy(SRC / "web" / "img" / "favicon.png", OUT / "img" / "favicon.png")
 
 page = (SRC / "web" / "amb_installer.html").read_text(encoding="utf-8")
-lib = strip_module((SRC / "web" / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1ota.js").read_text(encoding="utf-8"))
+lib = strip_module((SRC / "web" / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1backup.js").read_text(encoding="utf-8"))
 meta = json.dumps({"version": ver, "product": product, "pkg": "../firmware/" + name})
 page = page.replace("/*LIB*/", lib).replace("/*META*/", meta).replace("<h1>Install PERF-1</h1>", f"<h1>Install PERF-1 {ver}</h1>")
 (OUT / "install" / "index.html").write_text(page, encoding="utf-8", newline="\n")

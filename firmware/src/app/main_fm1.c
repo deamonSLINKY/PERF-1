@@ -374,6 +374,18 @@ static void bench_run(uint32_t *w)
     fm1_probe_read(w + 11);                         /* the cache control as the boot left it (stock writes 0x1EEE008, 0x1EEE00C = 0x808080, 0x1EEE010 = 0xFFFF), the PLL, the CPU1 enable */
 }
 
+/* BACKUP AND RESTORE (backup_proto.h; the installer page's buttons): an object of flash read out in frames, or written from chunks. The chunks gather in bk_buf,
+ * the object is checked as its loader would take it, and written when the page says it is complete; after any write nothing else is stored (plat_store_restore)
+ * and the page asks for a restart, which loads everything afresh. */
+static uint8_t bk_buf[BK_MAX] __attribute__((section(".pool.bk")));
+static bk_sess_t bk_sess;
+static uint8_t bk_restored;                      /* an object was written: a restart may follow */
+static uint8_t bk_ack[8], bk_ack_n;              /* an answer waiting for room in the USB queue */
+static uint32_t bk_rd_obj = 0xFFFFFFFFu, bk_rd_i, bk_rd_len;   /* an object being sent: which, how far, how long */
+static uint32_t bk_wait_obj = 0xFFFFFFFFu;       /* an object being written (the music fading out): which */
+static int bk_obj_ok(uint32_t obj) { return obj < OBJ_NOBJ && obj != OBJ_PANEL; }
+static void bk_ack_put(uint32_t obj, uint32_t idx, uint32_t status) { bk_ack_n = (uint8_t)bk_build_ack(bk_ack, obj, idx, status); }
+
 /* THE PLAYER'S DX7 VOICES. usb.c collects a DX7 SysEx (a 32-voice bulk dump: the first EN_NUSER voices replace the loaded ones; a single voice, appended; or
  * ours, F0 7D 50 56 slot 128-bytes checksum F7: one slot, or 7F alone to clear), here it is checked and handed to the engine, and the UI keeps them. */
 static void dx_service(void)
@@ -385,6 +397,17 @@ static void dx_service(void)
         return;
     RING_PUBLISH();
     kind = dx_kind;
+    if (kind == 5) {                                 /* a chunk of a restore: taken into bk_buf, answered */
+        bk_chunk_t c;
+        uint8_t f[8];
+        int st = bk_parse_chunk(dx_buf, dx_pos, &c);
+        const uint32_t obj = dx_pos > 4u ? dx_buf[4] & 0x7Fu : 0u;
+        if (st == 0 && (!bk_obj_ok(c.obj) || ui_restore_state() == 1 || bk_accept(&bk_sess, bk_buf, &c) != 0))
+            st = 2;
+        dx_state = 0;
+        usb_sysex_try(f, bk_build_ack(f, obj, st == 0 ? c.idx : 0x7Eu, (uint32_t)st));
+        return;
+    }
     if (kind == 1) {                                 /* bulk: 5 header bytes, 4096 data, the checksum */
         for (i = 0; i < 4096u; i++)
             sum += dx_buf[5u + i];
@@ -438,6 +461,46 @@ static void px_service(void)
             dump_i = 0;
         else if (e >> 28 == 3u)
             vox_req = e & 0x7Fu;
+        else if (e >> 28 == 4u) {                        /* backup: send an object (a restore under way is dropped) */
+            const uint32_t obj = e & 0x7Fu;
+            if (bk_obj_ok(obj) && bk_rd_obj == 0xFFFFFFFFu && ui_restore_state() != 1) {
+                const int n = plat_store_load(obj, bk_buf, BK_MAX);
+                bk_sess.mask = 0;
+                bk_rd_len = n > 0 ? (uint32_t)n : 0u;
+                bk_rd_i = 0;
+                bk_rd_obj = obj;
+            }
+        } else if (e >> 28 == 5u) {                      /* restore: the object is complete: check it, write it */
+            const uint32_t obj = e >> 14 & 0x1Fu, len = e & 0x3FFFu;
+            if (!bk_obj_ok(obj) || !bk_complete(&bk_sess, obj, len) || ui_restore_state() == 1)
+                bk_ack_put(obj, 0x7Fu, 1u);
+            else if (!ui_restore_valid(obj, bk_buf, len))
+                bk_ack_put(obj, 0x7Fu, 2u);
+            else {
+                bk_wait_obj = obj;
+                ui_restore_start(obj, bk_buf, len);
+            }
+            bk_sess.mask = 0;
+        } else if (e >> 28 == 6u && bk_restored && ui_restore_state() == 2) {   /* restore: restart, once something was written */
+            usb_detach();
+            fm1_delay_ms(30);
+            fm1_reboot();
+        }
+    }
+    if (bk_wait_obj != 0xFFFFFFFFu && ui_restore_state() >= 2) {   /* the written object's answer */
+        bk_restored |= ui_restore_state() == 2;
+        bk_ack_put(bk_wait_obj, 0x7Fu, ui_restore_state() == 2 ? 0u : 3u);
+        bk_wait_obj = 0xFFFFFFFFu;
+    }
+    if (bk_ack_n && usb_sysex_try(bk_ack, bk_ack_n) == 0)
+        bk_ack_n = 0;
+    if (bk_rd_obj != 0xFFFFFFFFu) {                      /* an object going out, a frame a turn of the loop as the queue has room */
+        const uint32_t n = bk_rd_len - bk_rd_i > BK_FRAME ? BK_FRAME : bk_rd_len - bk_rd_i;
+        if (usb_sysex_try(f, bk_build_frame(f, bk_rd_obj, bk_rd_i / BK_FRAME, bk_rd_len, bk_buf + bk_rd_i, n)) == 0) {
+            bk_rd_i += n;
+            if (bk_rd_i >= bk_rd_len)
+                bk_rd_obj = 0xFFFFFFFFu;
+        }
     }
     if (dump_i < (uint32_t)P_NPARAMS) {
         int32_t vals[24];

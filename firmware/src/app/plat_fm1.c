@@ -107,16 +107,30 @@ void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2) { plat_midi_out(st >> 4 
 
 int plat_store_load(uint32_t obj, void *dst, uint32_t max) { return flash_ok ? st_load(obj, dst, max) : -1; }
 static volatile uint32_t tel_stores, tel_store_us;       /* telemetry: flash writes so far, and how long the last one stopped the chip */
+static uint8_t store_lock;                               /* a backup was restored: what is in RAM is out of date, so nothing more is written until the restart */
+int plat_store_locked(void) { return store_lock; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
     uint32_t t0, r;
     if (!flash_ok)
         return -9;
+    if (store_lock)
+        return -8;
     t0 = fm1_ticks();
     r = (uint32_t)st_save(obj, src, len);
     tel_store_us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
     tel_stores++;
     return (int)r;
+}
+int plat_store_restore(uint32_t obj, const void *src, uint32_t len)
+{
+    int r;
+    if (!flash_ok)
+        return -9;
+    store_lock = 1;
+    r = st_save(obj, src, len);
+    tel_stores++;
+    return r;
 }
 
 static volatile uint32_t audio_cpu_pct, audio_xruns;

@@ -1,0 +1,29 @@
+# Restoring a backup (backup_proto.h): an object from flash goes back through the same check as its loader; a good one is written (the music fades out for it) and
+# after it nothing else is written until the restart; a damaged one is refused.
+seed 0
+wait 3000
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+expect dirty 0
+restore 0
+wait 600
+expect rsvalid 1
+expect rsstate 2
+expect storelock 1
+# the unit is locked: another save is not written
+tap GLO
+tap SAVE
+wait 800
+expect storelock 1
+# a restart: unlocked, and a damaged object is not valid and not written
+reboot
+wait 500
+expect storelock 0
+expect rsstate 0
+restore 0 bad
+wait 300
+expect rsvalid 0
+expect rsstate 0
+expect storelock 0

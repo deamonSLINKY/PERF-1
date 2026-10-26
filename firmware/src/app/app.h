@@ -48,6 +48,9 @@ int project_pending_globals(void);       /* the theme, Tune or MIDI out changed,
 int project_flush_globals(void);         /* those alone into flash (while playing too): 0 = written */
 
 void ui_init(void);
+int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len);   /* a backup's object, as its loader would take it (1) */
+void ui_restore_start(uint32_t obj, const uint8_t *b, uint32_t len);    /* write it (the music fades out for it) */
+int ui_restore_state(void);              /* 0 none, 1 waiting, 2 written, 3 not written */
 void ui_flush(void);                    /* before an update session: a store or autosave in flight written now, the fade undone */
 void ui_frame(void);
 void ui_input_only(void);
