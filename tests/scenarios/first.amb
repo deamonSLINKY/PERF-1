@@ -52,14 +52,17 @@ shot global.png
 # SELECT: the pages in order, Noise, Space and the Master (compressor, limiter) among them
 turn SELECT -1 100
 expect view 28
-shot master.png
+shot mixer.png
 turn SELECT -1 100
 expect view 27
-shot reverb.png
+shot master.png
 turn SELECT -1 100
 expect view 26
+shot reverb.png
+turn SELECT -1 100
+expect view 25
 shot space.png
-turn SELECT -21 100
+turn SELECT -20 100
 expect view 5
 shot noise.png
 turn SELECT -9 100

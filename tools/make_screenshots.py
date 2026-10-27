@@ -52,6 +52,9 @@ def main():
         shot(src).save(IMG / f"perf-screen-{name}.png", optimize=True)
     print(len(MANUAL), "manual screenshots")
     sheet(["imp/imp_tempo", "sections/build", "sections/breakdown"], 3, "readme-sigil.png")
+    sheet(["imp/imp_tempo", "hero/master_hard", "hero/kaleido"], 3, "readme-hero.png")          # three different things: the sigil, the master bus, a visualizer
+    sheet(["steps/steps", "acsteps/acsteps", "arrange/groove", "phrase/phrase", "answer/answer_page", "dejavu/dejavu"], 3, "readme-gen.png")
+    sheet(["fx/fx_latched", "flex/flex_bank", "perf/perf_screen", "imp/imp_mixer", "jam/jam_pluck", "sampler/snips_page"], 3, "readme-perf.png")
     sheet(["arrange/groove", "answer/answer_page", "seq/seq", "fx/fx_latched", "perf/perf_screen", "sampler/snips_page"], 3, "readme-pages.png")
     sheet(["imp/imp_tempo", "imp/theme_synth", "imp/theme_acid", "imp/theme_ice", "imp/theme_ember", "imp/theme_phosphor"], 3, "readme-palettes.png")
 

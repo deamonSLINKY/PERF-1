@@ -2,7 +2,9 @@
 
 **Custom live-performance firmware for the M-VAVE FM-1.** Sixteen genres of music that plays itself while you steer it: an auto-DJ, a drum sequencer with real depth, an acid line that answers itself, DX7-style FM voices (and your own), effects you can edit page by page, a mixer and a real compressor and limiter, a Jam page to play along on, scenes, and a screen that shows you what the music is doing. By **deamonSLINKY**.
 
-<p align="center"><img src="docs/img/readme-sigil.png" width="760" alt="The home screen: a summoning-circle display that turns to the chord's root, draws the chord as a shape and closes its eye in a breakdown."></p>
+<p align="center"><img src="docs/img/readme-hero.png" width="760" alt="Three screens: the home screen (a summoning circle that turns to the chord's root and draws the chord), the master bus page (the compressor's curve, the limiter and the output meter) and one of the visualizers."></p>
+
+*The home screen, the master bus and a visualizer.*
 
 **Try it now:** <https://deamonslinky.github.io/PERF-1/> (the browser emulator runs the same code with sound; the installer, editor and manual are there too).
 
@@ -32,10 +34,13 @@ PERF-1 is a custom firmware for the M-VAVE FM-1: a generative groovebox you perf
 - **Five tracks at once, with a safety net.** Pad, bass, acid, pluck and drums all play together (a generative firmware often runs four), which asks a lot of a chip with a 5.8 ms deadline. So the engine is built around not breaking: a second core takes the reverb, and under load more of the work; each piece is checked for level and load; a master bus with a compressor and a look-ahead limiter keeps the sum from clipping; and if a piece still gets too heavy, the engine sheds the least important work before it would drop a sample.
 - **Honest about its limits.** It runs two cores and watches its own load: a status line shows CPU, dropouts and which core is doing what, USB telemetry logs it, and when a piece gets too heavy the engine sheds the least important work before it would drop audio.
 
-<p align="center"><img src="docs/img/readme-pages.png" width="760" alt="Six screens: the Groove page (a density and source per drum lane), the Acid answer page (the line and its answer), the sequencer, the FX menu, the Perform screen and the DJ snips page."></p>
+<p align="center"><img src="docs/img/readme-gen.png" width="760" alt="Six screens: the Steps page (a ratchet, push and level for each step), the Acid steps page (the acid line frozen into sixteen editable steps), the Groove page, the Phrase page (pattern chains, slices, half and double time), the Acid answer page and the Deja vu page."></p>
 
-*Left to right, top to bottom: the Groove page, the acid answer page (the line, and what it answers), the sequencer, the FX menu, the Perform screen (section, scenes, effects, mood) and the DJ snips page.*
+*Under the generator: ratchets, push and level per step; the acid line frozen into steps you can edit; density and source per drum lane; chains, slices and half or double time; what the acid answers; the pluck remembering its phrase.*
 
+<p align="center"><img src="docs/img/readme-perf.png" width="760" alt="Six screens: the FX menu, the Flex Beat bank, the Perform screen, the Mixer page, the Jam page and the DJ snips page."></p>
+
+*Playing it: the FX menu (latch or hold), the Flex Beat bank, the Perform screen (section, scenes, effects, mood), the mixer, the Jam page (all 27 keys in the scale) and the DJ snips.*
 ## A first minute
 
 1. Switch on: the boot cards play and a piece starts by itself. Any key skips the cards.
