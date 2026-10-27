@@ -18,6 +18,7 @@ static int fails;
         }                                                                                                          \
     } while (0)
 
+static uint32_t acid_abs[512], hat_abs[512], acid_n;   /* the acid's note-ons (0x93) and the closed hat's, by block (the swing test) */
 static uint32_t midi_count;
 static uint32_t snare_n, snare_min = 999, pad_n;   /* snare note-ons (GM 38), the softest, and the pad's (0x90) */
 static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's note-ons (0x92) and the kicks counted, and the notes' range */
@@ -42,7 +43,10 @@ void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
         kick_last = blk_now;
         kick_n++;
     }
+    if (st == 0x93u && acid_n < 512u)
+        acid_abs[acid_n++] = blk_now;
     if (st == 0x99u && d1 == 42u && hat_n < 512u) {
+        hat_abs[hat_n] = blk_now;
         hat_t[hat_n] = blk_now - kick_last;
         hat_v[hat_n++] = d2;
     }
@@ -857,6 +861,78 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* the acid is swung with the drums (it used to play straight against swung hats): at swing 100, Humanize 0, a hat on every sixteenth, every acid
+     * note-on lands on a hat's block, odd sixteenths included */
+    {
+        int s, blk, matched = 0;
+        uint32_t i, j;
+        en_init();
+        en_set(P_TEMPO, 128);
+        en_set(P_MIDI, 1);
+        en_set(P_SWING, 100);
+        en_set(P_HUMAN, 0);
+        for (s = 0; s < EN_NPAT; s++)
+            en_pats[s][3] = 0xFFFFu;
+        en_play(1);
+        run(4.0f);
+        hat_n = acid_n = 0;
+        for (blk = 0; blk < 5500; blk++) {
+            blk_now = (uint32_t)blk;
+            en_render(buf, 64, 2048);
+        }
+        for (i = 0; i < acid_n; i++)
+            for (j = 0; j < hat_n; j++)
+                if (acid_abs[i] + 3u >= hat_abs[j] && acid_abs[i] <= hat_abs[j] + 3u) {
+                    matched++;
+                    break;
+                }
+        CHECK(acid_n >= 6u && (uint32_t)matched == acid_n, "swing 100: %d of %u acid notes land with a hat (the acid plays straight)", matched, acid_n);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
+    /* the chord habits (per genre: CHT): 120 chord changes by en_next at 240 bpm, read from the chord's root. Trap and funk go home often, the house loop goes back to
+     * the chord before (A B A), lofi's turnarounds never do */
+    {
+        static const int G[4] = {9, 11, 2, 1};
+        float tonic[4], back[4];
+        int gi;
+        for (gi = 0; gi < 4; gi++) {
+            int i, n = 0, tn = 0, bk = 0, r0, a = -1, b = -1, cnt[12] = {0};
+            en_init();
+            en_genre(G[gi]);
+            en_set(P_CH_LOOP, 0);
+            en_set(P_TEMPO, 240);
+            en_play(1);
+            run(0.3f);
+            r0 = en_chord_root;
+            for (i = 0; i < 120; i++) {
+                int r;
+                en_next();
+                run(1.05f);
+                r = en_chord_root;
+                if (r == a)
+                    continue;                    /* (no change yet) */
+                n++;
+                cnt[r % 12]++;
+                bk += r == b && b >= 0;
+                b = a;
+                a = r;
+            }
+            for (i = 0; i < 12; i++)
+                tn = cnt[i] > tn ? cnt[i] : tn;           /* (home: the root heard most) */
+            (void)r0;
+            tonic[gi] = n ? (float)tn / (float)n : 0.0f;
+            back[gi] = n ? (float)bk / (float)n : 0.0f;
+            printf("  chords genre %d: %d changes, home %.2f, A-B-A %.2f\n", G[gi], n, (double)tonic[gi], (double)back[gi]);
+        }
+        CHECK(tonic[0] > 0.3f && tonic[1] > 0.3f, "trap / funk go home: %.2f / %.2f of the chords", (double)tonic[0], (double)tonic[1]);
+        CHECK(back[2] > 0.15f && back[3] < 0.08f, "A-B-A: house %.2f (a loop), lofi %.2f (never)", (double)back[2], (double)back[3]);
+        en_genre(0);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the pluck's deja vu: a random pluck (Style Random, every note chosen from nine tones) at Deja vu 0 repeats its note 8 slots on only by chance, locked
      * (100) it comes round every time; a loop of 4 repeats at a distance of 4. Counted over 12 s of eighths at 120 bpm, the chord held (Drift at the top). */
     {
@@ -948,17 +1024,23 @@ int main(void)
             en_init();
             en_set(P_TEMPO, 128);
             en_set(P_CHAIN, 4);
+            en_set(P_DD_CHANGE, 0);
+            en_set(P_DD_MUTATE, 0);
+            en_set(P_DD_EVERY, 0);
             en_play(1);
             for (blk = 0; blk < 17000 && ns < 12; blk++) {
                 en_render(buf, 64, 2048);
-                if ((en_bars % 16u) == 8u && (ns == 0 || seq[ns - 1] >= 0)) {
+                if (en_drum_pos == 8 && (ns == 0 || seq[ns - 1] >= 0)) {
                     seq[ns++] = en_pat_now;
-                    while ((en_bars % 16u) == 8u && blk < 17000) {
+                    while (en_drum_pos == 8 && blk < 17000) {
                         en_render(buf, 64, 2048);
                         blk++;
                     }
                 }
             }
+            for (i = 0; i + 1 < ns; i++)                /* (the first bar is before the chain's first step: left out) */
+                seq[i] = seq[i + 1];
+            ns--;
             for (i = 1; i + 4 < ns; i++)
                 ok &= seq[i] == seq[i + 4];
             CHECK(ns >= 10 && ok && seq[2] == 2 && seq[3] == 3 && seq[0] != seq[2], "chain 1 1 3 4: patterns %d %d %d %d %d %d %d %d", seq[0], seq[1], seq[2], seq[3], seq[4], seq[5], seq[6], seq[7]);
@@ -1133,7 +1215,8 @@ int main(void)
                 en_fxs(EN_FXS_FX_MIX, 100);
                 run(0.1f);
                 done0 = en_flx_done;
-                en_fx(1ull << (FX_FLEX1 + pat));
+                en_flex_select(pat);
+                en_fx(FXB(FX_FLEX));
                 for (blk = 0; blk < 1700; blk++) {            /* ~10 s: a bar to wait, a bar to play */
                     en_render(buf, 256, 2048);
                     for (j = 0; j < 512; j++)
@@ -1154,7 +1237,8 @@ int main(void)
             en_fxs(EN_FXS_FX_MODE, 1);
             run(0.1f);
             done0 = en_flx_done;
-            en_fx(1ull << (FX_FLEX1 + pat));
+            en_flex_select(pat);
+                en_fx(FXB(FX_FLEX));
             run(7.0f);
             if (en_flx_done != done0 || en_flx_state != 2)
                 badloop++;

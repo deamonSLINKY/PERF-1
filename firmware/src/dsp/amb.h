@@ -151,6 +151,8 @@ void en_core2_attach(int (*submit)(void (*fn)(void *), void *ctx), int (*join)(v
 extern volatile float en_comp_gr, en_lim_gr, en_out_peak;   /* the master bus now: the compressor's and the limiter's gain reduction (dB, positive), the output's peak (0..1 of full scale) */
 void en_shed(int level);                       /* the load is too high: 0 none, 1 the DX voices to four and no chorus, 2 to two (the UI watches the CPU and says) */
 extern volatile uint8_t en_shed_level;
+void en_flex_select(int pat);                  /* the Flex Beat pattern the FX_FLEX bit plays (0..EN_NFLEX-1): sent before the bit is set */
+#define EN_NFLEX 15
 void en_flx_hold(int on);                      /* a Flex Beat pad is held down (not latched): a one shot goes on, bar after bar, while it is, and ends on the bar line after it is let go */
 void en_fill_next(void);                       /* a drum fill in the next bar (the auto-DJ asks one bar ahead: the fill is the last bar before the break) */
 void en_dj_sync(int on);                       /* the auto-DJ follows the chord changes: the engine fills the bar before one and breaks on it */
@@ -197,8 +199,9 @@ enum {
     FX_SWEEP,                                                 /* a filter swept in time with the tempo */
     FX_SCRATCH, FX_FREEZE, FX_RVSWELL, FX_RING,               /* an automatic scratch; a granular freeze; a reverse swell; a ring modulator */
     FX_RPT8T, FX_RPT16T,                                      /* beat repeats in triplets: 1/8, 1/16 */
-    FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7, FX_FLEX8,   /* Flex Beat: fifteen one-bar patterns (en_flex_step) */
-    FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
+    FX_FLEX,                                                  /* Flex Beat: one bit; the pattern (a one-bar table, en_flex_step) is en_flex_select's */
+    FX_SPARE1, FX_SPARE2, FX_SPARE3, FX_SPARE4, FX_SPARE5, FX_SPARE6, FX_SPARE7,   /* fourteen bits the Flex pads used to take: free for new effects */
+    FX_SPARE8, FX_SPARE9, FX_SPARE10, FX_SPARE11, FX_SPARE12, FX_SPARE13, FX_SPARE14,
     FX_TALK, FX_WAH,                                          /* a vowel filter sweeping across everything; an auto-wah that follows the loudness */
     FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM, FX_DBLKICK,   /* drum rolls (held): the hats in 32nds; in triplets; a snare roll; flams on snare and clap; a double kick */
     EN_NFX = 64                                               /* the mask is 64 bits: FXB(bit) */

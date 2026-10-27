@@ -1657,39 +1657,57 @@ static void drift_reset(void)
     fifth_done = 0;
 }
 
-/* each genre's habits on a 7-note scale: the weight of a move by the interval up from the chord now (a step up, a third, a fourth, a fifth, a sixth,
- * a step down: a fourth up is the circle of fifths, ii-V-I), and a pull towards the tonic. The first bank keeps the original walk (by degree). */
-static const struct { float mv[6], tonic; } CHM[EN_NGENRE] = {
-    {{0, 0, 0, 0, 0, 0}, 0},                    /* HYPNO: W7 */
-    {{2.5f, 3.0f, 5.0f, 3.5f, 3.0f, 1.5f}, 2.0f},   /* lofi: the jazz turnarounds (a fourth up) */
-    {{4.0f, 2.0f, 2.0f, 2.5f, 4.0f, 4.5f}, 3.0f},   /* house: the loops (i-VII-VI-VII), steps and thirds down, home */
-    {{1.5f, 1.5f, 2.0f, 3.0f, 3.5f, 3.0f}, 4.0f},   /* dubstep: sparse, a fifth and the flat sixth, home */
-    {{2.0f, 1.5f, 2.0f, 3.0f, 3.5f, 4.5f}, 3.0f},   /* jungle: the flat seventh */
-    {{2.0f, 3.0f, 4.5f, 3.0f, 3.5f, 2.0f}, 2.5f},   /* dnb: liquid, a fourth up */
-    {{3.0f, 2.0f, 3.0f, 3.0f, 3.0f, 3.0f}, 2.0f},   /* breaks: even */
-    {{2.5f, 3.5f, 4.5f, 3.0f, 3.0f, 2.0f}, 2.0f},   /* garage: soulful, a fourth up */
-    {{3.0f, 1.5f, 2.5f, 4.0f, 3.0f, 2.5f}, 3.5f},   /* electro: a fifth, home */
-    {{1.5f, 1.5f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.5f},   /* trap: minor, dark, home */
-    {{2.5f, 3.0f, 5.0f, 3.5f, 3.0f, 1.5f}, 2.5f},   /* disco: circle of fifths, ii-V */
-    {{1.5f, 2.5f, 3.0f, 2.5f, 2.0f, 2.0f}, 4.0f},   /* funk: the dorian vamp, mostly home */
-    {{3.0f, 1.5f, 3.5f, 3.0f, 2.0f, 2.0f}, 3.5f},   /* reggae: one and four, five */
-    {{1.5f, 3.0f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.0f},   /* synthwave: i-VI-III-VII */
-    {{2.5f, 3.0f, 5.0f, 3.5f, 3.0f, 1.5f}, 2.0f},   /* amapiano: jazzy turnarounds */
-    {{1.5f, 1.5f, 2.0f, 2.5f, 4.0f, 3.5f}, 4.5f},   /* trip-hop: minor, sparse, home */
+/* each genre's chord habits on a 7-note scale (degrees 0..6: I, ii, III, IV, V, VI, VII; the chord is a number of the scale, minor or major): every move to
+ * another degree weighs 1; the genre's own moves add to that (the edges: from, to, weight: ii-V-I for lofi, i-VII-VI-VII for house, i-VI-III-VII for synthwave),
+ * home adds a pull (tonic); the chord before a phrase's end (every cad_every chords) heads for cad_to and the phrase's end for home, so the tonic is
+ * heard on the phrase boundary; back: the move straight back to the chord before (A B A) is allowed (a house loop wants it, a lofi turnaround does not). */
+typedef struct { uint8_t from, to, w; } ch_edge_t;
+static const struct { uint8_t tonic, cad_every, cad_to, back; ch_edge_t e[8]; } CHT[EN_NGENRE] = {
+    {0, 0, 0, 0, {{0}}},                                                                    /* HYPNO: the walk by degree (W7) */
+    {2, 8, 4, 0, {{1, 4, 12}, {4, 0, 12}, {0, 1, 4}, {0, 3, 4}, {3, 1, 5}, {5, 1, 6}, {2, 5, 6}, {6, 2, 5}}},   /* lofi: ii-V-I, turnarounds */
+    {2, 4, 6, 1, {{0, 6, 8}, {6, 5, 6}, {5, 6, 6}, {6, 0, 5}, {5, 0, 3}, {0, 5, 5}, {3, 6, 3}, {0, 0, 0}}},    /* house: i-VII-VI-VII loops */
+    {4, 8, 6, 0, {{0, 5, 6}, {5, 0, 8}, {0, 6, 4}, {6, 0, 6}, {0, 4, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* dubstep: sparse, VI and home */
+    {3, 4, 6, 0, {{0, 6, 8}, {6, 5, 6}, {5, 0, 4}, {6, 0, 5}, {0, 3, 3}, {3, 6, 4}, {0, 0, 0}, {0, 0, 0}}},    /* jungle: the flat seventh */
+    {2, 4, 4, 0, {{1, 4, 10}, {4, 0, 8}, {0, 5, 5}, {5, 1, 6}, {0, 3, 4}, {3, 1, 4}, {0, 0, 0}, {0, 0, 0}}},   /* dnb: liquid ii-V */
+    {3, 4, 4, 0, {{0, 3, 4}, {3, 4, 4}, {4, 0, 6}, {0, 5, 4}, {5, 3, 4}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* breaks: even, V home */
+    {2, 4, 4, 0, {{1, 4, 8}, {4, 0, 8}, {0, 5, 5}, {5, 3, 5}, {3, 1, 5}, {2, 5, 4}, {0, 0, 0}, {0, 0, 0}}},    /* garage: soulful */
+    {4, 4, 4, 0, {{0, 4, 5}, {4, 0, 7}, {0, 3, 4}, {3, 0, 6}, {0, 6, 3}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* electro: a fifth, home */
+    {5, 4, 6, 0, {{0, 5, 6}, {5, 6, 5}, {6, 0, 8}, {0, 3, 3}, {3, 0, 7}, {5, 0, 5}, {0, 0, 0}, {0, 0, 0}}},    /* trap: dark, home */
+    {2, 4, 4, 0, {{1, 4, 10}, {4, 0, 9}, {0, 3, 5}, {3, 6, 6}, {6, 2, 6}, {2, 5, 6}, {5, 1, 6}, {0, 0, 0}}},   /* disco: the circle of fifths */
+    {5, 4, 3, 1, {{0, 3, 8}, {3, 0, 8}, {0, 6, 3}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* funk: the dorian vamp (i-IV) */
+    {3, 4, 4, 1, {{0, 3, 7}, {3, 0, 7}, {0, 4, 5}, {4, 0, 7}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* reggae: one, four, five */
+    {3, 4, 6, 0, {{0, 5, 8}, {5, 2, 8}, {2, 6, 8}, {6, 0, 7}, {6, 5, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* synthwave: i-VI-III-VII */
+    {2, 8, 4, 0, {{1, 4, 10}, {4, 0, 9}, {0, 1, 5}, {0, 3, 4}, {3, 1, 5}, {5, 1, 5}, {0, 0, 0}, {0, 0, 0}}},   /* amapiano: jazzy turnarounds */
+    {5, 8, 6, 0, {{0, 5, 5}, {5, 0, 7}, {0, 3, 4}, {3, 0, 6}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* trip-hop: minor, sparse, home */
 };
 static volatile uint8_t chord_genre;
 void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
-static void chord_change(void)                  /* to another degree: the near, strong moves first */
+static uint8_t deg_prev, cad_n;                  /* the chord before this one; the chords since the phrase began */
+static void chord_change(void)                  /* to another degree: the genre's own moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
     float w[12], sum = 0.0f, r;
     int i;
     const int cg = chord_genre;
+    const int rich = nsteps == 7 && cg;
     for (i = 0; i < nsteps; i++) {
-        if (nsteps == 7 && cg)
-            w[i] = i == deg ? 0.0f : CHM[cg].mv[(i - deg + 7) % 7 - 1] + (i == 0 ? CHM[cg].tonic : 0.0f);
-        else
-            w[i] = i == deg ? 0.0f : nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
+        if (i == deg) {
+            w[i] = 0.0f;
+        } else if (rich) {
+            int k;
+            w[i] = 1.0f + (i == 0 ? (float)CHT[cg].tonic : 0.0f);
+            for (k = 0; k < 8; k++)
+                if (CHT[cg].e[k].w && CHT[cg].e[k].from == deg && CHT[cg].e[k].to == i)
+                    w[i] += (float)CHT[cg].e[k].w;
+            if (!CHT[cg].back && i == deg_prev && deg_prev != deg && cad_n)   /* no A B A (a loop's own chord is the pull back) */
+                w[i] = 0.0f;
+            if (cad_n + 1 >= CHT[cg].cad_every && i == CHT[cg].cad_to && deg != 0)
+                w[i] += 10.0f;                  /* the chord before the phrase's end: its leading chord */
+            if (cad_n >= CHT[cg].cad_every && i == 0)
+                w[i] += 30.0f;                  /* the phrase's end: home */
+        } else {
+            w[i] = nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
+        }
         sum += w[i];
     }
     r = frand() * sum;
@@ -1719,6 +1737,8 @@ static void chord_change(void)                  /* to another degree: the near, 
             dh_i = 0;
         }
     }
+    deg_prev = (uint8_t)deg;
+    cad_n = (uint8_t)(i == 0 && rich && cad_n >= CHT[cg].cad_every ? 0 : cad_n + 1);
     deg = i;
     pad_retarget();
     pad_leave();
@@ -1841,7 +1861,37 @@ static void ac_mutate(void)                     /* the loop's end: Mutate (a dej
     ac_publish();
 }
 
-static void acid_step(void)                     /* a sixteenth of the acid line */
+/* the acid's note, as the sixteenth chose it, played when its time comes: on the tick, or after the swing and the looseness (ac_wait: samples; the
+ * drums' and the pluck's waits are served with it, drums_wait_step) */
+static int32_t ac_wait;
+static int32_t bl_wait, stab_wait;               /* the bass line's note and the pad's stab, waiting the same way */
+static int bl_pn;
+static float stab_pe;
+static void bl_note(int n);
+static void stab_fire(float envv);
+static struct { int n; uint8_t slid_ok, acc, hat, slide; float dec; } ac_pend;
+static void acid_fire(void)
+{
+    const int n = ac_pend.n, slid = ac_pend.slid_ok && acid.amp_t > 0.0f;
+    acid.inc_t = mtof((float)n) * (1.0f / EN_SR);
+    if (!slid) {                                /* a new note: the envelope again */
+        acid.inc = acid.inc_t;
+        acid.env = 1.0f;
+        acid.acc = ac_pend.acc ? 1.0f : 0.0f;
+        if (ac_pend.hat)                         /* the links: a hat here accents it */
+            acid.acc = fm_maxf(acid.acc, (float)par[P_LK_HAT] * 0.012f);
+        acid.amp_t = 1.0f;
+        acid.edec = fm_expf(-6.9f * 32.0f / (ac_pend.dec * (acid.acc > 0.0f ? 0.6f : 1.0f) * EN_SR));
+        if (acid.note)
+            midi(0x83, acid.note, 0);
+        midi(0x93, (uint32_t)n, acid.acc > 0.0f ? 120u : 90u);
+        acid.note = (uint8_t)n;
+    }
+    acid.sliding = (uint8_t)slid;
+    acid.gate_left = ac_pend.slide ? -1 : (int32_t)(0.55f * step_len);
+    en_acid_glow = 1.0f;
+}
+static void acid_step(int32_t wait)             /* a sixteenth of the acid line (wait: the swing and the looseness, samples) */
 {
     const int len = par[P_AC_LEN], st = ac_pos;
     int v, type;
@@ -1863,25 +1913,20 @@ static void acid_step(void)                     /* a sixteenth of the acid line 
     en_acid_pos = (uint8_t)st;
     if (acid.play || par[P_AC_MAN]) {           /* the keys have it: the line steps on, unheard */
     } else if (acid_gate(st, len, v)) {
-        int n = acid_note(ss, v), slid = (ac_slide >> prev & 1u) && (ac_gate >> prev & 1u) && acid.amp_t > 0.0f;
-        float dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
-        acid.inc_t = mtof((float)n) * (1.0f / EN_SR);
-        if (!slid) {                            /* a new note: the envelope again */
-            acid.inc = acid.inc_t;
-            acid.env = 1.0f;
-            acid.acc = (ac_accent & m) ? 1.0f : 0.0f;
-            if (lk_hat && links_on())            /* the links: a hat here accents it */
-                acid.acc = fm_maxf(acid.acc, (float)par[P_LK_HAT] * 0.012f);
-            acid.amp_t = 1.0f;
-            acid.edec = fm_expf(-6.9f * 32.0f / (dec * (acid.acc > 0.0f ? 0.6f : 1.0f) * EN_SR));
-            if (acid.note)
-                midi(0x83, acid.note, 0);
-            midi(0x93, (uint32_t)n, acid.acc > 0.0f ? 120u : 90u);
-            acid.note = (uint8_t)n;
+        if (ac_wait > 0) {                      /* the last note is still waiting (a long push): it sounds now */
+            ac_wait = 0;
+            acid_fire();
         }
-        acid.sliding = (uint8_t)slid;
-        acid.gate_left = (ac_slide & m) ? -1 : (int32_t)(0.55f * step_len);
-        en_acid_glow = 1.0f;
+        ac_pend.n = acid_note(ss, v);
+        ac_pend.slid_ok = (uint8_t)((ac_slide >> prev & 1u) && (ac_gate >> prev & 1u));
+        ac_pend.dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
+        ac_pend.acc = (uint8_t)((ac_accent & m) != 0u);
+        ac_pend.hat = (uint8_t)(lk_hat && links_on());
+        ac_pend.slide = (uint8_t)((ac_slide & m) != 0u);
+        if (wait > 0)
+            ac_wait = wait;
+        else
+            acid_fire();
     } else if (acid.gate_left < 0) {            /* a slide into a rest: let go */
         acid.gate_left = 0;
         acid.amp_t = 0.0f;
@@ -2172,6 +2217,12 @@ static int32_t drums_wait(void)                 /* samples to the next hit that 
 {
     int32_t m = cm_wait > 0 ? cm_wait : 0;
     int d;
+    if (ac_wait > 0 && (!m || ac_wait < m))
+        m = ac_wait;
+    if (bl_wait > 0 && (!m || bl_wait < m))
+        m = bl_wait;
+    if (stab_wait > 0 && (!m || stab_wait < m))
+        m = stab_wait;
     for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (!m || drum[d].wait < m))
             m = drum[d].wait;
@@ -2187,6 +2238,18 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
     if (cm_wait > 0 && (cm_wait -= k) <= 0) {   /* the swung pluck note */
         cm_wait = 0;
         cm_trigger(cm_pnote, cm_pvel);
+    }
+    if (ac_wait > 0 && (ac_wait -= k) <= 0) {   /* the acid, the bass line and the pad's stab that waited */
+        ac_wait = 0;
+        acid_fire();
+    }
+    if (bl_wait > 0 && (bl_wait -= k) <= 0) {
+        bl_wait = 0;
+        bl_note(bl_pn);
+    }
+    if (stab_wait > 0 && (stab_wait -= k) <= 0) {
+        stab_wait = 0;
+        stab_fire(stab_pe);
     }
     for (d = 0; d < EN_NDRUM; d++) {
         if (drum[d].wait > 0 && (drum[d].wait -= k) <= 0) {
@@ -2395,7 +2458,20 @@ static void bl_note(int n)
     bl_up = 1;
     bl_gate = (0.25f + 0.0475f * (float)par[P_BL_LEN]) * step_len;
 }
-static void bl_step(int st)
+static void bl_go(int n, int32_t w)
+{
+    if (bl_wait > 0) {                          /* the last one is still waiting: it sounds now */
+        bl_wait = 0;
+        bl_note(bl_pn);
+    }
+    if (w > 0) {
+        bl_pn = n;
+        bl_wait = w;
+    } else {
+        bl_note(n);
+    }
+}
+static void bl_step(int st, int32_t w)
 {
     const int mode = par[P_BL_MODE], g = chord_genre;
     int hit = 0, iv = 0, root;
@@ -2428,7 +2504,7 @@ static void bl_step(int st)
             n = five;
         else if (beat == 3 && frand() * 100.0f < (float)par[P_BL_MOVE] + 20.0f)
             n = bl_below(root);
-        bl_note(n);
+        bl_go(n, w);
         bl_beat++;
         return;
     }
@@ -2438,8 +2514,36 @@ static void bl_step(int st)
         const float r = frand();
         iv = r < 0.5f ? 12 : r < 0.8f ? (chord_nt > 2 ? (chord_pcs[2] - chord_pcs[0] + 12) % 12 : 7) : bl_below(root) - root;
     }
-    bl_note(root + iv);
+    bl_go(root + iv, w);
     bl_beat++;
+}
+
+static void stab_fire(float envv)
+{
+    int i;
+    stab_env = envv;
+    stab_k = fm_expf(-6.9f * 32.0f / (0.08f * fm_exp2f((float)par[P_PE_REL] * 0.04f) * EN_SR));
+    for (i = 0; i < EN_NPAD; i++) {
+        pad_t *v = &pad[i];
+        if (v->play)                            /* played from the keys: not stabbed */
+            continue;
+        if (v->midi_note)
+            midi(0x80, v->midi_note, 0);
+        v->note = v->target;
+        v->hand = 0;
+        v->hf = 1.0f;
+        v->voices = (uint8_t)pad_osc();
+        v->midi_note = (uint8_t)v->target;
+        midi(0x90, v->midi_note, (uint32_t)(60.0f + 40.0f * stab_env));
+    }
+}
+static int32_t loose(int32_t sw, float ms)      /* the swing's delay and a little more (Humanize, r*r: mostly small; ms at 100) for a voice that plays on the tick */
+{
+    if (par[P_HUMAN]) {
+        const float r = frand();
+        sw += (int32_t)(r * r * (float)par[P_HUMAN] * 0.01f * ms * 0.001f * EN_SR);
+    }
+    return sw;
 }
 
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
@@ -2700,33 +2804,28 @@ static void tick(void)
             }
         }
     }
-    bl_step(st);
+    bl_step(st, loose(sw, 4.0f));
     if (pad_stabs() && !par[P_PAD_MAN] && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: a rhythm (Comp; Auto: the genre's), the off-beats with more with Evolve */
         (comp_hit(st) || (comp_mask() == 0x4444u && par[P_PAD_COMP] == 0 && (st == 7 || st == 15) && frand() < 0.35f * evolve))) {
-        int i;
-        stab_env = st & 1 ? 0.7f : 1.0f;
-        stab_k = fm_expf(-6.9f * 32.0f / (0.08f * fm_exp2f((float)par[P_PE_REL] * 0.04f) * EN_SR));
-        for (i = 0; i < EN_NPAD; i++) {
-            pad_t *v = &pad[i];
-            if (v->play)                        /* played from the keys: not stabbed */
-                continue;
-            if (v->midi_note)
-                midi(0x80, v->midi_note, 0);
-            v->note = v->target;
-            v->hand = 0;
-            v->hf = 1.0f;
-            v->voices = (uint8_t)pad_osc();
-            v->midi_note = (uint8_t)v->target;
-            midi(0x90, v->midi_note, (uint32_t)(60.0f + 40.0f * stab_env));
+        const int32_t w = loose(sw, 8.0f);
+        if (stab_wait > 0) {                    /* the last stab is still waiting: it sounds now */
+            stab_wait = 0;
+            stab_fire(stab_pe);
+        }
+        if (w > 0) {
+            stab_wait = w;
+            stab_pe = st & 1 ? 0.7f : 1.0f;
+        } else {
+            stab_fire(st & 1 ? 0.7f : 1.0f);
         }
     }
     en_drum_pos = (uint8_t)st;
     drop_imp = 0;
     if (links_on() && par[P_LK_PERC] && sec == SEC_GROOVE) {
         if (perc_hit)
-            acid_step();                        /* the links: the perc lane is the acid's clock */
+            acid_step(loose(sw, 6.0f));         /* the links: the perc lane is the acid's clock */
     } else {
-        acid_step();
+        acid_step(loose(sw, 6.0f));
     }
     cm_step(st, sw);
     if (st == 0 && change_pending && !en_frozen) {   /* chords move on the bar */
@@ -3439,7 +3538,7 @@ static void quiet(void)
     acid.play = 0;
     for (i = 0; i < EN_NDRUM; i++)
         drum[i].on = 0, drum[i].wait = 0, drum[i].rn = 0;
-    cm_wait = 0;
+    cm_wait = ac_wait = bl_wait = stab_wait = 0;
     for (i = 0; i < EN_NPAD; i++)
         pad[i].amp = 0.0f;
     bass.amp = 0.0f;
@@ -3551,7 +3650,7 @@ static void play_stop(void)
     int d;
     for (d = 0; d < EN_NDRUM; d++)
         drum[d].wait = drum[d].wait2 = 0, drum[d].rn = 0;        /* a swung hit still waiting stays unplayed */
-    cm_wait = 0;                                /* and the swung pluck note */
+    cm_wait = ac_wait = bl_wait = stab_wait = 0;   /* and the swung pluck, acid, bass and stab notes */
     en_playing = 0;
     pad_gate = 0.0f;
     acid.amp_t = 0.0f;
@@ -3781,8 +3880,10 @@ static const uint8_t FLEX[15][16] = {
     /* 14 SCRATCH */ {FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0)},
     /* 15 DROPOUT */ {FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0)},
 };
-#define FLEXMASK (0x7FFFull << FX_FLEX1)
-uint8_t en_flex_step(int pat, int step) { return FLEX[(unsigned)pat < 15u ? pat : 0][step & 15]; }
+#define FLEXMASK FXB(FX_FLEX)
+static volatile uint8_t flx_sel;                /* the pattern the Flex bit plays (en_flex_select) */
+void en_flex_select(int pat) { flx_sel = (uint8_t)((unsigned)pat < (unsigned)EN_NFLEX ? pat : 0); }
+uint8_t en_flex_step(int pat, int step) { return FLEX[(unsigned)pat < (unsigned)EN_NFLEX ? pat : 0][step & 15]; }
 volatile uint8_t en_flx_state;                  /* 0 idle, 1 armed (waiting for its time), 2 playing */
 volatile uint32_t en_flx_done;                  /* one shots played out */
 static uint8_t flx_arm, flx_active, flx_pat, flx_pos, flx_held, flx_wait_rel, flx_rev, flx_live, flx_mute, flx_phys;
@@ -4407,10 +4508,8 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             bm_off = bm_len - 1.0f;
             bm_tgt = 1.0f;
         }
-    } else if (m & FLEXMASK) {                  /* Flex Beat: the lowest pad held */
-        int p = 0;
-        while (!(m >> (FX_FLEX1 + p) & 1u))
-            p++;
+    } else if (m & FLEXMASK) {                  /* Flex Beat: the pattern en_flex_select chose */
+        const int p = flx_sel;
         rpt_arm = 0;
         scat_arm = 0;
         var_exit = 0;

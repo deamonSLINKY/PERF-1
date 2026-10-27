@@ -265,11 +265,15 @@ static const uint8_t KEY_FX[4][NKEYS] = {
      FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the mutes where they are on the first page) */
      FX_MUTE_PERC, FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM,                         /* C5 .. E5: the drum rolls */
      FX_DBLKICK, FX_NONE, FX_NONE},
-    {FX_FLEX1, FX_FLEX2, FX_FLEX3, FX_FLEX4, FX_FLEX5, FX_FLEX6, FX_FLEX7,             /* Flex Beat: its fifteen patterns, F3 .. */
-     FX_FLEX8, FX_FLEX9, FX_FLEX10, FX_FLEX11, FX_FLEX12, FX_FLEX13, FX_FLEX14, FX_FLEX15,
+    {FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX,                    /* Flex Beat: its fifteen patterns (FLEX_PAT), F3 .. */
+     FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX,
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE},
     {FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE,   /* the sampler: the keys are notes, not effects */
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE}};
+/* the Flex bank: every key is the one engine bit (FX_FLEX); the pattern each plays is a number (en_flex_select), so a bank can hold any number of them */
+static const uint8_t FLEX_PAT[NKEYS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const char *const FLEX_LABEL[EN_NFLEX] = {"STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD",
+                                                 "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT"};
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
@@ -290,7 +294,7 @@ static const char *const FX_LABEL[EN_NFX] = {
 #define KC_FLEX RGB(110, 240, 200)
 static uint16_t fx_color(int fx)
 {
-    if (fx >= FX_FLEX1 && fx <= FX_FLEX15)
+    if (fx == FX_FLEX)
         return KC_FLEX;
     switch (fx) {
     case FX_RPT2: case FX_RPT4: case FX_RPT6: case FX_RPT8: case FX_RPT16: case FX_RPT32: case FX_RPT8T: case FX_RPT16T:
@@ -304,6 +308,7 @@ static uint16_t fx_color(int fx)
     }
 }
 static inline uint64_t fxbit(int k) { return KEY_FX[fx_bank][k] == FX_NONE ? 0u : FXB(KEY_FX[fx_bank][k]); }
+static inline int key_flex(int k) { return fx_bank == 2 && KEY_FX[2][k] == FX_FLEX ? FLEX_PAT[k] : -1; }   /* the Flex pattern a key plays here, -1: not a Flex key */
 static inline uint32_t h32(uint64_t x) { return (uint32_t)(x ^ x >> 32); }   /* a 64-bit mask, for the hashes */
 
 /* GLO held, the keys: every track's mute and solo, latched (en_trk). A code: 0..6 mute a track (EN_TR_*),
@@ -413,6 +418,8 @@ static struct {
     uint8_t centre_imp;                /* the sigil's middle: the eye (0) or the imp (SEL + HOME); kept with the visualizer's byte */
     uint8_t eu_n[EN_NLANE], eu_r[EN_NLANE];   /* the sequencer's Euclid tricks: each lane's hits and rotation, as last set */
     uint8_t flex_last;                 /* the Flex Beat pad pressed last (0..14) */
+    uint8_t flex_lock;                 /* the Flex pattern that is latched (with the one FX_FLEX bit in fx_lock) */
+    uint8_t flex_cur;                  /* the pattern the engine was last told to play (en_flex_select) */
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
@@ -1773,7 +1780,7 @@ static int fx_page_of(int fx)                   /* the edit page (1 ..) of an ef
 static int fx_key_page(int key)                 /* the edit page of the effect a key plays (in this bank), 0: none */
 {
     const int fx = KEY_FX[fx_bank][key];
-    return fx_bank == 3 ? 20 : fx >= FX_FLEX1 && fx <= FX_FLEX15 ? 19 : fx == FX_NONE ? 0 : fx_page_of(fx);
+    return fx_bank == 3 ? 20 : fx == FX_FLEX ? 19 : fx == FX_NONE ? 0 : fx_page_of(fx);
 }
 static void shift_key(int key)                  /* a key pressed with SEL held */
 {
@@ -1782,13 +1789,13 @@ static void shift_key(int key)                  /* a key pressed with SEL held *
     if (ui.fx_menu && !ui.fx_page) {             /* in the FX menu: SEL + a key opens that effect's settings page */
         const int fx = KEY_FX[fx_bank][key];
         int pg = fx_key_page(key);
-        if (fx >= FX_FLEX1 && fx <= FX_FLEX15)
-            ui.flex_last = (uint8_t)(fx - FX_FLEX1);
+        if (fx == FX_FLEX)
+            ui.flex_last = FLEX_PAT[key];
         if (pg) {
             ui.fx_page = (uint8_t)pg;
             say(FXP[pg - 1].name, "SETTINGS");
         } else {
-            say(fx == FX_NONE ? "NO EFFECT" : FX_LABEL[fx], "HAS NO SETTINGS");
+            say(fx == FX_NONE ? "NO EFFECT" : fx == FX_FLEX ? FLEX_LABEL[FLEX_PAT[key]] : FX_LABEL[fx], "HAS NO SETTINGS");
         }
         return;
     }
@@ -1923,6 +1930,17 @@ static void jam_up(int i);
 static void jam_tick(void);
 static void draw_jam(void);
 static int perf_like(void) { return ui.view == V_PERF || ui.view == V_VIZ; }   /* the screens whose keys are the mix, knobs the FX knobs, ALGORITHM the mood */
+
+static int key_on(int k)                        /* the effect on the FX menu's key k is sounding (a Flex key: its own pattern) */
+{
+    const int fp = key_flex(k);
+    return (int)(ui.fx_mask >> KEY_FX[fx_bank][k] & 1u) && (fp < 0 || fp == ui.flex_cur);
+}
+static int key_locked(int k)                    /* ... and latched */
+{
+    const int fp = key_flex(k);
+    return (int)(ui.fx_lock >> KEY_FX[fx_bank][k] & 1u) && (fp < 0 || fp == ui.flex_lock);
+}
 
 static void button(int b)
 {
@@ -2419,7 +2437,7 @@ static void input(void)
                 continue;
             if (down >> i & 1u) {
                 ui.fx_open_t = 0;              /* (a key since the menu opened: FX again closes it) */
-                if (ui.fx_lock & bit) {
+                if ((ui.fx_lock & bit) && (key_flex((int)i) < 0 || ui.flex_lock == key_flex((int)i))) {   /* (Flex: only the latched pattern's own key) */
                     ui.fx_lock &= ~bit;        /* off at once, and not played while it's held */
                     ui.lock_keys |= 1u << i;
                 } else {
@@ -2431,8 +2449,11 @@ static void input(void)
             }
             if ((up >> i & 1u) && (ui.fx_tap >> i & 1u)) {
                 ui.fx_tap &= ~(1u << i);
-                if (plat_ms() - ui.fx_down_t[i] < TAP_MS)
+                if (plat_ms() - ui.fx_down_t[i] < TAP_MS) {
                     ui.fx_lock |= bit;         /* let go quickly: latched */
+                    if (key_flex((int)i) >= 0)
+                        ui.flex_lock = (uint8_t)key_flex((int)i);
+                }
             }
         }
     }    {   /* the effects: each key held while the FX menu is on, and those locked */
@@ -2443,7 +2464,7 @@ static void input(void)
             static uint32_t flx_seen;
             if (en_flx_done != flx_seen) {
                 flx_seen = en_flx_done;
-                ui.fx_lock &= ~(0x7FFFull << FX_FLEX1);
+                ui.fx_lock &= ~FXB(FX_FLEX);
             }
         }
         m = ui.fx_lock;
@@ -2453,15 +2474,21 @@ static void input(void)
         {
             uint8_t flxh = 0;                  /* a Flex Beat pad held down by hand (the engine goes on with a one shot while it is) */
             static uint8_t flxh_sent;
+            int fsel = (m >> FX_FLEX & 1u) ? ui.flex_lock : -1;   /* the Flex pattern to play: a pad held (the lowest), else the latched one */
             if (ui.fx_menu && !ui.fx_page) {
                 for (i = 0; i < NKEYS; i++)
                     if ((keys & ~ui.shift_keys & ~ui.lock_keys) >> i & 1u) {
                         m |= fxbit(i);
-                        if (fx_bank == 2 && KEY_FX[2][i] != FX_NONE) {
-                            ui.flex_last = (uint8_t)(KEY_FX[2][i] - FX_FLEX1);
+                        if (key_flex((int)i) >= 0 && !flxh) {
+                            ui.flex_last = FLEX_PAT[i];
+                            fsel = FLEX_PAT[i];
                             flxh = 1;
                         }
                     }
+            }
+            if (fsel >= 0 && (m >> FX_FLEX & 1u) && fsel != ui.flex_cur) {
+                ui.flex_cur = (uint8_t)fsel;
+                en_flex_select(fsel);          /* (before the bit goes out) */
             }
             if (flxh != flxh_sent) {
                 flxh_sent = flxh;
@@ -3425,8 +3452,8 @@ static void draw_fx(void)
     }
     for (k = 0; k < NKEYS; k++) {
         int32_t x = 2 + (k / 9) * 79, y = 16 + (k % 9) * 14;
-        int pc = (5 + k) % 12, oct = 3 + (5 + k) / 12, on = (int)(ui.fx_mask >> KEY_FX[fx_bank][k] & 1u),
-            locked = (int)(ui.fx_lock >> KEY_FX[fx_bank][k] & 1u);
+        int pc = (5 + k) % 12, oct = 3 + (5 + k) / 12, on = key_on(k),
+            locked = key_locked(k);
         int black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10;
         char t[24];
         int n = 0;
@@ -3470,7 +3497,7 @@ static void draw_fx(void)
                 cv_rect(x - 1, y + 1, 2, 10, kc);   /* at rest: its colour in a stripe and in the name */
             }
             cv_text(x + 3, y, &FONT_XS, t, on ? K_BG : black ? K_DIM : K_TEXT);
-            cv_text(x + 27, y, &FONT_XS, FX_LABEL[KEY_FX[fx_bank][k]], on ? K_BG : kc);
+            cv_text(x + 27, y, &FONT_XS, key_flex(k) >= 0 ? FLEX_LABEL[key_flex(k)] : FX_LABEL[KEY_FX[fx_bank][k]], on ? K_BG : kc);
         }
     }
 }
@@ -4547,7 +4574,7 @@ static void draw_main(void)
         h = hash(h, ui.fx_page | (uint32_t)ui.gx_pat << 4 | (uint32_t)ui.fxs[EN_FXS_GX_LEN] << 20 | (uint32_t)ui.gx_tgt << 25);
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
-        h = hash(h, ui.flex_last);
+        h = hash(h, ui.flex_last | (uint32_t)ui.flex_cur << 8 | (uint32_t)ui.flex_lock << 16);
         if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
             int j;
             h = hash(h, scope_tick());
@@ -4985,7 +5012,7 @@ static void leds(void)
     } else if (ui.fx_menu) {                     /* FX: lit; the keys held */
         b |= 1u << B_FX;
         for (i = 0; i < NKEYS; i++)
-            if (ui.fx_mask >> KEY_FX[fx_bank][i] & 1u)
+            if (key_on((int)i))
                 k |= 1u << i;
     } else if (ui.view == V_ACSTEP) {            /* the acid steps: the notes of the line lit among them, the step chosen too */
         as_sync();
