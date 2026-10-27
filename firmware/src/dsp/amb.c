@@ -3003,7 +3003,7 @@ static void bal_apply(int l)
 void en_balance_force(int v) { bal_force = (int8_t)v; }
 static float bass_o[RV_MAX] EN_POOL, acid_o[RV_MAX] EN_POOL, gg_v[RV_MAX] EN_POOL;   /* the drone's and the acid's samples for the chunk, and the gate's gain per sample */
 static float bass_duck;                          /* the sidechain's envelope as the chunk began (what the drone's filter follows: the kick moves it later in the chunk) */
-static volatile uint32_t stage_done, stage2_done;             /* the job's first stage (the pad) is done: its outputs may be read */
+static volatile uint32_t stage_done, stage2_done, stage3_done;   /* the job's first stage (the pad) is done: its outputs may be read; the second (the drone, the acid); the third (the reverb's tank) */
 static void render_pad(uint32_t n);
 static void render_bass(uint32_t n);
 static void render_acid(uint32_t n);
@@ -3048,6 +3048,9 @@ static void chunk_job(void *p)
         stage2_done = 1;
     }
     reverb_job(p);
+    if (c2_fence)
+        c2_fence();
+    stage3_done = 1;                            /* the tank's output may be read: the first core goes on to its master while the DX voices render */
     fm_job((const rv_job_t *)p);
 }
 
@@ -6114,6 +6117,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         bass_duck = duck_env;
         stage_done = 0;
         stage2_done = 0;
+        stage3_done = 0;
         rv_c2 = c2_submit && c2_submit(chunk_job, &rv_job);
         if (rv_c2)
             en_c2_jobs++;
@@ -6222,9 +6226,17 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (rv_c2 && rv_job.bass) {                 /* the drone and the acid are the other core's: wait for them (the reverb goes on behind) */
         while (!stage2_done)
             if (c2_alive && !c2_alive()) {
+                if (c2_join())                  /* it finished just as the time ran out: not lost */
+                    continue;
+                rv_c2 = 0;                      /* (the join retired it: before the drone and the acid it was writing are read) */
+                en_c2_lost++;
                 for (j = 0; j < n; j++)
-                    bass_o[j] = acid_o[j] = 0.0f;
-                break;                          /* (the pad's wait retired it: or the join below does) */
+                    bass_o[j] = acid_o[j] = rv_wl[j] = rv_wr[j] = 0.0f;
+                plate_init();
+                fm_reset();
+                for (j = 0; j < FM_R; j++)
+                    fm_fifo[j] = 0.0f;
+                break;
             }
         if (c2_fence)
             c2_fence();
@@ -6252,13 +6264,25 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     PT(6);                                      /* the echoes, the reverb's input */
     bal_a = pt0_;
-    if (rv_c2 && !c2_join()) {                  /* the other core was lost: this chunk has no reverb, and the tank starts over */
-        en_c2_lost++;
-        for (j = 0; j < n; j++)
-            rv_wl[j] = rv_wr[j] = 0.0f;
-        plate_init();
+    if (rv_c2) {                                /* the tank's output is the other core's: wait for that only (its DX voices go on behind, joined after the master) */
+        while (!stage3_done)
+            if (c2_alive && !c2_alive()) {
+                if (c2_join())                  /* it finished just as the time ran out: not lost */
+                    continue;
+                rv_c2 = 0;                      /* (the join retired it: this chunk has no reverb, and the tank starts over) */
+                en_c2_lost++;
+                for (j = 0; j < n; j++)
+                    rv_wl[j] = rv_wr[j] = 0.0f;
+                plate_init();
+                fm_reset();
+                for (j = 0; j < FM_R; j++)
+                    fm_fifo[j] = 0.0f;
+                break;
+            }
+        if (c2_fence)
+            c2_fence();
     }
-    PT(7);                                      /* the wait for the reverb and the DX voices */
+    PT(7);                                      /* the wait for the reverb */
     bal_w += pt0_ - bal_a;
     for (j = 0; j < n; j++) {                   /* the tank's output in, the performance effects */
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
@@ -6272,6 +6296,23 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
     }
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
+    if (rv_c2) {                                /* the other core's DX voices (they run behind the master): done before anything touches their state */
+        bal_a = pt0_;
+        if (!c2_join()) {                       /* lost: its voices were its own */
+            en_c2_lost++;
+            fm_reset();
+            for (j = 0; j < FM_R; j++)
+                fm_fifo[j] = 0.0f;
+            plate_init();
+        }
+        if (en_prof_clock) {
+            const uint32_t t1_ = en_prof_clock();
+            en_prof[7] += t1_ - pt0_;
+            cs_[7] += t1_ - pt0_;
+            pt0_ = t1_;
+        }
+        bal_w += pt0_ - bal_a;
+    }
     en_prof[9]++;
     if (en_prof_clock && pt0_ - bal_t0 > en_peak_total) {   /* the slowest chunk: which stage, which step, how long it was, what was moved */
         uint32_t k;
