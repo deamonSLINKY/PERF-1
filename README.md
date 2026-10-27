@@ -28,7 +28,7 @@ PERF-1 is a custom firmware for the M-VAVE FM-1: a generative groovebox you perf
 - **A mixer and a real master bus.** A Mixer page with a live meter and fader for every layer and the output, each layer's pan and echo/reverb send; behind it a stereo-linked compressor (ratio, threshold, make-up) and a look-ahead brick-wall limiter with its own ceiling, each genre bringing its own settings and the screen drawing the compressor's curve and the limiter's reduction as they work.
 - **Jam along.** The Jam page makes the 27 keys an instrument: pluck, pad, acid or bass, every key a note of the scale (so no wrong notes), triads, or a harp up the scale, over the music as it plays; stop, and the pluck can answer your phrase back an octave up.
 - **The bass can be a line, the pluck can remember.** The bass plays held, on the genre's rhythm, on the kick, in eighths, off the beat, walking or in a riff, and the pluck can keep its last few notes and bring them round again (deja vu), morphing them a note at a time.
-- **Real FM voices, and yours.** A built-in six-operator FM engine plays 22 DX7-style voices as the pluck, and you can load up to 16 of your own DX7 voices from a `.syx` file over USB and play them from the pluck page. A browser **editor** shows every parameter and edits DX7 voices with a live preview on the unit.
+- **Real FM voices, and yours.** A built-in six-operator FM engine plays 30 DX7-style voices as the pluck, and you can load up to 16 of your own DX7 voices from a `.syx` file over USB and play them from the pluck page. A browser **editor** shows every parameter and edits DX7 voices with a live preview on the unit.
 - **You keep what you make.** Any piece, in any genre, can be stored (one button); the unit remembers your theme, tuning, effect settings and DX7 voices across power-off, and the installer page can back all of it up to a file and restore it (so trying another firmware costs you nothing).
 - **A screen that tells you what is going on.** The middle of the home screen is the **sigil**: a circle that turns so the chord's root is always at the top, draws the chord as a shape (a triad is a triangle, a seventh a four-sided figure), fills round with the four-bar phrase, shows the sixteen steps of the bar and flares a rune for each plucked note. Its eye is half open in a groove, shut in a breakdown, wide and shaking in a build, and flashes on the drop. The header counts down to the drop or the next break.
 - **Five tracks at once, with a safety net.** Pad, bass, acid, pluck and drums all play together (a generative firmware often runs four), which asks a lot of a chip with a 5.8 ms deadline. So the engine is built around not breaking: a second core takes the reverb, and under load more of the work; each piece is checked for level and load; a master bus with a compressor and a look-ahead limiter keeps the sum from clipping; and if a piece still gets too heavy, the engine sheds the least important work before it would drop a sample.
@@ -45,7 +45,7 @@ PERF-1 is a custom firmware for the M-VAVE FM-1: a generative groovebox you perf
 
 1. Switch on: the boot cards play and a piece starts by itself. Any key skips the cards.
 2. Turn **SELECT** to walk the pages; the four knobs under the screen change what each page shows. Turn **PRESETS** for another piece; hold **GLO** and turn **PRESETS** for another genre.
-3. Tap **SAVE** for a breakdown on the next bar, tap it again for a four-bar build and the drop.
+3. Tap **SAVE** for a breakdown on the next bar, tap it again for a build and the drop.
 4. Press **FX**: tap a key to latch an effect, hold it to play it. Hold **GLO** for the mute and solo map and the scenes.
 5. Hold **SEQ** for the step sequencer; the white keys are the sixteen steps.
 6. **GLO**, then **SAVE** stores the piece you are in.
@@ -57,6 +57,29 @@ The manual ([docs/MANUAL.md](docs/MANUAL.md), or the page on the site with scree
 The screen is drawn in one look (warm black, one colour per voice: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink) in six palettes, chosen on the Global page.
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
+
+## What's new in 0.14.0
+
+The first update since the public release (0.13.0). The full list, with the development builds it came from, is in [docs/CHANGELOG.md](docs/CHANGELOG.md).
+
+**New pages and ways to play**
+- **Steps page:** a ratchet (x2 to x6, flam, swells), a push and a level (ghost, soft, accent) for every step of every drum lane, kept with the piece.
+- **Bass line page:** the bass as notes (root, kick, eighths, off-beat, walk, riff) with length, move and glide; **Deja vu page:** the pluck remembers its last 4 to 32 notes and brings them round; **Feel page:** each genre's ghost notes, accents, comping rhythm and humanize; **Phrase page:** chains of patterns by bar, eight slice orders, half and double time, and a condition for each drum lane.
+- **Acid steps page:** the acid line as sixteen steps you can edit, frozen so Mutate leaves it.
+- **Flex Beat grows to 27 patterns, one on every key:** Jump bk, Halves, Swap, Mirror, Lag, Slowmo, Skip 3, Stut up, Stut dn, Tresillo, Offbeat, Cut 4, Rev 8 and Half gap join the original thirteen.
+- **Backup and restore** from the installer page: everything the FM-1 stores goes to a `.p1bak` file and comes back, so switching firmware costs nothing.
+- **Safer buttons:** factory reset is now SEL + SAVE (SAVE alone only stores), every layer's hold takes 0.4 s, a page button closes the FX menu, and HOME + SELECT sets the tempo from inside it.
+
+**Music that behaves more like the genre**
+- **Swing and looseness for every voice:** the acid, the bass line and the pad's stabs follow Swing with the drums and pluck, and Humanize loosens each of them.
+- **Chord habits per genre:** ii-V-I for lofi, amapiano and disco, i-VII-VI-VII for house, i-VI-III-VII for synthwave, the i-IV vamp for funk and reggae, a pull home and a cadence at the end of each phrase. Before, every genre was close to the same random walk.
+- **Sections shaped by genre:** the bar before a breakdown thins out; house, techno and dubstep keep the kick in a breakdown and drum and bass the hats; builds are two, four or eight bars by genre with the snare climbing, the kick coming back in the four-on-the-floor genres, a ringing crash and the home chord on the drop; six drum fills instead of one.
+- **Six more genres** (disco, funk, reggae, synthwave, amapiano and trip-hop, sixteen in all), **thirty built-in DX voices** (eight new: four guitars, slap bass, synth brass, sax and muted trumpet), and DX voice levels set by loudness, so a sustaining pad no longer sits far above a plain pluck.
+
+**Under the hood**
+- **Seamless saves:** a store while playing no longer fades the music (the flash erase is done in slices with the chip's erase-suspend).
+- **Fewer dropouts in heavy pieces:** the second core now renders the DX voices while the first does its master effects, and when a piece starts to crack the engine moves the bass and acid to the second core first, then, in three steps, gives up the least important work (DX voices, chorus, the Echoplex slap and the vinyl noise).
+- **Fixes:** Flex Beat slices keep their shape at slow tempos, a pushed hit on a swung step is no longer lost, a swung pluck note no longer sounds after Stop, SAVE during a restore no longer cancels it, and a limiter that cannot be fooled by a bad sample.
 
 ## Install
 

@@ -8,7 +8,7 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## 0.14.0 (in development; the builds 0.13.1 .. 0.13.5 are its steps)
+## 0.14.0 (in development; the builds 0.13.1 .. 0.13.13 are its steps)
 
 - **Steps page** (0.13.1): a ratchet (x2, x3, x4, x6, flam, swells), a push (late, in twelfths of a step) and a level (ghost, soft, accent) for each step of each lane, stored with the piece in the record's spare bytes (older pieces load with none); some genres ship with tricks.
 - **Bass line page** (0.13.2): the drone as notes (Root, Kick, Eighths, Off-beat, Walk, Riff) with Length, Move and Glide, a genre's own rhythm and riff; lofi, house, dubstep, electro, trap and the newer genres start as a bass line.
