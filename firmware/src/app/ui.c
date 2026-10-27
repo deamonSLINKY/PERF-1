@@ -1530,6 +1530,10 @@ static void genre_step(int d)
 static void store_now(const char *done)
 {
     int i;
+    if (ui.store_wait && ui.store_kind == 4) {   /* a restore is waiting for its fade: a store here would take its place and wedge it */
+        say("RESTORING", "ONE MOMENT");
+        return;
+    }
     for (i = 0; done[i] && i < (int)sizeof ui.store_msg - 1; i++)
         ui.store_msg[i] = done[i];
     ui.store_msg[i] = 0;

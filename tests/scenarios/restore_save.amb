@@ -1,0 +1,15 @@
+# SAVE while a restore waits for the music to fade (a unit whose flash part refused erase-suspend: the host's default path): the restore still lands, the
+# store does not take its place and leave backup/restore refused until a restart (audit B-01)
+seed 0
+wait 3000
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+wait 1500
+restore 0
+expect rsstate 1
+tap SAVE
+wait 800
+expect rsstate 2
+expect storelock 1

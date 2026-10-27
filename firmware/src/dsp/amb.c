@@ -2668,6 +2668,14 @@ static void tick(void)
             perc_hit = 1;
         if (hit) {
             drum[l].rn = 0;                     /* a ratchet still coming ends where a new hit lands */
+            if (drum[l].wait > 0) {             /* a pushed hit still waiting sounds now, not lost (one slot a lane) */
+                drum[l].wait = 0;
+                drum_fire(l, drum[l].pend);
+            }
+            if (drum[l].wait2 > 0) {
+                drum[l].wait2 = 0;
+                drum_fire(l, drum[l].pend2);
+            }
             vel *= l == L_HAT || l == L_OHAT ? pa : 1.0f;
             if (dbl == 3) {                     /* a flam: the grace note now, the hit 20 ms on */
                 drum_fire(l, vel * 0.4f);
@@ -3431,6 +3439,7 @@ static void quiet(void)
     acid.play = 0;
     for (i = 0; i < EN_NDRUM; i++)
         drum[i].on = 0, drum[i].wait = 0, drum[i].rn = 0;
+    cm_wait = 0;
     for (i = 0; i < EN_NPAD; i++)
         pad[i].amp = 0.0f;
     bass.amp = 0.0f;
@@ -3542,6 +3551,7 @@ static void play_stop(void)
     int d;
     for (d = 0; d < EN_NDRUM; d++)
         drum[d].wait = drum[d].wait2 = 0, drum[d].rn = 0;        /* a swung hit still waiting stays unplayed */
+    cm_wait = 0;                                /* and the swung pluck note */
     en_playing = 0;
     pad_gate = 0.0f;
     acid.amp_t = 0.0f;
@@ -3786,7 +3796,7 @@ static void flx_load(void)                      /* the step's slice */
     flx_rev = (b >> 4) & 1u;
     flx_live = e == 15;
     if (!flx_live) {
-        flx_off = (float)(flx_n - 1 - (e % flx_n)) * flx_slice;
+        flx_off = (float)(flx_n - 1 - (e * flx_n >> 3)) * flx_slice;   /* below 126 BPM fewer slices: the pattern's shape kept, coarser */
         flx_sub = fm_maxf(flx_slice / (float)(1 << div), 32.0f);
     }
     flx_p = 0.0f;

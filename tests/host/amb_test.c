@@ -826,6 +826,37 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* full swing and the latest push on every hat step (together past a step: a pushed hit used to be overwritten by the next one's wait):
+     * no hit may be lost against the same pattern without the push */
+    {
+        int v, s, blk;
+        uint32_t cnt[2];
+        for (v = 0; v < 2; v++) {
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            en_set(P_SWING, 100);
+            en_set(P_HUMAN, 0);
+            memset((void *)en_mod, 0, sizeof en_mod);
+            for (s = 0; s < EN_NPAT; s++)
+                en_pats[s][3] = 0xFFFFu;         /* a hat on every sixteenth, so a pushed hit meets the next one's wait */
+            for (s = 0; s < 16; s++)
+                en_mod[3][s] = (uint8_t)(v ? 7 << 3 : 0);
+            en_play(1);
+            run(4.0f);
+            hat_n = 0;
+            for (blk = 0; blk < 2756; blk++) {
+                blk_now = (uint32_t)blk;
+                en_render(buf, 64, 2048);
+            }
+            cnt[v] = hat_n;
+        }
+        CHECK(cnt[0] >= 6u && cnt[1] + 1u >= cnt[0], "swing 100 + push 7: %u hat hits against %u without (pushed hits lost)", cnt[1], cnt[0]);
+        memset((void *)en_mod, 0, sizeof en_mod);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the pluck's deja vu: a random pluck (Style Random, every note chosen from nine tones) at Deja vu 0 repeats its note 8 slots on only by chance, locked
      * (100) it comes round every time; a loop of 4 repeats at a distance of 4. Counted over 12 s of eighths at 120 bpm, the chord held (Drift at the top). */
     {
