@@ -113,7 +113,7 @@ hardware upstream; treat it as a last resort, not a guarantee. Otherwise recover
 5. Want to play the bass yourself? Press **LFO** for its page, then hold **SEL** and press **ENV**: it leaves the
    algorithm and the keys play it. **SEL** + **ENV** again gives it back. The **JAM** page (SELECT dial, after
    Global) is a keyboard that never edits the scale.
-6. Tap **SAVE** for a breakdown on the next bar; tap it again for a four-bar build and the drop.
+6. Tap **SAVE** for a breakdown on the next bar; tap it again for a build (four bars; two in trap, lofi and trip-hop; eight in house) and the drop.
 7. Press **FX**: tap a key to latch its effect, hold it to play it.
 8. **HOME** is the Tempo page; **HOME** again (not too quickly) is the Perform screen; **HOME** twice quickly
    is the visualizers; hold **HOME** for the settings.
@@ -805,8 +805,8 @@ share this page. The settings, the gate's pattern and targets are kept across po
 
 ![A build](img/perf-screen-perform.png)
 
-- **Breakdown: tap SAVE.** The drums drop out on the next bar, the bass closes and the pad rises, for as long as you leave it.
-- **Build: tap SAVE again.** A four-bar snare roll with the bass opening, then the drop.
+- **Breakdown: tap SAVE.** The bar before it the percussion, the open hat and half the hats drop out, so it comes as a release; then the drums stop on the next bar (house, techno and dubstep keep the kick; drum and bass and jungle keep the hats), the mix darkens, the bass closes and the pad rises, for as long as you leave it.
+- **Build: tap SAVE again.** A snare roll climbing in pitch with the bass opening (four bars; two in trap, lofi and trip-hop; eight in house), the last bar with the open hat on every eighth and, in the four-on-the-floor genres, the kick back; then the drop.
 - **Drop: hold SAVE.** Straight back in on the next bar. SAVE lights during a breakdown or build and blinks while one waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on; press again to let it move.
 - **Next chord: EDIT.** Moves on at the next bar.
@@ -859,8 +859,8 @@ itself, on the bar clock:
 1. a **groove** (8, 16, 32 or 64 bars; 16 by default);
 2. a **drum fill** as the groove's last bar (if Fill is on);
 3. a **breakdown**: short (4 bars), half the groove (4 bars at least, the default), or full (as long as the groove);
-4. a four-bar **build**, the riser rising, a breath of silence on the last two sixteenths, then the **drop**: the
-   breakdown's swell and the build's dip are gone at once, with the kick, a clap and the open hat on the one;
+4. a **build** (the genre's length), the riser rising, a breath of silence on the last two sixteenths, then the **drop**: the
+   breakdown's swell and the build's dip are gone at once, with the kick, a clap and the open hat (a crash that rings) on the one, and mostly the tonic chord;
 5. the groove again.
 
 The settings (Groove, Break, Fill and Scenes) are on the **Perform** settings page. **Sync** is the fifth Groove

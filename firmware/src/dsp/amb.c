@@ -1684,6 +1684,7 @@ static const struct { uint8_t tonic, cad_every, cad_to, back; ch_edge_t e[8]; } 
 static volatile uint8_t chord_genre;
 void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
 static uint8_t deg_prev, cad_n;                  /* the chord before this one; the chords since the phrase began */
+static uint8_t drop_tonic;                       /* the drop takes the next chord home */
 static void chord_change(void)                  /* to another degree: the genre's own moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
@@ -1737,6 +1738,10 @@ static void chord_change(void)                  /* to another degree: the genre'
             dh[dh_n++] = (uint8_t)i;
             dh_i = 0;
         }
+    }
+    if (drop_tonic) {                           /* the drop: home */
+        drop_tonic = 0;
+        i = 0;
     }
     deg_prev = (uint8_t)deg;
     cad_n = (uint8_t)(i == 0 && rich && cad_n >= CHT[cg].cad_every ? 0 : cad_n + 1);
@@ -1955,6 +1960,22 @@ static uint32_t bars;                           /* bars played (the drone's enve
 static uint8_t fill_hold;
 static uint8_t riser_cut;                         /* the drop: the build's riser is cut at once (its high-pass was thinning the first kick) */
 static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the next bar; this bar's; the DJ follows the chords; the drop's impact is due */
+/* SECTIONS by genre (audit M-13): what a breakdown keeps (the kick: house, techno, dub; the hats: drum and bass), how far the pad rises in it (percent),
+ * how many bars a build takes (a trap's two, a house's eight), and whether the kick comes back for the build's last bar (the four on the floor) */
+static const struct { uint8_t kick, hat, build, pad, kret; } SECT[EN_NGENRE] = {
+    {1, 0, 4, 90, 1}, {0, 0, 2, 60, 0}, {1, 0, 8, 90, 1}, {1, 0, 4, 40, 0}, {0, 1, 4, 90, 0}, {0, 1, 4, 90, 0}, {0, 0, 4, 90, 0}, {0, 0, 4, 80, 0},
+    {0, 0, 4, 90, 1}, {0, 0, 2, 40, 0}, {0, 0, 4, 90, 1}, {0, 0, 4, 80, 0}, {0, 0, 4, 60, 0}, {0, 0, 4, 90, 1}, {0, 0, 4, 80, 0}, {0, 0, 2, 60, 0}};
+static int sec_n = 4;                           /* the build's length in bars (from SECT when it starts) */
+static float snr_rise;                          /* the snare's pitch, semitones: it climbs through a build */
+static uint8_t crash_next, fill_kind;           /* the next open hat is the drop's crash (long); this bar's fill */
+/* the fills (audit M-13): the snare's velocity on each of the bar's sixteen steps (0: none), nine is full; the second half is what a drift fill plays,
+ * the whole bar what a DJ fill or the FX does. Kind 0 is the old ramp (the snare and the hats on every step: in tick), 1..5 are these */
+static const uint8_t FILLS[5][16] = {
+    {0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 5, 0, 6, 7, 8, 9},   /* a rush at the end */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 4, 6, 9},   /* a drag: the last beat only */
+    {0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 5, 6, 7, 8, 0, 0},   /* a roll and a breath before the bar */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 6, 0, 7, 0, 9},   /* the off-beats */
+    {0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 5, 6, 8, 9}};  /* a hit, a gap, then the last beat in sixteenths */
 volatile uint8_t en_sec, en_sec_req;
 volatile uint8_t en_sec_bars;                   /* a build's bars left (the header's countdown) */
 volatile uint8_t en_cm_note, en_cm_count;       /* the pluck's last note and a count of its notes (the sigil's runes) */
@@ -2088,15 +2109,20 @@ static void section_cmd(int c)                  /* the player's: on the bar */
     } else if (c == EN_CMD_BUILD) {
         if (sec == SEC_BREAK) {
             sec = SEC_BUILD;
-            sec_bars = 4;
+            sec_n = sec_bars = SECT[chord_genre].build;
         }
     } else if (sec != SEC_GROOVE) {             /* the drop: at once the full groove (the breakdown's swell and the build's dip gone, not eased out), the kick, clap and open hat on the one */
         sec = SEC_GROOVE;
         brk = 0.0f;
         drop_imp = 1;
         riser_cut = 1;
-        if (frand() < 0.4f + 0.5f * evolve)
+        drop_tonic = 0;
+        if (deg != 0 && nsteps > 1 && frand() < 0.7f) {   /* the drop lands at home, mostly */
+            drop_tonic = 1;
             change_pending = 1;
+        } else if (frand() < 0.4f + 0.5f * evolve) {
+            change_pending = 1;
+        }
     }
 }
 
@@ -2105,7 +2131,9 @@ static int kick_note(void) { return 28 + (par[P_ROOT] + 8) % 12; }   /* E1 .. Eb
 static void drum_fire(int d, float vel)
 {
     drum_t *v = &drum[d];
-    const float dec = lane_dec[d], tf = fm_exp2f(lane_tune[d] * (1.0f / 12.0f));
+    const float dec = d == L_OHAT && crash_next ? 1.0f : lane_dec[d], tf = fm_exp2f((lane_tune[d] + (d == L_SNARE ? snr_rise : 0.0f)) * (1.0f / 12.0f));
+    if (d == L_OHAT)
+        crash_next = 0;
     v->on = 1;
     v->amp = vel;
     v->att = 0.0f;
@@ -2646,6 +2674,7 @@ static void tick(void)
         int tb = TRIG_BARS[(unsigned)par[P_DE_TRIG] < 6u ? par[P_DE_TRIG] : 0];
         fill_bar = fill_q;                      /* the fill the DJ asked for a bar ahead */
         fill_q = 0;
+        fill_kind = (uint8_t)((bars + (uint32_t)chord_genre * 2u) % 6u);   /* this bar's fill, if there is one: one of the six */
         if (dj_sync && sec == SEC_GROOVE && en_playing && !en_frozen) {   /* the DJ follows the chords: the bar before a change is a fill, the change's bar a breakdown */
             if (change_pending)
                 section_cmd(EN_CMD_BREAK);
@@ -2692,6 +2721,7 @@ static void tick(void)
     }
     drum_publish();
     lk_hat = 0;
+    snr_rise = sec == SEC_BUILD ? 7.0f * (float)((sec_n - sec_bars) * 16 + st) / (float)(sec_n * 16) : 0.0f;   /* the snare climbs a fifth through a build */
     for (l = 0; l < EN_NDRUM; l++) {
         const int llen = par[P_LLEN + l] < 16 && par[P_LLEN + l] >= 1 ? par[P_LLEN + l] : 16;
         const int ls = llen < 16 ? (int)(sixteenth % (uint32_t)llen) : st;   /* a shorter lane runs against the bar: polymeter */
@@ -2701,19 +2731,32 @@ static void tick(void)
         float vel = 0.9f;
         int32_t push = 0;
         int rat = 0;
-        if (sec == SEC_BREAK) {
-            hit = 0;
+        if (sec == SEC_BREAK) {                 /* the breakdown: the drums stop, but for what the genre keeps (the kick, the hats) */
+            hit = hit && ((l == L_KICK && SECT[chord_genre].kick) || (l == L_HAT && SECT[chord_genre].hat));
         } else if (sec == SEC_BUILD) {
-            if (l == L_KICK || l == L_CLAP || l == L_PERC)
+            if (l == L_KICK || l == L_CLAP || l == L_PERC) {
                 hit = 0;
-            else if (l == L_SNARE) {            /* the roll: quarters, eighths, sixteenths, and a breath before the drop */
+                if (l == L_KICK && sec_bars == 1 && SECT[chord_genre].kret && (st == 0 || st == 8))   /* the kick comes back for the last bar: before the drop */
+                    hit = 1;
+            } else if (l == L_SNARE) {          /* the roll: quarters, eighths, sixteenths, and a breath before the drop */
                 hit = sec_bars > 2 ? (st & 3) == 0 : sec_bars == 2 ? (st & 1) == 0 : st < 14;
-                vel = 0.3f + 0.7f * ((float)(4 - sec_bars) * 16.0f + (float)st) / 64.0f;
+                vel = 0.3f + 0.7f * ((float)((sec_n - sec_bars) * 16 + st)) / (float)(sec_n * 16);
+            } else if (l == L_OHAT && sec_bars == 1) {   /* the last bar: the open hat on every eighth */
+                hit = (st & 1) == 0;
+                vel = 0.55f;
             }
+        } else if (sec == SEC_GROOVE && sec_req == EN_CMD_BREAK + 1 && (l == L_PERC || l == L_OHAT || (l == L_HAT && (st & 1)))) {
+            hit = 0;                            /* the break is asked for: the rest of the bar thins out, so it comes as a release */
         }
         if ((fill_hold || fill_bar || (dd_fill && st >= 8 && sec == SEC_GROOVE)) && (l == L_SNARE || l == L_HAT)) {   /* FILL; the DJ's; drift's */
-            hit = 1;
-            vel = l == L_SNARE ? 0.35f + 0.04f * (float)st : 0.5f;
+            if (!fill_kind) {                   /* the ramp: every step */
+                hit = 1;
+                vel = l == L_SNARE ? 0.35f + 0.04f * (float)st : 0.5f;
+            } else if (l == L_SNARE && st >= 8) {   /* one of the others, in the bar's second half; the hats play on */
+                const uint8_t fv = FILLS[fill_kind - 1][st];
+                hit = fv != 0;
+                vel = 0.1f * (float)fv + 0.1f;
+            }
         }
         if (chop > 0.0f && sec == SEC_GROOVE && !fill_hold) {   /* breakcore: ghosts, and some hits rolled */
             if (!hit && l == L_SNARE && frand() < 0.16f * chop) {
@@ -2737,6 +2780,8 @@ static void tick(void)
         if (drop_imp && st == 0 && (l == L_KICK || l == L_CLAP || l == L_OHAT)) {   /* the drop lands */
             hit = 1;
             vel = l == L_KICK ? 1.0f : 0.95f;
+            if (l == L_OHAT)
+                crash_next = 1;                 /* the open hat is a crash: it rings */
         }
         if (l == L_KICK) {
             bl_kick = (uint8_t)(hit != 0);
@@ -4474,7 +4519,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         cr_hold = 1 + (int)(7.0f * ca);
         cr_lv = fm_exp2f(11.0f - 7.0f * ca);
         cr_wet = fm_minf(ca * 3.0f, 1.0f);
-        lp_amt_e = fm_maxf(lp_amt, lpk_s);
+        lp_amt_e = fm_maxf(fm_maxf(lp_amt, lpk_s), 0.35f * fm_maxf(brk, 0.0f));   /* (a breakdown darkens the whole mix) */
         hp_amt_e = fm_maxf(fm_maxf(hp_amt, hpk_s), rs_filt * riser_amt);   /* the build: a high-pass rising */
     }
     echo_fbx = echo_fb + (0.86f - echo_fb) * throw_amt;
@@ -5217,7 +5262,7 @@ static void render_pad(uint32_t n)
     uint32_t j0;
     for (j0 = 0; j0 < n; j0++)
         padl[j0] = padr[j0] = 0.0f;
-    const float g = pad_vol * 0.5f * pad_lvl * (1.0f + 0.9f * fm_maxf(brk, 0.0f)) * PAD_SOUND[pad_snd()].g *   /* the pad rises in a breakdown */
+    const float g = pad_vol * 0.5f * pad_lvl * (1.0f + 0.01f * (float)SECT[chord_genre].pad * fm_maxf(brk, 0.0f)) * PAD_SOUND[pad_snd()].g *   /* the pad rises in a breakdown */
                     (1.0f + 0.35f * (float)par[P_LK_SNARE] * 0.01f * pad_lk);                    /* and swells with the links */
     uint32_t nb = (n + 31u) >> 5;
     pad_gain += (pad_gate - pad_gain) * fm_minf((float)n / ((pad_gate > 0.0f ? 2.0f : 5.0f) * EN_SR), 1.0f);

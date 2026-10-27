@@ -1486,6 +1486,42 @@ int main(void)
         en_play(1);
     }
 
+    /* sections by genre (audit M-13): a house breakdown keeps the kick, a drum and bass one the hats, a lofi one stops everything; a house build
+     * takes eight bars, a trap's two */
+    {
+        static const int G[4] = {2, 5, 1, 9};
+        uint32_t kk[4], hh[4], bt[4];
+        int k;
+        for (k = 0; k < 4; k++) {
+            int blk;
+            en_init();
+            en_genre(G[k]);
+            en_play(1);
+            run(3.0f);
+            en_section(EN_CMD_BREAK);
+            for (blk = 0; blk < 3000 && en_sec != EN_SEC_BREAK; blk++)
+                en_render(buf, 256, 2048);
+            run(1.0f);
+            kick_n = 0;
+            hat_n = 0;
+            run(5.0f);
+            kk[k] = kick_n;
+            hh[k] = hat_n;
+            en_section(EN_CMD_BUILD);
+            for (blk = 0; blk < 3000 && en_sec != EN_SEC_BUILD; blk++)
+                en_render(buf, 256, 2048);
+            bt[k] = 0;
+            for (blk = 0; blk < 12000 && en_sec == EN_SEC_BUILD; blk++, bt[k]++)
+                en_render(buf, 256, 2048);
+        }
+        CHECK(kk[0] > 0u && hh[0] == 0u, "a house breakdown keeps the kick only (kicks %u, hats %u)", kk[0], hh[0]);
+        CHECK(kk[1] == 0u && hh[1] > 0u, "a drum and bass breakdown keeps the hats only (kicks %u, hats %u)", kk[1], hh[1]);
+        CHECK(kk[2] == 0u && hh[2] == 0u, "a lofi breakdown stops the drums (kicks %u, hats %u)", kk[2], hh[2]);
+        CHECK(bt[3] > 0u && bt[0] > 3u * bt[3] && bt[0] < 5u * bt[3], "a house build is four times a trap's (%u and %u blocks)", bt[0], bt[3]);
+        en_init();
+        en_play(1);
+    }
+
     /* stop: the tails die away */
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, en_param_info(i)->def);
