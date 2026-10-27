@@ -265,21 +265,23 @@ static const uint8_t KEY_FX[4][NKEYS] = {
      FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the mutes where they are on the first page) */
      FX_MUTE_PERC, FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM,                         /* C5 .. E5: the drum rolls */
      FX_DBLKICK, FX_NONE, FX_NONE},
-    {FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX,                    /* Flex Beat: its fifteen patterns (FLEX_PAT), F3 .. */
+    {FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX,                    /* Flex Beat: a pattern on each key (FLEX_PAT), F3 .. G5 */
      FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX,
-     FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE},
+     FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX},
     {FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE,   /* the sampler: the keys are notes, not effects */
      FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE, FX_NONE}};
 /* the Flex bank: every key is the one engine bit (FX_FLEX); the pattern each plays is a number (en_flex_select), so a bank can hold any number of them */
-static const uint8_t FLEX_PAT[NKEYS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static const char *const FLEX_LABEL[EN_NFLEX] = {"STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD",
-                                                 "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT"};
+static const uint8_t FLEX_PAT[NKEYS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26};
+static const char *const FLEX_LABEL[EN_NFLEX] = {"BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD",
+                                                 "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT",
+                                                 "JUMP BK", "HALVES", "SWAP", "MIRROR", "LAG", "SLOWMO", "SKIP 3", "STUT UP", "STUT DN", "TRESILLO",
+                                                 "OFFBEAT", "CUT 4", "REV 8", "HALF GAP"};
 static const char *const FX_LABEL[EN_NFX] = {
     [FX_RPT2] = "RPT 1/2", "RPT 1/4", "RPT 1/6", "RPT 1/8", "RPT1/16", "RPT1/32", "REVERSE", "TAPESTP",
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
-    "STUT 16", "STUT 32", "BT REPT", "HF REPT", "BT REV", "SKIP", "TRANCE", "GATE 8", "DOUBLE", "SHUFFLE", "BCK-FWD", "ROLL OUT", "BUILD", "SCRATCH", "DROPOUT", "TALK", "WAH", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
+    "FLEX", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "TALK", "WAH", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
     [FX_NONE] = ""};
 /* every kind of effect its own colour (the same in every theme, so a key is found by its colour as well as its name):
  * repeats cyan, filters green, gates and the pump yellow, the drums' mutes red, the colour effects pink, the transport

@@ -27,3 +27,7 @@ wait 3000
 expect flexdone 2
 expect flexstate 0
 expect flexlast 5
+# the last key plays the last pattern (27 keys, 27 patterns)
+tapkey 26
+wait 100
+expect flexlast 26

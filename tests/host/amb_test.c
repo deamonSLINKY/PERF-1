@@ -1230,7 +1230,7 @@ int main(void)
      * exactly once; the level stays sane; and a loop keeps going while it is held */
     {
         int pat, q, blk, j, broken = 0, bad = 0, badloop = 0;
-        for (pat = 0; pat < 15; pat++)
+        for (pat = 0; pat < EN_NFLEX; pat++)
             for (q = 0; q < 3; q++) {
                 uint32_t done0;
                 en_init();
@@ -1254,7 +1254,7 @@ int main(void)
                 en_fx(0);
                 run(0.5f);
             }
-        for (pat = 0; pat < 15; pat += 7) {                   /* a loop: not over while it is held, over when let go */
+        for (pat = 0; pat < EN_NFLEX; pat += 7) {                   /* a loop: not over while it is held, over when let go */
             uint32_t done0;
             en_init();
             en_play(1);
@@ -1272,7 +1272,7 @@ int main(void)
             run(0.5f);
         }
         CHECK(!broken, "flex beat: %d samples broken (NaN or over full scale)", broken);
-        CHECK(!bad, "flex beat: %d of 45 one shots did not play out exactly once", bad);
+        CHECK(!bad, "flex beat: %d of %d one shots did not play out exactly once", bad, EN_NFLEX * 3);
         CHECK(!badloop, "flex beat: %d loops stopped by themselves", badloop);
         en_fxs(EN_FXS_FX_QUANT, EN_FXS_DEF[EN_FXS_FX_QUANT]);
         en_fxs(EN_FXS_FX_MODE, EN_FXS_DEF[EN_FXS_FX_MODE]);

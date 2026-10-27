@@ -734,10 +734,16 @@ slower tempos plays as a 1/4.
 
 ![The FLEX BEAT bank](img/perf-screen-flex.png)
 
-Fifteen one-bar patterns, F3 to G4, that rework the last stretch of the music on the grid: **Stut 16**, **Stut 32**
-(the last sixteenth stuttered), **Bt Rept** (the last beat looped), **Hf Rept** (the last half bar), **Bt Rev** (the beat
+Twenty-seven one-bar patterns, one on every key, F3 to G5, that rework the last stretch of the music on the grid:
+**Bt Rept** (the last beat looped), **Hf Rept** (the last half bar), **Bt Rev** (the beat
 backwards), **Skip**, **Trance** (a 3-3-2 gate), **Gate 8**, **Double**, **Shuffle**, **Bck-Fwd**, **Roll out**, **Build** (live,
-then a stutter that speeds up), **Scratch**, **Dropout**. Tap latches, hold plays. The settings page (below) has
+then a stutter that speeds up), **Scratch**, **Dropout**; **Jump bk** (the last beat again, then on), **Halves** (the
+two halves of the last half bar swapped), **Swap** (sixteenths swapped in pairs), **Mirror** (forwards, then
+backwards), **Lag** (late, with a hole), **Slowmo** (every sixteenth twice: half time without the pitch drop),
+**Skip 3** (three against four), **Stut up** and **Stut dn** (a stutter that speeds up, or slows down),
+**Tresillo** (3-3-2 on the last sixteenth), **Offbeat** (the off-beats only), **Cut 4** (a hole every fourth step),
+**Rev 8** (the half bar backwards, twice), **Half gap** (the half bar once, then silence). The stutters that were
+here (Stut 16, Stut 32) are the beat page's repeats. Tap latches, hold plays. The settings page (below) has
 **Quant** (off, beat, bar: when it starts; bar is the default), **Mode** (one shot: the bar plays out, then a latched
 pad lets go; or loop: until the pad is let go or tapped off) and **Mix** (dry to wet). A pad held down by hand repeats
 its bar, and on release the current bar plays out, so it always ends on the bar line. The ring is frozen while it

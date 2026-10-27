@@ -152,7 +152,7 @@ extern volatile float en_comp_gr, en_lim_gr, en_out_peak;   /* the master bus no
 void en_shed(int level);                       /* the load is too high: 0 none, 1 the DX voices to four and no chorus, 2 to two, 3 also no Echoplex, no vinyl noise and the cheap output clip (the UI watches the CPU and says) */
 extern volatile uint8_t en_shed_level;
 void en_flex_select(int pat);                  /* the Flex Beat pattern the FX_FLEX bit plays (0..EN_NFLEX-1): sent before the bit is set */
-#define EN_NFLEX 15
+#define EN_NFLEX 27                            /* a pattern for each of the 27 keys */
 void en_flx_hold(int on);                      /* a Flex Beat pad is held down (not latched): a one shot goes on, bar after bar, while it is, and ends on the bar line after it is let go */
 void en_fill_next(void);                       /* a drum fill in the next bar (the auto-DJ asks one bar ahead: the fill is the last bar before the break) */
 void en_dj_sync(int on);                       /* the auto-DJ follows the chord changes: the engine fills the bar before one and breaks on it */
@@ -252,7 +252,7 @@ enum {
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
-uint8_t en_flex_step(int pat, int step);       /* Flex Beat pattern pat (0..14), step 0..15: e | rev << 4 | mute << 5 | div << 6 (e 15: live) */
+uint8_t en_flex_step(int pat, int step);       /* Flex Beat pattern pat (0..EN_NFLEX-1), step 0..15: e | rev << 4 | mute << 5 | div << 6 (e 15: live) */
 extern volatile uint8_t en_flx_state;          /* 0 idle, 1 armed, 2 playing */
 extern volatile uint32_t en_flx_done;          /* one shots played out so far */
 extern volatile uint8_t en_smp_active;       /* the DJ snips sounding */

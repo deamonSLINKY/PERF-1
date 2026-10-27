@@ -2296,9 +2296,11 @@ const char *const EN_CM_RATE[4] = {"1/4", "3/16", "1/8", "1/16"};   /* slowest t
 #include "fm6.inc"
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
-static const float FM_GAIN[EN_NCMFM] = {0.60f, 0.96f, 0.73f, 0.95f, 2.56f, 1.87f, 0.76f, 1.26f, 0.94f, 1.33f, 0.75f, 2.55f, 0.88f, 1.22f, 3.84f, 0.85f, 1.32f, 2.13f, 0.67f, 1.58f, 1.62f, 0.73f,
-                                         0.49f, 0.51f, 1.80f, 0.64f, 0.93f, 0.57f, 0.95f, 1.12f,   /* (the eight newer DX voices, from fmcal; the muted guitar's is its peak's, its rms is only a click) */
-                                         1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* tests/host/fmcal.c (the loaded voices: not levelled) */
+/* fmcal levels each voice's peak to the plain sounds'; the ear hears loudness, and a voice that sustains sits 30-40 dB above a plain pluck 0.3 s into
+ * a note (audit M-65), so the sustaining ones are taken down 8 dB (x0.40; x0.42 nylon and harp, x0.55 steel drum) and the percussive ones stay */
+static const float FM_GAIN[EN_NCMFM] = {0.24f, 0.38f, 0.29f, 0.38f, 1.02f, 1.87f, 0.30f, 0.53f, 0.38f, 0.53f, 0.30f, 2.55f, 0.35f, 0.49f, 1.54f, 0.34f, 0.55f, 2.13f, 0.27f, 0.87f, 0.65f, 0.29f,
+                                         0.49f, 0.20f, 1.80f, 0.26f, 0.93f, 0.23f, 0.38f, 0.45f,   /* (the eight newer DX voices; the muted guitar's is its peak's, its rms is only a click) */
+                                         0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};   /* (the loaded voices: not measured, a sustaining voice's -6 dB) */
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
@@ -3749,7 +3751,7 @@ const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
     "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T",
-    "Stut 16", "Stut 32", "Beat repeat", "Half Rpt", "Beat Rev", "Skip", "Trance", "Gate 8", "Double", "Shuffle", "Back-Fwd", "Roll Out", "Build", "Scratch", "Dropout", "Talk", "Wah", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
+    "Flex Beat", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "Talk", "Wah", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -3874,22 +3876,39 @@ static void scat_engage(void)
  * it is over (en_flx_done counts them, for the UI to let a latched key go); loop: it goes on while it is held or latched. The ring is
  * frozen while it plays (as the scatter), the live mix goes on under the live steps. Mix: how much of the effect against the music. */
 #define FL(e, r, m, d) ((uint8_t)((e) | (r) << 4 | (m) << 5 | (d) << 6))
-static const uint8_t FLEX[15][16] = {
-    /* 1 STUT 16 */ {FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0)},
-    /* 2 STUT 32 */ {FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1)},
-    /* 3 BEAT RPT */ {FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0)},
-    /* 4 HALF RPT */ {FL(7, 0, 0, 0), FL(6, 0, 0, 0), FL(5, 0, 0, 0), FL(4, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(7, 0, 0, 0), FL(6, 0, 0, 0), FL(5, 0, 0, 0), FL(4, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0)},
-    /* 5 BEAT REV */ {FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0)},
-    /* 6 SKIP */ {FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0)},
-    /* 7 TRANCE */ {FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0)},
-    /* 8 GATE 8 */ {FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0)},
-    /* 9 DOUBLE */ {FL(3, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0)},
-    /* 10 SHUFFLE */ {FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0)},
-    /* 11 BACK-FWD */ {FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0)},
-    /* 12 ROLL OUT */ {FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1)},
-    /* 13 BUILD */ {FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 2), FL(0, 0, 0, 2)},
-    /* 14 SCRATCH */ {FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0)},
-    /* 15 DROPOUT */ {FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0)},
+#define FLP(e) FL(e, 0, 0, 0)                   /* slice e */
+#define FLR(e) FL(e, 1, 0, 0)                   /* slice e backwards */
+#define FLM FL(0, 0, 1, 0)                      /* muted */
+#define FLV FL(15, 0, 0, 0)                     /* the live mix */
+#define FLD(d) FL(0, 0, 0, d)                   /* the last sixteenth cut in 2 (1), 4 (2), 8 (3) and repeated */
+static const uint8_t FLEX[EN_NFLEX][16] = {
+    /* 1 BEAT RPT */ {FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 2 HALF RPT */ {FL(7, 0, 0, 0), FL(6, 0, 0, 0), FL(5, 0, 0, 0), FL(4, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(7, 0, 0, 0), FL(6, 0, 0, 0), FL(5, 0, 0, 0), FL(4, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 3 BEAT REV */ {FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0)},
+    /* 4 SKIP */ {FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0), FL(3, 0, 0, 0), FL(0, 0, 1, 0), FL(1, 0, 0, 0), FL(0, 0, 1, 0)},
+    /* 5 TRANCE */ {FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0)},
+    /* 6 GATE 8 */ {FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0)},
+    /* 7 DOUBLE */ {FL(3, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(3, 0, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0)},
+    /* 8 SHUFFLE */ {FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(3, 0, 0, 0), FL(0, 0, 0, 0), FL(2, 0, 0, 0)},
+    /* 9 BACK-FWD */ {FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0), FL(3, 0, 0, 0), FL(2, 0, 0, 0), FL(1, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 1, 0, 0), FL(2, 1, 0, 0), FL(3, 1, 0, 0)},
+    /* 10 ROLL OUT */ {FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 1)},
+    /* 11 BUILD */ {FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 0), FL(0, 0, 0, 1), FL(0, 0, 0, 1), FL(0, 0, 0, 2), FL(0, 0, 0, 2)},
+    /* 12 SCRATCH */ {FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(1, 0, 0, 0), FL(1, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0), FL(0, 0, 0, 0), FL(0, 1, 0, 0)},
+    /* 13 DROPOUT */ {FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(0, 0, 1, 0), FL(0, 0, 1, 0), FL(15, 0, 0, 0), FL(15, 0, 0, 0)},
+    /* 14 JUMP BK */ {FLP(3), FLP(2), FLP(1), FLP(0), FLV, FLV, FLV, FLV, FLV, FLV, FLV, FLV, FLV, FLV, FLV, FLV},
+    /* 15 HALVES */ {FLP(3), FLP(2), FLP(1), FLP(0), FLP(7), FLP(6), FLP(5), FLP(4), FLP(3), FLP(2), FLP(1), FLP(0), FLP(7), FLP(6), FLP(5), FLP(4)},
+    /* 16 SWAP */ {FLP(6), FLP(7), FLP(4), FLP(5), FLP(2), FLP(3), FLP(0), FLP(1), FLP(6), FLP(7), FLP(4), FLP(5), FLP(2), FLP(3), FLP(0), FLP(1)},
+    /* 17 MIRROR */ {FLP(7), FLP(6), FLP(5), FLP(4), FLR(0), FLR(1), FLR(2), FLR(3), FLP(7), FLP(6), FLP(5), FLP(4), FLR(0), FLR(1), FLR(2), FLR(3)},
+    /* 18 LAG */ {FLP(7), FLP(6), FLP(5), FLP(4), FLM, FLP(3), FLP(2), FLP(1), FLP(0), FLP(7), FLP(6), FLP(5), FLP(4), FLM, FLP(3), FLP(2)},
+    /* 19 SLOWMO */ {FLP(7), FLP(7), FLP(6), FLP(6), FLP(5), FLP(5), FLP(4), FLP(4), FLP(3), FLP(3), FLP(2), FLP(2), FLP(1), FLP(1), FLP(0), FLP(0)},
+    /* 20 SKIP 3 */ {FLP(2), FLP(1), FLP(0), FLP(2), FLP(1), FLP(0), FLP(2), FLP(1), FLP(0), FLP(2), FLP(1), FLP(0), FLP(2), FLP(1), FLP(0), FLP(2)},
+    /* 21 STUT UP */ {FLP(0), FLP(0), FLP(0), FLP(0), FLD(1), FLD(1), FLD(1), FLD(1), FLD(2), FLD(2), FLD(2), FLD(2), FLD(3), FLD(3), FLD(3), FLD(3)},
+    /* 22 STUT DN */ {FLD(3), FLD(3), FLD(3), FLD(3), FLD(2), FLD(2), FLD(2), FLD(2), FLD(1), FLD(1), FLD(1), FLD(1), FLP(0), FLP(0), FLP(0), FLP(0)},
+    /* 23 TRESILLO */ {FLP(0), FLM, FLM, FLP(0), FLM, FLM, FLP(0), FLM, FLP(0), FLM, FLM, FLP(0), FLM, FLM, FLP(0), FLM},
+    /* 24 OFFBEAT */ {FLM, FLV, FLM, FLV, FLM, FLV, FLM, FLV, FLM, FLV, FLM, FLV, FLM, FLV, FLM, FLV},
+    /* 25 CUT 4 */ {FLV, FLV, FLV, FLM, FLV, FLV, FLV, FLM, FLV, FLV, FLV, FLM, FLV, FLV, FLV, FLM},
+    /* 26 REV 8 */ {FLR(0), FLR(1), FLR(2), FLR(3), FLR(4), FLR(5), FLR(6), FLR(7), FLR(0), FLR(1), FLR(2), FLR(3), FLR(4), FLR(5), FLR(6), FLR(7)},
+    /* 27 HALF GAP */ {FLP(7), FLP(6), FLP(5), FLP(4), FLP(3), FLP(2), FLP(1), FLP(0), FLM, FLM, FLM, FLM, FLM, FLM, FLM, FLM},
 };
 #define FLEXMASK FXB(FX_FLEX)
 static volatile uint8_t flx_sel;                /* the pattern the Flex bit plays (en_flex_select) */
