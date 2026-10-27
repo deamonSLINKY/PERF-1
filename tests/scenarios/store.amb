@@ -87,11 +87,13 @@ reboot
 wait 300
 # SAVE held on Global: 01 back to its factory settings, out of the store
 tap GLO
+press SEL
 press SAVE
 wait 700
 shot global_hold.png
 wait 1000
 release SAVE
+release SEL
 expect par0 45
 expect lane0 0x1111
 expect par52 60

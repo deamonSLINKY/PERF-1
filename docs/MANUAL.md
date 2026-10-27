@@ -156,9 +156,9 @@ page you were last on in that group.
 |---|---|---|
 | Hold SEQ | 0.4 s | The sequencer. |
 | Hold SAVE | 0.5 s | The drop, straight away on the next bar. |
-| Hold SAVE on Global | 1.5 s | The piece back to factory (a card says `HOLD: FACTORY` from 0.4 s). |
+| Hold SEL + SAVE on Global | 1.5 s | The piece back to factory (a card says `KEEP HOLDING: FACTORY` from 0.4 s). A plain SAVE on Global only stores. |
 | Hold HOME | 0.7 s | The settings page. |
-| Hold GLO | 0.35 s | The mix map. |
+| Hold GLO | 0.4 s | The mix map. |
 | Hold SEL alone | 0.4 s | A card with what shift does on this page. |
 | Hold another button alone | 0.9 s | A card says what it does (ENV, LFO, ARP, EDIT, REC, OCT-, OCT+). |
 | Tap an effect key | under 0.25 s | Latches it. Longer: it plays while held. |
@@ -339,7 +339,7 @@ place of that genre's factory piece (piece 3 of lofi stored is piece 3 of lofi f
 above the knobs says `01 SAVE: STORE` while it has changes, then `01 STORED`. Changes you don't store last while you stay in that genre
 (moving between its pieces keeps them) and are gone when you change genre or switch off (the original genre's come back when you return to it).
 
-**Factory:** on Global, hold SAVE for 1.5 seconds (the screen says `HOLD: FACTORY`): the piece goes back to how
+**Factory:** on Global, hold **SEL and SAVE** together for 1.5 seconds (the screen says `KEEP HOLDING: FACTORY`; SAVE alone only stores): the piece goes back to how
 it shipped, and out of the store (the slot goes back to the factory piece).
 
 **When it's written:** at once. The FM-1 can't make sound while it writes to its memory, so a store made while

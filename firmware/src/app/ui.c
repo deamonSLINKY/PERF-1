@@ -455,7 +455,8 @@ static struct {
     uint8_t store_kind;                /* and what: 0 the piece's, 1 the settings, 2 the globals (quiet_write) */
     uint32_t store_t;
     char store_msg[12];
-    uint8_t factory_done;              /* SAVE held on Global: the piece went back to its factory settings */
+    uint8_t factory_done;              /* SEL + SAVE held on Global: the piece went back to its factory settings */
+    uint8_t save_fact;                 /* SAVE went down on Global with SEL held: a factory reset if held on, never a store */
     uint32_t shift_keys;               /* keys pressed while SEL (shift) was held: not notes, not effects */
     uint8_t piece_q;                   /* a piece waiting for the bar (SEL + PRESETS): its number + 1 */
     uint8_t shift_hint;                /* SEL held alone: its hint shown this hold */
@@ -527,7 +528,7 @@ static const char *mode_name(void)
 static int mix_show(void)
 {
     return (ui.btn >> B_GLO & 1u) && !(ui.btn >> B_SEL & 1u) &&
-           ((ui.btn_used >> B_GLO & 1u) || plat_ms() - ui.down_t[B_GLO] >= 350u);
+           ((ui.btn_used >> B_GLO & 1u) || plat_ms() - ui.down_t[B_GLO] >= 400u);
 }
 static int mix_state(int k)
 {
@@ -1946,6 +1947,11 @@ static void button(int b)
     for (g = 0; g < NGROUP; g++)                 /* a page's button: its page, or the next in its group */
         if (GROUP[g].btn == b) {
             int v = ui.view;
+            if (ui.fx_menu) {                    /* a page's button leaves the FX menu (latched effects play on) */
+                ui.fx_menu = 0;
+                ui.fx_page = 0;
+                ui.fx_open_t = 0;
+            }
             if (group_of(v) == g && GROUP[g].n > 1)
                 set_view(GROUP[g].first + (v - GROUP[g].first + 1) % GROUP[g].n);       /* inside: the next page */
             else if (ui.grp_last[g] >= GROUP[g].first && ui.grp_last[g] < GROUP[g].first + GROUP[g].n)
@@ -1988,7 +1994,7 @@ static void button(int b)
         en_freeze(!en_frozen);                   /* the engine takes it at its next block */
         break;
     case B_OCTDN: case B_OCTUP:
-        if (ui.fx_menu && b == B_OCTDN) {        /* in FX, OCT-: everything back (effects, knobs, mutes), undoable */
+        if (ui.fx_menu && !ui.fx_page && b == B_OCTDN) {   /* in FX, OCT-: everything back (effects, knobs, mutes), undoable */
             scene_reset();
             break;
         }
@@ -2268,6 +2274,9 @@ static void input(void)
             if (i == B_SAVE && ui.view == V_GLOBAL && !ui.fx_menu) {   /* Global: store the piece */
                 ui.save_global = 1;
                 ui.factory_done = 0;
+                ui.save_fact = (uint8_t)(btn >> B_SEL & 1u);
+                if (ui.save_fact)
+                    ui.btn_used |= 1u << B_SEL;       /* SEL as the modifier: letting go of it does nothing */
                 ui.btn_used |= m;              /* not a breakdown */
                 ui.save_held = 1;              /* nor a drop */
             }
@@ -2346,7 +2355,7 @@ static void input(void)
                 button((int)i);
         } else if (i == B_SAVE && ui.save_global) {
             ui.save_global = 0;                /* Global: SAVE let go, the piece stored (unless held to factory) */
-            if (!ui.factory_done)
+            if (!ui.factory_done && !ui.save_fact)
                 piece_store();
         } else if (!(ui.btn_used & m) && i != B_PLAY) {
             if (i == B_SEQ && ui.view == V_SEQ)
@@ -2383,7 +2392,7 @@ static void input(void)
                 mix_key((int)i);
     }
     if ((btn >> B_GLO & 1u) && !(btn >> B_SEL & 1u) && !(ui.btn_used >> B_GLO & 1u) &&
-        plat_ms() - ui.down_t[B_GLO] >= 350u)
+        plat_ms() - ui.down_t[B_GLO] >= 400u)
         ui.btn_used |= 1u << B_GLO;            /* held for the mix: letting go does nothing either */
     ui.lock_keys &= keys;
     if (!ui.fx_menu || ui.fx_page)
@@ -2539,10 +2548,10 @@ static void input(void)
         set_view(V_SEQ);
     }
     if ((e = plat_enc(EN_SELECT)) != 0) {        /* SELECT: the pages (the steps); with HOME held, the tempo */
-        if (ui.fx_menu && !ui.fx_page) {         /* the FX keys: the dial is the bank (the effects, the beat effects) */
+        if (!(btn >> B_HOME & 1u) && ui.fx_menu && !ui.fx_page) {   /* the FX keys: the dial is the bank (the effects, the beat effects) (HOME held: the tempo) */
             fx_bank = (uint8_t)(e > 0 ? (fx_bank < 3 ? fx_bank + 1 : 3) : (fx_bank > 0 ? fx_bank - 1 : 0));
             say(fx_bank == 3 ? "DJ SNIPS" : fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
-        } else if (ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
+        } else if (!(btn >> B_HOME & 1u) && ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
             const int pos = fx_pos(ui.fx_page) + (e > 0 ? 1 : -1);
             if (pos >= 0 && pos < NFXP - 1) {         /* (the JAM page's, the last, is not an FX page) */
                 ui.fx_page = FX_ORDER[pos];
@@ -2620,13 +2629,13 @@ static void input(void)
         plat_ms() - ui.down_t[B_SEL] >= 400u) {
         ui.shift_hint = 1;                     /* SEL held alone: what the shift does (draw_shift) */
     }
-    if (ui.save_global && !ui.factory_done && (btn >> B_SAVE & 1u)) {
+    if (ui.save_global && ui.save_fact && !ui.factory_done && (btn >> B_SAVE & 1u)) {
         uint32_t held = plat_ms() - ui.down_t[B_SAVE];
         if (held >= FACTORY_HOLD) {
             ui.factory_done = 1;
             piece_factory();
         } else if (held >= 400u && plat_ms() >= ui.msg_until) {
-            say("HOLD:", "FACTORY");           /* what holding on does */
+            say("KEEP HOLDING:", "FACTORY");   /* what holding on does */
             ui.msg_until = ui.down_t[B_SAVE] + FACTORY_HOLD;
         }
     }

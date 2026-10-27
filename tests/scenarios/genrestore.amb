@@ -50,9 +50,11 @@ expect piece 2
 expect par0 44
 # factory on it frees the slot, and that stays
 tap GLO
+press SEL
 press SAVE
 wait 1800
 release SAVE
+release SEL
 wait 600
 expect saved 0
 reboot

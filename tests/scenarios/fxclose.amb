@@ -1,0 +1,21 @@
+# The FX menu: a page's button closes it, HOME + SELECT is still the tempo there, and a long SAVE alone on Global only stores (audit U-12, U-13)
+# (fxpage: -1 the menu is closed, 0 its keys)
+seed 0
+wait 500
+tap FX
+expect fxpage 0
+tap ENV
+expect fxpage -1
+tap FX
+expect fxpage 0
+press HOME
+turn SELECT 2
+release HOME
+expect fxbank 0
+expect fxpage 0
+tap GLO
+press SAVE
+wait 2000
+release SAVE
+wait 600
+expect saved 1
