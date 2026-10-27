@@ -1,0 +1,20 @@
+{
+  "name": "perf1-videos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Feature-demo videos for PERF-1, made from the firmware itself (no screen recording): driver/ runs the emulator offline, src/ is the Remotion project",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "capture": "node driver/capture.mjs driver/scenes/flex.mjs public/flex",
+    "studio": "remotion studio src/index.jsx",
+    "render": "remotion render src/index.jsx Flex out/flex.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.250",
+    "@remotion/google-fonts": "4.0.250",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.250"
+  }
+}
