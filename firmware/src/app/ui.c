@@ -5650,24 +5650,32 @@ void ui_frame(void)
     glide_tick();
     saver_tick();
     jam_tick();
-    {   /* a render that ran out of time (an xrun, or the longest render of the last second reaching the deadline): the engine drops the chorus and holds the DX voices to four,
-         * then two; and eases back a step after twenty seconds without one. (It went by the average CPU before, then by how close the peaks came: the logs showed both sit high in the
-         * heavy pieces, so it never eased back, while the cracks themselves were rare.) */
-        static uint32_t over_t, calm_t, last_xr;
-        const uint32_t now = plat_ms(), pk = plat_peak_pct(), xr = plat_xruns();
-        const int xrun = xr != last_xr;
+    {   /* the load: a half that was never rendered (a real dropout) or renders that keep running past their half (the margin is gone) make the engine drop the chorus and hold
+         * the DX voices to four, then two, then give up the Echoplex and the vinyl; and it eases back a step after twenty seconds of neither. One step at a time (four seconds
+         * after the last on a dropout, ten on the other: a step needs time to show; one overrun used to climb all three at once, the peak of the last second still reading 100 %).
+         * (A single late render is not a dropout: the next one starts at once. The average CPU and the peaks were the gauge before, but they sit high in the heavy pieces.) */
+        static uint32_t calm_t, step_t, last_xr, last_late, win_t, win_n;
+        const uint32_t now = plat_ms(), xr = plat_xruns(), lt = plat_late();
+        const int lost = xr != last_xr;
+        win_n += lt - last_late;
         last_xr = xr;
+        last_late = lt;
         if (!en_playing) {
-            over_t = calm_t = now;
-        } else if (xrun || pk >= 100u) {
-            calm_t = now;
-            if ((xrun || now - over_t > 600u) && en_shed_level < 3) {
-                en_shed(en_shed_level + 1);
-                over_t = now;
-            }
+            calm_t = step_t = win_t = now;
+            win_n = 0;
         } else {
-            over_t = now;
-            if (now - calm_t > 20000u && en_shed_level > 0) {   /* twenty seconds without a crack: a step back (and if it cracks again, a step up: the peaks sit at 90-95 % of the time in the heavy pieces, so they cannot be the gauge) */
+            if (now - win_t > 10000u) {             /* the late renders of the last ten seconds */
+                win_t = now;
+                win_n = 0;
+            }
+            if (lost || win_n >= 6u) {
+                calm_t = now;
+                if (en_shed_level < 3 && now - step_t > (lost ? 4000u : 10000u)) {
+                    en_shed(en_shed_level + 1);
+                    step_t = now;
+                    win_n = 0;
+                }
+            } else if (now - calm_t > 20000u && en_shed_level > 0) {
                 en_shed(en_shed_level - 1);
                 calm_t = now;
             }

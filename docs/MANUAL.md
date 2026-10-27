@@ -1112,13 +1112,13 @@ the top right of the mix map, with the auto-DJ's phase beneath it.
 | Mark | Means |
 |---|---|
 | CPU nn | The share of the render's time budget the first core is using, measured inside the audio interrupt (it includes waiting for the second core). Drawing the screen doesn't count. |
-| XR n | **Xruns**: renders that ran late. Each is a click or a tick. |
+| XR n | **Xruns**: halves of audio that were never rendered (the last 11.6 ms play a second time). Each is a click or a stutter. A render that only ran past its half is not counted: the next one starts at once and nothing is lost (the status log counts those as `late`). |
 | C2 nn | The second core is working, and nn % of a chunk's time goes on its job (the pad with its chorus, the DX voices, the reverb, and at times the bass and acid: the engine moves some of this work between the cores as the load changes). `C1` instead: it stopped after a fault and everything runs on one core until power-off. |
 | S1 | **Load shedding, level 1:** the engine eased off to keep up: the pad's chorus is off and the DX voices are held to four. |
 | S2 | Level 2: the DX voices held to two. |
 
-The engine steps up a level when a render runs late (an xrun) or its longest render in the last second reaches its deadline; it steps back
-one level after twenty seconds without a crack. When `S1` or `S2` is on, the sound is a little thinner, not broken. The heaviest
+The engine steps up a level when a half is lost (an xrun) or when renders keep running past their half (six in ten seconds); one step at a time, and it steps back
+one level after twenty seconds of neither. When `S1` or `S2` is on, the sound is a little thinner, not broken. The heaviest
 combinations are the DX plucks with the shimmer reverb, and the fast genres (dnb, breaks).
 
 The audio is rendered 512 frames at a time, as two renders of 256 (11.6 ms for the pair), so a slow render borrows time from a quick one beside it. The price is a few
@@ -1132,7 +1132,7 @@ genre and piece, the flash writes and the frames drawn. **Save CSV** writes them
 `--port` and `--out` choose a port and a file) asks the unit for a status frame four times a second and writes `telemetry/fm1_<time>.csv`: CPU and
 CPU1 %, xruns, the longest render since the last frame against its budget, the longest gap between main-loop turns and the longest screen frame (a flash
 write or a long frame shows there), the shed level, flash writes (and how long the last one stopped the chip), crashes, the genre and piece, and
-the first core's time by stage. Events are marked in the file (XRUN, FLASH, OVER, GAP, SHED). The unit sends nothing until it is asked, and stops
+the first core's time by stage. Events are marked in the file (XRUN, LATE, FLASH, OVER, GAP, SHED). The unit sends nothing until it is asked, and stops
 ten seconds after the last ask; a frame is dropped rather than waited for, so it can't hold the music up. `python tools/fm1sum.py telemetry/<file>.csv`
 prints the load, xruns and stage times per genre and piece. `fm1log.py --bench` times loops on the chip once (the interrupts are off for a few
 milliseconds: one glitch in the music) and is for development.

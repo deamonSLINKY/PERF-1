@@ -191,7 +191,9 @@ def main():
                     ev = []
                     if prev:
                         if d["xruns"] > prev["xruns"]:
-                            ev.append("XRUN+%d" % (d["xruns"] - prev["xruns"]))
+                            ev.append("XRUN+%d" % (d["xruns"] - prev["xruns"]))      # a half that was never rendered: its buffer played again
+                        if d["late"] > prev["late"]:
+                            ev.append("LATE+%d" % (d["late"] - prev["late"]))        # a render that ran past its half (the next one started at once)
                         if d["stores"] > prev["stores"]:
                             ev.append("FLASH(%dus)" % d["store_us"])
                         if d["seq"] != prev["seq"] + 1:

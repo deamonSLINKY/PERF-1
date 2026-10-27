@@ -137,9 +137,10 @@ int plat_store_restore(uint32_t obj, const void *src, uint32_t len)
     return r;
 }
 
-static volatile uint32_t audio_cpu_pct, audio_xruns;
+static volatile uint32_t audio_cpu_pct, audio_xruns, audio_late;
 uint32_t plat_cpu_pct(void) { return audio_cpu_pct; }
 uint32_t plat_xruns(void) { return audio_xruns; }
+uint32_t plat_late(void) { return audio_late; }
 static volatile uint32_t pk_cur_pct, pk_prev_pct, pk_n;   /* the longest render, in percent of its time, in this second and the last */
 uint32_t plat_peak_pct(void) { return pk_cur_pct > pk_prev_pct ? pk_cur_pct : pk_prev_pct; }
 uint32_t plat_cpu1_pct(void) { return fm1_core1_load(); }

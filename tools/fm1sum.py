@@ -20,15 +20,17 @@ def main():
     for r in rows:
         r = {k: (int(v) if v.lstrip("-").isdigit() else v) for k, v in r.items()}
         r["dx"] = r["xruns"] - prev["xruns"] if prev else 0
+        r["dl"] = r.get("late", 0) - prev.get("late", 0) if prev else 0
         prev = r
         g[(r.get("genre", 0), r.get("piece", 0))].append(r)
-    print("%-9s %2s %5s %4s %4s %3s %6s %6s | us per 5.8 ms chunk: %s" % ("genre", "pc", "secs", "cpu", "max", "xr", "peak", "gap", " ".join("%7s" % s for s in STAGES) + "  isr% chor bass"))
+    print("xr = halves never rendered (a dropout), late = renders that ran past their half (nothing lost: the next one starts at once)")
+    print("%-9s %2s %5s %4s %4s %3s %4s %6s %6s | us per 5.8 ms chunk: %s" % ("genre", "pc", "secs", "cpu", "max", "xr", "late", "peak", "gap", " ".join("%7s" % s for s in STAGES) + "  isr% chor bass"))
     for (ge, pc), s in sorted(g.items()):
         ch = sum(x.get("chunks", 0) for x in s) or 1
         st = ["%7.0f" % (sum(x.get(f, 0) for x in s) / ch) for f in FIELDS]
-        print("%-9s %2d %5.0f %3.0f%% %3d%% %3d %5.1fms %5.1fms | %s" % (
+        print("%-9s %2d %5.0f %3.0f%% %3d%% %3d %4d %5.1fms %5.1fms | %s" % (
             GENRES[ge] if ge < len(GENRES) else ge, pc, len(s) * 0.25, sum(x["cpu"] for x in s) / len(s), max(x["cpu"] for x in s),
-            sum(x["dx"] for x in s), max(x["max_us"] for x in s) / 1000, max(x["gap_us"] for x in s) / 1000, " ".join(st) + "  %4.1f%% %3d%% %3d%%" % (100.0 * sum(x.get("isr_in", 0) for x in s) / (len(s) * 250000.0), 100.0 * sum(1 for x in s if x.get("chorus", 0)) / len(s), 100.0 * sum(1 for x in s if x.get("bass", 0)) / len(s))))
+            sum(x["dx"] for x in s), sum(x["dl"] for x in s), max(x["max_us"] for x in s) / 1000, max(x["gap_us"] for x in s) / 1000, " ".join(st) + "  %4.1f%% %3d%% %3d%%" % (100.0 * sum(x.get("isr_in", 0) for x in s) / (len(s) * 250000.0), 100.0 * sum(1 for x in s if x.get("chorus", 0)) / len(s), 100.0 * sum(1 for x in s if x.get("bass", 0)) / len(s))))
 
 
 def peaks(path):

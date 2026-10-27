@@ -52,7 +52,8 @@ enum { OBJ_PROJ, OBJ_PANEL, OBJ_SET, OBJ_VOICES, OBJ_GLOB, OBJ_G1, OBJ_G2, OBJ_G
 
 /* audio load in % of the render budget, and xruns since boot (device: from the ISR) */
 uint32_t plat_cpu_pct(void);
-uint32_t plat_xruns(void);
-uint32_t plat_peak_pct(void);               /* the longest render of the last second or two, in percent of the time it has: 100 is an xrun */
+uint32_t plat_xruns(void);                  /* halves that were never rendered (their buffer played again): the real dropouts */
+uint32_t plat_late(void);                   /* renders that ran past their half (the next one started at once: nothing lost, but the margin is thin) */
+uint32_t plat_peak_pct(void);               /* the longest render of the last second or two, in percent of the time it has: 100 is a late render */
 uint32_t plat_cpu1_pct(void);                /* the other core's load, in percent of a chunk (0 when it is not there) */
 uint32_t plat_core2(void);                  /* the second core: 0 not in this build, 1 reverbing, 2 not (lost, or barred after a crash) */

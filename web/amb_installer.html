@@ -192,7 +192,7 @@ const TEXT = {
     statush: "FM-1 の状態（リアルタイム）",
     statusinfo: "USB でつないだ PERF-1 の負荷をここに表示します。CSV に保存することもできます（tools/fm1log.py と同じ内容）。",
     stgo: "表示を始める", ststop: "止める", stsave: "CSV を保存", stwait: "FM-1 の返事を待っています…",
-    stlabels: ["CPU", "第2コア", "xrun", "最長の描画", "負荷の調整", "音色", "フラッシュ書込", "フレーム"],
+    stlabels: ["CPU", "第2コア", "xrun / 遅れ", "最長の描画", "負荷の調整", "音色", "フラッシュ書込", "フレーム"],
   },
   en: {
     intro: "Connect the FM-1 by USB. (Works in Chrome or Edge.)",
@@ -244,7 +244,7 @@ const TEXT = {
     statush: "Live status",
     statusinfo: "Shows how hard the PERF-1 on the USB cable is working, as it plays: the same numbers tools/fm1log.py logs. Save them as a CSV for a bug report.",
     stgo: "Start", ststop: "Stop", stsave: "Save CSV", stwait: "Waiting for the FM-1\u2026",
-    stlabels: ["CPU", "2nd core", "xruns", "longest render", "work moved", "genre / piece", "flash writes", "frames"],
+    stlabels: ["CPU", "2nd core", "xruns / late", "longest render", "work moved", "genre / piece", "flash writes", "frames"],
   },
 };
 let lang = "en";                                 /* English first; 日本語 is a click away */
@@ -269,6 +269,9 @@ const meta = /*META*/;
 const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing", "stores", "store_us", "crashes",
   "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece", "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums",
   "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt"];
+/* the second frame (F0 7D 50 5A): the slowest chunk of the window (its stages in us, its total, its info) and how many renders took <5, 5-6 ... 11-12, >=12 ms; kept with the status frame before it */
+const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
+  "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12"];
 const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
 let port = null;
 async function openPort() {
@@ -279,12 +282,13 @@ async function openPort() {
   const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
   const inp = pick(midi.inputs), out = pick(midi.outputs);
   if (!inp || !out) throw new Error(t("notfound"));
-  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onframe: null };
+  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, onframe: null };
   inp.onmidimessage = (ev) => {
     const d = ev.data;
     if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
     if (d[3] === 0x57) { const w = port.waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }       /* the answer to a voice message */
     else if (d[3] === 0x46 && port.onstatus) port.onstatus(d);                                      /* a status frame */
+    else if (d[3] === 0x5A && port.onextra) port.onextra(d);                                        /* the slowest chunk of the window, and the histogram of renders */
     else if (d[3] === 0x43 && port.onframe) port.onframe(d);                                        /* a frame of an object being backed up */
     else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }   /* the answer to a chunk or a write */
   };
@@ -486,7 +490,7 @@ function stRender(w) {
   const items = [
     [w.cpu + "%", w.cpu > 85 ? "bad" : w.cpu > 72 ? "hot" : "", w.cpu],
     [w.cpu1 + "%", w.cpu1 > 70 ? "hot" : "", w.cpu1],
-    [String(w.xruns), w.xruns ? "bad" : "", 0],
+    [w.xruns + " / " + w.late, w.xruns ? "bad" : w.late ? "hot" : "", 0],
     [(w.max_us / 1000).toFixed(1) + " ms", pct > 95 ? "bad" : pct > 85 ? "hot" : "", Math.min(100, pct)],
     [(w.shed ? "S" + (w.shed & 255) + " " : "") + ((w.shed >> 8) & 1 ? "chorus -> core 1 " : "") + ((w.shed >> 9) & 1 ? "bass -> core 2" : "") || "-", (w.shed & 255) ? "hot" : "", 0],
     [(GENRES[w.genre] || w.genre) + " " + w.piece, "", 0],
@@ -516,9 +520,15 @@ function onStatus(d) {
   $("stsave").disabled = false;
   stRender(w);
 }
+function onExtra(d) {                       /* the second frame follows its status frame at once: it joins that row */
+  const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
+  const dv = new DataView(new Uint8Array(raw).buffer), w = frames[frames.length - 1];
+  if (!w || raw.length < EXTRA.length * 4) return;
+  EXTRA.forEach((f, i) => { w[f] = dv.getUint32(i * 4, true); });
+}
 async function stStop() {
   clearInterval(stTimer); stTimer = null;
-  if (port) { try { port.out.send([0xF0, 0x7D, 0x50, 0x46, 0x00, 0xF7]); } catch (_) {} port.onstatus = null; }
+  if (port) { try { port.out.send([0xF0, 0x7D, 0x50, 0x46, 0x00, 0xF7]); } catch (_) {} port.onstatus = null; port.onextra = null; }
   $("stgo").textContent = t("stgo");
 }
 $("stgo").addEventListener("click", async () => {
@@ -527,6 +537,7 @@ $("stgo").addEventListener("click", async () => {
     const p = await openPort();
     frames = [];
     p.onstatus = onStatus;
+    p.onextra = onExtra;
     const arm = () => { try { p.out.send([0xF0, 0x7D, 0x50, 0x46, 0x01, 0xF7]); } catch (_) { stStop(); } };
     arm();
     stTimer = setInterval(arm, 3000);
@@ -535,7 +546,8 @@ $("stgo").addEventListener("click", async () => {
   } catch (err) { $("ststatus").textContent = err.message; }
 });
 $("stsave").addEventListener("click", () => {
-  const rows = ["t," + FIELDS.join(",")].concat(frames.map((w) => ((w.t - frames[0].t) / 1000).toFixed(2) + "," + FIELDS.map((f) => w[f]).join(",")));
+  const cols = FIELDS.concat(EXTRA);
+  const rows = ["t," + cols.join(",")].concat(frames.map((w) => ((w.t - frames[0].t) / 1000).toFixed(2) + "," + cols.map((f) => (w[f] === undefined ? 0 : w[f])).join(",")));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([rows.join("\n") + "\n"], { type: "text/csv" }));
   a.download = "fm1_status_" + new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19) + ".csv";

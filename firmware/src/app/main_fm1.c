@@ -73,17 +73,25 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
     en_dbg.in_audio = 0;
 }
 
+static uint32_t last_half = 2u;                     /* the half rendered last (2: none yet) */
 void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_isr.S) */
 {
     uint8_t p = fm1_audio_pending();
     fm1_audio_ack_aux(p);
     if (p & FM1_AUDIO_HALF) {
         uint32_t half = fm1_audio_free_half();
-        render_block(&abuf[half * HALF_WORDS]);
+        /* The half's flag is cleared before the render, not after it: a half that ends while this one renders raises the interrupt again, and the
+         * next render follows at once. (Cleared at the end it took that one too: a render that ran past its half, 11.6 to 12.4 ms in a lofi piece at
+         * 55 % load, cost the next half its render, and its buffer played a second time. The telemetry's xruns were exactly that: every one was a
+         * window with one render fewer in its "renders" column.) */
         fm1_audio_ack_half();
+        if (half == last_half)
+            audio_xruns++;                          /* two ends went by in one render, or the interrupts were off: a half was never rendered */
+        last_half = half;
+        render_block(&abuf[half * HALF_WORDS]);
         if (fm1_audio_free_half() != half) {
-            en_dbg.late++;                         /* the DMA moved on while we rendered */
-            audio_xruns++;
+            en_dbg.late++;                         /* the DMA moved on while we rendered: the next render is due already, nothing is lost */
+            audio_late++;
         }
     }
 }
