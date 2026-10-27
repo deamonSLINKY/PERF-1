@@ -1,7 +1,7 @@
 # PERF-1
 
 PERF-1 turns the M-VAVE FM-1 into a live-performance machine for hypnotic techno, acid, lofi, house,
-dubstep, jungle and more. It plays from the moment it's switched on: a breathing pad, a deep bass, a
+dubstep, dub and more. It plays from the moment it's switched on: a breathing pad, a deep bass, a
 generative 303 line and a plucked counter-melody, over drums you sequence. You shape the voices like a
 small modular, flip patterns on the bar, break it down and build it back up, throw beat repeats, gates,
 tape stops and DJ air horns over it, mix it, or let the auto-DJ run the set, and record the whole
@@ -255,7 +255,7 @@ master bus; it was called Master) and Global.
 
 ![The Chords page](img/perf-screen-chords.png)
 
-**What moves by itself.** The chord changes now and then (Drift sets how long it stays; EDIT moves it on). Each genre has its own habits in where it goes next on a seven-note scale: lofi and DnB love the fourth up (the ii-V-I turnaround), house loops by steps and thirds, dubstep and trap stay close to home on the dark side, jungle favours the flat seventh; HYPNO keeps the original walk. The **Loop** setting on the Chords page makes the last 2, 4 or 8 chords repeat.
+**What moves by itself.** The chord changes now and then (Drift sets how long it stays; EDIT moves it on). Each genre has its own habits in where it goes next on a seven-note scale: lofi and DnB love the fourth up (the ii-V-I turnaround), house loops by steps and thirds, dubstep and trap stay close to home on the dark side, dub keeps to a minor one-four vamp; HYPNO keeps the original walk. The **Loop** setting on the Chords page makes the last 2, 4 or 8 chords repeat.
 The pad's voices breathe on unequal cycles and take the new chord's notes as they breathe in. The bass
 follows the chord's root and glides. The acid line's notes are tied to the chord, so the riff transposes;
 Mutate rewrites steps each time round. The pluck plays an arpeggio of the chord's tones. Motion sets how far
@@ -314,7 +314,7 @@ shows a made-up title when you pick it (`VELVET RAIN`), the same one every time.
 | LOFI | L01-L10 | 70-94 | Swung boom-bap: Rhodes in 7ths and 9ths over a warm bass, a soft sparse lead, the Dusty kit; vinyl and tape latched on. |
 | HOUSE | H01-H10 | 118-126 | Four on the floor, claps on 2 and 4, off-beat open hats, stabs and organ, a sub or square bass, the House kit; the pump latched on. |
 | DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, the bass as a wobble bass (its LFO on the cutoff), a harsh lead, dark pads, chords in fourths. |
-| JUNGLE | J01-J10 | 160-170 | The Amen break and its variants, the Break kit chopped, a tear-out fill; vinyl and tape latched on. |
+| DUB | V01-V10 | 64-76 | One-drop, steppers and rockers: a sparse kick and rim, a deep bass on the one and three, the skank on the off-beats, a long dotted echo and a worn tape latched on; a breakdown keeps the kick. |
 | DNB | N01-N10 | 170-178 | Two-step, liquid, roller, neuro, jump-up and half-time; the DnB kit, a shimmer reverb, a light pump and tape. |
 | BREAKS | B01-B10 | 100-135 | Patterns after classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat) and a big-beat stomp (some are approximations); the Break kit, a gated reverb, tape and the phaser latched on. |
 | GARAGE | G01-G10 | 126-138 | Swung two-step, skippy, speed garage, a conga kick, rim Q&A (Minimal snare, House hats); tape and a light pump. |
@@ -633,7 +633,7 @@ Under the six patterns each lane has **step tricks**: a **ratchet**, a **push** 
 | Push | The hit lands late, 0 to 7 twelfths of a step (a laid-back snare; at 128 BPM about 10 ms a step). It can only be late, not early. |
 | Level | **Normal**, **ghost** (very soft), **soft** or **accent**. |
 
-The page draws each step as a bar (its height the level, shifted by its push) with the ratchet's hits as small bars under it. The tricks belong to the lane's steps, whatever pattern plays, and are stored with the piece (a piece stored in 0.13 simply has none). They apply to the hits the pattern makes; a trick on a step with no hit waits for one. They do not apply in fills, builds, breakdowns, or to the hits the drop lands on, and the first bar after PLAY plays without them. Some genres ship with tricks: the off-beat hats soft (lofi, house, garage and most of the rest), the hats' off-beat accented (disco, house, electro), the backbeat accented (jungle, DnB, breaks, funk, synthwave), the snare laid back (lofi, trip-hop, reggae's rim a touch), trap's triplets and a swell on its last hat beat.
+The page draws each step as a bar (its height the level, shifted by its push) with the ratchet's hits as small bars under it. The tricks belong to the lane's steps, whatever pattern plays, and are stored with the piece (a piece stored in 0.13 simply has none). They apply to the hits the pattern makes; a trick on a step with no hit waits for one. They do not apply in fills, builds, breakdowns, or to the hits the drop lands on, and the first bar after PLAY plays without them. Some genres ship with tricks: the off-beat hats soft (lofi, house, garage and most of the rest), the hats' off-beat accented (disco, house, electro), the backbeat accented (DnB, breaks, funk, synthwave), the snare laid back (lofi, trip-hop, reggae's rim a touch), trap's triplets and a swell on its last hat beat.
 
 ### Feel: ghosts, accents, comping and looseness
 
@@ -641,7 +641,7 @@ The page draws each step as a bar (its height the level, shifted by its push) wi
 
 The **Feel** page (SEQ seven times) holds what makes a groove human:
 
-- **Ghosts** (0-100): the genre's ghost notes, soft snares (and soft kicks in lofi, jungle, breaks, funk, trip-hop) on steps the pattern does not have. At 100 about six in ten of those steps sound. Lofi, house, jungle, DnB, breaks, garage, funk and trip-hop have ghost steps; the others are unchanged.
+- **Ghosts** (0-100): the genre's ghost notes, soft snares (and soft kicks in lofi, breaks, funk, trip-hop) on steps the pattern does not have. At 100 about six in ten of those steps sound. Lofi, house, DnB, breaks, garage, funk and trip-hop have ghost steps; the others are unchanged.
 - **Accents** (0-100; 50 is as marked): how much the Steps page's accents and ghosts count. 0 plays every level alike; 100 exaggerates them.
 - **Pad comp:** the rhythm of the pad's stabs, for stab-type pad sounds (Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass, Pluck). **Auto** takes the genre's own; **Hold** never stabs (a stab sound plays as a held pad); the others force the stabs on any pad sound: **Off-beat**, **On-beat**, **3-3-2**, **Charleston**, **Syncopated**, **Sparse**, **Eighths**.
 - **Humanize** (0-100): a little looseness, each hit a touch softer and a touch late.
@@ -805,7 +805,7 @@ share this page. The settings, the gate's pattern and targets are kept across po
 
 ![A build](img/perf-screen-perform.png)
 
-- **Breakdown: tap SAVE.** The bar before it the percussion, the open hat and half the hats drop out, so it comes as a release; then the drums stop on the next bar (house, techno and dubstep keep the kick; drum and bass and jungle keep the hats), the mix darkens, the bass closes and the pad rises, for as long as you leave it.
+- **Breakdown: tap SAVE.** The bar before it the percussion, the open hat and half the hats drop out, so it comes as a release; then the drums stop on the next bar (house, techno, dubstep and dub keep the kick; drum and bass keeps the hats), the mix darkens, the bass closes and the pad rises, for as long as you leave it.
 - **Build: tap SAVE again.** A snare roll climbing in pitch with the bass opening (four bars; two in trap, lofi and trip-hop; eight in house), the last bar with the open hat on every eighth and, in the four-on-the-floor genres, the kick back; then the drop.
 - **Drop: hold SAVE.** Straight back in on the next bar. SAVE lights during a breakdown or build and blinks while one waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on; press again to let it move.
@@ -941,7 +941,7 @@ reduction). The limiter delays the audio by about 1.4 ms so the gain is in place
 60 ms. The page draws the compressor's transfer curve (in across, out up; the dotted line is unity, the vertical tick the
 threshold, the horizontal one the ceiling) and live meters: **COMP** (the compressor's reduction), **LIMIT** and **OUT** (the
 output's peak). The four settings are stored with the piece. The defaults are a light 1.5:1 at -12 dB with +1.2 dB of make-up; each genre brings its own
-(lofi and garage 2:1, house, jungle, dnb and electro 3:1, breaks, dubstep and trap 4:1 with more make-up), and the
+(lofi and garage 2:1, house, dnb and electro 3:1, breaks, dubstep and trap 4:1 with more make-up), and the
 limiter's ceiling is 0 dB everywhere, so it only catches overs.
 
 ---
@@ -1119,7 +1119,7 @@ the top right of the mix map, with the auto-DJ's phase beneath it.
 
 The engine steps up a level when a render runs late (an xrun) or its longest render in the last second reaches its deadline; it steps back
 one level after twenty seconds without a crack. When `S1` or `S2` is on, the sound is a little thinner, not broken. The heaviest
-combinations are the DX plucks with the shimmer reverb, and the fast genres (jungle, dnb, breaks).
+combinations are the DX plucks with the shimmer reverb, and the fast genres (dnb, breaks).
 
 The audio is rendered 512 frames at a time, as two renders of 256 (11.6 ms for the pair), so a slow render borrows time from a quick one beside it. The price is a few
 milliseconds of latency from a key to the sound (the DX plucks, rendered a chunk ahead on the second core, sound 5.8 ms later than the plain ones).

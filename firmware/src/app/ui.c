@@ -80,7 +80,7 @@ static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
-static const char *const GENRE_UI_NAME[16] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
+static const char *const GENRE_UI_NAME[16] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[5] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS", "SYNC"};   /* the auto-DJ's groove (SYNC: until the chord changes) */
 static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
@@ -1490,7 +1490,7 @@ static void genre_fx(int g)
         ui.fx_lock |= FXB(FX_PUMP);
     } else if (g >= 4 && g - 4 < 12) {           /* the others: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
         static const uint8_t XFX[12][12] = {
-            {10, 12, 45, 35, 30, 22, 38, 45, 255, 255, 255, 255},     /* jungle: sampled-from-vinyl grit */
+            {14, 16, 22, 38, 255, 255, 255, 255, 255, 255, 255, 255},   /* dub: a worn tape (and the long echo) */
             {5, 5, 25, 20, 255, 255, 255, 255, 30, 30, 1, 0xF0},      /* dnb: a light pump, a very light tape */
             {20, 15, 60, 30, 255, 255, 255, 255, 255, 255, 255, 255}, /* breaks: tape drive, the phaser */
             {25, 10, 25, 40, 255, 255, 255, 255, 30, 35, 1, 0xF0},    /* garage: a light tape and pump */
@@ -1502,7 +1502,7 @@ static void genre_fx(int g)
             {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* synthwave: nothing latched (the chorus and the gated reverb are in the piece) */
             {255, 255, 255, 255, 255, 255, 255, 255, 30, 40, 1, 0x70},      /* amapiano: a soft pump */
             {18, 14, 28, 40, 30, 22, 36, 36, 255, 255, 255, 255}};          /* trip-hop: the vinyl and the tape, gentler than lofi's */
-        static const uint8_t XLK[12] = {3, 6, 10, 6, 8, 4, 4, 0, 2, 0, 4, 3};
+        static const uint8_t XLK[12] = {2, 6, 10, 6, 8, 4, 4, 0, 2, 0, 4, 3};
         for (i = 0; i < 12; i++)
             if (XFX[g - 4][i] != 255)
                 fxs_put(SET[i], XFX[g - 4][i]);

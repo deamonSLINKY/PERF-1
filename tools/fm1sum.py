@@ -6,7 +6,7 @@ import csv
 import sys
 from collections import defaultdict
 
-GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"]
+GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"]
 FIELDS = ["p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums", "p_echo", "w_rev", "p_master"]
 STAGES = ["clear", "bassacid", "pluck", "w_pad", "merge", "drums", "echo", "w_rev", "master"]
 

@@ -189,10 +189,10 @@ static const int16_t PD_09[] = {DUB_BASE, P_TEMPO, 136, P_ROOT, 6, P_MODE, 5, P_
 static const int16_t PD_10[] = {DUB_BASE, P_TEMPO, 150, P_ROOT, 11, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
 static const int16_t *const DUB_PIECES[EN_NPIECES] = {PD_01, PD_02, PD_03, PD_04, PD_05, PD_06, PD_07, PD_08, PD_09, PD_10};
 static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"};
-/* the other six genres (4 .. 9: JUNGLE, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
+/* the other six genres (4 .. 9: DUB, DNB, BREAKS, GARAGE, ELECTRO, TRAP): a base recipe each, ten rows of tempo, root, mode, chord, pad, drone and acid, six
  * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
-static const int16_t X_JUNGLE[] = {P_CM_VU, 30, P_GHOST, 55, P_HUMAN, 15, P_PULSE, 80, P_DRIVE, 55, P_SWING, 6, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 38, P_ACID, 40, P_BASS, 80, P_AC_DENS, 30, P_AC_LEN, 8, P_ECHO, 40, P_REVERB, 35,
-    KIT(4), DE(0), 25, LV(2), 30, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 25, P_RV_DAMP, 50, P_RV_PRE, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
+static const int16_t X_DUBR[] = {P_CM_VU, 45, P_GHOST, 0, P_HUMAN, 25, P_PULSE, 78, P_DRIVE, 15, P_SWING, 12, P_BASSOCT, -1, P_PAD, 40, P_ACID, 22, P_BASS, 92, P_AC_DENS, 15, P_AC_LEN, 12, P_ECHO, 72, P_ETIME, 3, P_REVERB, 45, P_SIZE, 65,
+    KIT(8), P_PATTERN, 0, P_EVOLVE, 25, P_PL_CHO, 15, P_RV_DAMP, 55, P_BL_MODE, 1, P_BL_LEN, 85, P_BL_MOVE, 8, P_BL_GLIDE, 30, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 38, -1};
 static const int16_t X_DNB[] = {P_CM_VU, 40, P_GHOST, 40, P_HUMAN, 10, P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
     KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 45, P_RV_TYPE, 1, P_RV_X, 25, P_RV_DAMP, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
 static const int16_t X_BREAKS[] = {P_CM_VU, 30, P_GHOST, 70, P_HUMAN, 25, P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
@@ -216,9 +216,9 @@ static const int16_t X_AMAPIANO[] = {P_PULSE, 70, P_DRIVE, 15, P_SWING, 25, P_PA
 static const int16_t X_TRIPHOP[] = {P_PULSE, 72, P_DRIVE, 40, P_SWING, 18, P_PAD, 50, P_ACID, 25, P_BASS, 80, P_AC_DENS, 25, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 50, P_SIZE, 70, P_RV_DAMP, 55,
     P_NOISE, 20, P_NZ_COLOR, 7, KIT(8), P_PATTERN, 0, P_EVOLVE, 30, P_BL_MODE, 1, P_BL_LEN, 75, P_BL_MOVE, 12, P_CM_VU, 55, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 30,
     P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 32, -1};
-static const int16_t *const XBASE[12] = {X_JUNGLE, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP};
+static const int16_t *const XBASE[12] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP};
 static const uint8_t XROW[12][10][7] = {
-    {{165, 5, 5, 5, 8, 4, 9}, {168, 7, 2, 4, 7, 9, 13}, {162, 2, 1, 2, 0, 1, 4}, {170, 9, 5, 1, 14, 11, 3}, {160, 0, 7, 5, 8, 9, 11}, {166, 4, 2, 6, 11, 4, 14}, {164, 10, 5, 1, 2, 1, 9}, {168, 6, 1, 3, 3, 9, 4}, {170, 1, 5, 4, 7, 2, 13}, {160, 8, 2, 5, 8, 4, 9}},
+    {{70, 9, 5, 5, 0, 0, 0}, {66, 2, 1, 5, 0, 0, 0}, {72, 7, 2, 5, 0, 0, 0}, {68, 0, 5, 5, 0, 0, 0}, {74, 4, 1, 5, 0, 0, 0}, {64, 5, 5, 2, 0, 0, 0}, {76, 10, 1, 5, 0, 0, 0}, {70, 3, 2, 5, 0, 0, 0}, {66, 6, 5, 5, 0, 0, 0}, {72, 11, 1, 2, 0, 0, 0}},
     {{174, 9, 1, 3, 0, 9, 4}, {172, 2, 5, 2, 1, 1, 15}, {174, 5, 3, 3, 3, 9, 11}, {175, 4, 2, 6, 7, 4, 14}, {174, 0, 5, 4, 11, 3, 2}, {176, 7, 1, 2, 5, 9, 4}, {170, 10, 5, 3, 2, 1, 15}, {175, 6, 2, 4, 7, 13, 13}, {172, 11, 1, 2, 0, 9, 11}, {178, 3, 5, 6, 11, 2, 14}},
     {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 7, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 7, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
     {{130, 5, 1, 3, 0, 9, 4}, {132, 9, 5, 2, 4, 5, 11}, {128, 0, 4, 3, 1, 9, 12}, {134, 2, 1, 2, 5, 10, 4}, {130, 7, 5, 3, 0, 4, 15}, {136, 10, 1, 2, 1, 9, 11}, {126, 4, 5, 3, 4, 5, 12}, {132, 1, 4, 2, 5, 9, 4}, {130, 6, 1, 3, 3, 1, 15}, {138, 10, 5, 2, 0, 10, 11}},
@@ -232,7 +232,7 @@ static const uint8_t XROW[12][10][7] = {
     {{84, 9, 5, 2, 7, 9, 15}, {78, 4, 2, 3, 2, 1, 17}, {72, 2, 1, 2, 16, 8, 4}, {88, 7, 5, 3, 5, 3, 20}, {80, 0, 5, 2, 1, 9, 11}, {70, 5, 2, 2, 7, 1, 15}, {86, 10, 1, 3, 2, 8, 17}, {76, 3, 5, 2, 16, 3, 4}, {82, 6, 2, 3, 5, 9, 20}, {74, 11, 5, 2, 7, 1, 11}},
 };
 static const uint16_t XPAT[12][6][6] = {
-    {{0x0C05, 0x1010, 0x8280, 0x5555, 0x0000, 0x0000}, {0x4C45, 0x1010, 0x8280, 0x5555, 0x0000, 0x0000}, {0x0405, 0x4010, 0x0280, 0x5555, 0x0000, 0x0000}, {0x040C, 0x4010, 0x0282, 0x4044, 0x0400, 0x0000}, {0x0401, 0x1010, 0x8288, 0x5555, 0x0000, 0x4040}, {0x0005, 0xF550, 0x0000, 0x0155, 0x0000, 0x0000}},
+    {{0x0100, 0x0100, 0x0000, 0x4444, 0x0000, 0x0000}, {0x1111, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x2111, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0000, 0x0000, 0x4000, 0x0000}, {0x0101, 0x0100, 0x0100, 0x4444, 0x0000, 0x2020}, {0x1111, 0x1010, 0x0000, 0x4444, 0x4040, 0x0000}},
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0401, 0x1010, 0x8080, 0xFF7F, 0x0000, 0x4040}, {0x0405, 0x1010, 0x8080, 0xFFFF, 0x0000, 0x0000}, {0x0401, 0x1010, 0x0000, 0x4444, 0x0000, 0x8008}, {0x0409, 0x1010, 0x0000, 0x5555, 0x0000, 0x4080}, {0x4041, 0x0100, 0x0100, 0x5555, 0x1000, 0x0000}},
     {{0x2445, 0x1010, 0x8A80, 0xDF7F, 0x2080, 0x0000}, {0x4181, 0x1010, 0x0000, 0x51D5, 0x0400, 0x0000}, {0x0C83, 0x1010, 0x0000, 0x0000, 0x5555, 0x0000}, {0x0501, 0x9090, 0x0000, 0x5555, 0x0000, 0x0000}, {0x4405, 0x1010, 0x1010, 0x5555, 0x8000, 0x0080}, {0x0005, 0xF510, 0x1000, 0x0155, 0x0000, 0x0000}},
     {{0x0401, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0421, 0x1010, 0x0000, 0x1313, 0x4044, 0x8880}, {0x1111, 0x8080, 0x1010, 0x4444, 0x0000, 0x0000}, {0x0449, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0401, 0x9244, 0x1010, 0x0111, 0x4000, 0x0000}, {0x0401, 0xF010, 0x0000, 0x1111, 0x0044, 0x0000}},
@@ -246,7 +246,7 @@ static const uint16_t XPAT[12][6][6] = {
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0481, 0x1010, 0x0000, 0x5D5D, 0x0000, 0x0220}, {0x0109, 0x1010, 0x0000, 0x5555, 0x4000, 0x0000}, {0x0421, 0x9010, 0x0000, 0xDDDD, 0x0000, 0x8080}, {0x0201, 0x1010, 0x1010, 0x5555, 0x0040, 0x0000}, {0x4401, 0x1090, 0x0000, 0xFFFF, 0x0000, 0x2020}},
 };
 static const char *const XNAME[12][10] = {
-    {"J01", "J02", "J03", "J04", "J05", "J06", "J07", "J08", "J09", "J10"},
+    {"V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10"},
     {"N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10"},
     {"B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10"},
     {"G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08", "G09", "G10"},
@@ -337,7 +337,7 @@ static const char *const PIECE_NAME[EN_NPIECES] = {"01", "02", "03", "04", "05",
 
 const char *en_piece_name(int i) { return PIECE_NAME[(unsigned)i < EN_NPIECES ? i : 0]; }
 static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES, HOUSE_PIECES, DUB_PIECES};
-static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
+static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
 const char *en_genre_name(int g) { return GENRE_NAME[(unsigned)g < EN_NGENRE ? g : 0]; }
 const char *en_piece_name_g(int g, int i)
 {
@@ -354,7 +354,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{0, 17, 5, 2, 3}, {1, 9, 7, 18, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 8, 7}, {8, 8, 1}, {8, 5, 8}, {8, 5, 8}},
     {{6, 4, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
     {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
-    {{7, 23, 16, 8, 1}, {4, 8, 20, 9, 11}, {4, 21, 9, 26, 1}, {0, 10, 29, 2, 7}, {4, 4, 9}, {4, 12, 6}, {4, 12, 10}, {4, 12, 8}},
+    {{13, 4, 6, 17, 0}, {9, 1, 5, 8, 20}, {12, 4, 16, 21, 15}, {18, 24, 12, 30, 36}, {8, 8, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 11}},
     {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
     {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
     {{5, 17, 0, 20, 16}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
@@ -367,7 +367,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{0, 5, 16, 2, 23}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
     {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {35, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
 };
-static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 3, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
+static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 0, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
 static void vary(int g, int i, int16_t *par)
 {
     const int pw = g * 3 + i, h = i / 5;
@@ -454,8 +454,10 @@ void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
             mod[3][s] = (uint8_t)(2u << 6);                 /* the off-beat hats soft */
         if ((g == 2 || g == 8) && (s & 3) == 2)
             mod[3][s] = (uint8_t)(3u << 6);                 /* house and electro: the hats' off-beat accented */
-        if (g >= 4 && g <= 6 && (s == 4 || s == 12))
-            mod[1][s] = (uint8_t)(3u << 6);                 /* jungle, DnB, breaks: the backbeat accented */
+        if (g >= 5 && g <= 6 && (s == 4 || s == 12))
+            mod[1][s] = (uint8_t)(3u << 6);                 /* DnB, breaks: the backbeat accented */
+        if (g == 4)
+            mod[1][s] = (uint8_t)(1u << 3);                 /* dub: the rim a touch late */
         if (g == 8 && s == 0)
             mod[0][s] = (uint8_t)(3u << 6);
         if (g == 10 && (s & 3) == 2)
@@ -1668,7 +1670,7 @@ static const struct { uint8_t tonic, cad_every, cad_to, back; ch_edge_t e[8]; } 
     {2, 8, 4, 0, {{1, 4, 12}, {4, 0, 12}, {0, 1, 4}, {0, 3, 4}, {3, 1, 5}, {5, 1, 6}, {2, 5, 6}, {6, 2, 5}}},   /* lofi: ii-V-I, turnarounds */
     {2, 4, 6, 1, {{0, 6, 8}, {6, 5, 6}, {5, 6, 6}, {6, 0, 5}, {5, 0, 3}, {0, 5, 5}, {3, 6, 3}, {0, 0, 0}}},    /* house: i-VII-VI-VII loops */
     {4, 8, 6, 0, {{0, 5, 6}, {5, 0, 8}, {0, 6, 4}, {6, 0, 6}, {0, 4, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* dubstep: sparse, VI and home */
-    {3, 4, 6, 0, {{0, 6, 8}, {6, 5, 6}, {5, 0, 4}, {6, 0, 5}, {0, 3, 3}, {3, 6, 4}, {0, 0, 0}, {0, 0, 0}}},    /* jungle: the flat seventh */
+    {3, 4, 3, 1, {{0, 3, 8}, {3, 0, 8}, {0, 6, 5}, {6, 0, 5}, {0, 5, 3}, {5, 6, 3}, {0, 0, 0}, {0, 0, 0}}},    /* dub: a minor vamp, one and four */
     {2, 4, 4, 0, {{1, 4, 10}, {4, 0, 8}, {0, 5, 5}, {5, 1, 6}, {0, 3, 4}, {3, 1, 4}, {0, 0, 0}, {0, 0, 0}}},   /* dnb: liquid ii-V */
     {3, 4, 4, 0, {{0, 3, 4}, {3, 4, 4}, {4, 0, 6}, {0, 5, 4}, {5, 3, 4}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* breaks: even, V home */
     {2, 4, 4, 0, {{1, 4, 8}, {4, 0, 8}, {0, 5, 5}, {5, 3, 5}, {3, 1, 5}, {2, 5, 4}, {0, 0, 0}, {0, 0, 0}}},    /* garage: soulful */
@@ -1963,7 +1965,7 @@ static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the ne
 /* SECTIONS by genre (audit M-13): what a breakdown keeps (the kick: house, techno, dub; the hats: drum and bass), how far the pad rises in it (percent),
  * how many bars a build takes (a trap's two, a house's eight), and whether the kick comes back for the build's last bar (the four on the floor) */
 static const struct { uint8_t kick, hat, build, pad, kret; } SECT[EN_NGENRE] = {
-    {1, 0, 4, 90, 1}, {0, 0, 2, 60, 0}, {1, 0, 8, 90, 1}, {1, 0, 4, 40, 0}, {0, 1, 4, 90, 0}, {0, 1, 4, 90, 0}, {0, 0, 4, 90, 0}, {0, 0, 4, 80, 0},
+    {1, 0, 4, 90, 1}, {0, 0, 2, 60, 0}, {1, 0, 8, 90, 1}, {1, 0, 4, 40, 0}, {1, 0, 4, 40, 0}, {0, 1, 4, 90, 0}, {0, 0, 4, 90, 0}, {0, 0, 4, 80, 0},
     {0, 0, 4, 90, 1}, {0, 0, 2, 40, 0}, {0, 0, 4, 90, 1}, {0, 0, 4, 80, 0}, {0, 0, 4, 60, 0}, {0, 0, 4, 90, 1}, {0, 0, 4, 80, 0}, {0, 0, 2, 60, 0}};
 static int sec_n = 4;                           /* the build's length in bars (from SECT when it starts) */
 static float snr_rise;                          /* the snare's pitch, semitones: it climbs through a build */
@@ -2455,9 +2457,9 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
  * for Length and let go; each note opens the filter again (the Drone env page's attack and decay). 1 Root: the genre's rhythm. 2 Kick: where the kick
  * hits. 3 Eighths. 4 Off-beat. 5 Walk: a note a beat, root, third or fifth, fifth, then an approach to the next. 6 Riff: the genre's figure.
  * Move is how often a note goes up an octave, to the fifth or to the scale note below the root instead. A breakdown plays none. */
-static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x2421, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401, 0x5555, 0x4529, 0x0149, 0x5555, 0x2449, 0x0401};
+static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x0501, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401, 0x5555, 0x4529, 0x0149, 0x5555, 0x2449, 0x0401};
 static const struct { uint16_t mask; int8_t iv[4]; } BL_RIFF[EN_NGENRE] = {
-    {0x5555, {0, 0, 12, 0}},  {0x0421, {0, 7, 5, 0}},   {0x4444, {0, 0, 12, 0}},  {0x0401, {0, 0, -2, 0}},  {0x2421, {0, 0, 0, 3}},
+    {0x5555, {0, 0, 12, 0}},  {0x0421, {0, 7, 5, 0}},   {0x4444, {0, 0, 12, 0}},  {0x0401, {0, 0, -2, 0}},  {0x0501, {0, 0, 7, 5}},
     {0x0441, {0, 0, 7, 5}},   {0x1121, {0, 0, 12, 7}},  {0x0449, {0, 7, 0, 12}},  {0x5555, {0, 0, 12, 0}},  {0x2401, {0, 0, 12, 7}},
     {0x5555, {0, 12, 0, 12}}, {0x4529, {0, 12, 0, 7}},  {0x0149, {0, 0, 7, 5}},   {0x5555, {0, 0, 12, 0}},  {0x2449, {0, 0, 7, 0}},   {0x0401, {0, 0, -2, 0}}};
 static int bl_fit(int n)
@@ -2590,7 +2592,7 @@ static void flx_tick(int st);
 static uint64_t fx_on;
 /* The pad's comping: the steps of the bar its stabs fall on. Comp 2 .. 8 chooses one; Auto takes the genre's (hypnotic: the off-beats, as ever). */
 static const uint16_t COMP_MASK[7] = {0x4444, 0x1111, 0x4949, 0x0041, 0x2448, 0x0401, 0x5555};   /* off-beat, on-beat, 3-3-2, Charleston, syncopated, sparse, eighths */
-static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4144, 0x0408, 0x4949, 0x2448, 0x1111, 0x0401, 0x4545, 0x2448, 0x4444, 0x0401, 0x2448, 0x0401};
+static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4040, 0x0408, 0x4949, 0x2448, 0x1111, 0x0401, 0x4545, 0x2448, 0x4444, 0x0401, 0x2448, 0x0401};
 static uint16_t comp_mask(void)
 {
     const int c = par[P_PAD_COMP];
@@ -2599,8 +2601,8 @@ static uint16_t comp_mask(void)
 static int comp_hit(int st) { return comp_mask() >> st & 1; }
 
 /* The genre's ghost notes: steps where a soft snare (or kick) may sound that the pattern does not have, with the chance Ghosts gives (at 100: six in ten). */
-static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0x8280, 0x8200, 0xC288, 0x0408, 0, 0, 0, 0x8A48, 0, 0, 0, 0x8280};
-static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0x0A00, 0, 0x2200, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0x4400};
+static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0, 0x8200, 0xC288, 0x0408, 0, 0, 0, 0x8A48, 0, 0, 0, 0x8280};
+static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0x4400};
 
 /* THE PHRASE. Chain: from the bar line the pattern is the chain's next (the bars of 1 2 / 1 1 1 2 / 1 1 2 3 / the Amen's 1 1 3 4 / 1 2 1 3 / 1 2 3 4 / 1 2 3 2 / 1 1 1 5 /
  * all six), so a piece has a phrase of its own and drum drift's changes give way to it. Slice: the drum steps read in another order (halves swapped, a beat stuttered,

@@ -5,7 +5,7 @@
 export const BK_CHUNK = 256, BK_FRAME = 64, BK_MAX = 3840;
 
 // the flash objects worth keeping (plat.h OBJ_*; the panel's calibration, 1, is the unit's own and is never saved), in the order they are read and written
-const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "JUNGLE", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
+const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
 export const BK_OBJECTS = [
   { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
   ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })),
