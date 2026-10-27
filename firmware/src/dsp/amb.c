@@ -892,7 +892,8 @@ void en_fxs(int i, int v) { post(C_FXS, i, v); }
 void en_fill_next(void) { post(C_FILLQ, 0, 0); }
 void en_flx_hold(int on) { post(C_FLXH, on ? 1 : 0, 0); }
 volatile uint8_t en_shed_level;
-void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 2 ? 2 : level, 0); }
+static uint8_t shed3;                          /* shed level 3 (the chunk's copy): the first core gives up the Echoplex, the vinyl noise and the exact output clip */
+void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 3 ? 3 : level, 0); }
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
 volatile float en_drift_bars = 99.0f;
 
@@ -3161,8 +3162,14 @@ static void heads_step(uint32_t n)
 /* one sample of both: the input (a mono send) to the tape's heads (el, er) and the Echoplex (xl, xr) */
 static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
 {
-    float y = (float)plex[plex_w] * (1.0f / 12000.0f);         /* the Echoplex: 160 ms, fed back, darker */
+    float y;
     int t = plex_w - PLEX_TAP;
+    if (shed3) {                                 /* shed level 3: no Echoplex (the tape alone) */
+        *xl = *xr = 0.0f;
+        tape_acc += in;
+        goto tape_part;
+    }
+    y = (float)plex[plex_w] * (1.0f / 12000.0f);         /* the Echoplex: 160 ms, fed back, darker */
     plex_lp += 0.35f * (y - plex_lp);
     plex_lp2 += 0.35f * ((float)plex[t < 0 ? t + PLEX_N : t] * (1.0f / 12000.0f) - plex_lp2);
     plex[plex_w] = s16(in + 0.55f * plex_lp);
@@ -3171,6 +3178,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
     *xl = plex_lp;
     *xr = plex_lp2;
     tape_acc += in + 0.3f * plex_lp;
+tape_part:
     if (++tape_ph >= 4) {                        /* the tape, a quarter of the time */
         float d, h1, h2, fb;
         tape_ph = 0;
@@ -5827,7 +5835,7 @@ static void render_noise(uint32_t n)            /* into its own buffer: the pump
 {
     uint32_t j;
     const float g = vin_m * vn_g, k = nz_lp_k;   /* the vinyl key fades it in; its settings are en_fxs's */
-    if (g <= 0.0f || !en_playing) {
+    if (g <= 0.0f || !en_playing || shed3) {     /* (shed level 3: the vinyl's noise is off) */
         for (j = 0; j < n; j++)
             nzl[j] = nzr[j] = 0.0f;
         return;
@@ -6104,6 +6112,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : 0;
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
     int rv_c2;
+    shed3 = en_shed_level >= 3;
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
     {   /* the tank for this chunk starts now (it reads input older than this chunk's), here or on the other core */
@@ -6292,8 +6301,13 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     master_dyn_block(mixl, mixr, n);            /* the compressor and the limiter */
     for (j = 0; j < n; j++) {                   /* the master gain and the soft clip */
-        out[2 * j] = (int32_t)(fm_tanhf(mixl[j] * gain) * 8300000.0f);
-        out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
+        if (shed3) {                            /* the cheap clip (a rational tanh) */
+            out[2 * j] = (int32_t)(soft_sat(mixl[j] * gain) * 8300000.0f);
+            out[2 * j + 1] = (int32_t)(soft_sat(mixr[j] * gain) * 8300000.0f);
+        } else {
+            out[2 * j] = (int32_t)(fm_tanhf(mixl[j] * gain) * 8300000.0f);
+            out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
+        }
     }
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     if (rv_c2) {                                /* the other core's DX voices (they run behind the master): done before anything touches their state */

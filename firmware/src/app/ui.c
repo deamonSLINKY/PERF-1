@@ -5659,7 +5659,7 @@ void ui_frame(void)
             over_t = calm_t = now;
         } else if (xrun || pk >= 100u) {
             calm_t = now;
-            if ((xrun || now - over_t > 600u) && en_shed_level < 2) {
+            if ((xrun || now - over_t > 600u) && en_shed_level < 3) {
                 en_shed(en_shed_level + 1);
                 over_t = now;
             }

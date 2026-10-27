@@ -149,7 +149,7 @@ void en_init(void);
  * memory between the cores (the job's stages); alive says whether the other core still runs (0: join it, it is retired). */
 void en_core2_attach(int (*submit)(void (*fn)(void *), void *ctx), int (*join)(void), void (*fence)(void), int (*alive)(void));
 extern volatile float en_comp_gr, en_lim_gr, en_out_peak;   /* the master bus now: the compressor's and the limiter's gain reduction (dB, positive), the output's peak (0..1 of full scale) */
-void en_shed(int level);                       /* the load is too high: 0 none, 1 the DX voices to four and no chorus, 2 to two (the UI watches the CPU and says) */
+void en_shed(int level);                       /* the load is too high: 0 none, 1 the DX voices to four and no chorus, 2 to two, 3 also no Echoplex, no vinyl noise and the cheap output clip (the UI watches the CPU and says) */
 extern volatile uint8_t en_shed_level;
 void en_flex_select(int pat);                  /* the Flex Beat pattern the FX_FLEX bit plays (0..EN_NFLEX-1): sent before the bit is set */
 #define EN_NFLEX 15

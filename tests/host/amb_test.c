@@ -933,6 +933,32 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* shed level 3 (no Echoplex, no vinyl noise, the rational output clip): it renders, nothing is broken, the level is as loud as level 0 within 3 dB */
+    {
+        int lv, blk, j, broken = 0;
+        double rms[2] = {0.0, 0.0};
+        for (lv = 0; lv < 2; lv++) {
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_play(1);
+            en_shed(lv ? 3 : 0);
+            run(3.0f);
+            for (blk = 0; blk < 800; blk++) {
+                en_render(buf, 256, 2048);
+                for (j = 0; j < 512; j++) {
+                    if (buf[j] == INT32_MIN || buf[j] > 8400000 || buf[j] < -8400000)
+                        broken++;
+                    rms[lv] += (double)buf[j] / 8300000.0 * (double)buf[j] / 8300000.0;
+                }
+            }
+        }
+        CHECK(!broken, "shed 3: %d samples broken", broken);
+        CHECK(rms[1] > rms[0] * 0.5 && rms[1] < rms[0] * 2.0, "shed 3: level %.4f against %.4f unshed", rms[1], rms[0]);
+        en_shed(0);
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the pluck's deja vu: a random pluck (Style Random, every note chosen from nine tones) at Deja vu 0 repeats its note 8 slots on only by chance, locked
      * (100) it comes round every time; a loop of 4 repeats at a distance of 4. Counted over 12 s of eighths at 120 bpm, the chord held (Drift at the top). */
     {
