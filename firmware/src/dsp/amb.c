@@ -6333,8 +6333,18 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                 bal_dwell--;
             if (bal_block)
                 bal_block--;
-            if (en_shed_level) {                /* the engine is shedding: the chorus is off, the default places */
-                bal_apply(1);
+            if (en_shed_level) {                /* the engine is shedding (the chorus is off): the first core is the one short of time, so the drone and the acid go to the other
+                                                 * (its log shows 25-30 % busy in the pieces that crack); back to the default places if the first core ends up waiting for it */
+                if (bal_lvl == 2 && frac > 8u) {
+                    bal_apply(1);
+                    bal_block = bal_back;
+                } else if (bal_lvl != 2 && !bal_block) {
+                    bal_apply(2);
+                    bal_dwell = 8;
+                    bal_up_t = 1;
+                } else if (bal_lvl == 0) {
+                    bal_apply(1);
+                }
             } else if (!bal_dwell) {
                 if (frac > 8u && bal_lvl > 0) {          /* the first core waits: the other has too much: its chorus, or the drone and acid, come back */
                     bal_apply(bal_lvl - 1);
