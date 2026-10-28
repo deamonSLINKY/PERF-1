@@ -122,13 +122,13 @@ export function EmuScene({ dir }) {
         <span style={{ color: ORANGE }}>{text.label || ""}</span>
       </div>
       <div style={{ position: "absolute", left: 80, top: 110, opacity: Math.min(1, st * 1.4), transform: `translateY(${(1 - st) * 24}px)`, width: 880 }}>
-        <div style={{ fontSize: !text.title || text.title.length <= 20 ? 104 : text.title.length <= 27 ? 84 : 64, fontWeight: 700, lineHeight: 1.05 }}>{text.title}</div>
+        <div style={{ fontSize: Math.max(52, Math.min(104, Math.floor(860 / (Math.max(1, (text.title || "").length) * 0.43)))), fontWeight: 700, lineHeight: 1.05, whiteSpace: "nowrap" }}>{text.title}</div>
         <div style={{ margin: "22px -8px", fontSize: 34, height: 54, whiteSpace: "nowrap" }}>
           {(text.chips || []).map((c, i) => c.startsWith("*")
             ? <Chip key={i} on={lit.has(c.slice(1))}>{c.slice(1)}</Chip>
             : <span key={i} style={{ color: DIM, margin: "0 8px" }}>{c}</span>)}
         </div>
-        <div style={{ fontSize: 36, lineHeight: 1.4, color: "#cfcbd8", fontWeight: 400 }}>{text.body}</div>
+        <div style={{ fontSize: (text.body || "").length > 100 ? 30 : 36, lineHeight: 1.35, color: "#cfcbd8", fontWeight: 400 }}>{text.body}</div>
       </div>
 
       <div style={{ position: "absolute", left: 1040, top: 110, width: 800, height: 800, borderRadius: 40, background: "#0b0b0d", border: "3px solid #3a3d42", boxShadow: "0 30px 80px #0008" }}>

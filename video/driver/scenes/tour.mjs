@@ -108,7 +108,9 @@ export default {
     if (!(await s.waitLit("SAVE", true, 90000))) throw new Error("no break");
     text(s, { label: "AUTO-DJ", title: "The break", body: "The bar before thinned out. Now the mix darkens and the pad rises.", chips: [] });
     readout(s, "BREAK", "SHORT: 4 BARS", 7);
-    await s.wait(7500);
+    await s.wait(3700);
+    await s.tap("HOME"); await s.wait(300);                     // the home screen: the eye (shut in the break, wide in the build, a flash on the drop)
+    await s.wait(3500);
     text(s, { label: "AUTO-DJ", title: "The build", body: "A snare climbing a fifth, the bass opening, a breath of silence before...", chips: [] });
     readout(s, "BUILD", "", 7);
     await s.waitLit("SAVE", false, 20000);
@@ -116,8 +118,7 @@ export default {
     readout(s, "DROP", "", 3);
     await s.wait(4500);
     ring(s, "btn:GLO", 1.4, ""); ring(s, "key:24", 1.2, "");
-    s.press("GLO"); await s.wait(400); await s.tapKey(24); await s.wait(200); s.release("GLO"); await s.wait(800);   // the DJ off
-    await s.tap("HOME"); await s.wait(700);                    // Tempo
+    s.press("GLO"); await s.wait(400); await s.tapKey(24); await s.wait(200); s.release("GLO"); await s.wait(800);   // the DJ off (the home screen is up already)
 
     // ---- 6. the master bus
     text(s, { label: "THE MASTER BUS", title: "Compressor and limiter", body: "Stereo-linked, with a soft knee. The limiter sees the peak coming and holds the ceiling.", chips: ["turn", "*SELECT"] });
@@ -130,12 +131,13 @@ export default {
     readout(s, "RATIO", "UP TO 10:1", 2.5);
     await turnK(s, "KNOB2", -28, 90, "KNOB2"); await s.wait(1500);
     readout(s, "THRESHOLD", "DOWN", 2.5);
-    await turnK(s, "KNOB3", 8, 170, "KNOB3"); await s.wait(1200);
-    await turnK(s, "KNOB4", -70, 25, "KNOB4"); await s.wait(2600);
+    await turnK(s, "KNOB3", 90, 22, "KNOB3"); await s.wait(1000);
+    readout(s, "MAKE-UP", "NEAR THE TOP", 2.5);
+    await turnK(s, "KNOB4", -110, 20, "KNOB4"); await s.wait(3200);
     readout(s, "CEILING", "THE LIMITER HOLDS IT", 3);
     await turnK(s, "KNOB1", -5, 150, "KNOB1"); await s.wait(600);
-    await turnK(s, "KNOB4", 70, 20, "KNOB4"); await s.wait(600);
-    await turnK(s, "KNOB2", 28, 25, "KNOB2"); await turnK(s, "KNOB3", -8, 40, "KNOB3"); await s.wait(800);
+    await turnK(s, "KNOB4", 110, 14, "KNOB4"); await s.wait(400);
+    await turnK(s, "KNOB2", 19, 25, "KNOB2"); await turnK(s, "KNOB3", -90, 14, "KNOB3"); await s.wait(800);
     await s.tap("HOME"); await s.wait(600);
 
     // ---- 7. effects, and editing them
@@ -205,16 +207,13 @@ export default {
 
     // ---- 10. genres
     text(s, { label: "GENRES", title: "Sixteen genres", body: "Hold GLO and turn PRESETS. Each brings its own drums, sounds, chords, effects and compressor.", chips: ["hold", "*GLO", "turn", "*PRESETS"] });
-    readout(s, G[0], "BPM " + BPM[0], 3);
-    await s.wait(3000);
+    readout(s, G[0], "BPM " + BPM[0], 4.5);
+    await s.wait(4600);
     for (let i = 1; i < 16; i++) {
-      if (i === 9) { await s.turn("PRESETS", -2, 200); await s.wait(300); }          // back to piece 1 after Electro's 03
       ring(s, "btn:GLO", 1.1, "GLO"); ring(s, "knob:PRESETS", 1.1, "PRESETS");
       s.press("GLO"); await s.wait(350); s.spin("PRESETS", 1); await s.wait(450); s.release("GLO");
-      if (i === 8) {                                                     // Electro: piece 3
-        await s.wait(300); ring(s, "knob:PRESETS", 1.0, "PRESETS"); await s.turn("PRESETS", 2, 220); await s.wait(300);
-        readout(s, "ELECTRO", "E03 · BPM " + BPM[i], 3); await s.wait(2500);
-      } else { readout(s, G[i], "BPM " + BPM[i], 2.7); await s.wait(2350); }
+      readout(s, G[i], "BPM " + BPM[i], 4.6);
+      await s.wait(4350);
     }
 
     // ---- 11. and much, much more
