@@ -25,8 +25,8 @@ PERF-1 builds on Linux x86-64 (or macOS/Windows through Docker or WSL: JieLi's t
 ## Build and test
 
 ```
-tools/release.sh 0.13.0            # parameter data, the manual's page, the tests, the package, the emulator
-tools/release.sh 0.13.0 --no-tests # without the tests
+tools/release.sh 0.14.0            # parameter data, the manual's page, the tests, the package, the emulator
+tools/release.sh 0.14.0 --no-tests # without the tests
 ./build.sh                        # a development build (version DEV)
 tests/run_tests.sh                # the tests alone
 ```
@@ -38,7 +38,7 @@ The build fails if a soft-double routine is linked (a `double` crept in) and che
 ## The site
 
 ```
-python3 tools/make_pages_site.py 0.13.0 build/site
+python3 tools/make_pages_site.py 0.14.0 build/site
 ```
 
 makes the landing page, the web installer with the package in it, the emulator, the editor and the manual as a static folder with relative links. Publish it with GitHub Pages (a `gh-pages` branch holding the folder's contents works) or any static host.
@@ -48,7 +48,7 @@ makes the landing page, the web installer with the package in it, the emulator, 
 From the site, or from the command line (needs `pip3 install mido python-rtmidi`):
 
 ```
-python3 tools/fm1_install.py build/amb-0.13.0.fwsc
+python3 tools/fm1_install.py build/amb-0.14.0.fwsc
 python3 tools/fm1_install.py --info          # identity of the connected FM-1
 ```
 

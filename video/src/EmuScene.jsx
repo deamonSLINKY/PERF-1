@@ -40,12 +40,11 @@ export function drawFb(canvas, fb, n) {
 }
 
 // the panel camera: where it looks (panel units) and how far in
-const CAMS = { wide: [500, 320, 1.0], fx: [700, 235, 1.75], btns: [760, 230, 1.5], knobs: [740, 110, 1.55], knobL: [215, 150, 2.0], keys: [560, 440, 1.35], keysL: [330, 460, 1.6], keysR: [760, 460, 1.6],
-  octs: [165, 290, 2.0], screen: [418, 162, 2.3] };
+const CAMS = { wide: [500, 320, 1.0] };   // the FM-1 stays whole: the cues ring the controls instead of zooming in
 function camAt(events, t) {
   const cs = events.filter((e) => e.kind === "cam");
   let prev = CAMS.wide, cur = CAMS.wide, t0 = -9;
-  for (const e of cs) { if (e.t > t) break; prev = cur; cur = CAMS[e.to] || CAMS.wide; t0 = e.t; }
+  for (const e of cs) { if (e.t > t) break; prev = cur; cur = CAMS.wide; t0 = e.t; }
   const k = interpolate(t, [t0, t0 + 0.9], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.cubic) });
   return { cx: prev[0] + (cur[0] - prev[0]) * k, cy: prev[1] + (cur[1] - prev[1]) * k, z: prev[2] + (cur[2] - prev[2]) * k };
 }
@@ -58,6 +57,19 @@ function target(tg) {                                 // "btn:FX", "knob:SELECT"
   return [];
 }
 
+
+const CREDIT_LINES = [
+  ["PERF-1", "by deamonSLINKY · free software, GPL-3.0 · github.com/deamonSLINKY/PERF-1"],
+  ["Based on", "HYP-1 by RedtailWorks, a fork of AMB-1 by Charles Vestal"],
+  ["Platform", "Felucca by Leo Kuroshita (Hügelton Instruments), through X0X and FoMni"],
+  ["FM engine, DX7 voices", "Melodee by Kerem Kilic (Ellic Studio), after Dexed (Pascal Gauthier) on MSFA (Raph Levien / Google)"],
+  ["Plate reverb", "after Dattorro, through FoMni"],
+  ["Ideas", "Tuna by delirioux, and Marbles by Émilie Gillet"],
+  ["The hardware", "FM-1-RE; rescue protocol from FM-1-transporter and kagaimiq's jl-uboot-tool"],
+  ["The browser emulator", "an idea from Groove OS by Péter Gombos"],
+  ["Type", "Chakra Petch and Barlow Semi Condensed, SIL OFL"],
+  ["", "M-VAVE and FM-1 are trademarks of their owners. PERF-1 is independent firmware, not affiliated with or endorsed by them."],
+];
 const Chip = ({ children, on }) => (
   <span style={{ display: "inline-block", padding: "4px 18px", margin: "0 8px", borderRadius: 12, fontWeight: 700, fontSize: 34, letterSpacing: ".04em",
     color: on ? "#fff" : INK, background: on ? "#d8452d" : "#2a2c33", border: `2px solid ${on ? "#ff7a5c" : "#44474f"}` }}>{children}</span>
@@ -72,7 +84,30 @@ export function EmuScene({ dir }) {
   useLayoutEffect(() => { if (d) { drawFb(small.current, d.fb, d.lastFb[n]); drawFb(big.current, d.fb, d.lastFb[n]); } });
   if (!d) return <AbsoluteFill style={{ background: BG }} />;
   const f = d.tr.frames[n], ev = d.tr.events;
-  const text = [...ev].reverse().find((e) => e.kind === "text" && e.t <= t) || { title: "", body: "", chips: [] };
+  const cr = ev.find((e) => e.kind === "credits"), ct = cr ? t - cr.t : -1;
+  if (ct >= 0) {                                      // the credits, over the visualizer: two pages
+    const page = ct < 11 ? 0 : 1, local = page ? ct - 11 : ct;
+    const pageFade = page ? interpolate(local, [0, 0.8], [0, 1], { extrapolateRight: "clamp" }) : interpolate(ct, [0, 0.8, 10, 11], [0, 1, 1, 0], { extrapolateRight: "clamp" });
+    const shown = CREDIT_LINES.slice(page ? 5 : 0, page ? 10 : 5);
+    return (
+      <AbsoluteFill style={{ background: `radial-gradient(ellipse at 30% 20%, #25262d, ${BG} 70%)`, fontFamily, color: INK, opacity: fade }}>
+        <Audio src={staticFile(`${dir}/audio.wav`)} volume={fade} />
+        <div style={{ position: "absolute", right: 90, top: 150, width: 720, height: 720, borderRadius: 34, background: "#0b0b0d", border: "3px solid #3a3d42" }}>
+          <canvas ref={big} width={240} height={240} style={{ position: "absolute", left: 36, top: 36, width: 648, height: 648, imageRendering: "pixelated", borderRadius: 6 }} />
+        </div>
+        <div style={{ position: "absolute", left: 100, top: 80, fontSize: 40, letterSpacing: ".2em", color: ORANGE, fontWeight: 700 }}>CREDITS</div>
+        <div style={{ position: "absolute", left: 100, top: 170, width: 1000, opacity: pageFade }}>
+          {shown.map(([k, v], i) => (
+            <div key={i} style={{ marginBottom: 34 }}>
+              {k && <div style={{ fontSize: 26, letterSpacing: ".16em", color: DIM, fontWeight: 600 }}>{k.toUpperCase()}</div>}
+              <div style={{ fontSize: 36, color: v.startsWith("M-VAVE") ? DIM : "#e4e0ec", lineHeight: 1.25 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        <Brand />
+      </AbsoluteFill>
+    );
+  }  const text = [...ev].reverse().find((e) => e.kind === "text" && e.t <= t) || { title: "", body: "", chips: [] };
   const textT = text.t ?? 0;
   const st = spring({ frame: frame - Math.round(textT * fps), fps, config: { damping: 18, stiffness: 120 } });
   const rings = ev.filter((e) => e.kind === "ring" && t >= e.t - 0.05 && t < e.t + (e.dur ?? 1));

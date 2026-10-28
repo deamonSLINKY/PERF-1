@@ -13,7 +13,8 @@ const wasm = resolve(here, "../../build/emu/amb.wasm");
 const scene = (await import(pathToFileURL(scenePath).href)).default;
 
 mkdirSync(out, { recursive: true });
-const emu = await Emu.create({ wasmPath: wasm, seed: scene.seed ?? 0, master: scene.master ?? 2800 });
+const prepared = scene.prepare ? await scene.prepare(wasm) : {};      // settings set up beforehand, out of sight (kept in the firmware's flash)
+const emu = await Emu.create({ wasmPath: wasm, seed: scene.seed ?? 0, master: scene.master ?? 2800, ...prepared });
 const frames = [], fbs = [];
 let fbCount = 0;
 emu.onframe = (f) => {

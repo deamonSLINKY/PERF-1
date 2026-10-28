@@ -29,7 +29,13 @@ export class Emu {
     this.t0 = 0;                      // sample at which recording started
   }
 
-  static async create({ wasmPath, seed = 0, master = 2800 }) {
+  dumpStore() {                         // the objects the firmware has written to its flash (settings, stored pieces), as the web emulator keeps them
+    const ex = this.ex, out = {};
+    for (let o = 0; o < ex.web_nobj(); o++) { const n = ex.web_store_len(o); if (n >= 0) out[o] = new Uint8Array(this.mem.buffer, ex.web_store(o), n).slice(); }
+    return out;
+  }
+
+  static async create({ wasmPath, seed = 0, master = 2800, store = null }) {
     let emu = null;
     const wasi = {
       clock_time_get: (id, prec, out) => { new DataView(emu.mem.buffer).setBigUint64(out, BigInt(Math.round((emu.samples / SR) * 1e9)), true); return 0; },
@@ -41,8 +47,16 @@ export class Emu {
     const { instance } = await WebAssembly.instantiate(readFileSync(wasmPath), { wasi_snapshot_preview1: stub, env });
     const ex = instance.exports;
     emu = new Emu(ex);
-    emu.opts = { wasmPath, seed, master };
+    emu.opts = { wasmPath, seed, master, store };
     if (ex._initialize) ex._initialize();
+    if (store) {                                    // flash as an earlier run left it: before boot
+      const max = ex.web_store_max();
+      for (const [obj, bytes] of Object.entries(store)) {
+        const b = new Uint8Array(bytes).subarray(0, max);
+        new Uint8Array(emu.mem.buffer, ex.web_store(+obj), b.length).set(b);
+        ex.web_store_set_len(+obj, b.length);
+      }
+    }
     ex.web_master(master);
     if (ex.web_seed) ex.web_seed(seed >>> 0);       // 0: the first piece, exact
     ex.web_boot();
@@ -83,6 +97,10 @@ export class Emu {
     const t = this.samples;
     for (let ms = 0; ms < maxMs; ms += stepMs) { if (this.litButton(name)) return (this.samples - t) / SR * 1000 + 0; this.advance(Math.round((stepMs * SR) / 1000)); }
     return -1;
+  }
+  async waitLit(name, state, maxMs, stepMs = 50) {             // wait (recording) until a button's light is on / off
+    for (let ms = 0; ms < maxMs; ms += stepMs) { if (!!this.litButton(name) === state) return true; await this.wait(stepMs); }
+    return false;
   }
   // run for ms without recording (a cut: the video's clock does not move, the device's does)
   skip(ms) {

@@ -4,13 +4,15 @@
 
 **0.13.0 is the first public release.** Its code is identical to the last development build, 0.12.8.
 
+**0.14.0 is the second.** Its code is identical to the last development build, 0.13.15; the builds 0.13.1 to 0.13.15 in the git history are its steps.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## 0.14.0 (in development; the builds 0.13.1 .. 0.13.15 are its steps)
+## 0.14.0 (the builds 0.13.1 .. 0.13.15 are its steps)
 
-- **The xruns were a lost interrupt** (0.13.15): the audio interrupt cleared its flag after the render. A render that ran past its half (11.6 to 12.4 ms in a lofi piece at 55 % load) therefore cleared the flag the next half had already raised: that half was never rendered and its buffer played a second time. Each xrun in a 309 s log was exactly one render missing from the renders count. The flag is now cleared before the render, so a late render is followed at once by the next one and nothing is lost; `XR` counts only halves never rendered, `late` (new in the status log and the installer's Live status) counts renders that ran past their half. Load shedding follows: one step at a time (a single overrun used to climb s0 to s3 in under two seconds), on a lost half, or on six late renders in ten seconds. The installer's status CSV also records the slowest chunk of each window and the histogram of render times.
+- **The xruns were a lost interrupt** (0.13.15): the audio interrupt cleared its flag after the render. A render that ran past its half (11.6 to 12.4 ms in a lofi piece at 55 % load) therefore cleared the flag the next half had already raised: that half was never rendered and its buffer played a second time. Each xrun in a 309 s log was exactly one render missing from the renders count. The flag is now cleared before the render, so a late render is followed at once by the next one and nothing is lost; `XR` counts only halves never rendered, `late` (new in the status log and the installer's Live status) counts renders that ran past their half. Load shedding follows: one step at a time (a single overrun used to climb s0 to s3 in under two seconds), on a lost half, or on six late renders in ten seconds. The installer's status CSV also records the slowest chunk of each window and the histogram of render times. On the unit: the same lofi piece, 9 xruns in 309 s before, 0 xruns in 642 s after (88 late renders, the longest 13.3 ms, absorbed).
 - **Steps page** (0.13.1): a ratchet (x2, x3, x4, x6, flam, swells), a push (late, in twelfths of a step) and a level (ghost, soft, accent) for each step of each lane, stored with the piece in the record's spare bytes (older pieces load with none); some genres ship with tricks.
 - **Bass line page** (0.13.2): the drone as notes (Root, Kick, Eighths, Off-beat, Walk, Riff) with Length, Move and Glide, a genre's own rhythm and riff; lofi, house, dubstep, electro, trap and the newer genres start as a bass line.
 - **Deja vu page** (0.13.3): the pluck remembers its last 4 to 32 notes and brings each round again with a chance (Deja vu, Loop, Leaps); Acid mut chooses what the acid's Mutate changes (all, notes, rhythm, accents).

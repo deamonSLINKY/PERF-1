@@ -15,4 +15,4 @@ body:
     attributes:
       label: Version (optional)
       description: The boot card, or the site footer.
-      placeholder: "0.13.0"
+      placeholder: "0.14.0"
