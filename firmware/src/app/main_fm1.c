@@ -32,10 +32,20 @@ static uint8_t safe_mode;                           /* two failed boots: no audi
 static volatile uint32_t tel_isr_in, tel_isr_out;   /* telemetry: ticks in the timer interrupt while a render ran (it nests into it) and outside it */
 static volatile uint32_t tel_hist[9];                  /* telemetry: renders by time: <5 ms, 5-6, ... 11-12, >= 12 ms */
 static volatile uint32_t tel_max_us;                /* telemetry: the longest render (a half block) since the last frame */
+/* telemetry: that slowest half, dissected (the 12 ms halves whose slowest chunk is under 4 ms): its us; the sum of its chunks' stages (us: what
+ * render_chunk saw); its chunks; the timer interrupt's us nested inside it; those ticks; the step it began at, the main loop's place when it
+ * began (0 between turns, 1 the UI frame, 2 the USB services) << 8 and the half << 12; and its waits for the other core (us, part of the stages).
+ * The rest (us - stages - isr) is drain, control, the pulse and the swung hits: the engine's work outside render_chunk. */
+static volatile uint32_t tel_pkr[7], tel_pkr_sent[7];
+static volatile uint8_t main_where;
 
 static void render_block(int32_t *o)                /* ALNK0: one half, measured */
 {
     uint32_t t0 = fm1_ticks(), us, budget = HALF_FRAMES * 1000000u / FS;
+    uint32_t s0 = 0, w0, c0 = en_prof[9], i0 = tel_isr_in, n0 = en_dbg.nested, k;
+    for (k = 0; k < 9u; k++)
+        s0 += en_prof[k];
+    w0 = en_prof[3] + en_prof[7];
     en_dbg.in_audio = 1;
 #if FELUCCA_UAC
     uac_render_start();
@@ -57,8 +67,19 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
     en_dbg.last_us = us;
     if (us > en_dbg.max_us)
         en_dbg.max_us = us;
-    if (us > tel_max_us)
+    if (us > tel_max_us) {
+        uint32_t s1 = 0, w1 = en_prof[3] + en_prof[7];
         tel_max_us = us;
+        for (k = 0; k < 9u; k++)
+            s1 += en_prof[k];
+        tel_pkr[0] = us;                        /* (a frame may have zeroed en_prof between the two sums: then the stage words are 0 for this half) */
+        tel_pkr[1] = s1 >= s0 ? (s1 - s0) / FM1_TICKS_PER_US : 0u;
+        tel_pkr[2] = en_prof[9] - c0;
+        tel_pkr[3] = (tel_isr_in - i0) / FM1_TICKS_PER_US;
+        tel_pkr[4] = en_dbg.nested - n0;
+        tel_pkr[5] = (uint32_t)en_drum_pos | (uint32_t)main_where << 8 | (o == abuf ? 0u : 1u) << 12;
+        tel_pkr[6] = w1 >= w0 ? (w1 - w0) / FM1_TICKS_PER_US : 0u;
+    }
     tel_hist[us < 5000u ? 0u : us >= 12000u ? 8u : (us - 4000u) / 1000u]++;
     {
         const uint32_t pc = us * 100u / budget;
@@ -558,17 +579,19 @@ static void tel_service(void)
         on = 0;
         return;
     }
-    if (extra) {                                    /* the second frame (F0 7D 50 5A): the slowest chunk's stages and when it was, and the histogram of renders */
-        uint32_t w[20], i, o = 4;
-        uint8_t f[4 + 20 * 5 + 2], b[20 * 4];
-        _Static_assert(4 + (20 * 4 * 8 + 6) / 7 + 1 <= 4 + 20 * 5 + 2, "the frame fits its buffer");
+    if (extra) {                                    /* the second frame (F0 7D 50 5A): the slowest chunk's stages and when it was, the histogram of renders, the slowest half dissected */
+        uint32_t w[27], i, o = 4;
+        uint8_t f[4 + 27 * 5 + 2], b[27 * 4];
+        _Static_assert(4 + (27 * 4 * 8 + 6) / 7 + 1 <= 4 + 27 * 5 + 2, "the frame fits its buffer");
         for (i = 0; i < 9u; i++)
             w[i] = en_peak_stage[i] / FM1_TICKS_PER_US;
         w[9] = en_peak_total / FM1_TICKS_PER_US;
         w[10] = en_peak_info;
         for (i = 0; i < 9u; i++)
             w[11 + i] = tel_hist[i];
-        for (i = 0; i < 20u; i++)
+        for (i = 0; i < 7u; i++)
+            w[20 + i] = tel_pkr_sent[i];
+        for (i = 0; i < 27u; i++)
             b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x5A;
         o += ota_pack7(b, sizeof b, f + o);
@@ -628,9 +651,15 @@ static void tel_service(void)
         }
         f[n++] = 0xF7;
         if (usb_sysex_try(f, n) == 0) {
+            {                                       /* the slowest half's record goes with this window (the second frame carries it; a render may replace it before then) */
+                const uint32_t fl = irq_save();
+                for (i = 0; i < 7u; i++)
+                    tel_pkr_sent[i] = tel_pkr[i];
+                tel_max_us = 0;
+                irq_restore(fl);
+            }
             extra = 1;
             seq++;
-            tel_max_us = 0;
             tel_gap_us = 0;
             tel_ui_us = 0;
             next += 250u;
@@ -768,10 +797,12 @@ static void fm1_main(void)
                 enter_uboot("UBOOT");
             }
         }
+        main_where = 2;
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
         tel_service();
         dx_service();
         px_service();
+        main_where = 0;
         if (usb.ota_req) {
             usb.ota_req = 0;
             en_play(0);
@@ -792,7 +823,9 @@ static void fm1_main(void)
             {
                 const uint32_t t = fm1_ticks();
                 uint32_t u;
+                main_where = 1;
                 ui_frame();
+                main_where = 0;
                 u = (fm1_ticks() - t) / FM1_TICKS_PER_US;
                 if (u > tel_ui_us)
                     tel_ui_us = u;

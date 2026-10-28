@@ -10,6 +10,10 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
+## Unreleased (the builds 0.14.1 .. are its steps)
+
+- **The slowest half, dissected** (0.14.1): the 0.14.0 logs showed halves of 12-13 ms whose slowest chunk was under 4 ms, so the time is going somewhere the stage timers do not see. The status log's second frame now carries, for each window's slowest half, its length, the sum of its chunks' stages, its waits for the second core, the timer interrupt's time inside it, its chunk count, the step it began at and what the main loop was doing (`pkr_*` columns; `tools/fm1sum.py` prints "the slowest halves"). Older loggers ignore the extra words; the new logger reads older firmware. Nothing in the sound changes.
+
 ## 0.14.0 (the builds 0.13.1 .. 0.13.15 are its steps)
 
 - **The xruns were a lost interrupt** (0.13.15): the audio interrupt cleared its flag after the render. A render that ran past its half (11.6 to 12.4 ms in a lofi piece at 55 % load) therefore cleared the flag the next half had already raised: that half was never rendered and its buffer played a second time. Each xrun in a 309 s log was exactly one render missing from the renders count. The flag is now cleared before the render, so a late render is followed at once by the next one and nothing is lost; `XR` counts only halves never rendered, `late` (new in the status log and the installer's Live status) counts renders that ran past their half. Load shedding follows: one step at a time (a single overrun used to climb s0 to s3 in under two seconds), on a lost half, or on six late renders in ten seconds. The installer's status CSV also records the slowest chunk of each window and the histogram of render times. On the unit: the same lofi piece, 9 xruns in 309 s before, 0 xruns in 642 s after (88 late renders, the longest 13.3 ms, absorbed).

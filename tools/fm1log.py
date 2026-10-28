@@ -73,19 +73,27 @@ BENCH_NAMES = ["float mul-add x10 (flash code)", "float mul-add x10 (RAM code)",
 
 
 EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
-         "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12"]
+         "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
+         "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits"]
 
 
 def decode_extra(msg):
     """the second frame: the slowest chunk of the window (its stages in us, its total, its info: step 0-3, size 4-11, tick at start 12, the drone and
-    acid on core 2 13, the chorus on core 1 14, shed 15-16, section 17-18) and how many renders took <5, 5-6 ... 11-12, >=12 ms"""
+    acid on core 2 13, the chorus on core 1 14, shed 15-16, section 17-18), how many renders took <5, 5-6 ... 11-12, >=12 ms, and (0.14.1 on) the
+    slowest half dissected: its us, the sum of its chunks' stages, its chunks, the timer interrupt's us inside it and those ticks, its step | the
+    main loop's place << 8 (0 between, 1 the UI frame, 2 the USB services) | the half << 12, and its waits for the other core (us). Older firmware
+    sends 20 words: the rest read 0."""
     msg = list(msg)
     if msg[:3] != [0x7D, 0x50, 0x5A]:
         return None
     raw = unpack7(msg[3:])
-    if len(raw) < 80:
+    n = min(len(EXTRA), len(raw) // 4)
+    if n < 20:
         return None
-    return dict(zip(EXTRA, struct.unpack("<20I", bytes(raw[:80]))))
+    d = dict(zip(EXTRA, struct.unpack("<%dI" % n, bytes(raw[:4 * n]))))
+    for k in EXTRA[n:]:
+        d[k] = 0
+    return d
 
 
 def decode_bench(msg):

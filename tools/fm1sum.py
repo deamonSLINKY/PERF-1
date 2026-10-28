@@ -54,5 +54,25 @@ def peaks(path):
     print("renders by time (ms): " + "  ".join("%s %.1f%%" % (lab, 100.0 * h / tot) for lab, h in zip(["<5", "5", "6", "7", "8", "9", "10", "11", ">=12"], hist)))
 
 
+def halves(path):
+    """the slowest halves (columns pkr_*, 0.14.1 on): where a half's time went beyond its chunks' stages (the engine's work between chunks:
+    drain, control, the pulse, the swung hits) and the timer interrupt nested in it, with the step and what the main loop was doing"""
+    rows = list(csv.DictReader(open(path)))
+    if not rows or "pkr_us" not in rows[0]:
+        return
+    ranked = sorted((r for r in rows if int(r["pkr_us"])), key=lambda r: -int(r["pkr_us"]))[:12]
+    if not ranked:
+        return
+    where = ["between turns", "UI frame", "USB services"]
+    print("\nthe slowest halves (budget 11.6 ms): total = its chunks' stages + the timer interrupt inside it + the rest (drain, control, pulse, swung hits):")
+    for r in ranked:
+        us, st, isr, wt = int(r["pkr_us"]), int(r["pkr_stages"]), int(r["pkr_isr"]), int(r["pkr_waits"])
+        wi = int(r["pkr_where"])
+        print("  %5.1f s  %s %2d  %5d us = stages %5d (waits %4d) + isr %4d (%2d ticks) + rest %5d  chunks %d  step %2d  half %d  main loop: %s" % (
+            float(r["t"]), GENRES[int(r["genre"])] if int(r["genre"]) < len(GENRES) else r["genre"], int(r["piece"]), us, st, wt, isr, int(r["pkr_nested"]),
+            us - st - isr, int(r["pkr_chunks"]), wi & 255, wi >> 12 & 1, where[wi >> 8 & 15] if (wi >> 8 & 15) < len(where) else wi >> 8 & 15))
+
+
 peaks(sys.argv[1])
+halves(sys.argv[1])
 main()

@@ -271,7 +271,8 @@ const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", 
   "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt"];
 /* the second frame (F0 7D 50 5A): the slowest chunk of the window (its stages in us, its total, its info) and how many renders took <5, 5-6 ... 11-12, >=12 ms; kept with the status frame before it */
 const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
-  "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12"];
+  "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
+  "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits"];   /* the last seven: 0.14.1 on (the slowest half dissected); older firmware sends 20 words */
 const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
 let port = null;
 async function openPort() {
@@ -523,8 +524,9 @@ function onStatus(d) {
 function onExtra(d) {                       /* the second frame follows its status frame at once: it joins that row */
   const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
   const dv = new DataView(new Uint8Array(raw).buffer), w = frames[frames.length - 1];
-  if (!w || raw.length < EXTRA.length * 4) return;
-  EXTRA.forEach((f, i) => { w[f] = dv.getUint32(i * 4, true); });
+  if (!w || raw.length < 20 * 4) return;
+  const n = Math.min(EXTRA.length, raw.length >> 2);
+  EXTRA.forEach((f, i) => { w[f] = i < n ? dv.getUint32(i * 4, true) : 0; });
 }
 async function stStop() {
   clearInterval(stTimer); stTimer = null;
