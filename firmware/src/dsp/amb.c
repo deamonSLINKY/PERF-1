@@ -5171,6 +5171,9 @@ static void drain(void)
 
 /* --------------------------------------------------------------- render --- */
 #define BLK 256
+#ifndef EN_MIN_CHUNK
+#define EN_MIN_CHUNK 128                        /* frames: the shortest chunk a swung or humanized hit may cut (en_render; the clock pulse cuts anywhere) */
+#endif
 static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
 
 /* the pad's bus: a 12 dB low-pass, darker than it sounds on paper (Brian Eno darkened everything: the
@@ -6548,9 +6551,15 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         if (k > n)
             k = n;
         {
-            int32_t w = drums_wait();            /* a swung hit lands on its sample */
+            int32_t w = drums_wait();            /* a swung hit lands on its sample, unless that would cut the chunk shorter than EN_MIN_CHUNK: then it
+                                                 * sounds at that mark, up to 2.9 ms late. Every chunk costs the device a fixed share whatever its length
+                                                 * (0.14.1's log: a swung step whose humanized hats, perc, pluck, acid and bass each cut their own chunk
+                                                 * made halves of 7-9 chunks and 12-13.7 ms, their stages 10-11 ms against 7 for the usual two or three),
+                                                 * so a 256-frame render is now at most three chunks for the hits. The clock pulse still cuts where it
+                                                 * falls: the grid and the MIDI clock out keep their timing; only hits that swing or humanize (6-60 ms
+                                                 * off the grid by design) may come the little later. */
             if (w > 0 && (uint32_t)w < k)
-                k = (uint32_t)w;
+                k = (uint32_t)w >= EN_MIN_CHUNK ? (uint32_t)w : k < EN_MIN_CHUNK ? k : EN_MIN_CHUNK;
         }
         if (timed)
             pulse_left -= (float)k;

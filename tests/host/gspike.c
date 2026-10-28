@@ -93,6 +93,18 @@ int main(int argc, char **argv)
             if (h[b].outside > 4.0 * omed && h[b].outside > 0.1 * med)
                 hot_out[h[b].step & 15]++;
         }
+        {
+            int ch[17] = {0}, mx = 0;
+            for (b = 0; b < n; b++) {
+                ch[h[b].chunks > 16 ? 16 : h[b].chunks]++;
+                if (h[b].chunks > mx)
+                    mx = h[b].chunks;
+            }
+            printf("chunks a half (count of halves by chunks 1..%d):", mx);
+            for (p = 1; p <= (mx > 16 ? 16 : mx); p++)
+                printf(" %d:%d", p, ch[p]);
+            printf("\n");
+        }
         printf("halves > 1.5x median by step: ");
         for (p = 0; p < 16; p++)
             printf(" %d", hot[p]);
