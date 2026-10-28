@@ -6,9 +6,9 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
-    "capture": "node driver/capture.mjs driver/scenes/flex.mjs public/flex",
+    "capture": "node driver/capture.mjs driver/scenes/tour.mjs public/tour",
     "studio": "remotion studio src/index.jsx",
-    "render": "remotion render src/index.jsx Flex out/flex.mp4"
+    "render": "remotion render src/index.jsx Full out/perf1_tour.mp4"
   },
   "dependencies": {
     "@remotion/cli": "4.0.250",
