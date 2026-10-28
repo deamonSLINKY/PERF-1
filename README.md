@@ -1,6 +1,6 @@
 # PERF-1
 
-**Custom live-performance firmware for the M-VAVE FM-1.** Sixteen genres of music that plays itself while you steer it: an auto-DJ, a drum sequencer with real depth, an acid line that answers itself, DX7-style FM voices (and your own), effects you can edit page by page, a mixer and a real compressor and limiter, a Jam page to play along on, scenes, and a screen that shows you what the music is doing. By **deamonSLINKY**.
+**Custom live-performance firmware for the M-VAVE FM-1.** Sixteen genres of music that plays itself while you steer it: an auto-DJ, a drum sequencer with real depth, an acid line that answers itself, DX7-style FM voices (and your own), effects you can edit page by page, a mixer and a real compressor and limiter, a Jam page to play along on, scenes, and a screen that shows you what the music is doing. By **deamonSLINKY**. DEMO VIDEO https://youtu.be/NSJR3SOgDXo
 
 <p align="center"><img src="docs/img/readme-hero.png" width="760" alt="Three screens: the home screen (a summoning circle that turns to the chord's root and draws the chord), the master bus page (the compressor's curve, the limiter and the output meter) and one of the visualizers."></p>
 
