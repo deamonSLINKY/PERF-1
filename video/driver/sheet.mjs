@@ -6,8 +6,8 @@ const tr = JSON.parse(readFileSync(`${dir}/trace.json`)), fb = readFileSync(`${d
 const cols = Math.min(4, ts.length), rows = Math.ceil(ts.length / cols), W = cols * 242, H = rows * 242;
 const px = Buffer.alloc(W * H * 3, 40);
 ts.forEach((t, i) => {
-  let f = tr.frames[Math.round(+t * tr.fps)], n = f.fb;
-  for (let k = Math.round(+t * tr.fps); n === undefined; k--) n = tr.frames[k].fb;
+  let k = Math.min(tr.frames.length - 1, Math.round(+t * tr.fps)), n = tr.frames[k].fb;
+  for (; n === undefined; k--) n = tr.frames[k].fb;
   const ox = (i % cols) * 242, oy = Math.floor(i / cols) * 242;
   for (let y = 0; y < 240; y++) for (let x = 0; x < 240; x++) {
     const v = fb.readUInt16LE((n * 57600 + y * 240 + x) * 2), p = ((v >> 8) | (v << 8)) & 0xffff, o = ((oy + y) * W + ox + x) * 3;

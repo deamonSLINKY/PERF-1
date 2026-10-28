@@ -41,6 +41,7 @@ export class Emu {
     const { instance } = await WebAssembly.instantiate(readFileSync(wasmPath), { wasi_snapshot_preview1: stub, env });
     const ex = instance.exports;
     emu = new Emu(ex);
+    emu.opts = { wasmPath, seed, master };
     if (ex._initialize) ex._initialize();
     ex.web_master(master);
     if (ex.web_seed) ex.web_seed(seed >>> 0);       // 0: the first piece, exact
@@ -75,6 +76,23 @@ export class Emu {
     }
   }
   get time() { return (this.samples - this.t0) / SR; }
+  clone() { return Emu.create(this.opts); }                       // another device with the same start (to look ahead: it is deterministic)
+  litButton(name) { return (this.ex.web_lit_buttons() >>> BTN[name]) & 1; }
+  // run until a button's light is on (SAVE lights through a breakdown and a build); ms of device time at most. Returns the device's time (ms) when it came on, or -1
+  async runUntilLit(name, maxMs, stepMs = 50) {
+    const t = this.samples;
+    for (let ms = 0; ms < maxMs; ms += stepMs) { if (this.litButton(name)) return (this.samples - t) / SR * 1000 + 0; this.advance(Math.round((stepMs * SR) / 1000)); }
+    return -1;
+  }
+  // run for ms without recording (a cut: the video's clock does not move, the device's does)
+  skip(ms) {
+    const n = Math.round((ms * SR) / 1000), was = this.recording;
+    this.recording = false;
+    this.advance(n);
+    this.recording = was;
+    this.t0 += n;
+    this.lastBlits = -1;
+  }
 
   // ---- recording
   start(fps = 30) {
