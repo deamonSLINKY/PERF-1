@@ -1639,6 +1639,46 @@ int main(void)
         en_genre(0);
         en_param_text(P_DRIFT, 60, t);
         CHECK(!strcmp(t, "1:42"), "drift 60 in hypno: %s", t);
+        /* the progression loop starts from the chord playing: house with Loop 4 plays home, a, b, c, home, a, b, c */
+        en_play(0);
+        en_genre(2);
+        en_pool(EN_MODE_POOL[MODE_AEOLIAN]);
+        en_set(P_ROOT, 9);
+        en_set(P_CH_LOOP, 2);
+        en_regrow();
+        run(0.05f);
+        {
+            int rt[12], bad = 0;
+            rt[0] = en_chord_root % 12;
+            for (k = 1; k < 12; k++) {
+                en_next();
+                run(0.02f);
+                rt[k] = en_chord_root % 12;
+            }
+            for (k = 0; k < 8; k++)
+                bad += rt[k + 4] != rt[k];
+            CHECK(rt[0] == 9 && rt[4] == 9 && rt[8] == 9 && bad == 0, "loop 4: %d %d %d %d | %d %d %d %d | %d %d %d %d", rt[0], rt[1], rt[2], rt[3], rt[4], rt[5], rt[6], rt[7], rt[8], rt[9], rt[10], rt[11]);
+            printf("  house loop 4: %d %d %d %d | %d %d %d %d\n", rt[0], rt[1], rt[2], rt[3], rt[4], rt[5], rt[6], rt[7]);
+        }
+        /* the pieces: every dub piece's pad stabs (the skank), and the genres' chord loops */
+        {
+            static int16_t pp[P_NPARAMS];
+            uint16_t pl;
+            int nstab = 0;
+            for (k = 0; k < 10; k++) {
+                en_piece_g(4, k, pp, &pl);
+                nstab += (0x2E7140u >> pp[P_PADTONE]) & 1u;   /* Stabs 6, Dub 8, Pings 12, Hits 13, Rave 14, Wurli 17, Mallet 18, Brass 19, Pluck 21 */
+            }
+            CHECK(nstab == 10, "dub pieces with a stabbing pad: %d of 10", nstab);
+            en_piece_g(2, 0, pp, &pl);
+            CHECK(pp[P_CH_LOOP] == 2, "house piece 1 loop: %d", pp[P_CH_LOOP]);
+            en_piece_g(13, 0, pp, &pl);
+            CHECK(pp[P_CH_LOOP] == 2, "synthwave piece 1 loop: %d", pp[P_CH_LOOP]);
+            en_piece_g(3, 0, pp, &pl);
+            CHECK(pp[P_CH_LOOP] == 1, "dubstep piece 1 loop: %d", pp[P_CH_LOOP]);
+            en_piece_g(1, 0, pp, &pl);
+            CHECK(pp[P_CH_LOOP] == 0, "lofi piece 1 loop: %d", pp[P_CH_LOOP]);
+        }
         en_init();
         en_play(1);
     }

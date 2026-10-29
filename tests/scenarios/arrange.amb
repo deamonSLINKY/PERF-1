@@ -59,7 +59,7 @@ tapkey w3
 release SEL
 wait 5000
 expect par48 3
-# the progression loop (Chords page K4: 2 chords): after two new chords the progression repeats, A B A B A B (the roots are the seeded run's: 0.14.9's motif draws changed them from 4, 9 to 5, 2)
+# the progression loop (Chords page K4: 2 chords): the loop starts from the chord playing (home, A), so after one new chord the two alternate, B A B A B A (the root 5 is the seeded run's; since 0.14.16 the loop holds home)
 turn SELECT -100 10
 turn SELECT 4 100
 expect view 4
@@ -70,16 +70,16 @@ wait 2500
 expect chordroot 5
 tap EDIT
 wait 2500
-expect chordroot 2
+expect chordroot 9
 tap EDIT
 wait 2500
 expect chordroot 5
 tap EDIT
 wait 2500
-expect chordroot 2
+expect chordroot 9
 tap EDIT
 wait 2500
 expect chordroot 5
 tap EDIT
 wait 2500
-expect chordroot 2
+expect chordroot 9
