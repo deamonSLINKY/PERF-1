@@ -1522,6 +1522,100 @@ int main(void)
         en_play(1);
     }
 
+    /* the harmony (0.14.14): a dominant in minor, no diminished chords, the genre's harmonic rhythm in bars */
+    {
+        int k, n, found, mask;
+        char t[12];
+        en_init();
+        en_play(0);                              /* resting: en_next changes the chord at once */
+        en_genre(1);                             /* lofi: 2 bars a chord, cadences with a dominant */
+        en_pool(EN_MODE_POOL[MODE_AEOLIAN]);
+        en_set(P_ROOT, 9);                       /* A minor: V is E, its third G (7) or, as a dominant, G# (8) */
+        en_set(P_CHORD, EN_CH_TRIAD);
+        en_set(P_DRIFT, 60);
+        en_regrow();
+        run(0.05f);
+        for (k = 0, found = 0; k < 300 && !found; k++) {
+            en_next();
+            run(0.02f);
+            found = en_chord_root % 12 == 4;
+        }
+        for (k = 0, mask = 0; k < en_chord_n; k++)
+            mask |= 1 << (en_chord[k] % 12);
+        CHECK(found, "lofi reaches V within 300 chords");
+        CHECK(found && (mask & 1 << 8) && !(mask & 1 << 7), "lofi's V in A minor is E major (pcs %03x)", mask);
+        en_genre(2);                             /* house: no dominant */
+        en_regrow();
+        run(0.05f);
+        for (k = 0, found = 0; k < 300 && !found; k++) {
+            en_next();
+            run(0.02f);
+            found = en_chord_root % 12 == 4;
+        }
+        for (k = 0, mask = 0; k < en_chord_n; k++)
+            mask |= 1 << (en_chord[k] % 12);
+        CHECK(found && (mask & 1 << 7) && !(mask & 1 << 8), "house's v in A minor is E minor (pcs %03x)", mask);
+        /* no diminished chords: synthwave in C major walked 400 chords lands on B (vii) rarely, and its leading chord is G, not B */
+        en_genre(13);
+        en_pool(EN_MODE_POOL[MODE_IONIAN]);
+        en_set(P_ROOT, 0);
+        en_regrow();
+        run(0.05f);
+        {
+            int cnt[12] = {0};
+            for (k = 0, n = 0; k < 400; k++) {
+                en_next();
+                run(0.02f);
+                n += en_chord_root % 12 == 11;
+                cnt[en_chord_root % 12]++;
+            }
+            CHECK(n < 40, "vii in C major: %d of 400 chords", n);
+            printf("  synthwave in C major, 400 chords by root:");
+            for (k = 0; k < 12; k++)
+                printf(" %d", cnt[k]);
+            printf("\n");
+        }
+        /* the harmonic rhythm: house changes chord every 2 bars, on the bar; Drift halves and doubles it; the text says so */
+        en_genre(2);
+        en_pool(EN_MODE_POOL[MODE_AEOLIAN]);
+        en_set(P_TEMPO, 120);
+        en_set(P_CH_LOOP, 0);
+        en_regrow();
+        run(0.05f);
+        en_play(1);
+        {
+            int last = -1, nch = 0, odd = 0, prev_bar = -1, gaps_bad = 0;
+            for (k = 0; k < 40 * 16; k++) {      /* 40 bars, a sixteenth at a time */
+                int sig, bar;
+                run(0.125f);
+                sig = en_chord[0] | en_chord[1] << 7 | en_chord[2] << 14 | en_chord[3] << 21;
+                bar = (int)(en_bars / 16u);
+                if (sig != last && last >= 0) {
+                    nch++;
+                    odd += bar & 1;
+                    if (prev_bar >= 0 && bar - prev_bar != 2)
+                        gaps_bad++;
+                    prev_bar = bar;
+                }
+                last = sig;
+            }
+            CHECK(nch >= 17 && nch <= 20, "house: %d chord changes in 40 bars (2 bars a chord)", nch);
+            CHECK(odd == 0 && gaps_bad == 0, "house: changes on even bars, two apart (%d odd, %d bad gaps)", odd, gaps_bad);
+            printf("  house: %d chord changes in 40 bars\n", nch);
+        }
+        en_param_text(P_DRIFT, 60, t);
+        CHECK(!strcmp(t, "2 bars"), "drift 60 in house: %s", t);
+        en_param_text(P_DRIFT, 0, t);
+        CHECK(!strcmp(t, "1 bar"), "drift 0 in house: %s", t);
+        en_param_text(P_DRIFT, 100, t);
+        CHECK(!strcmp(t, "8 bars"), "drift 100 in house: %s", t);
+        en_genre(0);
+        en_param_text(P_DRIFT, 60, t);
+        CHECK(!strcmp(t, "1:42"), "drift 60 in hypno: %s", t);
+        en_init();
+        en_play(1);
+    }
+
     /* stop: the tails die away */
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, en_param_info(i)->def);

@@ -53,7 +53,7 @@ SELECT walks 31 pages in this order; the buttons jump to a group (ENV, LFO, ARP,
 
 | Page | Button | a | b | c | d |
 |---|---|---|---|---|---|
-| Tempo | HOME | Tempo (70-190) | Evolve | Motion | Drift (20 s - 5 min a chord) |
+| Tempo | HOME | Tempo (70-190) | Evolve | Motion | Drift (bars a chord: the genre's, halved to x4; HYPNO 20 s - 5 min) |
 | Pad | ENV | Level | Bright | Sound (24) | Detune |
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (1/4 note - 32 bars) | Depth | Shape (6: sine .. drift) | Target (filter, level, pan, pitch) |

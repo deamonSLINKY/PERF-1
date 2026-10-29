@@ -552,6 +552,7 @@ static void secs_text(float s, char *b)          /* "0.25s", "2.4s", "12s" */
 }
 
 static float drift_secs(int v) { return 20.0f * fm_exp2f((float)v * 0.039069f); }   /* 20 s .. 5 min */
+static int hr_bars_v(int v);                    /* the chord's bars in a genre with a harmonic rhythm (0: by Drift's clock) */
 
 void en_param_text(int i, int v, char *b)
 {
@@ -659,6 +660,15 @@ void en_param_text(int i, int v, char *b)
     }
     if (i == P_DRIFT) {
         int sec = (int)(drift_secs(v) + 0.5f);
+        const int hb = hr_bars_v(v);
+        if (hb) {                               /* a genre with a harmonic rhythm: bars a chord */
+            const char *q = hb == 1 ? " bar" : " bars";
+            b = itoa_s(hb, b);
+            while (*q)
+                *b++ = *q++;
+            *b = 0;
+            return;
+        }
         if (sec < 60) {
             b = itoa_s(sec, b);
             *b++ = 's';
@@ -925,6 +935,7 @@ static int links_on(void) { return par[P_LINKS] != 0; }
 static uint32_t pool = 0xAADu;                  /* Ionian until told */
 static int nsteps, steps[12];                   /* the scale */
 static int deg;                                 /* the chord's scale degree */
+static uint8_t dom_on;                          /* a dominant in minor: the scale's seventh degree raised a semitone while the chord is V (dom_apply) */
 static int chord_pcs[4], chord_nt;
 static float tunefac = 1.0f;
 static uint32_t rng = 0x9E3779B9u;
@@ -1516,6 +1527,7 @@ static float rev_in_gain = 1.0f;                /* falls to 0 while frozen */
 static void scale_set(void)
 {
     nsteps = en_scale(pool, steps);
+    dom_on = 0;                                 /* the natural scale (dom_apply raises the seventh again if the chord is V) */
 }
 
 /* THE ANSWER. The acid line asks (the call) and now and then answers: a value type * 5 + dir (0 off; types 1 octave, 2 fifth, 3 third in the scale,
@@ -1604,6 +1616,12 @@ static void pad_retarget(void)                  /* the chord's tones to the four
 {
     int from[4], to[4], i;
     chord_nt = en_chord_kind(pool, par[P_ROOT], deg, par[P_CHORD], chord_pcs);
+    if (dom_on) {                               /* the dominant's third (the scale's seventh): a semitone up, as the scale has it now */
+        const int nat = (par[P_ROOT] + steps[6] - 1) % 12;
+        for (i = 0; i < chord_nt; i++)
+            if (chord_pcs[i] == nat)
+                chord_pcs[i] = (nat + 1) % 12;
+    }
     for (i = 0; i < EN_NPAD; i++)
         from[i] = (int)(pad[i].target + 0.5f);
     {   /* the pad's register (C3 .. F5), moved by its octaves and the song's, within C1 .. C8 */
@@ -1653,10 +1671,13 @@ static void bass_to(int pc)
 
 static float drift_left, drift_total, evolve;   /* evolve: Evolve, 0..1 */
 static uint8_t change_pending, fifth_done;
+static int hr_left;                             /* a harmonic rhythm: the chord's bars left after this one (the bar line counts; 0 otherwise) */
+static int hr_bars(void) { return hr_bars_v(par[P_DRIFT]); }
 
 static void drift_reset(void)
 {
-    drift_total = drift_secs(par[P_DRIFT]) * (0.7f + 0.6f * frand()) * EN_SR;
+    hr_left = hr_bars();
+    drift_total = hr_left ? (float)hr_left * 16.0f * step_len : drift_secs(par[P_DRIFT]) * (0.7f + 0.6f * frand()) * EN_SR;
     drift_left = drift_total;
     fifth_done = 0;
 }
@@ -1664,37 +1685,63 @@ static void drift_reset(void)
 /* each genre's chord habits on a 7-note scale (degrees 0..6: I, ii, III, IV, V, VI, VII; the chord is a number of the scale, minor or major): every move to
  * another degree weighs 1; the genre's own moves add to that (the edges: from, to, weight: ii-V-I for lofi, i-VII-VI-VII for house, i-VI-III-VII for synthwave),
  * home adds a pull (tonic); the chord before a phrase's end (every cad_every chords) heads for cad_to and the phrase's end for home, so the tonic is
- * heard on the phrase boundary; back: the move straight back to the chord before (A B A) is allowed (a house loop wants it, a lofi turnaround does not). */
+ * heard on the phrase boundary; back: the move straight back to the chord before (A B A) is allowed (a house loop wants it, a lofi turnaround does not).
+ * hr: the genre's harmonic rhythm, bars a chord (0: Drift's clock in seconds, hypno); Drift then halves or doubles it (hr_bars_v). dom: a dominant
+ * in minor: on V the scale's seventh degree is raised a semitone (the chord's third, the acid's and the bass's note) so the cadence is a real one.
+ * A diminished degree (its fifth a tritone: vii in a major mode, ii in a minor one) is rare, and a leading chord that is one is replaced by V (or IV). */
 typedef struct { uint8_t from, to, w; } ch_edge_t;
-static const struct { uint8_t tonic, cad_every, cad_to, back; ch_edge_t e[8]; } CHT[EN_NGENRE] = {
-    {0, 0, 0, 0, {{0}}},                                                                    /* HYPNO: the walk by degree (W7) */
-    {2, 8, 4, 0, {{1, 4, 12}, {4, 0, 12}, {0, 1, 4}, {0, 3, 4}, {3, 1, 5}, {5, 1, 6}, {2, 5, 6}, {6, 2, 5}}},   /* lofi: ii-V-I, turnarounds */
-    {2, 4, 6, 1, {{0, 6, 8}, {6, 5, 6}, {5, 6, 6}, {6, 0, 5}, {5, 0, 3}, {0, 5, 5}, {3, 6, 3}, {0, 0, 0}}},    /* house: i-VII-VI-VII loops */
-    {4, 8, 6, 0, {{0, 5, 6}, {5, 0, 8}, {0, 6, 4}, {6, 0, 6}, {0, 4, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* dubstep: sparse, VI and home */
-    {3, 4, 3, 1, {{0, 3, 8}, {3, 0, 8}, {0, 6, 5}, {6, 0, 5}, {0, 5, 3}, {5, 6, 3}, {0, 0, 0}, {0, 0, 0}}},    /* dub: a minor vamp, one and four */
-    {2, 4, 4, 0, {{1, 4, 10}, {4, 0, 8}, {0, 5, 5}, {5, 1, 6}, {0, 3, 4}, {3, 1, 4}, {0, 0, 0}, {0, 0, 0}}},   /* dnb: liquid ii-V */
-    {3, 4, 4, 0, {{0, 3, 4}, {3, 4, 4}, {4, 0, 6}, {0, 5, 4}, {5, 3, 4}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* breaks: even, V home */
-    {2, 4, 4, 0, {{1, 4, 8}, {4, 0, 8}, {0, 5, 5}, {5, 3, 5}, {3, 1, 5}, {2, 5, 4}, {0, 0, 0}, {0, 0, 0}}},    /* garage: soulful */
-    {4, 4, 4, 0, {{0, 4, 5}, {4, 0, 7}, {0, 3, 4}, {3, 0, 6}, {0, 6, 3}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* electro: a fifth, home */
-    {5, 4, 6, 0, {{0, 5, 6}, {5, 6, 5}, {6, 0, 8}, {0, 3, 3}, {3, 0, 7}, {5, 0, 5}, {0, 0, 0}, {0, 0, 0}}},    /* trap: dark, home */
-    {2, 4, 4, 0, {{1, 4, 10}, {4, 0, 9}, {0, 3, 5}, {3, 6, 6}, {6, 2, 6}, {2, 5, 6}, {5, 1, 6}, {0, 0, 0}}},   /* disco: the circle of fifths */
-    {5, 4, 3, 1, {{0, 3, 8}, {3, 0, 8}, {0, 6, 3}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* funk: the dorian vamp (i-IV) */
-    {3, 4, 4, 1, {{0, 3, 7}, {3, 0, 7}, {0, 4, 5}, {4, 0, 7}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* reggae: one, four, five */
-    {3, 4, 6, 0, {{0, 5, 8}, {5, 2, 8}, {2, 6, 8}, {6, 0, 7}, {6, 5, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* synthwave: i-VI-III-VII */
-    {2, 8, 4, 0, {{1, 4, 10}, {4, 0, 9}, {0, 1, 5}, {0, 3, 4}, {3, 1, 5}, {5, 1, 5}, {0, 0, 0}, {0, 0, 0}}},   /* amapiano: jazzy turnarounds */
-    {5, 8, 6, 0, {{0, 5, 5}, {5, 0, 7}, {0, 3, 4}, {3, 0, 6}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* trip-hop: minor, sparse, home */
+static const struct { uint8_t tonic, cad_every, cad_to, back, hr, dom; ch_edge_t e[8]; } CHT[EN_NGENRE] = {
+    {0, 0, 0, 0, 0, 0, {{0}}},                                                                    /* HYPNO: the walk by degree (W7) */
+    {2, 8, 4, 0, 2, 1, {{1, 4, 12}, {4, 0, 12}, {0, 1, 4}, {0, 3, 4}, {3, 1, 5}, {5, 1, 6}, {2, 5, 6}, {6, 2, 5}}},   /* lofi: ii-V-I, turnarounds */
+    {2, 4, 6, 1, 2, 0, {{0, 6, 8}, {6, 5, 6}, {5, 6, 6}, {6, 0, 5}, {5, 0, 3}, {0, 5, 5}, {3, 6, 3}, {0, 0, 0}}},    /* house: i-VII-VI-VII loops */
+    {4, 8, 6, 0, 8, 0, {{0, 5, 6}, {5, 0, 8}, {0, 6, 4}, {6, 0, 6}, {0, 4, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* dubstep: sparse, VI and home */
+    {3, 4, 3, 1, 4, 0, {{0, 3, 8}, {3, 0, 8}, {0, 6, 5}, {6, 0, 5}, {0, 5, 3}, {5, 6, 3}, {0, 0, 0}, {0, 0, 0}}},    /* dub: a minor vamp, one and four */
+    {2, 4, 4, 0, 4, 1, {{1, 4, 10}, {4, 0, 8}, {0, 5, 5}, {5, 1, 6}, {0, 3, 4}, {3, 1, 4}, {0, 0, 0}, {0, 0, 0}}},   /* dnb: liquid ii-V */
+    {3, 4, 4, 0, 4, 1, {{0, 3, 4}, {3, 4, 4}, {4, 0, 6}, {0, 5, 4}, {5, 3, 4}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* breaks: even, V home */
+    {2, 4, 4, 0, 2, 1, {{1, 4, 8}, {4, 0, 8}, {0, 5, 5}, {5, 3, 5}, {3, 1, 5}, {2, 5, 4}, {0, 0, 0}, {0, 0, 0}}},    /* garage: soulful */
+    {4, 4, 4, 0, 4, 0, {{0, 4, 5}, {4, 0, 7}, {0, 3, 4}, {3, 0, 6}, {0, 6, 3}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* electro: a fifth, home */
+    {5, 4, 6, 0, 4, 0, {{0, 5, 6}, {5, 6, 5}, {6, 0, 8}, {0, 3, 3}, {3, 0, 7}, {5, 0, 5}, {0, 0, 0}, {0, 0, 0}}},    /* trap: dark, home */
+    {2, 4, 4, 0, 2, 1, {{1, 4, 10}, {4, 0, 9}, {0, 3, 5}, {3, 6, 6}, {6, 2, 6}, {2, 5, 6}, {5, 1, 6}, {0, 0, 0}}},   /* disco: the circle of fifths */
+    {5, 4, 3, 1, 4, 0, {{0, 3, 8}, {3, 0, 8}, {0, 6, 3}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* funk: the dorian vamp (i-IV) */
+    {3, 4, 4, 1, 2, 1, {{0, 3, 7}, {3, 0, 7}, {0, 4, 5}, {4, 0, 7}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* reggae: one, four, five */
+    {3, 4, 6, 0, 2, 0, {{0, 5, 8}, {5, 2, 8}, {2, 6, 8}, {6, 0, 7}, {6, 5, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* synthwave: i-VI-III-VII */
+    {2, 8, 4, 0, 4, 1, {{1, 4, 10}, {4, 0, 9}, {0, 1, 5}, {0, 3, 4}, {3, 1, 5}, {5, 1, 5}, {0, 0, 0}, {0, 0, 0}}},   /* amapiano: jazzy turnarounds */
+    {5, 8, 6, 0, 4, 0, {{0, 5, 5}, {5, 0, 7}, {0, 3, 4}, {3, 0, 6}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* trip-hop: minor, sparse, home */
 };
 static volatile uint8_t chord_genre;
 void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
+static int hr_bars_v(int v)                     /* the genre's bars a chord, by Drift: a quarter below 20, half below 45, double above 80, four times above 95 */
+{
+    int b = CHT[chord_genre].hr;
+    if (!b)
+        return 0;
+    b = v < 20 ? b >> 2 : v < 45 ? b >> 1 : v > 95 ? b << 2 : v > 80 ? b << 1 : b;
+    return b < 1 ? 1 : b;
+}
+static int deg_nat(int k) { return steps[k % 7] - (k % 7 == 6 ? dom_on : 0); }   /* the natural scale's step (without the dominant's raise) */
+static int deg_dim(int i) { return nsteps == 7 && (deg_nat(i + 4) - deg_nat(i) + 12) % 12 == 6; }   /* the degree's triad is diminished */
+static void dom_apply(void)                     /* the dominant in minor: the seventh degree raised while the chord is V, in a genre that cadences (CHT dom) */
+{
+    if (nsteps != 7)
+        return;
+    steps[6] -= dom_on;
+    dom_on = (uint8_t)(CHT[chord_genre].dom && deg == 4 && steps[6] - steps[4] == 3 && steps[6] < 11);
+    steps[6] += dom_on;
+}
 static uint8_t deg_prev, cad_n;                  /* the chord before this one; the chords since the phrase began */
 static uint8_t drop_tonic;                       /* the drop takes the next chord home */
 static void chord_change(void)                  /* to another degree: the genre's own moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
     float w[12], sum = 0.0f, r;
-    int i;
+    int i, cad_to = 0;
     const int cg = chord_genre;
     const int rich = nsteps == 7 && cg;
+    if (rich) {                                 /* the leading chord: the genre's, unless the mode makes it diminished (then V, or IV) */
+        cad_to = CHT[cg].cad_to;
+        if (deg_dim(cad_to))
+            cad_to = deg_dim(4) ? 3 : 4;
+    }
     for (i = 0; i < nsteps; i++) {
         if (i == deg) {
             w[i] = 0.0f;
@@ -1706,7 +1753,9 @@ static void chord_change(void)                  /* to another degree: the genre'
                     w[i] += (float)CHT[cg].e[k].w;
             if (!CHT[cg].back && i == deg_prev && deg_prev != deg && cad_n)   /* no A B A (a loop's own chord is the pull back) */
                 w[i] = 0.0f;
-            if (cad_n + 1 >= CHT[cg].cad_every && i == CHT[cg].cad_to && deg != 0)
+            if (deg_dim(i))
+                w[i] *= 0.15f;                  /* a diminished chord: rare */
+            if (cad_n + 1 >= CHT[cg].cad_every && i == cad_to && deg != 0)
                 w[i] += 10.0f;                  /* the chord before the phrase's end: its leading chord */
             if (cad_n >= CHT[cg].cad_every && i == 0)
                 w[i] += 30.0f;                  /* the phrase's end: home */
@@ -1749,6 +1798,7 @@ static void chord_change(void)                  /* to another degree: the genre'
     deg_prev = (uint8_t)deg;
     cad_n = (uint8_t)(i == 0 && rich && cad_n >= CHT[cg].cad_every ? 0 : cad_n + 1);
     deg = i;
+    dom_apply();
     pad_retarget();
     pad_leave();
     bass_to(chord_pcs[0]);
@@ -2809,7 +2859,7 @@ static void tick(void)
         if (dj_sync && sec == SEC_GROOVE && en_playing && !en_frozen) {   /* the DJ follows the chords: the bar before a change is a fill, the change's bar a breakdown */
             if (change_pending)
                 section_cmd(EN_CMD_BREAK);
-            else if (drift_total > 0.0f && drift_left <= step_len * 16.0f)
+            else if (hr_bars() ? hr_left == 1 : drift_total > 0.0f && drift_left <= step_len * 16.0f)
                 fill_bar = 1;
         }
         if (sec == SEC_BUILD && --sec_bars <= 0)
@@ -3012,6 +3062,14 @@ static void tick(void)
         chord_change();
         if (!par[P_DD_EVERY] && (par[P_DD_CHANGE] || par[P_DD_MUTATE]) && dd_in < 0)
             dd_in = 2;                          /* drum drift with the chord: a fill next bar, the change after */
+    }
+    if (st == 0 && en_playing && !en_frozen && hr_bars()) {   /* the genre's harmonic rhythm: this bar counted; the chord's last bar asks for the change on the next bar line */
+        if (hr_left > 0)
+            hr_left--;
+        if (hr_left == 0)
+            change_pending = 1;
+        drift_total = (float)hr_bars() * 16.0f * step_len;   /* the way to the next chord, for the screen and the DJ */
+        drift_left = (float)(hr_left + 1) * 16.0f * step_len;
     }
     sixteenth++;
     en_bars = sixteenth;
@@ -3497,7 +3555,11 @@ static void apply(int p, int v)
         drum_publish();
         break;
     case P_DRIFT:
-        if (drift_total > 0.0f) {                /* keep the progress, at the new pace */
+        if (hr_bars()) {                         /* a harmonic rhythm: a shorter chord takes effect now, a longer one from the next chord */
+            const int hb = hr_bars();
+            if (hr_left >= hb)
+                hr_left = hb - 1;
+        } else if (drift_total > 0.0f) {         /* keep the progress, at the new pace */
             float frac = drift_left / drift_total;
             drift_total = drift_secs(v) * EN_SR;
             drift_left = frac * drift_total;
@@ -3569,6 +3631,7 @@ static void pool_set(uint32_t p)
     scale_set();
     if (deg >= nsteps)
         deg = 0;
+    dom_apply();
     pad_retarget();
     pad_handoff();
     bass_to(chord_pcs[0]);
@@ -3577,6 +3640,7 @@ static void pool_set(uint32_t p)
 static void regrow(void)                        /* a new piece: a fresh acid line, the home chord */
 {
     deg = 0;
+    dom_apply();
     pad_retarget();
     pad_handoff();
     bass_to(chord_pcs[0]);
@@ -6758,10 +6822,17 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     pl_decay += ((en_frozen ? 0.9995f : pl_decay_t) - pl_decay) * 0.002f;
     pl_dd2 = fm_clampf(pl_decay + 0.15f, 0.25f, 0.5f);
     rev_in_gain += ((en_frozen ? 0.0f : 1.0f) - rev_in_gain) * 0.01f;
-    if (en_playing && !en_frozen && !change_pending) {
-        drift_left -= (float)n;
-        if (drift_left <= 0.0f)
-            change_pending = 1;
+    if (en_playing && !en_frozen) {
+        const int hr = hr_bars();
+        if (!change_pending || hr) {
+            drift_left -= (float)n;
+            if (drift_left <= 0.0f) {
+                if (hr)
+                    drift_left = 0.0f;          /* a harmonic rhythm: the bar line changes the chord */
+                else
+                    change_pending = 1;
+            }
+        }
     }
     en_drift_bars = drift_total > 0.0f && step_len > 1.0f ? fm_minf(drift_left / (step_len * 16.0f), 99.0f) : 99.0f;
     en_drift = drift_total > 0.0f ? 1.0f - fm_clampf(drift_left / drift_total, 0.0f, 1.0f) : 0.0f;

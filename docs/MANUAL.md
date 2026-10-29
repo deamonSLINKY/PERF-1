@@ -208,7 +208,7 @@ chords). On a voice's main page KNOB 1 is its level.
 
 | Page | Reach it | a | b | c | d |
 |---|---|---|---|---|---|
-| Tempo | HOME | Tempo (70-190) | Evolve | Motion | Drift (20 s - 5 min a chord) |
+| Tempo | HOME | Tempo (70-190) | Evolve | Motion | Drift (bars a chord in a genre, 1-32; 20 s - 5 min in HYPNO) |
 | Pad | ENV | Level | Bright | Sound (24) | Detune |
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
@@ -255,7 +255,7 @@ master bus; it was called Master) and Global.
 
 ![The Chords page](img/perf-screen-chords.png)
 
-**What moves by itself.** The chord changes now and then (Drift sets how long it stays; EDIT moves it on). Each genre has its own habits in where it goes next on a seven-note scale: lofi and DnB love the fourth up (the ii-V-I turnaround), house loops by steps and thirds, dubstep and trap stay close to home on the dark side, dub keeps to a minor one-four vamp; HYPNO keeps the original walk. The **Loop** setting on the Chords page makes the last 2, 4 or 8 chords repeat.
+**What moves by itself.** The chord changes on the bar line, every so many bars: each genre has its harmonic rhythm (house, disco, garage, lofi, reggae and synthwave 2 bars a chord; dub, DnB, breaks, electro, trap, funk, amapiano and trip-hop 4; dubstep 8), and **Drift** halves or doubles it (below 20 a quarter, below 45 half, above 80 double, above 95 four times; the Tempo page shows the bars). In HYPNO the chord lasts a time instead (Drift 20 s to 5 min, a little random) and changes at the next bar line; EDIT moves it on in any genre. Each genre has its own habits in where it goes next on a seven-note scale: lofi and DnB love the fourth up (the ii-V-I turnaround), house loops by steps and thirds, dubstep and trap stay close to home on the dark side, dub keeps to a minor one-four vamp; HYPNO keeps the original walk. The genres that cadence (lofi, DnB, breaks, garage, disco, reggae, amapiano) play a real dominant in a minor key: on the V chord the scale's seventh is raised a semitone (the chord's third, and the acid's and the bass's note with it), the harmonic minor's leading tone. A diminished chord (the seventh degree of a major key, the second of a minor one) is rare in every genre, and a genre whose leading chord would be diminished in the key cadences through V instead. The **Loop** setting on the Chords page makes the last 2, 4 or 8 chords repeat.
 The pad's voices breathe on unequal cycles and take the new chord's notes as they breathe in. The bass
 follows the chord's root and glides. The acid line's notes are tied to the chord, so the riff transposes;
 Mutate rewrites steps each time round. The pluck plays an arpeggio of the chord's tones. Motion sets how far
@@ -275,7 +275,7 @@ piece. Going down, each voice stops at the bottom of what you can hear (about C1
 
 ### Chords
 
-The pad's chords come from the scale: each is built on a degree of it, and Drift sets how long one lasts
+The pad's chords come from the scale: each is built on a degree of it, and the genre's harmonic rhythm, scaled by Drift, sets how many bars one lasts
 (EDIT moves on now). The **Chords** page (ENV four times) sets what kind of chord that is:
 
 | Chord | What it plays |
@@ -868,7 +868,7 @@ itself, on the bar clock:
 5. the groove again.
 
 The settings (Groove, Break, Fill and Scenes) are on the **Perform** settings page. **Sync** is the fifth Groove
-setting: the groove lasts until the chord changes (the **Drift** time on the Tempo page then sets the length of the
+setting: the groove lasts until the chord changes (the chord's bars, **Drift** on the Tempo page, then set the length of the
 groove), the bar before a change is a fill, and the change's bar is the breakdown. With **DJ new pieces** on (GLO +
 G5), the next piece in the bank comes in on the fill's bar, so the breakdown and the drop belong to it. SAVE pressed
 by hand just moves the DJ on from there. If the drop's key change is on (section 13), it applies on each drop.
