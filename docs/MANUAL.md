@@ -138,7 +138,7 @@ hardware upstream; treat it as a last resort, not a guarantee. Otherwise recover
 | LFO | Bass; again Bass env, again Bass LFO. |
 | ARP | Acid; again Acid env, Acid line, Pluck, Pluck 2. |
 | EDIT | The next chord, on the next bar. |
-| GLO | Global: root, theme, tune, MIDI out. Here SAVE stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter; with PRESETS, the genre. With SEL held: remote (see 17). |
+| GLO | Global: root, theme, tune, genre. Here SAVE stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter; with PRESETS, the genre. With SEL held: remote (see 17). |
 | HOME | The Tempo page; again, the Perform screen; again, back to Tempo. Twice quickly: the visualizers. Held: the settings. With SELECT: the tempo. |
 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. |
 | SEQ | Drums; again Links, Kit, Drum drift; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
@@ -219,12 +219,12 @@ chords). On a voice's main page KNOB 1 is its level.
 | Bass line | LFO x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff) | Length (how long a note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
-| Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate |
+| Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate (SEL + the knob: what a mutation changes: all, notes, rhythm, accents) |
 | Acid answer | ARP x4 | Answer (off, octave, fifth, mirror, sparse) | Every (the 2nd ... 8th time round the line) | Direction (up, down) | - |
 | Acid steps | ARP x5 | Step (the step chosen with a white key: rest, note, accent, slide, accent + slide) | Note (0-11 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
 | Pluck | ARP x6 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | ARP x7 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
-| Deja vu | ARP x8 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Acid mut (what the acid's Mutate changes: all, notes, rhythm, accents) |
+| Deja vu | ARP x8 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | - |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Bass | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
@@ -237,7 +237,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Reverb | SELECT | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | SELECT | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
 | Mixer | SELECT | Track (pad, bass, acid, pluck, drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
-| Global | GLO | Root | Theme (6) | Tune (+-50 cents) | MIDI out (off / on) |
+| Global | GLO | Root | Theme (6) | Tune (+-50 cents) | Genre (the bank: the same as GLO + PRESETS) |
 | Jam | SELECT | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off / on) |
 
 Three more screens are off the dial: the **Sequencer** (hold SEQ; section 8), the **Perform** screen
@@ -302,7 +302,7 @@ page also has **Root** (the same as on Global). For dub techno, try Chord on Dub
 
 There are sixteen **genres**, each a bank of ten **pieces**. Turn **PRESETS** for another piece in the bank
 (01-10 wrap round); hold **GLO** and turn **PRESETS** for another bank (it wraps too), or use the Genre knob
-on the settings page. The same piece number keeps playing, in the new genre, and the genre's own effects come
+on the Global page. The same piece number keeps playing, in the new genre, and the genre's own effects come
 with it (the lofi bank latches vinyl and tape on, house latches the pump on, and so on). Switching clears the
 latched vinyl, tape, pump and phaser first. Each piece has its own settings, its own six drum patterns and its
 own drum sounds; patterns 1-6 run roughly intro, groove, build, peak, variation and a thinner tool. A piece
@@ -521,7 +521,7 @@ Any edit freezes the line (it would otherwise be rewritten); turn Frozen back to
 
 The pluck normally chooses each note afresh. The **Deja vu** page (ARP seven times) makes it remember: it keeps the last 4, 8, 16 or 32 notes (**Loop**), and each time one comes round again, **Pluck vu** is the chance it is the same note, rest or leap as last time (0: every note is new, 100: the loop is locked and repeats exactly). The chord it is played over is the chord of now, so a locked phrase follows the harmony. **Leaps** is how often a new note jumps an octave. Changing the loop's length, or a new piece, forgets the loop.
 
-The acid has always had this in its **Mutate** (Acid line page): each time round it rewrites a few steps. **Acid mut** on this page chooses what a rewrite changes: **All** (as before), **Notes** only (the rhythm stays, the notes drift: the classic acid), **Rhythm** only (the same notes come and go), or **Accents** (only the accents and slides).
+The acid has always had this in its **Mutate** (Acid line page): each time round it rewrites a few steps. **SEL + the Mutate knob** on that page chooses what a rewrite changes: **All** (as before), **Notes** only (the rhythm stays, the notes drift: the classic acid), **Rhythm** only (the same notes come and go), or **Accents** (only the accents and slides).
 
 ### The kits: 14
 
@@ -789,8 +789,8 @@ held to be heard). The dots at the right of the knob strip show where you are am
 | Rv swell | Length (1/2, 1, 2 beats) | Mix | - | - |
 | Ring mod | Tone (40-800 Hz) | Mix | - | - |
 | Auto DJ | Scenes (at once, next bar) | Groove (8, 16, 32, 64 bars, sync) | Break (short, half, full) | Fill (off, on) |
-| Settings | Key (same, +2, +3, +5, +7) | Saver (off, 1, 3, 10 min) | Lights (off, show) | Genre |
-| USB | Level (knob, fixed): the USB audio follows the master knob, or stays at a fixed level so a recording does not move when you turn it | - | - | - |
+| Settings | Key (same, +2, +3, +5, +7) | Saver (off, 1, 3, 10 min) | Lights (off, show) | - |
+| USB & MIDI | Level (knob, fixed): the USB audio follows the master knob, or stays at a fixed level so a recording does not move when you turn it | MIDI out (off, on) | - | - |
 | Flex | Quant (off, beat, bar) | Mode (one shot, loop) | Mix | - |
 | Snips | Pitch | Play | Echo | Level (the keys play the snips on this page, to try them) |
 | Talk | Every (2 bars, 1 bar, 1/2, 1/4, 1/8) | Depth | Reso | Mix |
@@ -1018,7 +1018,7 @@ pattern, the section), in the theme's colours.
 |---|---|
 | The pieces you stored (Global, SAVE), in any genre | At once (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after the last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights), the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights), the USB & MIDI page's USB level, the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -1043,14 +1043,14 @@ Switching to another firmware, or reinstalling, can lose what PERF-1 has stored.
 
 ![Global](img/perf-screen-global.png)
 
-**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor), **Tune** (+-50 cents) and **MIDI out**.
+**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
 
 **The look** is Imp in every theme; the themes are its colour variations. Warm black, one colour per voice everywhere (in Imp: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header has a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick; a piece waiting for the bar shows as `>08` beside the key and mode. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) and shows the knobs' values large with a bar under them; hold **SEL** and the tabs give way to a one-line hint of what shift does on this page.
 The theme, Tune and MIDI out are yours across all pieces.
 
 **MIDI out** (USB): the pad's notes on channel 1, the bass on 3, the acid on 4, the drums on 10 (General MIDI notes),
 and MIDI clock with start, continue and stop. The pluck and the DJ snips are not sent. Notes you play by hand go on their voice's channel.
-MIDI out can be switched off on Global.
+MIDI out can be switched off on the USB & MIDI settings page.
 
 **MIDI in:** channel 1 notes add or remove their note from the scale; clock and start / stop drive the tempo (`EXT` shows in place of the
 tempo). It is read from the USB MIDI port, and from the TRS MIDI input where the build has it.

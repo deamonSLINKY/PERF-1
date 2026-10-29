@@ -45,14 +45,14 @@ static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LF
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
  * the four knobs, the effect itself held on while the page is up, so it is heard as it is edited. K_FXP + 4 *
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 230 };
-enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
+enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
 #define NFXP 24
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
@@ -133,7 +133,7 @@ static const struct {
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
     {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
-                         {"Genre", KN_NAME, 11, GENRE_UI_NAME, 16}}},
+                         {"", KN_NONE, 0, 0, 0}}},   /* (the genre moved to Global's fourth knob in 0.14.7) */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SNIPS", 62, 0, {{"Pitch", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 3}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
@@ -143,7 +143,7 @@ static const struct {
     {"WAH", FX_WAH, 0, {{"Sens", KN_PLAIN, EN_FXS_WH_SENS, 0, 0}, {"Range", KN_PLAIN, EN_FXS_WH_RANGE, 0, 0},
                         {"Reso", KN_PLAIN, EN_FXS_WH_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_WH_MIX, 0, 0}}},
     /* the JAM page's four knobs (the UI's own: uiv 7 .. 10): not an FX page, the dial never walks to it */
-    {"USB", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* the USB audio's level: the knob's, or fixed */
+    {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's) */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -181,7 +181,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {K_ASTY, K_ASNO, K_ASOC, P_AC_LOCK},           /* the acid's steps: the step chosen (a white key): its kind, its note, its octave; and whether the line is frozen (held, and stored with the piece) */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
-    {P_CM_VU, P_CM_LOOP, P_CM_LEAP, P_AC_CHG},     /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps, and what the acid's Mutate changes */
+    {P_CM_VU, P_CM_LOOP, P_CM_LEAP, K_NONE},       /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps (the fourth knob is free since 0.14.7: Acid mut went to SEL + Mutate on the Acid line page) */
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
@@ -194,7 +194,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
     {P_MC_RATIO, P_MC_THR, P_MC_MAKE, P_ML_CEIL},   /* the master bus: compressor and limiter */
     {K_MXT, K_MXL, K_MXP, K_MXS},                  /* the mixer: a layer chosen, its level, its place, its send (the level is also on the layer's own page) */
-    {P_ROOT, P_THEME, P_TUNE, P_MIDI},
+    {P_ROOT, P_THEME, P_TUNE, K_GENRE},            /* global: the song's root, the look, the tuning, the genre (MIDI out is on the USB & MIDI settings page since 0.14.7) */
     {K_NONE, K_NONE, K_NONE, K_NONE},              /* Jam: its knobs are the FXP table's last page (view_knob) */
     {K_LVL, K_TUNE, K_DEC, P_PATTERN},
     {K_FXF, K_FXF + 1, K_FXF + 2, K_FXF + 3},      /* perform: the FX knobs, without the FX menu */
@@ -217,7 +217,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Step", "Note", "Octave", "Frozen"},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
-    {"Pluck vu", "Loop", "Leaps", "Acid mut"},
+    {"Pluck vu", "Loop", "Leaps", ""},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Bass", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
@@ -230,7 +230,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Type", "Damping", "Predelay", "Amount"},
     {"Ratio", "Thresh", "Make-up", "Ceiling"},
     {"Track", "Level", "Pan", "Send"},
-    {"Root", "Theme", "Tune", "MIDI out"},
+    {"Root", "Theme", "Tune", "Genre"},
     {"Voice", "Keys", "Octave", "Answer"},
     {"Level", "Tune", "Decay", "Pattern"},
     {"Filter", "Crush", "Throw", "Wash"},
@@ -562,6 +562,9 @@ static int mix_state(int k)
     return c == 16 ? (ui.trk_m & 15u) == 15u : c == 17 ? (ui.trk_s & 15u) == 15u : 0;
 }
 static void knob_set(int k, int v);
+static int knob_get(int k);
+static void knob_range(int k, int *lo, int *hi);
+static void knob_text(int k, char *b);
 static void scene_reset(void);
 static void undo_save(void)                    /* before a big change: what it will undo to */
 {
@@ -767,6 +770,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
 static int fxp_get(int k)
 {
     switch (FXP_CTL(k).kind) {
+    case KN_PAR: return knob_get(FXP_CTL(k).idx);
     case KN_PRESET: return ui.gx_preset;
     case KN_TGT: return ui.gx_tgt;
     case KN_PTGT: return ui.pm_tgt;
@@ -776,6 +780,10 @@ static int fxp_get(int k)
 static void fxp_range(int k, int *lo, int *hi)
 {
     const int kind = FXP_CTL(k).kind;
+    if (kind == KN_PAR) {
+        knob_range(FXP_CTL(k).idx, lo, hi);
+        return;
+    }
     *lo = kind == KN_LEN || kind == KN_RANGE ? 2 : 0;
     *hi = kind == KN_PRESET ? NGXP - 1 : kind == KN_LEN ? 16 : kind == KN_TGT || kind == KN_PTGT ? NTGT - 1 :
           kind == KN_NAME ? FXP_CTL(k).n - 1 : kind == KN_RANGE ? FXP_CTL(k).n : 100;
@@ -786,9 +794,12 @@ static void fxp_set(int k, int v)
     int lo, hi;
     fxp_range(k, &lo, &hi);
     v = v < lo ? lo : v > hi ? hi : v;
-    if (v != fxp_get(k))
+    if (v != fxp_get(k) && FXP_CTL(k).kind != KN_PAR)
         ui.set_dirty = 1;                        /* a setting changed: written when it has been left alone a moment (settings_save) */
     switch (FXP_CTL(k).kind) {
+    case KN_PAR:                                 /* an engine parameter: the project's, the dial pages' way */
+        knob_set(FXP_CTL(k).idx, v);
+        break;
     case KN_PRESET:
         if (v != ui.gx_preset && v < NGXP - 1)
             gx_load(v);
@@ -831,6 +842,10 @@ static void fxp_text(int k, char *b)
 {
     const char *s = 0;
     const int v = fxp_get(k);
+    if (FXP_CTL(k).kind == KN_PAR) {
+        knob_text(FXP_CTL(k).idx, b);
+        return;
+    }
     if (FXP_CTL(k).kind == KN_PRESET)
         s = GX_PRE[v].name;
     else if (FXP_CTL(k).kind == KN_TGT || FXP_CTL(k).kind == KN_PTGT)
@@ -919,6 +934,8 @@ static int knob_get(int k)
     int p = knob_par(k);
     if (k == K_MXT)
         return ui.mix_trk;
+    if (k == K_GENRE)
+        return proj.genre;
     if (k == K_ACT)                              /* the answer's kind (P_AC_RESP is kind * 5 + direction) */
         return proj.par[P_AC_RESP] / 5;
     if (k == K_ACD)
@@ -960,6 +977,11 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = k == K_ACT ? 8 : 4;
         return;
     }
+    if (k == K_GENRE) {
+        *lo = 0;
+        *hi = EN_NGENRE - 1;
+        return;
+    }
     if (k == K_GRT || k == K_GRA) {
         *lo = 0;
         *hi = k == K_GRT ? EN_NLANE - 1 : 100;
@@ -992,6 +1014,16 @@ static void knob_text(int k, char *b)
     int p = knob_par(k);
     if (k == K_MXT) {
         const char *s = MXT_NAME[ui.mix_trk % 5u];
+        int n = 0;
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
+        return;
+    }
+    if (k == K_GENRE) {
+        const char *s = GENRE_UI_NAME[(unsigned)proj.genre < 16u ? proj.genre : 0];
         int n = 0;
         while (s[n]) {
             b[n] = s[n];
@@ -1106,6 +1138,12 @@ static void knob_set(int k, int v)
     int lo, hi, p = knob_par(k);
     if (k == K_MXT) {
         ui.mix_trk = (uint8_t)(v < 0 ? 0 : v > 4 ? 4 : v);
+        return;
+    }
+    if (k == K_GENRE) {                          /* the genre: a switch of bank (the way GLO + PRESETS does it) */
+        v = v < 0 ? 0 : v > EN_NGENRE - 1 ? EN_NGENRE - 1 : v;
+        if (v != proj.genre)
+            genre_step(v - proj.genre);
         return;
     }
     if (k == K_ACT || k == K_ACD) {              /* one value: 0 off, 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down */
@@ -1854,12 +1892,34 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
 }
 
 /* ------------------------------------------------------------ buttons --- */
+/* the tab chain along the bottom (imp_tabs), and the breadcrumb's names: a tab a voice or group, with its pages */
+static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
+    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 3},
+    {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
 static void set_view(int v)
 {
     int g;
     for (g = 0; g < NGROUP; g++)                 /* remembered: the page last on in its group */
         if (v >= GROUP[g].first && v < GROUP[g].first + GROUP[g].n)
             ui.grp_last[g] = (uint8_t)v;
+    if (v != ui.view && v < NDIAL) {             /* the breadcrumb (0.14.7): "DRUMS  PHRASE 8/8" in the header for a moment, on every change of page in a group of more than one */
+        int t;
+        for (t = 0; t < 10; t++)
+            if (v >= TB[t].first && v < TB[t].first + TB[t].n && TB[t].n > 1) {
+                char b[24];
+                int n;
+                caps(b, VIEW_NAME[v], 18);
+                for (n = 0; b[n]; n++)
+                    ;
+                b[n++] = ' ';
+                b[n++] = (char)('1' + (v - TB[t].first));
+                b[n++] = '/';
+                b[n++] = (char)('0' + TB[t].n);
+                b[n] = 0;
+                say(TB[t].name, b);
+                break;
+            }
+    }
     ui.view = (uint8_t)v;
     if (v < NDIAL)
         ui.last_dial = (uint8_t)v;
@@ -1955,6 +2015,11 @@ static void button(int b)
     int g;
     if (b == B_HOME) {                           /* HOME: the tempo page; again, the perform screen; and back; twice quickly, the visualizers */
         const uint32_t now = plat_ms();
+        if (ui.fx_menu) {                        /* HOME leaves the FX menu too (0.14.7; latched effects play on), then does its usual */
+            ui.fx_menu = 0;
+            ui.fx_page = 0;
+            ui.fx_open_t = 0;
+        }
         if (ui.view == V_VIZ) {                  /* (HOME leaves them: the perform screen) */
             set_view(V_PERF);
             ui.home_t = 0;
@@ -2689,6 +2754,15 @@ static void input(void)
             if (ui.view == V_SEQ && (btn >> B_SEL & 1u)) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation), the lane's probability and length */
                 ui.btn_used |= 1u << B_SEL;
                 seq_trick((int)i, e);
+                ui.act_t = ui.turn_t = plat_ms();
+                continue;
+            }
+            if (ui.view == V_ACLINE && i == 3 && (btn >> B_SEL & 1u)) {   /* SEL + Mutate: what a mutation changes (all, the notes, the rhythm, the accents; it was the Deja vu page's fourth knob) */
+                char t[16];
+                ui.btn_used |= 1u << B_SEL;
+                turn(EN_K1 + (int)i, P_AC_CHG, e);
+                knob_text(P_AC_CHG, t);
+                say("MUTATES", t);
                 ui.act_t = ui.turn_t = plat_ms();
                 continue;
             }
@@ -3679,7 +3753,7 @@ static void draw_shift(void)
     cv_text(4, 1, &FONT_XS, "SHIFT: SEL +", K_ACC);
     for (k = 0; k < 8; k++)
         if (l[k][0])
-            cv_text(8, 18 + k * 15, &FONT_XS, l[k], K_TEXT);
+            cv_text(8, 18 + k * 15, &FONT_XS, ui.view == V_ACLINE && l == GEN && k == 0 ? "MUTATE    WHAT IT CHANGES" : l[k], K_TEXT);   /* (the Acid line page: its fourth knob's shift) */
 }
 
 /* the load, as text: CPU (the first core), XR (the xruns), C2 and the second core's load (the experimental build), S1/S2 (the engine is
@@ -4757,9 +4831,6 @@ static uint16_t view_color(void)                /* the page's voice in its colou
 /* the accordion tabs (the Imp skin's knob strip): a chip a group of pages; the one you are in opens to its name and a pip a page */
 static void imp_tabs(void)
 {
-    static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-        {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 3},
-        {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
     const uint16_t col[10] = {K_TEXT, K_PAD, K_BASS, K_ACID, IMP_TEAL, K_PULSE, K_FROST, K_DIM, K_TEXT, KC_MOVE};
     const int v = ui.view == V_SEQ ? V_DRUMS : ui.view >= V_PERF ? V_TEMPO : (int)ui.view;
     int32_t x = 3;
@@ -5385,7 +5456,7 @@ static void settings_load(void)
     for (p = 0; p < NFXP; p++)
         for (c = 0; c < 4; c++) {
             const int k = K_FXP + 4 * p + c, kind = FXP[p].c[c].kind;
-            if (kind == KN_NONE || kind == KN_PRESET)
+            if (kind == KN_NONE || kind == KN_PRESET || kind == KN_PAR)   /* (KN_PAR: the project's, not a setting) */
                 continue;
             if (FXP[p].bit == 63) {              /* the UI's own (not the genre: 11) */
                 if (FXP[p].c[c].idx < 11)

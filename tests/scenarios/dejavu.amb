@@ -1,5 +1,6 @@
 # The Deja vu page (the ARP button's seventh page, after Pluck 2): how often a pluck note is the one the loop heard last time round (0 new .. 100 locked),
-# the loop's length (4, 8, 16, 32 notes), leaps (an octave away), and what the acid's Mutate changes (all, notes, rhythm, accents).
+# the loop's length (4, 8, 16, 32 notes), leaps (an octave away). What the acid's Mutate changes (all, notes, rhythm, accents) is SEL + Mutate
+# on the Acid line page since 0.14.7 (it was this page's fourth knob).
 seed 0
 wait 3000
 turn SELECT 16 100
@@ -15,14 +16,23 @@ expect par157 1
 spin K3 20
 wait 100
 expect par158 20
-spin K4 2
-wait 100
-expect par159 2
 shot dejavu.png
 spin K1 100
 spin K2 10
-spin K4 10
 wait 100
 expect par156 100
 expect par157 3
+# the acid's Mutates: SEL + the Acid line page's fourth knob
+turn SELECT -5 100
+expect view 11
+expect par159 0
+press SEL
+spin K4 2
+release SEL
+wait 100
+expect par159 2
+press SEL
+spin K4 10
+release SEL
+wait 100
 expect par159 3
