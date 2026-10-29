@@ -851,7 +851,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1794,6 +1794,8 @@ void en_acid_step(int s, int off, int oct, int gate, int accent, int slide)
 {
     post(C_ACSTEP, s & 15, (off & 15) | (oct & 3) << 4 | (gate ? 1 : 0) << 6 | (accent ? 1 : 0) << 7 | (slide ? 1 : 0) << 8);
 }
+void en_acid_capture(int s, int note, int accent, int slide) { post(C_ACCAP, (s & 15) | (accent ? 16 : 0) | (slide ? 32 : 0), note & 127); }
+void en_pluck_capture(int s, int note) { post(C_CMCAP, s & 15, note < 0 ? 128 : note & 127); }
 static void ac_roll_w(int st, int what)         /* a step made anew: what 0 all of it, 1 the note, 2 the rhythm (whether it sounds), 3 the accent and the slide */
 {
     float dens = (float)par[P_AC_DENS] * 0.01f;
@@ -1844,6 +1846,25 @@ static void ac_step_set(int s, int off, int oct, int gate, int accent, int slide
     ac_accent = (uint16_t)(accent ? ac_accent | m : ac_accent & ~m);
     ac_slide = (uint16_t)(slide ? ac_slide | m : ac_slide & ~m);
     ac_publish();
+}
+
+static void ac_capture(int s, int note, int accent, int slide)   /* Capture: a note played by hand into step s, as the offset and octave nearest it under the chord and scale of now (the line then follows the chords) */
+{
+    int off, oct, bo = 0, bc = 0, best = 999;
+    for (oct = 0; oct < 4; oct++)
+        for (off = 0; off < 12 && off < 2 * nsteps; off++) {
+            int d = deg + off, o, n, diff;
+            d += nsteps * 8;
+            o = d / nsteps - 8;
+            n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + oct + par[P_AC_OCT] + par[P_OCT]);   /* (acid_raw, before its register wrap) */
+            diff = n > note ? n - note : note - n;
+            if (diff < best) {
+                best = diff;
+                bo = off;
+                bc = oct;
+            }
+        }
+    ac_step_set(s, bo, bc, 1, accent, slide);
 }
 
 static void ac_regrow(void)
@@ -2343,6 +2364,7 @@ static float cm_vol;
 static int cm_i, cm_alt;
 static uint8_t cm_f[32], cm_g[32], cm_ix[32], cm_vl[32];   /* the pluck's loop (deja vu): a slot heard (f), its gate, its place in the chord's tones (octave leap in bit 7 and 6: up, down), its velocity */
 static uint32_t cm_k;                           /* the slot the next note is in */
+static uint8_t cm_sync;                         /* a captured loop: its slot 0 is the next bar's first step */
 volatile float en_cm_level;
 
 static void cm_trigger(int note, float vel)     /* a note: the next voice, its decay as the Decay knob has it */
@@ -2373,13 +2395,57 @@ static void cm_play(int key)                    /* a note played by hand (the JA
     cm_trigger(note, 0.95f);
 }
 
+static int cm_ladder(int *arp)                  /* the chord's tones over the pluck's octaves, low to high: the ladder a slot's index points into */
+{
+    const int range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE], base = 60 + 12 * (par[P_OCT] + par[P_CM_OCT]);
+    int n = 0, k, o, t;
+    for (o = 0; o < range; o++)
+        for (k = 0; k < chord_nt && n < 12; k++)
+            arp[n++] = base + chord_pcs[k] + 12 * o;
+    for (k = 1; k < n; k++) {
+        t = arp[k];
+        for (o = k - 1; o >= 0 && arp[o] > t; o--)
+            arp[o + 1] = arp[o];
+        arp[o + 1] = t;
+    }
+    return n;
+}
+
+static void cm_capture(int slot, int note)      /* Capture: a note played by hand (or a rest, note < 0) into a slot of the loop, as the nearest rung of the ladder of now, an octave's leap allowed */
+{
+    int arp[12], n, k, best = 0, leap = 0, bd = 999;
+    cm_f[slot] = 1;
+    cm_g[slot] = (uint8_t)(note >= 0);
+    cm_sync = 1;
+    if (note < 0 || chord_nt < 1)
+        return;
+    n = cm_ladder(arp);
+    for (k = 0; k < n; k++) {
+        int l;
+        for (l = -1; l <= 1; l++) {
+            const int c = arp[k] + 12 * l, d = c > note ? c - note : note - c;
+            if (d < bd) {
+                bd = d;
+                best = k;
+                leap = l;
+            }
+        }
+    }
+    cm_ix[slot] = (uint8_t)(best | (leap > 0 ? 32 : leap < 0 ? 64 : 0) | 128);
+    cm_vl[slot] = 230;
+}
+
 static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-melody: st its place in the bar, sw the swing's delay (samples) */
 {
     static const uint8_t RATE[4] = {4, 3, 2, 1};   /* sixteenths between notes, by the Rate knob */
     const int ri = par[P_CM_RATE] < 0 ? 0 : par[P_CM_RATE] > 3 ? 3 : par[P_CM_RATE];
-    int arp[12], n = 0, k, o, t, note, idx, range = par[P_CM_RANGE] < 1 ? 1 : par[P_CM_RANGE] > 3 ? 3 : par[P_CM_RANGE], slot, replay, leap = 0;
+    int arp[12], n = 0, note, idx, slot, replay, leap = 0;
     float dens = (float)par[P_CM_DENS] * 0.01f, vel;
-    const int base = 60 + 12 * (par[P_OCT] + par[P_CM_OCT]);
+    if (st == 0 && cm_sync) {                   /* a captured loop starts with the bar */
+        cm_k = 0;
+        cm_i = 0;
+        cm_sync = 0;
+    }
     /* on the bar's grid, whatever has gone before (a stop, a new piece): every 2nd, 1st, 4th sixteenth; the dotted eighth 0 3 6 9 12 each bar */
     if (RATE[ri] == 3 ? (st % 3 != 0 || st > 12) : st % RATE[ri])
         return;
@@ -2401,15 +2467,7 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         if (!sound)
             return;
     }
-    for (o = 0; o < range; o++)                 /* the chord's tones over the octaves, low to high */
-        for (k = 0; k < chord_nt && n < 12; k++)
-            arp[n++] = base + chord_pcs[k] + 12 * o;
-    for (k = 1; k < n; k++) {
-        t = arp[k];
-        for (o = k - 1; o >= 0 && arp[o] > t; o--)
-            arp[o + 1] = arp[o];
-        arp[o + 1] = t;
-    }
+    n = cm_ladder(arp);                         /* the chord's tones over the octaves, low to high */
     if (replay) {
         idx = (cm_ix[slot] & 15) % n;
         leap = cm_ix[slot] & 32 ? 1 : cm_ix[slot] & 64 ? -1 : 0;
@@ -5181,6 +5239,8 @@ static void drain(void)
         case C_USERVOICE: fm_user_take(a); break;
         case C_USERCLEAR: fm_user_wipe(); break;
         case C_ACSTEP: ac_step_set(a & 15, b & 15, b >> 4 & 3, b >> 6 & 1, b >> 7 & 1, b >> 8 & 1); break;
+        case C_ACCAP: ac_capture(a & 15, b & 127, a >> 4 & 1, a >> 5 & 1); break;
+        case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)

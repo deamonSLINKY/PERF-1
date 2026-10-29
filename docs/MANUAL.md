@@ -143,7 +143,7 @@ hardware upstream; treat it as a last resort, not a guarantee. Otherwise recover
 | SAVE | Breakdown on the next bar; again, a build and the drop; held, the drop. On Global: store the piece. |
 | SEQ | Drums; again Links, Kit, Drum drift; held, the sequencer; tapped in the sequencer, back to Drums. With SEL held: the links on and off. |
 | PLAY | Play and stop. |
-| REC | Freeze: the chord holds and the reverb rings on, until pressed again. |
+| REC | Freeze: the chord holds and the reverb rings on, until pressed again. With SEL: Capture, the bar you played on Jam into the acid line or the pluck loop (see 10). |
 | White keys | The scale (each key adds or removes its note; the root stays). On the pages of a voice played by hand, and on JAM: that voice. Sequencer: the 16 steps. FX: effects. Perform, visualizers, GLO held: the track mix. |
 | Black keys | The same. |
 
@@ -890,6 +890,14 @@ key plays the scale tone at or below it, so there are no wrong notes), *Chords* 
 notes, then a while of quiet), the pluck plays your phrase back an octave up at the next bar line, once, and waits for the
 next. The page draws the keyboard, the scale lit and the held keys bright. If the pluck's level is nearly off, playing it
 raises it to 40 so it can be heard.
+
+**Capture (SEL + REC).** The bar you last played on Jam becomes the voice's own line, so the fastest way to write a riff is
+to play it. With the voice on **acid**, the bar goes into the Acid steps page as a frozen line: each sixteenth you played a
+key on becomes that note (as scale steps above the chord of the moment, so the line follows the chords from then on), a key
+on a beat an accent, a key held past the next step a slide; the line is 16 steps and **Frozen**, and it plays when you leave
+the Jam page. With the voice on the **pluck**, the bar goes into the Deja vu loop: Loop 16, Rate 1/16, Pluck vu 100, from the
+next bar line; turn Pluck vu down to let it drift again. The pad and the bass cannot be captured yet. Capture remembers the
+last 32 keys, so play the bar, then press; the header says `CAPTURED`.
 
 ---
 

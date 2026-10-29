@@ -283,6 +283,8 @@ extern volatile uint8_t en_acid_len, en_acid_pos;    /* the acid loop's length a
 extern volatile uint8_t en_acid_off[EN_NSTEP], en_acid_oct[EN_NSTEP];   /* the line's steps: scale steps above the chord, the octave */
 extern volatile uint16_t en_acid_slide;        /* the steps that slide into the next */
 void en_acid_step(int s, int off, int oct, int gate, int accent, int slide);   /* set a step of the line (the Acid steps page); the line is then the player's, until a new piece */
+void en_acid_capture(int s, int note, int accent, int slide);   /* Capture: a note played by hand (MIDI) into step s, as the nearest offset and octave the chord and scale of now give; the step sounds */
+void en_pluck_capture(int s, int note);         /* Capture: a note (or a rest, note < 0) into slot s of the pluck's loop; the loop's slot 0 is the next bar's first step */
 int en_acid_pack(uint8_t *b18);                /* the line as stored: 16 steps of nine bits (18 bytes) */
 void en_acid_unpack(const uint8_t *b18);       /* and back into the engine (a stored piece's frozen line) */
 extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; those accented */

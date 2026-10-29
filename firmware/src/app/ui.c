@@ -446,6 +446,8 @@ static struct {
     uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
     uint8_t ans_note[8], ans_dt[8], ans_cnt, ans_playing, ans_i;   /* the answer's memory: notes, the sixteenths between them; playing, at which */
     uint32_t ans_last, ans_t;
+    uint16_t cap_t[32];                          /* Capture's memory (SEL + REC on Jam): the last 32 keys played: the sixteenth (en_bars), the note heard, the key and voice, how long it was held (sixteenths; 0: still down) */
+    uint8_t cap_note[32], cap_kv[32], cap_len[32], cap_w;
     uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
@@ -565,6 +567,7 @@ static void knob_set(int k, int v);
 static int knob_get(int k);
 static void knob_range(int k, int *lo, int *hi);
 static void knob_text(int k, char *b);
+static void jam_capture(void);
 static void scene_reset(void);
 static void undo_save(void)                    /* before a big change: what it will undo to */
 {
@@ -2411,6 +2414,11 @@ static void input(void)
                 runner_start();
                 return;
             }
+            if (i == B_REC && (btn >> B_SEL & 1u)) {   /* shift: Capture: the bar played on Jam into the acid line or the pluck loop */
+                ui.btn_used |= m | 1u << B_SEL;
+                jam_capture();
+                continue;
+            }
             if (i == B_ENV && (btn >> B_SEL & 1u)) {
                 /* shift: the voice whose page is on screen off the algorithm (silent but for the keys on its
                  * pages), or back on it */
@@ -3502,7 +3510,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     }
     case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); break;
     case B_SEQ: L("DRUMS; AGAIN: LINKS, KIT,"); L("THEN DRUM DRIFT"); L("HOLD: THE SEQUENCER"); break;
-    case B_REC: L("FREEZE: THE CHORD HOLDS"); L("AND THE REVERB RINGS ON"); L("AGAIN: THAW"); break;
+    case B_REC: L("FREEZE: THE CHORD HOLDS,"); L("THE REVERB RINGS; AGAIN: THAW"); L("SEL + REC: CAPTURE THE BAR"); L("YOU PLAYED ON JAM"); break;
     case B_OCTDN: L("AN OCTAVE DOWN: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM ABOVE"); break;
     case B_OCTUP: L("AN OCTAVE UP: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM BELOW"); break;
     default: break;
@@ -3744,7 +3752,7 @@ static void draw_shift(void)
                                        "GLO       REMOTE (BROWSER)", ""};
     static const char *const GEN[8] = {"F3 - D4   PATTERN 1-6", "PRESETS   PIECE, NEXT BAR", "ALGO      SOUND / KIT",
                                        "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "FX        EDIT PAGES",
-                                       "GLO       REMOTE (BROWSER)", ""};
+                                       "GLO       REMOTE (BROWSER)", "REC       CAPTURE (JAM)"};
     static const char *const SQ[8] = {"WHITE KEYS   PATTERN 1-6", "BLACK KEYS   COPY HERE TO 1-6", "OCT-         CLEAR THIS LANE",
                                       "OCT+         THE LANE'S OWN", "PRESETS      PIECE, NEXT BAR", "ALGO         KIT",
                                       "SEQ          LINKS ON / OFF", "FX           EDIT PAGES"};
@@ -5221,6 +5229,14 @@ static void jam_down(int i)
         en_note(VC[vc], ui.jam_note[i][k], 1);
     }
     jam_rec(nn[0]);
+    if (en_playing) {                            /* Capture's memory: the note as heard, when, on which key and voice */
+        const int w = ui.cap_w & 31;
+        ui.cap_t[w] = (uint16_t)en_bars;
+        ui.cap_note[w] = nn[0];
+        ui.cap_kv[w] = (uint8_t)(i | vc << 5);
+        ui.cap_len[w] = 0;
+        ui.cap_w = (uint8_t)(w + 1);
+    }
 }
 static void jam_up(int i)
 {
@@ -5228,6 +5244,66 @@ static void jam_up(int i)
     for (k = 0; k < ui.jam_n[i]; k++)
         en_note(ui.jam_vc[i], ui.jam_note[i][k], 0);
     ui.jam_n[i] = 0;
+    for (k = 1; k <= 32; k++) {                  /* Capture's memory: how long the key was held (the latest event of this key still open) */
+        const int w = (ui.cap_w - k) & 31;
+        if (ui.cap_note[w] && (ui.cap_kv[w] & 31) == i && !ui.cap_len[w]) {
+            const uint32_t held = en_bars - ui.cap_t[w];
+            ui.cap_len[w] = (uint8_t)(held < 1u ? 1u : held > 255u ? 255u : held);
+            break;
+        }
+    }
+}
+/* CAPTURE (SEL + REC): the bar you last played on Jam becomes the acid line (frozen, 16 steps: a key on a beat is an accent, a key held past the
+ * next step a slide) or the pluck's loop (16 slots, Deja vu at 100, the loop from the next bar), by the voice of the last key played */
+static void jam_capture(void)
+{
+    const int vc = ui.jam_voice & 3;             /* the page's voice: its keys are the ones captured */
+    int k, last = -1, s;
+    uint32_t bar0;
+    if (vc != 0 && vc != 2) {
+        say("CAPTURE", "THE ACID OR THE PLUCK");
+        return;
+    }
+    for (k = 1; k <= 32; k++) {
+        const int w = (ui.cap_w - k) & 31;
+        if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc) {
+            last = w;
+            break;
+        }
+    }
+    if (last < 0 || !en_playing) {
+        say("CAPTURE", "PLAY ON JAM FIRST");
+        return;
+    }
+    bar0 = (uint32_t)ui.cap_t[last] & ~15u;       /* the bar the last key fell in */
+    for (s = 0; s < 16; s++) {
+        int note = -1, len = 0;
+        for (k = 1; k <= 32; k++) {              /* the first key of this voice on this step (the latest events first, so the earliest wins) */
+            const int w = (ui.cap_w - k) & 31;
+            if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc && (uint32_t)ui.cap_t[w] == bar0 + (uint32_t)s) {
+                note = ui.cap_note[w];
+                len = ui.cap_len[w];
+            }
+        }
+        if (vc == 2) {
+            if (note >= 0)
+                en_acid_capture(s, note, (s & 3) == 0, len > 1);
+            else
+                en_acid_step(s, 0, 0, 0, 0, 0);
+        } else {
+            en_pluck_capture(s, note);
+        }
+    }
+    if (vc == 2) {
+        knob_set(P_AC_LEN, 16);
+        knob_set(P_AC_LOCK, 1);
+        say("CAPTURED", "ACID LINE (FROZEN)");
+    } else {
+        knob_set(P_CM_RATE, 3);
+        knob_set(P_CM_LOOP, 2);
+        knob_set(P_CM_VU, 100);
+        say("CAPTURED", "PLUCK LOOP");
+    }
 }
 static void jam_tick(void)                       /* the answer, on the sixteenths */
 {
