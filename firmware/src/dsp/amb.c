@@ -90,7 +90,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
     [P_COND4] = {"Cond", 0, 7, 0},          [P_COND5] = {"Cond", 0, 7, 0},
     [P_AC_LOCK] = {"Frozen", 0, 1, 0},
-    [P_BL_MODE] = {"Mode", 0, 6, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
+    [P_BL_MODE] = {"Mode", 0, 15, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -100,6 +100,9 @@ int en_par_sticky(int p) { return en_par_global(p) || (p >= P_DD_CHANGE && p <= 
 #include "pats.h"
 volatile uint16_t en_pats[EN_NPAT][EN_NLANE];
 volatile uint8_t en_mod[EN_NLANE][16];          /* a piece's step tricks, a byte a lane step: ratchet (bits 0-2), push (3-5), level (6-7); 0: none (the UI edits) */
+
+#define EN_NBLFIG 9                             /* the bass line's figures by name (modes 7 ..; the table BL_FIG is with the bass line) */
+static const char *const BL_FIG_NAME[EN_NBLFIG] = {"Octaves", "Two-step", "One-drop", "Log drum", "Skippy", "Funk", "Big beat", "Dub", "Gallop"};
 
 /* the pieces: each the defaults above with a few changed (a parameter, its value; -1 ends), its own
  * kit's sound (the lanes) among them. Numbered on the screen; the names are for reading here. */
@@ -150,7 +153,7 @@ static const int16_t PL_03[] = {LOFI_BASE, P_TEMPO, 84, P_ROOT, 7, P_MODE, 4, P_
 static const int16_t PL_04[] = {LOFI_BASE, P_TEMPO, 90, P_ROOT, 0, P_MODE, 0, P_SWING, 42, P_AC_DENS, 35, -1};                /* C major, sevenths */
 static const int16_t PL_05[] = {LOFI_BASE, P_TEMPO, 70, P_ROOT, 5, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 2, P_AC_WAVE, 4, P_REVERB, 42, -1};   /* F dorian, strings, slow */
 static const int16_t PL_06[] = {LOFI_BASE, P_TEMPO, 80, P_ROOT, 10, P_MODE, 5, P_PADTONE, 4, P_AC_WAVE, 11, P_PAD, 52, -1};  /* Bb aeolian, organ */
-static const int16_t PL_07[] = {LOFI_BASE, P_TEMPO, 86, P_ROOT, 3, P_MODE, 7, P_AC_DENS, 22, P_SWING, 34, -1};                /* Eb minor pentatonic, sparse */
+static const int16_t PL_07[] = {LOFI_BASE, P_TEMPO, 86, P_ROOT, 3, P_MODE, 5, P_AC_DENS, 22, P_SWING, 34, -1};                /* Eb Aeolian, sparse (minor pentatonic until 0.14.15: it lost the turnaround) */
 static const int16_t PL_08[] = {LOFI_BASE, P_TEMPO, 76, P_ROOT, 4, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 3, P_BRIGHT, 24, P_ECHO, 40, -1};   /* E dorian, glass */
 static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_DR_INST, 9, P_REVERB, 46, P_SIZE, 70, -1};   /* C# lydian, dreamy */
 static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
@@ -194,11 +197,11 @@ static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D0
  * drum patterns from their classic masks (kick, snare, clap as the ghosts, hat, open, perc), the piece choosing which comes first */
 static const int16_t X_DUBR[] = {P_CM_VU, 45, P_GHOST, 0, P_HUMAN, 25, P_PULSE, 78, P_DRIVE, 15, P_SWING, 12, P_BASSOCT, -1, P_PAD, 40, P_ACID, 22, P_BASS, 92, P_AC_DENS, 15, P_AC_LEN, 12, P_ECHO, 72, P_ETIME, 3, P_REVERB, 45, P_SIZE, 65,
     KIT(8), P_PATTERN, 0, P_EVOLVE, 25, P_PL_CHO, 15, P_RV_DAMP, 55, P_BL_MODE, 1, P_BL_LEN, 85, P_BL_MOVE, 8, P_BL_GLIDE, 30, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 38, -1};
-static const int16_t X_DNB[] = {P_CM_VU, 40, P_GHOST, 40, P_HUMAN, 10, P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
+static const int16_t X_DNB[] = {P_BL_MODE, 1, P_CM_VU, 40, P_GHOST, 40, P_HUMAN, 10, P_PULSE, 78, P_DRIVE, 40, P_SWING, 5, P_BASSOCT, -1, P_DE_TRIG, 2, P_PAD, 36, P_ACID, 42, P_BASS, 82, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 35, P_REVERB, 40,
     KIT(12), DE(0), 20, P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 45, P_RV_TYPE, 1, P_RV_X, 25, P_RV_DAMP, 40, P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 30, -1};
-static const int16_t X_BREAKS[] = {P_CM_VU, 30, P_GHOST, 70, P_HUMAN, 25, P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
+static const int16_t X_BREAKS[] = {P_BL_MODE, 6, P_CM_VU, 30, P_GHOST, 70, P_HUMAN, 25, P_PULSE, 80, P_DRIVE, 70, P_SWING, 14, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_RES, 70, P_AC_ENV, 65, P_AC_DENS, 55, P_ECHO, 40, P_REVERB, 30,
     KIT(4), P_PATTERN, 0, P_EVOLVE, 45, P_PL_CHO, 20, P_RV_TYPE, 2, P_RV_X, 35, P_MC_RATIO, 4, P_MC_THR, 42, P_MC_MAKE, 35, -1};
-static const int16_t X_GARAGE[] = {P_CM_VU, 50, P_GHOST, 45, P_HUMAN, 20, P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
+static const int16_t X_GARAGE[] = {P_BL_MODE, 6, P_BL_MOVE, 30, P_CM_VU, 50, P_GHOST, 45, P_HUMAN, 20, P_PULSE, 70, P_DRIVE, 25, P_SWING, 64, P_PAD, 42, P_ACID, 42, P_BASS, 70, P_AC_DENS, 45, P_AC_LEN, 12, P_ECHO, 40, P_REVERB, 40,
     P_KIT_KICK, 1, P_KIT_SNARE, 5, P_KIT_HAT, 1, P_KIT_PERC, 5, P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 40, P_RV_DAMP, 45, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 40, -1};
 static const int16_t X_ELECTRO[] = {P_CM_VU, 65, P_CM_LOOP, 1, P_BL_MODE, 3, P_BL_LEN, 30, P_BL_MOVE, 35, P_PULSE, 78, P_DRIVE, 45, P_SWING, 3, P_PAD, 40, P_ACID, 55, P_BASS, 70, P_AC_DENS, 60, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 30,
     KIT(11), P_PATTERN, 0, P_EVOLVE, 40, P_PL_CHO, 40, P_RV_TYPE, 2, P_RV_X, 30, P_MC_RATIO, 3, P_MC_THR, 48, P_MC_MAKE, 30, -1};
@@ -221,15 +224,15 @@ static const int16_t *const XBASE[12] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_EL
 static const uint8_t XROW[12][10][7] = {
     {{70, 9, 5, 5, 0, 0, 0}, {66, 2, 1, 5, 0, 0, 0}, {72, 7, 2, 5, 0, 0, 0}, {68, 0, 5, 5, 0, 0, 0}, {74, 4, 1, 5, 0, 0, 0}, {64, 5, 5, 2, 0, 0, 0}, {76, 10, 1, 5, 0, 0, 0}, {70, 3, 2, 5, 0, 0, 0}, {66, 6, 5, 5, 0, 0, 0}, {72, 11, 1, 2, 0, 0, 0}},
     {{174, 9, 1, 3, 0, 9, 4}, {172, 2, 5, 2, 1, 1, 15}, {174, 5, 3, 3, 3, 9, 11}, {175, 4, 2, 6, 7, 4, 14}, {174, 0, 5, 4, 11, 3, 2}, {176, 7, 1, 2, 5, 9, 4}, {170, 10, 5, 3, 2, 1, 15}, {175, 6, 2, 4, 7, 13, 13}, {172, 11, 1, 2, 0, 9, 11}, {178, 3, 5, 6, 11, 2, 14}},
-    {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 7, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 7, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
+    {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 4, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 1, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
     {{130, 5, 1, 3, 0, 9, 4}, {132, 9, 5, 2, 4, 5, 11}, {128, 0, 4, 3, 1, 9, 12}, {134, 2, 1, 2, 5, 10, 4}, {130, 7, 5, 3, 0, 4, 15}, {136, 10, 1, 2, 1, 9, 11}, {126, 4, 5, 3, 4, 5, 12}, {132, 1, 4, 2, 5, 9, 4}, {130, 6, 1, 3, 3, 1, 15}, {138, 10, 5, 2, 0, 10, 11}},
     {{118, 9, 5, 1, 2, 10, 13}, {120, 2, 2, 6, 3, 6, 3}, {122, 0, 1, 4, 14, 11, 9}, {124, 4, 5, 1, 2, 10, 13}, {125, 7, 2, 6, 3, 6, 3}, {126, 5, 1, 4, 14, 11, 9}, {127, 11, 5, 1, 2, 10, 13}, {128, 9, 2, 6, 3, 6, 3}, {129, 6, 1, 4, 14, 11, 9}, {130, 2, 5, 1, 2, 10, 13}},
-    {{130, 1, 5, 6, 7, 9, 11}, {134, 5, 5, 4, 12, 9, 4}, {136, 9, 2, 1, 2, 9, 15}, {138, 3, 5, 6, 13, 3, 11}, {140, 7, 7, 4, 7, 9, 4}, {140, 11, 5, 1, 12, 9, 15}, {142, 6, 2, 6, 2, 9, 11}, {144, 0, 5, 4, 13, 3, 4}, {146, 4, 7, 1, 7, 9, 15}, {150, 10, 5, 6, 12, 9, 11}},
+    {{130, 1, 5, 6, 7, 9, 11}, {134, 5, 5, 4, 12, 9, 4}, {136, 9, 2, 1, 2, 9, 15}, {138, 3, 5, 6, 13, 3, 11}, {140, 7, 5, 4, 7, 9, 4}, {140, 11, 5, 1, 12, 9, 15}, {142, 6, 2, 6, 2, 9, 11}, {144, 0, 5, 4, 13, 3, 4}, {146, 4, 2, 1, 7, 9, 15}, {150, 10, 5, 6, 12, 9, 11}},
     {{118, 9, 1, 2, 2, 10, 21}, {120, 2, 4, 3, 19, 9, 4}, {122, 7, 1, 2, 17, 1, 17}, {116, 4, 5, 2, 2, 5, 19}, {124, 0, 0, 3, 13, 10, 21}, {112, 5, 1, 2, 19, 17, 4}, {120, 10, 4, 2, 0, 9, 12}, {126, 3, 5, 3, 2, 10, 21}, {114, 6, 1, 2, 17, 5, 17}, {122, 11, 4, 2, 19, 1, 19}},
-    {{100, 4, 4, 2, 17, 17, 21}, {104, 9, 1, 3, 4, 5, 4}, {96, 2, 7, 2, 13, 10, 19}, {108, 7, 4, 2, 0, 9, 21}, {102, 0, 1, 3, 19, 17, 17}, {98, 5, 5, 2, 17, 5, 21}, {106, 10, 4, 2, 4, 10, 4}, {110, 3, 1, 3, 13, 9, 19}, {100, 11, 7, 2, 19, 17, 21}, {104, 6, 4, 2, 0, 5, 17}},
-    {{76, 9, 5, 1, 13, 9, 12}, {72, 4, 1, 2, 6, 1, 21}, {80, 2, 4, 1, 17, 8, 15}, {74, 7, 5, 2, 21, 7, 4}, {78, 0, 6, 1, 19, 9, 16}, {70, 5, 1, 2, 13, 5, 12}, {82, 10, 4, 1, 6, 9, 21}, {84, 3, 5, 1, 17, 1, 15}, {74, 6, 7, 2, 21, 8, 4}, {78, 11, 1, 1, 19, 7, 16}},
+    {{100, 4, 4, 2, 17, 17, 21}, {104, 9, 1, 3, 4, 5, 4}, {96, 2, 7, 2, 13, 10, 19}, {108, 7, 4, 2, 0, 9, 21}, {102, 0, 1, 3, 19, 17, 17}, {98, 5, 5, 2, 17, 5, 21}, {106, 10, 4, 2, 4, 10, 4}, {110, 3, 1, 3, 13, 9, 19}, {100, 11, 1, 2, 19, 17, 21}, {104, 6, 4, 2, 0, 5, 17}},
+    {{76, 9, 5, 1, 13, 9, 12}, {72, 4, 1, 2, 6, 1, 21}, {80, 2, 4, 1, 17, 8, 15}, {74, 7, 5, 2, 21, 7, 4}, {78, 0, 0, 1, 19, 9, 16}, {70, 5, 1, 2, 13, 5, 12}, {82, 10, 4, 1, 6, 9, 21}, {84, 3, 5, 1, 17, 1, 15}, {74, 6, 5, 2, 21, 8, 4}, {78, 11, 1, 1, 19, 7, 16}},
     {{108, 9, 5, 1, 10, 0, 26}, {112, 4, 5, 2, 20, 10, 24}, {104, 0, 0, 1, 2, 5, 25}, {116, 7, 1, 2, 9, 1, 30}, {100, 2, 5, 1, 5, 22, 26}, {110, 5, 1, 2, 10, 0, 24}, {118, 10, 5, 1, 20, 10, 25}, {106, 3, 0, 2, 2, 5, 28}, {114, 6, 5, 1, 9, 1, 30}, {102, 11, 1, 2, 5, 22, 26}},
-    {{112, 9, 5, 3, 0, 9, 16}, {110, 4, 1, 3, 5, 1, 4}, {108, 2, 7, 2, 16, 8, 18}, {113, 7, 5, 3, 2, 21, 15}, {111, 0, 6, 2, 23, 9, 16}, {109, 5, 1, 3, 0, 1, 4}, {114, 10, 5, 3, 5, 9, 18}, {112, 3, 7, 2, 16, 8, 15}, {110, 6, 5, 3, 2, 21, 16}, {115, 11, 1, 3, 23, 9, 4}},
+    {{112, 9, 5, 3, 0, 9, 16}, {110, 4, 1, 3, 5, 1, 4}, {108, 2, 1, 2, 16, 8, 18}, {113, 7, 5, 3, 2, 21, 15}, {111, 0, 0, 2, 23, 9, 16}, {109, 5, 1, 3, 0, 1, 4}, {114, 10, 5, 3, 5, 9, 18}, {112, 3, 4, 3, 16, 8, 15}, {110, 6, 5, 3, 2, 21, 16}, {115, 11, 1, 3, 23, 9, 4}},
     {{84, 9, 5, 2, 7, 9, 15}, {78, 4, 2, 3, 2, 1, 17}, {72, 2, 1, 2, 16, 8, 4}, {88, 7, 5, 3, 5, 3, 20}, {80, 0, 5, 2, 1, 9, 11}, {70, 5, 2, 2, 7, 1, 15}, {86, 10, 1, 3, 2, 8, 17}, {76, 3, 5, 2, 16, 3, 4}, {82, 6, 2, 3, 5, 9, 20}, {74, 11, 5, 2, 7, 1, 11}},
 };
 static const uint16_t XPAT[12][6][6] = {
@@ -601,7 +604,7 @@ void en_param_text(int i, int v, char *b)
     case P_TIME: { static const char *const T[3] = {"Normal", "Half", "Double"}; s = T[(unsigned)v < 3u ? v : 0]; break; }
     case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
     case P_AC_LOCK: s = v ? "Frozen" : "Free"; break;
-    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = M[(unsigned)v < 7u ? v : 0]; break; }
+    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = (unsigned)v < 7u ? M[v] : (unsigned)v < 7u + EN_NBLFIG ? BL_FIG_NAME[v - 7] : M[0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -2632,12 +2635,27 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
 /* The drone as a bass line (P_BL_MODE): a note on the steps its mode chooses, on the chord's root (or a chord tone, an octave, an approach note), held
  * for Length and let go; each note opens the filter again (the Drone env page's attack and decay). 1 Root: the genre's rhythm. 2 Kick: where the kick
  * hits. 3 Eighths. 4 Off-beat. 5 Walk: a note a beat, root, third or fifth, fifth, then an approach to the next. 6 Riff: the genre's figure.
- * Move is how often a note goes up an octave, to the fifth or to the scale note below the root instead. A breakdown plays none. */
+ * 7 .. 15: a figure by name, whatever the genre (BL_FIG). A figure is a mask of the bar's sixteenths and four intervals, one a hit (the fifth hit
+ * takes the first again), so a figure of four hits plays the same each bar. Move is how often a note goes up an octave, to the fifth or to the
+ * scale note below the root instead. The fifth is the perfect fifth unless the chord has an altered one (bl_fifth; a 9th, Dub or Fourths chord
+ * leaves the fifth out of its voicing, and the line used to take the chord's third tone, the seventh, for it). A breakdown plays none. */
 static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x0501, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401, 0x5555, 0x4529, 0x0149, 0x5555, 0x2449, 0x0401};
-static const struct { uint16_t mask; int8_t iv[4]; } BL_RIFF[EN_NGENRE] = {
+typedef struct { uint16_t mask; int8_t iv[4]; } bl_fig_t;
+static const bl_fig_t BL_RIFF[EN_NGENRE] = {
     {0x5555, {0, 0, 12, 0}},  {0x0421, {0, 7, 5, 0}},   {0x4444, {0, 0, 12, 0}},  {0x0401, {0, 0, -2, 0}},  {0x0501, {0, 0, 7, 5}},
     {0x0441, {0, 0, 7, 5}},   {0x1121, {0, 0, 12, 7}},  {0x0449, {0, 7, 0, 12}},  {0x5555, {0, 0, 12, 0}},  {0x2401, {0, 0, 12, 7}},
-    {0x5555, {0, 12, 0, 12}}, {0x4529, {0, 12, 0, 7}},  {0x0149, {0, 0, 7, 5}},   {0x5555, {0, 0, 12, 0}},  {0x2449, {0, 0, 7, 0}},   {0x0401, {0, 0, -2, 0}}};
+    {0x5555, {0, 12, 0, 12}}, {0x0509, {0, 12, 7, 0}},  {0x0149, {0, 0, 7, 5}},   {0x5555, {0, 0, 12, 0}},  {0x2449, {0, 0, 7, 0}},   {0x0401, {0, 0, -2, 0}}};
+static const bl_fig_t BL_FIG[EN_NBLFIG] = {      /* the figures by name (the bass line's modes 7 ..): see BL_FIG_NAME */
+    {0x5555, {0, 12, 0, 12}},                   /* Octaves: eighths, root and octave (disco) */
+    {0x0441, {0, 0, 12, 0}},                    /* Two-step: 1, and-of-2, and-of-3 (garage, drum and bass) */
+    {0x0149, {0, 0, 7, 5}},                     /* One-drop: 1, a-of-1, and-of-2, 3 (reggae) */
+    {0x2449, {0, 0, 7, 0}},                     /* Log drum: 1, a-of-1, and-of-2, and-of-3, a-of-4 (amapiano) */
+    {0x0449, {0, 7, 0, 12}},                    /* Skippy: 1, a-of-1, and-of-2, and-of-3, up to the fifth and the octave */
+    {0x0509, {0, 12, 7, 0}},                    /* Funk: 1, a-of-1, 3, and-of-3 */
+    {0x1121, {0, 0, 12, 7}},                    /* Big beat: 1, e-of-2, 3, 4 */
+    {0x0501, {0, 0, 7, 5}},                     /* Dub: 1, 3, and-of-3 */
+    {0x7777, {0, 0, 0, 12}},                    /* Gallop: three sixteenths a beat, an octave moving through them */
+};
 static int bl_fit(int n)
 {
     while (n < 24)
@@ -2680,6 +2698,18 @@ static void bl_go(int n, int32_t w)
         bl_note(n);
     }
 }
+static int bl_fifth(void)                       /* the fifth above the root, semitones: the chord's altered fifth if it has one (diminished, augmented), else the perfect fifth (a 9th chord leaves it out of the voicing, not the harmony), or the scale's if that is not in the scale */
+{
+    int k;
+    for (k = 1; k < chord_nt; k++) {
+        const int d = (chord_pcs[k] - chord_pcs[0] + 12) % 12;
+        if (d == 7)
+            return 7;
+        if (d == 6 || d == 8)
+            return d;
+    }
+    return pool >> (((chord_pcs[0] + 7 - par[P_ROOT]) % 12 + 12) % 12) & 1u ? 7 : 6;
+}
 static void bl_step(int st, int32_t w)
 {
     const int mode = par[P_BL_MODE], g = chord_genre;
@@ -2696,7 +2726,8 @@ static void bl_step(int st, int32_t w)
     case 3: hit = !(st & 1); break;
     case 4: hit = (st & 3) == 2; break;
     case 5: hit = !(st & 3); break;
-    default: hit = BL_RIFF[g].mask >> st & 1; break;
+    case 6: hit = BL_RIFF[g].mask >> st & 1; break;
+    default: hit = BL_FIG[(mode - 7) % EN_NBLFIG].mask >> st & 1; break;
     }
     if (drop_imp && st == 0)
         hit = 1;
@@ -2705,7 +2736,7 @@ static void bl_step(int st, int32_t w)
     root = bl_fit(36 + chord_pcs[0] % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
     if (mode == 5) {                            /* the walk */
         const int beat = st >> 2, three = chord_nt > 1 ? root + (chord_pcs[1] - chord_pcs[0] + 12) % 12 : root + 3,
-                  five = chord_nt > 2 ? root + (chord_pcs[2] - chord_pcs[0] + 12) % 12 : root + 7;
+                  five = root + bl_fifth();
         int n = root;
         if (beat == 1)
             n = frand() < 0.5f ? three : five;
@@ -2719,9 +2750,11 @@ static void bl_step(int st, int32_t w)
     }
     if (mode == 6)
         iv = BL_RIFF[g].iv[bl_beat & 3];
+    else if (mode > 6)
+        iv = BL_FIG[(mode - 7) % EN_NBLFIG].iv[bl_beat & 3];
     if (frand() * 100.0f < (float)par[P_BL_MOVE]) {   /* a move: the octave, the fifth, or the note below the root */
         const float r = frand();
-        iv = r < 0.5f ? 12 : r < 0.8f ? (chord_nt > 2 ? (chord_pcs[2] - chord_pcs[0] + 12) % 12 : 7) : bl_below(root) - root;
+        iv = r < 0.5f ? 12 : r < 0.8f ? bl_fifth() : bl_below(root) - root;
     }
     bl_go(root + iv, w);
     bl_beat++;

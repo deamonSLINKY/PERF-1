@@ -22,6 +22,7 @@ static uint32_t acid_abs[512], hat_abs[512], acid_n;   /* the acid's note-ons (0
 static uint32_t midi_count;
 static uint32_t snare_n, snare_min = 999, pad_n;   /* snare note-ons (GM 38), the softest, and the pad's (0x90) */
 static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's note-ons (0x92) and the kicks counted, and the notes' range */
+static uint32_t bass_pc[12];                    /* the bass line's note-ons by pitch class */
 static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
@@ -34,6 +35,7 @@ void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
         pad_n++;
     if (st == 0x92u) {
         bass_n++;
+        bass_pc[d1 % 12u]++;
         if (d1 < bass_lo)
             bass_lo = d1;
         if (d1 > bass_hi)
@@ -1168,8 +1170,8 @@ int main(void)
      * Off-beat about 8, Walk about 8, and every note stays in the bass range (C1 .. B5) */
     {
         int m, blk;
-        uint32_t nn[7], kk[7], lo = 999, hi = 0;
-        for (m = 0; m < 7; m++) {
+        uint32_t nn[16], kk[16], lo = 999, hi = 0;
+        for (m = 0; m < 16; m++) {
             en_init();
             en_set(P_TEMPO, 128);
             en_set(P_MIDI, 1);
@@ -1198,6 +1200,31 @@ int main(void)
         CHECK(nn[5] >= 6u && nn[5] <= 10u, "bass line, Walk: %u notes (expected about 8)", nn[5]);
         CHECK(nn[1] > 2u && nn[6] > 2u, "bass line, Root %u and Riff %u notes", nn[1], nn[6]);
         CHECK(lo >= 24u && hi <= 83u, "bass line: notes %u .. %u outside C1 .. B5", lo, hi);
+        for (m = 7; m < 16; m++)                 /* the figures by name (0.14.15): each plays */
+            CHECK(nn[m] >= 5u && nn[m] <= 26u, "bass line, figure %d: %u notes in 4 s", m, nn[m]);
+        CHECK(nn[7] >= 14u && nn[15] >= 20u, "bass line: Octaves %u, Gallop %u notes in 4 s", nn[7], nn[15]);
+        /* the fifth (0.14.15): under a 9th chord (1 3 7 9) the Walk's fifth is the fifth above the root, not the chord's third tone (the seventh):
+         * A minor 9, held: the walk plays E (and never only G) */
+        {
+            int k;
+            en_init();
+            en_set(P_TEMPO, 128);
+            en_set(P_MIDI, 1);
+            en_pool(EN_MODE_POOL[MODE_AEOLIAN]);
+            en_set(P_ROOT, 9);
+            en_set(P_CHORD, EN_CH_9TH);
+            en_set(P_BL_MODE, 5);
+            en_set(P_BL_MOVE, 0);
+            en_set(P_DRIFT, 100);
+            en_regrow();
+            en_play(1);
+            run(2.0f);
+            for (k = 0; k < 12; k++)
+                bass_pc[k] = 0;
+            run(15.0f);                          /* 8 bars: 8 fifths on beat 3, 4 or so on beat 2 */
+            CHECK(bass_pc[4] >= 8u && bass_pc[4] > 2u * bass_pc[7], "the walk's fifth under Am9: E %u, G %u", bass_pc[4], bass_pc[7]);
+            printf("  the walk under Am9, 8 bars: A %u C %u E %u G %u\n", bass_pc[9], bass_pc[0], bass_pc[4], bass_pc[7]);
+        }
         en_init();
         en_play(1);
         run(1.0f);

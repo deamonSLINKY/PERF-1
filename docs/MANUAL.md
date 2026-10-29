@@ -216,7 +216,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Bass | LFO | Level | Sound (24) | Cutoff | Reso |
 | Bass env | LFO x2 | Trigger (chord, 1, 2, 4, 8 bars, off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | LFO x3 | Rate (a 1/4 note - 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
-| Bass line | LFO x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff) | Length (how long a note holds) | Move (octaves, fifths, approach notes) | Glide |
+| Bass line | LFO x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, nine figures by name) | Length (how long a note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate (SEL + the knob: what a mutation changes: all, notes, rhythm, accents) |
@@ -445,10 +445,11 @@ The bass can play notes instead of one held tone. The **Bass line** page (LFO fo
 | Off-beat | on the off-beat eighths (house) |
 | Walk | on the beats: the root, then the third or fifth, then the fifth, then the scale note below the root, leading to the next |
 | Riff | on the genre's figure: disco bounces the octave, funk and amapiano syncopate, reggae leans on the fifth |
+| Octaves, Two-step, One-drop, Log drum, Skippy, Funk, Big beat, Dub, Gallop | on a figure by name, whatever the genre: eighths bouncing the octave (disco); 1, and-of-2, and-of-3 (garage, drum and bass); the one-drop (1, a-of-1, and-of-2, 3, reggae); the log drum (1, a-of-1, and-of-2, and-of-3, a-of-4, amapiano); the skippy sub (up to the fifth and the octave); funk (1, a-of-1, 3, and-of-3); big beat (1, e-of-2, 3, 4); dub (1, 3, and-of-3); a gallop of three sixteenths a beat |
 
-**Length** is how long a note holds (a quarter step to five steps) before it lets go; **Move** is how often a note goes up an octave, to the fifth or to the scale note below the root instead (in Walk, how often the last beat steps below); **Glide** is the slide from note to note (0 plays each note as it is; 100 takes about 0.4 s). Each note opens the bass's filter again, with the **Bass env** page's attack and decay, so that page still shapes the sound; its Trigger setting does not apply. The sound, cutoff and reso are the **Bass** page's. A breakdown plays no notes; a build plays none in Kick mode. A bass played by hand from the keys is not a bass line.
+A figure is a rhythm and four intervals, one a note, so a figure of four notes plays the same each bar. The fifth is the fifth above the root when the chord has one (a 9th, Dub or Fourths chord has no fifth among its first tones: then the chord's third tone). **Length** is how long a note holds (a quarter step to five steps) before it lets go; **Move** is how often a note goes up an octave, to the fifth or to the scale note below the root instead (in Walk, how often the last beat steps below); **Glide** is the slide from note to note (0 plays each note as it is; 100 takes about 0.4 s). Each note opens the bass's filter again, with the **Bass env** page's attack and decay, so that page still shapes the sound; its Trigger setting does not apply. The sound, cutoff and reso are the **Bass** page's. A breakdown plays no notes; a build plays none in Kick mode. A bass played by hand from the keys is not a bass line.
 
-New pieces start as a bass line in lofi (Root), house (Off-beat), dubstep and trap (Kick, long, a little glide), electro and synthwave (Eighths), disco, funk, reggae and amapiano (Riff), and trip-hop (Root); the other genres keep the bass. Every note stays between C1 and B5.
+New pieces start as a bass line in lofi and DnB (Root), house (Off-beat), dubstep and trap (Kick, long, a little glide), electro and synthwave (Eighths), disco, funk, reggae, amapiano, breaks and garage (Riff), and trip-hop (Root); HYPNO and dub keep the bass. Every note stays between C1 and B5.
 
 ### The acid: 31 sounds
 
