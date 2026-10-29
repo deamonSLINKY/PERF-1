@@ -22,7 +22,7 @@ _Static_assert(REND_FRAMES == UA_HALF, "usb.c sizes the USB audio ring band for 
 #endif
 static int32_t abuf[2u * HALF_WORDS] __attribute__((aligned(4)));
 #if FELUCCA_UAC
-static int32_t usb_buf[2u * REND_FRAMES] __attribute__((section(".pool.usb"), aligned(4)));   /* the USB audio at its fixed level, when the setting asks (en_usb_out) */
+static int16_t usb_buf[2u * REND_FRAMES] __attribute__((section(".pool.usb"), aligned(4)));   /* the USB audio at its fixed level, when the setting asks (en_usb_out) */
 #endif
 
 #define DBG_MAGIC 0x44424731u                       /* "DBG1": read with `fm1t memr` */
@@ -60,7 +60,7 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 #if FELUCCA_UAC
             en_usb_out = en_usb_fixed && uac.feed ? usb_buf : 0;   /* the Settings' USB page says FIXED and a computer is recording: a second output at unity */
             en_render(o + 2u * k, REND_FRAMES, master_q12);
-            uac_tap(en_usb_out ? usb_buf : o + 2u * k, REND_FRAMES);   /* the USB audio input: the master output, or that */
+            uac_tap(o + 2u * k, en_usb_out ? usb_buf : 0, REND_FRAMES);   /* the USB audio input: the master output, or that */
 #else
             en_render(o + 2u * k, REND_FRAMES, master_q12);
 #endif

@@ -967,8 +967,9 @@ static inline int32_t uac_s16(int32_t v)
     return v > 32767 ? 32767 : v < -32768 ? -32768 : v;
 }
 
-static __attribute__((noinline)) void uac_tap(const int32_t *out, uint32_t n)   /* audio ISR: one block,
-                                                                                  * 24-bit in int32 (X0X) */
+static __attribute__((noinline)) void uac_tap(const int32_t *out, const int16_t *o16, uint32_t n)   /* audio ISR: one block,
+                                                                                  * 24-bit in int32 (X0X), or, when o16 is given, that 16-bit block instead
+                                                                                  * (the engine's fixed-level output, the same scale as out >> 8) */
 {
     uint32_t w = ua_w, i;
     if (!uac.feed)
@@ -976,8 +977,8 @@ static __attribute__((noinline)) void uac_tap(const int32_t *out, uint32_t n)   
     uac_window(w - ua_r);
     for (i = 0; i < n; i++) {                            /* each frame in: as many out as the step gives */
         float *h = uac.rs_h;
-        h[0] = h[2]; h[2] = h[4]; h[4] = h[6]; h[6] = (float)(out[2u * i] >> 8);
-        h[1] = h[3]; h[3] = h[5]; h[5] = h[7]; h[7] = (float)(out[2u * i + 1u] >> 8);
+        h[0] = h[2]; h[2] = h[4]; h[4] = h[6]; h[6] = o16 ? (float)o16[2u * i] : (float)(out[2u * i] >> 8);
+        h[1] = h[3]; h[3] = h[5]; h[5] = h[7]; h[7] = o16 ? (float)o16[2u * i + 1u] : (float)(out[2u * i + 1u] >> 8);
         while (uac.rs_pos < 1.0f) {                     /* between h[2..3] and h[4..5]: cubic Hermite */
             float t = uac.rs_pos, y[2];
             int c;

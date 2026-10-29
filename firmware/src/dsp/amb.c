@@ -5207,7 +5207,7 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
 static uint32_t pad_ctl[EN_NPAD], dr_ctl, ac_ctl;      /* the control steps' counts (every 32 samples), kept across chunks */
 static float padl[BLK] EN_POOL, padr[BLK] EN_POOL;
 static float plp[4];
-static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL, pad_ds[BLK] EN_POOL;   /* the job's working buffers: the pad's contribution to the mix (after the chorus) and its dry sum, the sends' source; then into pad_ring */
+static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL;   /* the job's working buffers: the pad's contribution to the mix, through the chorus, then into pad_ring (its dry sum goes straight there from pad_bus) */
 /* the pad's ensemble: three delays a side, each swept by a slow triangle (the three a third of a turn apart, the right side's the other way), around
  * 7 ms, 3 ms deep; its sum is added to the pad (Chorus is how much). Widens every pad sound without the pulsing a single swept delay makes against a
  * pure tone: the beats are never all in step. On the pad's stage, so on the other core with it. */
@@ -5233,20 +5233,19 @@ static void pad_bus(uint32_t n)
         r = plp[3] * TG(TR_PAD, j);
         pad_ol[j] = l * 0.8f;
         pad_or[j] = r * 0.8f;
-        pad_ds[j] = l + r;                      /* the sends' source: 0.6 of it to the reverb, 0.2 to the echo (render_chunk, a chunk on) */
+        pad_ring[2][(rv_job.pad_w + j) & (PAD_R - 1)] = l + r;   /* the dry sum, the sends' source: 0.6 of it to the reverb, 0.2 to the echo (render_chunk, a chunk on) */
     }
     for (j = 0; j < 4; j++)
         plp[j] = fm_flush(plp[j]);
 }
 
-static void pad_publish(uint32_t w, uint32_t n)   /* the job's pad (after the chorus) and its dry sum into the ring, for the first core a chunk on */
+static void pad_publish(uint32_t w, uint32_t n)   /* the job's pad (after the chorus) into the ring, for the first core a chunk on (the dry sum went in from pad_bus) */
 {
     uint32_t j;
     for (j = 0; j < n; j++) {
         const uint32_t q = (w + j) & (PAD_R - 1);
         pad_ring[0][q] = pad_ol[j];
         pad_ring[1][q] = pad_or[j];
-        pad_ring[2][q] = pad_ds[j];
     }
 }
 
@@ -6217,8 +6216,8 @@ static void mx_end(int t, uint32_t n)
 /* the first core's time by stage, for the telemetry (the firmware sets the clock; the host leaves it off): ticks summed since last read */
 uint32_t (*en_prof_clock)(void);
 volatile uint8_t en_usb_fixed;                  /* the USB audio at a fixed level (the Settings' USB page) */
-int32_t *en_usb_out;                            /* where this render writes it, or NULL */
-static int32_t *usb_cur;                        /* this chunk's part of en_usb_out, or NULL */
+int16_t *en_usb_out;                            /* where this render writes it (16-bit, as the USB stream is), or NULL */
+static int16_t *usb_cur;                        /* this chunk's part of en_usb_out, or NULL */
 static float usb_gain;
 volatile uint32_t en_prof[EN_NPROF];
 volatile uint32_t en_prof_sm[11];
@@ -6443,10 +6442,11 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
         }
     }
-    if (usb_cur)                                /* the USB audio at its fixed level (the Settings' USB page), only while a computer records: the same clip, unity gain */
+    if (usb_cur)                                /* the USB audio at its fixed level (the Settings' USB page), only while a computer records: the same clip, unity gain,
+                                                 * at the scale the USB tap makes of the 24-bit output (8300000 / 256) */
         for (j = 0; j < n; j++) {
-            usb_cur[2 * j] = (int32_t)(fm_tanhf(mixl[j] * usb_gain) * 8300000.0f);
-            usb_cur[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * usb_gain) * 8300000.0f);
+            usb_cur[2 * j] = (int16_t)(fm_tanhf(mixl[j] * usb_gain) * 32421.0f);
+            usb_cur[2 * j + 1] = (int16_t)(fm_tanhf(mixr[j] * usb_gain) * 32421.0f);
         }
     DT(13);
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
@@ -6679,8 +6679,8 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
             out0[2 * j] = (int32_t)((float)out0[2 * j] * hush_g);
             out0[2 * j + 1] = (int32_t)((float)out0[2 * j + 1] * hush_g);
             if (en_usb_out) {
-                en_usb_out[2 * j] = (int32_t)((float)en_usb_out[2 * j] * hush_g);
-                en_usb_out[2 * j + 1] = (int32_t)((float)en_usb_out[2 * j + 1] * hush_g);
+                en_usb_out[2 * j] = (int16_t)((float)en_usb_out[2 * j] * hush_g);
+                en_usb_out[2 * j + 1] = (int16_t)((float)en_usb_out[2 * j + 1] * hush_g);
             }
         }
     }

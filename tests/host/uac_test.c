@@ -36,7 +36,7 @@ static int run(double rate_in)
             for (b = 0; b < 2; b++) {
                 for (k = 0; k < 256; k++, ph += 1000.0 / rate_in)
                     blk[2 * k] = blk[2 * k + 1] = (int32_t)(sin(2 * M_PI * ph) * 0.5 * 8388607.0) & ~0xFF;
-                uac_tap(blk, 256);
+                uac_tap(blk, 0, 256);
             }
             t_in += 512.0 / rate_in;
         } else {                                         /* the host's 1 ms frame */
