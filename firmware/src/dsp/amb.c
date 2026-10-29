@@ -6223,16 +6223,24 @@ volatile uint32_t en_prof[EN_NPROF];
 volatile uint32_t en_prof_sm[11];
 /* the diagnostic frame (0.14.3): inside the stages, fourteen pieces (ticks, all chunks: 0-13, the chunks shorter than 256 frames again: 14-27),
  * the chunk sizes (28-31: < 64, < 128, < 256, 256 frames) and the work between chunks (32-35: drain, control, the clock pulse, the hits that waited) */
+#if EN_DIAG
 volatile uint32_t en_diag[36];
 #define DT0() do { if (en_prof_clock) dt0_ = en_prof_clock(); } while (0)
 #define DT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); ds_[i] += t1_ - dt0_; dt0_ = t1_; } } while (0)
 #define RT(i, stmt) do { if (en_prof_clock) { const uint32_t t0_ = en_prof_clock(); stmt; en_diag[i] += en_prof_clock() - t0_; } else { stmt; } } while (0)
+#define DIAG_LOCALS uint32_t dt0_ = pt0_, ds_[14] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#else
+#define DT0() do { } while (0)
+#define DT(i) do { } while (0)
+#define RT(i, stmt) do { stmt; } while (0)
+#define DIAG_LOCALS
+#endif
 volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the longest chunk since last read: its stages (ticks), its total, and when it was */
 #define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; cs_[i] = t1_ - pt0_; pt0_ = t1_; } } while (0)
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u, cs_[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    uint32_t dt0_ = pt0_, ds_[14] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    DIAG_LOCALS
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
@@ -6476,6 +6484,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         en_prof_sm[9]++;
         en_prof_sm[10] += n;
     }
+#if EN_DIAG
     if (en_prof_clock) {                        /* the diagnostic frame's pieces */
         uint32_t k;
         for (k = 0; k < 14u; k++) {
@@ -6485,6 +6494,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
         en_diag[28 + (n < 64u ? 0u : n < 128u ? 1u : n < (uint32_t)BLK ? 2u : 3u)]++;
     }
+#endif
     if (en_prof_clock && pt0_ - bal_t0 > en_peak_total) {   /* the slowest chunk: which stage, which step, how long it was, what was moved */
         uint32_t k;
         for (k = 0; k < 9u; k++)

@@ -33,7 +33,7 @@ tests/run_tests.sh                # the tests alone
 
 The tests run, on the build machine: the maths library against libm; the instrument (`tests/host/amb_test.c`); flash storage; the SysEx protocol and the editor's parameter and DX7 voice code; Felucca's update path against the package; the dual-core job handoff (identical output with the work on either core); and the whole app in a simulator (`tests/scenarios/*.amb`, about 70 scripts), with screenshots and audio in `build/scenarios/`. `host/build_host.sh` builds the simulator alone; `build/host/amb_host SCRIPT OUTDIR` runs one script (the command list is at the top of `host/amb_host.c`).
 
-The build fails if a soft-double routine is linked (a `double` crept in) and checks the image, RAM and pool sizes. Build options: `EN_CORE2=0` builds single-core (the reverb on the second core is the default), `EN_CDC=1` adds Felucca's USB serial function.
+The build fails if a soft-double routine is linked (a `double` crept in) and checks the image, RAM and pool sizes. Build options: `EN_CORE2=0` builds single-core (the reverb on the second core is the default), `EN_CDC=1` adds Felucca's USB serial function, `EN_DIAG=1` adds the status log's third frame (timers inside the render's stages, the chunk sizes, the work between chunks) for a performance hunt.
 
 ## The site
 

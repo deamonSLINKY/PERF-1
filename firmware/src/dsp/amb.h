@@ -298,7 +298,12 @@ void en_balance_force(int v);                  /* tests: -1 it decides, 0 / 1 as
 extern uint32_t (*en_prof_clock)(void);        /* the firmware's tick counter, for them (0: not measured) */
 extern volatile uint32_t en_prof[EN_NPROF];
 extern volatile uint32_t en_prof_sm[11];     /* the chunks shorter than 256 frames: their nine stages (ticks), their count, their frames (since cleared) */
+#ifndef EN_DIAG
+#define EN_DIAG 0                              /* 1 (EN_DIAG=1 at build): the diagnostic frame below and its timers inside the stages (0.14.3's hunt for the fixed cost a chunk); off, the status log's first two frames stay */
+#endif
+#if EN_DIAG
 extern volatile uint32_t en_diag[36];        /* the diagnostic frame: fourteen pieces inside the stages (ticks; all chunks, then the short ones), four chunk sizes, four pieces between chunks */
+#endif
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
 extern volatile uint8_t en_acid_ans;           /* this bar the acid answers (UI) */

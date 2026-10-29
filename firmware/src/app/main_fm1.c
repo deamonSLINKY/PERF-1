@@ -612,11 +612,12 @@ static void tel_service(void)
                 tel_hist[i] = 0;
             for (i = 0; i < 11u; i++)
                 en_prof_sm[i] = 0;
-            extra = 2;
+            extra = EN_DIAG ? 2 : 0;
         }
         return;
     }
-    if (extra == 2) {                               /* the third frame (F0 7D 50 5B): the diagnostic pieces (amb.c en_diag), us and counts */
+#if EN_DIAG
+    if (extra == 2) {                               /* the third frame (F0 7D 50 5B): the diagnostic pieces (amb.c en_diag), us and counts; EN_DIAG=1 builds only */
         uint32_t w[36], i, o = 4;
         uint8_t f[4 + 36 * 5 + 2], b[36 * 4];
         _Static_assert(4 + (36 * 4 * 8 + 6) / 7 + 1 <= 4 + 36 * 5 + 2, "the frame fits its buffer");
@@ -634,6 +635,7 @@ static void tel_service(void)
         }
         return;
     }
+#endif
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
