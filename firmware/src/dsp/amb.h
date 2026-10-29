@@ -128,6 +128,7 @@ enum {
     P_CHAIN, P_SLICE, P_TIME,                             /* the phrase: a chain of patterns by bar (0 off, 1 .. 9 a preset), a slice permutation of the drum steps (0 off, 1 .. 8, 9 a new one each fourth bar), the pattern's time (0 normal, 1 half, 2 double) */
     P_COND, P_COND1, P_COND2, P_COND3, P_COND4, P_COND5,  /* each drum lane's condition (P_COND + lane): 0 always, 1 odd bars, 2 even bars, 1 of 4, 4 of 4, 1 of 8, fill bars only, not in fills */
     P_AC_LOCK,                                            /* the acid line held: 0 free (it evolves with Mutate, a new one with each piece), 1 frozen (as it is: Mutate leaves it, and it is stored with the piece) */
+    P_CM_MOTIF,                                           /* the pluck's motif (0.14.9): how often a bar of an 8-bar phrase develops the phrase's first bar (its rhythm and intervals: sequenced, inverted, re-ended, restated) instead of inventing; 0 off */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */

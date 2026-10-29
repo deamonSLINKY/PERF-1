@@ -84,6 +84,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
     [P_AC_RESP] = {"Answer", 0, 44, 0},
     [P_CM_VU] = {"Deja vu", 0, 100, 0},   [P_CM_LOOP] = {"Loop", 0, 3, 2},       [P_CM_LEAP] = {"Leaps", 0, 100, 0},   [P_AC_CHG] = {"Mutates", 0, 3, 0},
+    [P_CM_MOTIF] = {"Motif", 0, 100, 60},
     [P_PAD_COMP] = {"Comp", 0, 8, 0},     [P_GHOST] = {"Ghosts", 0, 100, 0},   [P_ACCENT] = {"Accents", 0, 100, 50}, [P_HUMAN] = {"Humanize", 0, 100, 0},
     [P_CHAIN] = {"Chain", 0, 9, 0},         [P_SLICE] = {"Slice", 0, 9, 0},       [P_TIME] = {"Time", 0, 2, 0},
     [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
@@ -2365,6 +2366,14 @@ static int cm_i, cm_alt;
 static uint8_t cm_f[32], cm_g[32], cm_ix[32], cm_vl[32];   /* the pluck's loop (deja vu): a slot heard (f), its gate, its place in the chord's tones (octave leap in bit 7 and 6: up, down), its velocity */
 static uint32_t cm_k;                           /* the slot the next note is in */
 static uint8_t cm_sync;                         /* a captured loop: its slot 0 is the next bar's first step */
+/* THE MOTIF (after Tuna's motif engine, GPL-3.0): the first bar of an 8-bar phrase is kept as an idea, which sixteenths sounded and each note's step
+ * up or down the chord's ladder from the one before; the bars after develop it as a composer would: the same figure from where the line is
+ * (a sequence), upside down (an inversion), with its last interval drawn afresh (a new ending), and, after the half, at its own pitch again (the
+ * restatement). Deja vu lies on top of it. P_CM_MOTIF is how often a bar develops rather than invents; a kept idea opens the next phrase too. */
+static uint16_t mo_play;                        /* the idea's rhythm: bit s, sixteenth s sounded */
+static int8_t mo_k[16];                         /* its intervals: ladder steps from the note before (the first: 0) */
+static int8_t mo_last;                          /* its last sounding step, -1: none */
+static uint8_t mo_valid, mo_rec, mo_on, mo_inv, mo_alt, mo_restate, mo_first, mo_idx0, mo_prev;   /* kept; being recorded; this bar develops it: inverted, re-ended, restated; the bar's first note is to come; the idea's first rung; the last rung played */
 volatile float en_cm_level;
 
 static void cm_trigger(int note, float vel)     /* a note: the next voice, its decay as the Decay knob has it */
@@ -2446,6 +2455,34 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         cm_i = 0;
         cm_sync = 0;
     }
+    if (st == 0) {                              /* the motif, bar by bar through the phrase of eight */
+        const uint32_t ph = bars & 7u;
+        const int use = par[P_CM_MOTIF];
+        if (mo_rec) {
+            mo_valid = (uint8_t)(mo_play != 0);
+            mo_rec = 0;
+        }
+        if (!use) {
+            mo_on = 0;
+        } else if (ph == 0) {                   /* the phrase's first bar: a new idea (most times), or the kept one opens it again */
+            if (!mo_valid || frand() * 100.0f < 70.0f) {
+                mo_play = 0;
+                mo_last = -1;
+                mo_rec = 1;
+                mo_on = 0;
+            } else {
+                mo_on = 1;
+                mo_inv = mo_alt = 0;
+                mo_restate = 1;
+            }
+        } else {
+            mo_restate = (uint8_t)(ph == 4);     /* after the half: the answer restates it at its pitch */
+            mo_on = (uint8_t)(mo_valid && (mo_restate || frand() * 100.0f < (float)use));
+            mo_inv = (uint8_t)(mo_on && !mo_restate && frand() < 0.2f);
+            mo_alt = (uint8_t)(mo_on && !mo_restate && frand() < 0.3f);
+        }
+        mo_first = 1;
+    }
     /* on the bar's grid, whatever has gone before (a stop, a new piece): every 2nd, 1st, 4th sixteenth; the dotted eighth 0 3 6 9 12 each bar */
     if (RATE[ri] == 3 ? (st % 3 != 0 || st > 12) : st % RATE[ri])
         return;
@@ -2459,9 +2496,13 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         if (!cm_g[slot] || (sec == SEC_BREAK && frand() >= 0.4f))
             return;
     } else {
+        int sound;
         if (sec == SEC_BREAK)
             dens *= 0.4f;
-        const int sound = frand() < (cm_i == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens);
+        if (mo_on && !mo_rec)                   /* the motif's rhythm */
+            sound = mo_play >> st & 1u;
+        else
+            sound = frand() < (cm_i == 0 ? fm_minf(dens + 0.3f, 1.0f) : dens);
         cm_f[slot] = 1;
         cm_g[slot] = (uint8_t)sound;
         if (!sound)
@@ -2472,6 +2513,18 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         idx = (cm_ix[slot] & 15) % n;
         leap = cm_ix[slot] & 32 ? 1 : cm_ix[slot] & 64 ? -1 : 0;
         vel = (float)cm_vl[slot] * (1.0f / 255.0f);
+    } else if (mo_on && !mo_rec) {              /* the motif's intervals, from where the line is (restated: from the idea's own first rung); inverted, they go the other way; re-ended, the last is drawn afresh */
+        int k = mo_k[st];
+        if (mo_inv)
+            k = -k;
+        if (mo_alt && st == mo_last)
+            k = irand(5) - 2;
+        idx = mo_first ? (mo_restate ? mo_idx0 : mo_prev) : mo_prev + k;
+        idx = ((idx % n) + n) % n;
+        mo_first = 0;
+        vel = 0.75f + 0.25f * frand();
+        cm_ix[slot] = (uint8_t)(idx | 128);
+        cm_vl[slot] = (uint8_t)(vel * 255.0f);
     } else {
         switch (par[P_CM_STYLE]) {
         case 1: idx = n - 1 - cm_i % n; cm_i++; break;
@@ -2495,6 +2548,14 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         cm_ix[slot] = (uint8_t)(idx | (leap > 0 ? 32 : leap < 0 ? 64 : 0) | 128);
         cm_vl[slot] = (uint8_t)(vel * 255.0f);
     }
+    if (mo_rec) {                               /* the idea, as it sounds (deja vu's notes too) */
+        mo_k[st] = (int8_t)(mo_play ? idx - (int)mo_prev : 0);
+        if (!mo_play)
+            mo_idx0 = (uint8_t)idx;
+        mo_play |= (uint16_t)(1u << st);
+        mo_last = (int8_t)st;
+    }
+    mo_prev = (uint8_t)idx;
     note = arp[idx] + 12 * leap;
     while (note > 100)
         note -= 12;
@@ -3398,7 +3459,7 @@ static void apply(int p, int v)
         chain_i = 0;
         break;
     case P_CM_LOOP:                              /* a new length (or a new piece): the loop is forgotten, the next notes are heard afresh */
-        { int q; for (q = 0; q < 32; q++) cm_f[q] = 0; cm_k = 0; }
+        { int q; for (q = 0; q < 32; q++) cm_f[q] = 0; cm_k = 0; mo_valid = mo_on = mo_rec = 0; }   /* (and the motif: a new piece, a new idea) */
         break;
     case P_BL_MODE:                              /* back to the drone: the root again; a line starts from silence */
         bl_up = 0;

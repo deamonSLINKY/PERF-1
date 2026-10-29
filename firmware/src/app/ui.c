@@ -181,7 +181,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {K_ASTY, K_ASNO, K_ASOC, P_AC_LOCK},           /* the acid's steps: the step chosen (a white key): its kind, its note, its octave; and whether the line is frozen (held, and stored with the piece) */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
-    {P_CM_VU, P_CM_LOOP, P_CM_LEAP, K_NONE},       /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps (the fourth knob is free since 0.14.7: Acid mut went to SEL + Mutate on the Acid line page) */
+    {P_CM_VU, P_CM_LOOP, P_CM_LEAP, P_CM_MOTIF},   /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps, and the motif (how often a bar develops the phrase's first bar) */
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
@@ -217,7 +217,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Step", "Note", "Octave", "Frozen"},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
-    {"Pluck vu", "Loop", "Leaps", ""},
+    {"Pluck vu", "Loop", "Leaps", "Motif"},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Bass", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},

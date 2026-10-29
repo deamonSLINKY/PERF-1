@@ -97,7 +97,7 @@ def main():
     tabs = [
         {"name": "Tempo & global", "sections": [
             {"name": "Tempo", "knobs": byname["Tempo"]},
-            {"name": "Global", "knobs": byname["Global"]},
+            {"name": "Global", "knobs": byname["Global"] + pl(("P_MIDI", "MIDI out (the USB & MIDI settings page)"))},
             {"name": "Scale and octave", "knobs": pl(("P_MODE", "Mode (scale)"), ("P_OCT", "Song octave"))}]},
         {"name": "Pad", "sections": [
             {"name": "Pad", "knobs": byname["Pad"]},
@@ -114,7 +114,7 @@ def main():
         {"name": "Acid", "sections": [
             {"name": "Acid", "knobs": byname["Acid"]},
             {"name": "Envelope and sound", "knobs": byname["Acid env"]},
-            {"name": "The line", "knobs": byname["Acid line"] + pl(("P_AC_RESP", "Answer"), ("P_AC_EVERY", "Answer every (bars; or before a drum change)"), ("P_STYLE", "Answer sync (0 bar, 1 loop)"), ("P_AC_LOCK", "Frozen (the line held and stored with the piece)"))},
+            {"name": "The line", "knobs": byname["Acid line"] + pl(("P_AC_RESP", "Answer"), ("P_AC_EVERY", "Answer every (bars; or before a drum change)"), ("P_STYLE", "Answer sync (0 bar, 1 loop)"), ("P_AC_LOCK", "Frozen (the line held and stored with the piece)"), ("P_AC_CHG", "Mutates (what Mutate changes: 0 all, 1 notes, 2 rhythm, 3 accents)"))},
             {"name": "Place", "knobs": pl(("P_AC_OCT", "Octave"), ("P_AC_MAN", "By hand")) + [ls("P_PAN", 2, "Pan"), ls("P_SEND", 2, "Send")]}]},
         {"name": "Pluck", "sections": [
             {"name": "Pluck", "knobs": byname["Pluck"]},

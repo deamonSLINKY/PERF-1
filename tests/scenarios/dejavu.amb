@@ -19,9 +19,11 @@ expect par158 20
 shot dejavu.png
 spin K1 100
 spin K2 10
+spin K4 -10
 wait 100
 expect par156 100
 expect par157 3
+expect par174 50
 # the acid's Mutates: SEL + the Acid line page's fourth knob
 turn SELECT -5 100
 expect view 11

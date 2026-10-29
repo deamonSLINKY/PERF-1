@@ -224,7 +224,7 @@ chords). On a voice's main page KNOB 1 is its level.
 | Acid steps | ARP x5 | Step (the step chosen with a white key: rest, note, accent, slide, accent + slide) | Note (0-11 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
 | Pluck | ARP x6 | Level | Sound (12 + 22 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | ARP x7 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16: slow to fast) | Range (1-3 oct) |
-| Deja vu | ARP x8 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | - |
+| Deja vu | ARP x8 | Pluck vu (0 new notes .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Motif (0 off .. 100: how often a bar develops the phrase's first bar) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Bass | S>Pad | H>Acid | P>Clock (off / clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
@@ -520,6 +520,8 @@ Any edit freezes the line (it would otherwise be rewritten); turn Frozen back to
 ![The Deja vu page](img/perf-screen-dejavu.png)
 
 The pluck normally chooses each note afresh. The **Deja vu** page (ARP seven times) makes it remember: it keeps the last 4, 8, 16 or 32 notes (**Loop**), and each time one comes round again, **Pluck vu** is the chance it is the same note, rest or leap as last time (0: every note is new, 100: the loop is locked and repeats exactly). The chord it is played over is the chord of now, so a locked phrase follows the harmony. **Leaps** is how often a new note jumps an octave. Changing the loop's length, or a new piece, forgets the loop.
+
+**Motif** is the pluck thinking in phrases. The first bar of each eight is kept as an idea: which sixteenths sounded and how far each note stepped up or down the chord from the one before. Each bar after then develops it with the chance the knob gives (60 by default): the same figure from where the line is (a sequence, so it follows the chords), now and then upside down (an inversion) or with a new last interval (a new ending), and the fifth bar restates it at its own pitch, the answer to the first. Most phrases start a new idea; some keep the old one and open with it again. At 0 the pluck invents every bar as before. Deja vu lies on top: a replayed note is replayed whatever the motif says.
 
 The acid has always had this in its **Mutate** (Acid line page): each time round it rewrites a few steps. **SEL + the Mutate knob** on that page chooses what a rewrite changes: **All** (as before), **Notes** only (the rhythm stays, the notes drift: the classic acid), **Rhythm** only (the same notes come and go), or **Accents** (only the accents and slides).
 
