@@ -245,12 +245,14 @@ enum {
     EN_FXS_TK_RATE, EN_FXS_TK_DEPTH, EN_FXS_TK_RESO, EN_FXS_TK_MIX,      /* talk: its period (0..4: 2 bars .. 1/8), how far through the vowels, resonance, mix */
     EN_FXS_WH_SENS, EN_FXS_WH_RANGE, EN_FXS_WH_RESO, EN_FXS_WH_MIX,      /* wah: how it follows the loudness, how far it sweeps, resonance, mix */
     EN_FXS_SM_MODE, EN_FXS_SM_LOOP, EN_FXS_SM_LEN, EN_FXS_SM_MIX,        /* the sampler: pitch (0) or slice (1), one shot (0) or loop (1), the window (0 full, 1 half, 2 quarter), its mix */
+    EN_FXS_RP_PITCH, EN_FXS_RP_DECAY, EN_FXS_RP_GATE, EN_FXS_RP_REFRESH,   /* the beat repeats (0.14.10): the pitch reached over four beats held (0..24: -12..+12 semitones), a decay a repeat (0..100: 0..6 dB), the gate (0..3: all, 3/4, half, a quarter of the slice), the slip refresh (0 off, 1 each beat, 2 each bar: the slice is the newest again) */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0xF0, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
-                         1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80}
+                         1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
+                         12, 0, 0, 0}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 uint8_t en_flex_step(int pat, int step);       /* Flex Beat pattern pat (0..EN_NFLEX-1), step 0..15: e | rev << 4 | mute << 5 | div << 6 (e 15: live) */

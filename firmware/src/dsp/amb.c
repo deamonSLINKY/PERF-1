@@ -2704,6 +2704,7 @@ static int32_t step_t;                          /* samples into this sixteenth (
 static uint8_t rpt_arm;                         /* a beat repeat waiting for the next sixteenth: its rate + 1 */
 static uint8_t scat_arm, var_exit, rvs_arm;              /* a scatter waiting for the sixteenth; a brake or spin-back let go, leaving on the next */
 static void rpt_engage(int r);
+static void rpt_refresh(int st);
 static void scat_engage(void);
 static void var_leave(void);
 static void rvs_engage(void);
@@ -2790,6 +2791,8 @@ static void tick(void)
     if (rpt_arm) {                              /* the beat repeat starts on the sixteenth */
         rpt_engage(rpt_arm - 1);
         rpt_arm = 0;
+    } else {
+        rpt_refresh(st);                        /* the slip refresh: a repeat's slice is the newest again on the beat (or the bar) */
     }
     if (st == 0) {                              /* a bar */
         int tb = TRIG_BARS[(unsigned)par[P_DE_TRIG] < 6u ? par[P_DE_TRIG] : 0];
@@ -3884,6 +3887,10 @@ static float rb_hl, rb_hr;                       /* the first sample of each pai
 static uint64_t fx_req;
 enum { BM_LIVE, BM_RPT, BM_REV, BM_STOP, BM_SCAT, BM_VAR, BM_SCR, BM_GRN, BM_RVS, BM_FLX };
 static int bmode, brate = -1;                    /* the ring's mode; the repeat's rate (FX_RPT2 ..) */
+/* the repeat's settings (the Repeat page, 0.14.10): the read's speed (the pitch, climbing to its target over four beats held), the gain (a decay
+ * each time round), the gate's share of the slice, the slip refresh (the slice is the newest again each beat or bar, the ring writing on under it) */
+static float rp_rate = 1.0f, rp_gain = 1.0f, rp_step = 1.0f, rp_gatef = 1.0f, rp_t;   /* rp_t: beats held */
+static uint8_t rp_ref, rp_ok;                    /* the refresh asked for; the ring long enough for it with this slice */
 static uint32_t bm_start;                        /* the frame the reading counts from */
 static float bm_off, bm_len, bm_speed, bm_mix, bm_tgt;   /* samples from bm_start; the slice; 0 live .. 1 ring */
 static float trk_g[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
@@ -3956,6 +3963,17 @@ static void rpt_engage(int r)                   /* the slice that just ended, lo
     bm_start = rb_w - (uint32_t)(len * 0.5f + 0.5f), bm_sm = bm_start % RB_N;
     bm_off = 0.0f;
     bm_tgt = 1.0f;
+    rp_gain = 1.0f;
+    rp_t = 0.0f;
+}
+
+static void rpt_refresh(int st)                 /* on a sixteenth: a repeat with Refresh on takes the newest slice again each beat (or bar); the pitch's climb goes on */
+{
+    if (bmode == BM_RPT && rp_ref && rp_ok && (rp_ref == 2 ? st == 0 : (st & 3) == 0)) {
+        const float held = rp_t;
+        rpt_engage(brate);
+        rp_t = held;
+    }
 }
 
 static inline void rb_read_from(uint32_t sm, float off, float *l, float *r)   /* off samples (44.1 kHz) after the ring index sm (before it, if negative) */
@@ -4559,6 +4577,17 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     rs_wash = (float)fxs_v[EN_FXS_RS_WASH] * 0.005f;                             /* the reverb: up to 0.5 */
     rs_echo = (float)fxs_v[EN_FXS_RS_ECHO] * 0.007f;                             /* the echo: up to 0.7 */
     roll_t = m >> FX_ROLL & 1u ? roll_t + dt * EN_SR / (4.0f * step_len) : 0.0f;   /* beats held */
+    {   /* the repeat's settings: the pitch climbs to its target over four beats held, a decay each time round, the gate's share, the slip refresh (only where the
+         * ring outlasts a beat or a bar with this slice: 21000 frames at 22.05 kHz less the slice, against the time to the next refresh) */
+        const int pit = (int)fm_clampf((float)fxs_v[EN_FXS_RP_PITCH], 0.0f, 24.0f) - 12;
+        if (bmode == BM_RPT)
+            rp_t += dt * EN_SR / (4.0f * step_len);
+        rp_rate = pit ? fm_exp2f((float)pit * fm_minf(rp_t * 0.25f, 1.0f) * (1.0f / 12.0f)) : 1.0f;
+        rp_step = fm_exp2f(-(float)fm_clampf((float)fxs_v[EN_FXS_RP_DECAY], 0.0f, 100.0f) * 0.06f * (1.0f / 6.0206f));
+        rp_gatef = 1.0f - 0.25f * fm_clampf((float)fxs_v[EN_FXS_RP_GATE], 0.0f, 3.0f);
+        rp_ref = (uint8_t)fm_clampf((float)fxs_v[EN_FXS_RP_REFRESH], 0.0f, 2.0f);
+        rp_ok = (uint8_t)(((float)RB_N - bm_len * 0.5f) * (1.0f / 22050.0f) > (rp_ref == 2 ? 16.0f : 4.0f) * step_len * (1.0f / EN_SR));
+    }
     {   /* tape, flanger, phaser: in and out over ~80 ms; the phaser's all-pass corners (left, right), swept */
         const float sm = fm_minf(dt * 12.0f, 1.0f);
         int c;
@@ -4951,15 +4980,19 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
 static inline void fx_master(float *pl, float *pr)   /* one sample of the master, before the gain */
 {
     float l = *pl, r = *pr;
-    if (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR)
+    if (bmode == BM_LIVE || bmode == BM_STOP || bmode == BM_VAR || (bmode == BM_RPT && rp_ref && rp_ok))   /* (a refreshing repeat: the ring goes on recording under the loop) */
         rb_write(l, r);
     if (bmode != BM_LIVE) {
         float bl = 0.0f, br = 0.0f, w = 1.0f;
         if (bmode == BM_RPT) {
             rb_read(bm_off, &bl, &br);
-            w = fm_minf(fm_minf(bm_off, bm_len - bm_off) * (1.0f / 64.0f), 1.0f);   /* 1.5 ms edges */
-            if ((bm_off += 1.0f) >= bm_len)
+            w = fm_minf(fm_minf(bm_off, bm_len - bm_off) * (1.0f / 64.0f), 1.0f) * rp_gain;   /* 1.5 ms edges; the decay */
+            if (rp_gatef < 1.0f)                /* the gate: the rest of the slice silent (a 1.5 ms edge) */
+                w = fm_minf(w, fm_maxf((bm_len * rp_gatef - bm_off) * (1.0f / 64.0f), 0.0f));
+            if ((bm_off += rp_rate) >= bm_len) {   /* (the pitch: the read's speed) */
                 bm_off -= bm_len;
+                rp_gain *= rp_step;
+            }
         } else if (bmode == BM_REV) {
             rb_read(bm_off, &bl, &br);
             w = fm_minf(fm_minf(bm_off, bm_len - bm_off) * (1.0f / 64.0f), 1.0f);

@@ -129,6 +129,16 @@ key 3 down
 wait 200
 expect fxmask 536870912
 key 3 up
+# the repeats' page (0.14.10): pitch, decay, gate, refresh; the pitch knob counts in semitones
+spin SELECT 1
+wait 100
+expect fxpage 23
+spin K1 2
+wait 50
+spin K1 -2
+spin K4 1
+wait 50
+spin K4 -1
 # the sweep (heard as it is edited), the last page
 spin SELECT 1
 wait 100
@@ -193,10 +203,10 @@ spin K1 2
 wait 50
 expect keyset 2
 spin K1 -2
-# the USB page (0.14.5): the USB audio's level, the knob's or fixed; it walks between Settings and Flex Beat
+# the USB & MIDI page (0.14.5): the USB audio's level, the knob's or fixed, and MIDI out; it walks between Settings and Flex Beat
 spin SELECT 1
 wait 100
-expect fxpage 23
+expect fxpage 24
 spin K1 1
 wait 50
 spin K1 -1

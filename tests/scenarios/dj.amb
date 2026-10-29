@@ -8,7 +8,7 @@ press SEL
 tap FX
 release SEL
 wait 100
-# (talk and wah come after the flanger now: two more turns to the same pages)
+# (talk and wah come after the flanger now, and the Repeat page before the sweep: three more turns to the same pages)
 spin SELECT 1
 wait 30
 spin SELECT 1
@@ -43,6 +43,9 @@ spin SELECT 1
 wait 30
 spin SELECT 1
 wait 30
+spin SELECT 1
+wait 30
+# (the Repeat page comes before the sweep since 0.14.10: one more turn)
 spin SELECT 1
 wait 30
 spin K2 -1

@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 230 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 24
+#define NFXP 25
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
@@ -79,7 +79,11 @@ static const char *const JM_NAME[3];
 static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
-static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};                                       /* the USB audio's level: the master knob's, or fixed (a recording that does not move with the knob) */
+static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
+static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0",
+                                         "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "+11", "+12"};   /* the repeat's pitch, semitones reached over four beats held */
+static const char *const RPG_NAME[4] = {"FULL", "3/4", "HALF", "1/4"};                              /* the repeat's gate: the part of the slice that sounds */
+static const char *const RPR_NAME[3] = {"OFF", "BEAT", "BAR"};                                      /* the repeat's slip refresh */                                       /* the USB audio's level: the master knob's, or fixed (a recording that does not move with the knob) */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
 static const char *const GENRE_UI_NAME[16] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
@@ -143,6 +147,8 @@ static const struct {
     {"WAH", FX_WAH, 0, {{"Sens", KN_PLAIN, EN_FXS_WH_SENS, 0, 0}, {"Range", KN_PLAIN, EN_FXS_WH_RANGE, 0, 0},
                         {"Reso", KN_PLAIN, EN_FXS_WH_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_WH_MIX, 0, 0}}},
     /* the JAM page's four knobs (the UI's own: uiv 7 .. 10): not an FX page, the dial never walks to it */
+    {"REPEAT", FX_RPT2, 0, {{"Pitch", KN_NAME, EN_FXS_RP_PITCH, RPP_NAME, 25}, {"Decay", KN_PLAIN, EN_FXS_RP_DECAY, 0, 0},
+                            {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's) */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
@@ -1807,7 +1813,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 }
 
 /* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 23, 19, 20};   /* (23: the USB page, with the settings) */
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings) */
 static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
 {
     int i;
@@ -1821,6 +1827,8 @@ static int fx_page_of(int fx)                   /* the edit page (1 ..) of an ef
     int p;
     if (fx == FX_GATE16 || fx == FX_GATE8)
         fx = FX_GATEX;
+    if ((fx >= FX_RPT2 && fx <= FX_RPT32) || fx == FX_RPT8T || fx == FX_RPT16T)   /* the eight repeats share one page */
+        fx = FX_RPT2;
     for (p = 0; p < NFXP; p++)
         if (FXP[p].bit == fx)
             return p + 1;
@@ -5524,9 +5532,39 @@ static void settings_save(void)
 static void settings_load(void)
 {
     set_t s;
-    int p, c;
-    if (plat_store_load(OBJ_SET, &s, sizeof s) != (int)sizeof s || s.magic != SET_MAGIC || s.nfxs != EN_NFXS || s.nui != 12)
+    uint8_t raw[sizeof(set_t)];
+    int p, c, n = plat_store_load(OBJ_SET, raw, sizeof raw);
+    if (n >= 8 && n < (int)sizeof s && raw[0] == 'S' && raw[1] == 'E' && raw[2] == 'T' && raw[3] == '1' && (raw[4] | raw[5] << 8) < EN_NFXS && (raw[6] | raw[7] << 8) == 12) {
+        /* a record from before the newest effect settings (fewer fxs, 0.14.10 on): its fields by their old places, the new settings at their defaults */
+        const int old = raw[4] | raw[5] << 8;
+        int q = 8, i;
+        memset(&s, 0, sizeof s);
+        s.magic = SET_MAGIC;
+        s.nfxs = EN_NFXS;
+        s.nui = 12;
+        for (i = 0; i < EN_NFXS; i++)
+            s.fxs[i] = (uint8_t)EN_FXS_DEF[i];
+        for (i = 0; i < old; i++)
+            s.fxs[i] = raw[q++];
+        memcpy(s.uiv, raw + q, 12);
+        q += 12;
+        s.gx_preset = raw[q++];
+        s.gx_tgt = raw[q++];
+        s.pm_tgt = raw[q++];
+        s.viz = raw[q++];
+        if (q & 1)
+            q++;
+        if (q + 4 > n)
+            return;
+        s.gx_pat = (uint16_t)(raw[q] | raw[q + 1] << 8);
+        s.usb = (uint16_t)(raw[q + 2] | raw[q + 3] << 8);
+    } else if (n == (int)sizeof s) {
+        memcpy(&s, raw, sizeof s);
+        if (s.magic != SET_MAGIC || s.nfxs != EN_NFXS || s.nui != 12)
+            return;
+    } else {
         return;
+    }
     set_disk = s;
     set_have = 1;
     for (p = 0; p < NFXP; p++)

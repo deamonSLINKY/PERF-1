@@ -767,7 +767,7 @@ or so and every other one plays out), **Echo** (dry, some, lots: how much goes t
 ![A settings page: the Gate](img/perf-screen-gate.png)
 
 Every effect with settings has a page that draws it. Reach a page by: **SEL + a key** in the FX menu (the effect that key
-plays; an effect with no settings says so), **FX twice quickly** (the effect you used last), **SEL + FX** (walks all 23,
+plays; an effect with no settings says so), **FX twice quickly** (the effect you used last), **SEL + FX** (walks all 24,
 then back to the keys; Talk and Wah come right after the phaser and flanger), or the **SELECT dial** once you are in one (no wrap). **FX** closes. The effect is on while its page
 is up, so you hear what you edit (the roll, riser, scatter, brake, half time, scratch, freeze and reverse swell need a key
 held to be heard). The dots at the right of the knob strip show where you are among the 22.
@@ -793,6 +793,7 @@ held to be heard). The dots at the right of the knob strip show where you are am
 | Auto DJ | Scenes (at once, next bar) | Groove (8, 16, 32, 64 bars, sync) | Break (short, half, full) | Fill (off, on) |
 | Settings | Key (same, +2, +3, +5, +7) | Saver (off, 1, 3, 10 min) | Lights (off, show) | - |
 | USB & MIDI | Level (knob, fixed): the USB audio follows the master knob, or stays at a fixed level so a recording does not move when you turn it | MIDI out (off, on) | - | - |
+| Repeat | Pitch (-12 .. +12 semitones, reached over four beats held: a build) | Decay (0 .. 6 dB a repeat: a dub tail) | Gate (full, 3/4, half, 1/4 of the slice sounds) | Refresh (off, beat, bar: the slice is the newest again, a slip roll, where the ring is long enough for it) |
 | Flex | Quant (off, beat, bar) | Mode (one shot, loop) | Mix | - |
 | Snips | Pitch | Play | Echo | Level (the keys play the snips on this page, to try them) |
 | Talk | Every (2 bars, 1 bar, 1/2, 1/4, 1/8) | Depth | Reso | Mix |
