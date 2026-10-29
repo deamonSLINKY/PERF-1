@@ -45,6 +45,9 @@ spin SELECT 1
 wait 30
 spin SELECT 1
 wait 30
+# (the Repeat page, 23, walks before the sweep since 0.14.10: one more turn)
+spin SELECT 1
+wait 100
 expect fxpage 18
 expect saver 0
 expect lights 0
