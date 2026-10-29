@@ -193,6 +193,13 @@ spin K1 2
 wait 50
 expect keyset 2
 spin K1 -2
+# the USB page (0.14.5): the USB audio's level, the knob's or fixed; it walks between Settings and Flex Beat
+spin SELECT 1
+wait 100
+expect fxpage 23
+spin K1 1
+wait 50
+spin K1 -1
 # Flex Beat's page, the last: its quantize (bar), mode (one shot), mix (all)
 spin SELECT 1
 wait 100

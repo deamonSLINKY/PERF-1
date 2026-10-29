@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 230 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_NONE };   /* KN_RANGE: 2 .. n; KN_NONE: no knob */
-#define NFXP 23
+#define NFXP 24
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
@@ -79,6 +79,7 @@ static const char *const JM_NAME[3];
 static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
+static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};                                       /* the USB audio's level: the master knob's, or fixed (a recording that does not move with the knob) */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
 static const char *const GENRE_UI_NAME[16] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
@@ -142,7 +143,8 @@ static const struct {
     {"WAH", FX_WAH, 0, {{"Sens", KN_PLAIN, EN_FXS_WH_SENS, 0, 0}, {"Range", KN_PLAIN, EN_FXS_WH_RANGE, 0, 0},
                         {"Reso", KN_PLAIN, EN_FXS_WH_RESO, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_WH_MIX, 0, 0}}},
     /* the JAM page's four knobs (the UI's own: uiv 7 .. 10): not an FX page, the dial never walks to it */
-    {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},
+    {"USB", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* the USB audio's level: the knob's, or fixed */
+    {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
@@ -423,6 +425,7 @@ static struct {
     uint8_t flex_lock;                 /* the Flex pattern that is latched (with the one FX_FLEX bit in fx_lock) */
     uint8_t flex_cur;                  /* the pattern the engine was last told to play (en_flex_select) */
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
+    uint8_t usb_fixed;                           /* the USB page: 1, the USB audio at a fixed level, not the master knob's */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
@@ -757,7 +760,8 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
 static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
-           i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans : &proj.genre;   /* 11: the genre (proj's own) */
+           i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
+           i == 12 ? &ui.usb_fixed : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -811,6 +815,8 @@ static void fxp_set(int k, int v)
         }
         if (FXP_UI(k)) {
             *uiv(FXP_CTL(k).idx) = (uint8_t)v;
+            if (FXP_CTL(k).idx == 12)
+                en_usb_fixed = (uint8_t)v;       /* the engine renders the USB audio at unity when a computer is recording */
             break;
         }
         if (v != ui.fxs[FXP_CTL(k).idx]) {
@@ -1760,7 +1766,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 }
 
 /* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 23, 19, 20};   /* (23: the USB page, with the settings) */
 static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
 {
     int i;
@@ -5262,7 +5268,7 @@ typedef struct {
     uint8_t fxs[EN_NFXS];
     uint8_t uiv[12];
     uint8_t gx_preset, gx_tgt, pm_tgt, viz;
-    uint16_t gx_pat, rsv;
+    uint16_t gx_pat, usb;                        /* usb (0.14.5, the field was spare): the USB audio's level, 0 the knob's, 1 fixed; older records read 0 */
 } set_t;
 typedef char set_fits[sizeof(set_t) <= PLAT_STORE_MAX ? 1 : -1];
 static set_t set_disk;                           /* as it was last read or written */
@@ -5360,6 +5366,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
+    s.usb = ui.usb_fixed;
     s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -5383,6 +5390,8 @@ static void settings_load(void)
             if (FXP[p].bit == 63) {              /* the UI's own (not the genre: 11) */
                 if (FXP[p].c[c].idx < 11)
                     fxp_set(k, s.uiv[FXP[p].c[c].idx]);
+                else if (FXP[p].c[c].idx == 12)
+                    fxp_set(k, (int)s.usb);
             } else if (kind == KN_TGT) {
                 fxp_set(k, s.gx_tgt);
             } else if (kind == KN_PTGT) {

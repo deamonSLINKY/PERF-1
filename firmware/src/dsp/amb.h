@@ -290,6 +290,8 @@ extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 #define EN_NPROF 10                            /* the first core's stages (amb.c render_chunk PT): ticks summed since cleared, and the chunk count last */
 extern volatile uint8_t en_bass_c1;            /* 1: the drone and the acid are rendered by the other core */
+extern volatile uint8_t en_usb_fixed;          /* 1: the USB audio is rendered at unity gain (the master knob is the speakers' alone) */
+extern int32_t *en_usb_out;                    /* where en_render writes that second output (as out: stereo int32 frames), or NULL for none this render */
 extern volatile uint8_t en_chorus_c0;          /* 1: the pad's chorus runs on the first core (it decides, from its waits); */
 void en_fm_float_path(int v);                  /* tests: the DX voices' MARK I on float buses (1), or integer (0, as the firmware runs it) */
 void en_balance_force(int v);                  /* tests: -1 it decides, 0 / 1 as told */

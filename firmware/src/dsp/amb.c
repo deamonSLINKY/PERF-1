@@ -3104,12 +3104,10 @@ static void fm_job(const rv_job_t *c)           /* the DX voices' samples for th
  * output at the end of the chunk), then the DX voices (needed a chunk on, so nothing waits for them) */
 static void chunk_job(void *p)
 {
-    render_pad((uint32_t)((const rv_job_t *)p)->n);
-    pad_publish(((const rv_job_t *)p)->pad_w, (uint32_t)((const rv_job_t *)p)->n);   /* into the ring: the first core takes it a chunk on */
-    if (c2_fence)
-        c2_fence();
-    stage_done = 1;
-    if (((const rv_job_t *)p)->bass) {           /* the drone and the acid (the first core needs them after the drums) */
+    /* in the order the first core needs them (0.14.5): the drone and the acid first if they are this core's (wanted after the drums, about 1.5 ms into
+     * the chunk), then the tank (wanted before the master, about 3 ms in), then the pad and the DX voices, which are both for the next chunk. With the
+     * pad first, the first core waited 80-390 us a chunk for the tank (0.14.4's log). */
+    if (((const rv_job_t *)p)->bass) {
         render_bass((uint32_t)((const rv_job_t *)p)->n);
         render_acid((uint32_t)((const rv_job_t *)p)->n);
         if (c2_fence)
@@ -3119,7 +3117,12 @@ static void chunk_job(void *p)
     reverb_job(p);
     if (c2_fence)
         c2_fence();
-    stage3_done = 1;                            /* the tank's output may be read: the first core goes on to its master while the DX voices render */
+    stage3_done = 1;                            /* the tank's output may be read: the first core goes on to its master while the pad and the DX voices render */
+    render_pad((uint32_t)((const rv_job_t *)p)->n);
+    pad_publish(((const rv_job_t *)p)->pad_w, (uint32_t)((const rv_job_t *)p)->n);   /* into the ring: the first core takes it a chunk on */
+    if (c2_fence)
+        c2_fence();
+    stage_done = 1;
     fm_job((const rv_job_t *)p);
 }
 
@@ -6213,6 +6216,10 @@ static void mx_end(int t, uint32_t n)
 
 /* the first core's time by stage, for the telemetry (the firmware sets the clock; the host leaves it off): ticks summed since last read */
 uint32_t (*en_prof_clock)(void);
+volatile uint8_t en_usb_fixed;                  /* the USB audio at a fixed level (the Settings' USB page) */
+int32_t *en_usb_out;                            /* where this render writes it, or NULL */
+static int32_t *usb_cur;                        /* this chunk's part of en_usb_out, or NULL */
+static float usb_gain;
 volatile uint32_t en_prof[EN_NPROF];
 volatile uint32_t en_prof_sm[11];
 /* the diagnostic frame (0.14.3): inside the stages, fourteen pieces (ticks, all chunks: 0-13, the chunks shorter than 256 frames again: 14-27),
@@ -6436,6 +6443,11 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
         }
     }
+    if (usb_cur)                                /* the USB audio at its fixed level (the Settings' USB page), only while a computer records: the same clip, unity gain */
+        for (j = 0; j < n; j++) {
+            usb_cur[2 * j] = (int32_t)(fm_tanhf(mixl[j] * usb_gain) * 8300000.0f);
+            usb_cur[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * usb_gain) * 8300000.0f);
+        }
     DT(13);
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     if (rv_c2) {                                /* the other core's DX voices (they run behind the master): done before anything touches their state */
@@ -6612,6 +6624,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     const uint32_t n0 = n;
     RT(32, drain());
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
+    usb_gain = muted ? 0.0f : 1.0f;             /* the USB audio at a fixed level (en_usb_out): unity, the knob at about three quarters */
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
     while (n) {
@@ -6652,6 +6665,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
             for (t = 0; t < EN_NTRACK; t++)
                 trk_g[t] = trk_g1[t];
         }
+        usb_cur = en_usb_out ? en_usb_out + (out - out0) : 0;
         render_chunk(out, k, gain);
         RT(35, drums_wait_step((int32_t)k));
         out += 2 * k;
@@ -6664,6 +6678,10 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
             hush_g = tgt > hush_g ? fm_minf(hush_g + step, 1.0f) : fm_maxf(hush_g - step, 0.0f);
             out0[2 * j] = (int32_t)((float)out0[2 * j] * hush_g);
             out0[2 * j + 1] = (int32_t)((float)out0[2 * j + 1] * hush_g);
+            if (en_usb_out) {
+                en_usb_out[2 * j] = (int32_t)((float)en_usb_out[2 * j] * hush_g);
+                en_usb_out[2 * j + 1] = (int32_t)((float)en_usb_out[2 * j + 1] * hush_g);
+            }
         }
     }
     en_hushed = (uint8_t)(hush && hush_g <= 0.0f);
