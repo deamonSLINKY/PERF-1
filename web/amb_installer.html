@@ -272,7 +272,11 @@ const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", 
 /* the second frame (F0 7D 50 5A): the slowest chunk of the window (its stages in us, its total, its info) and how many renders took <5, 5-6 ... 11-12, >=12 ms; kept with the status frame before it */
 const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
   "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
-  "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits"];   /* the last seven: 0.14.1 on (the slowest half dissected); older firmware sends 20 words */
+  "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits",   /* 0.14.1 on: the slowest half dissected */
+  "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames"];   /* 0.14.3 on: the short chunks' stages; older firmware sends fewer words and the rest read 0 */
+/* the third frame (F0 7D 50 5B, 0.14.3 on): fourteen pieces inside the stages (us; all chunks, then the chunks shorter than 256 frames), the chunk sizes (counts), the work between chunks (us) */
+const DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"];
+const DIAG = DIAG_PIECES.map((p) => "d_" + p).concat(DIAG_PIECES.map((p) => "ds_" + p), ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits"]);
 const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
 let port = null;
 async function openPort() {
@@ -283,13 +287,14 @@ async function openPort() {
   const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
   const inp = pick(midi.inputs), out = pick(midi.outputs);
   if (!inp || !out) throw new Error(t("notfound"));
-  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, onframe: null };
+  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, ondiag: null, onframe: null };
   inp.onmidimessage = (ev) => {
     const d = ev.data;
     if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
     if (d[3] === 0x57) { const w = port.waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }       /* the answer to a voice message */
     else if (d[3] === 0x46 && port.onstatus) port.onstatus(d);                                      /* a status frame */
     else if (d[3] === 0x5A && port.onextra) port.onextra(d);                                        /* the slowest chunk of the window, and the histogram of renders */
+    else if (d[3] === 0x5B && port.ondiag) port.ondiag(d);                                          /* the diagnostic pieces */
     else if (d[3] === 0x43 && port.onframe) port.onframe(d);                                        /* a frame of an object being backed up */
     else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }   /* the answer to a chunk or a write */
   };
@@ -528,9 +533,15 @@ function onExtra(d) {                       /* the second frame follows its stat
   const n = Math.min(EXTRA.length, raw.length >> 2);
   EXTRA.forEach((f, i) => { w[f] = i < n ? dv.getUint32(i * 4, true) : 0; });
 }
+function onDiag(d) {                        /* the third frame follows the second: it joins the same row */
+  const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
+  const dv = new DataView(new Uint8Array(raw).buffer), w = frames[frames.length - 1];
+  if (!w || raw.length < DIAG.length * 4) return;
+  DIAG.forEach((f, i) => { w[f] = dv.getUint32(i * 4, true); });
+}
 async function stStop() {
   clearInterval(stTimer); stTimer = null;
-  if (port) { try { port.out.send([0xF0, 0x7D, 0x50, 0x46, 0x00, 0xF7]); } catch (_) {} port.onstatus = null; port.onextra = null; }
+  if (port) { try { port.out.send([0xF0, 0x7D, 0x50, 0x46, 0x00, 0xF7]); } catch (_) {} port.onstatus = null; port.onextra = null; port.ondiag = null; }
   $("stgo").textContent = t("stgo");
 }
 $("stgo").addEventListener("click", async () => {
@@ -540,6 +551,7 @@ $("stgo").addEventListener("click", async () => {
     frames = [];
     p.onstatus = onStatus;
     p.onextra = onExtra;
+    p.ondiag = onDiag;
     const arm = () => { try { p.out.send([0xF0, 0x7D, 0x50, 0x46, 0x01, 0xF7]); } catch (_) { stStop(); } };
     arm();
     stTimer = setInterval(arm, 3000);
@@ -548,7 +560,7 @@ $("stgo").addEventListener("click", async () => {
   } catch (err) { $("ststatus").textContent = err.message; }
 });
 $("stsave").addEventListener("click", () => {
-  const cols = FIELDS.concat(EXTRA);
+  const cols = FIELDS.concat(EXTRA, DIAG);
   const rows = ["t," + cols.join(",")].concat(frames.map((w) => ((w.t - frames[0].t) / 1000).toFixed(2) + "," + cols.map((f) => (w[f] === undefined ? 0 : w[f])).join(",")));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([rows.join("\n") + "\n"], { type: "text/csv" }));

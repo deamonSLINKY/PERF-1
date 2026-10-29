@@ -6170,11 +6170,19 @@ static void mx_end(int t, uint32_t n)
 /* the first core's time by stage, for the telemetry (the firmware sets the clock; the host leaves it off): ticks summed since last read */
 uint32_t (*en_prof_clock)(void);
 volatile uint32_t en_prof[EN_NPROF];
+volatile uint32_t en_prof_sm[11];
+/* the diagnostic frame (0.14.3): inside the stages, fourteen pieces (ticks, all chunks: 0-13, the chunks shorter than 256 frames again: 14-27),
+ * the chunk sizes (28-31: < 64, < 128, < 256, 256 frames) and the work between chunks (32-35: drain, control, the clock pulse, the hits that waited) */
+volatile uint32_t en_diag[36];
+#define DT0() do { if (en_prof_clock) dt0_ = en_prof_clock(); } while (0)
+#define DT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); ds_[i] += t1_ - dt0_; dt0_ = t1_; } } while (0)
+#define RT(i, stmt) do { if (en_prof_clock) { const uint32_t t0_ = en_prof_clock(); stmt; en_diag[i] += en_prof_clock() - t0_; } else { stmt; } } while (0)
 volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the longest chunk since last read: its stages (ticks), its total, and when it was */
 #define PT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); en_prof[i] += t1_ - pt0_; cs_[i] = t1_ - pt0_; pt0_ = t1_; } } while (0)
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u, cs_[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    uint32_t dt0_ = pt0_, ds_[14] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
@@ -6203,17 +6211,25 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             chunk_job(&rv_job);
     }
     PT(0);                                      /* the clear, the job's start */
+    DT0();
     if (!rv_job.bass) {                         /* the drone and the acid here (else the other core's: merged after the drums) */
         render_bass(n);
+        DT(0);
         render_acid(n);
+        DT(1);
     }
     PT(1);                                      /* bass, acid */
+    DT0();
     mx_begin(3, n);
     render_cm(n);
+    DT(2);
     render_fm(n);                               /* the DX voices' samples from a chunk ago (the other core's), into the fm_ buffers added below */
     mx_end(3, n);
+    DT(3);
     render_dj(n);
+    DT(4);
     render_noise(n);
+    DT(5);
     PT(2);                                      /* pluck, the DX voices' samples, snips, noise */
     bal_a = pt0_;
     if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
@@ -6236,6 +6252,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     PT(3);                                      /* the wait for the pad */
     bal_w = pt0_ - bal_a;
+    DT0();
     if (en_chorus_c0)
         pad_chorus(n);                          /* the pad's chorus here, while the other core goes on with the reverb */
     {
@@ -6250,6 +6267,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     pad_midi_flush();
+    DT(6);
     for (j = 0; j < n; j++) {                   /* the sidechain: the kick pushes the rest down, briefly */
         float gt = 1.0f;
         if (gate == 1)                          /* the gate: the first half of each sixteenth */
@@ -6273,7 +6291,9 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     gate_g = gg;
+    DT(7);
     PT(4);                                      /* the merge, the sidechain */
+    DT0();
     mx_begin(4, n);
     if (KK->crush > 0.0f) {                      /* breakcore: the drums crushed (what they add, held and stepped) */
         static float hl, hr;
@@ -6300,6 +6320,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         render_drums(n);                        /* (the kick sets duck_env for the next chunk) */
     }
     mx_end(4, n);
+    DT(8);
     PT(5);                                      /* the drums */
     if (rv_c2 && rv_job.bass) {                 /* the drone and the acid are the other core's: wait for them (the reverb goes on behind) */
         while (!stage2_done)
@@ -6319,6 +6340,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (c2_fence)
             c2_fence();
     }
+    DT0();
     {   /* the drone and the acid into the mix as they were before the sidechain: ducked by the kick and gated, their sends gated, the mixer's pan and sends on each */
         float bl, br, bs, al, ar, as;
         mx_gains(1, &bl, &br, &bs);
@@ -6332,6 +6354,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     duck_env = fm_flush(de);
+    DT(9);
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
         float el, er, xl, xr;
         echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]), &el, &er, &xl, &xr);
@@ -6340,6 +6363,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;
         dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
     }
+    DT(10);
     PT(6);                                      /* the echoes, the reverb's input */
     bal_a = pt0_;
     if (rv_c2) {                                /* the tank's output is the other core's: wait for that only (its DX voices go on behind, joined after the master) */
@@ -6362,13 +6386,16 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     PT(7);                                      /* the wait for the reverb */
     bal_w += pt0_ - bal_a;
+    DT0();
     for (j = 0; j < n; j++) {                   /* the tank's output in, the performance effects */
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
         mixl[j] = l;
         mixr[j] = r;
     }
+    DT(11);
     master_dyn_block(mixl, mixr, n);            /* the compressor and the limiter */
+    DT(12);
     for (j = 0; j < n; j++) {                   /* the master gain and the soft clip */
         if (shed3) {                            /* the cheap clip (a rational tanh) */
             out[2 * j] = (int32_t)(soft_sat(mixl[j] * gain) * 8300000.0f);
@@ -6378,6 +6405,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             out[2 * j + 1] = (int32_t)(fm_tanhf(mixr[j] * gain) * 8300000.0f);
         }
     }
+    DT(13);
     PT(8);                                      /* the master: effects, dynamics, the soft clip */
     if (rv_c2) {                                /* the other core's DX voices (they run behind the master): done before anything touches their state */
         bal_a = pt0_;
@@ -6397,6 +6425,22 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         bal_w += pt0_ - bal_a;
     }
     en_prof[9]++;
+    if (en_prof_clock && n < (uint32_t)BLK) {   /* the short chunks' stages apart: against the full chunks' they give each stage's fixed cost a chunk (tools/fm1sum.py) */
+        uint32_t k;
+        for (k = 0; k < 9u; k++)
+            en_prof_sm[k] += cs_[k];
+        en_prof_sm[9]++;
+        en_prof_sm[10] += n;
+    }
+    if (en_prof_clock) {                        /* the diagnostic frame's pieces */
+        uint32_t k;
+        for (k = 0; k < 14u; k++) {
+            en_diag[k] += ds_[k];
+            if (n < (uint32_t)BLK)
+                en_diag[14 + k] += ds_[k];
+        }
+        en_diag[28 + (n < 64u ? 0u : n < 128u ? 1u : n < (uint32_t)BLK ? 2u : 3u)]++;
+    }
     if (en_prof_clock && pt0_ - bal_t0 > en_peak_total) {   /* the slowest chunk: which stage, which step, how long it was, what was moved */
         uint32_t k;
         for (k = 0; k < 9u; k++)
@@ -6533,7 +6577,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     float gain;
     int32_t *const out0 = out;
     const uint32_t n0 = n;
-    drain();
+    RT(32, drain());
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
@@ -6542,7 +6586,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         int timed = en_playing && !en_ext;
         if (timed) {
             if (pulse_left <= 0.0f) {
-                clock_pulse();
+                RT(34, clock_pulse());
                 pulse_left += step_len * (1.0f / 6.0f);
             }
             if ((float)k > pulse_left)
@@ -6563,9 +6607,9 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         }
         if (timed)
             pulse_left -= (float)k;
-        control(k);
+        RT(33, control(k));
         render_chunk(out, k, gain);
-        drums_wait_step((int32_t)k);
+        RT(35, drums_wait_step((int32_t)k));
         out += 2 * k;
         n -= k;
     }

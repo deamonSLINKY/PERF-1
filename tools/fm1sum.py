@@ -73,6 +73,90 @@ def halves(path):
             us - st - isr, int(r["pkr_chunks"]), wi & 255, wi >> 12 & 1, where[wi >> 8 & 15] if (wi >> 8 & 15) < len(where) else wi >> 8 & 15))
 
 
+def fixed(path):
+    """each stage's fixed cost a chunk (columns sm_*, 0.14.3 on). A stage's time in a chunk is F + n v (F fixed, v a frame); the windows give the
+    full chunks' sums (the totals less the short chunks') and the short chunks' sums with their frames: two equations a stage, solved for F and v.
+    By genre and piece, where the log holds at least 200 short chunks of it. The short chunks sit at the hits (more voices starting), so their
+    v runs a little high and F a little low: the ranking of the stages is the point, not the last microsecond."""
+    rows = list(csv.DictReader(open(path)))
+    if not rows or "sm_n" not in rows[0]:
+        return
+    g = defaultdict(list)
+    for r in rows:
+        g[(int(r["genre"]), int(r["piece"]))].append(r)
+    names = ["clear", "bass+acid", "pluck+DX", "wait pad", "merge", "drums", "echoes", "wait rev", "master"]
+    keys = ["clear", "bassacid", "pluck", "w_pad", "merge", "drums", "echo", "w_rev", "master"]
+    shown = False
+    for (ge, pc), s in sorted(g.items()):
+        n_sm = sum(int(r["sm_n"]) for r in s)
+        fr_sm = sum(int(r["sm_frames"]) for r in s)
+        n_all = sum(int(r["chunks"]) for r in s)
+        n_full = n_all - n_sm
+        if n_sm < 200 or n_full < 200 or fr_sm == 256 * n_sm:
+            continue
+        if not shown:
+            print("\nfixed cost a chunk by stage (us; F + n v solved from the full and the short chunks), and a 256-frame chunk's total:")
+            shown = True
+        tot_f = tot_full = 0.0
+        out = []
+        for k, nm in zip(keys, names):
+            s_all = sum(int(r["p_" + k if k not in ("w_pad", "w_rev") else k]) for r in s)
+            s_sm = sum(int(r["sm_" + k]) for r in s)
+            s_full = s_all - s_sm
+            v = (s_sm - n_sm * s_full / n_full) / (fr_sm - 256.0 * n_sm)
+            f = s_full / n_full - 256.0 * v
+            tot_f += f
+            tot_full += s_full / n_full
+            out.append("%s F %4.0f (of %4.0f)" % (nm, f, s_full / n_full))
+        print("  %s %2d  (%d short chunks, mean %.0f frames; %d full):  %s  | fixed %.0f of %.0f us a full chunk" % (
+            GENRES[ge] if ge < len(GENRES) else ge, pc, n_sm, fr_sm / n_sm, n_full, "  ".join(out), tot_f, tot_full))
+
+
+def diag(path):
+    """the diagnostic frame (columns d_*, ds_*, hc_*, r_*; 0.14.3 on): the pieces inside the stages, each as us per full chunk and its fixed cost a
+    chunk (solved as in fixed()), the sizes of the chunks, and the work between chunks per chunk"""
+    rows = list(csv.DictReader(open(path)))
+    if not rows or "d_bass" not in rows[0] or "sm_n" not in rows[0]:
+        return
+    pieces = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"]
+    g = defaultdict(list)
+    for r in rows:
+        g[(int(r["genre"]), int(r["piece"]))].append(r)
+    shown = False
+    for (ge, pc), s in sorted(g.items()):
+        n_sm = sum(int(r["sm_n"]) for r in s)
+        fr_sm = sum(int(r["sm_frames"]) for r in s)
+        n_all = sum(int(r["chunks"]) for r in s)
+        n_full = n_all - n_sm
+        if n_all < 400:
+            continue
+        if not shown:
+            print("\nthe pieces inside the stages (us per full chunk; F = the fixed cost a chunk where the log allows it), the chunk sizes, the work between chunks:")
+            shown = True
+        name = GENRES[ge] if ge < len(GENRES) else str(ge)
+        solve = n_sm >= 200 and n_full >= 200 and fr_sm != 256 * n_sm
+        out = []
+        tot_f = 0.0
+        for p in pieces:
+            s_all = sum(int(r["d_" + p]) for r in s)
+            s_sm = sum(int(r["ds_" + p]) for r in s)
+            s_full = s_all - s_sm
+            if solve:
+                v = (s_sm - n_sm * s_full / n_full) / (fr_sm - 256.0 * n_sm)
+                f = s_full / n_full - 256.0 * v
+                tot_f += f
+                out.append("%s %4.0f F %4.0f" % (p, s_full / n_full, f))
+            else:
+                out.append("%s %4.0f" % (p, s_all / n_all))
+        print("  %s %2d  (%d chunks, %d short):  %s%s" % (name, pc, n_all, n_sm, "  ".join(out), ("  | fixed in these pieces %.0f us" % tot_f) if solve else ""))
+        hc = [sum(int(r["hc_" + k]) for r in s) for k in ("lt64", "lt128", "lt256", "256")]
+        rr = [sum(int(r["r_" + k]) for r in s) / n_all for k in ("drain", "control", "pulse", "hits")]
+        print("           chunks by size: <64 %d  <128 %d  <256 %d  256 %d   | between chunks, us a chunk: drain %.0f control %.0f pulse %.0f hits %.0f" % (
+            hc[0], hc[1], hc[2], hc[3], rr[0], rr[1], rr[2], rr[3]))
+
+
 peaks(sys.argv[1])
 halves(sys.argv[1])
+fixed(sys.argv[1])
+diag(sys.argv[1])
 main()

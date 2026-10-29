@@ -579,10 +579,10 @@ static void tel_service(void)
         on = 0;
         return;
     }
-    if (extra) {                                    /* the second frame (F0 7D 50 5A): the slowest chunk's stages and when it was, the histogram of renders, the slowest half dissected */
-        uint32_t w[27], i, o = 4;
-        uint8_t f[4 + 27 * 5 + 2], b[27 * 4];
-        _Static_assert(4 + (27 * 4 * 8 + 6) / 7 + 1 <= 4 + 27 * 5 + 2, "the frame fits its buffer");
+    if (extra == 1) {                               /* the second frame (F0 7D 50 5A): the slowest chunk's stages and when it was, the histogram of renders, the slowest half dissected */
+        uint32_t w[38], i, o = 4;
+        uint8_t f[4 + 38 * 5 + 2], b[38 * 4];
+        _Static_assert(4 + (38 * 4 * 8 + 6) / 7 + 1 <= 4 + 38 * 5 + 2, "the frame fits its buffer");
         for (i = 0; i < 9u; i++)
             w[i] = en_peak_stage[i] / FM1_TICKS_PER_US;
         w[9] = en_peak_total / FM1_TICKS_PER_US;
@@ -591,7 +591,11 @@ static void tel_service(void)
             w[11 + i] = tel_hist[i];
         for (i = 0; i < 7u; i++)
             w[20 + i] = tel_pkr_sent[i];
-        for (i = 0; i < 27u; i++)
+        for (i = 0; i < 9u; i++)                /* the short chunks' stages (us), their count and their frames: with the totals, each stage's fixed cost a chunk */
+            w[27 + i] = en_prof_sm[i] / FM1_TICKS_PER_US;
+        w[36] = en_prof_sm[9];
+        w[37] = en_prof_sm[10];
+        for (i = 0; i < 38u; i++)
             b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x5A;
         o += ota_pack7(b, sizeof b, f + o);
@@ -600,6 +604,26 @@ static void tel_service(void)
             en_peak_total = 0;
             for (i = 0; i < 9u; i++)
                 tel_hist[i] = 0;
+            for (i = 0; i < 11u; i++)
+                en_prof_sm[i] = 0;
+            extra = 2;
+        }
+        return;
+    }
+    if (extra == 2) {                               /* the third frame (F0 7D 50 5B): the diagnostic pieces (amb.c en_diag), us and counts */
+        uint32_t w[36], i, o = 4;
+        uint8_t f[4 + 36 * 5 + 2], b[36 * 4];
+        _Static_assert(4 + (36 * 4 * 8 + 6) / 7 + 1 <= 4 + 36 * 5 + 2, "the frame fits its buffer");
+        for (i = 0; i < 36u; i++)
+            w[i] = i < 28u || i >= 32u ? en_diag[i] / FM1_TICKS_PER_US : en_diag[i];
+        for (i = 0; i < 36u; i++)
+            b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
+        f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x5B;
+        o += ota_pack7(b, sizeof b, f + o);
+        f[o++] = 0xF7;
+        if (usb_sysex_try(f, o) == 0) {
+            for (i = 0; i < 36u; i++)
+                en_diag[i] = 0;
             extra = 0;
         }
         return;

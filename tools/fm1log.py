@@ -74,15 +74,34 @@ BENCH_NAMES = ["float mul-add x10 (flash code)", "float mul-add x10 (RAM code)",
 
 EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
          "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
-         "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits"]
+         "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits",
+         "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames"]
+
+
+DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"]
+DIAG = ["d_" + p for p in DIAG_PIECES] + ["ds_" + p for p in DIAG_PIECES] + ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits"]
+
+
+def decode_diag(msg):
+    """the third frame (0.14.3 on, F0 7D 50 5B): fourteen pieces inside the stages (us, all chunks: d_*, the chunks shorter than 256 frames again:
+    ds_*), the chunk sizes (counts), and the work between chunks (us: drain, control, the clock pulse, the hits that waited)"""
+    msg = list(msg)
+    if msg[:3] != [0x7D, 0x50, 0x5B]:
+        return None
+    raw = unpack7(msg[3:])
+    n = min(len(DIAG), len(raw) // 4)
+    if n < 36:
+        return None
+    return dict(zip(DIAG, struct.unpack("<%dI" % n, bytes(raw[:4 * n]))))
 
 
 def decode_extra(msg):
     """the second frame: the slowest chunk of the window (its stages in us, its total, its info: step 0-3, size 4-11, tick at start 12, the drone and
     acid on core 2 13, the chorus on core 1 14, shed 15-16, section 17-18), how many renders took <5, 5-6 ... 11-12, >=12 ms, and (0.14.1 on) the
     slowest half dissected: its us, the sum of its chunks' stages, its chunks, the timer interrupt's us inside it and those ticks, its step | the
-    main loop's place << 8 (0 between, 1 the UI frame, 2 the USB services) | the half << 12, and its waits for the other core (us). Older firmware
-    sends 20 words: the rest read 0."""
+    main loop's place << 8 (0 between, 1 the UI frame, 2 the USB services) | the half << 12, and its waits for the other core (us); and (0.14.3 on)
+    the stages of the chunks shorter than 256 frames (us), how many there were and their frames, so that with the totals each stage's fixed
+    cost a chunk can be solved (fm1sum.py). Older firmware sends 20 or 27 words: the rest read 0."""
     msg = list(msg)
     if msg[:3] != [0x7D, 0x50, 0x5A]:
         return None
@@ -130,9 +149,15 @@ def selftest():
     wb = [1500, 240] + [3000 + 100 * k for k in range(9)]
     wb = wb + [7] * 5
     assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<16I", *wb))) == tuple(wb)
-    we = list(range(1, 21))
+    we = list(range(1, 21))                       # an older firmware's 20 words: the rest read 0
     ex = decode_extra(PREFIX[:2] + [0x5A] + pack7(struct.pack("<20I", *we)))
+    assert ex and [ex[k] for k in EXTRA] == we + [0] * (len(EXTRA) - 20), ex
+    we = list(range(1, len(EXTRA) + 1))
+    ex = decode_extra(PREFIX[:2] + [0x5A] + pack7(struct.pack("<%dI" % len(we), *we)))
     assert ex and [ex[k] for k in EXTRA] == we, ex
+    wd = list(range(1, len(DIAG) + 1))
+    dg = decode_diag(PREFIX[:2] + [0x5B] + pack7(struct.pack("<%dI" % len(wd), *wd)))
+    assert dg and [dg[k] for k in DIAG] == wd, dg
     print("selftest ok:", len(msg) + 2, "bytes a frame")
 
 
@@ -180,7 +205,8 @@ def main():
     t0 = time.time()
     with open(out, "w", newline="") as f:
         cw = csv.writer(f)
-        cw.writerow(["t"] + FIELDS + ["chorus", "bass"] + EXTRA + ["event"])
+        cw.writerow(["t"] + FIELDS + ["chorus", "bass"] + EXTRA + DIAG + ["event"])
+        diag = {}
         try:
             while True:
                 now = time.time()
@@ -195,6 +221,10 @@ def main():
                         ex = decode_extra(m.data)
                         if ex:
                             extra = ex
+                        else:
+                            dg = decode_diag(m.data)
+                            if dg:
+                                diag = dg
                         continue
                     ev = []
                     if prev:
@@ -215,8 +245,10 @@ def main():
                     if d["gap_us"] > 20000:
                         ev.append("GAP%dms" % (d["gap_us"] // 1000))
                     prev = d
-                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"]] + [extra.get(k, 0) for k in EXTRA] + [" ".join(ev)])
+                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"]] + [extra.get(k, 0) for k in EXTRA] +
+                                [diag.get(k, 0) for k in DIAG] + [" ".join(ev)])
                     extra = {}
+                    diag = {}
                     f.flush()
                     print("\r%6.1fs cpu %3d%% c1 %3d%% xr %-4d max %5.1fms/%.1f gap %5.1fms ui %5.1fms shed %d %s        " % (
                         now - t0, d["cpu"], d["cpu1"], d["xruns"], d["max_us"] / 1000, d["budget_us"] / 1000,
