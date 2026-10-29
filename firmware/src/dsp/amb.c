@@ -2356,9 +2356,10 @@ static const float FM_GAIN[EN_NCMFM] = {0.24f, 0.38f, 0.29f, 0.38f, 1.02f, 1.87f
                                          0.49f, 0.20f, 1.80f, 0.26f, 0.93f, 0.23f, 0.38f, 0.45f,   /* (the eight newer DX voices; the muted guitar's is its peak's, its rms is only a click) */
                                          0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};   /* (the loaded voices: not measured, a sustaining voice's -6 dB) */
 /* the DY voices' gains: each set so the voice's rms in the arpeggio (tests/host/dycal on build/fm6_dy.bin, at the user slots' 0.5) equals the DX
- * voice's in the same slot (fmcal's rms column), so the genres' balance holds whichever set plays */
-static const float FM_GAIN_DY[EN_NFMFACT] = {0.25f, 0.16f, 0.12f, 0.33f, 2.07f, 0.49f, 0.22f, 0.64f, 0.39f, 0.29f, 0.29f, 0.91f, 0.16f, 0.27f, 0.43f, 0.16f, 0.65f, 1.86f, 0.52f, 0.33f,
-                                              0.13f, 0.11f, 0.76f, 0.29f, 0.51f, 0.19f, 0.42f, 0.13f, 0.22f, 0.24f};
+ * voice's in the same slot (fmcal's rms column), then all x1.8 (+5 dB): the DX set sits 6 dB under the plain sounds (audit M-65), and on the unit
+ * that read as too quiet against the loaded voices (0.14.13), which play at a flat 0.5, about 1.5 dB under the plain mean */
+static const float FM_GAIN_DY[EN_NFMFACT] = {0.45f, 0.29f, 0.22f, 0.59f, 3.73f, 0.88f, 0.40f, 1.15f, 0.70f, 0.52f, 0.52f, 1.64f, 0.29f, 0.49f, 0.77f, 0.29f, 1.17f, 3.35f, 0.94f, 0.59f,
+                                              0.23f, 0.20f, 1.37f, 0.52f, 0.92f, 0.34f, 0.76f, 0.23f, 0.40f, 0.43f};
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
