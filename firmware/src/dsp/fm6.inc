@@ -23,6 +23,9 @@ typedef struct {
     char name[11];
 } fm6_rom_t;
 #include "fm6_rom.h"             /* FM6_ROM[]: sixteen more */
+#include "fm6_dy.h"              /* FM6_DY[]: the DY set, a human-made voice for each DX one (tools/gen_fm6_dy.py) */
+volatile uint8_t en_fm_dy;                       /* the Settings page's Voices: 0 the DX set (Melodee's and ours), 1 the DY set */
+static uint8_t fm_dy_cur;                        /* the set the loaded patch came from */
 #define FM6_NPATCH (FM6_NFACTORY + FM6_NROM)
 #define FM6_PACKED 128u
 
@@ -306,10 +309,16 @@ static void fm_set_patch(int idx)                /* between chunks: a new patch 
         idx = 0;
     if (idx >= EN_NFMFACT && idx - EN_NFMFACT >= (int)fm_user_n)
         idx = 0;                                 /* a loaded voice that is not there: the first */
+    if (fm_dy_cur != en_fm_dy) {
+        fm_dy_cur = en_fm_dy;                    /* the set changed: load the patch again from the other */
+        fm_cur = -1;
+    }
     if (idx == fm_cur)
         return;
     if (idx >= EN_NFMFACT) {
         fm6_unpack(fm_user[idx - EN_NFMFACT], fm_ed);
+    } else if (fm_dy_cur) {
+        fm6_unpack(FM6_DY[idx], fm_ed);
     } else {
         const int src = FM_MAP[idx];
         if (src < (int)FM6_NFACTORY)
@@ -324,6 +333,14 @@ static void fm_set_patch(int idx)                /* between chunks: a new patch 
     }
     fm_zero(&fm_lfo, sizeof fm_lfo);
     fm_pos = FM6_N;
+}
+
+void en_fm_set_dy(int on)                        /* the main loop: the set, and the names the pluck's sound list shows */
+{
+    int i;
+    en_fm_dy = (uint8_t)(on != 0);
+    for (i = 0; i < EN_NFMFACT; i++)
+        EN_CM_SOUND[12 + i] = en_fm_dy ? FM6_DY_NAME[i] : FM_DX_NAME[i];
 }
 
 /* a key goes down (Dx7Note::init); the key comes up after gate samples */

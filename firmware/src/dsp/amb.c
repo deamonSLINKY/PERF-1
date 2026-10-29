@@ -2343,6 +2343,8 @@ const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", 
     "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)"};
+static const char *const FM_DX_NAME[EN_NFMFACT] = {   /* (the same thirty, to put back when the DY set is switched off: en_fm_set_dy) */
+    "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
 const char *const EN_CM_RATE[4] = {"1/4", "3/16", "1/8", "1/16"};   /* slowest to fastest */
 #include "fm6.inc"
@@ -2353,6 +2355,10 @@ const char *const EN_CM_RATE[4] = {"1/4", "3/16", "1/8", "1/16"};   /* slowest t
 static const float FM_GAIN[EN_NCMFM] = {0.24f, 0.38f, 0.29f, 0.38f, 1.02f, 1.87f, 0.30f, 0.53f, 0.38f, 0.53f, 0.30f, 2.55f, 0.35f, 0.49f, 1.54f, 0.34f, 0.55f, 2.13f, 0.27f, 0.87f, 0.65f, 0.29f,
                                          0.49f, 0.20f, 1.80f, 0.26f, 0.93f, 0.23f, 0.38f, 0.45f,   /* (the eight newer DX voices; the muted guitar's is its peak's, its rms is only a click) */
                                          0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};   /* (the loaded voices: not measured, a sustaining voice's -6 dB) */
+/* the DY voices' gains: each set so the voice's rms in the arpeggio (tests/host/dycal on build/fm6_dy.bin, at the user slots' 0.5) equals the DX
+ * voice's in the same slot (fmcal's rms column), so the genres' balance holds whichever set plays */
+static const float FM_GAIN_DY[EN_NFMFACT] = {0.25f, 0.16f, 0.12f, 0.33f, 2.07f, 0.49f, 0.22f, 0.64f, 0.39f, 0.29f, 0.29f, 0.91f, 0.16f, 0.27f, 0.43f, 0.16f, 0.65f, 1.86f, 0.52f, 0.33f,
+                                              0.13f, 0.11f, 0.76f, 0.29f, 0.51f, 0.19f, 0.42f, 0.13f, 0.22f, 0.24f};
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
@@ -5778,7 +5784,8 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
 static void render_fm(uint32_t n)
 {
     const int on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
-    const float g = cm_vol * 0.5f * FM_OUT * (float)FM_GAIN[(on ? (fm_cur >= 0 ? fm_cur : 0) : 0)];   /* (the voice that is loaded: an empty user slot plays the first built-in one, at its own gain) */
+    const int cur = on && fm_cur >= 0 ? fm_cur : 0;   /* (the voice that is loaded: an empty user slot plays the first built-in one, at its own gain) */
+    const float g = cm_vol * 0.5f * FM_OUT * (fm_dy_cur && cur < EN_NFMFACT ? FM_GAIN_DY[cur] : FM_GAIN[cur]);
     uint32_t j;
     float lvl = 0.0f;
     if (!on) {

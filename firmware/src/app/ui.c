@@ -80,6 +80,7 @@ static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
+static const char *const VOICES_NAME[2] = {"DX", "DY"};                                          /* the thirty built-in DX7 voices: Melodee's set, or the human-made one */
 static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0",
                                          "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "+11", "+12"};   /* the repeat's pitch, semitones reached over four beats held */
 static const char *const RPG_NAME[4] = {"FULL", "3/4", "HALF", "1/4"};                              /* the repeat's gate: the part of the slice that sounds */
@@ -137,7 +138,7 @@ static const struct {
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
     {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
-                         {"", KN_NONE, 0, 0, 0}}},   /* (the genre moved to Global's fourth knob in 0.14.7) */
+                         {"Voices", KN_NAME, 13, VOICES_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SNIPS", 62, 0, {{"Pitch", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 3}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
@@ -432,6 +433,7 @@ static struct {
     uint8_t flex_cur;                  /* the pattern the engine was last told to play (en_flex_select) */
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
     uint8_t usb_fixed;                           /* the USB page: 1, the USB audio at a fixed level, not the master knob's */
+    uint8_t fm_dy;                               /* the Settings page's Voices: 1, the DY set stands in for the DX voices (kept in set_t.usb's bit 1) */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
@@ -773,7 +775,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
-           i == 12 ? &ui.usb_fixed : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level (kept in set_t.usb) */
+           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -837,6 +839,8 @@ static void fxp_set(int k, int v)
             *uiv(FXP_CTL(k).idx) = (uint8_t)v;
             if (FXP_CTL(k).idx == 12)
                 en_usb_fixed = (uint8_t)v;       /* the engine renders the USB audio at unity when a computer is recording */
+            else if (FXP_CTL(k).idx == 13)
+                en_fm_set_dy(v);                 /* the DX or the DY voices: the names change at once, the patch at the next chunk */
             break;
         }
         if (v != ui.fxs[FXP_CTL(k).idx]) {
@@ -2167,7 +2171,7 @@ static void help_tick(uint32_t btn, uint32_t keys)
         ui.btn_used |= btn;                      /* its release now does nothing */
         ui.fx_menu = 1;
         ui.fx_page = (uint8_t)(p < NFXP ? p + 1 : 1);
-        say("SETTINGS", "GENRE, SAVER, LIGHTS, KEY");
+        say("SETTINGS", "KEY, SAVER, LIGHTS, VOICES");
         return;
     }
     for (i = 0; i < NB; i++)
@@ -5521,7 +5525,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = ui.usb_fixed;
+    s.usb = (uint16_t)(ui.usb_fixed | ui.fm_dy << 1);
     s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -5576,7 +5580,9 @@ static void settings_load(void)
                 if (FXP[p].c[c].idx < 11)
                     fxp_set(k, s.uiv[FXP[p].c[c].idx]);
                 else if (FXP[p].c[c].idx == 12)
-                    fxp_set(k, (int)s.usb);
+                    fxp_set(k, s.usb & 1);
+                else if (FXP[p].c[c].idx == 13)
+                    fxp_set(k, s.usb >> 1 & 1);
             } else if (kind == KN_TGT) {
                 fxp_set(k, s.gx_tgt);
             } else if (kind == KN_PTGT) {

@@ -35,6 +35,8 @@ The tests run, on the build machine: the maths library against libm; the instrum
 
 The build fails if a soft-double routine is linked (a `double` crept in) and checks the image, RAM and pool sizes. Build options: `EN_CORE2=0` builds single-core (the reverb on the second core is the default), `EN_CDC=1` adds Felucca's USB serial function, `EN_DIAG=1` adds the status log's third frame (timers inside the render's stages, the chunk sizes, the work between chunks) for a performance hunt.
 
+The DY voices (`firmware/src/dsp/fm6_dy.h`) are generated from DX7 bank files that are not in this tree: `python3 -I tools/gen_fm6_dy.py tools/fm6_dy.txt BANKS --rom ROMDIR` reads the manifest (slot, name, bank file, voice, source), writes the header, `build/fm6_dy.bin` and the test bank `build/PERF-1-test-voices.syx`, and refuses a voice whose operators match a Yamaha ROM voice in ROMDIR. `tests/host/dycal FILE` (built like the other host tools) prints each voice's level and the gain it would need against the plain sounds; `FM_GAIN_DY` in `amb.c` is set from it and `fmcal`'s rms column so each DY voice sits where its DX voice does.
+
 ## The site
 
 ```

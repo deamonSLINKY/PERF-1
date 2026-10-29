@@ -1,0 +1,26 @@
+# Settings' fourth knob, Voices (0.14.12): DY swaps the thirty built-in DX voices for the human-made set. The pluck on a DX voice plays on
+# through the switch (the engine loads the other set's patch between chunks), the setting is read back, and the switch back works.
+seed 0
+wait 500
+setpar 98 80
+setpar 99 12
+wait 1000
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+expect dyvoices 0
+spin K4 1
+wait 100
+expect dyvoices 1
+peakreset
+wait 4000
+expect peak_db_min -40
+shot dyvoices.png
+spin K4 -1
+wait 100
+expect dyvoices 0
+peakreset
+wait 4000
+expect peak_db_min -40

@@ -383,7 +383,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for **Settings**: **Key** (the drop's key change: same, +2, +3, +5, +7 semitones; the root rises for the round and the next breakdown puts it back; `KEY` in the header), **Saver** (the screensaver: off, 1, 3, 10 min; the visualizers take the whole screen until a touch), **Lights** (off, or show: the key lights follow the music). **SEL + FX** walks on to the others; the SELECT dial moves between them; FX leaves. **USB & MIDI**: Level (KNOB: the USB audio follows MASTER; FIXED: it stays at unity, about the knob at three quarters), MIDI out (off, on). **Auto DJ**: Scenes, Groove, Break, Fill (page 4). **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six palettes), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for **Settings**: **Key** (the drop's key change: same, +2, +3, +5, +7 semitones; the root rises for the round and the next breakdown puts it back; `KEY` in the header), **Saver** (the screensaver: off, 1, 3, 10 min; the visualizers take the whole screen until a touch), **Lights** (off, or show: the key lights follow the music), **Voices** (DX: the built-in DX7 voices; DY: human-made ones of the same roles in their place). **SEL + FX** walks on to the others; the SELECT dial moves between them; FX leaves. **USB & MIDI**: Level (KNOB: the USB audio follows MASTER; FIXED: it stays at unity, about the knob at three quarters), MIDI out (off, on). **Auto DJ**: Scenes, Groove, Break, Fill (page 4). **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six palettes), Tune (+-50 cents), Genre.
 
 ### Visualizers
 
