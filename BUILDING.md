@@ -43,6 +43,8 @@ python3 tools/make_pages_site.py 0.14.0 build/site
 
 makes the landing page, the web installer with the package in it, the emulator, the editor and the manual as a static folder with relative links. Publish it with GitHub Pages (a `gh-pages` branch holding the folder's contents works) or any static host.
 
+The printable quick manual (`docs/QUICK.md`, eight A4 pages) is made by `python tools/make_quick_manual.py` on Windows, which prints its HTML to `build/quick-manual.pdf` with Microsoft Edge; the site build copies the PDF to `manual/PERF-1-quick-manual.pdf` when it is there. Bump the footer line at the top of `QUICK.md` with each release.
+
 ## Install
 
 From the site, or from the command line (needs `pip3 install mido python-rtmidi`):

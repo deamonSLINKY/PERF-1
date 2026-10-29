@@ -1,0 +1,26 @@
+# A beat repeat through the UI (the FX menu, the BEAT FX bank, RPT 1/8 on G#3 = key 3), recorded: tools outside the suite read the wav
+# (the segments of an eighth should repeat sample for sample). Then the roll (bank 1, G#4 = key 15), recorded too.
+seed 0
+wait 4000
+tap FX
+wait 100
+spin SELECT 1
+wait 100
+expect fxbank 1
+wav rpt8.wav
+wait 500
+key 3 down
+wait 2500
+key 3 up
+wait 500
+wavstop
+spin SELECT -1
+wait 100
+expect fxbank 0
+wav roll.wav
+wait 500
+key 15 down
+wait 4000
+key 15 up
+wait 500
+wavstop

@@ -51,6 +51,10 @@ if params.exists():
     ed = (SRC / "web" / "editor" / "index.html").read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8"))
     (OUT / "editor" / "index.html").write_text(ed, encoding="utf-8", newline="\n")
 shutil.copy(SRC / "docs" / "manual.html", OUT / "manual" / "index.html")
+quick_card = ""
+if (SRC / "build" / "quick-manual.pdf").exists():   # the printable eight-page quick manual (tools/make_quick_manual.py, made on Windows with Edge)
+    shutil.copy(SRC / "build" / "quick-manual.pdf", OUT / "manual" / "PERF-1-quick-manual.pdf")
+    quick_card = '<a class="card" href="manual/PERF-1-quick-manual.pdf"><b>Quick manual (PDF)</b><span>Eight A4 pages to print: every control, page and key map on paper.</span></a>'
 for img in (SRC / "docs" / "img").glob("perf-screen-*.png"):
     shutil.copy(img, OUT / "manual" / "img" / img.name)
 
@@ -79,6 +83,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <a class="card" href="emu/"><b>Try it in your browser</b><span>The same code the FM-1 runs, with sound. No FM-1 needed.</span></a>
 <a class="card" href="editor/"><b>Editor</b><span>Every parameter, and a DX7 voice editor with live preview on the unit.</span></a>
 <a class="card" href="manual/"><b>Manual</b><span>Every control, page and setting.</span></a>
+{quick_card}
 <a class="card" href="firmware/{name}"><b>Download the package</b><span>{name} ({len(raw) // 1024} KB), for the installer or tools/fm1_install.py.</span></a>
 <a class="card" href="{REPO}/issues/new/choose"><b>Feedback and ideas</b><span>Comments, suggestions, ideas and bug reports: open an issue. Everyone is welcome to help.</span></a>
 <a class="card" href="{REPO}"><b>Source on GitHub</b><span>GPL-3.0. Read it, build it, send changes.</span></a>

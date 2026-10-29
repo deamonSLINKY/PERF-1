@@ -56,6 +56,10 @@ expect fxpage 11
 shot fxs_half.png
 spin SELECT 1
 wait 400
+# (the Repeat page, 23, comes before the sweep since 0.14.10: one more turn)
+expect fxpage 23
+spin SELECT 1
+wait 100
 expect fxpage 12
 shot fxs_sweep.png
 spin SELECT 1
