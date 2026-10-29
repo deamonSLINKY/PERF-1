@@ -24,7 +24,10 @@ SECTIONS
     /* the second core's worker loop (EN_CORE2): RAM code, copied at boot, inside the PC guard's window */
     .dsp_text : { _dsp_start = .; KEEP(*(.dsp_text*)) . = ALIGN(4); _dsp_end = .; } > RAMTEXT AT > XIP
     _dsp_load = LOADADDR(.dsp_text);
-    _guard_ram_end = _dsp_end;
+    /* hot render code, in RAM so the flash cache need not fetch it every chunk (0.14.4: render_bass); copied at boot like the two above */
+    .ram_hot : { _rh_start = .; KEEP(*(.ram_hot*)) . = ALIGN(4); _rh_end = .; } > RAMTEXT AT > XIP
+    _rh_load = LOADADDR(.ram_hot);
+    _guard_ram_end = _rh_end;
     .cpu1_stacks (NOLOAD) : { . = ALIGN(32); _cpu1_stacks_lo = .; KEEP(*(.cpu1_stacks)) _cpu1_stacks_hi = .; } > RAMTEXT
     _cpu1_ustack_top = _cpu1_stacks_lo + 4096;
     _cpu1_sstack_top = _cpu1_stacks_lo + 8192;

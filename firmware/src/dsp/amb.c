@@ -1476,7 +1476,7 @@ static float acid_vol;
  * harder than the rest. Two generators, left and right. */
 typedef struct {
     float b0, b1, b2, br, pw, pp, y1, y2, crack, lp, r1, r2;
-    uint32_t rng;
+    uint32_t rng, cnt;
 } nz_t;
 static nz_t nz[2] = {{.rng = 0x1234567u}, {.rng = 0x89ABCDEu}};
 static float noise_vol, nz_lp_k = 0.5f, nz_pump;
@@ -3024,8 +3024,23 @@ static inline void reverb_tank(float x, float *ol, float *or_)
  * on the other core (en_core2_attach) while this one renders the voices, the drums and the echoes. Same job, same
  * result, whichever core runs it. The line's slots a job reads and the slots being written are apart (PRE_LP). */
 #define RV_MAX 256
-typedef struct { int n, r0; int fm_on; uint32_t fm_w; int bass; } rv_job_t;   /* bass: the job renders the drone and the acid too */
+typedef struct { int n, r0; int fm_on; uint32_t fm_w, pad_w; int bass; } rv_job_t;   /* bass: the job renders the drone and the acid too; pad_w: where the pad's ring is written */
 static rv_job_t rv_job;
+/* The pad reaches the mix a chunk late (PAD_D frames), as the DX voices do: the job writes this ring and the first core reads it a chunk on, so it
+ * never waits for the pad. (Until 0.14.4 it waited at its third stage, 1.2 ms into the chunk, a time the other core could not meet with the chorus
+ * to do; the balancer then ran the chorus on the first core, 250-330 us a chunk in most genres, while the other core sat at 30 %.) */
+#define PAD_R 512
+#define PAD_D 256
+static float pad_ring[3][PAD_R] EN_POOL;         /* left, right (after the chorus), the dry sum (the sends' source) */
+static uint32_t pad_ctr;                         /* frames the first core has taken from the ring */
+static void pad_ring_clear(uint32_t w, uint32_t n)
+{
+    uint32_t j;
+    for (j = 0; j < n; j++) {
+        const uint32_t q = (w + j) & (PAD_R - 1);
+        pad_ring[0][q] = pad_ring[1][q] = pad_ring[2][q] = 0.0f;
+    }
+}
 static float rv_wl[RV_MAX] EN_POOL, rv_wr[RV_MAX] EN_POOL;           /* the tank's output for the chunk */
 static int (*c2_submit)(void (*)(void *), void *);
 static int (*c2_join)(void);
@@ -3041,13 +3056,15 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void),
 }
 volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by the first core (set when it has time to spare and the other has not) */
 static int8_t bal_force = -1;                    /* tests: -1 as it decides, else the level */
-static uint8_t bal_lvl = 1;                      /* where the work runs: 0 the pad's chorus on the first core too; 1 the usual; 2 the drone and the acid on the other core as well */
+static uint8_t bal_lvl = 1;                      /* where the work runs: 1 the usual (the pad, its chorus, the reverb and the DX voices on the other core); 2 the drone and the acid on the other core as well (0, the chorus on the first core, is gone since 0.14.4) */
 static uint32_t bal_wait, bal_tot, bal_dwell, bal_block, bal_up_t, bal_back = 40u;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
 volatile uint8_t en_bass_c1;
 static void bal_apply(int l)
 {
+    if (l < 1)                                  /* level 0 (the chorus on the first core) is gone since 0.14.4: the pad's ring means the first core never waits for it */
+        l = 1;
     bal_lvl = (uint8_t)l;
-    en_chorus_c0 = (uint8_t)(l == 0 && par[P_PL_CHO] > 0);
+    en_chorus_c0 = 0;
     en_bass_c1 = (uint8_t)(l == 2);
 }
 void en_balance_force(int v) { bal_force = (int8_t)v; }
@@ -3055,6 +3072,7 @@ static float bass_o[RV_MAX] EN_POOL, acid_o[RV_MAX] EN_POOL, gg_v[RV_MAX] EN_POO
 static float bass_duck;                          /* the sidechain's envelope as the chunk began (what the drone's filter follows: the kick moves it later in the chunk) */
 static volatile uint32_t stage_done, stage2_done, stage3_done;   /* the job's first stage (the pad) is done: its outputs may be read; the second (the drone, the acid); the third (the reverb's tank) */
 static void render_pad(uint32_t n);
+static void pad_publish(uint32_t w, uint32_t n);
 static void render_bass(uint32_t n);
 static void render_acid(uint32_t n);
 static void reverb_job(void *p)
@@ -3087,6 +3105,7 @@ static void fm_job(const rv_job_t *c)           /* the DX voices' samples for th
 static void chunk_job(void *p)
 {
     render_pad((uint32_t)((const rv_job_t *)p)->n);
+    pad_publish(((const rv_job_t *)p)->pad_w, (uint32_t)((const rv_job_t *)p)->n);   /* into the ring: the first core takes it a chunk on */
     if (c2_fence)
         c2_fence();
     stage_done = 1;
@@ -3614,6 +3633,8 @@ void en_init(void)
     fm_init();
     fm_reset();
     master_dyn_reset();
+    pad_ring_clear(0, PAD_R);
+    pad_ctr = 0;
     for (i = 0; i < TAPE_N; i++)
         tape[i] = 0;
     for (i = 0; i < PLEX_N; i++)
@@ -5183,7 +5204,7 @@ static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
 static uint32_t pad_ctl[EN_NPAD], dr_ctl, ac_ctl;      /* the control steps' counts (every 32 samples), kept across chunks */
 static float padl[BLK] EN_POOL, padr[BLK] EN_POOL;
 static float plp[4];
-static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL, pad_rs[BLK] EN_POOL, pad_es[BLK] EN_POOL;   /* the pad's contribution to the mix, the reverb send and the echo send */
+static float pad_ol[BLK] EN_POOL, pad_or[BLK] EN_POOL, pad_ds[BLK] EN_POOL;   /* the job's working buffers: the pad's contribution to the mix (after the chorus) and its dry sum, the sends' source; then into pad_ring */
 /* the pad's ensemble: three delays a side, each swept by a slow triangle (the three a third of a turn apart, the right side's the other way), around
  * 7 ms, 3 ms deep; its sum is added to the pad (Chorus is how much). Widens every pad sound without the pulsing a single swept delay makes against a
  * pure tone: the beats are never all in step. On the pad's stage, so on the other core with it. */
@@ -5209,11 +5230,21 @@ static void pad_bus(uint32_t n)
         r = plp[3] * TG(TR_PAD, j);
         pad_ol[j] = l * 0.8f;
         pad_or[j] = r * 0.8f;
-        pad_rs[j] = (l + r) * 0.6f;
-        pad_es[j] = (l + r) * 0.2f;
+        pad_ds[j] = l + r;                      /* the sends' source: 0.6 of it to the reverb, 0.2 to the echo (render_chunk, a chunk on) */
     }
     for (j = 0; j < 4; j++)
         plp[j] = fm_flush(plp[j]);
+}
+
+static void pad_publish(uint32_t w, uint32_t n)   /* the job's pad (after the chorus) and its dry sum into the ring, for the first core a chunk on */
+{
+    uint32_t j;
+    for (j = 0; j < n; j++) {
+        const uint32_t q = (w + j) & (PAD_R - 1);
+        pad_ring[0][q] = pad_ol[j];
+        pad_ring[1][q] = pad_or[j];
+        pad_ring[2][q] = pad_ds[j];
+    }
 }
 
 static void pad_chorus(uint32_t n)
@@ -5393,10 +5424,12 @@ static void render_pad(uint32_t n)
         stab_env *= stab_k;
     stab_env = fm_flush(stab_env);
     pad_bus(n);
-    if (!en_chorus_c0)
-        pad_chorus(n);                           /* (or the first core's, after it waits for this stage: render_chunk) */
+    pad_chorus(n);
 }
 
+/* (0.14.4 tried this in RAM, .ram_hot: on the device the bass costs about 200 us a chunk whatever the chunk's length, the most of any stage, which
+ * looks like its code fetched cold from the flash each chunk. It makes 43 calls out to helpers the compiler keeps in the flash, and a pi32v2 call
+ * cannot reach the flash from RAM (R_PI32V2_LONG_JUMP_23M2 truncated), so it needs those helpers inlined or in RAM with it first.) */
 static void render_bass(uint32_t n)
 {
     uint32_t j;
@@ -5869,25 +5902,28 @@ static inline float nz_sample(nz_t *z, int unused)
     (void)unused;
     z->rng = z->rng * 1664525u + 1013904223u;    /* one step a sample: the noise from it, the chances from a scramble of it */
     w = (float)(int32_t)z->rng * (1.0f / 2147483648.0f);
-    h = (z->rng ^ z->rng >> 15) * 2246822519u;
     if (vn_hiss > 0.0f) {                       /* the hiss: pink (Paul Kellet's economy filter), only if it is wanted */
         z->b0 = 0.99765f * z->b0 + w * 0.0990460f;
         z->b1 = 0.96300f * z->b1 + w * 0.2965164f;
         z->b2 = 0.57000f * z->b2 + w * 1.0526913f;
         pk = (z->b0 + z->b1 + z->b2 + w * 0.1848f) * 0.22f * vn_hiss;
     }
-    if ((float)(h >> 8) * (1.0f / 16777216.0f) < vn_pop) {   /* a tick: a burst of noise that dies in a fraction of a millisecond or two */
-        float a;
-        h = (h ^ h >> 13) * 3266489917u;        /* another scramble: its size, not the number that chose it */
-        a = (float)(h >> 8) * (1.0f / 16777216.0f);          /* 0 .. 1 */
-        z->crack = (0.1f + 1.2f * a * a) * vn_amp;           /* most small, now and then a loud one */
-        z->r1 = 0.90f + 0.075f * a;             /* its decay: 0.25 ms (small) to 1.5 ms (big) */
-        if (a > 0.85f)
-            z->y2 += 0.45f * vn_amp * (a - 0.85f) * 6.0f;    /* a loud one brings a dull thud with it */
-    } else {
-        h = (h ^ h >> 13) * 3266489917u;
-        if ((float)(h >> 8) * (1.0f / 16777216.0f) < 5.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
-            z->r2 = 0.09f * vn_amp;
+    if (!(++z->cnt & 3u)) {                     /* the chances, every fourth sample at four times the odds (the same ticks and dust a second; a tick lasts
+                                                 * 11 to 66 samples, so nothing is lost at that grain): two scrambles and their conversions a sample less */
+        h = (z->rng ^ z->rng >> 15) * 2246822519u;
+        if ((float)(h >> 8) * (1.0f / 16777216.0f) < 4.0f * vn_pop) {   /* a tick: a burst of noise that dies in a fraction of a millisecond or two */
+            float a;
+            h = (h ^ h >> 13) * 3266489917u;    /* another scramble: its size, not the number that chose it */
+            a = (float)(h >> 8) * (1.0f / 16777216.0f);          /* 0 .. 1 */
+            z->crack = (0.1f + 1.2f * a * a) * vn_amp;           /* most small, now and then a loud one */
+            z->r1 = 0.90f + 0.075f * a;         /* its decay: 0.25 ms (small) to 1.5 ms (big) */
+            if (a > 0.85f)
+                z->y2 += 0.45f * vn_amp * (a - 0.85f) * 6.0f;    /* a loud one brings a dull thud with it */
+        } else {
+            h = (h ^ h >> 13) * 3266489917u;
+            if ((float)(h >> 8) * (1.0f / 16777216.0f) < 20.0f * vn_pop)   /* and the fine dust between: five times as many, very small */
+                z->r2 = 0.09f * vn_amp;
+        }
     }
     z->pp += 0.55f * (w - z->pp);               /* a tick's body: noise with its top rolled off (about 5 kHz): full-band white clicks were piercing */
     d = z->pp * 0.9f;
@@ -5900,6 +5936,8 @@ static inline float nz_sample(nz_t *z, int unused)
 }
 
 static float nzl[BLK], nzr[BLK];
+static float nz_hl, nz_hr;                       /* the pair held across two samples */
+static uint32_t nz_ph;
 static void render_noise(uint32_t n)            /* into its own buffer: the pump ducks it on its own */
 {
     uint32_t j;
@@ -5910,9 +5948,15 @@ static void render_noise(uint32_t n)            /* into its own buffer: the pump
         return;
     }
     for (j = 0; j < n; j++) {
-        float l = nz_sample(&nz[0], nz_color), r = nz_sample(&nz[1], nz_color), tg = TG(TR_PAD, j) * g;
-        nz[0].lp += k * (l - nz[0].lp);         /* Tone: a low-pass, 300 Hz .. 19 kHz */
-        nz[1].lp += k * (r - nz[1].lp);
+        const float tg = TG(TR_PAD, j) * g;
+        if (!(nz_ph++ & 1u)) {                  /* a new pair every other sample, held for the next (0.14.4: the noise was 10 % of the first core in every
+                                                 * genre with the vinyl latched): the hiss is pink and the ticks' bodies roll off at 5 kHz, and the hold's
+                                                 * own roll-off (-4 dB at 11 kHz) sits under the Tone low-pass */
+            nz_hl = nz_sample(&nz[0], nz_color);
+            nz_hr = nz_sample(&nz[1], nz_color);
+        }
+        nz[0].lp += k * (nz_hl - nz[0].lp);     /* Tone: a low-pass, 300 Hz .. 19 kHz */
+        nz[1].lp += k * (nz_hr - nz[1].lp);
         nzl[j] = nz[0].lp * tg;
         nzr[j] = nz[1].lp * tg;
     }
@@ -6198,6 +6242,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         rv_job.r0 = pd->i >= rv_pre ? pd->i - rv_pre : pd->i - rv_pre + pd->n;
         rv_job.fm_on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
         rv_job.fm_w = fm_ctr & (FM_R - 1);
+        rv_job.pad_w = pad_ctr & (PAD_R - 1);
         pad_lk = lk_snare;
         rv_job.bass = en_bass_c1;
         bass_duck = duck_env;
@@ -6232,39 +6277,23 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     DT(5);
     PT(2);                                      /* pluck, the DX voices' samples, snips, noise */
     bal_a = pt0_;
-    if (rv_c2) {                                /* the pad is the other core's: wait for it (the reverb goes on behind) */
-        while (!stage_done)
-            if (c2_alive && !c2_alive()) {
-                if (c2_join())                  /* it finished just as the time ran out: not lost */
-                    continue;
-                rv_c2 = 0;                      /* (the join retired it) */
-                en_c2_lost++;
-                for (j = 0; j < n; j++)
-                    padl[j] = padr[j] = pad_ol[j] = pad_or[j] = pad_rs[j] = pad_es[j] = fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = rv_wl[j] = rv_wr[j] = bass_o[j] = acid_o[j] = 0.0f;
-                plate_init();
-                fm_reset();                      /* (its voices were the other core's too) */
-                for (j = 0; j < FM_R; j++)
-                    fm_fifo[j] = 0.0f;
-                break;
-            }
-        if (c2_fence)
-            c2_fence();
-    }
-    PT(3);                                      /* the wait for the pad */
+    PT(3);                                      /* (the wait for the pad: none since 0.14.4, the pad comes from its ring a chunk late; the column stays) */
     bal_w = pt0_ - bal_a;
     DT0();
-    if (en_chorus_c0)
-        pad_chorus(n);                          /* the pad's chorus here, while the other core goes on with the reverb */
-    {
+    {   /* the pad from a chunk ago (the ring, written by the job), with the DX voices' samples */
         float pl, pr, ps, fl, fr, fs;
+        const uint32_t rp = pad_ctr - PAD_D;
         mx_gains(0, &pl, &pr, &ps);
         mx_gains(3, &fl, &fr, &fs);
         for (j = 0; j < n; j++) {
-            mixl[j] += pad_ol[j] * pl + fm_ol[j] * fl;
-            mixr[j] += pad_or[j] * pr + fm_or[j] * fr;
-            rsend[j] += pad_rs[j] * ps + fm_rs[j] * fs;
-            esend[j] += pad_es[j] * ps + fm_es[j] * fs;
+            const uint32_t q = (rp + j) & (PAD_R - 1);
+            const float ds = pad_ring[2][q] * ps;
+            mixl[j] += pad_ring[0][q] * pl + fm_ol[j] * fl;
+            mixr[j] += pad_ring[1][q] * pr + fm_or[j] * fr;
+            rsend[j] += ds * 0.6f + fm_rs[j] * fs;
+            esend[j] += ds * 0.2f + fm_es[j] * fs;
         }
+        pad_ctr += n;
     }
     pad_midi_flush();
     DT(6);
@@ -6329,6 +6358,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                     continue;
                 rv_c2 = 0;                      /* (the join retired it: before the drone and the acid it was writing are read) */
                 en_c2_lost++;
+                pad_ring_clear(rv_job.pad_w, n);   /* (the pad it was writing for the next chunk) */
                 for (j = 0; j < n; j++)
                     bass_o[j] = acid_o[j] = rv_wl[j] = rv_wr[j] = 0.0f;
                 plate_init();
@@ -6373,6 +6403,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                     continue;
                 rv_c2 = 0;                      /* (the join retired it: this chunk has no reverb, and the tank starts over) */
                 en_c2_lost++;
+                pad_ring_clear(rv_job.pad_w, n);
                 for (j = 0; j < n; j++)
                     rv_wl[j] = rv_wr[j] = 0.0f;
                 plate_init();
@@ -6411,6 +6442,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         bal_a = pt0_;
         if (!c2_join()) {                       /* lost: its voices were its own */
             en_c2_lost++;
+            pad_ring_clear(rv_job.pad_w, n);
             fm_reset();
             for (j = 0; j < FM_R; j++)
                 fm_fifo[j] = 0.0f;
@@ -6572,6 +6604,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     }
 }
 
+static uint32_t ctl_acc;                        /* frames since control() last ran */
 void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
 {
     float gain;
@@ -6607,7 +6640,18 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         }
         if (timed)
             pulse_left -= (float)k;
-        RT(33, control(k));
+        ctl_acc += k;
+        if (ctl_acc >= 128u) {                  /* the slow things once per 128 frames at most (0.14.4): a short chunk, cut for a swung hit, skips them. On the
+                                                 * device control() cost 210-260 us a call whatever the chunk's length (a dozen functions fetched cold); the
+                                                 * things it steps take the frames since it last ran, so nothing drifts */
+            RT(33, control(ctl_acc));
+            ctl_acc = 0;
+        } else {
+            int t;
+            tg_inv = 1.0f / (float)k;           /* the tracks' gains hold at their targets through the skipped chunk; the ramp goes on at the next control */
+            for (t = 0; t < EN_NTRACK; t++)
+                trk_g[t] = trk_g1[t];
+        }
         render_chunk(out, k, gain);
         RT(35, drums_wait_step((int32_t)k));
         out += 2 * k;

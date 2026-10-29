@@ -4,7 +4,7 @@
 /* AMB-1 on the FM-1 (from X0X's): boot (WDT first, boot-loop guard, guards), LCD, input (TIMER5
  * 10 kHz), audio (ALNK0), USB; then the main loop: UI at ~60 frames/s, input polled in between. */
 extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
-extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[], _dsp_start[], _dsp_end[], _dsp_load[];
+extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[], _dsp_start[], _dsp_end[], _dsp_load[], _rh_start[], _rh_end[], _rh_load[];
 
 /* --------------------------------------------------------------- audio --- */
 /* Felucca's 256-frame halves (5.8 ms): AMB-1's render is light, and a strum wants the short latency */
@@ -895,6 +895,8 @@ void fm1_cstart(void)
         *d = *s;
     for (s = _dsp_load, d = _dsp_start; d < _dsp_end; s++, d++)
         *d = *s;                                    /* CPU1's worker loop (EN_CORE2) */
+    for (s = _rh_load, d = _rh_start; d < _rh_end; s++, d++)
+        *d = *s;                                    /* the hot render code (.ram_hot) */
     fm1_mailbox_clear();
 #if EN_CORE2
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS);
