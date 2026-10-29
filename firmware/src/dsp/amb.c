@@ -1097,7 +1097,7 @@ static const struct { uint8_t osc, stabs; float fc, g; } PAD_SOUND[EN_NSOUND] = 
     {PO_ORGAN, 0, 1.1f, 0.8f}, {PO_WARM, 0, 0.85f, 1.0f}, {PO_RHODES, 1, 1.3f, 0.9f}, {PO_VOICES, 0, 0.6f, 0.8f},
     {PO_STRINGS, 1, 0.55f, 1.4f},               /* Dub: saw chords stabbed, dark, into the echo */
     {PO_SUPER, 0, 1.3f, 0.75f},                 /* Trance: a supersaw */
-    {PO_PWM, 0, 1.1f, 1.1f},                   /* Poly: two detuned saws less each other, a pulse's width drifting */
+    {PO_PWM, 0, 1.1f, 0.9f},                   /* Poly: two detuned saws less each other, a pulse's width drifting */
     {PO_HOLLOW, 0, 1.0f, 0.75f},                /* Hollow: odd harmonics, a clarinet's */
     {PO_GLASS, 1, 1.6f, 1.2f},                  /* Pings: the bells, stabbed */
     {PO_ORGAN, 1, 1.3f, 1.05f},                 /* Hits: a house organ, stabbed */
@@ -1216,7 +1216,7 @@ static int links_on(void);
  * cents apart through two formant band-passes, a vowel that Bright moves from "oo" through "ah" to
  * "eh", with a little of the first formant's low-pass for body. */
 typedef struct {
-    float ph[2], inc[2];
+    float ph[4], inc[4], sub;                   /* the two saws Detune apart, a second pair inside them (strings, supersaw), the sub's phase */
     float note, target;                         /* MIDI: the note of this breath, the next one's */
     float t, rate, peak, amp;                   /* t 0..1 through the breath, per 32 samples */
     float fa, fh, fr;                           /* the breath's attack, hold and release, as parts of it */
@@ -1420,6 +1420,8 @@ static void pad_coefs(pad_t *v, int i)          /* every 32 samples: the breath,
     f = mtof(v->note + 0.08f * motion * mod[i].v + pad_pitch);              /* a slow drift, as tape; the LFO */
     v->inc[0] = f * (1.0f - detune) * (1.0f / EN_SR);   /* Detune: 2.5 .. 25 cents either way */
     v->inc[1] = f * (1.0f + detune) * (1.0f / EN_SR);
+    v->inc[2] = f * (1.0f - 0.45f * detune) * (1.0f / EN_SR);   /* the inner pair, a little less apart: four saws, no two beating alike */
+    v->inc[3] = f * (1.0f + 0.45f * detune) * (1.0f / EN_SR);
     vw = fm_clampf((float)bright * 0.01f + 0.25f * arcm + 0.2f * motion * mod[(i + 2) % NMOD_PAD].v + 0.4f * pad_filt,
                    0.0f, 1.0f) * 2.999f;
     a = (int)vw;
@@ -3887,6 +3889,8 @@ void en_init(void)
         pad[i].amp = 0.0f;
         pad[i].ph[0] = 0.0f;
         pad[i].ph[1] = 0.37f;
+        pad[i].ph[2] = 0.61f;
+        pad[i].ph[3] = 0.19f;
         pad[i].vib = 0.3f * (float)i;
         pad[i].midi_note = 0;
         pad[i].hf = 1.0f;
@@ -5522,7 +5526,7 @@ static void pad_publish(uint32_t w, uint32_t n)   /* the job's pad (after the ch
 
 static void pad_chorus(uint32_t n)
 {
-    const float a = en_shed_level ? 0.0f : (float)par[P_PL_CHO] * 0.01f * 0.55f;   /* (no chorus when the load is too high) */
+    const float a = en_shed_level >= 2 ? 0.0f : (float)par[P_PL_CHO] * 0.01f * 0.55f;   /* (no chorus when the load is far too high: it runs on the pad's core, and the first level answers the first core's time) */
     const float rate[3] = {0.47f / EN_SR, 0.61f / EN_SR, 0.79f / EN_SR};   /* Hz, the sweeps are slow and unequal */
     uint32_t j;
     int k;
@@ -5577,8 +5581,9 @@ static void render_pad(uint32_t n)
     pad_gain += (pad_gate - pad_gain) * fm_minf((float)n / ((pad_gate > 0.0f ? 2.0f : 5.0f) * EN_SR), 1.0f);
     for (i = 0; i < EN_NPAD; i++) {
         pad_t *v = &pad[i];
-        float p0 = v->ph[0], p1 = v->ph[1], amp = v->amp, s0 = v->ic[0], s1 = v->ic[1], s2 = v->ic[2], s3 = v->ic[3],
-              gl, gr, pn, tgt = 0.0f, idx = 0.0f, se = stab_env, ar = 0.01f;
+        float p0 = v->ph[0], p1 = v->ph[1], p2 = v->ph[2], p3 = v->ph[3], ps = v->sub, amp = v->amp,
+              s0 = v->ic[0], s1 = v->ic[1], s2 = v->ic[2], s3 = v->ic[3], gl, gr, pn, tgt = 0.0f, idx = 0.0f, se = stab_env, ar = 0.01f;
+        const int saw = v->voices == PO_STRINGS || v->voices == PO_SUPER || v->voices == PO_PWM;   /* the saw sounds: a sub and the sweep filter */
         uint32_t j;
         if (amp < 1e-5f && pad_gain < 1e-4f && !v->play) {
             v->amp = 0.0f;
@@ -5610,6 +5615,12 @@ static void render_pad(uint32_t n)
                 }
                 /* the Rhodes blooms: more overtones as the breath swells (index in turns) */
                 idx = (0.04f + 0.1f * bright * 0.01f + 0.1f * br) * (1.0f + 0.4f * arcm);
+                if (saw) {                       /* the saw sounds' filter: a resonant low-pass that opens with the breath or the stab and closes after it, a Prophet's
+                                                  * sweep (two poles resonant, two flat: 24 dB); its states are the formants' (a saw sound has none) */
+                    const float fcv = 300.0f * PAD_SOUND[pad_snd()].fc * fm_exp2f(3.3f * br + 0.02f * bright + 1.5f * pad_filt + 0.5f * arcm);
+                    svf_coefs(v->c1, fcv, 0.5f);
+                    svf_coefs(v->c2, fcv * 1.3f, 1.0f);
+                }
             }
             amp += (tgt - amp) * ar;
             switch (v->voices) {
@@ -5618,8 +5629,8 @@ static void render_pad(uint32_t n)
                 x = (sine(p0 + m + 1.0f) + 0.12f * sine(2.0f * p0)) * 1.2f;   /* one carrier: no beating */
                 break;
             }
-            case PO_STRINGS:                     /* two saws, detuned (Detune) */
-                x = 0.62f * (blep_saw(p0, v->inc[0]) + blep_saw(p1, v->inc[1]));
+            case PO_STRINGS:                     /* four saws, detuned (Detune, and a pair inside it) */
+                x = 0.36f * (blep_saw(p0, v->inc[0]) + blep_saw(p1, v->inc[1]) + blep_saw(p2, v->inc[2]) + blep_saw(p3, v->inc[3]));
                 break;
             case PO_GLASS: {                     /* FM at 3.5: a bell, glassy, brighter as it swells */
                 float m = sine(p1) * (0.25f + 4.0f * idx);
@@ -5634,10 +5645,11 @@ static void render_pad(uint32_t n)
                 x = ((p0 < 0.5f ? 4.0f * p0 - 1.0f : 3.0f - 4.0f * p0) + (p1 < 0.5f ? 4.0f * p1 - 1.0f : 3.0f - 4.0f * p1)) *
                     0.7f + 0.5f * sine(p0);
                 break;
-            case PO_SUPER: {                     /* two saws detuned and one an octave up: a supersaw */
-                float p2 = 2.0f * p0;
-                p2 -= (float)(int)p2;
-                x = 0.5f * (blep_saw(p0, v->inc[0]) + blep_saw(p1, v->inc[1])) + 0.3f * blep_saw(p2, 2.0f * v->inc[0]);
+            case PO_SUPER: {                     /* four saws detuned and one an octave up: a supersaw */
+                float po = 2.0f * p0;
+                po -= (float)(int)po;
+                x = 0.3f * (blep_saw(p0, v->inc[0]) + blep_saw(p1, v->inc[1]) + blep_saw(p2, v->inc[2]) + blep_saw(p3, v->inc[3])) +
+                    0.3f * blep_saw(po, 2.0f * v->inc[0]);
                 break;
             }
             case PO_PWM: {                       /* a saw less another, detuned: a pulse whose width drifts */
@@ -5671,6 +5683,29 @@ static void render_pad(uint32_t n)
                 x = b1 + 0.5f * b2 + 0.45f * l1;
                 break;
             }
+            if (saw) {                           /* the sub, an octave down; then the sweep: resonant pair, flat pair */
+                x += 0.15f * sine(ps);
+                v3 = x - s1;
+                v1 = v->c1[0] * s0 + v->c1[1] * v3;
+                v2 = s1 + v->c1[1] * s0 + v->c1[2] * v3;
+                s0 = 2.0f * v1 - s0;
+                s1 = 2.0f * v2 - s1;
+                v3 = v2 - s3;
+                v1 = v->c2[0] * s2 + v->c2[1] * v3;
+                v2 = s3 + v->c2[1] * s2 + v->c2[2] * v3;
+                s2 = 2.0f * v1 - s2;
+                s3 = 2.0f * v2 - s3;
+                x = v2 * 1.1f;
+                p2 += v->inc[2];
+                if (p2 >= 1.0f)
+                    p2 -= 1.0f;
+                p3 += v->inc[3];
+                if (p3 >= 1.0f)
+                    p3 -= 1.0f;
+                ps += 0.5f * v->inc[0];
+                if (ps >= 1.0f)
+                    ps -= 1.0f;
+            }
             p0 += v->inc[0];
             if (p0 >= 1.0f)
                 p0 -= 1.0f;
@@ -5688,6 +5723,9 @@ static void render_pad(uint32_t n)
         v->amp = amp;
         v->ph[0] = p0;
         v->ph[1] = p1;
+        v->ph[2] = p2;
+        v->ph[3] = p3;
+        v->sub = ps;
         en_pad_note[i] = (uint8_t)v->note;
         en_pad_amp[i] = amp;
         lvl = fm_maxf(lvl, amp);

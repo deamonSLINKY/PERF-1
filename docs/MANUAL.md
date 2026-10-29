@@ -378,14 +378,14 @@ and filter carry over to the new sound.
 |---|---|---|
 | 1 | Rhodes | FM, blooming as it swells |
 | 2 | Voices | Sung: formants |
-| 3 | Strings | Two detuned saws; Detune spreads them |
+| 3 | Strings | Four detuned saws; Detune spreads them |
 | 4 | Glass | An FM bell |
 | 5 | Organ | Drawbars |
 | 6 | Warm | Soft triangles |
 | 7 | Stabs | Rhodes chords on the off-beats; Pad env Release is their length; Evolve adds a few |
 | 8 | Dark | Voices, closed down |
 | 9 | Dub | Saw chords stabbed, dark, for dub techno |
-| 10 | Trance | A supersaw |
+| 10 | Trance | A supersaw: four saws and an octave |
 | 11 | Poly | Two detuned saws as a drifting pulse: an 80s poly |
 | 12 | Hollow | Odd harmonics, like a clarinet |
 | 13 | Pings | The Glass bells, stabbed |
@@ -400,6 +400,8 @@ and filter carry over to the new sound.
 | 22 | Pluck | The Poly pulse as short stabs |
 | 23 | Chapel | Drawbars with the top closed: a church organ |
 | 24 | Air | An open sine: breath |
+
+The saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck) have an analog voice's filter: a resonant low-pass, four poles, that opens with each breath or stab and closes after it (Bright opens it further, the pad LFO's Filter target sweeps it), and a sub an octave down under them.
 
 ### The bass: 24 sounds
 
