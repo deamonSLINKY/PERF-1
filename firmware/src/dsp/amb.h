@@ -293,6 +293,25 @@ void en_pluck_step(int s, int rung, int level);   /* set a step of the pluck's l
 int en_pluck_pack(uint8_t *b12);               /* the line as stored: 16 steps of six bits (12 bytes); 0 when empty */
 void en_pluck_unpack(const uint8_t *b12);      /* and back into the engine (a stored piece's frozen line) */
 extern volatile uint8_t en_cm_rung[16], en_cm_lvl[16], en_cm_pos;   /* the loop's first sixteen slots: each one's rung and level (0 a rest), and the slot playing */
+/* THE PROGRESSION (the Progression page, 0.15.6): eight slots of chords set by hand, stored with the piece in six bytes (EN_PRG_LEN):
+ * bits 3s..3s+2 slot s's chord (0 empty: the chord before goes on; 1..7 the scale's degree I..VII), bits 24+2s..25+2s its bars (1, 2, 4, 8),
+ * bit 40 Play (0 the genre's walk, 1 the slots in turn, up to the last one set), bits 41..42 Drift's unit (0 the genre's, 1 bars, 2 seconds) */
+#define EN_PRG_LEN 6
+#define EN_PRG_N 8
+#define EN_PRG_PLAY 40
+#define EN_PRG_UNIT 41
+static inline int en_prg_get(const uint8_t *b, int bit, int n) { return (int)((b[bit >> 3] | (uint32_t)(bit >> 3 < EN_PRG_LEN - 1 ? b[(bit >> 3) + 1] : 0) << 8) >> (bit & 7) & ((1u << n) - 1u)); }
+static inline void en_prg_put(uint8_t *b, int bit, int n, int v)
+{
+    int k;
+    for (k = 0; k < n; k++, bit++)
+        b[bit >> 3] = (uint8_t)((b[bit >> 3] & ~(1u << (bit & 7))) | (uint32_t)(v >> k & 1) << (bit & 7));
+}
+void en_prog(const uint8_t *b6);                /* a piece's progression (as stored) into the engine */
+void en_prog_capture(uint8_t *b6);              /* the chords heard last (the chord loop, else the last four), as the slots and their bars (Play and the unit kept) */
+int en_prog_chord(int deg, int *pcs);           /* the scale degree's chord as the engine plays it (the chord kind, a cadence's raised seventh): its tones */
+extern volatile int8_t en_prog_pos;             /* the slot playing (-1: the genre's walk) */
+int en_genre_bars(void);                        /* 1: the genre counts its chords in bars (Drift's own unit), 0: in seconds (hypno) */
 void en_acid_capture(int s, int note, int accent, int slide);   /* Capture: a note played by hand (MIDI) into step s, as the nearest offset and octave the chord and scale of now give; the step sounds */
 void en_pluck_capture(int s, int note);         /* Capture: a note (or a rest, note < 0) into slot s of the pluck's loop; the loop's slot 0 is the next bar's first step */
 int en_acid_pack(uint8_t *b18);                /* the line as stored: 16 steps of nine bits (18 bytes) */

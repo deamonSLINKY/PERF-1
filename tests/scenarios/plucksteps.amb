@@ -11,7 +11,7 @@ tap ARP
 tap ARP
 tap ARP
 wait 300
-expect view 17
+expect view 18
 shot plucksteps_free.png
 spin K1 3
 wait 200

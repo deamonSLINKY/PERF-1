@@ -32,10 +32,10 @@
 | **OCT-** / **OCT+** | An octave down / up: on a voice's pages that voice, elsewhere the song. Sequencer: the drum. FX menu: OCT- turns all off. | Both 5 s: update mode. | Sequencer: clear the lane / the piece's own lane back. |
 | **FX** | The FX menu on and off. Twice quickly: the last effect's settings. | | Steps through the effect settings, then back. |
 | **SEL** | Shift: hold it with another control. | Alone 0.4 s: what shift does here. | |
-| **ENV** | Pad; again Pad env, Pad LFO, Chords. | Any page button 0.9 s: its help card. | On a voice's page: play it by hand; again, back. |
+| **ENV** | Pad; again Pad env, Pad LFO, Chords, Progression. | Any page button 0.9 s: its help card. | On a voice's page: play it by hand; again, back. |
 | **LFO** | Bass; again Bass env, Bass LFO, Bass line. | | |
 | **ARP** | Acid; again Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. | | |
-| **EDIT** | The next chord, on the next bar. | | Stopped: starts the music by itself. |
+| **EDIT** | The next chord, on the next bar. | 0.4 s: the Progression page. | Stopped: starts the music by itself. |
 | **GLO** | Global (Root, Theme, Tune, Genre). SAVE here stores the piece. | 0.4 s: the mix map, the load meter. | Remote: the FM-1 plays the emulator. |
 | **HOME** | Tempo page; again Perform; again Tempo. Twice quickly: visualizers. Leaves the FX menu. | 0.7 s: the settings. | The sigil's middle: eye or imp. |
 | **SAVE** | Breakdown on the next bar; again a build, then the drop. On Global: store. | 0.5 s: the drop. | On Global, 1.5 s: back to factory. |
@@ -49,7 +49,7 @@
 
 ## The pages on the SELECT dial
 
-**SELECT** steps through 31 pages in this order. The buttons (**ENV**, **LFO**, **ARP**, **SEQ**, **GLO**, **HOME**) jump to their group and step through it; from elsewhere, a button returns to the page you last used in its group. Columns a-d are **KNOB1**-**KNOB4**; on a voice's main page KNOB1 is its level. Pages that shape a sound draw it. Off the dial: the **sequencer** (hold SEQ), **Perform** (HOME on Tempo), the **visualizers** (HOME twice quickly).
+**SELECT** steps through 33 pages in this order. The buttons (**ENV**, **LFO**, **ARP**, **SEQ**, **GLO**, **HOME**) jump to their group and step through it; from elsewhere, a button returns to the page you last used in its group. Columns a-d are **KNOB1**-**KNOB4**; on a voice's main page KNOB1 is its level. Pages that shape a sound draw it. Off the dial: the **sequencer** (hold SEQ), **Perform** (HOME on Tempo), the **visualizers** (HOME twice quickly).
 
 | Page | Button | a | b | c | d |
 |---|---|---|---|---|---|
@@ -58,6 +58,7 @@
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (1/4 note - 32 bars) | Depth | Shape (6: sine .. drift) | Target (filter, level, pan, pitch) |
 | Chords | ENV x4 | Chord (7 kinds, below) | Voicing (close, open) | Chorus (0-100) | Loop (off; 2, 4, 8 chords) |
+| Progression | ENV x5 | Slot (1-8) | Chord (I-VII, Hold) | Bars (1-8) | Play (Walk, Loop) |
 | Bass | LFO | Level | Sound (24) | Cutoff | Reso |
 | Bass env | LFO x2 | Trigger (chord; 1-8 bars; off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | LFO x3 | Rate | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
@@ -88,13 +89,15 @@
 
 <div class="cols">
 
-**What changes by itself.** Every few bars the chord changes. Each genre has its own pace and its own habits for where the chord goes next; **Drift** makes the pace up to four times faster or slower (in HYPNO, 20 s to 5 min a chord), and **EDIT** moves on now. The pad's notes swell and fade, taking the new chord as they swell. The bass follows the root. The acid's riff moves with the chord, and **Mutate** rewrites a few steps each time round. The pluck plays the chord's notes one at a time (an arpeggio). **Motion** slowly moves the song between sparse and full; **Evolve** makes the acid and chords change more.
+**What changes by itself.** Every few bars the chord changes. Each genre has its own pace and its own habits for where the chord goes next; **Drift** makes the pace up to four times faster or slower (in HYPNO, 20 s to 5 min a chord; SEL + Drift: bars or seconds), and **EDIT** moves on now. The pad's notes swell and fade, taking the new chord as they swell. The bass follows the root. The acid's riff moves with the chord, and **Mutate** rewrites a few steps each time round. The pluck plays the chord's notes one at a time (an arpeggio). **Motion** slowly moves the song between sparse and full; **Evolve** makes the acid and chords change more.
 
 **Tempo** 70-190 BPM. Hold **HOME** and turn **SELECT** on any page, or tap it in: hold **GLO** and tap `E4` four times or so. MIDI clock from another device (its tempo, sent over MIDI) takes over, and the screen shows `EXT`.
 
 **Octaves.** **OCT-** / **OCT+** move the voice whose page you're on (the Pad, Bass or Acid pages and their env and LFO pages; the Pluck pages move the pluck). On any other page they move the whole song. You'll see `OCT+2` or `SONG-1` above the knobs. It's stored with the piece.
 
-**Chords** (ENV x4) are built from the scale's notes. **Auto**: 7ths on a 7-note scale, triads (three-note chords) on a pentatonic. **Triads**: Am, C, G. **7ths**: Am7, Dm7, CM7. **9ths**: root, 3rd, 7th, 9th. **Sus**: root, 4th, 5th and 7th, spread out. **Dub**: one minor 9 shape on every chord, the dub techno stab. **Fourths**: stacked fourths, a hollow m11 sound. **Voicing** is how the notes are spread: Open drops the second note from the top an octave. **Chorus** thickens the pad (0 off; the genres use 20-50). **Loop** repeats the last 2, 4 or 8 chords, counting from the one playing; with a ~, one is swapped for a new one now and then. House, disco, garage, trap and synthwave pieces bring a loop of four; dubstep, DnB, electro, amapiano and trip-hop two.
+**Chords** (ENV x4) are built from the scale's notes. **Auto**: 7ths on a 7-note scale, triads on a pentatonic. **Triads**: Am, C, G. **7ths**: Am7, Dm7, CM7. **9ths**: root, 3rd, 7th, 9th. **Sus**: root, 4th, 5th, 7th. **Dub**: one m9 shape on every chord, the dub techno stab. **Fourths**: stacked fourths, a hollow m11.
+
+**Voicing**: Open drops the second note from the top an octave. **Chorus** thickens the pad. **Loop** repeats the last 2, 4 or 8 chords (with a ~, one is swapped now and then); many genres bring one. **Progression** (hold EDIT): your own chords, eight slots of the scale's chords and bars (Hold: the chord before rings on). Turning one starts the loop next bar; Walk hands back to the genre.
 
 **Sound words.** Cutoff is where the filter starts cutting the highs (lower is darker); Reso adds a squelchy peak there. An env (envelope) shapes each note: attack fades in, decay and release fade out. An LFO is a slow wobble: Rate is its speed, Depth how far, Target what it moves.
 

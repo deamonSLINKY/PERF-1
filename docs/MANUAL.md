@@ -292,10 +292,10 @@ short version.
 | **OCT+** | Up an octave, to +3, the same way. In the sequencer it picks the next drum. |
 | **FX** | Opens and closes the effects menu. Press it twice quickly for the settings of the effect you used last. |
 | **SEL** | Shift: hold it while you use another control (section 12). |
-| **ENV** | The Pad page. Again: Pad env, Pad LFO, Chords. With **SEL** held: takes the voice on screen off its automatic part so you play it by hand (again: hands it back). |
+| **ENV** | The Pad page. Again: Pad env, Pad LFO, Chords, Progression. With **SEL** held: takes the voice on screen off its automatic part so you play it by hand (again: hands it back). |
 | **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line. |
 | **ARP** | The Acid page. Again: Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. |
-| **EDIT** | The next chord, on the next bar. |
+| **EDIT** | The next chord, on the next bar. Held: the Progression page, your own chords. |
 | **GLO** | The Global page: root, theme, tune, genre. Here **SAVE** stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter. Held with **PRESETS**: the genre. With **SEL** held: remote (section 17). |
 | **HOME** | The Tempo page. Again: the Perform screen, then back to Tempo. Twice quickly: the visualizers. Held: the settings. Held with **SELECT**: the tempo. |
 | **SAVE** | A breakdown on the next bar. Again: a build and the drop. Held: the drop. On Global: stores the piece. |
@@ -318,7 +318,8 @@ back to the page you were last on in that group.
 | Hold **HOME** | 0.7 s | The settings page. |
 | Hold **GLO** | 0.4 s | The mix map. |
 | Hold **SEL** alone | 0.4 s | A card shows what shift does on this page. |
-| Hold another button alone | 0.9 s | A card says what it does (**ENV**, **LFO**, **ARP**, **EDIT**, **REC**, **OCT-**, **OCT+**). |
+| Hold **EDIT** | 0.4 s | The Progression page. |
+| Hold another button alone | 0.9 s | A card says what it does (**ENV**, **LFO**, **ARP**, **REC**, **OCT-**, **OCT+**). |
 | Tap an effect key | under 0.25 s | Latches the effect on. Hold it longer and it plays only while held. |
 | Hold a scene key | 0.6 s | Stores the scene. A tap recalls it. |
 | **FX**, **FX** | within 0.35 s | The settings of the effect you used last. |
@@ -400,18 +401,19 @@ along it. It shows the shape, not exact milliseconds.
 
 ## 5. The pages
 
-Turn **SELECT** to move through the pages in this order. There are 32, and the dial stops at each end. The
+Turn **SELECT** to move through the pages in this order. There are 33, and the dial stops at each end. The
 voice buttons jump straight to a voice. Pressing the same button again steps through that voice's envelope
-and LFO pages (and, for the pad, the chords). On a voice's main page, **KNOB1** is its level. The a to d
+and LFO pages (and, for the pad, the chords and the progression). On a voice's main page, **KNOB1** is its level. The a to d
 columns are **KNOB1** to **KNOB4**.
 
 | Page | Reach it | a | b | c | d |
 |---|---|---|---|---|---|
-| Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO) |
+| Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO; hold **SEL** and turn it for bars or seconds) |
 | Pad | **ENV** | Level | Bright | Sound (24) | Detune |
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | **ENV** x3 | Rate (a 1/4 note to 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
 | Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Chorus (0-100) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
+| Progression | **ENV** x5, or hold **EDIT** | Slot (1-8, or a white key) | Chord (a chord of the scale, or Hold) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
@@ -483,6 +485,10 @@ twice as often. Above 80 they last twice as long, above 95 four times as long. T
 in bars. In HYPNO a chord lasts for a time instead: Drift sets 20 seconds to 5 minutes, a little random, and
 the change waits for the next bar line. In any genre, **EDIT** moves on to the next chord.
 
+You can switch any piece between the two. Hold **SEL** and turn Drift right for bars, left for seconds. HYPNO
+in bars starts from four bars a chord, and the other genres in seconds work as HYPNO does. The setting is
+stored with the piece, and the genres keep their own unless you change it.
+
 On a seven-note scale, each genre has its own habits for which chord comes next:
 
 - Lofi and DnB love to move up a fourth (the ii-V-I turnaround of jazz).
@@ -547,6 +553,34 @@ same as on Global.
 
 For dub techno, set Chord to Dub, pick the pad's Dub sound (dark chord stabs) and turn the echo up. HYPNO
 piece 06 is set up that way.
+
+### Your own progression
+
+![The Progression page](img/perf-screen-progression.png)
+
+The **Progression** page lets you write the chords yourself. Hold **EDIT** to open it, or press **ENV** five
+times. A tap of **EDIT** still moves on to the next chord.
+
+The page has eight slots. Each slot is one chord of the scale and how many bars it lasts. Until you change
+something, the page shows the chords you just heard, so you can start from those.
+
+| Knob | Does |
+|---|---|
+| Slot | Which slot you're editing, 1 to 8. The first eight white keys pick a slot too. |
+| Chord | The slot's chord, picked from the chords of the scale. The page shows each as a numeral (I to VII, small for a minor chord) and its name, like Am7. **Hold** leaves the slot empty: the chord before keeps playing for its bars. |
+| Bars | How long the slot's chord lasts: 1, 2, 4 or 8 bars. |
+| Play | **Walk**: the genre picks the chords, as usual. **Loop**: your slots play in turn. |
+
+Turning Chord or Bars switches Play to Loop. Your progression starts on the next bar, from slot 1. The loop
+ends at the last slot that has a chord, so a four-chord progression only needs slots 1 to 4. **EDIT** jumps
+to the next slot, and the drop of a build goes back to slot 1.
+
+The chords are steps of the scale, not fixed notes, so they follow the key. Change the root or the mode and
+the progression moves with it. The chord kind, the voicing and the rest of the Chords page still apply. In
+the genres with a cadence, the V chord in a minor key gets its raised seventh, as it does in the walk.
+
+While Play is on Loop, the walk, Drift and the chord Loop setting have no say. Set Play back to Walk and the
+genre takes over again, with your slots kept for later. The progression is stored with the piece.
 
 ---
 
@@ -1409,7 +1443,7 @@ These are the moves for playing a set live. Most of them wait for the next bar, 
 - **Build: tap SAVE again.** A snare roll climbs in pitch while the bass opens up. It lasts four bars (two in trap, lofi and trip-hop, eight in house). In the last bar the open hat plays every eighth note, and in the four-on-the-floor genres the kick comes back. Then comes the drop.
 - **Drop: hold SAVE.** Everything comes straight back in on the next bar. **SAVE** lights up during a breakdown or build, and blinks while it waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on. Press **REC** again to let the music move on.
-- **Next chord: EDIT.** Moves to the next chord at the next bar.
+- **Next chord: EDIT.** Moves to the next chord at the next bar. With your own progression playing, it moves to the next slot.
 - **The scale: the keys.** Each key adds its note to the scale or takes it away. The root note always stays. **ALGORITHM** picks a mode (a ready-made scale).
 - **Patterns.** Change the drum pattern with **KNOB4** on the Drums page, or with **SEL** + white keys 1-6. A change waits for the next bar, so if you turn the knob past several patterns, only the one you stop on plays.
 

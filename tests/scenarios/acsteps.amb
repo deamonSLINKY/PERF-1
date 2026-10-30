@@ -2,8 +2,8 @@
 # slide, accent and slide), its note (scale steps above the chord) and its octave; Frozen holds the line (an edit freezes it) and stores it with the piece.
 seed 0
 wait 3000
-turn SELECT 13 100
-expect view 13
+turn SELECT 14 100
+expect view 14
 expect par173 0
 # step 3 (the third white key, key 4): an accent, five scale steps up, two octaves up
 tapkey 4
@@ -35,8 +35,8 @@ expect acidkind2 2
 expect acidoff2 5
 expect acidoct2 2
 # frozen: it does not change (Mutate at the top, ten seconds on)
-turn SELECT 11 100
-expect view 11
+turn SELECT 12 100
+expect view 12
 spin K4 100
 wait 10000
 expect acidkind2 2

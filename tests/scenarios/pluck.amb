@@ -4,13 +4,13 @@ wait 3000
 tap ARP
 tap ARP
 tap ARP
-expect view 11
-tap ARP
 expect view 12
 tap ARP
 expect view 13
 tap ARP
 expect view 14
+tap ARP
+expect view 15
 expect par98 30
 turn K1 1
 expect par98 31
@@ -23,7 +23,7 @@ turn ALGO 1
 release SEL
 expect par99 4
 tap ARP
-expect view 15
+expect view 16
 turn K2 1
 expect par103 1
 turn K3 1
@@ -33,7 +33,7 @@ shot pluck2.png
 tap ARP
 tap ARP
 tap ARP
-expect view 9
+expect view 10
 press GLO
 tapkey 18
 release GLO

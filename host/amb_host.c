@@ -518,6 +518,16 @@ static int expect(const char *what, const char *val)
         got = (int)(en_bass_level * 100.0f);
     else if (!strcmp(what, "chordroot"))
         got = en_chord_root;
+    else if (!strcmp(what, "progpos"))            /* the progression: the slot playing (-1 the walk), Play, Drift's unit, a slot's chord (0 none, 1.. a degree) and bars (1, 2, 4, 8) */
+        got = en_prog_pos;
+    else if (!strcmp(what, "prgplay"))
+        got = en_prg_get(proj.prg, EN_PRG_PLAY, 1);
+    else if (!strcmp(what, "prgunit"))
+        got = en_prg_get(proj.prg, EN_PRG_UNIT, 2);
+    else if (!strncmp(what, "prgslot", 7))
+        got = en_prg_get(proj.prg, 3 * (atoi(what + 7) & 7), 3);
+    else if (!strncmp(what, "prgbars", 7))
+        got = 1 << en_prg_get(proj.prg, 24 + 2 * (atoi(what + 7) & 7), 2);
     else if (!strcmp(what, "chordiv")) {          /* the pad's notes as intervals over the chord's root (bits) */
         int k;
         got = 0;

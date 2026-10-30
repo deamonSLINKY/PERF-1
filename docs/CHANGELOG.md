@@ -16,6 +16,10 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
+## Unreleased (the builds 0.15.6 .. are its steps)
+
+- **Your own progression, and Drift in bars or seconds** (0.15.6), from a GitHub request ("edit our own chord progressions like Dub-1") and after DUB-1's Chords page (8 slots; a gap holds the chord before; the loop ends at the last slot set). Hold **EDIT** (0.4 s; a tap is still the next chord) or press **ENV** five times for the **Progression** page, after Chords: **Slot** (1-8, or the first eight white keys), **Chord** (a degree of the scale, shown as I-VII, small when minor, and its name; or Hold, the chord before rings on), **Bars** (1, 2, 4, 8) and **Play** (Walk: the genre's chords; Loop: the slots in turn). Until the first edit the page shows the chords heard last (the chord loop, else the last four), and that edit makes them the piece's and starts the loop from slot 1 on the next bar; EDIT jumps a slot, the drop goes back to slot 1. The chords are scale degrees, so they follow the root and mode; the Chords page's kind and voicing still apply, and a cadencing genre's V in minor keeps its raised seventh. **SEL + Drift** on the Tempo page counts a chord's time in bars (right) or seconds (left) in any genre: HYPNO in bars starts from four a chord, the other genres in seconds go as HYPNO does; the genre's own unit stays the default. Both are stored with the piece, six bytes after the bank's ten records (header byte 14 marks them; an older bank loads with none): 3836 of the object's 3840 bytes, the same fifteen 256-byte writes. RAM +176 B (93288 of 98304). The dial has 33 pages.
+
 ## 0.15.2 (the development build 0.15.5)
 
 **In short.** No piece starts its bass on the bright Bite, Tine or Clang sounds any more, the Pluck steps page reads Step, Note, Octave, Frozen like Acid steps and has its place in the page tabs, and the manual and quick manual are rewritten in plain words for musicians.

@@ -18,7 +18,8 @@ project_t proj;
 #define IMG_VER 2u
 #define IMG_HDR 16u                          /* magic 4, ver 1, genre 1, npar 2, saved 2, record size 2, 4 spare */
 #define IMG_REC 376u
-#define IMG_LEN (IMG_HDR + NPIECES * IMG_REC)
+#define IMG_TAIL (IMG_HDR + NPIECES * IMG_REC)   /* after the records: each piece's progression (0.15.6), six bytes; header byte 14 says it is there */
+#define IMG_LEN (IMG_TAIL + NPIECES * EN_PRG_LEN)
 #define REC_PAR (2u + 2u * EN_NPAT * EN_NLANE)   /* the settings follow the pool and the patterns */
 #define REC_MOD (IMG_REC - EN_NLANE * 16u)       /* the step tricks end the record (a record from before them has zeros here) */
 #define REC_ACL (REC_MOD - 24u)                  /* the frozen acid line before them (18 bytes; zeros in an older record) */
@@ -57,6 +58,7 @@ static void recipe(int i, slot_t *s)
     en_piece_mods_g(proj.genre, i, s->mod);
     memset(s->acl, 0, sizeof s->acl);
     memset(s->cml, 0, sizeof s->cml);
+    memset(s->prg, 0, sizeof s->prg);
 }
 
 static int16_t clamp_par(int p, int v)
@@ -89,6 +91,7 @@ static void take(int i)                      /* piece i's slot into play (its pa
             en_mod[l][p] = s->mod[l][p];
     memcpy(proj.acl, s->acl, sizeof proj.acl);
     memcpy(proj.cml, s->cml, sizeof proj.cml);
+    memcpy(proj.prg, s->prg, sizeof proj.prg);
 }
 
 static void keep(void)                       /* the piece playing, into its slot */
@@ -108,6 +111,7 @@ static void keep(void)                       /* the piece playing, into its slot
         en_acid_pack(s->acl);                 /* a frozen line: as it is now; a free one is not kept (a new one grows with the piece) */
     if (proj.par[P_CM_LOCK])
         en_pluck_pack(s->cml);
+    memcpy(s->prg, proj.prg, sizeof s->prg);
 }
 
 static uint16_t rd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
@@ -124,9 +128,11 @@ static void glob_sync(void)                  /* the player's three, from play */
 }
 
 /* a piece in the stored form, and back (the slot should hold the recipe first: what the record lacks keeps it). 1: a good piece */
-static void pack_slot(const slot_t *s, uint8_t *rec)
+static void pack_slot(const slot_t *s, int i)
 {
+    uint8_t *rec = image + IMG_HDR + (uint32_t)i * IMG_REC;
     int p, l;
+    memcpy(image + IMG_TAIL + (uint32_t)i * EN_PRG_LEN, s->prg, EN_PRG_LEN);
     memset(rec, 0, IMG_REC);
     wr16(rec, s->pool);
     for (p = 0; p < EN_NPAT; p++)
@@ -143,9 +149,14 @@ static void pack_slot(const slot_t *s, uint8_t *rec)
     memcpy(rec + REC_CML1, s->cml, 6);
     memcpy(rec + REC_CML2, s->cml + 6, 6);
 }
-static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
+static int unpack_slot(int i, uint32_t npar, int tail, slot_t *s)   /* tail: the image has the progressions */
 {
+    const uint8_t *rec = image + IMG_HDR + (uint32_t)i * IMG_REC;
     int p, l, bad = 0;
+    if (tail)
+        memcpy(s->prg, image + IMG_TAIL + (uint32_t)i * EN_PRG_LEN, EN_PRG_LEN);
+    else
+        memset(s->prg, 0, EN_PRG_LEN);
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             s->pats[p][l] = rd16(rec + 2 + 2 * (p * EN_NLANE + l));
@@ -190,6 +201,7 @@ static void image_header(int g)
     wr16(image + 10, IMG_REC);
     image[12] = 1;                           /* 1: the acid answer in its present form (kind * 5 + direction) */
     image[13] = 1;                           /* 1: the pluck's sounds numbered with thirty built-in DX voices (0: twenty-two, the player's own voices from 34, not 42) */
+    image[14] = 1;                           /* 1: the progressions follow the records (0.15.6; an older image ends with the records) */
 }
 
 /* the old bank (OBJ_PROJ, 16-bit settings): its pieces into the slots, as before: read field by field, so a bank written with fewer
@@ -259,13 +271,14 @@ static void image_load(int g)
         recipe(i, &proj.slot[i]);
     n = plat_store_load(obj_of(g), image, sizeof image);
     if (n >= (int)IMG_HDR && rd32(image) == IMG_MAGIC && image[4] == IMG_VER && image[5] == (uint8_t)g && rd16(image + 10) == IMG_REC &&
-        (uint32_t)n >= IMG_LEN) {
+        (uint32_t)n >= IMG_TAIL) {
+        const int tail = image[14] == 1 && (uint32_t)n >= IMG_LEN;
         const uint32_t npar = rd16(image + 6);
         const uint16_t sv = rd16(image + 8);
         const int enc = image[12];
         for (i = 0; i < NPIECES; i++)
             if (sv >> i & 1u) {
-                if (unpack_slot(image + IMG_HDR + (uint32_t)i * IMG_REC, npar, &proj.slot[i])) {
+                if (unpack_slot(i, npar, tail, &proj.slot[i])) {
                     saved |= (uint16_t)(1u << i);
                     if (!enc)
                         ans_old(&proj.slot[i]);
@@ -280,9 +293,10 @@ static void image_load(int g)
             old_bank_load(n);
         memset(image, 0, sizeof image);
     }
+    memset(image + IMG_TAIL, 0, NPIECES * EN_PRG_LEN);
     for (i = 0; i < NPIECES; i++)       /* the image is what the slots saved hold */
         if (saved >> i & 1u)
-            pack_slot(&proj.slot[i], image + IMG_HDR + (uint32_t)i * IMG_REC);
+            pack_slot(&proj.slot[i], i);
     image_header(g);
 }
 
@@ -355,6 +369,7 @@ void project_apply(void)
         if (any)
             en_pluck_unpack(proj.cml);
     }
+    en_prog(proj.prg);
 }
 
 void project_piece(int i)
@@ -388,7 +403,7 @@ void project_set_genre(int g)
 void project_piece_save(void)
 {
     keep();
-    pack_slot(&proj.slot[proj.piece], image + IMG_HDR + (uint32_t)proj.piece * IMG_REC);
+    pack_slot(&proj.slot[proj.piece], proj.piece);
     saved |= (uint16_t)(1u << proj.piece);
     proj.edited &= (uint16_t)~(1u << proj.piece);
     pending = 1;
@@ -401,6 +416,7 @@ void project_piece_factory(void)
     if (saved >> proj.piece & 1u) {
         saved &= (uint16_t)~(1u << proj.piece);
         memset(image + IMG_HDR + (uint32_t)proj.piece * IMG_REC, 0, IMG_REC);
+        memset(image + IMG_TAIL + (uint32_t)proj.piece * EN_PRG_LEN, 0, EN_PRG_LEN);
         pending = 1;
     }
     proj.edited &= (uint16_t)~(1u << proj.piece);

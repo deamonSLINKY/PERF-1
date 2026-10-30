@@ -37,15 +37,15 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_PHRASE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
-static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Bass", "Bass env",
+static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Progression", "Bass", "Bass env",
                                               "Bass LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -184,6 +184,8 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
     {P_CHORD, P_VOICING, P_PL_CHO, P_CH_LOOP},     /* the harmony together, the pad's chorus, and how many chords repeat (Root is on Global, Drift on Tempo) */
+    {K_PGSL, K_PGCH, K_PGBR, K_PGPL},              /* the progression by hand (0.15.6, after DUB-1's Chords page): the slot (or a white key), its chord (a degree of the scale, or none: the
+                                                    * chord before holds), its bars, and Play: the genre's walk or the slots in turn */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
@@ -222,6 +224,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Chord", "Voicing", "Chorus", "Loop"},
+    {"Slot", "Chord", "Bars", "Play"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -257,7 +260,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 5}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -485,6 +488,7 @@ static struct {
     uint8_t stp;                       /* the Steps page's step (a white key) */
     uint8_t astp;                      /* the Acid steps page's step (a white key) */
     uint8_t pstp;                      /* the Pluck steps page's */
+    uint8_t pgsl;                      /* the Progression page's slot */
     uint8_t as_off[16], as_oct[16];    /* its working copy of the line while it is edited (the engine takes the edits a chunk later) */
     uint16_t as_gate, as_acc, as_slide;
     uint32_t as_t;                     /* when it was last edited */
@@ -959,6 +963,51 @@ static void as_put(int s, int note, int oct, int kind)
     knob_set(P_AC_LOCK, 1);                     /* an edited line is the player's: held, and stored with the piece */
     edited();
 }
+/* the Progression page (0.15.6): proj.prg is the piece's; while none of its slots is set, the page shows the chords heard last (the genre's walk),
+ * and the first edit makes them the piece's */
+static int pg_any(const uint8_t *b)              /* the piece's own: a slot set, or Play on Loop (all of them emptied by hand) */
+{
+    int s;
+    if (en_prg_get(b, EN_PRG_PLAY, 1))
+        return 1;
+    for (s = 0; s < EN_PRG_N; s++)
+        if (en_prg_get(b, 3 * s, 3))
+            return 1;
+    return 0;
+}
+static const uint8_t *pg_view(uint8_t *tmp)
+{
+    if (pg_any(proj.prg))
+        return proj.prg;
+    memcpy(tmp, proj.prg, EN_PRG_LEN);
+    en_prog_capture(tmp);
+    return tmp;
+}
+static int pg_scale(void)                       /* the degrees there are: the scale's notes (seven at most) */
+{
+    int st[12];
+    const int m = en_scale(proj.pool, st);
+    return m > 7 ? 7 : m;
+}
+static const char *pg_name(int d, char *b)      /* a slot's chord (1 ..): its name, "Am7" */
+{
+    int pcs[4];
+    const int n = en_prog_chord(d - 1, pcs);
+    return en_chord_name(pcs, n, b);
+}
+static const char *pg_roman(int d, char *b)     /* and its degree, lower case when it is minor */
+{
+    static const char *const R[7] = {"I", "II", "III", "IV", "V", "VI", "VII"};
+    int pcs[4], k = 0;
+    const int n = en_prog_chord(d - 1, pcs), minor = n > 1 && (pcs[1] - pcs[0] + 12) % 12 == 3;
+    const char *r = R[(d - 1) % 7];
+    while (r[k]) {
+        b[k] = (char)(minor ? r[k] - 'A' + 'a' : r[k]);
+        k++;
+    }
+    b[k] = 0;
+    return b;
+}
 static const char *const MXT_NAME[5] = {"PAD", "BASS", "ACID", "PLUCK", "DRUMS"};
 static int knob_get(int k)
 {
@@ -982,6 +1031,13 @@ static int knob_get(int k)
         if (k == K_ASOC)
             return ui.as_oct[ui.astp & 15];
         return as_kind(ui.astp & 15);
+    }
+    if (k == K_PGSL)
+        return ui.pgsl & 7;
+    if (k == K_PGCH || k == K_PGBR || k == K_PGPL) {
+        uint8_t tmp[EN_PRG_LEN];
+        const uint8_t *b = pg_view(tmp);
+        return k == K_PGCH ? en_prg_get(b, 3 * (ui.pgsl & 7), 3) : k == K_PGBR ? en_prg_get(b, 24 + 2 * (ui.pgsl & 7), 2) : en_prg_get(proj.prg, EN_PRG_PLAY, 1);
     }
     if (k == K_PSNO)
         return en_cm_rung[ui.pstp & 15];
@@ -1035,6 +1091,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_PSNO || k == K_PSLV) {
         *lo = 0;
         *hi = k == K_PSNO ? 11 : 3;
+        return;
+    }
+    if (k == K_PGSL || k == K_PGCH || k == K_PGBR || k == K_PGPL) {
+        *lo = 0;
+        *hi = k == K_PGSL ? EN_PRG_N - 1 : k == K_PGCH ? pg_scale() : k == K_PGBR ? 3 : 1;
         return;
     }
     if (k >= K_FXP) {
@@ -1096,6 +1157,24 @@ static void knob_text(int k, char *b)
     }
     if (k == K_GRA) {
         itoa_u((uint32_t)ui.gr_all, b);
+        return;
+    }
+    if (k == K_PGSL || k == K_PGCH || k == K_PGBR || k == K_PGPL) {   /* the progression: the slot (1 ..), its chord, its bars, Play */
+        static const char *const BR[4] = {"1 bar", "2 bars", "4 bars", "8 bars"};
+        const int v = knob_get(k);
+        const char *s = k == K_PGBR ? BR[v & 3] : k == K_PGPL ? (v ? "Loop" : "Walk") : k == K_PGCH && !v ? "Hold" : 0;
+        int n = 0;
+        if (k == K_PGSL) {
+            itoa_u((uint32_t)v + 1u, b);
+            return;
+        }
+        if (!s)
+            s = pg_name(v, b);
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
         return;
     }
     if (k == K_PSNO || k == K_PSLV) {            /* the pluck's step: its rung (1 ..) or its level */
@@ -1207,6 +1286,23 @@ static void knob_set(int k, int v)
     int lo, hi, p = knob_par(k);
     if (k == P_CM_LOCK && v && !proj.par[P_CM_LOCK]) {   /* freezing the pluck line: the loop's terms first */
         ps_freeze();
+        return;
+    }
+    if (k == K_PGSL) {
+        ui.pgsl = (uint8_t)(v < 0 ? 0 : v > EN_PRG_N - 1 ? EN_PRG_N - 1 : v);
+        return;
+    }
+    if (k == K_PGCH || k == K_PGBR || k == K_PGPL) {   /* the progression: a chord or its bars set makes the slots the piece's and plays them; Play: the walk or the slots */
+        const int s = ui.pgsl & 7;
+        if (!pg_any(proj.prg) && (k != K_PGPL || v > 0))
+            en_prog_capture(proj.prg);           /* (the chords heard last, as the page showed them) */
+        if (k == K_PGCH)
+            en_prg_put(proj.prg, 3 * s, 3, v < 0 ? 0 : v > pg_scale() ? pg_scale() : v);
+        else if (k == K_PGBR)
+            en_prg_put(proj.prg, 24 + 2 * s, 2, v < 0 ? 0 : v > 3 ? 3 : v);
+        en_prg_put(proj.prg, EN_PRG_PLAY, 1, k == K_PGPL ? v > 0 : 1);
+        en_prog(proj.prg);
+        edited();
         return;
     }
     if (k == K_PSNO || k == K_PSLV) {            /* the pluck's step chosen: its rung or its level; an edit freezes the line */
@@ -2009,7 +2105,7 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
 /* ------------------------------------------------------------ buttons --- */
 /* the tab chain along the bottom (imp_tabs), and the breadcrumb's names: a tab a voice or group, with its pages */
 static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
+    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 5}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
     {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
 static void set_view(int v)
 {
@@ -2602,6 +2698,13 @@ static void input(void)
             if (p >> i & 1u)
                 mix_key((int)i);
     }
+    if ((btn >> B_EDIT & 1u) && !(btn >> B_SEL & 1u) && !(ui.btn_used >> B_EDIT & 1u) && plat_ms() - ui.down_t[B_EDIT] >= 400u) {
+        ui.btn_used |= 1u << B_EDIT;           /* held: the Progression page (a tap: the next chord) */
+        ui.fx_menu = 0;
+        ui.fx_page = 0;
+        set_view(V_PROG);
+        say("PROGRESSION", "WHITE KEYS: A SLOT");
+    }
     if ((btn >> B_GLO & 1u) && !(btn >> B_SEL & 1u) && !(ui.btn_used >> B_GLO & 1u) &&
         plat_ms() - ui.down_t[B_GLO] >= 400u)
         ui.btn_used |= 1u << B_GLO;            /* held for the mix: letting go does nothing either */
@@ -2737,6 +2840,11 @@ static void input(void)
                     for (s = 0; s < 16; s++)
                         if (WHITE_KEY[s] == i)
                             ui.astp = (uint8_t)s;
+                } else if (ui.view == V_PROG) {   /* the Progression page: the first eight white keys choose the slot */
+                    int s;
+                    for (s = 0; s < EN_PRG_N; s++)
+                        if (WHITE_KEY[s] == i)
+                            ui.pgsl = (uint8_t)s;
                 } else if (ui.view == V_CMSTEP) { /* the Pluck steps page: likewise */
                     int s;
                     for (s = 0; s < 16; s++)
@@ -2879,6 +2987,16 @@ static void input(void)
             if (ui.view == V_SEQ && (btn >> B_SEL & 1u)) {   /* the sequencer's tricks, SEL + a knob: a Euclidean pattern (hits, rotation), the lane's probability and length */
                 ui.btn_used |= 1u << B_SEL;
                 seq_trick((int)i, e);
+                ui.act_t = ui.turn_t = plat_ms();
+                continue;
+            }
+            if (ui.view == V_TEMPO && i == 3 && (btn >> B_SEL & 1u)) {   /* SEL + Drift: the chord's time in bars (right) or in seconds (left), in any genre; the genre's own is kept as 0 */
+                const int def = en_genre_bars() ? 1 : 2, nw = e > 0 ? 1 : 2;
+                ui.btn_used |= 1u << B_SEL;
+                en_prg_put(proj.prg, EN_PRG_UNIT, 2, nw == def ? 0 : nw);
+                en_prog(proj.prg);
+                edited();
+                say("DRIFT", nw == 1 ? "IN BARS" : "IN SECONDS");
                 ui.act_t = ui.turn_t = plat_ms();
                 continue;
             }
@@ -3677,7 +3795,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
         L(cpu);
         break;
     }
-    case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); break;
+    case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); L("HOLD: THE PROGRESSION"); break;
     case B_SEQ: L("DRUMS; AGAIN: LINKS, KIT,"); L("THEN DRUM DRIFT"); L("HOLD: THE SEQUENCER"); break;
     case B_REC: L("FREEZE: THE CHORD HOLDS,"); L("THE REVERB RINGS; AGAIN: THAW"); L("SEL + REC: CAPTURE THE BAR"); L("YOU PLAYED ON JAM"); break;
     case B_OCTDN: L("AN OCTAVE DOWN: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM ABOVE"); break;
@@ -4076,7 +4194,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS, SCOPE_ACSTEP, SCOPE_CMSTEP };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS, SCOPE_ACSTEP, SCOPE_CMSTEP, SCOPE_PROG };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -4095,6 +4213,7 @@ static int scope_kind(int v)
     case V_STEPS: return SCOPE_STEPS;
     case V_ACSTEP: return SCOPE_ACSTEP;
     case V_CMSTEP: return SCOPE_CMSTEP;
+    case V_PROG: return SCOPE_PROG;
     case V_ACANS: return SCOPE_ACANS;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
@@ -4561,6 +4680,46 @@ static void draw_scope(int kind)
         }
         return;
     }
+    if (kind == SCOPE_PROG) {                    /* the progression: eight slots, each its degree, its chord and its bars; the one playing lit, the one chosen underlined */
+        uint8_t tmp[EN_PRG_LEN];
+        const uint8_t *b = pg_view(tmp);
+        const int mine = b == proj.prg, loop = mine && en_prg_get(b, EN_PRG_PLAY, 1) && en_prog_pos >= 0;
+        int s, last = 0, n;
+        char tx[24];
+        for (s = 0; s < EN_PRG_N; s++)
+            if (en_prg_get(b, 3 * s, 3))
+                last = s + 1;
+        cv_text(6, 2, &FONT_B, "PROGRESSION", K_PAD);
+        cv_text(6 + text_w(&FONT_B, "PROGRESSION") + 8, 6, &FONT_XS, loop ? "YOURS, IN TURN" : mine ? "WALK: THE GENRE'S" : "HEARD LAST", loop ? K_ACC : K_DIM);
+        for (s = 0; s < EN_PRG_N; s++) {
+            const int32_t x0 = 4 + (s & 3) * 59, y0 = 22 + (s >> 2) * 44;
+            const int d = en_prg_get(b, 3 * s, 3), br = 1 << en_prg_get(b, 24 + 2 * s, 2);
+            const int cur = s == (int)(ui.pgsl & 7u), now = loop && s == en_prog_pos;
+            const uint16_t fg = !loop ? K_DIM : s < last ? K_TEXT : K_LINE;
+            cv_rect(x0, y0, 55, 40, now ? mix(K_BG, K_PAD, 6) : K_PANEL);
+            if (cur)
+                cv_rect(x0, y0 + 38, 55, 2, K_ACC);
+            itoa_u((uint32_t)s + 1u, tx);
+            cv_text(x0 + 3, y0 + 2, &FONT_XS, tx, K_DIM);
+            if (d || s < last) {
+                itoa_u((uint32_t)br, tx);
+                n = 0;
+                while (tx[n])
+                    n++;
+                tx[n++] = 'B';
+                tx[n] = 0;
+                cv_text(x0 + 52 - text_w(&FONT_XS, tx), y0 + 2, &FONT_XS, tx, K_DIM);
+            }
+            if (d) {
+                cv_text(x0 + 3, y0 + 11, &FONT_B, pg_roman(d, tx), now ? K_ACC : fg);
+                cv_text(x0 + 3, y0 + 26, &FONT_XS, pg_name(d, tx), fg);
+            } else if (s < last) {
+                cv_text(x0 + 3, y0 + 17, &FONT_XS, "HOLDS", K_LINE);
+            }
+        }
+        cv_text(4, 112, &FONT_XS, !mine ? "TURN A CHORD: THEY ARE YOURS" : loop ? "EDIT: NEXT SLOT  HOLD: HERE" : "PLAY: LOOP TO HEAR THEM", K_DIM);
+        return;
+    }
     if (kind == SCOPE_CMSTEP) {                  /* the pluck steps: the line, a bar a step (its height the rung), the accent bright, a soft one dim; the step chosen framed */
         int s;
         char tx[24];
@@ -5022,6 +5181,12 @@ static void draw_main(void)
             h = hash(h, (uint32_t)ui.as_gate | (uint32_t)ui.as_acc << 16);
             h = hash(h, (uint32_t)ui.as_slide | (uint32_t)ui.astp << 16 | (uint32_t)proj.par[P_AC_LOCK] << 24 | (uint32_t)en_acid_pos << 25);
         }
+        if (ui.view == V_PROG) {
+            int s;
+            for (s = 0; s < EN_PRG_LEN; s++)
+                h = hash(h, proj.prg[s]);
+            h = hash(h, (uint32_t)ui.pgsl | (uint32_t)(uint8_t)en_prog_pos << 8 | (uint32_t)en_chord_root << 16 | (uint32_t)en_playing << 24);
+        }
         if (ui.view == V_CMSTEP) {
             int s;
             for (s = 0; s < 16; s++)
@@ -5287,10 +5452,14 @@ static void draw_knobs(void)
             caps(t, view_label((int)i), sizeof t);
             text_c(cx, 26, &FONT_XS, t, hot ? K_TEXT : K_DIM);
             knob_text(k, t);
-            caps(vt, t, sizeof vt);
             {                                    /* the value in the largest type that fits its card (a long name steps down: M, B, S, then XS) */
-                const felucca_font_t *vf = &FONT_M;
-                int32_t vy = 34;
+                const int cased = k == K_PGCH && knob_get(k);   /* a chord's name as written (Am7 is not AM7): M has no small letters, so B */
+                const felucca_font_t *vf = cased ? &FONT_B : &FONT_M;
+                int32_t vy = cased ? 39 : 34;
+                if (cased)
+                    memcpy(vt, t, sizeof vt);
+                else
+                    caps(vt, t, sizeof vt);
                 if (text_w(vf, vt) > 56)
                     vf = &FONT_B, vy = 39;
                 if (text_w(vf, vt) > 56)
@@ -5386,6 +5555,10 @@ static void leds(void)
         as_sync();
         for (i = 0; i < 16; i++)
             if ((uint32_t)i == (uint32_t)(ui.astp & 15u) || (uint32_t)(ui.as_gate >> i & 1u) ^ (uint32_t)(en_playing && i == en_acid_pos))
+                k |= 1u << WHITE_KEY[i];
+    } else if (ui.view == V_PROG) {              /* the progression: the slots set lit, the one chosen too, the one playing blinks against them */
+        for (i = 0; i < EN_PRG_N; i++)
+            if ((uint32_t)i == (uint32_t)(ui.pgsl & 7u) || (uint32_t)(en_prg_get(proj.prg, 3 * (int)i, 3) != 0) ^ (uint32_t)(en_playing && (int)i == en_prog_pos))
                 k |= 1u << WHITE_KEY[i];
     } else if (ui.view == V_CMSTEP) {            /* the pluck steps: likewise */
         for (i = 0; i < 16; i++)

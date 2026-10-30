@@ -866,7 +866,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2 };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -943,7 +943,13 @@ static uint32_t pool = 0xAADu;                  /* Ionian until told */
 static int nsteps, steps[12];                   /* the scale */
 static int deg;                                 /* the chord's scale degree */
 static uint8_t dom_on;
-static uint8_t dh[8], dh_n, dh_i, dh_ln;        /* the progression loop: its chords, how many, the next, its length */                          /* a dominant in minor: the scale's seventh degree raised a semitone while the chord is V (dom_apply) */
+static uint8_t dh[8], dh_n, dh_i, dh_ln;        /* the progression loop: its chords, how many, the next, its length */
+static uint8_t pg_deg[EN_PRG_N], pg_bars[EN_PRG_N], pg_len, pg_i, pg_on, drift_unit;   /* the progression set by hand (en_prog): each slot's chord (0 empty, 1..7 a degree) and
+                                                * bars (1 << it), the slots in use, the one playing, Play; Drift's unit (0 the genre's, 1 bars, 2 seconds) */
+static uint8_t hist[8], hist_n;                 /* the last chords, the newest last (for the progression's capture) */
+static uint32_t pg_lo;                          /* the slots' chords, until their bars come (C_PROG, C_PROG2) */
+static uint8_t pg_start;                        /* the next chord is the first slot's (Play just turned to Loop) */
+volatile int8_t en_prog_pos = -1;                          /* a dominant in minor: the scale's seventh degree raised a semitone while the chord is V (dom_apply) */
 static int chord_pcs[4], chord_nt;
 static float tunefac = 1.0f;
 static uint32_t rng = 0x9E3779B9u;
@@ -1682,7 +1688,7 @@ static void bass_to(int pc)
 static float drift_left, drift_total, evolve;   /* evolve: Evolve, 0..1 */
 static uint8_t change_pending, fifth_done;
 static int hr_left;                             /* a harmonic rhythm: the chord's bars left after this one (the bar line counts; 0 otherwise) */
-static int hr_bars(void) { return hr_bars_v(par[P_DRIFT]); }
+static int hr_bars(void) { return pg_on ? 1 << pg_bars[pg_i] : hr_bars_v(par[P_DRIFT]); }   /* (a progression set by hand: its slot's bars) */
 
 static void drift_reset(void)
 {
@@ -1723,8 +1729,10 @@ void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0);
 static int hr_bars_v(int v)                     /* the genre's bars a chord, by Drift: a quarter below 20, half below 45, double above 80, four times above 95 */
 {
     int b = CHT[chord_genre].hr;
+    if (drift_unit == 2 || (!b && drift_unit != 1))
+        return 0;                               /* seconds: hypno's way, or the player's choice */
     if (!b)
-        return 0;
+        b = 4;                                  /* bars where the genre counts seconds: four a chord, then Drift as everywhere */
     b = v < 20 ? b >> 2 : v < 45 ? b >> 1 : v > 95 ? b << 2 : v > 80 ? b << 1 : b;
     return b < 1 ? 1 : b;
 }
@@ -1738,8 +1746,82 @@ static void dom_apply(void)                     /* the dominant in minor: the se
     dom_on = (uint8_t)(CHT[chord_genre].dom && deg == 4 && steps[6] - steps[4] == 3 && steps[6] < 11);
     steps[6] += dom_on;
 }
+int en_prog_chord(int d, int *pcs)               /* a degree's chord as chord_change would play it (for the Progression page) */
+{
+    const int n = en_chord_kind(pool, par[P_ROOT], d, par[P_CHORD], pcs);
+    if (nsteps == 7 && CHT[chord_genre].dom && d % 7 == 4 && deg_nat(6) - deg_nat(4) == 3 && deg_nat(6) < 11) {   /* the cadence's V in minor: its raised seventh */
+        const int lt = (par[P_ROOT] + deg_nat(6)) % 12;
+        int k;
+        for (k = 0; k < n; k++)
+            if (pcs[k] == lt)
+                pcs[k] = (lt + 1) % 12;
+    }
+    return n;
+}
+int en_genre_bars(void) { return CHT[chord_genre].hr != 0; }
+void en_prog(const uint8_t *b)                  /* (a command carries 24 bits: the slots' chords, then their bars, Play and the unit) */
+{
+    post(C_PROG, b[0], b[1] | b[2] << 8);
+    post(C_PROG2, b[3], b[4] | b[5] << 8);
+}
+void en_prog_capture(uint8_t *b)
+{
+    int s, n, bc, hb = hr_bars_v(par[P_DRIFT]);
+    uint8_t d[8];
+    if (dh_ln && dh_n >= dh_ln) {               /* the chord loop, as it plays */
+        n = dh_ln;
+        for (s = 0; s < n; s++)
+            d[s] = dh[s];
+    } else {                                    /* else the last four chords heard (the one playing last) */
+        n = hist_n < 4 ? hist_n : 4;
+        for (s = 0; s < n; s++)
+            d[s] = hist[hist_n - n + s];
+        if (!n) {
+            d[0] = (uint8_t)deg;
+            n = 1;
+        }
+    }
+    for (bc = 0; bc < 3 && (1 << bc) < (hb ? hb : 4); bc++)
+        ;
+    for (s = 0; s < EN_PRG_N; s++) {
+        en_prg_put(b, 3 * s, 3, s < n ? d[s] + 1 : 0);
+        en_prg_put(b, 24 + 2 * s, 2, bc);
+    }
+}
+static void chord_change(void);
+static void prog_take(uint32_t lo, uint32_t hi) /* the progression from the page or the piece (en_prog) */
+{
+    const int was = pg_on, unit = (int)(hi >> 17 & 3u);
+    int s;
+    pg_len = 0;
+    for (s = 0; s < EN_PRG_N; s++) {
+        pg_deg[s] = (uint8_t)(lo >> 3 * s & 7u);
+        pg_bars[s] = (uint8_t)(hi >> 2 * s & 3u);
+        if (pg_deg[s])
+            pg_len = (uint8_t)(s + 1);
+    }
+    pg_on = (uint8_t)((hi >> 16 & 1u) && pg_len);
+    if (pg_i >= pg_len)
+        pg_i = 0;
+    if (pg_on && !was) {                        /* on: the first slot from the next bar (stopped: now) */
+        pg_start = 1;
+        if (en_playing)
+            change_pending = 1;
+        else
+            chord_change();
+    } else if (pg_on) {
+        if (hr_left >= hr_bars())               /* the slot playing made shorter: it ends sooner */
+            hr_left = hr_bars() - 1;
+    }
+    en_prog_pos = (int8_t)(pg_on ? pg_i : -1);
+    if ((!pg_on && was) || unit != drift_unit) {   /* back to the walk, or Drift's unit changed: the chord's time anew */
+        drift_unit = (uint8_t)unit;
+        drift_reset();
+    }
+}
 static uint8_t deg_prev, cad_n;                  /* the chord before this one; the chords since the phrase began */
 static uint8_t drop_tonic;                       /* the drop takes the next chord home */
+static void chord_to(int i);
 static void chord_change(void)                  /* to another degree: the genre's own moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
@@ -1747,6 +1829,16 @@ static void chord_change(void)                  /* to another degree: the genre'
     int i, cad_to = 0;
     const int cg = chord_genre;
     const int rich = nsteps == 7 && cg;
+    if (pg_on) {                                /* the progression set by hand: its next slot (the drop: its first); an empty slot keeps the chord for its bars */
+        pg_i = (uint8_t)(drop_tonic || pg_start ? 0 : (pg_i + 1) % pg_len);
+        drop_tonic = pg_start = 0;
+        en_prog_pos = (int8_t)pg_i;
+        if (pg_deg[pg_i])
+            chord_to((pg_deg[pg_i] - 1) % nsteps);
+        else
+            drift_reset();
+        return;
+    }
     if (rich) {                                 /* the leading chord: the genre's, unless the mode makes it diminished (then V, or IV) */
         cad_to = CHT[cg].cad_to;
         if (deg_dim(cad_to))
@@ -1807,9 +1899,18 @@ static void chord_change(void)                  /* to another degree: the genre'
         drop_tonic = 0;
         i = 0;
     }
+    chord_to(i);
+}
+static void chord_to(int i)                     /* the chord moves to degree i */
+{
+    int k;
     deg_prev = (uint8_t)deg;
-    cad_n = (uint8_t)(i == 0 && rich && cad_n >= CHT[cg].cad_every ? 0 : cad_n + 1);
+    cad_n = (uint8_t)(i == 0 && nsteps == 7 && chord_genre && cad_n >= CHT[chord_genre].cad_every ? 0 : cad_n + 1);
     deg = i;
+    if (hist_n >= 8)
+        for (k = 0; k < 7; k++)
+            hist[k] = hist[k + 1];
+    hist[hist_n < 8 ? hist_n++ : 7] = (uint8_t)i;
     dom_apply();
     pad_retarget();
     pad_leave();
@@ -3795,10 +3896,12 @@ static void pool_set(uint32_t p)
     bass_to(chord_pcs[0]);
 }
 
-static void regrow(void)                        /* a new piece: a fresh acid line, the home chord, an empty progression loop */
+static void regrow(void)                        /* a new piece: a fresh acid line, the home chord (or the progression's first), an empty progression loop */
 {
-    deg = 0;
-    dh_n = dh_i = 0;
+    pg_i = pg_start = 0;
+    deg = pg_on && pg_deg[0] ? (pg_deg[0] - 1) % (nsteps ? nsteps : 7) : 0;
+    en_prog_pos = (int8_t)(pg_on ? 0 : -1);
+    dh_n = dh_i = hist_n = 0;
     dom_apply();
     pad_retarget();
     pad_handoff();
@@ -5599,6 +5702,8 @@ static void drain(void)
         case C_ACCAP: ac_capture(a & 15, b & 127, a >> 4 & 1, a >> 5 & 1); break;
         case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
         case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
+        case C_PROG: pg_lo = (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8; break;
+        case C_PROG2: prog_take(pg_lo, (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8); break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)
