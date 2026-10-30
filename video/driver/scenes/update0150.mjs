@@ -145,7 +145,7 @@ export default {
     await s.tapKey("w10"); await s.wait(300);
     await s.turn("KNOB2", -3, 60); await turnK(s, "KNOB2", 2, 160, "KNOB2"); await s.wait(300);   // a note
     await turnK(s, "KNOB1", -3, 160, "KNOB1"); await s.wait(2000);
-    for (const w of [0, 9]) {                                  // the loop's own accents, down to notes: one accent is enough on this voice
+    for (const w of [0, 11]) {                                  // the loop's own accents, down to notes: one accent is enough on this voice
       ring(s, "key:" + WK[w], 1.0, "KEY");
       await s.tapKey("w" + w); await s.wait(250);
       await s.turn("KNOB2", -3, 60); await turnK(s, "KNOB2", 2, 120, "KNOB2"); await s.wait(900);
