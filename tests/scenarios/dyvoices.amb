@@ -1,4 +1,4 @@
-# Settings' fourth knob, Voices (0.14.12): DY swaps the thirty built-in DX voices for the human-made set. The pluck on a DX voice plays on
+# Settings' fourth knob, Voices (0.14.12; DY the default since 0.14.21): DX swaps the human-made set for the thirty built-in DX voices. The pluck on a DX voice plays on
 # through the switch (the engine loads the other set's patch between chunks), the setting is read back, the Pluck page names the DY voice,
 # and the switch back works.
 seed 0
@@ -11,15 +11,15 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-expect dyvoices 0
-spin K4 1
-wait 100
 expect dyvoices 1
+spin K4 -1
+wait 100
+expect dyvoices 0
 peakreset
 wait 4000
 expect peak_db_min -40
 shot dyvoices.png
-# the Pluck page: its Sound reads DY TINE EP (the ARP cycle from the settings page)
+# the Pluck page: its Sound reads the DX name (the ARP cycle from the settings page)
 tap ARP
 tap ARP
 tap ARP
@@ -34,9 +34,9 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-spin K4 -1
+spin K4 1
 wait 100
-expect dyvoices 0
+expect dyvoices 1
 peakreset
 wait 4000
 expect peak_db_min -40

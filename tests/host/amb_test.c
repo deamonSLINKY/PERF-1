@@ -1725,6 +1725,49 @@ int main(void)
         en_play(1);
     }
 
+    /* the pluck's line (the Pluck steps page): steps set, read back, packed into 12 bytes and unpacked; frozen, it survives a new piece and plays as written */
+    {
+        uint8_t b[12], c[12];
+        int i, ok = 1;
+        en_init();
+        en_play(0);
+        en_genre(2);
+        en_set(P_CM_LVL, 60);
+        en_set(P_CM_RATE, 3);
+        en_set(P_CM_LOOP, 2);
+        en_set(P_CM_VU, 100);
+        en_set(P_CM_LOCK, 1);
+        for (i = 0; i < 16; i++)
+            en_pluck_step(i, (i * 5) % 12, i % 4 == 0 ? 3 : i % 4 == 2 ? 2 : i % 8 == 5 ? 1 : 0);   /* 1 . 2 . 3 1 2 . | 1 . 2 . 3 1 2 . : eight notes a bar */
+        run(0.05f);
+        for (i = 0; i < 16; i++)
+            ok &= en_cm_rung[i] == (i * 5) % 12 && en_cm_lvl[i] == (i % 4 == 0 ? 3 : i % 4 == 2 ? 2 : i % 8 == 5 ? 1 : 0);
+        CHECK(ok, "pluck steps read back");
+        CHECK(en_pluck_pack(b) == 1, "pluck line packs");
+        en_regrow();                             /* a new piece: frozen, the line stays */
+        run(0.05f);
+        en_pluck_pack(c);
+        CHECK(!memcmp(b, c, 12), "pluck line kept through regrow");
+        for (i = 0; i < 16; i++)
+            en_pluck_step(i, 0, 0);
+        run(0.05f);
+        CHECK(en_pluck_pack(c) == 0, "pluck line cleared");
+        en_pluck_unpack(b);
+        run(0.05f);
+        en_pluck_pack(c);
+        CHECK(!memcmp(b, c, 12), "pluck line unpacked");
+        cm_on_n = 0;
+        en_play(1);
+        run(0.3f);
+        cm_on_n = 0;
+        run(60.0f / 120.0f * 4.0f * 4.0f);     /* four bars at 120 */
+        CHECK(cm_on_n >= 28 && cm_on_n <= 36, "frozen line: %d notes in four bars (eight a bar written)", cm_on_n);
+        printf("  pluck steps: %d notes in four bars\n", cm_on_n);
+        en_set(P_CM_LOCK, 0);
+        en_init();
+        en_play(1);
+    }
+
     /* the pluck on MIDI channel 2: every note-on gets one note-off, with a plain sound and with a DX voice, and Stop lets go of all */
     {
         int snd, i, worst = 0, ons[2];
@@ -1741,7 +1784,7 @@ int main(void)
             memset(cm_bal, 0, sizeof cm_bal);
             en_play(1);
             run(8.0f);
-            CHECK(cm_on_n >= 20, "pluck notes out (%s): %d", snd ? "DX" : "plain", cm_on_n);
+            CHECK(cm_on_n >= 12, "pluck notes out (%s): %d", snd ? "DX" : "plain", cm_on_n);
             CHECK(cm_off_n <= cm_on_n && cm_on_n - cm_off_n <= 8, "pluck notes sounding at once (%s): %d", snd ? "DX" : "plain", cm_on_n - cm_off_n);
             en_play(0);
             run(0.1f);

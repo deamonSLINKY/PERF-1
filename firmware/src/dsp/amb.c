@@ -84,7 +84,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_CH_LOOP] = {"Loop", 0, 6, 0},
     [P_AC_RESP] = {"Answer", 0, 44, 0},
     [P_CM_VU] = {"Deja vu", 0, 100, 0},   [P_CM_LOOP] = {"Loop", 0, 3, 2},       [P_CM_LEAP] = {"Leaps", 0, 100, 0},   [P_AC_CHG] = {"Mutates", 0, 3, 0},
-    [P_CM_MOTIF] = {"Motif", 0, 100, 60},
+    [P_CM_MOTIF] = {"Motif", 0, 100, 60},   [P_CM_LOCK] = {"Frozen", 0, 1, 0},
     [P_PAD_COMP] = {"Comp", 0, 8, 0},     [P_GHOST] = {"Ghosts", 0, 100, 0},   [P_ACCENT] = {"Accents", 0, 100, 50}, [P_HUMAN] = {"Humanize", 0, 100, 0},
     [P_CHAIN] = {"Chain", 0, 9, 0},         [P_SLICE] = {"Slice", 0, 9, 0},       [P_TIME] = {"Time", 0, 2, 0},
     [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
@@ -604,6 +604,7 @@ void en_param_text(int i, int v, char *b)
     case P_TIME: { static const char *const T[3] = {"Normal", "Half", "Double"}; s = T[(unsigned)v < 3u ? v : 0]; break; }
     case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
     case P_AC_LOCK: s = v ? "Frozen" : "Free"; break;
+    case P_CM_LOCK: s = v ? "Frozen" : "Free"; break;
     case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = (unsigned)v < 7u ? M[v] : (unsigned)v < 7u + EN_NBLFIG ? BL_FIG_NAME[v - 7] : M[0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
@@ -865,7 +866,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1858,6 +1859,43 @@ void en_acid_step(int s, int off, int oct, int gate, int accent, int slide)
 }
 void en_acid_capture(int s, int note, int accent, int slide) { post(C_ACCAP, (s & 15) | (accent ? 16 : 0) | (slide ? 32 : 0), note & 127); }
 void en_pluck_capture(int s, int note) { post(C_CMCAP, s & 15, note < 0 ? 128 : note & 127); }
+/* THE PLUCK'S LINE (the Pluck steps page, 0.14.21): deja vu's loop, Loop 16 and Rate 1/16 and Pluck vu 100, read as sixteen steps of the bar, each a rung of
+ * the chord's ladder and a level; frozen (P_CM_LOCK) it survives a new piece and is stored with it, six bits a step. */
+volatile uint8_t en_cm_rung[16], en_cm_lvl[16], en_cm_pos;
+void en_pluck_step(int s, int rung, int level) { post(C_CMSTEP, s & 15, (rung & 15) | (level & 3) << 4); }
+int en_pluck_pack(uint8_t *b)
+{
+    uint32_t acc = 0, bits = 0, i = 0;
+    int s, any = 0;
+    for (s = 0; s < 16; s++) {
+        const uint32_t v = ((uint32_t)en_cm_rung[s] & 15u) | ((uint32_t)en_cm_lvl[s] & 3u) << 4;
+        any |= v != 0;
+        acc |= v << bits;
+        bits += 6;
+        while (bits >= 8) {
+            b[i++] = (uint8_t)acc;
+            acc >>= 8;
+            bits -= 8;
+        }
+    }
+    return any;
+}
+void en_pluck_unpack(const uint8_t *b)
+{
+    uint32_t acc = 0, bits = 0, i = 0;
+    int s;
+    for (s = 0; s < 16; s++) {
+        uint32_t v;
+        while (bits < 6) {
+            acc |= (uint32_t)b[i++] << bits;
+            bits += 8;
+        }
+        v = acc & 63u;
+        acc >>= 6;
+        bits -= 6;
+        post(C_CMSTEP, s, (int)v);
+    }
+}
 static void ac_roll_w(int st, int what)         /* a step made anew: what 0 all of it, 1 the note, 2 the rhythm (whether it sounds), 3 the accent and the slide */
 {
     float dens = (float)par[P_AC_DENS] * 0.01f;
@@ -2559,6 +2597,23 @@ static void cm_capture(int slot, int note)      /* Capture: a note played by han
     cm_vl[slot] = 230;
 }
 
+static void cm_publish(void)                    /* the loop's first sixteen slots, for the screen and the record */
+{
+    int s;
+    for (s = 0; s < 16; s++) {
+        const int on = cm_f[s] && cm_g[s];
+        en_cm_rung[s] = (uint8_t)(cm_ix[s] & 15);
+        en_cm_lvl[s] = (uint8_t)(!on ? 0 : cm_vl[s] < 140 ? 1 : cm_vl[s] < 220 ? 2 : 3);
+    }
+}
+static void cm_step_set(int s, int rung, int level)   /* the player's edit of a step */
+{
+    cm_f[s] = 1;
+    cm_g[s] = (uint8_t)(level > 0);
+    cm_ix[s] = (uint8_t)((rung > 11 ? 11 : rung) | 128);
+    cm_vl[s] = (uint8_t)(level <= 1 ? 110 : level == 2 ? 190 : 255);
+    cm_publish();
+}
 static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-melody: st its place in the bar, sw the swing's delay (samples) */
 {
     static const uint8_t RATE[4] = {4, 3, 2, 1};   /* sixteenths between notes, by the Rate knob */
@@ -2570,6 +2625,8 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
         cm_i = 0;
         cm_sync = 0;
     }
+    if (st == 0)
+        cm_publish();
     if (st == 0) {                              /* the motif, bar by bar through the phrase of eight */
         const uint32_t ph = bars & 7u;
         const int use = par[P_CM_MOTIF];
@@ -2606,6 +2663,7 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
     /* DEJA VU (after Marbles): the notes of the last 4, 8, 16 or 32 are kept, and each comes round again with the chance Deja vu gives (the chord
      * it is played over is the chord of now, so the phrase follows the harmony); 0 makes every note new */
     slot = (int)(cm_k++ % (4u << (par[P_CM_LOOP] < 0 ? 0 : par[P_CM_LOOP] > 3 ? 3 : par[P_CM_LOOP])));
+    en_cm_pos = (uint8_t)(slot & 15);
     replay = par[P_CM_VU] > 0 && cm_f[slot] && frand() * 100.0f < (float)par[P_CM_VU];
     if (replay) {
         if (!cm_g[slot] || (sec == SEC_BREAK && frand() >= 0.4f))
@@ -3591,6 +3649,7 @@ static void apply(int p, int v)
     case P_PULSE: pulse_vol = (float)(v * v) * 0.0001f; break;
     case P_NOISE: noise_vol = (float)(v * v) * 0.0001f; break;
     case P_DETUNE: detune = 0.00144f * fm_exp2f((float)v * 0.0332f); break;   /* 2.5 .. 25 cents */
+    case P_CM_LOCK: if (v) cm_sync = 1; break;  /* frozen: the line starts with the bar */
     case P_NZ_COLOR: nz_color = v; break;
     case P_NZ_PUMP: nz_pump = (float)v * 0.01f; break;
     case P_BASSOCT:
@@ -3615,7 +3674,16 @@ static void apply(int p, int v)
         chain_i = 0;
         break;
     case P_CM_LOOP:                              /* a new length (or a new piece): the loop is forgotten, the next notes are heard afresh */
-        { int q; for (q = 0; q < 32; q++) cm_f[q] = 0; cm_k = 0; mo_valid = mo_on = mo_rec = 0; }   /* (and the motif: a new piece, a new idea) */
+        if (par[P_CM_LOCK]) {                   /* a frozen pluck line is the piece's own: kept, from the bar */
+            cm_sync = 1;
+        } else {
+            int q;
+            for (q = 0; q < 32; q++)
+                cm_f[q] = 0;
+            cm_k = 0;
+            mo_valid = mo_on = mo_rec = 0;      /* (and the motif: a new piece, a new idea) */
+        }
+        cm_publish();
         break;
     case P_BL_MODE:                              /* back to the drone: the root again; a line starts from silence */
         bl_up = 0;
@@ -3921,6 +3989,8 @@ void en_init(void)
     master_dyn_reset();
     pad_ring_clear(0, PAD_R);
     pad_ctr = 0;
+    for (i = 0; i < CM_MN; i++)
+        cm_mn[i] = 0, cm_moff[i] = 0;          /* (no pluck notes out) */
     for (i = 0; i < TAPE_N; i++)
         tape[i] = 0;
     for (i = 0; i < PLEX_N; i++)
@@ -5525,7 +5595,8 @@ static void drain(void)
         case C_USERCLEAR: fm_user_wipe(); break;
         case C_ACSTEP: ac_step_set(a & 15, b & 15, b >> 4 & 3, b >> 6 & 1, b >> 7 & 1, b >> 8 & 1); break;
         case C_ACCAP: ac_capture(a & 15, b & 127, a >> 4 & 1, a >> 5 & 1); break;
-        case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); break;
+        case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
+        case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)

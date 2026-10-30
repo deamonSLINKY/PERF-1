@@ -32,6 +32,7 @@ wait 2000
 shot pluck2.png
 tap ARP
 tap ARP
+tap ARP
 expect view 9
 press GLO
 tapkey 18

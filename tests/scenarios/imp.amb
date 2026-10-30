@@ -33,15 +33,15 @@ tap SEQ
 tap SEQ
 tap SEQ
 tap SEQ
-expect view 21
+expect view 22
 wait 600
 shot imp_groove.png
 turn SELECT 4 100
-expect view 25
+expect view 26
 wait 300
 shot imp_space.png
 turn SELECT 3 100
-expect view 28
+expect view 29
 wait 300
 shot imp_mixer.png
 tap FX

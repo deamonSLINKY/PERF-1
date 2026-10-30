@@ -2,8 +2,8 @@
 # At 128 BPM a beat is 469 ms: four keys a beat apart, twice over, so the last bar holds a key on each beat whatever the phase.
 seed 0
 wait 3000
-turn SELECT 30 100
-expect view 30
+turn SELECT 31 100
+expect view 31
 expect jamv 0
 expect par156 0
 tapkey w0

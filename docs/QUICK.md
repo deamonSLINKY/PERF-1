@@ -34,7 +34,7 @@
 | SEL | Shift. | 0.4 s alone: what shift does here. | |
 | ENV | Pad; again Pad env, Pad LFO, Chords. | Any page button 0.9 s: its help card. | On a voice's page: by hand; again, back. |
 | LFO | Bass; again Bass env, Bass LFO, Bass line. | | |
-| ARP | Acid; again Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu. | | |
+| ARP | Acid; again Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. | | |
 | EDIT | The next chord, on the next bar. | | Stopped: starts the music by itself. |
 | GLO | Global (Root, Theme, Tune, Genre). Here SAVE stores the piece. | 0.4 s: the mix map, the load meter. | Remote: the FM-1 plays the emulator. |
 | HOME | Tempo page; again Perform; again Tempo. Twice quickly: visualizers. Leaves the FX menu. | 0.7 s: the settings page. | The sigil's middle: eye or imp. |
@@ -70,6 +70,7 @@ SELECT walks 31 pages in this order; the buttons jump to a group (ENV, LFO, ARP,
 | Pluck | ARP x6 | Level | Sound (12 + 30 DX + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | ARP x7 | Decay | Style (up, down, up-down ..) | Rate (1/4, 3/16, 1/8, 1/16) | Range (1-3 oct) |
 | Deja vu | ARP x8 | Pluck vu (0 new .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Motif (develop the first bar) |
+| Pluck steps | ARP x9 | Rung (1-12 of the chord's ladder) | Level (rest, soft, note, accent) | Range (1-3 octaves) | Frozen (free, frozen) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
 | Links | SEQ x2 | K>Bass | S>Pad | H>Acid | P>Clock (off, clock) |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
@@ -312,6 +313,8 @@ Each knob picks one drum's sound from the same fourteen: Kick, Snare (and clap),
 
 **Acid steps** (ARP x5): the line as sixteen steps you can edit. A **white key** chooses a step; **Step**: Rest, Note, Accent, Slide (into the next), Acc+Slide; **Note**: 0-11 scale steps above the chord; **Octave**: 0-3 up; **Frozen**: Free (the line evolves; a new one grows with each piece) or Frozen (held as it is, Mutate leaves it alone, **stored with the piece**). Any edit freezes the line. Steps beyond Length are dim and silent. The answer and the Acid octave work on a frozen line too.
 
+**Pluck steps** (ARP x9): deja vu's loop as sixteen steps you can edit. A **white key** chooses a step; **Rung**: 1-12 of the chord's ladder (its tones over the pluck's octaves); **Level**: Rest, Soft, Note, Accent; **Range**: the ladder's octaves; **Frozen**: held (Loop 16, Rate 1/16, Pluck vu 100 are set) and **stored with the piece**; any edit freezes it. Free, a new piece forgets the loop.
+
 **Capture (SEL + REC).** The bar you last played on the Jam page becomes the voice's own line. Voice on the acid: a frozen 16-step line on Acid steps (each sixteenth you pressed a key on is that note, as scale steps above the chord of the moment; a key on a beat is an accent, a key held past the next step a slide); it plays when you leave Jam. Voice on the pluck: into the Deja vu loop (Loop 16, Rate 1/16, Pluck vu 100, from the next bar). The pad and the bass cannot be captured yet. Jam remembers the last 32 keys: play the bar, then press; the header says `CAPTURED`.
 
 ### The pluck
@@ -383,7 +386,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for **Settings**: **Key** (the drop's key change: same, +2, +3, +5, +7 semitones; the root rises for the round and the next breakdown puts it back; `KEY` in the header), **Saver** (the screensaver: off, 1, 3, 10 min; the visualizers take the whole screen until a touch), **Lights** (off, or show: the key lights follow the music), **Voices** (DX: the built-in DX7 voices; DY: human-made ones of the same roles in their place, named as their banks name them). **SEL + FX** walks on to the others; the SELECT dial moves between them; FX leaves. **USB & MIDI**: Level (KNOB: the USB audio follows MASTER; FIXED: it stays at unity, about the knob at three quarters), MIDI out (off, on). **Auto DJ**: Scenes, Groove, Break, Fill (page 4). **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six palettes), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for **Settings**: **Key** (the drop's key change: same, +2, +3, +5, +7 semitones; the root rises for the round and the next breakdown puts it back; `KEY` in the header), **Saver** (the screensaver: off, 1, 3, 10 min; the visualizers take the whole screen until a touch), **Lights** (off, or show: the key lights follow the music), **Voices** (DY, the default: human-made DX7 voices named as their banks name them; DX: the built-in set). **SEL + FX** walks on to the others; the SELECT dial moves between them; FX leaves. **USB & MIDI**: Level (KNOB: the USB audio follows MASTER; FIXED: it stays at unity, about the knob at three quarters), MIDI out (off, on). **Auto DJ**: Scenes, Groove, Break, Fill (page 4). **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six palettes), Tune (+-50 cents), Genre.
 
 ### Visualizers
 

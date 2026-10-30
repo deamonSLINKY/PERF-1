@@ -34,7 +34,7 @@ shot settings.png
 # the genre: Global's fourth knob since 0.14.7 (GLO leaves the settings page)
 tap GLO
 wait 100
-expect view 29
+expect view 30
 spin K4 1
 wait 300
 expect genre 1

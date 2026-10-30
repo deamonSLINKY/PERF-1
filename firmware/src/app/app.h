@@ -17,12 +17,14 @@ typedef struct {
     uint16_t pats[EN_NPAT][EN_NLANE];    /* its six drum patterns */
     uint8_t mod[EN_NLANE][16];           /* its step tricks (en_mod): a lane's ratchet, push and level on each of its steps */
     uint8_t acl[18];                     /* the acid line as it was when the piece was left (used when the piece's acid is frozen) */
+    uint8_t cml[12];                     /* the pluck line, likewise (its sixteen steps, six bits each) */
 } slot_t;
 
 typedef struct {
     int16_t par[P_NPARAMS];              /* the piece playing, as it is now (amb.h P_*); its patterns are en_pats */
     uint16_t pool;                       /* its scale, relative to the root (bit 0 = the root) */
     uint8_t acl[18];                     /* the piece's frozen acid line (a slot's, while it plays) */
+    uint8_t cml[12];                     /* and its frozen pluck line */
     uint8_t leds;                        /* lights: 0 off, 1 keys and the buttons' glow, 2 keys only */
     uint8_t piece;                       /* which piece */
     uint8_t genre;                       /* which bank of ten pieces (EN_NGENRE): the original, lofi; the others are factory sets */

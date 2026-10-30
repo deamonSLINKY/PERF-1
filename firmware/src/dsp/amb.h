@@ -129,6 +129,7 @@ enum {
     P_COND, P_COND1, P_COND2, P_COND3, P_COND4, P_COND5,  /* each drum lane's condition (P_COND + lane): 0 always, 1 odd bars, 2 even bars, 1 of 4, 4 of 4, 1 of 8, fill bars only, not in fills */
     P_AC_LOCK,                                            /* the acid line held: 0 free (it evolves with Mutate, a new one with each piece), 1 frozen (as it is: Mutate leaves it, and it is stored with the piece) */
     P_CM_MOTIF,                                           /* the pluck's motif (0.14.9): how often a bar of an 8-bar phrase develops the phrase's first bar (its rhythm and intervals: sequenced, inverted, re-ended, restated) instead of inventing; 0 off */
+    P_CM_LOCK,                                            /* the pluck line held (0.14.21): 0 free (deja vu's loop comes and goes), 1 frozen (the loop's first sixteen slots are the line, a sixteenth a step, stored with the piece) */
     P_NPARAMS
 };
 #define P_AC_CHANCE P_STYLE                           /* the acid answer's sync (0: it counts bars, 1: loops of the line); it took the place of the old style, which only the oldest banks have */
@@ -288,6 +289,10 @@ extern volatile uint8_t en_acid_len, en_acid_pos;    /* the acid loop's length a
 extern volatile uint8_t en_acid_off[EN_NSTEP], en_acid_oct[EN_NSTEP];   /* the line's steps: scale steps above the chord, the octave */
 extern volatile uint16_t en_acid_slide;        /* the steps that slide into the next */
 void en_acid_step(int s, int off, int oct, int gate, int accent, int slide);   /* set a step of the line (the Acid steps page); the line is then the player's, until a new piece */
+void en_pluck_step(int s, int rung, int level);   /* set a step of the pluck's line (the Pluck steps page): a rung of the chord's ladder (0 .. 11) and a level (0 rest, 1 soft, 2 note, 3 accent) */
+int en_pluck_pack(uint8_t *b12);               /* the line as stored: 16 steps of six bits (12 bytes); 0 when empty */
+void en_pluck_unpack(const uint8_t *b12);      /* and back into the engine (a stored piece's frozen line) */
+extern volatile uint8_t en_cm_rung[16], en_cm_lvl[16], en_cm_pos;   /* the loop's first sixteen slots: each one's rung and level (0 a rest), and the slot playing */
 void en_acid_capture(int s, int note, int accent, int slide);   /* Capture: a note played by hand (MIDI) into step s, as the nearest offset and octave the chord and scale of now give; the step sounds */
 void en_pluck_capture(int s, int note);         /* Capture: a note (or a rest, note < 0) into slot s of the pluck's loop; the loop's slot 0 is the next bar's first step */
 int en_acid_pack(uint8_t *b18);                /* the line as stored: 16 steps of nine bits (18 bytes) */

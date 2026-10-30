@@ -37,15 +37,15 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_PHRASE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Bass", "Bass env",
-                                              "Bass LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
+                                              "Bass LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -196,6 +196,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
     {P_CM_VU, P_CM_LOOP, P_CM_LEAP, P_CM_MOTIF},   /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps, and the motif (how often a bar develops the phrase's first bar) */
+    {K_PSNO, K_PSLV, P_CM_RANGE, P_CM_LOCK},       /* the pluck's steps: the step chosen (a white key): its rung of the chord's ladder, its level; the ladder's octaves; and whether the line is frozen (held, and stored with the piece) */
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
@@ -232,6 +233,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
     {"Pluck vu", "Loop", "Leaps", "Motif"},
+    {"Rung", "Level", "Range", "Frozen"},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Bass", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
@@ -254,7 +256,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 8}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 1},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 4}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 1},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -481,6 +483,7 @@ static struct {
     uint8_t lane;                      /* the sequencer's lane (OCT- / OCT+) */
     uint8_t stp;                       /* the Steps page's step (a white key) */
     uint8_t astp;                      /* the Acid steps page's step (a white key) */
+    uint8_t pstp;                      /* the Pluck steps page's */
     uint8_t as_off[16], as_oct[16];    /* its working copy of the line while it is edited (the engine takes the edits a chunk later) */
     uint16_t as_gate, as_acc, as_slide;
     uint32_t as_t;                     /* when it was last edited */
@@ -979,6 +982,10 @@ static int knob_get(int k)
             return ui.as_oct[ui.astp & 15];
         return as_kind(ui.astp & 15);
     }
+    if (k == K_PSNO)
+        return en_cm_rung[ui.pstp & 15];
+    if (k == K_PSLV)
+        return en_cm_lvl[ui.pstp & 15];
     if (k == K_STR)
         return en_mod[ui.lane % EN_NLANE][ui.stp & 15] & 7;
     if (k == K_STP)
@@ -1022,6 +1029,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_ASTY || k == K_ASNO || k == K_ASOC) {
         *lo = 0;
         *hi = k == K_ASTY ? 4 : k == K_ASNO ? 11 : 3;
+        return;
+    }
+    if (k == K_PSNO || k == K_PSLV) {
+        *lo = 0;
+        *hi = k == K_PSNO ? 11 : 3;
         return;
     }
     if (k >= K_FXP) {
@@ -1083,6 +1095,21 @@ static void knob_text(int k, char *b)
     }
     if (k == K_GRA) {
         itoa_u((uint32_t)ui.gr_all, b);
+        return;
+    }
+    if (k == K_PSNO || k == K_PSLV) {            /* the pluck's step: its rung (1 ..) or its level */
+        static const char *const PL[4] = {"Rest", "Soft", "Note", "Accent"};
+        const int v = knob_get(k);
+        int n = 0;
+        if (k == K_PSNO) {
+            itoa_u((uint32_t)v + 1u, b);
+            return;
+        }
+        while (PL[v & 3][n]) {
+            b[n] = PL[v & 3][n];
+            n++;
+        }
+        b[n] = 0;
         return;
     }
     if (k == K_ASTY || k == K_ASNO || k == K_ASOC) {
@@ -1160,9 +1187,39 @@ static void knob_text(int k, char *b)
         b[0] = 0;
 }
 
+static void ps_freeze(void)                     /* the pluck line held: deja vu's loop as sixteen sixteenths, every note the same next time, and kept with the piece */
+{
+    if (proj.par[P_CM_RATE] != 3)
+        knob_set(P_CM_RATE, 3);
+    if (proj.par[P_CM_LOOP] != 2)
+        knob_set(P_CM_LOOP, 2);
+    if (proj.par[P_CM_VU] != 100)
+        knob_set(P_CM_VU, 100);
+    if (!proj.par[P_CM_LOCK]) {                  /* (set here, not through knob_set: its freeze hook calls this) */
+        proj.par[P_CM_LOCK] = 1;
+        en_set(P_CM_LOCK, 1);
+        edited();
+    }
+}
 static void knob_set(int k, int v)
 {
     int lo, hi, p = knob_par(k);
+    if (k == P_CM_LOCK && v && !proj.par[P_CM_LOCK]) {   /* freezing the pluck line: the loop's terms first */
+        ps_freeze();
+        return;
+    }
+    if (k == K_PSNO || k == K_PSLV) {            /* the pluck's step chosen: its rung or its level; an edit freezes the line */
+        const int s = ui.pstp & 15;
+        int rung = en_cm_rung[s], lvl = en_cm_lvl[s];
+        if (k == K_PSNO)
+            rung = v < 0 ? 0 : v > 11 ? 11 : v;
+        else
+            lvl = v < 0 ? 0 : v > 3 ? 3 : v;
+        ps_freeze();
+        en_pluck_step(s, rung, lvl);
+        edited();
+        return;
+    }
     if (k == K_MXT) {
         ui.mix_trk = (uint8_t)(v < 0 ? 0 : v > 4 ? 4 : v);
         return;
@@ -2010,7 +2067,7 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
         en_param_text(p, proj.par[p], b);
         caps(a, b, sizeof a);
         say(WHO[vc], a);
-    } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU) {   /* the counter-melody's sound */
+    } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU || ui.view == V_CMSTEP) {   /* the counter-melody's sound */
         const int ns = en_ncm_snd(), cur = proj.par[P_CM_SND] < ns ? proj.par[P_CM_SND] : 0;   /* (a loaded voice that is gone: from the first) */
         knob_set(P_CM_SND, (cur + d + ns) % ns);
         caps(a, EN_CM_SOUND[proj.par[P_CM_SND]], sizeof a);
@@ -2036,7 +2093,7 @@ static int oct_par(int v)                       /* what OCT moves on page v */
         return P_BASSOCT;
     if ((v >= V_ACID && v <= V_ACLINE) || v == V_ACSTEP)
         return P_AC_OCT;
-    if (v == V_CMEL || v == V_CMEL2 || v == V_CMVU)
+    if (v == V_CMEL || v == V_CMEL2 || v == V_CMVU || v == V_CMSTEP)
         return P_CM_OCT;
     return P_OCT;
 }
@@ -2679,6 +2736,11 @@ static void input(void)
                     for (s = 0; s < 16; s++)
                         if (WHITE_KEY[s] == i)
                             ui.astp = (uint8_t)s;
+                } else if (ui.view == V_CMSTEP) { /* the Pluck steps page: likewise */
+                    int s;
+                    for (s = 0; s < 16; s++)
+                        if (WHITE_KEY[s] == i)
+                            ui.pstp = (uint8_t)s;
                 } else if (ui.view == V_STEPS) { /* the Steps page: a white key chooses the step */
                     int s;
                     for (s = 0; s < 16; s++)
@@ -4002,7 +4064,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS, SCOPE_ACSTEP };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS, SCOPE_ACSTEP, SCOPE_CMSTEP };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -4020,6 +4082,7 @@ static int scope_kind(int v)
     case V_GROOVE: return SCOPE_GROOVE;
     case V_STEPS: return SCOPE_STEPS;
     case V_ACSTEP: return SCOPE_ACSTEP;
+    case V_CMSTEP: return SCOPE_CMSTEP;
     case V_ACANS: return SCOPE_ACANS;
     case V_CMEL: case V_CMEL2: return SCOPE_CMEL;
     default: return SCOPE_NONE;
@@ -4486,6 +4549,46 @@ static void draw_scope(int kind)
         }
         return;
     }
+    if (kind == SCOPE_CMSTEP) {                  /* the pluck steps: the line, a bar a step (its height the rung), the accent bright, a soft one dim; the step chosen framed */
+        int s;
+        char tx[24];
+        cv_text(6, 2, &FONT_B, "PLUCK STEPS", KC_COLOR);
+        cv_text(6 + text_w(&FONT_B, "PLUCK STEPS") + 8, 6, &FONT_XS, proj.par[P_CM_LOCK] ? "FROZEN" : "FREE: DEJA VU'S LOOP", proj.par[P_CM_LOCK] ? K_ACC : K_DIM);
+        for (s = 0; s < 16; s++) {
+            const int32_t x0 = 16 + s * 13;
+            const int lv = en_cm_lvl[s], cur = s == (int)(ui.pstp & 15u);
+            const int32_t h = 8 + (int32_t)en_cm_rung[s] * 6;
+            if (cur)
+                cv_rect(x0 - 1, 24, 13, 84, K_PANEL);
+            if (s % 4 == 0)
+                cv_rect(x0 - 1, 23, 1, 86, K_LINE);
+            if (lv)
+                cv_rect(x0, 100 - h, 9, h, lv == 3 ? K_ACC : lv == 1 ? mix(K_BG, KC_COLOR, 8) : KC_COLOR);
+            else
+                cv_rect(x0 + 3, 99, 4, 1, K_LINE);
+            if (en_playing && s == (int)en_cm_pos)
+                cv_rect(x0, 104, 9, 2, K_TEXT);
+            if (cur)
+                cv_rect(x0 - 1, 107, 13, 1, K_ACC);
+        }
+        {
+            static const char *const LN[4] = {"REST", "SOFT", "NOTE", "ACCENT"};
+            int n = 0;
+            const char *q = "STEP ";
+            while (*q)
+                tx[n++] = *q++;
+            itoa_u((uint32_t)(ui.pstp & 15u) + 1u, tx + n);
+            cv_text(4, 112, &FONT_XS, tx, K_TEXT);
+            cv_text(48, 112, &FONT_XS, LN[en_cm_lvl[ui.pstp & 15] & 3], en_cm_lvl[ui.pstp & 15] ? K_ACC : K_DIM);
+            n = 0;
+            q = "RUNG ";
+            while (*q)
+                tx[n++] = *q++;
+            itoa_u((uint32_t)en_cm_rung[ui.pstp & 15] + 1u, tx + n);
+            cv_text(120, 112, &FONT_XS, tx, K_DIM);
+        }
+        return;
+    }
     if (kind == SCOPE_MIX) {                     /* the mixer: a strip a layer, its level set and its level now, the output last */
         static const char *const NAME[6] = {"PAD", "DRN", "ACID", "PLK", "DRUM", "OUT"};
         static const uint8_t TRK[6] = {0x40, 0x10, 0x20, 0x80, 0x0F, 0};
@@ -4917,6 +5020,12 @@ static void draw_main(void)
             h = hash(h, (uint32_t)ui.as_gate | (uint32_t)ui.as_acc << 16);
             h = hash(h, (uint32_t)ui.as_slide | (uint32_t)ui.astp << 16 | (uint32_t)proj.par[P_AC_LOCK] << 24 | (uint32_t)en_acid_pos << 25);
         }
+        if (ui.view == V_CMSTEP) {
+            int s;
+            for (s = 0; s < 16; s++)
+                h = hash(h, (uint32_t)en_cm_rung[s] | (uint32_t)en_cm_lvl[s] << 4);
+            h = hash(h, (uint32_t)ui.pstp | (uint32_t)proj.par[P_CM_LOCK] << 8 | (uint32_t)en_cm_pos << 12 | (uint32_t)en_playing << 16);
+        }
         if (ui.view == V_STEPS) {
             int s;
             for (s = 0; s < 16; s++)
@@ -4999,7 +5108,7 @@ static uint16_t view_color(void)                /* the page's voice in its colou
     const int g = group_of(ui.view == V_SEQ ? V_DRUMS : ui.view);
     switch (g >= 0 ? GROUP[g].btn : -1) {
     case B_LFO: return K_BASS;
-    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU ? IMP_TEAL : K_ACID;
+    case B_ARP: return ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU || ui.view == V_CMSTEP ? IMP_TEAL : K_ACID;
     case B_SEQ: return K_PULSE;
     case B_HOME: return KC_REPEAT;
     default: return ui.view == V_JAM ? KC_MOVE : perf_like() ? KC_FILTER : K_PAD;
@@ -5103,7 +5212,7 @@ static void draw_knobs(void)
             if (vc >= 0) {
                 en_param_text(SOUND_PAR[vc], proj.par[SOUND_PAR[vc]], t);
                 caps(u, t, sizeof u);
-            } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU) {
+            } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU || ui.view == V_CMSTEP) {
                 caps(u, EN_CM_SOUND[(unsigned)proj.par[P_CM_SND] < EN_NCMSND ? proj.par[P_CM_SND] : 0], sizeof u);
             } else if (kit_view(ui.view)) {
                 int k = proj.par[P_KIT_KICK];
@@ -5275,6 +5384,10 @@ static void leds(void)
         as_sync();
         for (i = 0; i < 16; i++)
             if ((uint32_t)i == (uint32_t)(ui.astp & 15u) || (uint32_t)(ui.as_gate >> i & 1u) ^ (uint32_t)(en_playing && i == en_acid_pos))
+                k |= 1u << WHITE_KEY[i];
+    } else if (ui.view == V_CMSTEP) {            /* the pluck steps: likewise */
+        for (i = 0; i < 16; i++)
+            if ((uint32_t)i == (uint32_t)(ui.pstp & 15u) || (uint32_t)(en_cm_lvl[i] != 0) ^ (uint32_t)(en_playing && i == en_cm_pos))
                 k |= 1u << WHITE_KEY[i];
     } else if (ui.view == V_STEPS) {             /* the steps: the step chosen lit, the lane's hits dim among them (the playhead too) */
         const int l = ui.lane % EN_NLANE;
@@ -5683,7 +5796,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | ui.fm_dy << 1 | ui.scan << 2 | (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9);
+    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9);
     s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -5740,7 +5853,7 @@ static void settings_load(void)
                 else if (FXP[p].c[c].idx == 12)
                     fxp_set(k, s.usb & 1);
                 else if (FXP[p].c[c].idx == 13)
-                    fxp_set(k, s.usb >> 1 & 1);
+                    fxp_set(k, !(s.usb >> 1 & 1));
                 else if (FXP[p].c[c].idx == 14)
                     fxp_set(k, s.usb >> 2 & 1);
                 else if (FXP[p].c[c].idx >= 15 && FXP[p].c[c].idx <= 17)
@@ -5955,6 +6068,8 @@ void ui_init(void)
         ui.dj_fillon = 1;
         ui.mood = 50;                          /* the mood macro: the middle leaves the piece as it is */
         ui.jam_oct = 2;                        /* the JAM page: octave 0 */
+        ui.fm_dy = 1;                          /* the DY voices (0.14.21): the human-made set by default */
+        en_fm_set_dy(1);
     }
     settings_load();                             /* the effects' and performing settings as you left them */
     voices_load();                               /* and the player's DX7 voices */

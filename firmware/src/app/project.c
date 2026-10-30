@@ -22,8 +22,10 @@ project_t proj;
 #define REC_PAR (2u + 2u * EN_NPAT * EN_NLANE)   /* the settings follow the pool and the patterns */
 #define REC_MOD (IMG_REC - EN_NLANE * 16u)       /* the step tricks end the record (a record from before them has zeros here) */
 #define REC_ACL (REC_MOD - 24u)                  /* the frozen acid line before them (18 bytes; zeros in an older record) */
+#define REC_CML1 250u                            /* the frozen pluck line (12 bytes) in the two gaps: six after the settings, six after the acid line */
+#define REC_CML2 (REC_ACL + 18u)
 typedef char img_fits[IMG_LEN <= PLAT_STORE_MAX ? 1 : -1];
-typedef char rec_fits[REC_PAR + P_NPARAMS <= REC_ACL ? 1 : -1];
+typedef char rec_fits[REC_PAR + P_NPARAMS <= REC_CML1 && REC_CML1 + 6u <= REC_ACL ? 1 : -1];
 static uint8_t image[PLAT_STORE_MAX];        /* the playing genre's object, as it is in flash (and as the next save writes it: its first IMG_LEN bytes; the old bank is read here whole first) */
 static uint16_t saved;                       /* bit i: piece i is in the image */
 static uint8_t pending, pending_glob;        /* the pieces; the player's three (theme, Tune, MIDI out) */
@@ -54,6 +56,7 @@ static void recipe(int i, slot_t *s)
     en_piece_pats_g(proj.genre, i, s->pats);
     en_piece_mods_g(proj.genre, i, s->mod);
     memset(s->acl, 0, sizeof s->acl);
+    memset(s->cml, 0, sizeof s->cml);
 }
 
 static int16_t clamp_par(int p, int v)
@@ -85,6 +88,7 @@ static void take(int i)                      /* piece i's slot into play (its pa
         for (p = 0; p < 16; p++)
             en_mod[l][p] = s->mod[l][p];
     memcpy(proj.acl, s->acl, sizeof proj.acl);
+    memcpy(proj.cml, s->cml, sizeof proj.cml);
 }
 
 static void keep(void)                       /* the piece playing, into its slot */
@@ -102,6 +106,8 @@ static void keep(void)                       /* the piece playing, into its slot
             s->mod[l][p] = en_mod[l][p];
     if (proj.par[P_AC_LOCK])
         en_acid_pack(s->acl);                 /* a frozen line: as it is now; a free one is not kept (a new one grows with the piece) */
+    if (proj.par[P_CM_LOCK])
+        en_pluck_pack(s->cml);
 }
 
 static uint16_t rd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
@@ -134,6 +140,8 @@ static void pack_slot(const slot_t *s, uint8_t *rec)
         for (p = 0; p < 16; p++)
             rec[REC_MOD + l * 16 + p] = s->mod[l][p];
     memcpy(rec + REC_ACL, s->acl, 18);
+    memcpy(rec + REC_CML1, s->cml, 6);
+    memcpy(rec + REC_CML2, s->cml + 6, 6);
 }
 static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
 {
@@ -146,6 +154,8 @@ static int unpack_slot(const uint8_t *rec, uint32_t npar, slot_t *s)
         for (p = 0; p < 16; p++)
             s->mod[l][p] = rec[REC_MOD + l * 16 + p];
     memcpy(s->acl, rec + REC_ACL, 18);
+    memcpy(s->cml, rec + REC_CML1, 6);
+    memcpy(s->cml + 6, rec + REC_CML2, 6);
     for (p = 0; (uint32_t)p < npar && p < P_NPARAMS; p++) {
         const int v = en_param_info(p)->lo + rec[REC_PAR + p];
         if (p == P_AC_CHANCE && v > 1) {         /* (a development build kept a chance here, 100: now the sync, bars) */
@@ -337,6 +347,13 @@ void project_apply(void)
             any |= proj.acl[k];
         if (any)
             en_acid_unpack(proj.acl);
+    }
+    if (proj.par[P_CM_LOCK]) {               /* a frozen pluck line, likewise */
+        int k, any = 0;
+        for (k = 0; k < 12; k++)
+            any |= proj.cml[k];
+        if (any)
+            en_pluck_unpack(proj.cml);
     }
 }
 
