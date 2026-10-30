@@ -1768,24 +1768,27 @@ int main(void)
         en_play(1);
     }
 
-    /* a breakdown in a genre whose pads all stab (reggae): the pad breathes through it instead of falling silent */
+    /* a breakdown in a genre whose pads all stab (reggae): the stabs go on through it (none fired there before 0.15.3; 0.15.3 made them a held pad) */
     {
         float lv = 0.0f;
+        uint32_t pad0;
         int i;
         en_init();
         en_play(0);
         en_genre(12);
+        en_set(P_MIDI, 1);
         en_regrow();
         en_play(1);
         run(3.0f);
         en_section(EN_CMD_BREAK);
         run(2.5f);                               /* (the break arrives on the bar) */
+        pad0 = pad_n;                            /* the stabs' MIDI notes, from here (0x90) */
         for (i = 0; i < 40; i++) {
             run(0.1f);
             if (en_sec == EN_SEC_BREAK && en_pad_level > lv)
                 lv = en_pad_level;
         }
-        CHECK(en_sec == EN_SEC_BREAK && lv > 0.05f, "reggae breakdown: the pad's level %.3f (section %d)", (double)lv, en_sec);
+        CHECK(en_sec == EN_SEC_BREAK && lv > 0.05f && pad_n > pad0 + 4, "reggae breakdown: the pad's level %.3f, %u stabs (section %d)", (double)lv, pad_n - pad0, en_sec);
         printf("  reggae breakdown: pad level %.2f\n", (double)lv);
         en_init();
         en_play(1);

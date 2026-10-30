@@ -1178,12 +1178,9 @@ static const acid_snd_t ACID_SOUND[EN_NACID] = {
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
-static int pad_stabs(void)                      /* Comp: Hold never stabs, a rhythm always does, Auto as the sound is; in a breakdown a stab sound breathes as a held pad
-                                                 * (0.15.3: the stabs did not fire there, so a genre whose pads all stab, reggae, dub, was left with the pluck alone) */
+static int pad_stabs(void)                      /* Comp: Hold never stabs, a rhythm always does, Auto as the sound is */
 {
     const int c = par[P_PAD_COMP];
-    if (en_sec == EN_SEC_BREAK && c < 2)
-        return 0;
     return c == 1 ? 0 : c >= 2 ? 1 : PAD_SOUND[pad_snd()].stabs;
 }
 static int pad_osc(void) { return PAD_SOUND[pad_snd()].osc; }
@@ -3183,18 +3180,20 @@ static void tick(void)
         }
     }
     bl_step(st, loose(sw, 4.0f));
-    if (pad_stabs() && !par[P_PAD_MAN] && en_playing && sec != SEC_BREAK &&   /* the pad's stabs: a rhythm (Comp; Auto: the genre's), the off-beats with more with Evolve */
-        (comp_hit(st) || (comp_mask() == 0x4444u && par[P_PAD_COMP] == 0 && (st == 7 || st == 15) && frand() < 0.35f * evolve))) {
+    if (pad_stabs() && !par[P_PAD_MAN] && en_playing &&   /* the pad's stabs: a rhythm (Comp; Auto: the genre's), the off-beats with more with Evolve; in a breakdown
+                                                           * the rhythm alone, softer (0.15.4: none fired there, so an all-stab genre had the pluck alone) */
+        (comp_hit(st) || (sec != SEC_BREAK && comp_mask() == 0x4444u && par[P_PAD_COMP] == 0 && (st == 7 || st == 15) && frand() < 0.35f * evolve))) {
         const int32_t w = loose(sw, 8.0f);
+        const float pe = (st & 1 ? 0.7f : 1.0f) * (sec == SEC_BREAK ? 0.8f : 1.0f);
         if (stab_wait > 0) {                    /* the last stab is still waiting: it sounds now */
             stab_wait = 0;
             stab_fire(stab_pe);
         }
         if (w > 0) {
             stab_wait = w;
-            stab_pe = st & 1 ? 0.7f : 1.0f;
+            stab_pe = pe;
         } else {
-            stab_fire(st & 1 ? 0.7f : 1.0f);
+            stab_fire(pe);
         }
     }
     en_drum_pos = (uint8_t)st;
