@@ -95,7 +95,19 @@ figure.wide img { width: 100%; }
 figcaption { color: var(--muted); font-size: .88rem; margin-top: .4rem; max-width: 240px; }
 figure.wide figcaption { max-width: none; }
 nav.contents li { break-inside: avoid; }
+p.printable { margin: -0.4rem 0 1.4rem; color: var(--muted); }
+p.printable a { font-weight: 600; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+@media print {                                   /* the PDF (Edge headless prints this page): paper colours, no site chrome, sections on new pages */
+  :root { --paper: #fff; --sheet: #f3f1ee; --green-1: #e8e2e6; --green-3: #7a1030; --river: #8c1028; --river-2: #a03050; --ink: #111; --muted: #555; --rule: #bbb; }
+  header.site, p.printable, a.home { display: none; }
+  body { font-size: 10.5pt; }
+  main { max-width: none; padding: 0; }
+  h2 { break-before: page; }
+  h1 + h2, nav.contents + h2 { break-before: auto; }
+  figure, table, pre, li { break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
 """
 
 
@@ -185,8 +197,10 @@ def convert(md):
             if t == NAME:                               # the site's header (home, the other pages), then the title
                 out.append('<header class="site"><a class="home" href="../"><img src="' + data_uri(WEB_IMG / "slinky.png") + '" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a></nav></header>')
                 out.append('<h1>Manual</h1>')
+                out.append('<p class="printable">Printable: <a href="PERF-1-manual.pdf" download>the full manual (PDF)</a> &middot; <a href="PERF-1-quick-manual.pdf" download>the quick manual (PDF, ten A4 pages)</a></p>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')
+                out.append('<p class="printable">Printable: <a href="PERF-1-manual.pdf" download>the full manual (PDF)</a> &middot; <a href="PERF-1-quick-manual.pdf" download>the quick manual (PDF, ten A4 pages)</a></p>')
         elif ln.startswith("## "):
             t = ln[3:].strip()
             m = re.match(r"(\d+)\. (.+)", t)

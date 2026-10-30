@@ -8,7 +8,7 @@ tape stops and DJ air horns over it, mix it, or let the auto-DJ run the set, and
 performance into your DAW: the FM-1 is a USB audio and MIDI device.
 
 PERF-1 is deamonSLINKY's fork of [HYP-1](https://www.redtail.works) by RedtailWorks (GPL-3.0). This
-manual is for **PERF-1 0.14 (development)**: it is changing quickly, some of it has been tested only in the
+manual is for **PERF-1 0.15**: it is changing quickly, some of it has been tested only in the
 simulator and the emulator, and it can still crash. Keep a way back to the stock firmware (section 1).
 
 ![The Tempo page, the home screen](img/perf-screen-home.png)
