@@ -150,7 +150,7 @@ static const struct {
     /* the JAM page's four knobs (the UI's own: uiv 7 .. 10): not an FX page, the dial never walks to it */
     {"REPEAT", FX_RPT2, 1, {{"Pitch", KN_NAME, EN_FXS_RP_PITCH, RPP_NAME, 25}, {"Decay", KN_PLAIN, EN_FXS_RP_DECAY, 0, 0},
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
-    {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's) */
+    {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); and the screen's scanlines */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -354,10 +354,10 @@ static const theme_t THEMES[EN_NTHEME] = {
     {RGB(20, 14, 12), RGB(42, 30, 27), RGB(78, 56, 49), RGB(166, 140, 126), RGB(244, 232, 200), RGB(255, 212, 71),
      RGB(242, 230, 196), RGB(86, 78, 62), RGB(182, 242, 60), RGB(60, 80, 22), RGB(224, 52, 79), RGB(84, 22, 32),
      RGB(255, 143, 143), RGB(88, 52, 52), RGB(150, 210, 255), RGB(111, 224, 210)},
-    /* Synth: charcoal, a cyberpunk purple, orange */
-    {RGB(22, 21, 27), RGB(40, 36, 50), RGB(62, 56, 76), RGB(142, 134, 162), RGB(238, 234, 246), RGB(255, 128, 32),
-     RGB(164, 76, 255), RGB(68, 40, 104), RGB(214, 128, 255), RGB(78, 50, 104), RGB(118, 70, 214), RGB(52, 36, 88),
-     RGB(206, 196, 226), RGB(66, 60, 82), RGB(255, 150, 64), RGB(96, 224, 200)},
+    /* Synth (Synth Imp, 0.14.18): demon synthwave: a night sky, crimson to magenta neon, a horned sun on the horizon behind the sigil, the imp in tube light */
+    {RGB(12, 3, 24), RGB(28, 6, 32), RGB(69, 18, 63), RGB(154, 95, 134), RGB(255, 233, 242), RGB(255, 225, 74),
+     RGB(192, 140, 255), RGB(60, 36, 96), RGB(182, 255, 46), RGB(50, 80, 16), RGB(255, 47, 95), RGB(84, 16, 36),
+     RGB(255, 138, 61), RGB(88, 44, 24), RGB(150, 210, 255), RGB(62, 240, 255)},
     /* Acid: black, a 303's yellow-green, hot pink */
     {RGB(12, 13, 10), RGB(30, 34, 24), RGB(52, 60, 40), RGB(140, 152, 118), RGB(236, 242, 222), RGB(255, 60, 160),
      RGB(196, 255, 40), RGB(54, 72, 16), RGB(240, 255, 120), RGB(70, 80, 30), RGB(120, 200, 30), RGB(40, 62, 14),
@@ -376,6 +376,7 @@ static const theme_t THEMES[EN_NTHEME] = {
      RGB(120, 220, 140), RGB(20, 52, 28), RGB(240, 255, 140), RGB(200, 240, 150)},
 };
 static const theme_t *th = &THEMES[0];
+#define LOOK_SYNTH (th == &THEMES[1])           /* the Synth theme has a look of its own: the horizon behind the sigil, the neon imp */
 #define K_BG (th->bg)
 #define K_PANEL (th->panel)
 #define K_LINE (th->line)
@@ -434,6 +435,7 @@ static struct {
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
     uint8_t usb_fixed;                           /* the USB page: 1, the USB audio at a fixed level, not the master knob's */
     uint8_t fm_dy;                               /* the Settings page's Voices: 1, the DY set stands in for the DX voices (kept in set_t.usb's bit 1) */
+    uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
@@ -775,7 +777,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
-           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set (kept in set_t.usb) */
+           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -2973,7 +2975,7 @@ static void draw_mascot(int32_t x, int32_t y, int sleepy)
                 continue;
             if (ch == 'Y' && sleepy)
                 ch = 'K';
-            cv_pset(x + c, y + r - dy, ch == 'K' || ch == 'T' ? K_LINE : mascot_color(ch));
+            cv_pset(x + c, y + r - dy, (ch == 'K' || ch == 'T') && !LOOK_SYNTH ? K_LINE : mascot_color(ch));
         }
     }
 }
@@ -4639,6 +4641,59 @@ static void draw_scope(int kind)
 
 #include "viz.c"
 
+static void draw_horizon(void)
+{
+    static const uint8_t HY = 104;               /* the horizon's row (the sigil's centre is at CY 74; the phrase ring reaches 131) */
+    const uint16_t top = K_BG, bot = RGB(54, 8, 50), grid = RGB(255, 47, 142), haze = RGB(255, 47, 110);
+    const int play = en_playing;
+    const uint32_t now = plat_ms(), dage = now - sg.drop_t;
+    const int flash = play && sg.drop_t && dage < 450u;
+    int i, y;
+    for (i = 0; i < 5; i++)                      /* the sky, five bands */
+        cv_rect(0, i * HY / 5, 240, HY / 5 + 1, mix(top, bot, i * 4));
+    {   /* the stars: the same forty each frame */
+        uint32_t s = 0x9E3779B9u;
+        for (i = 0; i < 40; i++) {
+            s = s * 1664525u + 1013904223u;
+            cv_pset((int32_t)(s >> 24) * 240 / 256, (int32_t)((s >> 16) & 255u) * (HY - 8) / 256, mix(top, K_TEXT, 4 + (int)((s >> 8) & 7u)));
+        }
+    }
+    {   /* the horned sun: a banded disc sitting on the horizon, lifted in a build, white on the drop; the imp's horns from its shoulders */
+        const int lift16 = !play ? 9 : en_sec == EN_SEC_BREAK ? 4 : en_sec == EN_SEC_BUILD ? 10 + (int)((en_bars & 7u) * 6u / 8u) : en_sec == EN_SEC_GROOVE && dage < 4000u ? 16 : 10;
+        const int r = 30, cy = HY + r * (16 - lift16) * 9 / 160;
+        const uint16_t band[6] = {RGB(255, 225, 74), RGB(255, 180, 60), RGB(255, 122, 42), RGB(255, 80, 60), RGB(255, 40, 80), RGB(255, 31, 90)};
+        for (y = cy - r; y < HY; y++) {
+            const int d = y - cy, hw = (int)fm_sqrtf((float)(r * r - d * d)), k = (y - (cy - r)) * 6 / (2 * r);
+            if (y >= cy + 4 && ((y - cy) % 5) < 1 + (y - cy) / 10)
+                continue;                        /* the gaps, wider lower down */
+            cv_rect(CX - hw, y, 2 * hw + 1, 1, flash ? K_TEXT : band[k > 5 ? 5 : k]);
+        }
+        for (i = -1; i <= 1; i += 2) {           /* a horn: a tapering curve from the disc's shoulder up and out to its tip */
+            int t;
+            for (t = 0; t <= 20; t++) {
+                const int bx = CX + i * r * 45 / 100, by = cy - r * 88 / 100, tx = CX + i * r * 80 / 100, ty = cy - r * 165 / 100;
+                const int cx2 = CX + i * r * 125 / 100, cy2 = cy - r * 125 / 100;   /* the control point: out, then the horn curls in to its tip, the imp's own */
+                const int u = 20 - t, hx = (bx * u * u + 2 * cx2 * u * t + tx * t * t) / 400, hy = (by * u * u + 2 * cy2 * u * t + ty * t * t) / 400;
+                const int hw = 2 + (20 - t) * 9 / 20;   /* wide at the base, a point at the tip */
+                if (hy < HY)
+                    cv_rect(hx - hw / 2, hy, hw, 2, flash ? K_TEXT : mix(band[0], RGB(255, 241, 201), t * 16 / 20));
+            }
+        }
+    }
+    {   /* the floor: lines to the vanishing point, the near ones further apart, scrolling once a beat */
+        const int tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120, beat = 60000 / tempo;
+        const int ph = play ? (int)((now % (uint32_t)beat) * 64u / (uint32_t)beat) : 0;   /* 0..63 through the beat */
+        cv_rect(0, HY, 240, MAIN_H - HY, mix(top, bot, 3));
+        cv_rect(0, HY, 240, 1, mix(top, haze, 10));
+        for (i = 0; i < 7; i++) {
+            const int p = (i * 64 + ph), yy = HY + (MAIN_H - HY) * p * p / (448 * 448);
+            cv_rect(0, yy, 240, 1, mix(top, grid, 4 + p * 8 / 448));
+        }
+        for (i = -9; i <= 9; i++)
+            cv_line(CX + i * 5, HY, CX + i * 34, MAIN_H - 1, mix(top, grid, 3));
+    }
+}
+
 static void draw_main(void)
 {
     uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)sound_root() << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
@@ -4819,6 +4874,8 @@ static void draw_main(void)
         return;
     ui.sig[1] = h;
     cv_begin(240, MAIN_H, K_BG);
+    if (LOOK_SYNTH)
+        draw_horizon();
     if (en_frozen) {                             /* the way to the next chord, top right (held: frozen) */
         cv_text(232 - text_w(&FONT_XS, "held"), 4, &FONT_XS, "held", K_FROST);
     } else {
@@ -5525,7 +5582,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | ui.fm_dy << 1);
+    s.usb = (uint16_t)(ui.usb_fixed | ui.fm_dy << 1 | ui.scan << 2);
     s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -5583,6 +5640,8 @@ static void settings_load(void)
                     fxp_set(k, s.usb & 1);
                 else if (FXP[p].c[c].idx == 13)
                     fxp_set(k, s.usb >> 1 & 1);
+                else if (FXP[p].c[c].idx == 14)
+                    fxp_set(k, s.usb >> 2 & 1);
             } else if (kind == KN_TGT) {
                 fxp_set(k, s.gx_tgt);
             } else if (kind == KN_PTGT) {
@@ -5657,6 +5716,17 @@ static const char *const MASCOT[23] = {
     "...KKKKKKKKKKKK........"};
 static uint16_t mascot_color(char ch)
 {
+    if (LOOK_SYNTH)                              /* neon tube light: a magenta outline, chrome horns, cyan eyes, the body dark */
+        switch (ch) {
+        case 'K': case 'T': return RGB(255, 47, 142);
+        case 'H': return RGB(255, 255, 255);
+        case 'h': return RGB(159, 220, 255);
+        case 'Y': return RGB(62, 240, 255);
+        case 'R': return RGB(58, 11, 48);
+        case 'r': return RGB(36, 6, 31);
+        case 'L': return RGB(255, 122, 209);
+        default: return 0;
+        }
     switch (ch) {
     case 'K': case 'T': return RGB(27, 16, 34);
     case 'H': return RGB(242, 230, 196);
@@ -5905,6 +5975,7 @@ void ui_frame(void)
         ui.frame++;
         return;
     }
+    cv_scan = ui.scan;
     if (!ui.saver_on)
         draw_header();                           /* (the screensaver has the whole screen) */
     draw_main();

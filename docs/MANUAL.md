@@ -795,7 +795,7 @@ held to be heard). The dots at the right of the knob strip show where you are am
 | Ring mod | Tone (40-800 Hz) | Mix | - | - |
 | Auto DJ | Scenes (at once, next bar) | Groove (8, 16, 32, 64 bars, sync) | Break (short, half, full) | Fill (off, on) |
 | Settings | Key (same, +2, +3, +5, +7) | Saver (off, 1, 3, 10 min) | Lights (off, show) | Voices (DX, DY): which set of thirty built-in DX7 voices the pluck's `DX` sounds are (section 7) |
-| USB & MIDI | Level (knob, fixed): the USB audio follows the master knob, or stays at a fixed level so a recording does not move when you turn it | MIDI out (off, on) | - | - |
+| USB & MIDI | Level (knob, fixed): the USB audio follows the master knob, or stays at a fixed level so a recording does not move when you turn it | MIDI out (off, on) | Scanlines (off, on): every other row of the screen a quarter darker, a CRT's | - |
 | Repeat | Pitch (-12 .. +12 semitones, stepping each repeat toward it over four beats held: a build; every repeat still starts on the grid) | Decay (0 .. 6 dB a repeat: a dub tail) | Gate (full, 3/4, half, 1/4 of the slice sounds) | Refresh (off, beat, bar: the slice is the newest again, a slip roll, where the ring is long enough for it) |
 | Flex | Quant (off, beat, bar) | Mode (one shot, loop) | Mix | - |
 | Snips | Pitch | Play | Echo | Level (the keys play the snips on this page, to try them) |
@@ -1032,7 +1032,7 @@ pattern, the section), in the theme's colours.
 |---|---|
 | The pieces you stored (Global, SAVE), in any genre | At once (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after the last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level and Scanlines, the Jam page's settings and the visualizer | A couple of seconds after you leave them alone. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -1057,7 +1057,7 @@ Switching to another firmware, or reinstalling, can lose what PERF-1 has stored.
 
 ![Global](img/perf-screen-global.png)
 
-**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
+**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor; Synth is a look of its own, the Synth Imp: a night sky behind the sigil, a horned sun on the horizon that rises in a build and flashes on the drop, a floor of lines running to the vanishing point once a beat, and the imp in neon tube light), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
 
 **The look** is Imp in every theme; the themes are its colour variations. Warm black, one colour per voice everywhere (in Imp: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header has a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick; a piece waiting for the bar shows as `>08` beside the key and mode. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) and shows the knobs' values large with a bar under them; hold **SEL** and the tabs give way to a one-line hint of what shift does on this page.
 The theme, Tune and MIDI out are yours across all pieces.

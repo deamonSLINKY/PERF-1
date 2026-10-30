@@ -79,11 +79,30 @@ static void cv_band(int32_t y0, int32_t h)
     cv_y1 = y0 + h;
 }
 
-static void cv_blit(uint32_t x, uint32_t y) { lcd_blit(x, y, cv_w, cv_h, cv_px); }
+static uint8_t cv_scan;          /* Scanlines (a setting): every other screen row a quarter darker, a CRT's */
+static void cv_scanlines(uint32_t y, uint32_t r0)
+{
+    uint32_t r;
+    if (!cv_scan)
+        return;
+    for (r = r0 + ((y + r0) & 1u ? 0u : 1u); r < cv_h; r += 2u) {   /* the odd screen rows */
+        uint16_t *p = cv_px + r * cv_w, *e = p + cv_w;
+        for (; p < e; p++) {
+            const uint32_t c = swap16(*p);
+            *p = swap16(c - ((c >> 2) & 0x39E7u));
+        }
+    }
+}
+static void cv_blit(uint32_t x, uint32_t y)
+{
+    cv_scanlines(y, 0);
+    lcd_blit(x, y, cv_w, cv_h, cv_px);
+}
 
 /* canvas rows r0 .. cv_h-1 only, to screen row y + r0 */
 static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
 {
+    cv_scanlines(y, r0);
     if (r0 < cv_h)
         lcd_blit(x, y + r0, cv_w, cv_h - r0, cv_px + r0 * cv_w);
 }
