@@ -1692,6 +1692,39 @@ int main(void)
         en_play(1);
     }
 
+    /* the intro: from Play, en_intro_k climbs to 1 over its length and the engine is quiet but for the pad at first */
+    {
+        float k0, k1, k2;
+        double s0, e_early, e_late;
+        en_init();
+        en_play(0);
+        en_intro(4);
+        en_regrow();
+        en_set(P_PULSE, 90);
+        en_set(P_PAD, 20);
+        en_play(1);
+        run(0.1f);
+        s0 = (double)sum2;
+        run(0.4f);
+        e_early = (double)sum2 - s0;                 /* the first half second: the pad alone */
+        k0 = en_intro_k;
+        run(1.5f);
+        k1 = en_intro_k;
+        run(2.5f);
+        k2 = en_intro_k;
+        s0 = (double)sum2;
+        run(0.4f);
+        e_late = (double)sum2 - s0;                  /* everything in */
+        CHECK(k0 > 0.05f && k0 < 0.25f && k1 > 0.4f && k1 < 0.6f && k2 >= 1.0f, "intro clock: %.2f %.2f %.2f", (double)k0, (double)k1, (double)k2);
+        CHECK(e_late > 4.0 * e_early, "intro: the first half second's energy %.4f, after it %.4f", e_early, e_late);
+        printf("  intro: energy %.4f early, %.4f in\n", e_early, e_late);
+        en_intro(0);
+        run(0.1f);
+        CHECK(en_intro_k >= 1.0f, "intro off: %.2f", (double)en_intro_k);
+        en_init();
+        en_play(1);
+    }
+
     /* the pluck on MIDI channel 2: every note-on gets one note-off, with a plain sound and with a DX voice, and Stop lets go of all */
     {
         int snd, i, worst = 0, ons[2];

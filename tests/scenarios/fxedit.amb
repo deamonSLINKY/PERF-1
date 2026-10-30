@@ -210,6 +210,10 @@ expect fxpage 24
 spin K1 1
 wait 50
 spin K1 -1
+# the SET page (0.14.20): rounds, ramp, intro
+spin SELECT 1
+wait 100
+expect fxpage 25
 # Flex Beat's page, the last: its quantize (bar), mode (one shot), mix (all)
 spin SELECT 1
 wait 100

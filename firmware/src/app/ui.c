@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 230 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 25
+#define NFXP 26
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
@@ -90,6 +90,12 @@ static const char *const GENRE_UI_NAME[16] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[5] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS", "SYNC"};   /* the auto-DJ's groove (SYNC: until the chord changes) */
 static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
+static const char *const ROUNDS_NAME[4] = {"1", "2", "4", "8"};                                  /* the SET page: rounds of the auto-DJ a piece gets before the next */
+static const uint8_t DJ_ROUNDS[4] = {1, 2, 4, 8};
+static const char *const RAMP_NAME[5] = {"OFF", "+2 BPM", "+4 BPM", "+8 BPM", "+12 BPM"};        /* the tempo's climb over a piece's rounds */
+static const uint8_t RAMP_BPM[5] = {0, 2, 4, 8, 12};
+static const char *const INTRO_NAME[5] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 MIN"};             /* the slow progression from Play */
+static const uint16_t INTRO_S[5] = {0, 60, 120, 240, 480};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const struct {
     const char *name;
@@ -151,6 +157,7 @@ static const struct {
     {"REPEAT", FX_RPT2, 1, {{"Pitch", KN_NAME, EN_FXS_RP_PITCH, RPP_NAME, 25}, {"Decay", KN_PLAIN, EN_FXS_RP_DECAY, 0, 0},
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); and the screen's scanlines */
+    {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -461,6 +468,9 @@ static struct {
     uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
+    uint8_t dj_rounds, dj_ramp, intro; /* the SET page: rounds a piece gets (1, 2, 4, 8), the tempo's climb over them, the intro (kept in set_t.usb's bits 3 ..) */
+    uint8_t dj_round;                  /* the round the piece is in (from 0) */
+    int16_t dj_t0, dj_tlast;           /* the ramp: the piece's tempo at its start, and the last tempo the ramp set (another: the player turned it, so it starts again from there) */
     uint16_t dj_n;                     /* bars in the phase */
     uint64_t fx_mask;                  /* the effects held (and locked), as last sent */
     uint64_t fx_lock;                  /* the effects latched on */
@@ -673,6 +683,7 @@ static void mix_key(int k)
         ui.dj_on = (uint8_t)!ui.dj_on;
         ui.dj_phase = 0;
         ui.dj_n = 0;
+        ui.dj_round = 0;
         ui.dj_fill = 0;
         say("AUTO-DJ", ui.dj_on ? "ON" : "OFF");
     } else if (c == 26) {
@@ -777,7 +788,8 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
-           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines (kept in set_t.usb) */
+           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
+           &proj.genre;                         /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -1362,22 +1374,42 @@ static void scene_tick(void)                   /* a scene key down: held long en
  * SAVE pressed by hand just moves it on from there. */
 static void dj_bar(void)                       /* a new bar (while playing) */
 {
-    const int g = DJ_G(), b = dj_break_len(g), sync = ui.dj_len == 4;
+    const int g = DJ_G(), b = dj_break_len(g), sync = ui.dj_len == 4, rounds = DJ_ROUNDS[ui.dj_rounds & 3];
     const int ph = en_sec == EN_SEC_GROOVE ? 0 : en_sec == EN_SEC_BREAK ? 1 : 2;
+    const int last_round = ui.dj_round + 1 >= rounds;   /* the piece's last round: the next piece follows its drop */
     if (ph != ui.dj_phase) {                   /* the engine moved on (the DJ's request, or SAVE): so does the count */
+        if (ph == 0)
+            ui.dj_round++;                     /* back in the groove: a round done */
         ui.dj_phase = (uint8_t)ph;
         ui.dj_n = 0;
     }
     ui.dj_fill = 0;
+    if (en_intro_k < 1.0f) {                   /* the intro: the groove holds until everything is in */
+        ui.dj_n = 0;
+        return;
+    }
     ui.dj_n++;
+    if (ph == 0 && ui.dj_ramp) {               /* the ramp: the tempo climbs over the piece's rounds of groove; turned by hand, it climbs on from there */
+        const int bpm = RAMP_BPM[ui.dj_ramp % 5u], total = rounds * g, prog = (ui.dj_round < rounds ? ui.dj_round : rounds - 1) * g + (int)ui.dj_n;
+        int t;
+        if (proj.par[P_TEMPO] != ui.dj_tlast)
+            ui.dj_t0 = (int16_t)(proj.par[P_TEMPO] - bpm * prog / total);
+        t = ui.dj_t0 + bpm * (prog > total ? total : prog) / total;
+        t = t < 70 ? 70 : t > 190 ? 190 : t;
+        if (t != proj.par[P_TEMPO]) {
+            proj.par[P_TEMPO] = (int16_t)t;
+            en_set(P_TEMPO, t);
+        }
+        ui.dj_tlast = (int16_t)t;
+    }
     if (ph == 0 && sync) {                     /* with the chords: the engine fills the bar before a change and breaks on it; the next piece comes in as the fill begins */
-        if (en_drift_bars <= 2.0f && ui.dj_piece && !ui.piece_q)
+        if (en_drift_bars <= 2.0f && ui.dj_piece && last_round && !ui.piece_q)
             ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
     } else if (ph == 0) {
         if (ui.dj_n == (uint16_t)(g - 1)) {    /* the fill is the LAST bar of the groove (asked a bar ahead: the engine starts it on the bar line); the break follows at once */
             if (ui.dj_fillon)
                 en_fill_next();
-            if (ui.dj_piece && !ui.piece_q)
+            if (ui.dj_piece && last_round && !ui.piece_q)
                 ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
         }
         if (ui.dj_n >= (uint16_t)g && !en_sec_req)
@@ -1400,6 +1432,13 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
     }
     if (!ui.dj_on)
         ui.dj_fill = 0;
+    {   /* the intro's length to the engine when the setting changes (and once at boot) */
+        static uint8_t isent = 255;
+        if (ui.intro != isent) {
+            isent = ui.intro;
+            en_intro(INTRO_S[ui.intro % 5u]);
+        }
+    }
     if (!en_playing) {
         last = 255;
         ui.scene_q = 0;
@@ -1505,6 +1544,7 @@ static void piece_title(char *b, int n)
 
 static void set_piece(int i)                    /* the piece playing kept as it is; piece i as it was left */
 {
+    ui.dj_round = 0;                             /* (the auto-DJ's rounds and its ramp start over with the piece) */
     project_piece(i);
     ui.key_on = 0;                               /* (project_apply puts the key back) */
     project_apply();
@@ -1819,7 +1859,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 }
 
 /* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings) */
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET) */
 static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
 {
     int i;
@@ -3022,6 +3062,7 @@ static void draw_header(void)
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
                           (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
+    h = hash(h, (uint32_t)(en_intro_k * 64.0f) | (uint32_t)ui.dj_round << 8 | (uint32_t)ui.dj_rounds << 12);   /* the intro's countdown, the round */
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
@@ -3065,6 +3106,13 @@ static void draw_header(void)
             t[0] = 'B', t[1] = 'R', t[2] = 'E', t[3] = 'A', t[4] = 'K', t[5] = ' ', t[6] = 'I', t[7] = 'N', t[8] = ' ', t[9] = (char)('0' + left), t[10] = 0;
             x -= text_w(&FONT_XS, t);
             cv_text(x, 8, &FONT_XS, t, K_DIM);
+            x -= 10;
+        }
+        if (en_playing && en_intro_k < 1.0f) {   /* the intro: how long until everything is in */
+            const int secs = (int)((1.0f - en_intro_k) * (float)INTRO_S[ui.intro % 5u] + 0.99f), m = secs / 60, s = secs % 60;
+            t[0] = 'I', t[1] = 'N', t[2] = 'T', t[3] = 'R', t[4] = 'O', t[5] = ' ', t[6] = (char)('0' + m), t[7] = ':', t[8] = (char)('0' + s / 10), t[9] = (char)('0' + s % 10), t[10] = 0;
+            x -= text_w(&FONT_XS, t);
+            cv_text(x, 8, &FONT_XS, t, K_ACC);
             x -= 10;
         }
         if (en_sec != EN_SEC_GROOVE || en_sec_req) {   /* the section, or the one coming on the bar */
@@ -3324,6 +3372,39 @@ static void draw_sigil(void)
     if (ui.centre_imp) {                         /* the imp, summoned into it */
         cv_rect(CX - 13, CY - 14, 27, 27, K_BG);
         draw_mascot(CX - 11, CY - 12, play && en_sec == EN_SEC_BREAK);
+    } else if (LOOK_SYNTH) {                     /* the scanner (the Synth look): a slit whose opening follows the section, a light sweeping across it once in two beats */
+        const uint32_t dage = now - sg.drop_t;
+        const int flash = play && sg.drop_t && dage < 450u;
+        const int open = flash ? 12 : !play ? 3 : en_sec == EN_SEC_BREAK ? 1 : en_sec == EN_SEC_BUILD ? 8 : 5;
+        const int32_t ex = CX + (play && en_sec == EN_SEC_BUILD ? (int32_t)(ui.frame & 1u) * 2 - 1 : 0);
+        const int w = 34, x0 = (int)ex - w / 2, y0 = CY - open / 2 - 2;
+        const int tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120, two = 120000 / tempo;
+        const float ang = play ? (float)(now % (uint32_t)two) * (FM_TWO_PI / (float)two) : 0.0f;
+        const float sw = (fm_sinf(ang) + 1.0f) * 0.5f;
+        const int fwd = fm_cosf(ang) > 0.0f, sx = x0 + 2 + (int)(sw * (float)(w - 8));
+        int j;
+        cv_rect(x0 - 3, CY - 11, w + 6, 22, K_BG);   /* a dark surround, so the figure never runs through it */
+        if (flash) {
+            cv_rect(x0 - 2, CY - 8, w + 4, 14, K_TEXT);
+        } else {
+            cv_rect(x0, y0, w, open + 2, RGB(0, 0, 0));
+            cv_rect(x0 - 1, y0 - 1, w + 2, 1, mix(K_BG, th->bass, 11));   /* its frame, in the bass's colour */
+            cv_rect(x0 - 1, y0 + open + 2, w + 2, 1, mix(K_BG, th->bass, 11));
+            cv_rect(x0 - 1, y0, 1, open + 2, mix(K_BG, th->bass, 11));
+            cv_rect(x0 + w, y0, 1, open + 2, mix(K_BG, th->bass, 11));
+            for (j = 4; j >= 0; j--)             /* the light and its trail */
+                cv_rect(sx - (fwd ? j * 3 : -j * 3), y0 + 1, 4, open, mix(RGB(0, 0, 0), th->bass, 16 - j * 3));
+            cv_rect(sx + 1, y0 + 1 + open / 2, 2, 1, K_TEXT);
+        }
+        if (flash) {                             /* the shock ring */
+            const float r = 20.0f + (float)dage * (40.0f / 450.0f);
+            const uint16_t c = mix(K_TEXT, K_BG, (int)(dage * 16u / 450u));
+            for (j = 0; j < 48; j++) {
+                int32_t x, y;
+                sg_pt(r, (float)j * (FM_TWO_PI / 48.0f), &x, &y);
+                cv_rect(x, y, 2, 2, c);
+            }
+        }
     } else {                                     /* the eye */
         const uint32_t dage = now - sg.drop_t;
         const int flash = sg.drop_t && dage < 450u;
@@ -3687,6 +3768,16 @@ static void draw_perf(void)
                 n++;
             t[n++] = '/';
             itoa_u((uint32_t)len, t + n);
+            if (DJ_ROUNDS[ui.dj_rounds & 3] > 1) {   /* and the round */
+                while (t[n])
+                    n++;
+                t[n++] = ' ';
+                t[n++] = 'R';
+                t[n++] = (char)('1' + (ui.dj_round < 8 ? ui.dj_round : 7));
+                t[n++] = '/';
+                t[n++] = (char)('0' + DJ_ROUNDS[ui.dj_rounds & 3]);
+                t[n] = 0;
+            }
             cv_text(232 - text_w(&FONT_XS, t), 4, &FONT_XS, t, K_ACC);
         } else {
             cv_text(232 - text_w(&FONT_XS, "DJ OFF"), 4, &FONT_XS, "DJ OFF", K_DIM);
@@ -3820,6 +3911,16 @@ static void draw_mix(void)
         while (*pn)
             d[n++] = *pn++;
         itoa_u(ui.dj_n, d + n);
+        if (DJ_ROUNDS[ui.dj_rounds & 3] > 1) {   /* the round */
+            while (d[n])
+                n++;
+            d[n++] = ' ';
+            d[n++] = 'R';
+            d[n++] = (char)('1' + (ui.dj_round < 8 ? ui.dj_round : 7));
+            d[n++] = '/';
+            d[n++] = (char)('0' + DJ_ROUNDS[ui.dj_rounds & 3]);
+            d[n] = 0;
+        }
         cv_text(118, 8, &FONT_XS, d, K_ACC);
     }
     for (k = 0; k < NKEYS; k++) {
@@ -5582,7 +5683,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | ui.fm_dy << 1 | ui.scan << 2);
+    s.usb = (uint16_t)(ui.usb_fixed | ui.fm_dy << 1 | ui.scan << 2 | (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9);
     s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -5642,6 +5743,8 @@ static void settings_load(void)
                     fxp_set(k, s.usb >> 1 & 1);
                 else if (FXP[p].c[c].idx == 14)
                     fxp_set(k, s.usb >> 2 & 1);
+                else if (FXP[p].c[c].idx >= 15 && FXP[p].c[c].idx <= 17)
+                    fxp_set(k, s.usb >> (3 + 3 * (FXP[p].c[c].idx - 15)) & 7);
             } else if (kind == KN_TGT) {
                 fxp_set(k, s.gx_tgt);
             } else if (kind == KN_PTGT) {

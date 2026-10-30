@@ -4,7 +4,7 @@
 #pragma once
 #include <stdint.h>
 #define FM6_NDY 30
-static const char *const FM6_DY_NAME[FM6_NDY] = {"DY Tine EP", "DY Glass Bell", "DY Round Bass", "DY Brass Sect", "DY Soft Pad", "DY Wood Bars", "DY Drawbars", "DY Nylon Pick", "DY Brass 2", "DY Solid Bass", "DY Bells", "DY Marimba", "DY Clavinet", "DY Strings", "DY Glass Pad", "DY Sync Lead", "DY Harp", "DY Kalimba", "DY Flute", "DY Steel Drum", "DY Saw Bass", "DY Tubular", "DY Steel Gtr", "DY Clean Gtr", "DY Muted Gtr", "DY Drive Gtr", "DY Slap Bass", "DY Synth Brass", "DY Sax", "DY Mute Trumpet"};
+static const char *const FM6_DY_NAME[FM6_NDY] = {"MF EPRHOD1", "WINEGLASS", "SMOOTHBASS", "FULL-BRASS", "EASY DXPAD", "LOG DRUM 1", "DRAWBARS", "GITARA AKU", "ROLAND BRS", "SOLID BASS", "TEMPLEBELL", "MARIMBA", "CLAVINET", "SOFTSTRNGS", "SHIMMERPAD", "SKY SYNC", "HARFA LSR", "KALIMBA", "FLUTE BLOW", "STEEL PANS", "MOOGBASS", "TUBUL-BELL", "PEDALSTEEL", "GITARA ELE", "GUITARDAMP", "AXE", "SLAPS", "MFSYNBRASS", "SAXOPHONE", "SOLO TRPT"};
 static const uint8_t FM6_DY[FM6_NDY][128] = {
     {/* 0: DY Tine EP: "MF EPRHOD1", DX7 - madFame Custom Patches VOL 3.syx voice 20: madFame, Custom Patches vol 3 (BB) */
       99,   0,  99,   0,  99,   0,   0,   0,  87,  15,   0,  15,  56,   8,  58,   0,

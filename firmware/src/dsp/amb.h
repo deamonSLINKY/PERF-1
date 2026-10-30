@@ -157,6 +157,8 @@ void en_flex_select(int pat);                  /* the Flex Beat pattern the FX_F
 void en_flx_hold(int on);                      /* a Flex Beat pad is held down (not latched): a one shot goes on, bar after bar, while it is, and ends on the bar line after it is let go */
 void en_fill_next(void);                       /* a drum fill in the next bar (the auto-DJ asks one bar ahead: the fill is the last bar before the break) */
 void en_dj_sync(int on);                       /* the auto-DJ follows the chord changes: the engine fills the bar before one and breaks on it */
+void en_intro(int secs);                       /* the intro (a setting): from Play the tracks come in one by one over this many seconds (the pad first, then hats, perc, kick, snare, bass, pluck, acid); 0 none */
+extern volatile float en_intro_k;              /* how far the intro is, 0..1 (1: in, or none) */
 extern volatile float en_drift_bars;           /* bars to the next chord change (the drift's), 99 when none is coming */
 extern uint32_t en_c2_jobs, en_c2_lost;          /* chunks reverbed on the other core; times it was lost */
 void en_set(int param, int value);

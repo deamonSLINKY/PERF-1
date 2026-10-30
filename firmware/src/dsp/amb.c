@@ -865,7 +865,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -911,6 +911,9 @@ volatile uint8_t en_shed_level;
 static uint8_t shed3;                          /* shed level 3 (the chunk's copy): the first core gives up the Echoplex, the vinyl noise and the exact output clip */
 void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 3 ? 3 : level, 0); }
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
+void en_intro(int secs) { post(C_INTRO, secs < 0 ? 0 : secs > 1800 ? 1800 : secs, 0); }
+volatile float en_intro_k = 1.0f;
+static int32_t intro_len, intro_t;              /* the intro's length and how far it is, samples (0 length: none) */
 volatile float en_drift_bars = 99.0f;
 
 /* -------------------------------------------------------------- state --- */
@@ -4717,10 +4720,23 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
                     gate_f[t] *= f;
         }
     }
-    for (t = 0; t < EN_NTRACK; t++) {           /* mute and solo: 5 ms ramps */
-        float tgt = (!(mute >> t & 1u) && (!solo || (solo >> t & 1u))) ? gate_f[t] : 0.0f, d = (float)n * (1.0f / 220.0f);
-        trk_g[t] = trk_g1[t];
-        trk_g1[t] = trk_g[t] + fm_clampf(tgt - trk_g[t], -d, d);
+    {   /* the intro: from Play the tracks come in one at a time over its length, the pad from the first bar, then the hats, perc, kick, snare, bass, pluck, acid
+         * (each over a seventh of it), so a set can be mixed in under a pad and a hat rather than everything at once */
+        static const uint8_t IN_AT[EN_NTRACK] = {40, 6, 52, 20, 62, 82, 0, 72};   /* kick, hats, snare, perc, bass, acid, pad, pluck: hundredths of the intro where each starts */
+        float k = 1.0f;
+        if (intro_len > 0 && en_playing) {
+            if (intro_t < intro_len)
+                intro_t += (int32_t)n;
+            k = intro_t >= intro_len ? 1.0f : (float)intro_t / (float)intro_len;
+        }
+        en_intro_k = k;
+        for (t = 0; t < EN_NTRACK; t++) {       /* mute and solo: 5 ms ramps */
+            float tgt = (!(mute >> t & 1u) && (!solo || (solo >> t & 1u))) ? gate_f[t] : 0.0f, d = (float)n * (1.0f / 220.0f);
+            if (k < 1.0f && IN_AT[t])
+                tgt *= fm_clampf((k * 100.0f - (float)IN_AT[t]) * (1.0f / 14.0f), 0.0f, 1.0f);
+            trk_g[t] = trk_g1[t];
+            trk_g1[t] = trk_g[t] + fm_clampf(tgt - trk_g[t], -d, d);
+        }
     }
     tg_inv = 1.0f / (float)n;
     lp_amt = fm_clampf(lp_amt + (m >> FX_LP & 1u ? dt * 2.0f : -dt * 6.0f), 0.0f, 1.0f);   /* in 0.5 s, out in 0.17 */
@@ -5439,8 +5455,10 @@ static void drain(void)
             break;
         case C_POOL: pool_set((uint32_t)b & 0xFFFu); break;
         case C_PLAY:
-            if (a && !en_playing)
+            if (a && !en_playing) {
+                intro_t = 0;                     /* the intro from the start */
                 play_start(1);
+            }
             else if (!a && en_playing)
                 play_stop();
             break;
@@ -5476,6 +5494,10 @@ static void drain(void)
         case C_HUSH: hush = (uint8_t)(a != 0); break;
         case C_NOTE: note_cmd(a, b & 0x7F, b >> 8); break;
         case C_REGROW: regrow(); break;
+        case C_INTRO:                            /* set while playing: no intro now, the next Play's (unless play has only just begun: the boot's) */
+            intro_len = a * (int32_t)EN_SR;
+            intro_t = en_playing && en_bars >= 16u ? intro_len : 0;
+            break;
         case C_SECTION:
             if (a == EN_CMD_BREAK && sec != SEC_GROOVE && sec != SEC_BUILD)
                 break;                          /* already down */
