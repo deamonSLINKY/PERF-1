@@ -82,19 +82,19 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 </style></head><body><main>
 <img class="logo" src="img/slinky.png" alt="the PERF-1 slinky">
 <h1>PERF<span>-1</span></h1>
-<p class="tag">Custom live-performance firmware for the M-VAVE FM-1, by deamonSLINKY. Version <span class="v">{ver}</span>.</p>
-<p>Sixteen genres of ten generative pieces (pad, bass, acid, a pluck or DX7 voice, drums you can sequence), an auto-DJ with breakdowns, builds and drops, 27 effects, 24 beat FX, 15 flex beats and 27 DJ snips, scenes, a web editor and your own DX7 voices over USB.</p>
+<p class="tag">Free firmware that turns the M-VAVE FM-1 into a groovebox that plays by itself. By deamonSLINKY. Version <span class="v">{ver}</span>.</p>
+<p>Switch it on and music starts: drums, bass, a pad, an acid line and a plucked melody, in sixteen styles from techno to reggae. You steer it with the buttons and keys: change the chords, break it down and drop it back in, mute parts, throw on effects, or let the auto-DJ run the show. When you want more, nearly everything can be edited and saved. New here? Start with the beginner's guide.</p>
 <div class="grid">
-<a class="card" href="install/"><b>Install</b><span>The web installer (Chrome or Edge, FM-1 on USB). It can put M-VAVE's own firmware back.</span></a>
-<a class="card" href="emu/"><b>Try it in your browser</b><span>The same code the FM-1 runs, with sound. No FM-1 needed.</span></a>
-<a class="card" href="editor/"><b>Editor</b><span>Every parameter, and a DX7 voice editor with live preview on the unit.</span></a>
-<a class="card" href="manual/"><b>Manual</b><span>Every control, page and setting.</span></a>
+<a class="card" href="install/"><b>Install</b><span>Install it from this website in Chrome or Edge, with the FM-1 plugged in. You can go back to the original firmware the same way.</span></a>
+<a class="card" href="emu/"><b>Try it in your browser</b><span>Play with PERF-1 on screen, with sound, before you install anything.</span></a>
+<a class="card" href="editor/"><b>Editor</b><span>Change any setting from your computer, and make your own DX7 sounds and hear them on the FM-1.</span></a>
+<a class="card" href="manual/"><b>Manual</b><span>Starts with a beginner's guide, then explains every button and page.</span></a>
 {quick_card}
-<a class="card" href="firmware/{name}"><b>Download the package</b><span>{name} ({len(raw) // 1024} KB), for the installer or tools/fm1_install.py.</span></a>
-<a class="card" href="{REPO}/issues/new/choose"><b>Feedback and ideas</b><span>Comments, suggestions, ideas and bug reports: open an issue. Everyone is welcome to help.</span></a>
-<a class="card" href="{REPO}"><b>Source on GitHub</b><span>GPL-3.0. Read it, build it, send changes.</span></a>
+<a class="card" href="firmware/{name}"><b>Download the firmware file</b><span>{name} ({len(raw) // 1024} KB). You only need this if you install another way than the page above.</span></a>
+<a class="card" href="{REPO}/issues/new/choose"><b>Ideas and problems</b><span>Tell me what you'd like next, or what went wrong. Most new features started as someone's idea.</span></a>
+<a class="card" href="{REPO}"><b>Source code</b><span>Free and open source (GPL-3.0), on GitHub.</span></a>
 </div>
-<p class="small">Installing firmware is at your own risk, though the installer can restore the stock firmware and an FM-1 that fails to start twice comes up in a safe mode the installer can reach. Read the manual's section 1 first.</p>
+<p class="small">Installing firmware is at your own risk. If something goes wrong, the installer can put the original firmware back, and an FM-1 that fails to start twice in a row starts in a safe mode the installer can reach. Section 1 of the manual explains it all.</p>
 <p class="small">PERF-1 is a fork of HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a>, itself a fork of AMB-1 by Charles Vestal, built on Felucca by Leo Kuroshita (Hügelton Instruments); the six-operator FM engine is Melodee's by Kerem Kilic (Ellic Studio), after Dexed. GPL-3.0-only; see LICENSING.md in the repository. "M-VAVE" and "FM-1" are trademarks of their owners: PERF-1 is independent firmware, not affiliated with or endorsed by them.</p>
 </main></body></html>
 ''', encoding="utf-8", newline="\n")
