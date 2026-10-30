@@ -86,12 +86,14 @@ export default {
     await s.wait(6000);
     readout(s, "ACID", "", 3);
     await s.wait(5000);
-    // ---- 3. the imp in the sigil
-    text(s, { label: "THE SYNTH IMP", title: "The imp, summoned", body: "SEL + HOME puts the imp in the sigil. He bounces on the kick.", chips: ["*SEL", "+", "*HOME"] });
-    await at(s, (t0 + 62) * 1000);
-    ring(s, "btn:SEL", 1.2, "SEL"); ring(s, "btn:HOME", 1.2, "HOME");
-    s.press("SEL"); await s.wait(200); await s.tap("HOME"); s.release("SEL"); await s.wait(5500);
-    s.press("SEL"); await s.wait(200); await s.tap("HOME"); s.release("SEL"); await s.wait(1200);
+    // ---- 3. the pluck up a bit (the intro over)
+    text(s, { label: "WHILE WE ARE HERE", title: "Let's turn the pluck up a bit", body: "The Pluck page: ARP six times. Level to 60.", chips: ["tap", "*ARP", "x6", "*KNOB1"] });
+    await at(s, (t0 + 61) * 1000);
+    for (let i = 0; i < 6; i++) { await tapB(s, "ARP", "ARP"); await s.wait(200); }
+    await s.wait(900);
+    readout(s, "PLUCK 60", "", 3.5);
+    await turnK(s, "KNOB1", 30, 60, "KNOB1"); await s.wait(3000);
+    await s.tap("HOME"); await s.wait(900);                    // back to Tempo
     // ---- 4. harmony
     text(s, { label: "HARMONY YOU CAN HEAR", title: "A chord every two bars", body: "Each genre changes chord every so many bars now: two in synthwave. Minor keys get a real dominant.", chips: ["*KNOB4"] });
     ring(s, "knob:KNOB4", 2.5, "KNOB4");
@@ -113,7 +115,7 @@ export default {
     readout(s, "POLY", "BACK TO THE PIECE'S", 2.5);
     await turnK(s, "KNOB3", -9, 60, "KNOB3"); await s.wait(2000);
     // ---- 6. the bass line
-    text(s, { label: "THE BASS LINE", title: "Nine figures by name", body: "After Riff: Octaves, Two-step, One-drop, Log drum, Skippy, Funk, Big beat, Dub, Gallop. In any genre.", chips: ["tap", "*LFO", "four times", "*KNOB1"] });
+    text(s, { label: "THE BASS LINE", title: "Nine new bass figures", body: "The Bass line page, Mode, after Riff: Octaves, Two-step, One-drop, Log drum, Skippy, Funk, Big beat, Dub, Gallop. In any genre.", chips: ["tap", "*LFO", "four times", "*KNOB1"] });
     for (let i = 0; i < 4; i++) { await tapB(s, "LFO", "LFO"); await s.wait(220); }
     await s.wait(800);
     for (const [n, name] of [[4, "OCTAVES"], [1, "TWO-STEP"], [2, "LOG DRUM"], [5, "GALLOP"]]) {
@@ -124,12 +126,11 @@ export default {
     readout(s, "EIGHTHS", "", 2.5);
     await turnK(s, "KNOB1", -12, 60, "KNOB1"); await s.wait(3000);
     // ---- 7. the DY voices
-    text(s, { label: "DY VOICES", title: "Human-made DX7 voices, by default", body: "Thirty of them, from public-domain banks, each under its own name. The pluck here is SHIMMERPAD.", chips: ["tap", "*ARP", "six times", "*KNOB3"] });
-    for (let i = 0; i < 6; i++) { await tapB(s, "ARP", "ARP"); await s.wait(200); }
-    await s.wait(1200);
+    text(s, { label: "DY VOICES", title: "Human-made DX7 voices, by default", body: "Thirty of them, from public-domain banks, each under its own name. The pluck here is SHIMMERPAD.", chips: ["tap", "*ARP", "*KNOB2"] });
+    await tapB(s, "ARP", "ARP"); await s.wait(1200);          // (ARP comes back to the page it left: the Pluck page)
     for (const [n, name] of [[-4, "TEMPLEBELL"], [2, "CLAVINET"], [1, "SOFTSTRNGS"], [1, "SHIMMERPAD"]]) {
       readout(s, name, "", 3.6);
-      await turnK(s, "KNOB3", n, 150, "KNOB3"); await s.wait(3800 - Math.abs(n) * 150);
+      await turnK(s, "KNOB2", n, 150, "KNOB2"); await s.wait(3800 - Math.abs(n) * 150);
     }
     // ---- 8. pluck steps
     text(s, { label: "PLUCK STEPS", title: "Freeze the loop, write it", body: "Deja vu's loop as sixteen steps: a white key picks one, Rung and Level write it. Stored with the piece.", chips: ["tap", "*ARP", "three times"] });
@@ -157,31 +158,20 @@ export default {
     await djToggle(s);
     readout(s, "DJ ON", "ROUND 1 OF 2", 4);
     await s.wait(3000);
-    text(s, { label: "THE AUTO-DJ", title: "The groove runs its course", body: "Eight bars, a fill, the break, the build and the drop. Watch the sun.", chips: [] });
+    text(s, { label: "THE AUTO-DJ", title: "The groove runs its course", body: "Eight bars, a fill, the break, the build and the drop, on their own.", chips: [] });
     if (!(await s.waitLit("SAVE", true, 60000))) throw new Error("no break");
-    text(s, { label: "THE AUTO-DJ", title: "The break", body: "The mix darkens, the pad rises, the sun sinks.", chips: [] });
+    text(s, { label: "THE AUTO-DJ", title: "The break", body: "The bar before thinned out. The mix darkens and the pad rises.", chips: [] });
     readout(s, "BREAK", "", 5);
-    await s.wait(1500);
-    await s.tap("HOME"); await s.wait(300);                    // the home: the sun and the scanner
-    await s.wait(2500);
-    text(s, { label: "THE AUTO-DJ", title: "The build", body: "The sun climbs with the snare. A breath of silence, then...", chips: [] });
+    await s.wait(4300);
+    text(s, { label: "THE AUTO-DJ", title: "The build", body: "A snare climbing, the bass opening, a breath of silence, then...", chips: [] });
     readout(s, "BUILD", "", 6);
     await s.waitLit("SAVE", false, 30000);
-    text(s, { label: "THE AUTO-DJ", title: "The drop", body: "White on the one, home to the tonic chord, and the second round begins a touch faster.", chips: [] });
+    text(s, { label: "THE AUTO-DJ", title: "The drop", body: "Kick, clap and a crash on the one, home to the tonic chord. The second round begins a touch faster.", chips: [] });
     readout(s, "DROP", "", 3);
     await s.wait(5500);
     await djToggle(s);                                         // the DJ off
-    // ---- 10. the master bus
-    text(s, { label: "THE MASTER BUS", title: "Compressor and limiter", body: "On every piece. Push it: the limiter sees the peak coming and holds the ceiling.", chips: ["turn", "*SELECT"] });
-    await s.wait(800);
-    ring(s, "knob:SELECT", 2.4, "SELECT");
-    await s.turn("SELECT", 28, 60); await s.wait(1200);
-    readout(s, "RATIO 6:1", "", 2.5); await turnK(s, "KNOB1", 2, 300, "KNOB1"); await s.wait(1400);
-    readout(s, "THRESHOLD -23 dB", "", 2.5); await turnK(s, "KNOB2", -23, 60, "KNOB2"); await s.wait(1400);
-    readout(s, "MAKE-UP +11.2 dB", "", 4.5); await turnK(s, "KNOB3", 62, 60, "KNOB3"); await s.wait(1200);   /* (60 ms a detent: no acceleration, the value lands exactly) */
-    readout(s, "CEILING -10.1 dB", "THE LIMITER HOLDS", 6); await turnK(s, "KNOB4", -84, 60, "KNOB4"); await s.wait(4500);
-    await s.tap("HOME"); await s.wait(600);
-    // ---- 11. effects, editable
+    await s.tap("HOME"); await s.wait(600);                    // Tempo
+    // ---- 10. effects, editable
     text(s, { label: "EFFECTS", title: "Tap latches, hold plays", body: "The FX button turns every key into an effect. Hold SEL and tap a key: its page, and it plays while you edit.", chips: ["tap", "*FX"] });
     await s.wait(600);
     await tapB(s, "FX", "FX"); await s.wait(900);
@@ -201,7 +191,55 @@ export default {
     await s.tap("FX"); await s.wait(400);                      // the menu
     await s.tap("OCT-"); await s.wait(300);                    // everything off
     await s.tap("FX"); await s.wait(900);
-    // ---- 12. credits over FLUX
+    // ---- 11. a Flex Beat
+    text(s, { label: "FLEX BEAT", title: "Flex Beat", body: "The third bank of the FX menu: twenty-seven one-bar patterns that rework the last stretch of the music on the grid.", chips: ["tap", "*FX", "turn", "*SELECT", "twice"] });
+    await tapB(s, "FX", "FX"); await s.wait(300);
+    await s.turn("SELECT", -3, 60); await s.wait(600);         // the first bank
+    ring(s, "knob:SELECT", 1.4, "SELECT");
+    s.spin("SELECT", 1); await s.wait(250); s.spin("SELECT", 1); await s.wait(1200);
+    text(s, { label: "FLEX BEAT", title: "Tap: it waits for the bar", body: "Tresillo, then Beat repeat held until let go.", chips: ["tap", "*KEY", "hold", "*KEY"] });
+    for (const [k, hold, held, gap, name] of [[22, 120, 0, 4800, "TRESILLO"], [20, 120, 0, 4800, "STUT UP"], [0, 2800, 1, 3800, "BT REPT"]]) {
+      ring(s, "key:" + k, held ? 3.4 : 1.6, "KEY");
+      readout(s, name, held ? "HOLDING" : "LATCHED", held ? 3.2 : 3);
+      s.key(k, true); await s.wait(hold); s.key(k, false); await s.wait(gap - hold);
+    }
+    await s.tap("FX"); await s.wait(900);
+    // ---- 12. and much, much more: the master bus first (not new, but worth the look), then a card a page, slow at first, faster
+    text(s, { label: "AND", title: "...much, much more", body: "Starting with the master bus: a stereo compressor and a look-ahead limiter on every piece.", chips: ["turn", "*SELECT"] });
+    await s.wait(800);
+    ring(s, "knob:SELECT", 2.0, "SELECT");
+    await s.turn("SELECT", 28, 60); await s.wait(1000);
+    text(s, { label: "AND", title: "Compressor and limiter", body: "Ratio, threshold, make-up, ceiling. The page draws the curve, with live meters.", chips: ["*KNOB1", "*KNOB2", "*KNOB3", "*KNOB4"] });
+    readout(s, "RATIO 6:1", "", 2.5); await turnK(s, "KNOB1", 2, 300, "KNOB1"); await s.wait(1000);
+    readout(s, "THRESHOLD -23 dB", "", 2.5); await turnK(s, "KNOB2", -23, 60, "KNOB2"); await s.wait(1000);
+    readout(s, "MAKE-UP +11.2 dB", "", 4.5); await turnK(s, "KNOB3", 62, 60, "KNOB3"); await s.wait(800);
+    readout(s, "CEILING -10.1 dB", "THE LIMITER HOLDS", 6); await turnK(s, "KNOB4", -84, 60, "KNOB4"); await s.wait(3500);
+    await s.turn("SELECT", -28, 25); await s.wait(600);        // back to Tempo
+    {
+      const MORE = [
+        ["Pad", "Stabbing pads where the genre comps: every dub piece skanks"], ["Pad env", "Eleven pentatonic pieces moved to real modes"],
+        ["Pad LFO", "The bass plays the fifth, not the seventh"], ["Chords", "A real dominant in minor keys"], ["Bass", "Diminished chords: rare, never the cadence"],
+        ["Bass env", "DnB, breaks and garage start with a bass line"], ["Bass LFO", "The pluck on MIDI channel 2, note-offs and all"], ["Bass line", "Capture: play a bar on Jam, keep it"],
+        ["Acid", "The acid line frozen and edited step by step"], ["Acid env", "Scanlines, for any theme"], ["Acid line", "DY voices named as their banks name them"],
+        ["Acid answer", "Call and response: octave, fifth, mirror, sparse"], ["Acid steps", "Swing and looseness for every voice"], ["Pluck", "Your own DX7 voices, loaded over USB"],
+        ["Pluck 2", "Arps: up, down, random, thirds"], ["Deja vu", "The pluck remembers and develops a motif"], ["Pluck steps", "Sixteen steps you write, stored with the piece"],
+        ["Drums", "Fewer dropouts: a lost interrupt found, chunks no shorter than 128 frames"], ["Links", "The kick ducks the bass, the snare opens the pad"], ["Kit", "37 kits, every drum tunable"],
+        ["Drum drift", "Patterns that change themselves"], ["Groove", "Per-lane density and source"], ["Steps", "Ratchets, push, ghost and accent on every step"],
+        ["Feel", "Ghost notes, accents, comping, humanize"], ["Phrase", "Pattern chains, slices, half and double time"], ["Space", "Tempo-synced echo and reverb"],
+        ["Reverb", "Plate, shimmer, gated"], ["Comp/Limit", "The master bus, as you saw"], ["Mixer", "Level, pan and send for every layer"], ["Global", "Store the piece; six themes"],
+        ["Jam", "Play along with no wrong notes. Scenes. Backup and restore. A browser emulator and an editor."],
+      ];
+      let gap = 2000;
+      for (const [title, body] of MORE) {
+        ring(s, "knob:SELECT", gap / 1000, "");
+        s.spin("SELECT", 1);
+        text(s, { label: "AND", title, body, chips: [] });
+        await s.wait(gap);
+        gap = Math.max(380, Math.round(gap * 0.9));
+      }
+    }
+    await s.wait(1200);
+    // ---- 13. credits over FLUX
     text(s, { label: "0.15.0", title: "Out now", body: "The installer, the manual, the browser emulator: deamonslinky.github.io/PERF-1. Thank you for listening.", chips: [] });
     await s.wait(3500);
     await s.tap("HOME", 60); await s.wait(120); await s.tap("HOME", 60); await s.wait(1500);
