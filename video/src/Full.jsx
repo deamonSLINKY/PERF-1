@@ -5,7 +5,7 @@ import { EmuScene } from "./EmuScene.jsx";
 import { Title } from "./Cards.jsx";
 
 export const TITLE_FRAMES = 135;
-export const TOUR = "tour";
+export const TOUR = "update0150";   // the trace this video renders (public/<dir>): the 0.15.0 update; "tour" was the 0.14.0 tour
 
 export function Full({ frames }) {
   return (
