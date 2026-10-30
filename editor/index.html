@@ -1,0 +1,655 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     PERF-1 editor: every parameter of the engine on the unit's own pages, and a DX7 voice editor for the voices the unit keeps. The parameter data is the
+     firmware's own (tools/make_params.py -> build/params.json, put in at {"params":[{"i":0,"n":"Pad","min":0,"max":100,"def":45},{"i":1,"n":"Acid","min":0,"max":100,"def":55},{"i":2,"n":"Bass","min":0,"max":100,"def":65},{"i":3,"n":"Drums","min":0,"max":100,"def":75},{"i":4,"n":"Vinyl","min":0,"max":100,"def":20},{"i":5,"n":"Tempo","min":70,"max":190,"def":128},{"i":6,"n":"Evolve","min":0,"max":100,"def":40},{"i":7,"n":"Motion","min":0,"max":100,"def":60},{"i":8,"n":"Drift","min":0,"max":100,"def":60},{"i":9,"n":"Bright","min":0,"max":100,"def":35},{"i":10,"n":"Sound","min":0,"max":23,"def":1,"t":["Rhodes","Voices","Strings","Glass","Organ","Warm","Stabs","Dark","Dub","Trance","Poly","Hollow","Pings","Hits","Rave","Sine","Ooh","Wurli","Mallet","Brass","Fat","Pluck","Chapel","Air"]},{"i":11,"n":"Detune","min":0,"max":100,"def":30},{"i":12,"n":"Attack","min":0,"max":100,"def":45},{"i":13,"n":"Hold","min":0,"max":100,"def":35},{"i":14,"n":"Release","min":0,"max":100,"def":55},{"i":15,"n":"Rest","min":0,"max":100,"def":20},{"i":16,"n":"Rate","min":0,"max":7,"def":4,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars"]},{"i":17,"n":"Depth","min":0,"max":100,"def":25},{"i":18,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":19,"n":"Target","min":0,"max":3,"def":0,"t":["Filter","Level","Pan","Pitch"]},{"i":20,"n":"Wear","min":0,"max":7,"def":1,"t":["Mint","Clean","Light","Used","Worn","Scratched","Dusty","Trashed"]},{"i":21,"n":"Every","min":0,"max":7,"def":0,"t":["2nd","3rd","4th","5th","6th","7th","8th","Drift"]},{"i":22,"n":"Pump","min":0,"max":100,"def":60},{"i":23,"n":"Octave","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":24,"n":"Cutoff","min":0,"max":100,"def":45},{"i":25,"n":"Reso","min":0,"max":100,"def":45},{"i":26,"n":"Trigger","min":0,"max":5,"def":0,"t":["Chord","1 bar","2 bars","4 bars","8 bars","Off"]},{"i":27,"n":"Attack","min":0,"max":100,"def":25},{"i":28,"n":"Decay","min":0,"max":100,"def":55},{"i":29,"n":"Amount","min":0,"max":100,"def":35},{"i":30,"n":"Rate","min":0,"max":7,"def":6,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars"]},{"i":31,"n":"Depth","min":0,"max":100,"def":55},{"i":32,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":33,"n":"Target","min":0,"max":3,"def":0,"t":["Cutoff","Pitch","Level","Drive"]},{"i":34,"n":"Cutoff","min":0,"max":100,"def":35},{"i":35,"n":"Reso","min":0,"max":100,"def":70},{"i":36,"n":"Env mod","min":0,"max":100,"def":55},{"i":37,"n":"Decay","min":0,"max":100,"def":40},{"i":38,"n":"Accent","min":0,"max":100,"def":50},{"i":39,"n":"Slide","min":0,"max":100,"def":30},{"i":40,"n":"Sound","min":0,"max":30,"def":0,"t":["Saw","Square","Driven","Sync","Pluck","PWM","Chip","Sub","Trance","Bleep","Fifth","Bell","Organ","Laser","Fold","Soft","Marimba","E.Piano","Kalimba","Brass","Gong","Clav","Vibes","Digital","Super","CZ","Mini","Hyper","CZ Pulse","CZ Bell","Lead"]},{"i":41,"n":"Density","min":0,"max":100,"def":60},{"i":42,"n":"Length","min":1,"max":16,"def":16},{"i":43,"n":"Range","min":1,"max":3,"def":1,"t":["1 oct","2 oct","3 oct"]},{"i":44,"n":"Mutate","min":0,"max":100,"def":25},{"i":45,"n":"Acid oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":46,"n":"Drive","min":0,"max":100,"def":40},{"i":47,"n":"Swing","min":0,"max":100,"def":0},{"i":48,"n":"Pattern","min":0,"max":5,"def":0,"t":["1","2","3","4","5","6"]},{"i":49,"n":"Level","min":0,"max":100,"def":85},{"i":50,"n":"Tune","min":-50,"max":50,"def":0},{"i":51,"n":"Decay","min":0,"max":100,"def":50},{"i":52,"n":"Level","min":0,"max":100,"def":60},{"i":53,"n":"Tune","min":-50,"max":50,"def":0},{"i":54,"n":"Decay","min":0,"max":100,"def":45},{"i":55,"n":"Level","min":0,"max":100,"def":65},{"i":56,"n":"Tune","min":-50,"max":50,"def":0},{"i":57,"n":"Decay","min":0,"max":100,"def":45},{"i":58,"n":"Level","min":0,"max":100,"def":55},{"i":59,"n":"Tune","min":-50,"max":50,"def":0},{"i":60,"n":"Decay","min":0,"max":100,"def":35},{"i":61,"n":"Level","min":0,"max":100,"def":50},{"i":62,"n":"Tune","min":-50,"max":50,"def":0},{"i":63,"n":"Decay","min":0,"max":100,"def":50},{"i":64,"n":"Level","min":0,"max":100,"def":50},{"i":65,"n":"Tune","min":-50,"max":50,"def":0},{"i":66,"n":"Decay","min":0,"max":100,"def":40},{"i":67,"n":"Echo","min":0,"max":100,"def":45},{"i":68,"n":"Echo time","min":0,"max":5,"def":1,"t":["1/8","3/16","1/4","1/4.","1/2","1 bar"]},{"i":69,"n":"Reverb","min":0,"max":100,"def":40},{"i":70,"n":"Size","min":0,"max":100,"def":70},{"i":71,"n":"Root","min":0,"max":11,"def":9,"t":["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"]},{"i":72,"n":"Mode","min":0,"max":7,"def":5,"t":["Ionian","Dorian","Phrygian","Lydian","Mixolyd.","Aeolian","Pent maj","Pent min"]},{"i":73,"n":"Tune","min":-50,"max":50,"def":0},{"i":74,"n":"MIDI out","min":0,"max":1,"def":1,"t":["Off","On"]},{"i":75,"n":"Theme","min":0,"max":5,"def":0,"t":["Imp","Synth","Acid","Ice","Ember","Phosphor"]},{"i":76,"n":"Sync","min":0,"max":1,"def":0,"t":["Bar","Loop"]},{"i":77,"n":"Links","min":0,"max":1,"def":0,"t":["Off","On"]},{"i":78,"n":"Kick","min":0,"max":100,"def":50},{"i":79,"n":"Snare","min":0,"max":100,"def":40},{"i":80,"n":"Hats","min":0,"max":100,"def":50},{"i":81,"n":"Perc","min":0,"max":1,"def":0,"t":["Off","Clock"]},{"i":82,"n":"Song oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":83,"n":"Pad oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":84,"n":"Sound","min":0,"max":23,"def":0,"t":["Saws","Warm","Grit","Dirty","Reese","Pulse","FM","Organ","Rumble","Sub","Square","Hoover","Fifths","Metal","Sync","Bright","Wub","Bite","Tine","Clang","Gnarl","Wide","Power","Air"]},{"i":85,"n":"Kick","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":86,"n":"Snare","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":87,"n":"Hats","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":88,"n":"Perc","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":89,"n":"Pad hand","min":0,"max":1,"def":0},{"i":90,"n":"Bass hand","min":0,"max":1,"def":0},{"i":91,"n":"Acid hand","min":0,"max":1,"def":0},{"i":92,"n":"Chord","min":0,"max":6,"def":0,"t":["Auto","Triads","7ths","9ths","Sus","Dub","Fourths"]},{"i":93,"n":"Voicing","min":0,"max":1,"def":0,"t":["Close","Open"]},{"i":94,"n":"Change","min":0,"max":2,"def":0,"t":["Off","Next","Random"]},{"i":95,"n":"Every","min":0,"max":5,"def":2,"t":["Chord","4 bars","8 bars","16 bars","32 bars","64 bars"]},{"i":96,"n":"Pool","min":2,"max":6,"def":4,"t":["1-2","1-3","1-4","1-5","1-6"]},{"i":97,"n":"Mutate","min":0,"max":2,"def":0,"t":["Off","Shift","Morph"]},{"i":98,"n":"Pluck","min":0,"max":100,"def":30},{"i":99,"n":"Sound","min":0,"max":57,"def":1,"t":["Pluck","Marimba","E.Piano","Kalimba","Bell","Vibes","Gong","Clav","Digital","Brass","Bleep","Glass","DX Tine EP","DX Glass Bell","DX Round Bass","DX Brass Sect","DX Soft Pad","DX Wood Bars","DX Drawbars","DX Nylon Pick","DX Brass 2","DX Solid Bass","DX Bells","DX Marimba","DX Clavinet","DX Strings","DX Glass Pad","DX Sync Lead","DX Harp","DX Kalimba","DX Flute","DX Steel Drum","DX Saw Bass","DX Tubular","DX Steel Gtr","DX Clean Gtr","DX Muted Gtr","DX Drive Gtr","DX Slap Bass","DX Synth Brass","DX Sax","DX Mute Trumpet","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)"]},{"i":100,"n":"Density","min":0,"max":100,"def":45},{"i":101,"n":"Pluck oct","min":-2,"max":2,"def":0},{"i":102,"n":"Decay","min":0,"max":100,"def":45},{"i":103,"n":"Style","min":0,"max":5,"def":0,"t":["Up","Down","Up-down","Random","Skip","Thirds"]},{"i":104,"n":"Rate","min":0,"max":3,"def":2,"t":["1/4","3/16","1/8","1/16"]},{"i":105,"n":"Range","min":1,"max":3,"def":2},{"i":106,"n":"Prob","min":0,"max":100,"def":100},{"i":107,"n":"Prob","min":0,"max":100,"def":100},{"i":108,"n":"Prob","min":0,"max":100,"def":100},{"i":109,"n":"Prob","min":0,"max":100,"def":100},{"i":110,"n":"Prob","min":0,"max":100,"def":100},{"i":111,"n":"Prob","min":0,"max":100,"def":100},{"i":112,"n":"Pan","min":0,"max":100,"def":50},{"i":113,"n":"Pan","min":0,"max":100,"def":50},{"i":114,"n":"Pan","min":0,"max":100,"def":50},{"i":115,"n":"Pan","min":0,"max":100,"def":50},{"i":116,"n":"Pan","min":0,"max":100,"def":50},{"i":117,"n":"Send","min":0,"max":100,"def":50},{"i":118,"n":"Send","min":0,"max":100,"def":50},{"i":119,"n":"Send","min":0,"max":100,"def":50},{"i":120,"n":"Send","min":0,"max":100,"def":50},{"i":121,"n":"Send","min":0,"max":100,"def":50},{"i":122,"n":"Pluck hand","min":0,"max":1,"def":0},{"i":123,"n":"Type","min":0,"max":2,"def":0,"t":["Plate","Shimmer","Gated"]},{"i":124,"n":"Damping","min":0,"max":100,"def":47},{"i":125,"n":"Predelay","min":0,"max":100,"def":100},{"i":126,"n":"Amount","min":0,"max":100,"def":30},{"i":127,"n":"Chorus","min":0,"max":100,"def":0},{"i":128,"n":"Ratio","min":0,"max":6,"def":1,"t":["Off","1.5:1","2:1","3:1","4:1","6:1","10:1"]},{"i":129,"n":"Thresh","min":0,"max":100,"def":60},{"i":130,"n":"Make-up","min":0,"max":100,"def":10},{"i":131,"n":"Ceiling","min":0,"max":100,"def":100},{"i":132,"n":"Length","min":1,"max":16,"def":16},{"i":133,"n":"Length","min":1,"max":16,"def":16},{"i":134,"n":"Length","min":1,"max":16,"def":16},{"i":135,"n":"Length","min":1,"max":16,"def":16},{"i":136,"n":"Length","min":1,"max":16,"def":16},{"i":137,"n":"Length","min":1,"max":16,"def":16},{"i":138,"n":"Density","min":0,"max":100,"def":50},{"i":139,"n":"Density","min":0,"max":100,"def":50},{"i":140,"n":"Density","min":0,"max":100,"def":50},{"i":141,"n":"Density","min":0,"max":100,"def":50},{"i":142,"n":"Density","min":0,"max":100,"def":50},{"i":143,"n":"Density","min":0,"max":100,"def":50},{"i":144,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":145,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":146,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":147,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":148,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":149,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":150,"n":"Loop","min":0,"max":6,"def":0,"t":["Off","2","4","8","2 ~","4 ~","8 ~"]},{"i":151,"n":"Answer","min":0,"max":44,"def":0,"t":["Off","Off","Off","Off","Off","Oct -2","Oct -","Oct =","Oct +","Oct +2","5th -2","5th -","5th =","5th +","5th +2","3rd -2","3rd -","3rd =","3rd +","3rd +2","Mirr -2","Mirr -","Mirr =","Mirr +","Mirr +2","Rev -2","Rev -","Rev =","Rev +","Rev +2","Rot -2","Rot -","Rot =","Rot +","Rot +2","Spar -2","Spar -","Spar =","Spar +","Spar +2","Acc -2","Acc -","Acc =","Acc +","Acc +2"]},{"i":152,"n":"Mode","min":0,"max":15,"def":0,"t":["Hold","Root","Kick","Eighths","Off-beat","Walk","Riff","Octaves","Two-step","One-drop","Log drum","Skippy","Funk","Big beat","Dub","Gallop"]},{"i":153,"n":"Length","min":0,"max":100,"def":50},{"i":154,"n":"Move","min":0,"max":100,"def":30},{"i":155,"n":"Glide","min":0,"max":100,"def":0},{"i":156,"n":"Deja vu","min":0,"max":100,"def":0},{"i":157,"n":"Loop","min":0,"max":3,"def":2,"t":["4","8","16","32"]},{"i":158,"n":"Leaps","min":0,"max":100,"def":0},{"i":159,"n":"Mutates","min":0,"max":3,"def":0,"t":["All","Notes","Rhythm","Accents"]},{"i":160,"n":"Comp","min":0,"max":8,"def":0,"t":["Auto","Hold","Off-beat","On-beat","3-3-2","Charlesto","Syncop","Sparse","Eighths"]},{"i":161,"n":"Ghosts","min":0,"max":100,"def":0},{"i":162,"n":"Accents","min":0,"max":100,"def":50},{"i":163,"n":"Humanize","min":0,"max":100,"def":0},{"i":164,"n":"Chain","min":0,"max":9,"def":0,"t":["Off","12","1112","1123","1134","1213","1234","1232","1115","123456"]},{"i":165,"n":"Slice","min":0,"max":9,"def":0,"t":["Off","Halves","Stutter","Reverse","Delay","Beats","Mirror","Double","Swap","Auto"]},{"i":166,"n":"Time","min":0,"max":2,"def":0,"t":["Normal","Half","Double"]},{"i":167,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":168,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":169,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":170,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":171,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":172,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":173,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]},{"i":174,"n":"Motif","min":0,"max":100,"def":60},{"i":175,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]}],"tabs":[{"name":"Tempo & global","sections":[{"name":"Tempo","knobs":[{"p":5,"label":"Tempo"},{"p":6,"label":"Evolve"},{"p":7,"label":"Motion"},{"p":8,"label":"Drift"}]},{"name":"Global","knobs":[{"p":71,"label":"Root"},{"p":75,"label":"Theme"},{"p":73,"label":"Tune"},{"p":74,"label":"MIDI out (the USB & MIDI settings page)"}]},{"name":"Scale and octave","knobs":[{"p":72,"label":"Mode (scale)"},{"p":82,"label":"Song octave"}]}]},{"name":"Pad","sections":[{"name":"Pad","knobs":[{"p":0,"label":"Level"},{"p":9,"label":"Bright"},{"p":10,"label":"Sound"},{"p":11,"label":"Detune"}]},{"name":"Envelope (the breath)","knobs":[{"p":12,"label":"Attack"},{"p":13,"label":"Hold"},{"p":14,"label":"Release"},{"p":15,"label":"Rest"}]},{"name":"LFO","knobs":[{"p":16,"label":"Rate"},{"p":17,"label":"Depth"},{"p":18,"label":"Shape"},{"p":19,"label":"Target"}]},{"name":"Chords","knobs":[{"p":92,"label":"Chord"},{"p":93,"label":"Voicing"},{"p":127,"label":"Chorus"},{"p":150,"label":"Loop"}]},{"name":"Place","knobs":[{"p":83,"label":"Octave"},{"p":89,"label":"By hand"},{"p":112,"label":"Pan"},{"p":117,"label":"Send"}]}]},{"name":"Bass","sections":[{"name":"Bass","knobs":[{"p":2,"label":"Level"},{"p":84,"label":"Sound"},{"p":24,"label":"Cutoff"},{"p":25,"label":"Reso"}]},{"name":"Envelope","knobs":[{"p":26,"label":"Trigger"},{"p":27,"label":"Attack"},{"p":28,"label":"Decay"},{"p":29,"label":"Amount"}]},{"name":"LFO","knobs":[{"p":30,"label":"Rate"},{"p":31,"label":"Depth"},{"p":32,"label":"Shape"},{"p":33,"label":"Target"}]},{"name":"Bass line (the bass as notes)","knobs":[{"p":152,"label":"Mode"},{"p":153,"label":"Length"},{"p":154,"label":"Move"},{"p":155,"label":"Glide"}]},{"name":"Place","knobs":[{"p":23,"label":"Octave"},{"p":90,"label":"By hand"},{"p":113,"label":"Pan"},{"p":118,"label":"Send"}]}]},{"name":"Acid","sections":[{"name":"Acid","knobs":[{"p":1,"label":"Level"},{"p":34,"label":"Cutoff"},{"p":35,"label":"Reso"},{"p":36,"label":"Env mod"}]},{"name":"Envelope and sound","knobs":[{"p":37,"label":"Decay"},{"p":38,"label":"Accent"},{"p":39,"label":"Slide"},{"p":40,"label":"Sound"}]},{"name":"The line","knobs":[{"p":41,"label":"Density"},{"p":42,"label":"Length"},{"p":43,"label":"Range"},{"p":44,"label":"Mutate"},{"p":151,"label":"Answer"},{"p":21,"label":"Answer every (bars; or before a drum change)"},{"p":76,"label":"Answer sync (0 bar, 1 loop)"},{"p":173,"label":"Frozen (the line held and stored with the piece)"},{"p":159,"label":"Mutates (what Mutate changes: 0 all, 1 notes, 2 rhythm, 3 accents)"}]},{"name":"Place","knobs":[{"p":45,"label":"Octave"},{"p":91,"label":"By hand"},{"p":114,"label":"Pan"},{"p":119,"label":"Send"}]}]},{"name":"Pluck","sections":[{"name":"Pluck","knobs":[{"p":98,"label":"Level"},{"p":99,"label":"Sound"},{"p":100,"label":"Density"},{"p":101,"label":"Octave"}]},{"name":"Behaviour","knobs":[{"p":102,"label":"Decay"},{"p":103,"label":"Style"},{"p":104,"label":"Rate"},{"p":105,"label":"Range"}]},{"name":"Deja vu (and the acid's Mutates)","knobs":[{"p":156,"label":"Pluck vu"},{"p":157,"label":"Loop"},{"p":158,"label":"Leaps"},{"p":174,"label":"Motif"}]},{"name":"Place","knobs":[{"p":122,"label":"By hand"},{"p":115,"label":"Pan"},{"p":120,"label":"Send"}]}]},{"name":"Drums","sections":[{"name":"Drums","knobs":[{"p":3,"label":"Level"},{"p":46,"label":"Drive"},{"p":47,"label":"Swing"},{"p":48,"label":"Pattern"}]},{"name":"Kit","knobs":[{"p":85,"label":"Kick"},{"p":86,"label":"Snare"},{"p":87,"label":"Hats"},{"p":88,"label":"Perc"}]},{"name":"Links (drums into voices)","knobs":[{"p":77,"label":"Links on"},{"p":78,"label":"K>Bass"},{"p":79,"label":"S>Pad"},{"p":80,"label":"H>Acid"},{"p":81,"label":"P>Clock"}]},{"name":"Drum drift","knobs":[{"p":94,"label":"Change"},{"p":95,"label":"Every"},{"p":96,"label":"Pool"},{"p":97,"label":"Mutate"}]},{"name":"Feel (ghost notes, accents, the pad's comping)","knobs":[{"p":161,"label":"Ghosts"},{"p":162,"label":"Accents"},{"p":160,"label":"Pad comp"},{"p":163,"label":"Humanize"}]},{"name":"Phrase (chain, slice, time)","knobs":[{"p":164,"label":"Chain"},{"p":165,"label":"Slice"},{"p":166,"label":"Time"}]},{"name":"Place","knobs":[{"p":116,"label":"Pan"},{"p":121,"label":"Send"}]},{"name":"Kick lane","knobs":[{"p":49,"label":"Level"},{"p":50,"label":"Tune"},{"p":51,"label":"Decay"},{"p":106,"label":"Probability"},{"p":132,"label":"Length (steps)"},{"p":138,"label":"Density (50: as written)"},{"p":167,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":144,"label":"Source pattern"}]},{"name":"Snare lane","knobs":[{"p":52,"label":"Level"},{"p":53,"label":"Tune"},{"p":54,"label":"Decay"},{"p":107,"label":"Probability"},{"p":133,"label":"Length (steps)"},{"p":139,"label":"Density (50: as written)"},{"p":168,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":145,"label":"Source pattern"}]},{"name":"Clap lane","knobs":[{"p":55,"label":"Level"},{"p":56,"label":"Tune"},{"p":57,"label":"Decay"},{"p":108,"label":"Probability"},{"p":134,"label":"Length (steps)"},{"p":140,"label":"Density (50: as written)"},{"p":169,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":146,"label":"Source pattern"}]},{"name":"Hat lane","knobs":[{"p":58,"label":"Level"},{"p":59,"label":"Tune"},{"p":60,"label":"Decay"},{"p":109,"label":"Probability"},{"p":135,"label":"Length (steps)"},{"p":141,"label":"Density (50: as written)"},{"p":170,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":147,"label":"Source pattern"}]},{"name":"Open hat lane","knobs":[{"p":61,"label":"Level"},{"p":62,"label":"Tune"},{"p":63,"label":"Decay"},{"p":110,"label":"Probability"},{"p":136,"label":"Length (steps)"},{"p":142,"label":"Density (50: as written)"},{"p":171,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":148,"label":"Source pattern"}]},{"name":"Perc lane","knobs":[{"p":64,"label":"Level"},{"p":65,"label":"Tune"},{"p":66,"label":"Decay"},{"p":111,"label":"Probability"},{"p":137,"label":"Length (steps)"},{"p":143,"label":"Density (50: as written)"},{"p":172,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":149,"label":"Source pattern"}]}]},{"name":"Space & master","sections":[{"name":"Space","knobs":[{"p":67,"label":"Echo"},{"p":68,"label":"Echo time"},{"p":69,"label":"Reverb"},{"p":70,"label":"Size"}]},{"name":"Reverb","knobs":[{"p":123,"label":"Type"},{"p":124,"label":"Damping"},{"p":125,"label":"Predelay"},{"p":126,"label":"Amount"}]},{"name":"Master bus","knobs":[{"p":128,"label":"Ratio"},{"p":129,"label":"Thresh"},{"p":130,"label":"Make-up"},{"p":131,"label":"Ceiling"}]}]},{"name":"Mixer","sections":[{"name":"Levels","knobs":[{"p":0,"label":"Pad"},{"p":2,"label":"Bass"},{"p":1,"label":"Acid"},{"p":98,"label":"Pluck"},{"p":3,"label":"Drums"},{"p":4,"label":"Vinyl"}]},{"name":"Pan","knobs":[{"p":112,"label":"Pad"},{"p":113,"label":"Bass"},{"p":114,"label":"Acid"},{"p":115,"label":"Pluck"},{"p":116,"label":"Drums"}]},{"name":"Send (echo and reverb)","knobs":[{"p":117,"label":"Pad"},{"p":118,"label":"Bass"},{"p":119,"label":"Acid"},{"p":120,"label":"Pluck"},{"p":121,"label":"Drums"}]},{"name":"Vinyl","knobs":[{"p":20,"label":"Wear"},{"p":22,"label":"Pump (the kick ducks it)"}]},{"name":"More","knobs":[{"p":175,"label":"Frozen"}]}]}],"alg":[[193,17,17,20,1,20],[1,17,17,20,193,20],[193,17,20,1,17,20],[193,17,148,1,17,20],[193,20,1,20,1,20],[193,148,1,20,1,20],[193,17,5,20,1,20],[1,17,197,20,1,20],[1,17,5,20,193,20],[1,5,20,193,17,20],[193,5,20,1,17,20],[1,5,5,20,193,20],[193,5,5,20,1,20],[193,5,17,20,1,20],[1,5,17,20,193,20],[193,17,2,37,5,20],[1,17,2,37,197,20],[1,17,17,197,5,20],[193,20,20,1,17,20],[1,5,20,193,20,20],[1,20,20,193,20,20],[193,20,20,20,1,20],[193,20,20,1,20,4],[193,20,20,20,4,4],[193,20,20,4,4,4],[193,5,20,1,20,4],[1,5,20,193,20,4],[4,193,17,20,1,20],[193,20,1,20,4,4],[4,193,17,20,4,4],[193,20,4,4,4,4],[196,4,4,4,4,4]],"lanes":["Kick","Snare","Clap","Hat","Open hat","Perc"],"layers":["Pad","Bass","Acid","Pluck","Drums"],"enum":{"P_CM_LVL":98,"P_CM_SND":99,"P_NPARAMS":176}} by the site scripts). It talks to the FM-1 over WebMIDI SysEx
+     (F0 7D 50 ...: see firmware/src/usb.c and main_fm1.c px_service / dx_service). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PERF-1 editor</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABXElEQVR42mNgGAWjAAeQFlD6Tw89OA369OzIf1IMJEcP1QykxHIWfJKXju8iGLxPP9xjRFdLCmAk5LOVc2MYwpOXMBxV0cWqxvrOZQaYGphjqOIAaQGl/0dVdBnkox0YGBgYGB4uPUDQMOs7l0l2BCMhyx8uPcBgfecyAwMDA0YoYBMn1RFM+CRhvn5yRJXhyRFVDHlc4qQAJmIUydjcZniYwIHpwAQOBhmb2xQ5AGcu2PPyNQpfaFMpg6ZWHIrY9WuLGBi04jDUokcnvihhpHaphmwZLC3hSxd4ywH0XABLdDDQyCuBwq///AJrQj66lIHB+g4D1pDAGwLoFriIi8JzBnIuwOV7fKFDdEGEz8cu4qIEywFCaYCFlIII3cfUAHjTwJ6XrxkY+lZjpAliooBqdQElUUAo+GkaBcRYPjyjgFTHUD0KqFIdk1sQUdUB5NQH5KSBUTAKBhwAAK4G8263HIhkAAAAAElFTkSuQmCC">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
+<style>
+  :root { --ground: #130a0e; --card: #211219; --card-2: #2e1822; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
+          --purple: #e0344f; --purple-2: #ff8f8f; --orange: #ffd447; --rust: #9c1d3a; --horn: #f2e6c4; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 16px/1.5 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 22px 16px 56px; }
+  h1, h2, h3, button, .tabs a { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1rem; display: flex; align-items: center; gap: .7rem; }
+  h1::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 38%, var(--purple) 38%); }
+  h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: .06em; color: var(--purple-2); margin: 0 0 .6rem; }
+  h3 { font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--horn); margin: .2rem 0 .5rem; }
+  a { color: var(--ink); text-decoration-color: var(--purple); text-underline-offset: 3px; }
+  .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.2rem; padding-bottom: .7rem; border-bottom: 1px solid var(--rule); }
+  .site .home { font: 700 1.3rem "Chakra Petch", sans-serif; letter-spacing: .06em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+  .site .home img { image-rendering: pixelated; width: 46px; height: 46px; }
+  .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; }
+  .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
+  button { font-size: .95rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; background: var(--purple); color: #fff; border: 1px solid var(--purple-2);
+           border-radius: 8px; padding: .45em 1.2em; cursor: pointer; }
+  button:hover:not(:disabled) { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
+  button:disabled { opacity: .35; cursor: default; }
+  button.alt { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
+  button.alt:hover:not(:disabled) { background: var(--rust); border-color: var(--purple); color: #fff; }
+  button.small { font-size: .75rem; padding: .25em .7em; }
+  .bar { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin: 0 0 1rem; }
+  #conn { color: var(--muted); }
+  #conn.ok { color: var(--orange); }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; margin: 0 0 1rem; }
+  .tabs { display: flex; gap: .4rem; margin: 0 0 1rem; border-bottom: 1px solid var(--rule); }
+  .tabs button { background: none; border: 0; border-bottom: 3px solid transparent; border-radius: 0; color: var(--muted); padding: .5em 1em; }
+  .tabs button[aria-selected=true] { color: var(--ink); border-bottom-color: var(--purple); }
+  .tabs button:hover:not(:disabled) { background: none; color: var(--orange); }
+  .panel[hidden] { display: none; }
+  .cols { display: grid; grid-template-columns: 190px 1fr; gap: 16px; }
+  @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+  .pages { display: flex; flex-direction: column; gap: 3px; }
+  .pages button { text-align: left; background: var(--card); border-color: var(--rule); color: var(--ink); text-transform: none; letter-spacing: .02em; font-weight: 600; }
+  .pages button[aria-current=true] { background: var(--rust); border-color: var(--purple); }
+  @media (max-width: 720px) { .pages { flex-direction: row; flex-wrap: wrap; } }
+  .row { display: grid; grid-template-columns: 150px 1fr 90px 28px; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .row label { color: var(--horn); }
+  .row .val { text-align: right; font: 600 .95rem "Chakra Petch", sans-serif; color: var(--orange); }
+  .row button.small { padding: .1em .4em; }
+  input[type=range] { width: 100%; accent-color: var(--purple); }
+  select, input[type=text], input[type=number] { background: var(--ground); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .5em; font: inherit; max-width: 100%; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin: 0 0 12px; }
+  .slots button { text-transform: none; letter-spacing: 0; font-weight: 600; background: var(--card-2); border-color: var(--rule); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slots button[aria-current=true] { background: var(--rust); border-color: var(--purple); }
+  .slots button.empty { color: var(--muted); font-style: italic; }
+  .vgrid { display: grid; grid-template-columns: minmax(280px, 1.2fr) 1fr; gap: 16px; }
+  @media (max-width: 860px) { .vgrid { grid-template-columns: 1fr; } }
+  .ops { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 10px; }
+  .ops button { text-transform: none; letter-spacing: 0; background: var(--card-2); border-color: var(--rule); color: var(--ink); padding: .3em .9em; }
+  .ops button[aria-current=true] { background: var(--purple); border-color: var(--purple-2); }
+  .ops button.car { border-bottom: 3px solid var(--orange); }
+  svg text { font: 600 12px "Chakra Petch", sans-serif; fill: var(--ink); }
+  .envbox { background: var(--ground); border: 1px solid var(--rule); border-radius: 8px; }
+  #libl { max-height: 260px; overflow-y: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
+  #libl:empty { display: none; }
+  #libl div { display: flex; gap: .6em; padding: 3px 10px; cursor: pointer; font-size: 15px; }
+  #libl div:nth-child(odd) { background: rgba(255,255,255,.03); }
+  #libl div:hover { background: var(--rust); }
+  #libl .src { margin-left: auto; color: var(--muted); font-size: 12px; }
+  #msg { min-height: 1.4em; color: var(--purple-2); margin: 6px 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; }
+  @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="site"><a class="home" href="../"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="./" aria-current="page">Editor</a><a href="../manual/">Manual</a></nav></header>
+  <h1>PERF-1 editor</h1>
+  <div class="bar">
+    <button id="connect">Connect the FM-1</button>
+    <button id="readall" class="alt" disabled>Read everything from the FM-1</button>
+    <span id="conn">Not connected. (Chrome or Edge, with the FM-1 on USB.)</span>
+  </div>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-sound" aria-selected="true">Sound</button>
+    <button role="tab" id="tab-voice" aria-selected="false">DX7 voices</button>
+    <button role="tab" id="tab-about" aria-selected="false">About</button>
+  </div>
+
+  <section class="panel" id="p-sound">
+    <p class="muted">Every parameter, grouped by voice: all of the pad together, all of the drums together, and so on. Moving a control changes the piece that is playing right now; to keep it, store the piece on the unit (GLO page, SAVE). The pluck's Sound lists the built-in DX voices and the ones you have loaded.</p>
+    <div class="cols">
+      <div class="pages" id="pages"></div>
+      <div class="card"><h2 id="pagetitle"></h2><div id="rows"></div></div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-voice" hidden>
+    <p class="muted">The voices the FM-1 keeps (up to 16, after its built-in DX sounds on the pluck page). Pick a slot, edit the voice: with <b>Live</b> on, every change is sent to that slot as you make it, so you hear it on the pluck. Load .syx banks to take voices from, save the slots as a bank to keep them.</p>
+    <div class="bar">
+      <button id="vread" class="alt" disabled>Read the slots from the FM-1</button>
+      <button id="vsend" disabled>Send this voice to the slot</button>
+      <label class="muted"><input type="checkbox" id="vlive" checked> Live</label>
+      <button id="vplay" class="alt" disabled>Choose it on the pluck</button>
+      <button id="vnew" class="alt">Init voice</button>
+    </div>
+    <div class="slots" id="slots"></div>
+    <div class="bar">
+      <input type="file" id="vfile" accept=".syx,.SYX" multiple>
+      <button id="vsavebank" class="alt">Save the slots as a bank (.syx)</button>
+      <button id="vsaveone" class="alt">Save this voice (.syx)</button>
+    </div>
+    <div id="libl"></div>
+    <p id="msg"></p>
+    <div class="vgrid">
+      <div class="card">
+        <h2>Voice</h2>
+        <div class="two">
+          <label class="muted">Name <input type="text" id="vname" maxlength="10" size="12"></label>
+          <label class="muted">Algorithm <select id="valg"></select></label>
+        </div>
+        <svg id="algsvg" viewBox="0 0 360 190" width="100%" role="img" aria-label="The algorithm"></svg>
+        <p class="muted" style="margin:.2rem 0 0">Click an operator to edit it. Carriers (the ones you hear) have a gold base. A curl is feedback.</p>
+        <h3 style="margin-top:12px">Whole voice</h3>
+        <div id="vglobal"></div>
+      </div>
+      <div class="card">
+        <h2 id="optitle">Operator</h2>
+        <div class="ops" id="ops"></div>
+        <svg id="envsvg" class="envbox" viewBox="0 0 320 96" width="100%" role="img" aria-label="The operator's envelope"></svg>
+        <div id="vop"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-about" hidden>
+    <div class="card">
+      <p>The <b>Sound</b> tab edits the engine's parameters one by one (the same ones the FM-1's pages hold), straight into the piece that is playing. The <b>DX7 voices</b> tab is an editor for the FM voices the FM-1 can keep, with the six operators, the 32 algorithms, the envelopes and the LFO, and takes DX7 SysEx banks and single voices from any librarian.</p>
+      <p>It speaks to the FM-1 over USB-MIDI SysEx, which the browser asks permission for. Close other programs that use the FM-1's MIDI port first. Nothing is changed on the unit's flash except the DX7 voice slots (kept for the next power-on); the sound edits belong to the piece until you store it on the unit.</p>
+      <p>Comments, ideas and bug reports are welcome: <a href="https://github.com/deamonSLINKY/PERF-1/issues/new/choose" target="_blank" rel="noopener">open an issue on GitHub</a> (<a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">source</a>). Everyone is invited to help.</p>
+      <p class="muted">PERF-1 by deamonSLINKY, based on HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a> (GPL-3.0). Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). The DX7 voice format and algorithms are the Yamaha DX7's; the FM engine descends from Dexed / msfa (Apache-2.0).</p>
+    </div>
+  </section>
+</main>
+<script type="application/json" id="pdata">{"params":[{"i":0,"n":"Pad","min":0,"max":100,"def":45},{"i":1,"n":"Acid","min":0,"max":100,"def":55},{"i":2,"n":"Bass","min":0,"max":100,"def":65},{"i":3,"n":"Drums","min":0,"max":100,"def":75},{"i":4,"n":"Vinyl","min":0,"max":100,"def":20},{"i":5,"n":"Tempo","min":70,"max":190,"def":128},{"i":6,"n":"Evolve","min":0,"max":100,"def":40},{"i":7,"n":"Motion","min":0,"max":100,"def":60},{"i":8,"n":"Drift","min":0,"max":100,"def":60},{"i":9,"n":"Bright","min":0,"max":100,"def":35},{"i":10,"n":"Sound","min":0,"max":23,"def":1,"t":["Rhodes","Voices","Strings","Glass","Organ","Warm","Stabs","Dark","Dub","Trance","Poly","Hollow","Pings","Hits","Rave","Sine","Ooh","Wurli","Mallet","Brass","Fat","Pluck","Chapel","Air"]},{"i":11,"n":"Detune","min":0,"max":100,"def":30},{"i":12,"n":"Attack","min":0,"max":100,"def":45},{"i":13,"n":"Hold","min":0,"max":100,"def":35},{"i":14,"n":"Release","min":0,"max":100,"def":55},{"i":15,"n":"Rest","min":0,"max":100,"def":20},{"i":16,"n":"Rate","min":0,"max":7,"def":4,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars"]},{"i":17,"n":"Depth","min":0,"max":100,"def":25},{"i":18,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":19,"n":"Target","min":0,"max":3,"def":0,"t":["Filter","Level","Pan","Pitch"]},{"i":20,"n":"Wear","min":0,"max":7,"def":1,"t":["Mint","Clean","Light","Used","Worn","Scratched","Dusty","Trashed"]},{"i":21,"n":"Every","min":0,"max":7,"def":0,"t":["2nd","3rd","4th","5th","6th","7th","8th","Drift"]},{"i":22,"n":"Pump","min":0,"max":100,"def":60},{"i":23,"n":"Octave","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":24,"n":"Cutoff","min":0,"max":100,"def":45},{"i":25,"n":"Reso","min":0,"max":100,"def":45},{"i":26,"n":"Trigger","min":0,"max":5,"def":0,"t":["Chord","1 bar","2 bars","4 bars","8 bars","Off"]},{"i":27,"n":"Attack","min":0,"max":100,"def":25},{"i":28,"n":"Decay","min":0,"max":100,"def":55},{"i":29,"n":"Amount","min":0,"max":100,"def":35},{"i":30,"n":"Rate","min":0,"max":7,"def":6,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars"]},{"i":31,"n":"Depth","min":0,"max":100,"def":55},{"i":32,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":33,"n":"Target","min":0,"max":3,"def":0,"t":["Cutoff","Pitch","Level","Drive"]},{"i":34,"n":"Cutoff","min":0,"max":100,"def":35},{"i":35,"n":"Reso","min":0,"max":100,"def":70},{"i":36,"n":"Env mod","min":0,"max":100,"def":55},{"i":37,"n":"Decay","min":0,"max":100,"def":40},{"i":38,"n":"Accent","min":0,"max":100,"def":50},{"i":39,"n":"Slide","min":0,"max":100,"def":30},{"i":40,"n":"Sound","min":0,"max":30,"def":0,"t":["Saw","Square","Driven","Sync","Pluck","PWM","Chip","Sub","Trance","Bleep","Fifth","Bell","Organ","Laser","Fold","Soft","Marimba","E.Piano","Kalimba","Brass","Gong","Clav","Vibes","Digital","Super","CZ","Mini","Hyper","CZ Pulse","CZ Bell","Lead"]},{"i":41,"n":"Density","min":0,"max":100,"def":60},{"i":42,"n":"Length","min":1,"max":16,"def":16},{"i":43,"n":"Range","min":1,"max":3,"def":1,"t":["1 oct","2 oct","3 oct"]},{"i":44,"n":"Mutate","min":0,"max":100,"def":25},{"i":45,"n":"Acid oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":46,"n":"Drive","min":0,"max":100,"def":40},{"i":47,"n":"Swing","min":0,"max":100,"def":0},{"i":48,"n":"Pattern","min":0,"max":5,"def":0,"t":["1","2","3","4","5","6"]},{"i":49,"n":"Level","min":0,"max":100,"def":85},{"i":50,"n":"Tune","min":-50,"max":50,"def":0},{"i":51,"n":"Decay","min":0,"max":100,"def":50},{"i":52,"n":"Level","min":0,"max":100,"def":60},{"i":53,"n":"Tune","min":-50,"max":50,"def":0},{"i":54,"n":"Decay","min":0,"max":100,"def":45},{"i":55,"n":"Level","min":0,"max":100,"def":65},{"i":56,"n":"Tune","min":-50,"max":50,"def":0},{"i":57,"n":"Decay","min":0,"max":100,"def":45},{"i":58,"n":"Level","min":0,"max":100,"def":55},{"i":59,"n":"Tune","min":-50,"max":50,"def":0},{"i":60,"n":"Decay","min":0,"max":100,"def":35},{"i":61,"n":"Level","min":0,"max":100,"def":50},{"i":62,"n":"Tune","min":-50,"max":50,"def":0},{"i":63,"n":"Decay","min":0,"max":100,"def":50},{"i":64,"n":"Level","min":0,"max":100,"def":50},{"i":65,"n":"Tune","min":-50,"max":50,"def":0},{"i":66,"n":"Decay","min":0,"max":100,"def":40},{"i":67,"n":"Echo","min":0,"max":100,"def":45},{"i":68,"n":"Echo time","min":0,"max":5,"def":1,"t":["1/8","3/16","1/4","1/4.","1/2","1 bar"]},{"i":69,"n":"Reverb","min":0,"max":100,"def":40},{"i":70,"n":"Size","min":0,"max":100,"def":70},{"i":71,"n":"Root","min":0,"max":11,"def":9,"t":["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"]},{"i":72,"n":"Mode","min":0,"max":7,"def":5,"t":["Ionian","Dorian","Phrygian","Lydian","Mixolyd.","Aeolian","Pent maj","Pent min"]},{"i":73,"n":"Tune","min":-50,"max":50,"def":0},{"i":74,"n":"MIDI out","min":0,"max":1,"def":1,"t":["Off","On"]},{"i":75,"n":"Theme","min":0,"max":5,"def":0,"t":["Imp","Synth","Acid","Ice","Ember","Phosphor"]},{"i":76,"n":"Sync","min":0,"max":1,"def":0,"t":["Bar","Loop"]},{"i":77,"n":"Links","min":0,"max":1,"def":0,"t":["Off","On"]},{"i":78,"n":"Kick","min":0,"max":100,"def":50},{"i":79,"n":"Snare","min":0,"max":100,"def":40},{"i":80,"n":"Hats","min":0,"max":100,"def":50},{"i":81,"n":"Perc","min":0,"max":1,"def":0,"t":["Off","Clock"]},{"i":82,"n":"Song oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":83,"n":"Pad oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":84,"n":"Sound","min":0,"max":23,"def":0,"t":["Saws","Warm","Grit","Dirty","Reese","Pulse","FM","Organ","Rumble","Sub","Square","Hoover","Fifths","Metal","Sync","Bright","Wub","Bite","Tine","Clang","Gnarl","Wide","Power","Air"]},{"i":85,"n":"Kick","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":86,"n":"Snare","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":87,"n":"Hats","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":88,"n":"Perc","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":89,"n":"Pad hand","min":0,"max":1,"def":0},{"i":90,"n":"Bass hand","min":0,"max":1,"def":0},{"i":91,"n":"Acid hand","min":0,"max":1,"def":0},{"i":92,"n":"Chord","min":0,"max":6,"def":0,"t":["Auto","Triads","7ths","9ths","Sus","Dub","Fourths"]},{"i":93,"n":"Voicing","min":0,"max":1,"def":0,"t":["Close","Open"]},{"i":94,"n":"Change","min":0,"max":2,"def":0,"t":["Off","Next","Random"]},{"i":95,"n":"Every","min":0,"max":5,"def":2,"t":["Chord","4 bars","8 bars","16 bars","32 bars","64 bars"]},{"i":96,"n":"Pool","min":2,"max":6,"def":4,"t":["1-2","1-3","1-4","1-5","1-6"]},{"i":97,"n":"Mutate","min":0,"max":2,"def":0,"t":["Off","Shift","Morph"]},{"i":98,"n":"Pluck","min":0,"max":100,"def":30},{"i":99,"n":"Sound","min":0,"max":57,"def":1,"t":["Pluck","Marimba","E.Piano","Kalimba","Bell","Vibes","Gong","Clav","Digital","Brass","Bleep","Glass","DX Tine EP","DX Glass Bell","DX Round Bass","DX Brass Sect","DX Soft Pad","DX Wood Bars","DX Drawbars","DX Nylon Pick","DX Brass 2","DX Solid Bass","DX Bells","DX Marimba","DX Clavinet","DX Strings","DX Glass Pad","DX Sync Lead","DX Harp","DX Kalimba","DX Flute","DX Steel Drum","DX Saw Bass","DX Tubular","DX Steel Gtr","DX Clean Gtr","DX Muted Gtr","DX Drive Gtr","DX Slap Bass","DX Synth Brass","DX Sax","DX Mute Trumpet","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)"]},{"i":100,"n":"Density","min":0,"max":100,"def":45},{"i":101,"n":"Pluck oct","min":-2,"max":2,"def":0},{"i":102,"n":"Decay","min":0,"max":100,"def":45},{"i":103,"n":"Style","min":0,"max":5,"def":0,"t":["Up","Down","Up-down","Random","Skip","Thirds"]},{"i":104,"n":"Rate","min":0,"max":3,"def":2,"t":["1/4","3/16","1/8","1/16"]},{"i":105,"n":"Range","min":1,"max":3,"def":2},{"i":106,"n":"Prob","min":0,"max":100,"def":100},{"i":107,"n":"Prob","min":0,"max":100,"def":100},{"i":108,"n":"Prob","min":0,"max":100,"def":100},{"i":109,"n":"Prob","min":0,"max":100,"def":100},{"i":110,"n":"Prob","min":0,"max":100,"def":100},{"i":111,"n":"Prob","min":0,"max":100,"def":100},{"i":112,"n":"Pan","min":0,"max":100,"def":50},{"i":113,"n":"Pan","min":0,"max":100,"def":50},{"i":114,"n":"Pan","min":0,"max":100,"def":50},{"i":115,"n":"Pan","min":0,"max":100,"def":50},{"i":116,"n":"Pan","min":0,"max":100,"def":50},{"i":117,"n":"Send","min":0,"max":100,"def":50},{"i":118,"n":"Send","min":0,"max":100,"def":50},{"i":119,"n":"Send","min":0,"max":100,"def":50},{"i":120,"n":"Send","min":0,"max":100,"def":50},{"i":121,"n":"Send","min":0,"max":100,"def":50},{"i":122,"n":"Pluck hand","min":0,"max":1,"def":0},{"i":123,"n":"Type","min":0,"max":2,"def":0,"t":["Plate","Shimmer","Gated"]},{"i":124,"n":"Damping","min":0,"max":100,"def":47},{"i":125,"n":"Predelay","min":0,"max":100,"def":100},{"i":126,"n":"Amount","min":0,"max":100,"def":30},{"i":127,"n":"Chorus","min":0,"max":100,"def":0},{"i":128,"n":"Ratio","min":0,"max":6,"def":1,"t":["Off","1.5:1","2:1","3:1","4:1","6:1","10:1"]},{"i":129,"n":"Thresh","min":0,"max":100,"def":60},{"i":130,"n":"Make-up","min":0,"max":100,"def":10},{"i":131,"n":"Ceiling","min":0,"max":100,"def":100},{"i":132,"n":"Length","min":1,"max":16,"def":16},{"i":133,"n":"Length","min":1,"max":16,"def":16},{"i":134,"n":"Length","min":1,"max":16,"def":16},{"i":135,"n":"Length","min":1,"max":16,"def":16},{"i":136,"n":"Length","min":1,"max":16,"def":16},{"i":137,"n":"Length","min":1,"max":16,"def":16},{"i":138,"n":"Density","min":0,"max":100,"def":50},{"i":139,"n":"Density","min":0,"max":100,"def":50},{"i":140,"n":"Density","min":0,"max":100,"def":50},{"i":141,"n":"Density","min":0,"max":100,"def":50},{"i":142,"n":"Density","min":0,"max":100,"def":50},{"i":143,"n":"Density","min":0,"max":100,"def":50},{"i":144,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":145,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":146,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":147,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":148,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":149,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":150,"n":"Loop","min":0,"max":6,"def":0,"t":["Off","2","4","8","2 ~","4 ~","8 ~"]},{"i":151,"n":"Answer","min":0,"max":44,"def":0,"t":["Off","Off","Off","Off","Off","Oct -2","Oct -","Oct =","Oct +","Oct +2","5th -2","5th -","5th =","5th +","5th +2","3rd -2","3rd -","3rd =","3rd +","3rd +2","Mirr -2","Mirr -","Mirr =","Mirr +","Mirr +2","Rev -2","Rev -","Rev =","Rev +","Rev +2","Rot -2","Rot -","Rot =","Rot +","Rot +2","Spar -2","Spar -","Spar =","Spar +","Spar +2","Acc -2","Acc -","Acc =","Acc +","Acc +2"]},{"i":152,"n":"Mode","min":0,"max":15,"def":0,"t":["Hold","Root","Kick","Eighths","Off-beat","Walk","Riff","Octaves","Two-step","One-drop","Log drum","Skippy","Funk","Big beat","Dub","Gallop"]},{"i":153,"n":"Length","min":0,"max":100,"def":50},{"i":154,"n":"Move","min":0,"max":100,"def":30},{"i":155,"n":"Glide","min":0,"max":100,"def":0},{"i":156,"n":"Deja vu","min":0,"max":100,"def":0},{"i":157,"n":"Loop","min":0,"max":3,"def":2,"t":["4","8","16","32"]},{"i":158,"n":"Leaps","min":0,"max":100,"def":0},{"i":159,"n":"Mutates","min":0,"max":3,"def":0,"t":["All","Notes","Rhythm","Accents"]},{"i":160,"n":"Comp","min":0,"max":8,"def":0,"t":["Auto","Hold","Off-beat","On-beat","3-3-2","Charlesto","Syncop","Sparse","Eighths"]},{"i":161,"n":"Ghosts","min":0,"max":100,"def":0},{"i":162,"n":"Accents","min":0,"max":100,"def":50},{"i":163,"n":"Humanize","min":0,"max":100,"def":0},{"i":164,"n":"Chain","min":0,"max":9,"def":0,"t":["Off","12","1112","1123","1134","1213","1234","1232","1115","123456"]},{"i":165,"n":"Slice","min":0,"max":9,"def":0,"t":["Off","Halves","Stutter","Reverse","Delay","Beats","Mirror","Double","Swap","Auto"]},{"i":166,"n":"Time","min":0,"max":2,"def":0,"t":["Normal","Half","Double"]},{"i":167,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":168,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":169,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":170,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":171,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":172,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":173,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]},{"i":174,"n":"Motif","min":0,"max":100,"def":60},{"i":175,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]}],"tabs":[{"name":"Tempo & global","sections":[{"name":"Tempo","knobs":[{"p":5,"label":"Tempo"},{"p":6,"label":"Evolve"},{"p":7,"label":"Motion"},{"p":8,"label":"Drift"}]},{"name":"Global","knobs":[{"p":71,"label":"Root"},{"p":75,"label":"Theme"},{"p":73,"label":"Tune"},{"p":74,"label":"MIDI out (the USB & MIDI settings page)"}]},{"name":"Scale and octave","knobs":[{"p":72,"label":"Mode (scale)"},{"p":82,"label":"Song octave"}]}]},{"name":"Pad","sections":[{"name":"Pad","knobs":[{"p":0,"label":"Level"},{"p":9,"label":"Bright"},{"p":10,"label":"Sound"},{"p":11,"label":"Detune"}]},{"name":"Envelope (the breath)","knobs":[{"p":12,"label":"Attack"},{"p":13,"label":"Hold"},{"p":14,"label":"Release"},{"p":15,"label":"Rest"}]},{"name":"LFO","knobs":[{"p":16,"label":"Rate"},{"p":17,"label":"Depth"},{"p":18,"label":"Shape"},{"p":19,"label":"Target"}]},{"name":"Chords","knobs":[{"p":92,"label":"Chord"},{"p":93,"label":"Voicing"},{"p":127,"label":"Chorus"},{"p":150,"label":"Loop"}]},{"name":"Place","knobs":[{"p":83,"label":"Octave"},{"p":89,"label":"By hand"},{"p":112,"label":"Pan"},{"p":117,"label":"Send"}]}]},{"name":"Bass","sections":[{"name":"Bass","knobs":[{"p":2,"label":"Level"},{"p":84,"label":"Sound"},{"p":24,"label":"Cutoff"},{"p":25,"label":"Reso"}]},{"name":"Envelope","knobs":[{"p":26,"label":"Trigger"},{"p":27,"label":"Attack"},{"p":28,"label":"Decay"},{"p":29,"label":"Amount"}]},{"name":"LFO","knobs":[{"p":30,"label":"Rate"},{"p":31,"label":"Depth"},{"p":32,"label":"Shape"},{"p":33,"label":"Target"}]},{"name":"Bass line (the bass as notes)","knobs":[{"p":152,"label":"Mode"},{"p":153,"label":"Length"},{"p":154,"label":"Move"},{"p":155,"label":"Glide"}]},{"name":"Place","knobs":[{"p":23,"label":"Octave"},{"p":90,"label":"By hand"},{"p":113,"label":"Pan"},{"p":118,"label":"Send"}]}]},{"name":"Acid","sections":[{"name":"Acid","knobs":[{"p":1,"label":"Level"},{"p":34,"label":"Cutoff"},{"p":35,"label":"Reso"},{"p":36,"label":"Env mod"}]},{"name":"Envelope and sound","knobs":[{"p":37,"label":"Decay"},{"p":38,"label":"Accent"},{"p":39,"label":"Slide"},{"p":40,"label":"Sound"}]},{"name":"The line","knobs":[{"p":41,"label":"Density"},{"p":42,"label":"Length"},{"p":43,"label":"Range"},{"p":44,"label":"Mutate"},{"p":151,"label":"Answer"},{"p":21,"label":"Answer every (bars; or before a drum change)"},{"p":76,"label":"Answer sync (0 bar, 1 loop)"},{"p":173,"label":"Frozen (the line held and stored with the piece)"},{"p":159,"label":"Mutates (what Mutate changes: 0 all, 1 notes, 2 rhythm, 3 accents)"}]},{"name":"Place","knobs":[{"p":45,"label":"Octave"},{"p":91,"label":"By hand"},{"p":114,"label":"Pan"},{"p":119,"label":"Send"}]}]},{"name":"Pluck","sections":[{"name":"Pluck","knobs":[{"p":98,"label":"Level"},{"p":99,"label":"Sound"},{"p":100,"label":"Density"},{"p":101,"label":"Octave"}]},{"name":"Behaviour","knobs":[{"p":102,"label":"Decay"},{"p":103,"label":"Style"},{"p":104,"label":"Rate"},{"p":105,"label":"Range"}]},{"name":"Deja vu (and the acid's Mutates)","knobs":[{"p":156,"label":"Pluck vu"},{"p":157,"label":"Loop"},{"p":158,"label":"Leaps"},{"p":174,"label":"Motif"}]},{"name":"Place","knobs":[{"p":122,"label":"By hand"},{"p":115,"label":"Pan"},{"p":120,"label":"Send"}]}]},{"name":"Drums","sections":[{"name":"Drums","knobs":[{"p":3,"label":"Level"},{"p":46,"label":"Drive"},{"p":47,"label":"Swing"},{"p":48,"label":"Pattern"}]},{"name":"Kit","knobs":[{"p":85,"label":"Kick"},{"p":86,"label":"Snare"},{"p":87,"label":"Hats"},{"p":88,"label":"Perc"}]},{"name":"Links (drums into voices)","knobs":[{"p":77,"label":"Links on"},{"p":78,"label":"K>Bass"},{"p":79,"label":"S>Pad"},{"p":80,"label":"H>Acid"},{"p":81,"label":"P>Clock"}]},{"name":"Drum drift","knobs":[{"p":94,"label":"Change"},{"p":95,"label":"Every"},{"p":96,"label":"Pool"},{"p":97,"label":"Mutate"}]},{"name":"Feel (ghost notes, accents, the pad's comping)","knobs":[{"p":161,"label":"Ghosts"},{"p":162,"label":"Accents"},{"p":160,"label":"Pad comp"},{"p":163,"label":"Humanize"}]},{"name":"Phrase (chain, slice, time)","knobs":[{"p":164,"label":"Chain"},{"p":165,"label":"Slice"},{"p":166,"label":"Time"}]},{"name":"Place","knobs":[{"p":116,"label":"Pan"},{"p":121,"label":"Send"}]},{"name":"Kick lane","knobs":[{"p":49,"label":"Level"},{"p":50,"label":"Tune"},{"p":51,"label":"Decay"},{"p":106,"label":"Probability"},{"p":132,"label":"Length (steps)"},{"p":138,"label":"Density (50: as written)"},{"p":167,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":144,"label":"Source pattern"}]},{"name":"Snare lane","knobs":[{"p":52,"label":"Level"},{"p":53,"label":"Tune"},{"p":54,"label":"Decay"},{"p":107,"label":"Probability"},{"p":133,"label":"Length (steps)"},{"p":139,"label":"Density (50: as written)"},{"p":168,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":145,"label":"Source pattern"}]},{"name":"Clap lane","knobs":[{"p":55,"label":"Level"},{"p":56,"label":"Tune"},{"p":57,"label":"Decay"},{"p":108,"label":"Probability"},{"p":134,"label":"Length (steps)"},{"p":140,"label":"Density (50: as written)"},{"p":169,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":146,"label":"Source pattern"}]},{"name":"Hat lane","knobs":[{"p":58,"label":"Level"},{"p":59,"label":"Tune"},{"p":60,"label":"Decay"},{"p":109,"label":"Probability"},{"p":135,"label":"Length (steps)"},{"p":141,"label":"Density (50: as written)"},{"p":170,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":147,"label":"Source pattern"}]},{"name":"Open hat lane","knobs":[{"p":61,"label":"Level"},{"p":62,"label":"Tune"},{"p":63,"label":"Decay"},{"p":110,"label":"Probability"},{"p":136,"label":"Length (steps)"},{"p":142,"label":"Density (50: as written)"},{"p":171,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":148,"label":"Source pattern"}]},{"name":"Perc lane","knobs":[{"p":64,"label":"Level"},{"p":65,"label":"Tune"},{"p":66,"label":"Decay"},{"p":111,"label":"Probability"},{"p":137,"label":"Length (steps)"},{"p":143,"label":"Density (50: as written)"},{"p":172,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":149,"label":"Source pattern"}]}]},{"name":"Space & master","sections":[{"name":"Space","knobs":[{"p":67,"label":"Echo"},{"p":68,"label":"Echo time"},{"p":69,"label":"Reverb"},{"p":70,"label":"Size"}]},{"name":"Reverb","knobs":[{"p":123,"label":"Type"},{"p":124,"label":"Damping"},{"p":125,"label":"Predelay"},{"p":126,"label":"Amount"}]},{"name":"Master bus","knobs":[{"p":128,"label":"Ratio"},{"p":129,"label":"Thresh"},{"p":130,"label":"Make-up"},{"p":131,"label":"Ceiling"}]}]},{"name":"Mixer","sections":[{"name":"Levels","knobs":[{"p":0,"label":"Pad"},{"p":2,"label":"Bass"},{"p":1,"label":"Acid"},{"p":98,"label":"Pluck"},{"p":3,"label":"Drums"},{"p":4,"label":"Vinyl"}]},{"name":"Pan","knobs":[{"p":112,"label":"Pad"},{"p":113,"label":"Bass"},{"p":114,"label":"Acid"},{"p":115,"label":"Pluck"},{"p":116,"label":"Drums"}]},{"name":"Send (echo and reverb)","knobs":[{"p":117,"label":"Pad"},{"p":118,"label":"Bass"},{"p":119,"label":"Acid"},{"p":120,"label":"Pluck"},{"p":121,"label":"Drums"}]},{"name":"Vinyl","knobs":[{"p":20,"label":"Wear"},{"p":22,"label":"Pump (the kick ducks it)"}]},{"name":"More","knobs":[{"p":175,"label":"Frozen"}]}]}],"alg":[[193,17,17,20,1,20],[1,17,17,20,193,20],[193,17,20,1,17,20],[193,17,148,1,17,20],[193,20,1,20,1,20],[193,148,1,20,1,20],[193,17,5,20,1,20],[1,17,197,20,1,20],[1,17,5,20,193,20],[1,5,20,193,17,20],[193,5,20,1,17,20],[1,5,5,20,193,20],[193,5,5,20,1,20],[193,5,17,20,1,20],[1,5,17,20,193,20],[193,17,2,37,5,20],[1,17,2,37,197,20],[1,17,17,197,5,20],[193,20,20,1,17,20],[1,5,20,193,20,20],[1,20,20,193,20,20],[193,20,20,20,1,20],[193,20,20,1,20,4],[193,20,20,20,4,4],[193,20,20,4,4,4],[193,5,20,1,20,4],[1,5,20,193,20,4],[4,193,17,20,1,20],[193,20,1,20,4,4],[4,193,17,20,4,4],[193,20,4,4,4,4],[196,4,4,4,4,4]],"lanes":["Kick","Snare","Clap","Hat","Open hat","Perc"],"layers":["Pad","Bass","Acid","Pluck","Drums"],"enum":{"P_CM_LVL":98,"P_CM_SND":99,"P_NPARAMS":176}}</script>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const D = JSON.parse($("pdata").textContent);
+const P = D.params;
+const NPARAMS = P.length;
+const val = P.map((q) => q.def);                 /* what the FM-1 has, as far as we know */
+const say = (txt) => { $("msg").textContent = txt || ""; };
+
+/* ===================================================================== the MIDI port */
+let port = null, flushTimer = null;
+const pend = new Map();
+const waiters = [];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function openPort() {
+  if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
+  if (!navigator.requestMIDIAccess) throw new Error("This browser cannot do MIDI. Use Chrome or Edge.");
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { throw new Error("MIDI (SysEx) access was not allowed: allow it in the site settings."); }
+  const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
+  const inp = pick(midi.inputs), out = pick(midi.outputs);
+  if (!inp || !out) throw new Error("The FM-1 was not found. Check the USB cable and close other programs that use its MIDI port.");
+  port = { inp, out };
+  inp.onmidimessage = onMidi;
+  return port;
+}
+function onMidi(ev) {
+  const d = ev.data;
+  if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
+  if (d[3] === 0x57) { const w = waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }
+  else if (d[3] === 0x51) onDump(d);
+  else if (d[3] === 0x58) onVoiceReply(d);
+}
+function waitFor(ms) {
+  return new Promise((res) => {
+    const w = (a) => { clearTimeout(tm); res(a); };
+    waiters.push(w);
+    const tm = setTimeout(() => { const i = waiters.indexOf(w); if (i >= 0) waiters.splice(i, 1); res(null); }, ms);
+  });
+}
+const send = (bytes) => { try { port.out.send(bytes); return true; } catch (e) { return false; } };
+
+/* ===================================================================== the parameters */
+function setParam(p, v) {
+  val[p] = v;
+  pend.set(p, v);
+  if (!flushTimer) flushTimer = setTimeout(flush, 25);
+}
+function flush() {
+  flushTimer = null;
+  if (!port) { pend.clear(); return; }
+  let n = 0;
+  for (const [p, v] of pend) {
+    const u = v + 8192;
+    send([0xF0, 0x7D, 0x50, 0x50, 0x01, p >> 7, p & 127, (u >> 7) & 127, u & 127, 0xF7]);
+    pend.delete(p);
+    if (++n >= 6) break;
+  }
+  if (pend.size) flushTimer = setTimeout(flush, 25);
+}
+let dumpGot = 0;
+function onDump(d) {                              /* F0 7D 50 51 first-hi first-lo count (hi lo)* F7 */
+  const first = (d[4] << 7) | d[5], n = d[6];
+  for (let k = 0; k < n; k++) val[first + k] = (((d[7 + 2 * k] << 7) | d[8 + 2 * k]) & 0x3FFF) - 8192;
+  dumpGot = Math.max(dumpGot, first + n);
+  if (dumpGot >= NPARAMS) { renderRows(); $("conn").textContent = "Connected: " + port.inp.name + ". Read " + NPARAMS + " parameters."; }
+}
+const PAGES = D.tabs;                             /* a tab a voice (all of the pad together, all of the drums together), in sections */
+let page = 0;
+function renderPages() {
+  const box = $("pages");
+  box.textContent = "";
+  PAGES.forEach((g, i) => {
+    const b = document.createElement("button");
+    b.textContent = g.name;
+    b.setAttribute("aria-current", i === page ? "true" : "false");
+    b.addEventListener("click", () => { page = i; renderPages(); renderRows(); });
+    box.append(b);
+  });
+}
+function renderRows() {
+  const g = PAGES[page];
+  $("pagetitle").textContent = g.name;
+  const box = $("rows");
+  box.textContent = "";
+  g.sections.forEach((s) => {
+    const h = document.createElement("h3");
+    h.textContent = s.name;
+    h.style.marginTop = "14px";
+    box.append(h);
+    s.knobs.forEach((k) => box.append(paramRow(k)));
+  });
+}
+function paramRow(k) {
+  const q = P[k.p], row = document.createElement("div");
+  row.className = "row";
+  const lab = document.createElement("label");
+  lab.textContent = k.label;
+  const out = document.createElement("span");
+  out.className = "val";
+  const text = (v) => (q.t ? q.t[v - q.min] || v : String(v));
+  let ctl;
+  if (q.t && q.max - q.min < 40) {
+    ctl = document.createElement("select");
+    q.t.forEach((s, i) => { const o = document.createElement("option"); o.value = q.min + i; o.textContent = s; ctl.append(o); });
+    ctl.value = val[k.p];
+    ctl.addEventListener("change", () => { setParam(k.p, +ctl.value); out.textContent = ""; });
+  } else {
+    ctl = document.createElement("input");
+    ctl.type = "range"; ctl.min = q.min; ctl.max = q.max; ctl.step = 1; ctl.value = val[k.p];
+    out.textContent = text(val[k.p]);
+    ctl.addEventListener("input", () => { out.textContent = text(+ctl.value); setParam(k.p, +ctl.value); });
+  }
+  const rst = document.createElement("button");
+  rst.className = "alt small"; rst.textContent = "↺"; rst.title = "Back to the default (" + text(q.def) + ")";
+  rst.addEventListener("click", () => { ctl.value = q.def; out.textContent = q.t && ctl.tagName === "SELECT" ? "" : text(q.def); setParam(k.p, q.def); });
+  row.append(lab, ctl, out, rst);
+  return row;
+}
+
+/* ===================================================================== DX7 voices: the two formats */
+/* the 155-byte voice: six operators of 21 bytes (OP6 first), then the voice; the 128-byte packed record is what a bank holds (firmware/src/dsp/fm6.inc) */
+const FP = { R1: 0, L1: 4, BP: 8, LD: 9, RD: 10, LC: 11, RC: 12, RS: 13, AMS: 14, KVS: 15, OL: 16, MODE: 17, FC: 18, FF: 19, DET: 20, OP: 21,
+  PR1: 126, PL1: 130, ALG: 134, FB: 135, OKS: 136, LFS: 137, LFD: 138, LPMD: 139, LAMD: 140, LKS: 141, LFW: 142, LPMS: 143, TRNSP: 144, NAME: 145, SIZE: 155 };
+const OPMAX = [99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 3, 3, 7, 3, 7, 99, 1, 31, 99, 14];
+const VMAX = [99, 99, 99, 99, 99, 99, 99, 99, 31, 7, 1, 99, 99, 99, 99, 1, 5, 7, 48];
+function vmax(i) { return i < 126 ? OPMAX[i % 21] : i < FP.NAME ? VMAX[i - 126] : 126; }
+function sanitize(v) {
+  for (let i = 0; i < FP.SIZE; i++) {
+    if (i >= FP.NAME) v[i] = v[i] < 32 || v[i] > 126 ? 32 : v[i];
+    else if (v[i] > vmax(i)) v[i] = vmax(i);
+  }
+  return v;
+}
+function unpackVoice(b) {
+  const v = new Uint8Array(FP.SIZE);
+  for (let k = 0; k < 6; k++) {
+    const o = b.subarray(k * 17, k * 17 + 17), d = k * FP.OP;
+    for (let i = 0; i < 11; i++) v[d + i] = o[i] & 127;
+    v[d + FP.LC] = o[11] & 3; v[d + FP.RC] = (o[11] >> 2) & 3;
+    v[d + FP.RS] = o[12] & 7; v[d + FP.DET] = (o[12] >> 3) & 15;
+    v[d + FP.AMS] = o[13] & 3; v[d + FP.KVS] = (o[13] >> 2) & 7;
+    v[d + FP.OL] = o[14] & 127;
+    v[d + FP.MODE] = o[15] & 1; v[d + FP.FC] = (o[15] >> 1) & 31;
+    v[d + FP.FF] = o[16] & 127;
+  }
+  for (let i = 0; i < 9; i++) v[FP.PR1 + i] = b[102 + i] & 127;
+  v[FP.ALG] &= 31;
+  v[FP.FB] = b[111] & 7; v[FP.OKS] = (b[111] >> 3) & 1;
+  for (let i = 0; i < 4; i++) v[FP.LFS + i] = b[112 + i] & 127;
+  v[FP.LKS] = b[116] & 1; v[FP.LFW] = (b[116] >> 1) & 7; v[FP.LPMS] = (b[116] >> 4) & 7;
+  v[FP.TRNSP] = b[117] & 127;
+  for (let i = 0; i < 10; i++) v[FP.NAME + i] = b[118 + i] & 127;
+  return sanitize(v);
+}
+function packVoice(v) {
+  const b = new Uint8Array(128);
+  for (let k = 0; k < 6; k++) {
+    const o = k * 17, d = k * FP.OP;
+    for (let i = 0; i < 11; i++) b[o + i] = v[d + i] & 127;
+    b[o + 11] = (v[d + FP.LC] & 3) | ((v[d + FP.RC] & 3) << 2);
+    b[o + 12] = (v[d + FP.RS] & 7) | ((v[d + FP.DET] & 15) << 3);
+    b[o + 13] = (v[d + FP.AMS] & 3) | ((v[d + FP.KVS] & 7) << 2);
+    b[o + 14] = v[d + FP.OL] & 127;
+    b[o + 15] = (v[d + FP.MODE] & 1) | ((v[d + FP.FC] & 31) << 1);
+    b[o + 16] = v[d + FP.FF] & 127;
+  }
+  for (let i = 0; i < 9; i++) b[102 + i] = v[FP.PR1 + i] & 127;
+  b[111] = (v[FP.FB] & 7) | ((v[FP.OKS] & 1) << 3);
+  for (let i = 0; i < 4; i++) b[112 + i] = v[FP.LFS + i] & 127;
+  b[116] = (v[FP.LKS] & 1) | ((v[FP.LFW] & 7) << 1) | ((v[FP.LPMS] & 7) << 4);
+  b[117] = v[FP.TRNSP] & 127;
+  for (let i = 0; i < 10; i++) b[118 + i] = v[FP.NAME + i] & 127;
+  return b;
+}
+function initVoice() {                            /* the DX7's init voice: one operator (OP1) sounding, a plain sine */
+  const v = new Uint8Array(FP.SIZE);
+  for (let k = 0; k < 6; k++) {
+    const d = k * FP.OP;
+    v[d + 0] = v[d + 1] = v[d + 2] = v[d + 3] = 99;
+    v[d + 4] = v[d + 5] = v[d + 6] = 99; v[d + 7] = 0;
+    v[d + FP.BP] = 39; v[d + FP.LC] = 0; v[d + FP.RC] = 0; v[d + FP.FC] = 1; v[d + FP.DET] = 7;
+    v[d + FP.OL] = k === 5 ? 99 : 0;
+  }
+  for (let i = 0; i < 4; i++) { v[FP.PR1 + i] = 99; v[FP.PL1 + i] = 50; }
+  v[FP.ALG] = 0; v[FP.LFS] = 35; v[FP.LFD] = 0; v[FP.LFW] = 0; v[FP.TRNSP] = 24;
+  const nm = "INIT VOICE";
+  for (let i = 0; i < 10; i++) v[FP.NAME + i] = nm.charCodeAt(i);
+  return v;
+}
+const nameOf = (v) => String.fromCharCode(...Array.from(v.subarray(FP.NAME, FP.NAME + 10)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd();
+const checksum = (a) => { let s = 0; for (const b of a) s += b; return (128 - (s & 127)) & 127; };
+
+/* ===================================================================== the algorithms (the firmware's routing table, FM6_ALG) */
+/* a byte per operator, OP6 first: bits 0-1 the bus it writes (0 the voice: a carrier), bit 2 add to it (else replace), bits 4-5 the bus it reads,
+ * bit 6 feedback on itself, bit 7 the end of a feedback loop. Walk it in order to see who modulates whom. */
+function algGraph(a) {
+  const row = D.alg[a], bus = [[], [], []], edges = [], carrier = [], fb = [];
+  for (let k = 0; k < 6; k++) {
+    const f = row[k], out = f & 3, inn = (f >> 4) & 3, add = f & 4;
+    const n = 6 - k;                              /* the operator's number */
+    if (inn) for (const s of bus[inn]) edges.push([s, n]);
+    carrier[n] = out === 0;
+    fb[n] = (f & 0xC0) !== 0;
+    if (out) { if (!add) bus[out] = []; bus[out].push(n); }
+  }
+  /* a feedback loop through OP6 (algorithms 4 and 6): OP6's feedback comes back from the end of the chain */
+  return { edges, carrier, fb };
+}
+function algLayout(g) {
+  const level = {};
+  const targets = (n) => g.edges.filter((e) => e[0] === n).map((e) => e[1]);
+  const lv = (n) => { if (level[n] !== undefined) return level[n]; const t = targets(n); level[n] = t.length ? 1 + Math.max(...t.map(lv)) : 0; return level[n]; };
+  for (let n = 1; n <= 6; n++) lv(n);
+  const byLevel = {};
+  for (let n = 1; n <= 6; n++) (byLevel[level[n]] = byLevel[level[n]] || []).push(n);
+  const maxl = Math.max(...Object.values(level)), pos = {};
+  for (const l of Object.keys(byLevel)) byLevel[l].forEach((n, i) => { pos[n] = { x: 180 + (i - (byLevel[l].length - 1) / 2) * 62, y: 150 - l * 42 }; });
+  return { pos, maxl };
+}
+function drawAlg() {
+  const a = voice[FP.ALG], g = algGraph(a), L = algLayout(g), svg = $("algsvg");
+  let s = "";
+  for (const [from, to] of g.edges) s += `<line x1="${L.pos[from].x}" y1="${L.pos[from].y + 12}" x2="${L.pos[to].x}" y2="${L.pos[to].y - 12}" stroke="#bba79a" stroke-width="2"/>`;
+  for (let n = 1; n <= 6; n++) {
+    const p = L.pos[n], sel = n === opSel;
+    s += `<g data-op="${n}" style="cursor:pointer"><rect x="${p.x - 17}" y="${p.y - 12}" width="34" height="24" rx="4" fill="${sel ? "#e0344f" : "#2e1822"}" stroke="${sel ? "#ff8f8f" : "#4a2a35"}" stroke-width="2"/>`;
+    if (g.carrier[n]) s += `<rect x="${p.x - 17}" y="${p.y + 8}" width="34" height="4" fill="#ffd447"/>`;
+    s += `<text x="${p.x}" y="${p.y + 4}" text-anchor="middle">${n}</text>`;
+    if (g.fb[n]) s += `<path d="M ${p.x + 17} ${p.y - 4} q 12 -2 12 -10 q 0 -10 -12 -8" fill="none" stroke="#ffd447" stroke-width="2"/>`;
+    s += `</g>`;
+  }
+  svg.innerHTML = s;
+  svg.querySelectorAll("g[data-op]").forEach((el) => el.addEventListener("click", () => { opSel = +el.dataset.op; renderOpPanel(); drawAlg(); }));
+}
+
+/* ===================================================================== the voice editor */
+let voice = initVoice(), slot = 0, nloaded = 0, opSel = 1, live = true;
+const slots = new Array(16).fill(null);          /* {v: the 155 bytes} of what the FM-1 holds, once read */
+const library = [];                              /* voices read from .syx files */
+let sendTimer = null, sending = false, again = false;
+
+function renderSlots() {
+  const box = $("slots");
+  box.textContent = "";
+  for (let i = 0; i < 16; i++) {
+    const b = document.createElement("button");
+    const s = slots[i];
+    b.textContent = (i + 1) + (s ? "  " + nameOf(s) : i <= nloaded ? "  (new)" : "");
+    b.className = s ? "" : "empty";
+    b.disabled = i > nloaded && !s;
+    b.setAttribute("aria-current", i === slot ? "true" : "false");
+    b.addEventListener("click", () => { slot = i; if (slots[i]) voice = Uint8Array.from(slots[i]); renderSlots(); renderVoice(); updateButtons(); });
+    box.append(b);
+  }
+}
+function updateButtons() {
+  const on = !!port;
+  $("vread").disabled = !on; $("vsend").disabled = !on; $("vplay").disabled = !on; $("readall").disabled = !on;
+}
+function renderVoice() {
+  $("vname").value = nameOf(voice);
+  const sel = $("valg");
+  if (!sel.options.length) for (let i = 0; i < 32; i++) { const o = document.createElement("option"); o.value = i; o.textContent = "Algorithm " + (i + 1); sel.append(o); }
+  sel.value = voice[FP.ALG];
+  renderGlobal();
+  renderOpPanel();
+  drawAlg();
+}
+function vrow(label, idx, max, opts) {                 /* a slider for a byte of the voice (idx), 0..max; opts: names */
+  const row = document.createElement("div");
+  row.className = "row";
+  const lab = document.createElement("label"), out = document.createElement("span");
+  lab.textContent = label; out.className = "val";
+  let ctl;
+  if (opts) {
+    ctl = document.createElement("select");
+    opts.forEach((s, i) => { const o = document.createElement("option"); o.value = i; o.textContent = s; ctl.append(o); });
+    ctl.value = voice[idx];
+    ctl.addEventListener("change", () => { voice[idx] = +ctl.value; changed(); if (idx >= 0) postEdit(idx); });
+  } else {
+    ctl = document.createElement("input");
+    ctl.type = "range"; ctl.min = 0; ctl.max = max; ctl.value = voice[idx];
+    out.textContent = voice[idx];
+    ctl.addEventListener("input", () => { voice[idx] = +ctl.value; out.textContent = ctl.value; changed(); postEdit(idx); });
+  }
+  row.append(lab, ctl, out, document.createElement("span"));
+  return row;
+}
+const CURVE = ["-LIN", "-EXP", "+EXP", "+LIN"], LFOW = ["Triangle", "Saw down", "Saw up", "Square", "Sine", "Sample & hold"];
+const NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+function renderGlobal() {
+  const box = $("vglobal");
+  box.textContent = "";
+  box.append(vrow("Feedback", FP.FB, 7), vrow("Oscillator sync", FP.OKS, 1, ["Off", "On"]), vrow("Transpose", FP.TRNSP, 48),
+    vrow("Pitch EG rate 1", FP.PR1, 99), vrow("Pitch EG rate 2", FP.PR1 + 1, 99), vrow("Pitch EG rate 3", FP.PR1 + 2, 99), vrow("Pitch EG rate 4", FP.PR1 + 3, 99),
+    vrow("Pitch EG level 1", FP.PL1, 99), vrow("Pitch EG level 2", FP.PL1 + 1, 99), vrow("Pitch EG level 3", FP.PL1 + 2, 99), vrow("Pitch EG level 4", FP.PL1 + 3, 99),
+    vrow("LFO speed", FP.LFS, 99), vrow("LFO delay", FP.LFD, 99), vrow("LFO pitch depth", FP.LPMD, 99), vrow("LFO amp depth", FP.LAMD, 99),
+    vrow("LFO sync", FP.LKS, 1, ["Off", "On"]), vrow("LFO wave", FP.LFW, 5, LFOW), vrow("LFO pitch sens", FP.LPMS, 7));
+}
+function renderOpPanel() {
+  const d = (6 - opSel) * FP.OP, g = algGraph(voice[FP.ALG]);
+  $("optitle").textContent = "Operator " + opSel + (g.carrier[opSel] ? " (carrier)" : " (modulator)");
+  const ob = $("ops");
+  ob.textContent = "";
+  for (let n = 1; n <= 6; n++) {
+    const b = document.createElement("button");
+    b.textContent = "OP" + n; b.className = g.carrier[n] ? "car" : "";
+    b.setAttribute("aria-current", n === opSel ? "true" : "false");
+    b.addEventListener("click", () => { opSel = n; renderOpPanel(); drawAlg(); });
+    ob.append(b);
+  }
+  const box = $("vop");
+  box.textContent = "";
+  const ratio = () => (voice[d + FP.MODE] ? "fixed " + (Math.pow(10, voice[d + FP.FC] & 3) * (1 + voice[d + FP.FF] / 100 * 8.772)).toFixed(1) + " Hz"
+    : "ratio " + ((voice[d + FP.FC] || 0.5) * (1 + voice[d + FP.FF] / 100)).toFixed(2));
+  box.append(vrow("Output level", d + FP.OL, 99), vrow("Frequency mode", d + FP.MODE, 1, ["Ratio", "Fixed"]), vrow("Coarse", d + FP.FC, 31), vrow("Fine", d + FP.FF, 99), vrow("Detune", d + FP.DET, 14),
+    vrow("EG rate 1", d, 99), vrow("EG rate 2", d + 1, 99), vrow("EG rate 3", d + 2, 99), vrow("EG rate 4", d + 3, 99),
+    vrow("EG level 1", d + 4, 99), vrow("EG level 2", d + 5, 99), vrow("EG level 3", d + 6, 99), vrow("EG level 4", d + 7, 99),
+    vrow("Level scaling: break", d + FP.BP, 99), vrow("Left depth", d + FP.LD, 99), vrow("Right depth", d + FP.RD, 99),
+    vrow("Left curve", d + FP.LC, 3, CURVE), vrow("Right curve", d + FP.RC, 3, CURVE), vrow("Rate scaling", d + FP.RS, 7),
+    vrow("Amp mod sens", d + FP.AMS, 3), vrow("Velocity sens", d + FP.KVS, 7));
+  const info = document.createElement("p");
+  info.className = "muted"; info.id = "ratioinfo"; info.textContent = ratio();
+  box.append(info);
+  box.oninput = box.onchange = () => { info.textContent = ratio(); drawEnv(); };   /* (assigned, so a re-render does not stack listeners) */
+  drawEnv();
+}
+function drawEnv() {                             /* the operator's envelope: levels L1..L4, the segments as wide as their rates are slow */
+  const d = (6 - opSel) * FP.OP, W = 320, H = 96, pad = 8;
+  const L = [voice[d + 4], voice[d + 5], voice[d + 6], voice[d + 7]], R = [voice[d], voice[d + 1], voice[d + 2], voice[d + 3]];
+  const seg = R.map((r) => 8 + Math.pow((99 - r) / 99, 1.6) * 80);
+  const hold = 36, total = seg[0] + seg[1] + seg[2] + hold + seg[3];
+  const sx = (W - 2 * pad) / total, y = (l) => H - pad - (l / 99) * (H - 2 * pad);
+  let x = pad, pts = [[x, y(0)]];
+  x += seg[0] * sx; pts.push([x, y(L[0])]);
+  x += seg[1] * sx; pts.push([x, y(L[1])]);
+  x += seg[2] * sx; pts.push([x, y(L[2])]);
+  x += hold * sx; pts.push([x, y(L[2])]);
+  x += seg[3] * sx; pts.push([x, y(L[3])]);
+  $("envsvg").innerHTML = `<polyline fill="rgba(224,52,79,.25)" stroke="#ff8f8f" stroke-width="2" points="${pts.map((p) => p.join(",")).join(" ")} ${pts[pts.length - 1][0]},${H - pad} ${pad},${H - pad}"/>` +
+    pts.slice(1).map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#ffd447"/>`).join("");
+}
+function changed() { slots_dirty = true; }
+let slots_dirty = false;
+function postEdit() {                            /* a change: to the FM-1 soon (the latest), one message in flight */
+  if (!live || !port) return;
+  clearTimeout(sendTimer);
+  sendTimer = setTimeout(sendVoice, 120);
+}
+async function sendVoice() {
+  if (!port) return;
+  if (sending) { again = true; return; }
+  sending = true;
+  do {
+    again = false;
+    if (slot > nloaded) { say("Slots fill in order: send to the next free slot (" + (nloaded + 1) + ") first."); break; }
+    const b = packVoice(voice);
+    send([0xF0, 0x7D, 0x50, 0x56, slot, ...b, checksum(b), 0xF7]);
+    const a = await waitFor(1200);
+    if (!a) { say("The FM-1 did not answer (is it running PERF-1 0.11 or later?)."); break; }
+    if (a.n === 0x7F) { say("The FM-1 did not take the voice."); break; }
+    slots[slot] = Uint8Array.from(voice);
+    if (slot === nloaded) nloaded++;
+    say("");
+    renderSlotsSoon();
+  } while (again);
+  sending = false;
+}
+let slotsTimer = null;
+function renderSlotsSoon() { clearTimeout(slotsTimer); slotsTimer = setTimeout(renderSlots, 200); }
+
+/* reading the slots back from the FM-1 */
+let voiceWait = null;
+function onVoiceReply(d) {                       /* F0 7D 50 58 slot loaded [128 bytes, checksum] F7 */
+  if (!voiceWait) return;
+  const w = voiceWait; voiceWait = null;
+  const have = d.length > 8;
+  w({ slot: d[4], loaded: d[5], data: have ? Uint8Array.from(d.slice(6, 134)) : null });
+}
+async function readSlots() {
+  say("Reading the voices…");
+  nloaded = 0;
+  for (let i = 0; i < 16; i++) {
+    const r = await new Promise((res) => {
+      voiceWait = res;
+      send([0xF0, 0x7D, 0x50, 0x56, 0x7E, i, 0xF7]);
+      setTimeout(() => { if (voiceWait === res) { voiceWait = null; res(null); } }, 1500);
+    });
+    if (!r) { say("The FM-1 did not answer."); break; }
+    nloaded = r.loaded;
+    if (i >= r.loaded) { for (let j = i; j < 16; j++) slots[j] = null; break; }
+    slots[i] = unpackVoice(r.data);
+  }
+  if (slots[slot]) voice = Uint8Array.from(slots[slot]);
+  say("The FM-1 holds " + nloaded + " voice" + (nloaded === 1 ? "" : "s") + ".");
+  syncPluckNames();
+  renderSlots(); renderVoice();
+}
+function syncPluckNames() {                      /* the pluck's Sound lists the loaded voices by name */
+  const q = P[D.enum.P_CM_SND];
+  for (let i = 0; i < 16; i++) q.t[12 + 22 + i] = slots[i] ? "DX " + nameOf(slots[i]) : "(empty)";
+  renderRows();
+}
+
+/* files: .syx banks and single voices */
+function parseSyx(buf, file) {
+  const out = [];
+  const add = (b128) => out.push({ v: unpackVoice(b128), file });
+  if (buf.length === 4096) { for (let i = 0; i < 32; i++) add(buf.subarray(i * 128, i * 128 + 128)); return out; }
+  for (let i = 0; i < buf.length;) {
+    if (buf[i] !== 0xF0) { i++; continue; }
+    let j = i + 1;
+    while (j < buf.length && buf[j] !== 0xF7) j++;
+    const m = buf.subarray(i + 1, j);
+    i = j + 1;
+    if (m.length === 4102 && m[0] === 0x43 && m[2] === 0x09 && m[3] === 0x20 && m[4] === 0x00) for (let v = 0; v < 32; v++) add(m.subarray(5 + v * 128, 5 + (v + 1) * 128));
+    else if (m.length === 161 && m[0] === 0x43 && m[2] === 0x00 && m[3] === 0x01 && m[4] === 0x1B) add(packVoice(sanitize(Uint8Array.from(m.subarray(5, 160)))));
+  }
+  return out;
+}
+function renderLibrary() {
+  const box = $("libl");
+  box.textContent = "";
+  library.forEach((e, i) => {
+    const row = document.createElement("div"), n = document.createElement("span"), s = document.createElement("span");
+    n.textContent = nameOf(e.v) || "(no name)"; s.className = "src"; s.textContent = e.file;
+    row.append(n, s);
+    row.title = "Edit this voice";
+    row.addEventListener("click", () => { voice = Uint8Array.from(e.v); renderVoice(); changed(); postEdit(); say("Loaded “" + nameOf(e.v) + "” into the editor (slot " + (slot + 1) + ")."); });
+    box.append(row);
+  });
+}
+$("vfile").addEventListener("change", async (e) => {
+  library.length = 0;
+  for (const f of e.target.files) library.push(...parseSyx(new Uint8Array(await f.arrayBuffer()), f.name));
+  renderLibrary();
+  say(library.length ? library.length + " voices found. Click one to edit it." : "No voices found in that file.");
+});
+function download(name, bytes) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
+  a.download = name; a.click();
+}
+$("vsaveone").addEventListener("click", () => {
+  const v = sanitize(Uint8Array.from(voice));
+  download((nameOf(v) || "voice").replace(/[^A-Za-z0-9_-]+/g, "_") + ".syx", new Uint8Array([0xF0, 0x43, 0x00, 0x00, 0x01, 0x1B, ...v, checksum(v), 0xF7]));
+});
+$("vsavebank").addEventListener("click", () => {
+  const body = [];
+  for (let i = 0; i < 32; i++) body.push(...packVoice(i < 16 && slots[i] ? slots[i] : initVoice()));
+  download("perf1-voices.syx", new Uint8Array([0xF0, 0x43, 0x00, 0x09, 0x20, 0x00, ...body, checksum(body), 0xF7]));
+  say("Saved the 16 slots (empty ones as init voices) as a 32-voice bank.");
+});
+
+/* controls */
+$("vname").addEventListener("input", (e) => {
+  const s = e.target.value.padEnd(10, " ");
+  for (let i = 0; i < 10; i++) { const c = s.charCodeAt(i); voice[FP.NAME + i] = c < 32 || c > 126 ? 32 : c; }
+  changed(); postEdit();
+});
+$("valg").addEventListener("change", (e) => { voice[FP.ALG] = +e.target.value; renderOpPanel(); drawAlg(); changed(); postEdit(); });
+$("vlive").addEventListener("change", (e) => { live = e.target.checked; });
+$("vnew").addEventListener("click", () => { voice = initVoice(); renderVoice(); changed(); postEdit(); say("An init voice: only OP1 sounds, a plain sine."); });
+$("vsend").addEventListener("click", () => { say(""); sendVoice(); });
+$("vread").addEventListener("click", readSlots);
+$("vplay").addEventListener("click", () => {
+  const p = D.enum.P_CM_SND;
+  setParam(p, 12 + 22 + slot);
+  if (val[D.enum.P_CM_LVL] < 40) setParam(D.enum.P_CM_LVL, 60);
+  renderRows();
+  say("The pluck now plays slot " + (slot + 1) + ".");
+});
+
+/* connecting */
+async function connect() {
+  try {
+    await openPort();
+    $("conn").textContent = "Connected: " + port.inp.name + ".";
+    $("conn").className = "ok";
+    updateButtons();
+    dumpGot = 0;
+    send([0xF0, 0x7D, 0x50, 0x50, 0x02, 0xF7]);
+    $("connect").textContent = "Reconnect";
+  } catch (e) { $("conn").textContent = e.message; $("conn").className = ""; }
+}
+$("connect").addEventListener("click", () => { port = null; connect(); });
+$("readall").addEventListener("click", () => { dumpGot = 0; send([0xF0, 0x7D, 0x50, 0x50, 0x02, 0xF7]); if (!$("p-voice").hidden) readSlots(); });
+
+/* tabs */
+function tab(name) {
+  for (const t of ["sound", "voice", "about"]) {
+    $("p-" + t).hidden = t !== name;
+    $("tab-" + t).setAttribute("aria-selected", t === name ? "true" : "false");
+  }
+}
+for (const t of ["sound", "voice", "about"]) $("tab-" + t).addEventListener("click", () => { tab(t); if (t === "voice" && port && !slots[0] && nloaded === 0) readSlots(); });
+
+renderPages(); renderRows(); renderSlots(); renderVoice(); updateButtons();
+if (location.hash === "#voices") tab("voice");
+</script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+     HYP-1: Felucca's installer page (web/index_pkg.html, by way of X0X and AMB-1), branded for HYP-1, English first.
+     tools/make_pages.py inlines fm1pkg.js and fm1ota.js and the package's metadata. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PERF-1 installer</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABXElEQVR42mNgGAWjAAeQFlD6Tw89OA369OzIf1IMJEcP1QykxHIWfJKXju8iGLxPP9xjRFdLCmAk5LOVc2MYwpOXMBxV0cWqxvrOZQaYGphjqOIAaQGl/0dVdBnkox0YGBgYGB4uPUDQMOs7l0l2BCMhyx8uPcBgfecyAwMDA0YoYBMn1RFM+CRhvn5yRJXhyRFVDHlc4qQAJmIUydjcZniYwIHpwAQOBhmb2xQ5AGcu2PPyNQpfaFMpg6ZWHIrY9WuLGBi04jDUokcnvihhpHaphmwZLC3hSxd4ywH0XABLdDDQyCuBwq///AJrQj66lIHB+g4D1pDAGwLoFriIi8JzBnIuwOV7fKFDdEGEz8cu4qIEywFCaYCFlIII3cfUAHjTwJ6XrxkY+lZjpAliooBqdQElUUAo+GkaBcRYPjyjgFTHUD0KqFIdk1sQUdUB5NQH5KSBUTAKBhwAAK4G8263HIhkAAAAAElFTkSuQmCC">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
+<style>
+  /* the mascot's colours (the boot card's slinky): crimson body, pink light, cream horns, ember-yellow eyes, on a warm black. (The variable names are older.) */
+  :root { --ground: #130a0e; --card: #211219; --card-2: #2e1822; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
+          --purple: #e0344f; --purple-2: #ff8f8f; --orange: #ffd447; --rust: #9c1d3a; --horn: #f2e6c4; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink);
+         font: 400 17px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 28px 16px 56px; }
+  h1, h2, .site .home, button { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1.2rem;
+       display: flex; align-items: center; gap: .7rem; }
+  h1::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 38%, var(--purple) 38%); }
+  .lang, .lang:hover:not(:disabled) { float: right; font: 400 14px "Barlow Semi Condensed", sans-serif; letter-spacing: 0; text-transform: none; color: var(--muted);
+          cursor: pointer; text-decoration: underline; background: none; border: 0; border-radius: 0; padding: 0; }
+  p { margin: 0 0 14px; }
+  a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  a:hover { color: var(--purple-2); }
+  button { font-size: 1rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--purple); color: #fff;
+           border: 1px solid var(--purple-2); border-radius: 8px; padding: .55em 1.6em; cursor: pointer; }
+  button:hover:not(:disabled) { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
+  button.alt { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
+  button.alt:hover:not(:disabled) { background: var(--rust); border-color: var(--purple); color: #fff; }
+  button:disabled { opacity: .35; cursor: default; }
+  #stockgo { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
+  #stockgo:hover:not(:disabled) { border-color: var(--rust); background: var(--rust); color: #fff; }
+  #status { margin-top: 14px; min-height: 1.6em; color: var(--purple-2); }
+  .small { color: var(--muted); font-size: 15px; }
+  progress { width: 100%; height: 6px; margin-top: 14px; accent-color: var(--orange); }
+  pre { color: var(--muted); font-size: 12px; white-space: pre-wrap; margin-top: 14px; background: var(--card); border-radius: 6px; padding: 0 .6em; }
+  pre:empty { display: none; }
+  #log { display: block; height: 12.5em; overflow-y: auto; overscroll-behavior: contain; margin: 14px 0 0; padding: .5em .8em; border: 1px solid var(--rule);
+         line-height: 1.45; scrollbar-color: var(--purple) var(--card-2); }
+  #log:empty { display: block; }
+  #log:empty::before { content: attr(data-empty); color: var(--rule); }
+  h2 { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 2.4rem 0 .8rem;
+       padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--purple-2); }
+  ol { margin: 0 0 16px; padding-left: 20px; }
+  input[type=file] { font: inherit; font-size: 14px; color: var(--muted); max-width: 100%; }
+  .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
+  .site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+  .site .home img { image-rendering: pixelated; display: block; width: 46px; height: 46px; }
+  .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: 1rem; }
+  .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
+  .site nav a.yt { color: var(--orange); }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin: 0 0 1rem; }
+  .card.warn { border-color: var(--rust); }
+  #vlist { max-height: 340px; overflow-y: auto; margin: 10px 0; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
+  #vlist:empty { display: none; }
+  #vlist label { display: flex; gap: .7em; align-items: baseline; padding: 3px 12px; font-size: 15px; cursor: pointer; }
+  #vlist label:nth-child(odd) { background: rgba(255,255,255,.03); }
+  #vlist input { accent-color: var(--purple); }
+  #vlist .src { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 12px; }
+  .grid div { background: var(--ground); border: 1px solid var(--rule); border-radius: 8px; padding: 6px 10px; }
+  .grid b { display: block; font: 700 1.3rem "Chakra Petch", sans-serif; color: var(--horn); }
+  .grid span { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+  .grid .hot b { color: var(--orange); }
+  .grid .bad b { color: var(--purple-2); }
+  .meter { height: 4px; border-radius: 2px; background: var(--rule); margin-top: 4px; overflow: hidden; }
+  .meter i { display: block; height: 100%; background: var(--purple); }
+  footer.mark { display: flex; align-items: center; gap: .8rem; margin-top: 2rem; }
+  footer.mark img { width: 34px; height: 34px; image-rendering: pixelated; opacity: .9; }
+</style>
+</head>
+<body>
+<main>
+  <header class="site"><a class="home" href="../"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="../install/" aria-current="page">Install</a><a href="../manual/">Manual</a></nav></header>
+  <button class="lang" id="lang"></button>
+  <h1>Install PERF-1 0.15.2</h1>
+  <div class="card">
+  <p data-t="intro"></p>
+  <p data-t="warn"></p>
+  <p class="small" data-t="direct"></p>
+  </div>
+  <div class="card warn">
+  <p class="small" data-t="beta"></p>
+  <p class="small"><span data-t="brick"></span>
+    <a href="../manual/#recovering-an-fm-1-that-won-t-start" style="color:inherit" data-t="bricklink"></a></p>
+  <p class="small" data-t="back"></p>
+  <p class="small"><a href="https://www.m-vave.com/download" target="_blank" rel="noopener" style="color:inherit">www.m-vave.com/download</a></p>
+  </div>
+  <div class="card">
+  <p><button id="go" disabled data-t="install"></button></p>
+  <progress id="bar" max="100" value="0"></progress>
+  <p id="status"></p>
+  <pre id="log" data-empty="(what is being written shows here)"></pre>
+  </div>
+  <h2 data-t="voicesh"></h2>
+  <div class="card">
+  <p class="small" data-t="voicesinfo"></p>
+  <p><input type="file" id="syxfile" accept=".syx,.SYX" multiple></p>
+  <div id="vlist"></div>
+  <p><button id="vsend" disabled data-t="vsend"></button> <button id="vclear" class="alt" data-t="vclear"></button></p>
+  <p id="vstatus" class="small"></p>
+  </div>
+  <h2 data-t="bkh"></h2>
+  <div class="card">
+  <p class="small" data-t="bkinfo"></p>
+  <p><button id="bksave" data-t="bksave"></button></p>
+  <p><input type="file" id="bkfile" accept=".p1bak"> <button id="bkrestore" disabled class="alt" data-t="bkrestore"></button></p>
+  <progress id="bkbar" max="100" value="0"></progress>
+  <p id="bkstatus" class="small"></p>
+  </div>
+  <h2 data-t="statush"></h2>
+  <div class="card">
+  <p class="small" data-t="statusinfo"></p>
+  <p><button id="stgo" data-t="stgo"></button> <button id="stsave" class="alt" disabled data-t="stsave"></button></p>
+  <p id="ststatus" class="small"></p>
+  <div id="stgrid" class="grid"></div>
+  </div>
+  <h2 data-t="stockh"></h2>
+  <p class="small" data-t="stockwhy"></p>
+  <ol class="small">
+    <li><span data-t="stock1"></span> <a id="stocklink" href="https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc" style="color:inherit">FM-1.fwsc</a></li>
+    <li><span data-t="stock2"></span><br><input type="file" id="stockfile" accept=".fwsc"></li>
+    <li data-t="stock3"></li>
+  </ol>
+  <p><button id="stockgo" disabled data-t="stockinstall"></button></p>
+  <p><a href="../" style="color:inherit" data-t="manual"></a></p>
+  <p class="small">Comments, ideas and bug reports are welcome: <a href="https://github.com/deamonSLINKY/PERF-1/issues/new/choose" target="_blank" rel="noopener" style="color:inherit">open an issue on GitHub</a> (<a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener" style="color:inherit">source</a>). Everyone is invited to help make PERF-1 better.</p>
+  <footer class="mark"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" alt=""><span class="small">PERF-1 &middot; deamonSLINKY</span></footer>
+  <p class="small">PERF-1 by deamonSLINKY is based on HYP-1, a <a href="https://www.redtail.works" style="color:inherit">RedtailWorks</a> project (GPL-3.0), a fork of AMB-1 by Charles Vestal, its six-operator FM engine is Melodee's by Kerem Kilic (Ellic Studio), built on Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener" style="color:inherit">Hügelton Instruments</a>,
+    by way of X0X and FoMni.<br>
+    Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). M-VAVE and FM-1 are trademarks of their respective owners.<br>
+    <span data-t="license"></span> <a href="https://github.com/charlesvestal/fm1-amb" target="_blank" rel="noopener" style="color:inherit">github.com/charlesvestal/fm1-amb</a></p>
+</main>
+<script type="module">
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+//
+// FM-1 .fwsc packages in the browser: the package identity and the image the
+// device reads during an update.
+
+const BLOCKS = 20, BLK = 0x30, KEEP = 0x2F;
+
+// the package identity ("FM-1_904"): one marker byte after each of the first 20 blocks
+function productOf(fwsc) {
+  if (fwsc.length < BLOCKS * BLK) throw new Error("not an FM-1 package (too short)");
+  let s = "";
+  for (let i = 0; i < BLOCKS; i++) {
+    const m = fwsc[i * BLK + KEEP];
+    if (m !== 0x7D) s += String.fromCharCode((m - i - 1) & 0xFF);
+  }
+  return s;
+}
+
+// the image the device addresses during an update: the .fwsc without the 20 marker bytes
+function logicalImage(fwsc) {
+  const out = new Uint8Array(fwsc.length - BLOCKS);
+  for (let i = 0; i < BLOCKS; i++) out.set(fwsc.subarray(i * BLK, i * BLK + KEEP), i * KEEP);
+  out.set(fwsc.subarray(BLOCKS * BLK), BLOCKS * KEEP);
+  return out;
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+//
+// The FM-1 USB-MIDI update protocol (M-UPGRADE compatible) over WebMIDI.
+// Step 1: the running firmware reads parts of the package and stages the update
+// loader. Step 2: the loader reads the whole image and writes it. In both steps
+// the device sends cmd 0x30 read requests on the logical image and we answer.
+
+const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
+const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
+const MAXDATA = 512;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const IS_OTA = (id) => /^ota-/i.test(id.model);
+
+// errors carry a code the pages translate: notfound, model, stopped, noloader, lost, noreturn,
+// mismatch (detail: the identity the device reports), badreq
+function fail(code, msg, detail = "") { const e = new Error(msg); e.code = code; e.detail = detail; return e; }
+
+function pack7(data) {
+  const out = []; let acc = 0, nb = 0;
+  for (const b of data) {
+    acc |= b << nb; nb += 8;
+    while (nb >= 7) { out.push(acc & 0x7F); acc >>>= 7; nb -= 7; }
+  }
+  if (nb) out.push(acc & 0x7F);
+  return out;
+}
+
+function unpack7(s) {
+  const out = []; let acc = 0, nb = 0;
+  for (const b of s) {
+    acc |= (b & 0x7F) << nb; nb += 7;
+    while (nb >= 8) { out.push(acc & 0xFF); acc >>>= 8; nb -= 8; }
+  }
+  return out;
+}
+
+function response(addr, data, fl = 0) {
+  const len = data.length;
+  const body = [0x00, 0x59, 0x30, (len + 8) & 0xFF, ((len + 8) >> 8) & 0xFF, 0, fl,
+    addr & 0xFF, (addr >>> 8) & 0xFF, (addr >>> 16) & 0xFF, (addr >>> 24) & 0xFF,
+    len & 0xFF, (len >> 8) & 0xFF, 0, ...data];
+  let s = 0;
+  for (let i = 6; i < body.length; i++) s += body[i];
+  body.push(~s & 0xFF);
+  return [0xF0, ...pack7(body), 0xF7];
+}
+
+function parseRequest(pkt) {
+  if (pkt[0] !== 0xF0 || pkt[pkt.length - 1] !== 0xF7) return null;
+  const u = unpack7(pkt.slice(1, -1));
+  if (u.length !== 15 || u[0] !== 0 || u[1] !== 0x59 || u[2] !== 0x30) return null;
+  let s = 0;
+  for (let i = 6; i < 14; i++) s += u[i];
+  if ((~s & 0xFF) !== u[14]) return null;
+  return { fl: u[6], addr: (u[7] | (u[8] << 8) | (u[9] << 16) | (u[10] << 24)) >>> 0, len: u[11] | (u[12] << 8) | (u[13] << 16) };
+}
+
+function parseIdentity(pkt) {
+  const d = unpack7(pkt.slice(1, -1));
+  if (d.length !== 34 || d[0] !== 0 || d[1] !== 0x59 || d[2] !== 0x11) return null;
+  const txt = String.fromCharCode(...d.slice(6, 33)).replace(/\0+$/, "");
+  const m = /^([^_]+)_(\d+)$/.exec(txt);
+  return m ? { text: txt, model: m[1], version: parseInt(m[2], 10) } : null;
+}
+
+// one MIDI in/out pair with a SysEx queue
+class Link {
+  constructor(input, output) {
+    this.input = input; this.output = output; this.q = []; this.waiter = null;
+    input.onmidimessage = (ev) => {
+      if (ev.data[0] !== 0xF0) return;
+      this.q.push(Array.from(ev.data));
+      if (this.waiter) { const w = this.waiter; this.waiter = null; w(); }
+    };
+  }
+  get lost() { return this.input.state === "disconnected" || this.output.state === "disconnected"; }
+  // false when the port is gone (unplugged): WebMIDI throws on a disconnected output
+  send(bytes) {
+    try { this.output.send(bytes); return true; } catch (_) { return false; }
+  }
+  drain() { this.q.length = 0; }
+  async read(ms) {
+    if (!this.q.length) {
+      let tm;
+      await Promise.race([new Promise((r) => { this.waiter = r; }), new Promise((r) => { tm = setTimeout(r, ms); })]);
+      clearTimeout(tm);
+      this.waiter = null;
+    }
+    return this.q.shift() || null;
+  }
+  close() { this.input.onmidimessage = null; }
+}
+
+async function handshake(link, tries = 3) {
+  link.drain();
+  for (let t = 0; t < tries; t++) {
+    if (!link.send(HS_QUERY)) return null;
+    const end = Date.now() + 1000;
+    while (Date.now() < end) {
+      const p = await link.read(end - Date.now());
+      if (!p) break;
+      const id = parseIdentity(p);
+      if (id) return id;
+    }
+  }
+  return null;
+}
+
+class Updater {
+  constructor(access, log) {
+    this.access = access;
+    this.log = log || (() => {});
+  }
+
+  // every in/out pair with the same port name that answers the handshake
+  async find(filter) {
+    const outs = [...this.access.outputs.values()];
+    for (const input of this.access.inputs.values()) {
+      if (input.state === "disconnected") continue;
+      if (!/fm-1|felucca|ota|composite|sinco|usb-midi/i.test(input.name || "")) continue;   // never probe other gear
+      const output = outs.find((o) => o.name === input.name) || (outs.length === 1 ? outs[0] : null);
+      if (!output) continue;
+      try { await input.open(); await output.open(); } catch (_) { continue; }
+      const link = new Link(input, output);
+      const id = await handshake(link, 2);
+      if (id && (!filter || filter(id))) return { link, id, name: input.name };
+      link.close();
+    }
+    return null;
+  }
+
+  async waitFor(filter, ms) {
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      const dev = await this.find(filter);
+      if (dev) return dev;
+      await sleep(1000);
+    }
+    return null;
+  }
+
+  // serve read requests until the device asks for one of the finish addresses; stops early
+  // when the port disappears (lost: true) instead of waiting out idleMs
+  async serve(link, image, finishAddr, idleMs, onProgress) {
+    let served = 0, last = Date.now();
+    for (;;) {
+      const pkt = await link.read(1000);
+      if (!pkt) {
+        if (link.lost) return { served, finished: false, lost: true };
+        if (Date.now() - last > idleMs) return { served, finished: false };
+        continue;
+      }
+      const r = parseRequest(pkt);
+      if (!r) continue;
+      last = Date.now();
+      if (r.addr === 0xE0000000 || r.addr === 0xF0000000) {
+        link.send(response(r.addr, [...new TextEncoder().encode("success"), 0]));
+        if (r.addr === finishAddr) return { served, finished: true };
+        continue;
+      }
+      if (r.len > MAXDATA || r.addr + r.len > image.length) throw fail("badreq", `bad request ${r.addr.toString(16)}+${r.len}`);
+      await sleep(10);
+      if (!link.send(response(r.addr, Array.from(image.subarray(r.addr, r.addr + r.len)), r.fl))) {
+        return { served, finished: false, lost: true };
+      }
+      served++;
+      if (onProgress) onProgress(served, r.addr);
+    }
+  }
+
+  // full install: running firmware -> loader -> new firmware
+  async install(image, product, onStep) {
+    const step = onStep || (() => {});
+    const dev = await this.find((id) => !IS_OTA(id));
+    if (!dev) throw fail("notfound", "FM-1 not found (USB cable, and no other app using it?)");
+    const [model] = product.split("_");
+    if (dev.id.model !== model) { dev.link.close(); throw fail("model", `the device is ${dev.id.text}, the package is for ${product}`); }
+    step("start", dev.id.text);
+    dev.link.send(UPGRADE);
+    await sleep(2000);
+    const s1 = await this.serve(dev.link, image, 0xE0000000, 8000, (n) => step("verify", n));
+    dev.link.close();
+    if (!s1.finished) throw fail(s1.lost ? "lost" : "stopped", `the device ${s1.lost ? "was disconnected" : "stopped"} after ${s1.served} requests: nothing was written`);
+    step("loader");
+    await sleep(3000);
+    const ota = await this.waitFor(IS_OTA, 30000);
+    if (!ota) throw fail("noloader", "the update loader did not appear. Replug the USB cable and press Install again: the device stays in update mode until it is finished.");
+    const s2 = await this.write(ota, image, step);
+    if (!s2.finished) throw fail(s2.lost ? "lost" : "stopped", `the loader ${s2.lost ? "was disconnected" : "stopped"} after ${s2.served} requests. Replug and press Install again to resume.`);
+    step("reboot");
+    await sleep(3000);
+    const back = await this.waitFor((id) => !IS_OTA(id), 40000);
+    if (!back) throw fail("noreturn", "the device did not come back: power-cycle it");
+    back.link.close();
+    if (back.id.text !== product) throw fail("mismatch", `installed, but the device reports ${back.id.text}`, back.id.text);
+    step("done", back.id.text);
+    return back.id.text;
+  }
+
+  // step 2 with the loader found by find()/waitFor()
+  async write(ota, image, step) {
+    ota.link.send(UPGRADE);
+    await sleep(2000);
+    const s2 = await this.serve(ota.link, image, 0xF0000000, 180000, (n) => step("write", n));
+    ota.link.close();
+    return s2;
+  }
+
+  // resume: the device is already in update mode (loader) -> true when the write finished
+  async resume(image, onStep) {
+    const ota = await this.find(IS_OTA);
+    if (!ota) return false;
+    return (await this.write(ota, image, onStep || (() => {}))).finished;
+  }
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Backup and restore of PERF-1's stored data over USB MIDI (the installer page): the messages, the file, and nothing that touches the browser, so a node test can check
+// them against the firmware's (firmware/src/backup_proto.h, which describes the protocol).
+
+const BK_CHUNK = 256, BK_FRAME = 64, BK_MAX = 3840;
+
+// the flash objects worth keeping (plat.h OBJ_*; the panel's calibration, 1, is the unit's own and is never saved), in the order they are read and written
+const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
+const BK_OBJECTS = [
+  { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
+  ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })),
+];
+const bkName = (id) => (BK_OBJECTS.find((o) => o.id === id) || { name: "object " + id }).name;
+
+// the checksum: 128 minus the sum of the data bytes, modulo 128
+function bkSum(a) {
+  let s = 0;
+  for (const b of a) s += b;
+  return (128 - (s & 0x7F)) & 0x7F;
+}
+
+// a chunk for the FM-1 to write: raw bytes idx * BK_CHUNK .. of an object len bytes long (7D 50 42 03 obj idx(2) len(2) n(2) [2n nibbles] chk)
+function bkChunkMsg(obj, idx, len, bytes) {
+  const n = bytes.length, body = [obj & 0x7F, (idx >> 7) & 0x7F, idx & 0x7F, (len >> 7) & 0x7F, len & 0x7F, (n >> 7) & 0x7F, n & 0x7F];
+  for (const b of bytes) body.push(b >> 4, b & 15);
+  return [0xF0, 0x7D, 0x50, 0x42, 0x03, ...body, bkSum(body), 0xF7];
+}
+const bkReadMsg = (obj) => [0xF0, 0x7D, 0x50, 0x42, 0x01, obj & 0x7F, 0xF7];
+const bkCommitMsg = (obj, len) => [0xF0, 0x7D, 0x50, 0x42, 0x04, obj & 0x7F, (len >> 7) & 0x7F, len & 0x7F, 0xF7];
+const bkRestartMsg = () => [0xF0, 0x7D, 0x50, 0x42, 0x05, 0xF7];
+
+// a frame from the FM-1 (F0 7D 50 43 obj idx(2) len(2) n(2) [2n nibbles] chk F7): its object, place, the object's length and its bytes; null when it is damaged
+function bkParseFrame(d) {
+  if (d.length < 13 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x43 || d[d.length - 1] !== 0xF7) return null;
+  const n = (d[9] << 7) | d[10];
+  if (d.length !== 13 + 2 * n) return null;
+  if (bkSum(Array.from(d.slice(4, 11 + 2 * n))) !== d[11 + 2 * n]) return null;
+  const data = new Uint8Array(n);
+  for (let k = 0; k < n; k++) {
+    const hi = d[11 + 2 * k], lo = d[12 + 2 * k];
+    if (hi > 15 || lo > 15) return null;
+    data[k] = (hi << 4) | lo;
+  }
+  return { obj: d[4], idx: (d[5] << 7) | d[6], len: (d[7] << 7) | d[8], data };
+}
+
+// an answer (F0 7D 50 44 obj idx status F7): the chunk's place, or 0x7F for the write; status 0 is well
+function bkParseAck(d) {
+  if (d.length !== 8 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x44) return null;
+  return { obj: d[4], idx: d[5], status: d[6] };
+}
+
+function bkCrc32(a) {
+  let c = ~0;
+  for (let i = 0; i < a.length; i++) {
+    c ^= a[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & -(c & 1));
+  }
+  return ~c >>> 0;
+}
+
+// the file: "P1BK", version 1, the number of objects, a little JSON about it, then each object (id, length, bytes), and the CRC-32 of all that comes before
+function bkEncode(objs, info) {
+  const meta = new TextEncoder().encode(JSON.stringify(info || {}));
+  let size = 4 + 1 + 1 + 2 + meta.length + 4;
+  for (const o of objs) size += 3 + o.data.length;
+  const out = new Uint8Array(size);
+  let p = 0;
+  out.set([0x50, 0x31, 0x42, 0x4B, 1, objs.length, meta.length & 255, meta.length >> 8], p); p += 8;
+  out.set(meta, p); p += meta.length;
+  for (const o of objs) {
+    out.set([o.id, o.data.length & 255, o.data.length >> 8], p); p += 3;
+    out.set(o.data, p); p += o.data.length;
+  }
+  const crc = bkCrc32(out.subarray(0, p));
+  out.set([crc & 255, (crc >>> 8) & 255, (crc >>> 16) & 255, crc >>> 24], p);
+  return out;
+}
+function bkDecode(buf) {
+  if (buf.length < 12 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x42 || buf[3] !== 0x4B) throw new Error("not a PERF-1 backup");
+  if (buf[4] !== 1) throw new Error("a backup of a newer kind");
+  const crc = (buf[buf.length - 4] | (buf[buf.length - 3] << 8) | (buf[buf.length - 2] << 16) | (buf[buf.length - 1] << 24)) >>> 0;
+  if (bkCrc32(buf.subarray(0, buf.length - 4)) !== crc) throw new Error("the backup is damaged");
+  const count = buf[5], ml = buf[6] | (buf[7] << 8);
+  let p = 8, info = {};
+  try { info = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))); } catch (_) { info = {}; }
+  p += ml;
+  const objs = [];
+  for (let i = 0; i < count; i++) {
+    if (p + 3 > buf.length - 4) throw new Error("the backup is damaged");
+    const id = buf[p], len = buf[p + 1] | (buf[p + 2] << 8);
+    p += 3;
+    if (len > BK_MAX || p + len > buf.length - 4) throw new Error("the backup is damaged");
+    objs.push({ id, data: buf.slice(p, p + len) });
+    p += len;
+  }
+  return { info, objs };
+}
+
+const $ = (id) => document.getElementById(id);
+const TEXT = {
+  ja: {
+    intro: "FM-1 を USB で接続してください。（Chrome か Edge で使えます）",
+    warn: "書き込み中は USB を抜かないでください。",
+    install: "インストール", other: "English",
+    manual: "HYP-1 のページへ",
+    direct: "USB ケーブルはパソコンに直接つないでください。Probe や Transporter などの機材は不要です。",
+    brick: "万一 FM-1 が起動しなくなった場合は、Mac から標準ファームウェアに戻せます:",
+    bricklink: "起動しない FM-1 の復旧（英語）",
+    beta: "このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
+    back: "公式ファームウェアに戻すには、このページ下の「純正ファームウェアに戻す」か、M-VAVE 公式のアップデーター M-UPGRADE（Downloads → PC Software → M-UPGRADE）を使います。",
+    stockh: "純正ファームウェアに戻す",
+    stockwhy: "M-VAVE の FM-1 V15 を、HYP-1（またはそのセーフモード）から同じ USB ケーブルで書き込みます。HYP-1 で保存した曲の設定は消えることがあります。",
+    stock1: "M-VAVE の FM-1 V15 をダウンロード:",
+    stock2: "ダウンロードしたファイルを選ぶ:",
+    stock3: "FM-1 を USB で接続し、下のボタンを押す。",
+    stockinstall: "純正ファームウェアを書き込む",
+    stockok: "M-VAVE の FM-1 V15 です。ボタンを押してください。",
+    stockbad: "これは M-VAVE の FM-1 V15 のファイルではありません。上のリンクのファイルを選んでください。",
+    stockdone: "完了。FM-1 は純正ファームウェアで起動しました。",
+    nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
+    start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
+    reboot: "再起動中", done: "完了しました", stopped: "途中で止まりました。USB を挿し直してもう一度押してください。",
+    error: "エラー: ",
+    denied: "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度押してください。",
+    notfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
+    model: "接続されている機器は FM-1 ではありません。",
+    lost: "USB の接続が切れました。挿し直してもう一度押してください。",
+    noloader: "書き込みモードの FM-1 が見つかりません。USB を挿し直してもう一度押してください（終わるまで書き込みモードのままです）。",
+    noreturn: "FM-1 が戻ってきません。電源を入れ直してください。",
+    mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
+    badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
+    leave: "書き込み中です。ページを閉じないでください。",
+    license: "GPL-3.0、無保証。ソース:",
+    voicesh: "DX7 の音色を読み込む",
+    voicesinfo: "DX7 の SysEx ファイル（.syx）を選ぶと、音色の一覧が出ます。最大 16 個を選んで FM-1 に送ります。PLUCK のページで SEL + ALGORITHM を回すと選べます（「DX」の名前）。電源を切っても残ります。",
+    vsend: "選んだ音色を送る", vclear: "読み込んだ音色を消す",
+    vnone: "音色が見つかりません。", vfound: " 個の音色。16 個まで選べます。", vsel: " 個選択中",
+    vsending: "送信中: ", vdone: "FM-1 に送りました: ", vnoans: "FM-1 から返事がありません（古いファームウェアかもしれません）。", vcleared: "消しました。",
+    vbad: "FM-1 が受け取りませんでした。",
+    bkh: "ピースと設定のバックアップ",
+    bkinfo: "FM-1 に保存されているもの（全ジャンルで保存したピース、設定、DX7 の音色、テーマとチューニング）をファイルに保存し、あとで戻せます。別のファームウェアを試して、戻ってきても失われません。このファイルを読めるのは PERF-1 だけです。復元すると今の内容は置き換わり、FM-1 が再起動します。（保存していないピースの変更と、パネルの調整値は含まれません。）",
+    bksave: "バックアップを保存", bkrestore: "選んだバックアップを復元",
+    bkreading: "読み込み中: ", bksaved: "保存しました: ", bkwriting: "書き込み中: ", bkrestored: "復元しました。FM-1 が再起動します。",
+    bknoans: "FM-1 から返事がありません（バックアップに対応していない古いファームウェアかもしれません）。",
+    bkbad: "FM-1 が受け付けませんでした: ", bkbadfile: "PERF-1 のバックアップではないか、壊れています。",
+    bkconfirm: "FM-1 に保存されているものをすべてこのバックアップで置き換えますか？ 終わると FM-1 が再起動します。",
+    bkloaded: " 個の保存内容", bkempty: "FM-1 にはまだ何も保存されていません。",
+    statush: "FM-1 の状態（リアルタイム）",
+    statusinfo: "USB でつないだ PERF-1 の負荷をここに表示します。CSV に保存することもできます（tools/fm1log.py と同じ内容）。",
+    stgo: "表示を始める", ststop: "止める", stsave: "CSV を保存", stwait: "FM-1 の返事を待っています…",
+    stlabels: ["CPU", "第2コア", "xrun / 遅れ", "最長の描画", "負荷の調整", "音色", "フラッシュ書込", "フレーム"],
+  },
+  en: {
+    intro: "Connect the FM-1 by USB. (Works in Chrome or Edge.)",
+    warn: "Do not unplug the USB cable while writing.",
+    install: "Install", other: "日本語",
+    manual: "Back to PERF-1",
+    direct: "Connect the USB cable directly to the computer. No probe or Transporter is needed.",
+    brick: "If the FM-1 no longer starts, a Mac can put the stock firmware back:",
+    bricklink: "recovering an FM-1 that won't start",
+    beta: "The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
+    back: "To go back to the official firmware, use \"Back to the stock firmware\" below, or M-VAVE's own updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE).",
+    stockh: "Back to the stock firmware",
+    stockwhy: "This writes M-VAVE's own FM-1 V15 back, from HYP-1 (or its safe mode, X0X or Felucca) over the same USB cable. The pieces saved in HYP-1 may be lost.",
+    stock1: "Download M-VAVE's FM-1 V15:",
+    stock2: "Choose the file you downloaded:",
+    stock3: "Connect the FM-1 by USB and press the button below.",
+    stockinstall: "Install the stock firmware",
+    stockok: "That is M-VAVE's FM-1 V15. Press the button to install it.",
+    stockbad: "That is not M-VAVE's FM-1 V15 file. Choose the file from the link above.",
+    stockdone: "Done. The FM-1 has restarted with its original firmware.",
+    nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
+    start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
+    reboot: "Restarting", done: "Done", stopped: "Stopped. Replug the USB cable and press Install again.",
+    error: "Error: ",
+    denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (address bar) and press Install again.",
+    notfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Install again.",
+    model: "The connected device is not an FM-1.",
+    lost: "The USB connection was lost. Replug it and press Install again.",
+    noloader: "The FM-1 in update mode was not found. Replug the USB cable and press Install again (it stays in update mode until it is finished).",
+    noreturn: "The FM-1 did not come back. Power-cycle it.",
+    mismatch: "Written, but the FM-1 reports another version: ",
+    badpkg: "The file to install is damaged. Reload the page.",
+    leave: "Writing. Do not close the page.",
+    license: "GPL-3.0, no warranty. Source:",
+    voicesh: "Load DX7 voices",
+    voicesinfo: "Choose DX7 SysEx files (.syx: a 32-voice bank, or single voices) and the voices in them are listed. Pick up to 16 and send them to the FM-1; they come after the built-in DX sounds on the pluck page (SEL + ALGORITHM), named \"DX ...\", and are kept when the power is off.",
+    vsend: "Send the chosen voices", vclear: "Clear the loaded voices",
+    vnone: "No voices found in that file.", vfound: " voices. Choose up to 16.", vsel: " chosen",
+    vsending: "Sending: ", vdone: "Sent to the FM-1: ", vnoans: "The FM-1 did not answer (an older firmware?).", vcleared: "Cleared.",
+    vbad: "The FM-1 did not take it.",
+    bkh: "Back up and restore your pieces",
+    bkinfo: "Saves everything the FM-1 has stored (the pieces you saved in every genre, your settings, your DX7 voices, the theme and tuning) to a file, and puts it back, so you can try another firmware and come back without losing them. Only PERF-1 reads these files. A restore replaces what is stored now, then the FM-1 restarts. (Unsaved changes to a piece and the panel's calibration are not included.)",
+    bksave: "Save a backup", bkrestore: "Restore the chosen backup",
+    bkreading: "Reading: ", bksaved: "Saved: ", bkwriting: "Writing: ", bkrestored: "Restored. The FM-1 restarts now.",
+    bknoans: "The FM-1 did not answer (an older firmware without backup?).",
+    bkbad: "The FM-1 did not accept it: ", bkbadfile: "That is not a PERF-1 backup, or it is damaged.",
+    bkconfirm: "Replace everything stored on the FM-1 with this backup? The FM-1 restarts afterwards.",
+    bkloaded: " stores in this backup", bkempty: "Nothing is stored on the FM-1 yet.",
+    statush: "Live status",
+    statusinfo: "Shows how hard the PERF-1 on the USB cable is working, as it plays: the same numbers tools/fm1log.py logs. Save them as a CSV for a bug report.",
+    stgo: "Start", ststop: "Stop", stsave: "Save CSV", stwait: "Waiting for the FM-1\u2026",
+    stlabels: ["CPU", "2nd core", "xruns / late", "longest render", "work moved", "genre / piece", "flash writes", "frames"],
+  },
+};
+let lang = "en";                                 /* English first; 日本語 is a click away */
+const t = (k) => TEXT[lang][k];
+let lastKey = null, lastArg = "";
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
+  $("lang").textContent = t("other");
+  if (typeof stTimer !== "undefined") $("stgo").textContent = stTimer ? t("ststop") : t("stgo");
+  if (lastKey) $("status").textContent = t(lastKey) + lastArg;
+}
+$("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
+applyLang();
+const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; $("status").textContent = t(k) + arg; };
+const say = (txt) => { lastKey = null; $("status").textContent = txt; };
+const log = (t) => { const e = $("log"); e.textContent += t + "\n"; e.scrollTop = e.scrollHeight; };   /* a box of its own size that follows the newest line */
+let image = null;
+const meta = {"version": "0.15.2", "product": "FM-1_7001502", "pkg": "../firmware/perf1-0.15.2.fwsc"};
+
+/* ---------------------------------------------------- the FM-1's MIDI port, for the voices and the status */
+const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing", "stores", "store_us", "crashes",
+  "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece", "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums",
+  "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt"];
+/* the second frame (F0 7D 50 5A): the slowest chunk of the window (its stages in us, its total, its info) and how many renders took <5, 5-6 ... 11-12, >=12 ms; kept with the status frame before it */
+const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
+  "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
+  "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits",   /* 0.14.1 on: the slowest half dissected */
+  "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames"];   /* 0.14.3 on: the short chunks' stages; older firmware sends fewer words and the rest read 0 */
+/* the third frame (F0 7D 50 5B, 0.14.3 on): fourteen pieces inside the stages (us; all chunks, then the chunks shorter than 256 frames), the chunk sizes (counts), the work between chunks (us) */
+const DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"];
+const DIAG = DIAG_PIECES.map((p) => "d_" + p).concat(DIAG_PIECES.map((p) => "ds_" + p), ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits"]);
+const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP"];
+let port = null;
+async function openPort() {
+  if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
+  if (!navigator.requestMIDIAccess) throw new Error(t("nomidi"));
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { throw new Error(t("denied")); }
+  const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
+  const inp = pick(midi.inputs), out = pick(midi.outputs);
+  if (!inp || !out) throw new Error(t("notfound"));
+  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, ondiag: null, onframe: null };
+  inp.onmidimessage = (ev) => {
+    const d = ev.data;
+    if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
+    if (d[3] === 0x57) { const w = port.waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }       /* the answer to a voice message */
+    else if (d[3] === 0x46 && port.onstatus) port.onstatus(d);                                      /* a status frame */
+    else if (d[3] === 0x5A && port.onextra) port.onextra(d);                                        /* the slowest chunk of the window, and the histogram of renders */
+    else if (d[3] === 0x5B && port.ondiag) port.ondiag(d);                                          /* the diagnostic pieces */
+    else if (d[3] === 0x43 && port.onframe) port.onframe(d);                                        /* a frame of an object being backed up */
+    else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }   /* the answer to a chunk or a write */
+  };
+  return port;
+}
+function releasePort() {          /* before an install: the updater opens the ports itself */
+  if (port) { port.inp.onmidimessage = null; port = null; }
+}
+function waitAck(ms) {
+  return new Promise((res) => {
+    const w = (a) => { clearTimeout(tm); res(a); };
+    port.waiters.push(w);
+    const tm = setTimeout(() => { const i = port.waiters.indexOf(w); if (i >= 0) port.waiters.splice(i, 1); res(null); }, ms);
+  });
+}
+
+/* ---- the DX7 voices: .syx files -> a list -> up to 16 sent as the firmware takes them (F0 7D 50 56 slot, 128 bytes, a checksum, F7; 7F alone clears) */
+const nameOf = (a, off) => String.fromCharCode(...Array.from(a.slice(off, off + 10)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd() || "(no name)";
+function parseSyx(buf, file) {
+  const out = [];
+  if (buf.length === 4096) {                                       /* a bank without its envelope */
+    for (let v = 0; v < 32; v++) { const p = buf.slice(v * 128, (v + 1) * 128); out.push({ name: nameOf(p, 118), packed: p, file }); }
+    return out;
+  }
+  for (let i = 0; i < buf.length;) {
+    if (buf[i] !== 0xF0) { i++; continue; }
+    let j = i + 1;
+    while (j < buf.length && buf[j] !== 0xF7) j++;
+    const m = buf.slice(i + 1, j), whole = Array.from(buf.slice(i, j + 1));
+    i = j + 1;
+    if (m.length === 4102 && m[0] === 0x43 && m[2] === 0x09 && m[3] === 0x20 && m[4] === 0x00) {
+      for (let v = 0; v < 32; v++) { const p = m.slice(5 + v * 128, 5 + (v + 1) * 128); out.push({ name: nameOf(p, 118), packed: p, file }); }
+    } else if (m.length === 161 && m[0] === 0x43 && m[2] === 0x00 && m[3] === 0x01 && m[4] === 0x1B) {
+      out.push({ name: nameOf(m.slice(5), 145), single: whole, file });
+    }
+  }
+  return out;
+}
+let voices = [];
+function vrender() {
+  const box = $("vlist");
+  box.textContent = "";
+  voices.forEach((v, i) => {
+    const l = document.createElement("label"), c = document.createElement("input");
+    c.type = "checkbox"; c.dataset.i = i;
+    c.addEventListener("change", vcount);
+    const n = document.createElement("span"), s = document.createElement("span");
+    n.textContent = v.name; s.className = "src"; s.textContent = v.file;
+    l.append(c, n, s); box.append(l);
+  });
+  vcount();
+}
+function vcount() {
+  const boxes = [...$("vlist").querySelectorAll("input")];
+  const on = boxes.filter((b) => b.checked).length;
+  boxes.forEach((b) => { b.disabled = !b.checked && on >= 16; });
+  $("vsend").disabled = on === 0;
+  $("vstatus").textContent = voices.length ? voices.length + t("vfound") + (on ? "  " + on + t("vsel") : "") : "";
+}
+$("syxfile").addEventListener("change", async (e) => {
+  voices = [];
+  for (const f of e.target.files) voices.push(...parseSyx(new Uint8Array(await f.arrayBuffer()), f.name));
+  vrender();
+  if (!voices.length) $("vstatus").textContent = t("vnone");
+});
+const vmsg = (slot, p) => { let s = 0; for (const b of p) s += b; return [0xF0, 0x7D, 0x50, 0x56, slot, ...p, (128 - (s & 0x7F)) & 0x7F, 0xF7]; };
+$("vsend").addEventListener("click", async () => {
+  const pick = [...$("vlist").querySelectorAll("input:checked")].slice(0, 16).map((b) => voices[+b.dataset.i]);
+  let msg = "";
+  try {
+    const p = await openPort();
+    $("vsend").disabled = true;
+    let ok = 0, silent = 0;
+    p.out.send([0xF0, 0x7D, 0x50, 0x56, 0x7F, 0xF7]);                                  /* clear, then in order */
+    if (!(await waitAck(2000))) silent++;
+    for (let k = 0; k < pick.length; k++) {
+      $("vstatus").textContent = t("vsending") + pick[k].name;
+      p.out.send(pick[k].packed ? vmsg(k, pick[k].packed) : pick[k].single);
+      const a = await waitAck(2000);
+      if (!a) silent++; else if (a.n !== 0x7F) ok++;
+    }
+    msg = silent && !ok ? t("vnoans") : ok === pick.length ? t("vdone") + ok : t("vbad");
+  } catch (err) { msg = err.message; }
+  vcount();
+  $("vstatus").textContent = msg;                                                     /* (after vcount, which writes the count there) */
+});
+$("vclear").addEventListener("click", async () => {
+  try {
+    const p = await openPort();
+    p.out.send([0xF0, 0x7D, 0x50, 0x56, 0x7F, 0xF7]);
+    $("vstatus").textContent = (await waitAck(2000)) ? t("vcleared") : t("vnoans");
+  } catch (err) { $("vstatus").textContent = err.message; }
+});
+
+/* ---- backup and restore: everything the FM-1 has stored, to a file and back (web/fm1backup.js; the protocol is in firmware/src/backup_proto.h) */
+function waitBk(ms) {
+  return new Promise((res) => {
+    const w = (a) => { clearTimeout(tm); res(a); };
+    port.bkwait.push(w);
+    const tm = setTimeout(() => { const i = port.bkwait.indexOf(w); if (i >= 0) port.bkwait.splice(i, 1); res(null); }, ms);
+  });
+}
+const bkProgress = (i, n) => { $("bkbar").value = Math.round((100 * i) / n); };
+function bkReadObject(p, obj) {                       /* its bytes (none: an empty array), or undefined when the FM-1 goes quiet */
+  return new Promise((resolve) => {
+    const got = new Map();
+    let tm;
+    const finish = (r) => { clearTimeout(tm); p.onframe = null; resolve(r); };
+    const arm = () => { clearTimeout(tm); tm = setTimeout(() => finish(undefined), 3000); };
+    p.onframe = (d) => {
+      const f = bkParseFrame(d);
+      if (!f || f.obj !== obj) return;
+      got.set(f.idx, f.data);
+      arm();
+      if (f.len === 0) return finish(new Uint8Array(0));
+      if (got.size === Math.ceil(f.len / BK_FRAME)) {
+        const out = new Uint8Array(f.len);
+        let total = 0;
+        for (let i = 0; i < got.size; i++) {
+          const c = got.get(i);
+          if (!c || i * BK_FRAME + c.length > f.len) return finish(undefined);
+          out.set(c, i * BK_FRAME);
+          total += c.length;
+        }
+        finish(total === f.len ? out : undefined);
+      }
+    };
+    arm();
+    p.out.send(bkReadMsg(obj));
+  });
+}
+$("bksave").addEventListener("click", async () => {
+  try {
+    const p = await openPort();
+    $("bksave").disabled = true;
+    const objs = [];
+    for (let i = 0; i < BK_OBJECTS.length; i++) {
+      $("bkstatus").textContent = t("bkreading") + BK_OBJECTS[i].name;
+      bkProgress(i, BK_OBJECTS.length);
+      const d = await bkReadObject(p, BK_OBJECTS[i].id);
+      if (d === undefined) throw new Error(t("bknoans"));
+      if (d.length) objs.push({ id: BK_OBJECTS[i].id, data: d });                 /* (nothing stored there: left out) */
+    }
+    bkProgress(1, 1);
+    if (!objs.length) throw new Error(t("bkempty"));
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([bkEncode(objs, { app: "PERF-1", page: meta.version, created: new Date().toISOString() })], { type: "application/octet-stream" }));
+    a.download = "perf1-backup-" + new Date().toISOString().slice(0, 10) + ".p1bak";
+    a.click();
+    $("bkstatus").textContent = t("bksaved") + objs.length + t("bkloaded");
+  } catch (err) { $("bkstatus").textContent = err.message; }
+  $("bksave").disabled = false;
+});
+let bkLoaded = null;
+$("bkfile").addEventListener("change", async (e) => {
+  bkLoaded = null;
+  $("bkrestore").disabled = true;
+  if (!e.target.files[0]) return;
+  try {
+    bkLoaded = bkDecode(new Uint8Array(await e.target.files[0].arrayBuffer()));
+    $("bkstatus").textContent = bkLoaded.objs.length + t("bkloaded") + (bkLoaded.info.created ? " (" + bkLoaded.info.created.slice(0, 10) + ")" : "");
+    $("bkrestore").disabled = !bkLoaded.objs.length;
+  } catch (err) { $("bkstatus").textContent = t("bkbadfile"); }
+});
+$("bkrestore").addEventListener("click", async () => {
+  if (!bkLoaded || !confirm(t("bkconfirm"))) return;
+  const objs = bkLoaded.objs;
+  try {
+    const p = await openPort();
+    $("bkrestore").disabled = true;
+    writing = true;
+    for (let i = 0; i < objs.length; i++) {
+      const o = objs[i], len = o.data.length;
+      $("bkstatus").textContent = t("bkwriting") + bkName(o.id);
+      bkProgress(i, objs.length);
+      for (let idx = 0; idx * BK_CHUNK < len; idx++) {
+        p.out.send(bkChunkMsg(o.id, idx, len, o.data.subarray(idx * BK_CHUNK, Math.min(len, (idx + 1) * BK_CHUNK))));
+        const a = await waitBk(3000);
+        if (!a) throw new Error(t("bknoans"));
+        if (a.status !== 0) throw new Error(t("bkbad") + bkName(o.id));
+      }
+      p.out.send(bkCommitMsg(o.id, len));
+      const a = await waitBk(10000);                                              /* (a store while playing fades the music out first) */
+      if (!a) throw new Error(t("bknoans"));
+      if (a.status !== 0) throw new Error(t("bkbad") + bkName(o.id));
+    }
+    bkProgress(1, 1);
+    p.out.send(bkRestartMsg());
+    writing = false;
+    releasePort();
+    $("bkstatus").textContent = t("bkrestored");
+  } catch (err) { writing = false; $("bkstatus").textContent = err.message; $("bkrestore").disabled = false; }
+});
+
+/* ---- the live status: the unit sends a frame four times a second while this page asks (every 3 s) */
+var stTimer = null, frames = [];            /* (var: applyLang looks at stTimer before this line runs) */
+function stRender(w) {
+  const pct = (w.max_us * 100) / (w.budget_us || 1);
+  const items = [
+    [w.cpu + "%", w.cpu > 85 ? "bad" : w.cpu > 72 ? "hot" : "", w.cpu],
+    [w.cpu1 + "%", w.cpu1 > 70 ? "hot" : "", w.cpu1],
+    [w.xruns + " / " + w.late, w.xruns ? "bad" : w.late ? "hot" : "", 0],
+    [(w.max_us / 1000).toFixed(1) + " ms", pct > 95 ? "bad" : pct > 85 ? "hot" : "", Math.min(100, pct)],
+    [(w.shed ? "S" + (w.shed & 255) + " " : "") + ((w.shed >> 8) & 1 ? "chorus -> core 1 " : "") + ((w.shed >> 9) & 1 ? "bass -> core 2" : "") || "-", (w.shed & 255) ? "hot" : "", 0],
+    [(GENRES[w.genre] || w.genre) + " " + w.piece, "", 0],
+    [String(w.stores), "", 0],
+    [String(w.ui_frames), "", 0],
+  ];
+  const g = $("stgrid");
+  g.textContent = "";
+  items.forEach((it, i) => {
+    const d = document.createElement("div"), b = document.createElement("b"), s = document.createElement("span");
+    d.className = it[1]; b.textContent = it[0]; s.textContent = t("stlabels")[i];
+    d.append(b, s);
+    if (it[2]) { const m = document.createElement("div"), f = document.createElement("i"); m.className = "meter"; f.style.width = it[2] + "%"; m.append(f); d.append(m); }
+    g.append(d);
+  });
+}
+function onStatus(d) {
+  const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
+  const dv = new DataView(new Uint8Array(raw).buffer);
+  const n = Math.min(FIELDS.length, raw.length >> 2), w = {};
+  if (n < 22) return;
+  for (let i = 0; i < n; i++) w[FIELDS[i]] = dv.getUint32(i * 4, true);
+  FIELDS.forEach((f) => { if (w[f] === undefined) w[f] = 0; });
+  w.t = Date.now();
+  frames.push(w);
+  $("ststatus").textContent = "";
+  $("stsave").disabled = false;
+  stRender(w);
+}
+function onExtra(d) {                       /* the second frame follows its status frame at once: it joins that row */
+  const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
+  const dv = new DataView(new Uint8Array(raw).buffer), w = frames[frames.length - 1];
+  if (!w || raw.length < 20 * 4) return;
+  const n = Math.min(EXTRA.length, raw.length >> 2);
+  EXTRA.forEach((f, i) => { w[f] = i < n ? dv.getUint32(i * 4, true) : 0; });
+}
+function onDiag(d) {                        /* the third frame follows the second: it joins the same row */
+  const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
+  const dv = new DataView(new Uint8Array(raw).buffer), w = frames[frames.length - 1];
+  if (!w || raw.length < DIAG.length * 4) return;
+  DIAG.forEach((f, i) => { w[f] = dv.getUint32(i * 4, true); });
+}
+async function stStop() {
+  clearInterval(stTimer); stTimer = null;
+  if (port) { try { port.out.send([0xF0, 0x7D, 0x50, 0x46, 0x00, 0xF7]); } catch (_) {} port.onstatus = null; port.onextra = null; port.ondiag = null; }
+  $("stgo").textContent = t("stgo");
+}
+$("stgo").addEventListener("click", async () => {
+  if (stTimer) { await stStop(); return; }
+  try {
+    const p = await openPort();
+    frames = [];
+    p.onstatus = onStatus;
+    p.onextra = onExtra;
+    p.ondiag = onDiag;
+    const arm = () => { try { p.out.send([0xF0, 0x7D, 0x50, 0x46, 0x01, 0xF7]); } catch (_) { stStop(); } };
+    arm();
+    stTimer = setInterval(arm, 3000);
+    $("stgo").textContent = t("ststop");
+    $("ststatus").textContent = t("stwait");
+  } catch (err) { $("ststatus").textContent = err.message; }
+});
+$("stsave").addEventListener("click", () => {
+  const cols = FIELDS.concat(EXTRA, DIAG);
+  const rows = ["t," + cols.join(",")].concat(frames.map((w) => ((w.t - frames[0].t) / 1000).toFixed(2) + "," + cols.map((f) => (w[f] === undefined ? 0 : w[f])).join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([rows.join("\n") + "\n"], { type: "text/csv" }));
+  a.download = "fm1_status_" + new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19) + ".csv";
+  a.click();
+});
+
+let writing = false;
+window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
+
+(async () => {
+  if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
+  try {
+    const r = await fetch(meta.pkg);
+    if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
+    const pkg = new Uint8Array(await r.arrayBuffer());
+    if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
+    image = logicalImage(pkg);
+    say(`PERF-1 ${meta.version}`);
+    $("go").disabled = false;
+  } catch (e) { sayK("loadfail", e.message); }
+})();
+
+/* stock firmware: M-VAVE's FM-1 V15, chosen by the user (M-VAVE's server allows no cross-site
+   download) and checked against its SHA-256 before anything is written */
+const STOCK_SHA256 = "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a";
+let stock = null;
+$("stockfile").addEventListener("change", async (e) => {
+  stock = null;
+  $("stockgo").disabled = true;
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const raw = new Uint8Array(await f.arrayBuffer());
+    const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    if (hex !== STOCK_SHA256) { sayK("stockbad"); return; }
+    stock = { image: logicalImage(raw), product: productOf(raw) };
+    $("stockgo").disabled = writing;
+    sayK("stockok");
+  } catch (err) { sayK("error", err && err.message); }
+});
+
+async function run(img, product, isStock) {
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
+  catch (e) { sayK("denied"); return; }
+  await stStop();
+  releasePort();
+  writing = true;
+  $("go").disabled = $("stockgo").disabled = true;
+  try {
+    const up = new Updater(midi, log);
+    const total = 74 + 1167;
+    const step = (k, a) => {
+      log(`${k} ${a ?? ""}`);
+      if (k === "start") sayK("start");
+      if (k === "verify") { sayK("verify"); $("bar").value = (a / total) * 100; }
+      if (k === "loader") sayK("loader");
+      if (k === "write") { sayK("write"); $("bar").value = ((74 + a) / total) * 100; }
+      if (k === "reboot") sayK("reboot");
+      if (k === "done") { $("bar").value = 100; sayK(isStock ? "stockdone" : "done"); }
+    };
+    const ota = await up.find((id) => /^ota-/i.test(id.model));
+    if (ota) {
+      ota.link.close();
+      sayK((await up.resume(img, step)) ? (isStock ? "stockdone" : "done") : "stopped");
+    } else {
+      await up.install(img, product, step);
+    }
+  } catch (e) {
+    if (isStock && e && e.code === "mismatch") { $("bar").value = 100; sayK("stockdone"); }   /* stock names itself its own way */
+    else if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
+    else sayK("error", e && e.message);
+    log(String(e && e.stack || e));
+  }
+  writing = false;
+  $("go").disabled = !image;
+  $("stockgo").disabled = !stock;
+}
+
+$("go").addEventListener("click", () => run(image, meta.product, false));
+$("stockgo").addEventListener("click", () => { if (stock) run(stock.image, stock.product, true); });
+</script>
+</body>
+</html>
