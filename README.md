@@ -60,6 +60,12 @@ The screen is drawn in one look (warm black, one colour per voice: the pad bone,
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
 
+## What's new in 0.15.2
+
+- **Gentler basses:** no piece starts on the bright Bite, Tine or Clang bass sounds any more (they are still there to pick by hand).
+- **Pluck steps page tidied:** it now reads Step, Note, Octave, Frozen, like Acid steps, and shows in the page tabs.
+- **Manuals in plain words:** the manual and the quick manual are rewritten for musicians, not developers.
+
 ## What's new in 0.15.1
 
 - **Breakdowns keep the pad's stabs:** Fixed and issue where the breakdown wasn't playing the pads correctly for the piece selected.

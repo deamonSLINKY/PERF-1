@@ -10,13 +10,18 @@
 
 **0.15.1 is a fix-up of 0.15.0.** Its code is identical to development build 0.15.4; the builds 0.15.1 to 0.15.4 in the git history are its steps (the public number reuses the first of them).
 
+**0.15.2 is a second fix-up.** Its code is identical to development build 0.15.5.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Unreleased (the builds 0.15.5 .. are its steps)
+## 0.15.2 (the development build 0.15.5)
+
+**In short.** No piece starts its bass on the bright Bite, Tine or Clang sounds any more, the Pluck steps page reads Step, Note, Octave, Frozen like Acid steps and has its place in the page tabs, and the manual and quick manual are rewritten in plain words for musicians.
 
 - **Gentler basses, and the Pluck steps page tidied** (0.15.5). No piece starts its bass on Bite, Tine or Clang any more: they are too high and bright for a bass (disco 3 jumped out at you). They are still there to choose by hand. Lofi, electro, disco and funk start on Dirty, Sub or Warm instead. The Pluck steps page is laid out like Acid steps: **Step** (rest, soft, note, accent), **Note** (1-12, the chord's notes from low to high, was called Rung), **Octave** (the pluck's, as on the Pluck page) and **Frozen**; Range stays on Pluck 2. The page also has its place in the page tabs along the bottom (the pluck shows four pages).
+- **The manuals in plain words.** The manual and the quick manual are rewritten for musicians rather than developers, with the beginner's guide as the manual's first section, and a few errors fixed on the way (32 pages, 30 DX voices, Settings knob 4 is Voices). The site's front page says what PERF-1 is in a paragraph.
 
 ## 0.15.1 (the development builds 0.15.1 .. 0.15.4 are its steps)
 
