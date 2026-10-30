@@ -60,30 +60,28 @@ The screen is drawn in one look (warm black, one colour per voice: the pad bone,
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
 
-## What's new in 0.14.0
+## What's new in 0.15.0
 
-The first update since the public release (0.13.0). The full list, with the development builds it came from, is in [docs/CHANGELOG.md](docs/CHANGELOG.md).
+The second update since the public release. The full list, with the development builds it came from, is in [docs/CHANGELOG.md](docs/CHANGELOG.md).
+
+**Harmony you can hear**
+- **A harmonic rhythm in bars for each genre** (house, disco, garage, lofi, reggae and synthwave change chord every two bars; dub, DnB, breaks, electro, trap, funk, amapiano and trip-hop every four; dubstep every eight), so lofi's ii-V-I, house's i-VII-VI-VII and synthwave's i-VI-III-VII are progressions you hear. Drift scales the bars; HYPNO keeps its clock in seconds.
+- **A real dominant in minor keys,** diminished chords rare and never the cadence, and **chord loops that start from home** (four chords in house, disco, garage, trap and synthwave; two in dubstep, DnB, electro, amapiano and trip-hop).
+- **Stabbing pads where the genre comps:** every dub piece skanks; garage, house, funk and amapiano gain stab pieces; dub, breaks and electro get their own comp rhythms. Eleven pentatonic pieces moved to seven-note modes.
+
+**Sound**
+- **A fuller pad:** the saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck) sweep a resonant four-pole filter with every breath and stab, with a sub an octave down; Strings and the supersaws play four saws.
+- **The bass line** has nine figures by name (Octaves, Two-step, One-drop, Log drum, Skippy, Funk, Big beat, Dub, Gallop) and plays its fifth where it played the seventh; DnB, breaks and garage pieces start with a line.
+- **The DY voices by default:** thirty human-made DX7 voices from public-domain banks, each under its bank's own name; DX puts the built-in set back.
 
 **New pages and ways to play**
-- **Steps page:** a ratchet (x2 to x6, flam, swells), a push and a level (ghost, soft, accent) for every step of every drum lane, kept with the piece.
-- **Bass line page:** the bass as notes (root, kick, eighths, off-beat, walk, riff) with length, move and glide; **Deja vu page:** the pluck remembers its last 4 to 32 notes and brings them round; **Feel page:** each genre's ghost notes, accents, comping rhythm and humanize; **Phrase page:** chains of patterns by bar, eight slice orders, half and double time, and a condition for each drum lane.
-- **Acid steps page:** the acid line as sixteen steps you can edit, frozen so Mutate leaves it.
-- **Flex Beat grows to 27 patterns, one on every key:** Jump bk, Halves, Swap, Mirror, Lag, Slowmo, Skip 3, Stut up, Stut dn, Tresillo, Offbeat, Cut 4, Rev 8 and Half gap join the original thirteen.
-- **Backup and restore** from the installer page: everything the FM-1 stores goes to a `.p1bak` file and comes back, so switching firmware costs nothing.
-- **Safer buttons:** factory reset is now SEL + SAVE (SAVE alone only stores), every layer's hold takes 0.4 s, a page button closes the FX menu, and HOME + SELECT sets the tempo from inside it.
-
-**Music that behaves more like the genre**
-- **Swing and looseness for every voice:** the acid, the bass line and the pad's stabs follow Swing with the drums and pluck, and Humanize loosens each of them.
-- **Chord habits per genre:** ii-V-I for lofi, amapiano and disco, i-VII-VI-VII for house, i-VI-III-VII for synthwave, the i-IV vamp for funk and reggae, a pull home and a cadence at the end of each phrase. Before, every genre was close to the same random walk.
-- **Sections shaped by genre:** the bar before a breakdown thins out; house, techno and dubstep keep the kick in a breakdown and drum and bass the hats; builds are two, four or eight bars by genre with the snare climbing, the kick coming back in the four-on-the-floor genres, a ringing crash and the home chord on the drop; six drum fills instead of one.
-- **Dub, in place of Jungle:** one-drop, steppers and rockers at 64 to 76 BPM, a deep bass on the one and three, the skank on the off-beats, a long dotted echo and a worn tape; a breakdown keeps the kick.
-- **Six more genres** (disco, funk, reggae, synthwave, amapiano and trip-hop, sixteen in all), **thirty built-in DX voices** (eight new: four guitars, slap bass, synth brass, sax and muted trumpet), and DX voice levels set by loudness, so a sustaining pad no longer sits far above a plain pluck.
+- **Pluck steps page** (ARP x9): deja vu's loop frozen as sixteen steps you write, rung and level, stored with the piece. **The pluck on MIDI** channel 2, every note with its note-off.
+- **SET page:** rounds a piece gets before the auto-DJ moves on, a tempo ramp over them, and an **intro** that brings the tracks in one by one over one to eight minutes, for mixing in, scratching or sampling over.
+- **The Synth Imp look:** the Synth theme is a night sky and a horned sun behind the sigil, a scanner in its centre, the floor running to the horizon on the beat, the imp in neon. **Scanlines** for any theme.
 
 **Under the hood**
-- **Seamless saves:** a store while playing no longer fades the music (the flash erase is done in slices with the chip's erase-suspend).
-- **The dropouts found and fixed:** the audio interrupt cleared its flag after rendering, so a render that ran a little past its 11.6 ms half also swallowed the next half's interrupt, and that half's buffer played twice. Found from a status log (each xrun was one render missing), fixed by clearing the flag first: in a 642 s lofi log the unit went from 9 dropouts in 309 s to none, with the same 88 late renders now absorbed. The `XR` count now means halves never rendered; `late` counts renders that ran long.
-- **Fewer dropouts in heavy pieces:** the second core now renders the DX voices while the first does its master effects, and when a piece starts to crack the engine moves the bass and acid to the second core first, then, in three steps, gives up the least important work (DX voices, chorus, the Echoplex slap and the vinyl noise).
-- **Fixes:** Flex Beat slices keep their shape at slow tempos, a pushed hit on a swung step is no longer lost, a swung pluck note no longer sounds after Stop, SAVE during a restore no longer cancels it, and a limiter that cannot be fooled by a bad sample.
+- **The dropouts of heavy pieces traced and fixed:** a lost timer interrupt, and swung hits splintering a half into many short chunks (a hit may no longer cut a chunk under 128 frames).
+- The pad's filter runs on the second core; the first is untouched by it.
 
 ## Install
 

@@ -6,11 +6,13 @@
 
 **0.14.0 is the second.** Its code is identical to the last development build, 0.13.15; the builds 0.13.1 to 0.13.15 in the git history are its steps.
 
+**0.15.0 is the third.** Its code is identical to the last development build, 0.14.21; the builds 0.14.1 to 0.14.21 are its steps.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## 0.15.0 (in preparation; the builds 0.14.1 .. are its steps)
+## 0.15.0 (the builds 0.14.1 .. 0.14.21 are its steps)
 
 **What 0.15.0 brings, in short.** Harmony you can hear: each genre has a harmonic rhythm in bars, a real dominant in minor keys, no stray diminished chords, chord loops that start from home, and stabbing pads and comp rhythms where the genre comps. A fuller pad: the saw sounds sweep a resonant filter with every breath and stab, with a sub and four-saw unison. The bass line has nine named figures and plays its fifth. The pluck goes out on MIDI channel 2, and its loop can be frozen and written step by step on the new Pluck steps page. A SET page shapes a longer set: rounds a piece, a tempo ramp, and an intro that brings the tracks in one by one for mixing in. The Synth theme is a look of its own (a horned sun behind the sigil, a scanner in its centre, the imp in neon) and Scanlines are a setting. The DY voices are the default, named as their banks name them. Steadier audio on the unit: the lost-interrupt fix of 0.14.x and the 128-frame chunk floor.
 
