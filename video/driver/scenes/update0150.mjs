@@ -137,16 +137,22 @@ export default {
     for (let i = 0; i < 3; i++) { await tapB(s, "ARP", "ARP"); await s.wait(200); }
     await s.wait(1500);
     readout(s, "FROZEN", "THE LOOP HOLDS", 3);
-    ring(s, "key:" + [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26][4], 1.2, "KEY");
+    const WK = [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26];
+    ring(s, "key:" + WK[4], 1.2, "KEY");
     await s.tapKey("w4"); await s.wait(300);
-    await turnK(s, "KNOB2", 3, 160, "KNOB2"); await s.wait(2200);  // accent
-    ring(s, "key:" + [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26][10], 1.2, "KEY");
+    await s.turn("KNOB2", -3, 60); await turnK(s, "KNOB2", 2, 160, "KNOB2"); await s.wait(2000);   // a note
+    ring(s, "key:" + WK[10], 1.2, "KEY");
     await s.tapKey("w10"); await s.wait(300);
-    await turnK(s, "KNOB2", 3, 160, "KNOB2"); await s.wait(300);
-    await turnK(s, "KNOB1", -3, 160, "KNOB1"); await s.wait(2200);
-    ring(s, "key:" + [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26][13], 1.2, "KEY");
-    await s.tapKey("w13"); await s.wait(300);
-    await turnK(s, "KNOB2", 2, 160, "KNOB2"); await s.wait(300);
+    await s.turn("KNOB2", -3, 60); await turnK(s, "KNOB2", 2, 160, "KNOB2"); await s.wait(300);   // a note
+    await turnK(s, "KNOB1", -3, 160, "KNOB1"); await s.wait(2000);
+    for (const w of [0, 9]) {                                  // the loop's own accents, down to notes: one accent is enough on this voice
+      ring(s, "key:" + WK[w], 1.0, "KEY");
+      await s.tapKey("w" + w); await s.wait(250);
+      await s.turn("KNOB2", -3, 60); await turnK(s, "KNOB2", 2, 120, "KNOB2"); await s.wait(900);
+    }
+    ring(s, "key:" + WK[15], 1.2, "KEY");
+    await s.tapKey("w15"); await s.wait(300);
+    await s.turn("KNOB2", -3, 60); await turnK(s, "KNOB2", 3, 160, "KNOB2"); await s.wait(300);   // the one accent, at the end of the bar
     await turnK(s, "KNOB1", 4, 160, "KNOB1"); await s.wait(3500);
     text(s, { label: "PLUCK STEPS", title: "And on MIDI", body: "The pluck goes out on channel 2 now, every note with its note-off, from every place a note starts.", chips: [] });
     await s.wait(4500);
@@ -156,10 +162,20 @@ export default {
     text(s, { label: "THE AUTO-DJ", title: "Rounds and the ramp", body: "The DJ gives this piece two rounds, the tempo climbing four beats over them. GLO + F5 starts it.", chips: ["hold", "*GLO", "+", "*F5"] });
     await s.wait(800);
     await djToggle(s);
-    readout(s, "DJ ON", "ROUND 1 OF 2", 4);
-    await s.wait(3000);
-    text(s, { label: "THE AUTO-DJ", title: "The groove runs its course", body: "Eight bars, a fill, the break, the build and the drop, on their own.", chips: [] });
-    if (!(await s.waitLit("SAVE", true, 60000))) throw new Error("no break");
+    readout(s, "DJ ON", "ROUND 1 OF 2", 3);
+    await s.wait(1800);
+    text(s, { label: "PERFORM", title: "Meanwhile: the mood", body: "One knob from chill to peak: acid, hats, pluck, bass and reverb move together.", chips: ["turn", "*ALGORITHM"] });
+    ring(s, "knob:ALGORITHM", 5.5, "ALGORITHM");
+    readout(s, "CHILL", "", 3);
+    await s.turn("ALGORITHM", -20, 80); await s.wait(2200);
+    readout(s, "BACK", "", 1.5);
+    await s.turn("ALGORITHM", 20, 45); await s.wait(600);
+    text(s, { label: "PERFORM", title: "Mutes on the keys", body: "Drop the kick, bring it back. Then the hats.", chips: ["tap", "*KEY"] });
+    await tapK(s, 0, 120, ""); readout(s, "KICK OUT", "", 2); await s.wait(3300);
+    await tapK(s, 0, 120, ""); await s.wait(700);
+    await tapK(s, 2, 120, ""); readout(s, "HATS OUT", "", 2); await s.wait(3300);
+    await tapK(s, 2, 120, ""); await s.wait(700);
+    if (!(await s.waitLit("SAVE", true, 60000))) throw new Error("no break");   // (the groove's eight bars are about over)
     text(s, { label: "THE AUTO-DJ", title: "The break", body: "The bar before thinned out. The mix darkens and the pad rises.", chips: [] });
     readout(s, "BREAK", "", 5);
     await s.wait(4300);
@@ -244,6 +260,8 @@ export default {
     await s.wait(3500);
     await s.tap("HOME", 60); await s.wait(120); await s.tap("HOME", 60); await s.wait(1500);
     s.mark("credits", {});
-    await s.wait(22000);
+    await s.wait(11000);
+    await s.turn("SELECT", -2, 250);                           // FLUX -> KALEIDO for the second page
+    await s.wait(11000);
   },
 };
