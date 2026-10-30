@@ -506,6 +506,8 @@ The eight newest built-in DX voices are guitars, a bass and brass: **Steel Gtr**
 
 ### Pluck steps: freeze the pluck's loop and edit it
 
+![The Pluck steps page](img/perf-screen-pluck-steps.png)
+
 The pluck's deja vu loop can be held and written step by step on the **Pluck steps** page (ARP nine times, after Deja vu). It reads the loop as the sixteen sixteenths of a bar and draws them as bars, a step each: the height is the **rung** of the chord's ladder (the chord's tones over the pluck's octaves, low to high, so the line follows the harmony), an accent in the bright colour, a soft note dim, a dash for a rest, a mark under the step playing. A **white key** chooses a step; **Rung** and **Level** (Rest, Soft, Note, Accent) set it; **Range** is the ladder's height in octaves; **Frozen** holds the line: any edit freezes it, and freezing sets Deja vu's Loop to 16, the pluck's Rate to 1/16 and Pluck vu to 100, so every note comes round the same. A frozen line survives a new piece and is **stored with the piece** (a rung and a level a step). Free, the loop is deja vu's own again and a new piece forgets it. Capture (SEL + REC) with the voice on the pluck writes the bar you played here.
 
 ### Acid steps: freeze the line and edit it
@@ -882,6 +884,8 @@ groove), the bar before a change is a fill, and the change's bar is the breakdow
 G5), the next piece in the bank comes in on the fill's bar, so the breakdown and the drop belong to it. SAVE pressed
 by hand just moves the DJ on from there. If the drop's key change is on (section 13), it applies on each drop.
 
+![The SET page](img/perf-screen-set.png)
+
 The **SET** settings page (after USB & MIDI on the dial) shapes a longer set. **Rounds** gives a piece 1, 2, 4 or 8 rounds (groove, breakdown, build, drop) before DJ new pieces moves on; the header and the Perform screen count them (`R2/4`). **Ramp** makes the tempo climb over a piece's rounds of groove, +2 to +12 BPM, a beat at a time; turn the tempo by hand and the climb goes on from there; the next piece starts at its own tempo. **Intro** is the slow progression: from Play the tracks come in one at a time over 1, 2, 4 or 8 minutes, the pad from the first bar, then the hats, the perc, the kick, the snare, the bass, the pluck and last the acid, each over a seventh of the time, so a set can be mixed in, scratched or sampled over under a pad and a hat; the header counts `INTRO 1:42` down and the auto-DJ holds its groove until everything is in. Stop and Play start it again.
 
 ### Mood
@@ -1065,7 +1069,9 @@ Switching to another firmware, or reinstalling, can lose what PERF-1 has stored.
 
 ![Global](img/perf-screen-global.png)
 
-**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor; Synth is a look of its own, the Synth Imp: a night sky behind the sigil, a horned sun on the horizon that rises in a build and flashes on the drop, a floor of lines running to the vanishing point once a beat, and the imp in neon tube light), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
+**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor; Synth is a look of its own, the Synth Imp, pictured below: a night sky behind the sigil, a horned sun on the horizon that rises in a build and flashes on the drop, a floor of lines running to the vanishing point once a beat, and the imp in neon tube light), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
+
+![The Synth look: the home screen](img/perf-screen-home-synth.png)
 
 **The look** is Imp in every theme; the themes are its colour variations. Warm black, one colour per voice everywhere (in Imp: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink; ember is for "now"). The header has a beat bar along its top (the beats taller, the step playing lit) and a coil under it, the slinky's spring, that stretches on the kick; a piece waiting for the bar shows as `>08` beside the key and mode. The knob strip has **tabs** (a chip a group of pages: the one you are in opens to its name and a pip a page) and shows the knobs' values large with a bar under them; hold **SEL** and the tabs give way to a one-line hint of what shift does on this page.
 The theme, Tune and MIDI out are yours across all pieces.

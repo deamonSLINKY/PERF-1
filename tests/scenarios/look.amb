@@ -1,0 +1,39 @@
+# the looks: the splash, then the home screen in the Imp theme and in the Synth theme, the eye and the imp in the sigil
+seed 0
+wait 400
+shot splash.png
+wait 2600
+tap PLAY
+wait 3000
+shot home_imp.png
+tap GLO
+wait 200
+spin K2 1
+wait 200
+shot global.png
+tap HOME
+wait 2500
+shot home_synth.png
+press SEL
+tap HOME
+release SEL
+wait 1500
+shot home_synth_imp.png
+tap ENV
+wait 300
+shot pad_synth.png
+# Scanlines: the USB & MIDI settings page (after Settings on the dial), its third knob
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+turn SELECT 1
+wait 100
+expect fxpage 24
+spin K3 1
+wait 300
+shot settings_scan.png
+tap HOME
+wait 1500
+shot home_synth_scan.png

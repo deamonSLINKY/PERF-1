@@ -25,6 +25,7 @@ MANUAL = {                                  # docs/img/perf-screen-NAME.png: sce
     "store": "store/global_stored", "breakdown": "sections/breakdown", "build": "sections/build", "jam": "jam/jam_pluck",
     "remote": "remote/remote_link", "saver": "stage/saver", "help": "help/help_lfo", "viz-disco": "viz/viz_disco",
     "viz-kaleido": "viz/viz_kaleido", "groove": "arrange/groove", "acid-answer": "answer/answer_page", "steps": "steps/steps", "acsteps": "acsteps/acsteps", "phrase": "phrase/phrase", "feel": "feel/feel", "bassline": "bassline/bassline", "dejavu": "dejavu/dejavu",
+    "pluck-steps": "plucksteps/plucksteps_play", "set": "setpage/set_page_on", "home-synth": "look/home_synth", "intro": "setpage/intro_header",
 }
 BG = (20, 14, 12)
 

@@ -17,7 +17,7 @@ PERF-1 is a custom firmware for the M-VAVE FM-1: a 5 track generative groovebox 
 ## Who it's for
 
 - **If you want to make music without first learning how to build a good song,** PERF-1 is a place to start. Every piece already sounds finished: choose a genre, press play, and you are performing from the first minute, steering a groove that holds together (the chords, the drums, the acid and the effects all follow the same key and tempo). You learn by turning things, not by programming them.
-- **If you already know what you want,** it opens up. The sequencer, the sound pages, the acid line, the scales and the effects can be edited as deeply as you like, a piece you have shaped can be stored, and your own DX7 voices can be loaded. The sequencer keeps growing: per-step ratchets, push and levels, chains of patterns, slices and half or double time are in; editing the acid and pluck lines step by step is next.
+- **If you already know what you want,** it opens up. The sequencer, the sound pages, the acid line, the scales and the effects can be edited as deeply as you like, a piece you have shaped can be stored, and your own DX7 voices can be loaded. The sequencer keeps growing: per-step ratchets, push and levels, chains of patterns, slices and half or double time are in, and the acid and pluck lines can be frozen and edited step by step.
 
 ## What makes it different
 

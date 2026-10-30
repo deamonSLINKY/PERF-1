@@ -1,0 +1,37 @@
+# the SET page (after USB & MIDI on the dial): Rounds, Ramp, Intro; the intro's countdown in the header once playing
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+turn SELECT 2
+wait 100
+expect fxpage 25
+shot set_page.png
+spin K3 1
+spin K1 2
+spin K2 2
+wait 300
+shot set_page_on.png
+tap HOME
+wait 300
+expect playing 1
+tap PLAY
+wait 300
+expect playing 0
+tap PLAY
+wait 300
+expect playing 1
+wait 4000
+expect playing 1
+shot intro_header.png
+tap HOME
+wait 500
+shot intro_home.png
+press GLO
+wait 300
+shot intro_mix.png
+release GLO
+wait 200
