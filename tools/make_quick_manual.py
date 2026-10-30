@@ -26,7 +26,7 @@ EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 WANT_PAGES = 8
 
 CSS = """
-@page { size: A4; margin: 12mm; }
+@page { size: A4; margin: 12mm 12mm 13mm; @bottom-center { content: var(--foot); } }   /* (filled in by convert(): the running footer and the page number) */
 html { font-size: 9pt; }
 body { margin: 0; color: #000; background: #fff; line-height: 1.22;
        font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -49,14 +49,10 @@ th { font-weight: 700; border-bottom: .7pt solid #000; }
 td:first-child { white-space: nowrap; }
 .cols { columns: 2; column-gap: 4.5mm; }
 .newcol { break-before: column; }                 /* <h3 class="newcol"> in QUICK.md: start this heading in the next column */
-.page { min-height: 268mm; box-sizing: border-box; position: relative; padding-bottom: 6mm; }
-.page + .page { break-before: page; }
-.foot { position: absolute; left: 0; right: 0; bottom: 0; font-size: 6.8pt; color: #333; text-align: center; line-height: 1.1;
-        white-space: nowrap; overflow: hidden; border-top: .3pt solid #999; padding-top: .7mm; }
+.page + .page { margin-top: 3.5mm; padding-top: 2mm; border-top: .5pt solid #bbb; }   /* sections flow on: a section a little over a page no longer leaves the rest of the next sheet blank */
 @media screen {
   body { background: #ccc; padding: 10mm 0; }
-  .page { background: #fff; width: 210mm; min-height: 297mm; margin: 0 auto 8mm; padding: 12mm 12mm 18mm; box-shadow: 0 1px 6px rgba(0,0,0,.4); }
-  .foot { left: 12mm; right: 12mm; bottom: 12mm; }
+  main { background: #fff; width: 210mm; margin: 0 auto; padding: 12mm; box-shadow: 0 1px 6px rgba(0,0,0,.4); }
 }
 """
 
@@ -144,8 +140,10 @@ def convert(md):
         foot = html.escape(m.group(1), quote=False)
         md = md[:m.start()] + md[m.end():]
     pages = [p for p in re.split(r"(?m)^(?:---+|<div class=\"page\"></div>)\s*$", md) if p.strip()]
-    body = "\n".join("<section class=\"page\">\n%s\n<div class=\"foot\">%s · page %d of %d</div>\n</section>"
-                     % (blocks(p), foot, i, len(pages)) for i, p in enumerate(pages, 1))
+    body = "<main>\n" + "\n".join("<section class=\"page\">\n%s\n</section>" % blocks(p) for p in pages) + "\n</main>"
+    fcss = foot.replace("\\", "\\\\").replace('"', '\\"')
+    body = ("<style>@page { @bottom-center { content: \"%s · page \" counter(page) \" of \" counter(pages); font-size: 6.8pt; color: #333; "
+            "font-family: \"Segoe UI\", Arial, sans-serif; } }</style>\n" % fcss) + body
     title = re.search(r"(?m)^#\s+(.*)$", md)
     title = html.escape(title.group(1)) if title else "Quick manual"
     return ("<!doctype html>\n<html lang=\"en-GB\"><head><meta charset=\"utf-8\">\n<title>%s</title>\n"
