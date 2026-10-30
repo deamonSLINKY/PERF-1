@@ -363,7 +363,7 @@ static const theme_t THEMES[EN_NTHEME] = {
     {RGB(20, 14, 12), RGB(42, 30, 27), RGB(78, 56, 49), RGB(166, 140, 126), RGB(244, 232, 200), RGB(255, 212, 71),
      RGB(242, 230, 196), RGB(86, 78, 62), RGB(182, 242, 60), RGB(60, 80, 22), RGB(224, 52, 79), RGB(84, 22, 32),
      RGB(255, 143, 143), RGB(88, 52, 52), RGB(150, 210, 255), RGB(111, 224, 210)},
-    /* Synth (Synth Imp, 0.14.18): demon synthwave: a night sky, crimson to magenta neon, a horned sun on the horizon behind the sigil, the imp in tube light */
+    /* Synth (Synth Imp, 0.14.18): demon synthwave: a night sky, crimson to magenta neon, a banded sun on the horizon behind the sigil, the imp in tube light */
     {RGB(12, 3, 24), RGB(28, 6, 32), RGB(69, 18, 63), RGB(154, 95, 134), RGB(255, 233, 242), RGB(255, 225, 74),
      RGB(192, 140, 255), RGB(60, 36, 96), RGB(182, 255, 46), RGB(50, 80, 16), RGB(255, 47, 95), RGB(84, 16, 36),
      RGB(255, 138, 61), RGB(88, 44, 24), RGB(150, 210, 255), RGB(62, 240, 255)},
@@ -3445,7 +3445,6 @@ static void draw_sigil(void)
         const float sw = (fm_sinf(ang) + 1.0f) * 0.5f;
         const int fwd = fm_cosf(ang) > 0.0f, sx = x0 + 2 + (int)(sw * (float)(w - 8));
         int j;
-        cv_rect(x0 - 3, CY - 11, w + 6, 22, K_BG);   /* a dark surround, so the figure never runs through it */
         if (flash) {
             cv_rect(x0 - 2, CY - 8, w + 4, 14, K_TEXT);
         } else {
@@ -3531,9 +3530,16 @@ static void draw_meters(void)                    /* left: the five layers (pad, 
     lv[4] = dm * (float)proj.par[P_PULSE] * 0.01f;
     for (i = 0; i < 5; i++) {
         int32_t x = 6 + i * 9, h = (int32_t)(fm_clampf(lv[i], 0.0f, 1.0f) * 92.0f + 0.5f);
-        cv_rect(x, 20, 5, 96, t[i]);
-        if (h > 0)
-            cv_rect(x, 20 + 96 - h, 5, h, c[i]);
+        if (LOOK_SYNTH) {                        /* LED segments: 32 of them, the top four in the accent */
+            const int lit = (int)(fm_clampf(lv[i], 0.0f, 1.0f) * 32.0f + 0.5f);
+            int sgm;
+            for (sgm = 0; sgm < 32; sgm++)
+                cv_rect(x, 20 + 96 - (sgm + 1) * 3, 5, 2, sgm < lit ? (sgm >= 28 ? K_ACC : c[i]) : t[i]);
+        } else {
+            cv_rect(x, 20, 5, 96, t[i]);
+            if (h > 0)
+                cv_rect(x, 20 + 96 - h, 5, h, c[i]);
+        }
         cv_text(x, 120, &FONT_XS, L[i], K_DIM);
     }
 }
@@ -4862,26 +4868,16 @@ static void draw_horizon(void)
             cv_pset((int32_t)(s >> 24) * 240 / 256, (int32_t)((s >> 16) & 255u) * (HY - 8) / 256, mix(top, K_TEXT, 4 + (int)((s >> 8) & 7u)));
         }
     }
-    {   /* the horned sun: a banded disc sitting on the horizon, lifted in a build, white on the drop; the imp's horns from its shoulders */
-        const int lift16 = !play ? 9 : en_sec == EN_SEC_BREAK ? 4 : en_sec == EN_SEC_BUILD ? 10 + (int)((en_bars & 7u) * 6u / 8u) : en_sec == EN_SEC_GROOVE && dage < 4000u ? 16 : 10;
+    {   /* the sun: a banded disc sitting on the horizon, low in a breakdown, rising once through a build (its countdown), white on the drop */
+        const int left = en_sec_bars > 8u ? 8 : (int)en_sec_bars;
+        const int lift16 = !play ? 9 : en_sec == EN_SEC_BREAK ? 4 : en_sec == EN_SEC_BUILD ? 16 - left * 6 / 8 : en_sec == EN_SEC_GROOVE && dage < 4000u ? 16 : 10;
         const int r = 30, cy = HY + r * (16 - lift16) * 9 / 160;
-        const uint16_t band[6] = {RGB(255, 225, 74), RGB(255, 180, 60), RGB(255, 122, 42), RGB(255, 80, 60), RGB(255, 40, 80), RGB(255, 31, 90)};
+        const uint16_t band[6] = {RGB(255, 225, 74), RGB(255, 190, 70), RGB(255, 140, 80), RGB(255, 100, 120), RGB(255, 70, 140), RGB(255, 47, 142)};
         for (y = cy - r; y < HY; y++) {
             const int d = y - cy, hw = (int)fm_sqrtf((float)(r * r - d * d)), k = (y - (cy - r)) * 6 / (2 * r);
             if (y >= cy + 4 && ((y - cy) % 5) < 1 + (y - cy) / 10)
                 continue;                        /* the gaps, wider lower down */
             cv_rect(CX - hw, y, 2 * hw + 1, 1, flash ? K_TEXT : band[k > 5 ? 5 : k]);
-        }
-        for (i = -1; i <= 1; i += 2) {           /* a horn: a tapering curve from the disc's shoulder up and out to its tip */
-            int t;
-            for (t = 0; t <= 20; t++) {
-                const int bx = CX + i * r * 45 / 100, by = cy - r * 88 / 100, tx = CX + i * r * 80 / 100, ty = cy - r * 165 / 100;
-                const int cx2 = CX + i * r * 125 / 100, cy2 = cy - r * 125 / 100;   /* the control point: out, then the horn curls in to its tip, the imp's own */
-                const int u = 20 - t, hx = (bx * u * u + 2 * cx2 * u * t + tx * t * t) / 400, hy = (by * u * u + 2 * cy2 * u * t + ty * t * t) / 400;
-                const int hw = 2 + (20 - t) * 9 / 20;   /* wide at the base, a point at the tip */
-                if (hy < HY)
-                    cv_rect(hx - hw / 2, hy, hw, 2, flash ? K_TEXT : mix(band[0], RGB(255, 241, 201), t * 16 / 20));
-            }
         }
     }
     {   /* the floor: lines to the vanishing point, the near ones further apart, scrolling once a beat */

@@ -77,7 +77,7 @@ The second update since the public release. The full list, with the development 
 **New pages and ways to play**
 - **Pluck steps page** (ARP x9): deja vu's loop frozen as sixteen steps you write, rung and level, stored with the piece. **The pluck on MIDI** channel 2, every note with its note-off.
 - **SET page:** rounds a piece gets before the auto-DJ moves on, a tempo ramp over them, and an **intro** that brings the tracks in one by one over one to eight minutes, for mixing in, scratching or sampling over.
-- **The Synth Imp look:** the Synth theme is a night sky and a horned sun behind the sigil, a scanner in its centre, the floor running to the horizon on the beat, the imp in neon. **Scanlines** for any theme.
+- **The Synth Imp look:** the Synth theme is a night sky and a banded sun behind the sigil, a scanner in its centre, the floor running to the horizon on the beat, the imp in neon. **Scanlines** for any theme.
 
 **Under the hood**
 - **The dropouts of heavy pieces traced and fixed:** a lost timer interrupt, and swung hits splintering a half into many short chunks (a hit may no longer cut a chunk under 128 frames).

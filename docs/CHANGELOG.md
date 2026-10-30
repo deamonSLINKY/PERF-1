@@ -12,6 +12,10 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
+## Unreleased (the builds 0.15.1 .. are its steps)
+
+- **The Synth look, settled** (0.15.1), from the maker's notes on the update video: the sun rises once through a build (it followed the sixteenths and bobbed), its horns are gone, its foot is pink rather than red, the scanner has no dark box around it, only the slit over the sun, and the home screen's level meters are LED segments, the top four in the accent.
+
 ## 0.15.0 (the builds 0.14.1 .. 0.14.21 are its steps)
 
 **What 0.15.0 brings, in short.** Harmony you can hear: each genre has a harmonic rhythm in bars, a real dominant in minor keys, no stray diminished chords, chord loops that start from home, and stabbing pads and comp rhythms where the genre comps. A fuller pad: the saw sounds sweep a resonant filter with every breath and stab, with a sub and four-saw unison. The bass line has nine named figures and plays its fifth. The pluck goes out on MIDI channel 2, and its loop can be frozen and written step by step on the new Pluck steps page. A SET page shapes a longer set: rounds a piece, a tempo ramp, and an intro that brings the tracks in one by one for mixing in. The Synth theme is a look of its own (a horned sun behind the sigil, a scanner in its centre, the imp in neon) and Scanlines are a setting. The DY voices are the default, named as their banks name them. Steadier audio on the unit: the lost-interrupt fix of 0.14.x and the 128-frame chunk floor.

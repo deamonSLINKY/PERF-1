@@ -1069,7 +1069,7 @@ Switching to another firmware, or reinstalling, can lose what PERF-1 has stored.
 
 ![Global](img/perf-screen-global.png)
 
-**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor; Synth is a look of its own, the Synth Imp, pictured below: a night sky behind the sigil, a horned sun on the horizon that rises in a build and flashes on the drop, a floor of lines running to the vanishing point once a beat, and the imp in neon tube light), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
+**Global** (GLO): **Root**, **Theme** (Imp, Synth, Acid, Ice, Ember, Phosphor; Synth is a look of its own, the Synth Imp, pictured below: a night sky behind the sigil, a banded sun on the horizon that sinks in a breakdown, rises through a build and flashes on the drop, a floor of lines running to the vanishing point once a beat, and the imp in neon tube light), **Tune** (+-50 cents) and **Genre** (the bank, as GLO + PRESETS). MIDI out and the USB audio's level are on the **USB & MIDI** settings page (SEL + FX walks to it, after Settings).
 
 ![The Synth look: the home screen](img/perf-screen-home-synth.png)
 
