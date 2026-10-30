@@ -55,10 +55,13 @@ quick_card = ""
 if (SRC / "build" / "quick-manual.pdf").exists():   # the printable quick manual (tools/make_quick_manual.py, made on Windows with Edge)
     shutil.copy(SRC / "build" / "quick-manual.pdf", OUT / "manual" / "PERF-1-quick-manual.pdf")
     quick_card = '<a class="card" href="manual/PERF-1-quick-manual.pdf" download><b>Quick manual (PDF)</b><span>Eight A4 pages to print: every control, page and key map on paper.</span></a>'
+if (SRC / "build" / "beginners-guide.pdf").exists():  # the beginner's guide (docs/GUIDE.md, tools/make_quick_manual.py docs/GUIDE.md --out beginners-guide)
+    shutil.copy(SRC / "build" / "beginners-guide.pdf", OUT / "manual" / "PERF-1-beginners-guide.pdf")
+    quick_card = '<a class="card" href="manual/PERF-1-beginners-guide.pdf" download><b>Beginner\'s guide (PDF)</b><span>Your first hour, step by step, in plain words.</span></a>' + quick_card
 if (SRC / "build" / "manual.pdf").exists():         # the whole manual as a PDF (Edge headless printing docs/manual.html: tools/make_manual_pdf.sh)
     shutil.copy(SRC / "build" / "manual.pdf", OUT / "manual" / "PERF-1-manual.pdf")
     quick_card += '<a class="card" href="manual/PERF-1-manual.pdf" download><b>Full manual (PDF)</b><span>The whole manual to download or print.</span></a>'
-for img in (SRC / "docs" / "img").glob("perf-screen-*.png"):
+for img in [*(SRC / "docs" / "img").glob("perf-screen-*.png"), *(SRC / "docs" / "img").glob("guide-*.png")]:
     shutil.copy(img, OUT / "manual" / "img" / img.name)
 
 (OUT / "index.html").write_text(f'''<!doctype html>

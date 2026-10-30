@@ -8,11 +8,15 @@
 
 **0.15.0 is the third.** Its code is identical to the last development build, 0.14.21; the builds 0.14.1 to 0.14.21 are its steps.
 
+**0.15.1 is a fix-up of 0.15.0.** Its code is identical to development build 0.15.4; the builds 0.15.1 to 0.15.4 in the git history are its steps (the public number reuses the first of them).
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Unreleased (the builds 0.15.1 .. are its steps)
+## 0.15.1 (the development builds 0.15.1 .. 0.15.4 are its steps)
+
+**In short.** Breakdowns keep the pad's stabs, so reggae, dub and the stab pieces no longer drop to the pluck alone in a break. The Synth look is settled after the update video: the sun climbs once through a build and has no horns, nothing boxes in the scanner or the imp, the level meters are LED segments, and the slinky's coils part along the spring's winding when he jumps (the disco dancer too, and he is lit in the Synth theme). The manual page opens with a beginner's guide (the first hour in thirteen steps, with pictures), and there are three PDFs to download: the beginner's guide, the whole manual, and the quick manual on eight pages.
 
 - **A breakdown keeps the pad's stabs** (0.15.3, 0.15.4): the pad's stabs never fired in a breakdown, so a genre whose pads all stab (reggae, dub; the new stab pieces of garage, house, funk and amapiano) was left with the pluck alone there. 0.15.3 made the stab sound a held pad in the break, which sounded wrong; 0.15.4 keeps it a stab: the comp's own rhythm goes on through the break, a little softer, without Evolve's extra off-beats.
 - **The imp on the sun, and a spring that parts along its winding** (0.15.2): in the Synth look the imp summoned into the sigil stands on the sun with no box behind him; and the slinky's coils, when he stretches on the kick, part along the spring's winding (down across each coil) instead of in straight rows, in every theme and for the big dancer of the DISCO visualizer too; that dancer is lit in the Synth look (a magenta outline, a brighter body) instead of near-black.

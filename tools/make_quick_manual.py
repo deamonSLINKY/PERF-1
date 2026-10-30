@@ -24,6 +24,7 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[1]
 EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 WANT_PAGES = 8
+IMG_BASE = None                                     # the Markdown file's folder (images are relative to it)
 
 CSS = """
 @page { size: A4; margin: 12mm 12mm 13mm; @bottom-center { content: var(--foot); } }   /* (filled in by convert(): the running footer and the page number) */
@@ -48,6 +49,11 @@ th, td { border: .3pt solid #777; padding: .25mm .8mm; vertical-align: top; text
 th { font-weight: 700; border-bottom: .7pt solid #000; }
 td:first-child { white-space: nowrap; }
 .cols { columns: 2; column-gap: 4.5mm; }
+figure { margin: 1.5mm 0 2.5mm; break-inside: avoid; }
+figure img { display: block; max-width: 40%; image-rendering: pixelated; border: .3pt solid #999; }
+figure img[src*="panel"] { max-width: 78%; image-rendering: auto; }
+a { color: inherit; }
+figcaption { font-size: .85em; color: #444; margin-top: .6mm; }
 .newcol { break-before: column; }                 /* <h3 class="newcol"> in QUICK.md: start this heading in the next column */
 .page + .page { margin-top: 3.5mm; padding-top: 2mm; border-top: .5pt solid #bbb; }   /* sections flow on: a section a little over a page no longer leaves the rest of the next sheet blank */
 @media screen {
@@ -68,6 +74,7 @@ def inline(s):
     s = html.escape(s, quote=False)
     s = re.sub(r"\*\*(?=\S)(.+?)(?<=\S)\*\*", r"<strong>\1</strong>", s)
     s = re.sub(r"(?<![\w*])\*(?=\S)([^*]+?)(?<=\S)\*(?![\w*])", r"<em>\1</em>", s)
+    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", lambda m: '<a href="%s">%s</a>' % (m.group(2), m.group(1)), s)   # [text](url): the text, linked
     s = re.sub(r"\x00(\d+)\x00", lambda m: codes[int(m.group(1))], s)
     return s
 
@@ -127,6 +134,12 @@ def blocks(text):
                 j += 1
             tag = "ol" if ordered else "ul"
             out.append("<%s>%s</%s>" % (tag, "".join("<li>%s</li>" % inline(x) for x in items), tag)); i = j; continue
+        im = re.match(r"!\[([^\]]*)\]\(([^)]+)\)\s*$", lines[i].strip())
+        if im:                                                    # an image, with its alt text as the caption
+            src = (IMG_BASE / im.group(2)).resolve().as_uri() if IMG_BASE else im.group(2)
+            out.append('<figure><img src="%s" alt="%s"><figcaption>%s</figcaption></figure>' % (src, html.escape(im.group(1)), inline(im.group(1))))
+            i += 1
+            continue
         j = i                                                     # a paragraph: lines up to a blank or a block start
         while j < len(lines) and lines[j].strip() and not re.match(r"(#{1,3}\s|\||[-*]\s|\d+\.\s|<)", lines[j].strip()):
             j += 1
@@ -214,17 +227,24 @@ def page_report(pdf_path):
 
 def main(argv):
     md_path, html_only, do_measure, edge = SRC / "docs" / "QUICK.md", False, False, os.environ.get("PERF1_EDGE", EDGE)
+    stem, font = "quick-manual", None
     args = list(argv)
     while args:
         a = args.pop(0)
         if a == "--html-only": html_only = True
         elif a == "--measure": do_measure = True
         elif a == "--edge": edge = args.pop(0)
+        elif a == "--out": stem = args.pop(0)
+        elif a == "--font": font = args.pop(0)
         else: md_path = Path(a)
     out_dir = SRC / "build"
     out_dir.mkdir(exist_ok=True)
-    html_path, pdf_path = out_dir / "quick-manual.html", out_dir / "quick-manual.pdf"
+    html_path, pdf_path = out_dir / (stem + ".html"), out_dir / (stem + ".pdf")
+    global IMG_BASE
+    IMG_BASE = md_path.resolve().parent
     html_text = convert(md_path.read_text(encoding="utf-8"))
+    if font:                                        # (another sheet, e.g. the beginner's guide, in a larger type)
+        html_text = html_text.replace("html { font-size: 9pt; }", "html { font-size: %s; }" % font, 1)
     html_path.write_text(html_text, encoding="utf-8", newline="\n")
     print("wrote", html_path, "(%d bytes)" % html_path.stat().st_size)
     if html_only:
@@ -237,7 +257,7 @@ def main(argv):
     print("pages:", n, "" if n == WANT_PAGES else "(wanted %d)" % WANT_PAGES)
     if do_measure:
         measure(pdf_path)
-    return 0 if n == WANT_PAGES else 1
+    return 0 if n == WANT_PAGES or stem != "quick-manual" else 1
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

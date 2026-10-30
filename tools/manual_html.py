@@ -197,10 +197,10 @@ def convert(md):
             if t == NAME:                               # the site's header (home, the other pages), then the title
                 out.append('<header class="site"><a class="home" href="../"><img src="' + data_uri(WEB_IMG / "slinky.png") + '" width="46" height="46" alt="">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="../install/">Install</a><a href="../manual/" aria-current="page">Manual</a></nav></header>')
                 out.append('<h1>Manual</h1>')
-                out.append('<p class="printable">Printable: <a href="PERF-1-manual.pdf" download>the full manual (PDF)</a> &middot; <a href="PERF-1-quick-manual.pdf" download>the quick manual (PDF, eight A4 pages)</a></p>')
+                out.append('<p class="printable">Printable: <a href="PERF-1-manual.pdf" download>the full manual (PDF)</a> &middot; <a href="PERF-1-quick-manual.pdf" download>the quick manual (PDF, eight A4 pages)</a> &middot; <a href="PERF-1-beginners-guide.pdf" download>the beginner\'s guide (PDF)</a></p>')
             else:
                 out.append(f'<a class="home" href="../">{NAME}</a>\n<h1>{inline(t)}</h1>')
-                out.append('<p class="printable">Printable: <a href="PERF-1-manual.pdf" download>the full manual (PDF)</a> &middot; <a href="PERF-1-quick-manual.pdf" download>the quick manual (PDF, eight A4 pages)</a></p>')
+                out.append('<p class="printable">Printable: <a href="PERF-1-manual.pdf" download>the full manual (PDF)</a> &middot; <a href="PERF-1-quick-manual.pdf" download>the quick manual (PDF, eight A4 pages)</a> &middot; <a href="PERF-1-beginners-guide.pdf" download>the beginner\'s guide (PDF)</a></p>')
         elif ln.startswith("## "):
             t = ln[3:].strip()
             m = re.match(r"(\d+)\. (.+)", t)

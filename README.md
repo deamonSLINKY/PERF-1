@@ -60,6 +60,13 @@ The screen is drawn in one look (warm black, one colour per voice: the pad bone,
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
 
+## What's new in 0.15.1
+
+- **Breakdowns keep the pad's stabs:** reggae, dub and the stab pieces no longer drop to the pluck alone in a break.
+- **The Synth look, settled:** the sun climbs once through a build, no horns, nothing boxed in around the scanner or the imp, LED-segment meters; the slinky's coils part along the spring when he jumps.
+- **A beginner's guide** at the start of the manual: the first hour in thirteen steps, with pictures, in plain words.
+- **Printable manuals:** the beginner's guide, the whole manual and the eight-page quick manual as PDFs on the manual page.
+
 ## What's new in 0.15.0
 
 The second update since the public release. The full list, with the development builds it came from, is in [docs/CHANGELOG.md](docs/CHANGELOG.md).

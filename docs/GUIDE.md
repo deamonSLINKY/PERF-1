@@ -1,3 +1,4 @@
+<!-- footer: PERF-1 for beginners · 0.15.1 · the full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
 # PERF-1 for beginners
 
 This guide is for your first hour. No music theory needed, nothing to set up. Every step is one thing to press, and what you will hear.
@@ -20,6 +21,8 @@ You are the conductor. You don't have to play notes. You change the chords, brea
 
 Only a few. The rest can wait.
 
+![The FM-1's panel: the knobs top left and right, the screen in the middle, the buttons to its right, the keys below](img/guide-panel.png)
+
 | Control | What it does for you today |
 |---|---|
 | **MASTER** knob | Volume. |
@@ -36,6 +39,8 @@ Only a few. The rest can wait.
 
 **1. Switch it on and listen.** After a short animation, a piece starts playing on its own. Turn **MASTER** to a comfortable level. Nothing you press in this guide can break anything.
 
+![The home screen: the five parts' levels on the left, the circle shows the chord, the drum pattern on the right](img/perf-screen-home.png)
+
 **2. Tap EDIT.** At the start of the next bar the chord changes. The whole band follows: the bass, the pad and the melodies all move to fit. Tap it a few more times.
 
 **3. Tap a few keys.** Each key adds a note to the music or takes one away. Tap any key, listen, tap another. There are no wrong notes to find: the band only ever plays the notes you have left on. Tap a key again to put it back.
@@ -48,9 +53,15 @@ Only a few. The rest can wait.
 
 **6. Tap SAVE: a breakdown.** At the next bar the drums drop out and the music gets softer and dreamier.
 
+![A breakdown: the circle thins out and the eye closes](img/perf-screen-breakdown.png)
+
 **7. Tap SAVE again: the build and the drop.** The drums come back climbing for a few bars, there is a short silence, and then everything hits at once. This is the moment DJs live for. Tap SAVE, wait, tap SAVE, and you have done it.
 
+![A build: the top of the screen counts the bars to the drop](img/perf-screen-build.png)
+
 **8. Press FX: effects on the keys.** Every key is now an effect, and the screen shows their names.
+
+![The FX screen: each effect's name next to its key](img/perf-screen-fx-menu.png)
 - **Tap** a key and the effect stays on.
 - **Hold** a key and the effect lasts only while you hold it.
 - Tap the same key again to switch it off, or tap **OCT-** to switch every effect off at once.
@@ -60,6 +71,8 @@ Only a few. The rest can wait.
 
 **9. Press HOME, then HOME again** (not too quickly). This is the Perform screen: the eight parts of the band, and a **mood** bar.
 
+![The Perform screen: the eight parts, the four scenes, the mood bar](img/perf-screen-perform.png)
+
 **10. Turn ALGORITHM, the knob that sets the mood.** Turn it left for calm and sparse, right for busy and bright. The acid, the hats, the melody, the bass and the reverb all change together.
 
 **11. Tap the keys to mute parts.** On this screen the keys switch parts of the band off and on. The screen shows which key is which. Try muting the kick drum, listen to how much it changes, then bring it back.
@@ -68,7 +81,11 @@ Only a few. The rest can wait.
 
 ## Keep what you like
 
-**13. Save the piece.** If you have changed a piece and like it, press **GLO**, then **SAVE**. The screen says it has been stored, and it is there next time you switch on. Every style keeps its own ten pieces.
+**13. Save the piece.** If you have changed a piece and like it, press **GLO**, then **SAVE**. The screen says it has been stored, and it is there next time you switch on.
+
+![Stored: the top of the screen says so](img/perf-screen-store.png)
+
+ Every style keeps its own ten pieces.
 
 To put a piece back the way it was at the start, go to **GLO** and hold **SEL** and **SAVE** together for a moment.
 
@@ -80,6 +97,8 @@ You don't need any of this to have fun, but it is there.
 - **The Jam page** (turn SELECT past Global) turns the keys into a keyboard you can play along on. It only plays notes that fit, so you can play freely.
 - **Hold HOME** for the settings.
 - **The SET page** has an **Intro** that starts with just a pad and brings the band in one part at a time over a few minutes. Great for mixing in, or for playing over. You get there by holding **SEL** and pressing **FX**, then turning SELECT.
+
+![The SET page: Rounds, Ramp, Intro](img/perf-screen-set.png)
 - The [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) is eight pages to print and keep beside the FM-1.
 
 ## If something goes wrong
