@@ -407,7 +407,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 **USB audio.** The FM-1 is a stereo USB audio input (16-bit, 44.1 kHz): the master output, recorded over the same cable. The USB & MIDI page's Level: KNOB (follows MASTER) or FIXED (a recording does not move when you turn the speakers down). Its third knob, **Scanlines**, darkens every other row of the screen, a CRT's.
 
-**MIDI out** (USB): the pad on channel 1, the bass on 3, the acid on 4, the drums on 10 (General MIDI notes), MIDI clock with start, continue and stop. Notes played by hand go on their voice's channel. The pluck and the DJ snips are not sent. Off and on with the USB & MIDI page.
+**MIDI out** (USB): the pad on channel 1, the pluck on 2, the bass on 3, the acid on 4, the drums on 10 (General MIDI notes), MIDI clock with start, continue and stop. Notes played by hand go on their voice's channel. The DJ snips are not sent. Off and on with the USB & MIDI page.
 
 **MIDI in:** channel 1 notes add or remove their note from the scale (use another channel if that bothers you); clock and start / stop drive the tempo (`EXT`). From the USB MIDI port, and the TRS input where the build has it.
 

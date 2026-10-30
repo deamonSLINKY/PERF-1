@@ -23,9 +23,18 @@ static uint32_t midi_count;
 static uint32_t snare_n, snare_min = 999, pad_n;   /* snare note-ons (GM 38), the softest, and the pad's (0x90) */
 static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's note-ons (0x92) and the kicks counted, and the notes' range */
 static uint32_t bass_pc[12];                    /* the bass line's note-ons by pitch class */
+static int cm_on_n, cm_off_n, cm_bal[128];      /* the pluck's note-ons and note-offs (channel 2), and each note's ons less offs */
 static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
+    if (st == 0x91u) {
+        cm_on_n++;
+        cm_bal[d1 & 127u]++;
+    }
+    if (st == 0x81u) {
+        cm_off_n++;
+        cm_bal[d1 & 127u]--;
+    }
     if (st == 0x99u && d1 == 38u) {
         snare_n++;
         if (d2 < snare_min)
@@ -1679,6 +1688,37 @@ int main(void)
             en_piece_g(1, 0, pp, &pl);
             CHECK(pp[P_CH_LOOP] == 0, "lofi piece 1 loop: %d", pp[P_CH_LOOP]);
         }
+        en_init();
+        en_play(1);
+    }
+
+    /* the pluck on MIDI channel 2: every note-on gets one note-off, with a plain sound and with a DX voice, and Stop lets go of all */
+    {
+        int snd, i, worst = 0, ons[2];
+        for (snd = 0; snd < 2; snd++) {
+            en_init();
+            en_play(0);
+            en_genre(10);
+            en_set(P_CM_LVL, 60);
+            en_set(P_CM_DENS, 90);
+            en_set(P_CM_DEC, snd ? 80 : 40);
+            en_set(P_CM_SND, snd ? 12 : 1);          /* 12: the first DX voice */
+            en_regrow();
+            cm_on_n = cm_off_n = 0;
+            memset(cm_bal, 0, sizeof cm_bal);
+            en_play(1);
+            run(8.0f);
+            CHECK(cm_on_n >= 20, "pluck notes out (%s): %d", snd ? "DX" : "plain", cm_on_n);
+            CHECK(cm_off_n <= cm_on_n && cm_on_n - cm_off_n <= 8, "pluck notes sounding at once (%s): %d", snd ? "DX" : "plain", cm_on_n - cm_off_n);
+            en_play(0);
+            run(0.1f);
+            for (i = 0; i < 128; i++)
+                if (cm_bal[i] != 0)
+                    worst = cm_bal[i];
+            CHECK(cm_on_n == cm_off_n && worst == 0, "pluck note-offs (%s): %d on, %d off, a note left at %d", snd ? "DX" : "plain", cm_on_n, cm_off_n, worst);
+            ons[snd] = cm_on_n;
+        }
+        printf("  pluck on MIDI: %d plain notes, %d DX notes, all let go\n", ons[0], ons[1]);
         en_init();
         en_play(1);
     }

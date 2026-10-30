@@ -2324,6 +2324,52 @@ static void drum_ratchet(int d, float vel, int32_t wait, int r)   /* wait: the s
 static int32_t cm_wait, cm_pnote;                /* a pluck note that waits for the swing */
 static float cm_pvel;
 static void cm_trigger(int note, float vel);
+/* The pluck on MIDI out, channel 2: every note-on has its note-off booked for when the note has sounded (a plain sound: its decay to silence;
+ * a DX voice: the key's time), eight notes at once; the same note again, or the oldest of eight, is let go first; Stop and Panic let go of all. */
+#define CM_MN 8
+static uint8_t cm_mn[CM_MN];
+static int32_t cm_moff[CM_MN];
+static void cm_midi_off(int k)
+{
+    if (cm_mn[k])
+        midi(0x81, cm_mn[k], 0);
+    cm_mn[k] = 0;
+    cm_moff[k] = 0;
+}
+static void cm_midi_on(int note, uint32_t vel, int32_t len)
+{
+    int k, slot = -1, oldest = -1;
+    for (k = 0; k < CM_MN; k++) {
+        if (cm_mn[k] == note)
+            cm_midi_off(k);
+        if (!cm_mn[k]) {
+            if (slot < 0)
+                slot = k;
+        } else if (oldest < 0 || cm_moff[k] < cm_moff[oldest]) {
+            oldest = k;
+        }
+    }
+    if (slot < 0) {
+        cm_midi_off(oldest);
+        slot = oldest;
+    }
+    cm_mn[slot] = (uint8_t)note;
+    cm_moff[slot] = len;
+    midi(0x91, (uint32_t)note, vel);
+}
+static void cm_midi_step(int32_t k)             /* k samples went by */
+{
+    int i;
+    for (i = 0; i < CM_MN; i++)
+        if (cm_mn[i] && (cm_moff[i] -= k) <= 0)
+            cm_midi_off(i);
+}
+static void cm_midi_flush(void)
+{
+    int i;
+    for (i = 0; i < CM_MN; i++)
+        cm_midi_off(i);
+}
 static int32_t drums_wait(void)                 /* samples to the next hit that waits; 0: none */
 {
     int32_t m = cm_wait > 0 ? cm_wait : 0;
@@ -2447,9 +2493,10 @@ static void cm_trigger(int note, float vel)     /* a note: the next voice, its d
     en_cm_note = (uint8_t)note;                 /* (for the screen: the sigil's rune at this note) */
     en_cm_count++;
     const float dec = 0.1f * fm_exp2f((float)par[P_CM_DEC] * 0.045f);   /* the time to silence: 0.1 .. 2.2 s */
+    const float dk = (float)par[P_CM_DEC] * 0.01f, key_s = 0.12f + 1.6f * dk * dk;   /* a DX voice's key time */
+    cm_midi_on(note, (uint32_t)fm_clampf(40.0f + 87.0f * vel, 1.0f, 127.0f), (int32_t)((par[P_CM_SND] >= CM_NPLAIN ? key_s : dec) * EN_SR));
     if (par[P_CM_SND] >= CM_NPLAIN) {            /* a DX voice: the key is down for as long as the Decay knob says (the patch's own envelopes do the rest) */
-        const float d = (float)par[P_CM_DEC] * 0.01f;
-        fm_note_on(note, vel, (int32_t)((0.12f + 1.6f * d * d) * EN_SR));
+        fm_note_on(note, vel, (int32_t)(key_s * EN_SR));
         return;
     }
     cm[voice].inc = mtof((float)note) * (1.0f / EN_SR);
@@ -3699,6 +3746,7 @@ static void regrow(void)                        /* a new piece: a fresh acid lin
 static void notes_off(void)
 {
     int i;
+    cm_midi_flush();
     for (i = 0; i < 4; i++)
         en_midi_out(0xB0 | (uint32_t)i, 123, 0);
     en_midi_out(0xB9, 123, 0);
@@ -5955,6 +6003,7 @@ static void render_cm(uint32_t n)
     float lvl = 0.0f;
     int v;
     uint32_t j;
+    cm_midi_step((int32_t)n);                   /* the notes out on MIDI: their note-offs when due */
     if (par[P_CM_SND] >= CM_NPLAIN) {              /* a DX voice: render_fm */
         cm[0].env = cm[1].env = 0.0f;
         return;
