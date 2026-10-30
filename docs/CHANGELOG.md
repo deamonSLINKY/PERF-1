@@ -14,6 +14,10 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
+## Unreleased (the builds 0.15.5 .. are its steps)
+
+- **Gentler basses, and the Pluck steps page tidied** (0.15.5). No piece starts its bass on Bite, Tine or Clang any more: they are too high and bright for a bass (disco 3 jumped out at you). They are still there to choose by hand. Lofi, electro, disco and funk start on Dirty, Sub or Warm instead. The Pluck steps page is laid out like Acid steps: **Step** (rest, soft, note, accent), **Note** (1-12, the chord's notes from low to high, was called Rung), **Octave** (the pluck's, as on the Pluck page) and **Frozen**; Range stays on Pluck 2. The page also has its place in the page tabs along the bottom (the pluck shows four pages).
+
 ## 0.15.1 (the development builds 0.15.1 .. 0.15.4 are its steps)
 
 **In short.** Breakdowns keep the pad's stabs, so reggae, dub and the stab pieces no longer drop to the pluck alone in a break. The Synth look is settled after the update video: the sun climbs once through a build and has no horns, nothing boxes in the scanner or the imp, the level meters are LED segments, and the slinky's coils part along the spring's winding when he jumps (the disco dancer too, and he is lit in the Synth theme). The manual page opens with a beginner's guide (the first hour in thirteen steps, with pictures), and there are three PDFs to download: the beginner's guide, the whole manual, and the quick manual on eight pages.

@@ -196,7 +196,8 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
     {P_CM_VU, P_CM_LOOP, P_CM_LEAP, P_CM_MOTIF},   /* deja vu: how often a pluck note is the one the loop heard last time, the loop's length, leaps, and the motif (how often a bar develops the phrase's first bar) */
-    {K_PSNO, K_PSLV, P_CM_RANGE, P_CM_LOCK},       /* the pluck's steps: the step chosen (a white key): its rung of the chord's ladder, its level; the ladder's octaves; and whether the line is frozen (held, and stored with the piece) */
+    {K_PSLV, K_PSNO, P_CM_OCT, P_CM_LOCK},         /* the pluck's steps, laid out as the acid's: the step chosen (a white key): its kind (rest, soft, note, accent), its note (the chord's
+                                                    * tones, low to high); the pluck's octave; and whether the line is frozen (held, and stored with the piece) */
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
     {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
@@ -233,7 +234,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
     {"Pluck vu", "Loop", "Leaps", "Motif"},
-    {"Rung", "Level", "Range", "Frozen"},
+    {"Step", "Note", "Octave", "Frozen"},
     {"Level", "Drive", "Swing", "Pattern"},
     {"K>Bass", "S>Pad", "H>Acid", "P>Clock"},
     {"Kick", "Snare", "Hats", "Perc"},
@@ -2008,7 +2009,7 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
 /* ------------------------------------------------------------ buttons --- */
 /* the tab chain along the bottom (imp_tabs), and the breadcrumb's names: a tab a voice or group, with its pages */
 static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 3},
+    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 4}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
     {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 1}, {"JAM", 'J', V_JAM, 1}};
 static void set_view(int v)
 {
@@ -4592,7 +4593,7 @@ static void draw_scope(int kind)
             cv_text(4, 112, &FONT_XS, tx, K_TEXT);
             cv_text(48, 112, &FONT_XS, LN[en_cm_lvl[ui.pstp & 15] & 3], en_cm_lvl[ui.pstp & 15] ? K_ACC : K_DIM);
             n = 0;
-            q = "RUNG ";
+            q = "NOTE ";
             while (*q)
                 tx[n++] = *q++;
             itoa_u((uint32_t)en_cm_rung[ui.pstp & 15] + 1u, tx + n);
