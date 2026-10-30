@@ -491,8 +491,19 @@ static void vz_dancer(void)
                     w = (int32_t)(fm_fabsf(sx[g]) * (float)PX + 0.99f);
                     if (w < 1)
                         w = 1;
-                    cv_rect(CXD + (int32_t)(xx + rowdx) - (sx[g] < 0.0f ? w : 0), y, w, PX, ch == 'K' || ch == 'T' ? RGB(27, 16, 34) :
-                            ch == 'Y' && wide > 0.5f ? RGB(255, 255, 255) : mascot_color(ch));
+                    {   /* a coil parts along the spring's winding (down across its width), not straight across; the Synth look's imp is lit, not dark */
+                        int32_t yc = y;
+                        uint16_t col;
+                        if (g > 0 && c < 16) {
+                            const float fr = fm_clampf((float)(c - 2) * (1.0f / 13.0f), 0.0f, 1.0f);
+                            const int gn = g < 4 ? g + 1 : 4;
+                            yc = vfloor - 23 * PX + r * PX - (int32_t)((vz.lift + dyg[g] + (dyg[gn] - dyg[g]) * fr) * ks);
+                        }
+                        col = ch == 'K' || ch == 'T' ? (LOOK_SYNTH ? mascot_color('K') : RGB(27, 16, 34)) :
+                              ch == 'Y' && wide > 0.5f ? RGB(255, 255, 255) :
+                              LOOK_SYNTH && ch == 'R' ? RGB(150, 40, 120) : LOOK_SYNTH && ch == 'r' ? RGB(104, 24, 88) : mascot_color(ch);
+                        cv_rect(CXD + (int32_t)(xx + rowdx) - (sx[g] < 0.0f ? w : 0), yc, w, PX, col);
+                    }
                 }
             }
         }

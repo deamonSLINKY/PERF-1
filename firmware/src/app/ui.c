@@ -3068,15 +3068,19 @@ static void draw_mascot(int32_t x, int32_t y, int sleepy)
 {
     int r, c;
     for (r = 0; r < 23; r++) {
-        /* rows 0..10 the head, then four coils of three rows: each shifted by its share of the stretch */
+        /* rows 0..10 the head, then four coils of three rows: each shifted by its share of the stretch. Within a coil the share runs down
+         * across its width (the spring winds down to the right), so the stretch parts the coils along the winding, not straight across */
         const int grp = r <= 10 ? 0 : (r - 8) / 3;
-        const int32_t dy = (int32_t)(hm.lift + hm.dh * (float)(4 - grp) * 0.25f + 0.5f);
+        const int32_t dy0 = (int32_t)(hm.lift + hm.dh * (float)(4 - grp) * 0.25f + 0.5f);
         for (c = 0; c < 23; c++) {
             char ch = MASCOT[r][c];
+            int32_t dy = dy0;
             if (ch == '.')
                 continue;
             if (ch == 'Y' && sleepy)
                 ch = 'K';
+            if (grp > 0 && c < 16)
+                dy = (int32_t)(hm.lift + hm.dh * ((float)(4 - grp) - fm_clampf((float)(c - 2) * (1.0f / 13.0f), 0.0f, 1.0f)) * 0.25f + 0.5f);
             cv_pset(x + c, y + r - dy, (ch == 'K' || ch == 'T') && !LOOK_SYNTH ? K_LINE : mascot_color(ch));
         }
     }
@@ -3431,8 +3435,9 @@ static void draw_sigil(void)
                     if (RUNE[sg.rn[i].kind][r] >> (4 - c) & 1u)
                         cv_pset(x - 2 + c, y - 2 + r, mix(K_BG, K_ACC, 16 - (int)(age * 16u / 700u)));
         }
-    if (ui.centre_imp) {                         /* the imp, summoned into it */
-        cv_rect(CX - 13, CY - 14, 27, 27, K_BG);
+    if (ui.centre_imp) {                         /* the imp, summoned into it (in the Synth look he stands on the sun, no box) */
+        if (!LOOK_SYNTH)
+            cv_rect(CX - 13, CY - 14, 27, 27, K_BG);
         draw_mascot(CX - 11, CY - 12, play && en_sec == EN_SEC_BREAK);
     } else if (LOOK_SYNTH) {                     /* the scanner (the Synth look): a slit whose opening follows the section, a light sweeping across it once in two beats */
         const uint32_t dage = now - sg.drop_t;

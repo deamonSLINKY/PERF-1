@@ -14,6 +14,7 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Unreleased (the builds 0.15.1 .. are its steps)
 
+- **The imp on the sun, and a spring that parts along its winding** (0.15.2): in the Synth look the imp summoned into the sigil stands on the sun with no box behind him; and the slinky's coils, when he stretches on the kick, part along the spring's winding (down across each coil) instead of in straight rows, in every theme and for the big dancer of the DISCO visualizer too; that dancer is lit in the Synth look (a magenta outline, a brighter body) instead of near-black.
 - **The Synth look, settled** (0.15.1), from the maker's notes on the update video: the sun rises once through a build (it followed the sixteenths and bobbed), its horns are gone, its foot is pink rather than red, the scanner has no dark box around it, only the slit over the sun, and the home screen's level meters are LED segments, the top four in the accent.
 
 ## 0.15.0 (the builds 0.14.1 .. 0.14.21 are its steps)
