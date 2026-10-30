@@ -1178,9 +1178,12 @@ static const acid_snd_t ACID_SOUND[EN_NACID] = {
 };
 
 static int pad_snd(void) { return (unsigned)par[P_PADTONE] < EN_NSOUND ? par[P_PADTONE] : 0; }
-static int pad_stabs(void)                      /* Comp: Hold never stabs, a rhythm always does, Auto as the sound is */
+static int pad_stabs(void)                      /* Comp: Hold never stabs, a rhythm always does, Auto as the sound is; in a breakdown a stab sound breathes as a held pad
+                                                 * (0.15.3: the stabs did not fire there, so a genre whose pads all stab, reggae, dub, was left with the pluck alone) */
 {
     const int c = par[P_PAD_COMP];
+    if (en_sec == EN_SEC_BREAK && c < 2)
+        return 0;
     return c == 1 ? 0 : c >= 2 ? 1 : PAD_SOUND[pad_snd()].stabs;
 }
 static int pad_osc(void) { return PAD_SOUND[pad_snd()].osc; }
