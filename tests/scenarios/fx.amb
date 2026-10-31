@@ -15,10 +15,10 @@ expect fxmask 8388608
 shot fx_held.png
 key 17 up
 wait 2000
-# 10.1 s: the kick muted (G4), 4 s
+# 10.1 s: the punch-in FILTER on the synths (G4, where the kick's mute was until 0.15.19; FX_TFILT is bit 38), 4 s
 key 14 down
 wait 4000
-expect fxmask 256
+expect fxbit38 1
 key 14 up
 # 14.1 s: reverse (E4), 2 s; 16.1 s: tape stop (F4), 2 s
 key 11 down

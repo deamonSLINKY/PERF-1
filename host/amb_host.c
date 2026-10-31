@@ -567,6 +567,8 @@ static int expect(const char *what, const char *val)
         got = en_sec;
     else if (!strcmp(what, "fxmask"))             /* the effects held (FX menu) */
         got = (int)(uint32_t)ui.fx_mask;
+    else if (!strncmp(what, "fxbit", 5))          /* fxbitN: effect N (FX_*) held (the mask's upper half too) */
+        got = (int)(ui.fx_mask >> (atoi(what + 5) & 63) & 1u);
     else if (!strcmp(what, "trkmute"))            /* the tracks muted (GLO held, the keys): a bit a track */
         got = ui.trk_m;
     else if (!strncmp(what, "fxk", 3))           /* fxkN: the FX knobs' values (filter, crush, throw, wash) */

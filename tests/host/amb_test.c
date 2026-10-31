@@ -1978,6 +1978,70 @@ int main(void)
         en_play(1);
     }
 
+    /* the punch-ins on tracks (0.15.19): the targeted tracks go through a bus of their own. Each track alone (soloed), the FILTER held as a high-pass at
+     * 16 kHz (it takes nearly everything away): aimed at that track it goes nearly silent, aimed at another it plays on. So every way in (the kick with
+     * the drums, the bass, the acid, the pad, the plain pluck and the DX pluck) reaches the bus, and nothing else does. M:DRUMS silences the kick. */
+    {
+        static const struct { int tr, on, off, snd, most; const char *name; } R[6] = {   /* most: the level left, in %: the sends stay (the pad's reverb is a big one) */
+            {EN_TR_KICK, 1, 3, -1, 5, "kick"}, {EN_TR_DRONE, 4, 3, -1, 5, "bass"}, {EN_TR_ACID, 5, 3, -1, 5, "acid"},
+            {EN_TR_PAD, 3, 4, -1, 25, "pad"}, {EN_TR_PLUCK, 6, 3, 1, 5, "pluck (plain)"}, {EN_TR_PLUCK, 6, 3, 12, 5, "pluck (DX)"}};
+        int r, w;
+        float lv[2];
+        for (r = 0; r < 6; r++) {
+            for (w = 0; w < 2; w++) {
+                en_init();
+                en_dj_sync(0);
+                en_test_reseed(7);
+                en_play(0);
+                en_genre(2);
+                en_set(P_BL_MODE, 1);
+                en_set(P_ACID, 70);
+                en_set(P_CM_LVL, 80);
+                en_set(P_CM_DENS, 90);
+                if (R[r].snd >= 0)
+                    en_set(P_CM_SND, R[r].snd);
+                en_fxs(EN_FXS_TF_TYPE, 1);
+                en_fxs(EN_FXS_TF_CUT, 100);
+                en_fxs(EN_FXS_TF_RESO, 0);
+                en_fxs(EN_FXS_TF_TGT, w ? R[r].off : R[r].on);
+                en_trk(0, 1u << R[r].tr);
+                en_regrow();
+                en_play(1);
+                en_fx(FXB(FX_TFILT));
+                run(0.5f);
+                sum2 = 0.0f;
+                bad = 0;
+                run(4.0f);
+                lv[w] = sum2;
+            }
+            CHECK(bad == 0 && lv[1] > 0.0f && lv[0] < 0.01f * (float)R[r].most * lv[1], "punch-in FILTER on the %s: %.4f of its level when aimed elsewhere", R[r].name, (double)(lv[1] > 0.0f ? lv[0] / lv[1] : 1.0f));
+        }
+        for (w = 0; w < 2; w++) {                /* M:DRUMS: the kick alone, muted while held */
+            en_init();
+            en_test_reseed(7);
+            en_play(0);
+            en_genre(2);
+            en_trk(0, 1u << EN_TR_KICK);
+            en_regrow();
+            en_play(1);
+            en_fx(w ? FXB(FX_MDRUMS) : 0u);
+            run(0.5f);
+            sum2 = 0.0f;
+            run(2.0f);
+            lv[w] = sum2;
+        }
+        CHECK(lv[0] > 0.0f && lv[1] < 0.01f * lv[0], "M:DRUMS: the kick %.4f of its level", (double)(lv[0] > 0.0f ? lv[1] / lv[0] : 1.0f));
+        en_fx(0);
+        en_trk(0, 0);
+        en_fxs(EN_FXS_TF_TYPE, 2);
+        en_fxs(EN_FXS_TF_CUT, 50);
+        en_fxs(EN_FXS_TF_RESO, 40);
+        en_fxs(EN_FXS_TF_TGT, 2);
+        en_init();
+        en_play(1);
+        run(0.1f);
+    }
+
     /* stop: the tails die away */
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, en_param_info(i)->def);

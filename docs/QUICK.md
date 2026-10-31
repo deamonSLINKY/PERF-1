@@ -117,7 +117,7 @@
 
 **Latched effects keep going after you close the menu.** The **FX** button blinks, `FX` shows by the tempo, and the keys are the scale again. **OCT-** in the menu turns everything off: effects, FX knobs, mutes and solos (GLO + `B3` undoes it). The FX knobs Filter, Crush, Throw and Wash are the knobs here, on Perform and on the visualizers (page 4).
 
-**Settings pages.** Each effect with settings has a page that draws it: **SEL + a key** in the menu (that key's effect), **FX twice quickly** (the last one used), **SEL + FX** (all 23 in turn). **SELECT** moves between them and **FX** closes. The effect plays while its page is up, so you hear what you change (a few need a key held). All kept across power-off. The knobs on each page: Gate: Pattern (3-3-3, tres, offbeat, Euclid 5/7/9, waltz, chop, sparse, dense, dotted, 5/10, or your own from its white keys), Length, Targets, Depth (Gate 16 and 8 share it). Phaser and Flanger: Rate, Depth, Feedback, Mix. Vinyl: Level, Crackle, Hiss, Tone. Tape: Wow, Flutter, Drive, Dull. Roll: From, To, Each, Swell. Pump: Depth, Release, Every (1/2 .. 1/16 or KICK), Targets. Riser: Time, Filter, Wash, Echo. Scatter: Chaos, Reverse, Slice, Slices. Brake: Time, Spin back, Return, Dull. Half time: Speed, Slide. Sweep: Every, Depth, Reso, Type. Scratch: Every, Reach, Style. Freeze: Size, Spread, Grains. Rv swell: Length, Mix. Ring mod: Tone, Mix. Talk: Every, Depth, Reso, Mix. Wah: Sens, Range, Reso, Mix. Flex: Quant (off, beat, bar: when it starts), Mode (one shot, or loop until you let go or tap it off), Mix. Snips: Pitch (normal, an octave up or down), Play (while held, or one shot of about a second), Echo (dry, some, lots), Level. Auto DJ, Settings, USB & MIDI: pages 4 and 7.
+**Settings pages.** Each effect with settings has a page that draws it: **SEL + a key** in the menu (that key's effect), **FX twice quickly** (the last one used), **SEL + FX** (all 23 in turn). **SELECT** moves between them and **FX** closes. The effect plays while its page is up, so you hear what you change (a few need a key held). All kept across power-off. The knobs on each page: Gate: Pattern (3-3-3, tres, offbeat, Euclid 5/7/9, waltz, chop, sparse, dense, dotted, 5/10, or your own from its white keys), Length, Targets, Depth (Gate 16 and 8 share it). Phaser and Flanger: Rate, Depth, Feedback, Mix. Vinyl: Level, Crackle, Hiss, Tone. Tape: Wow, Flutter, Drive, Dull. Roll: From, To, Each, Swell. Pump: Depth, Release, Every (1/2 .. 1/16 or KICK), Targets. Riser: Time, Filter, Wash, Echo. Scatter: Chaos, Reverse, Slice, Slices. Brake: Time, Spin back, Return, Dull. Half time: Speed, Slide. Sweep: Every, Depth, Reso, Type. Scratch: Every, Reach, Style. Freeze: Size, Spread, Grains. Rv swell: Length, Mix. Ring mod: Tone, Mix. Talk: Every, Depth, Reso, Mix. Wah: Sens, Range, Reso, Mix. Flex: Quant (off, beat, bar: when it starts), Mode (one shot, or loop until you let go or tap it off), Mix. FILTER, DELAY, PHASE: each has Targets. Snips: Pitch (normal, an octave up or down), Play (while held, or one shot of about a second), Echo (dry, some, lots), Level. Auto DJ, Settings, USB & MIDI: pages 4 and 7.
 
 ### Bank 2: BEAT FX
 
@@ -137,12 +137,12 @@
 | Key | Effect | Key | Effect |
 |---|---|---|---|
 | `F3` | Sweep: a filter swept in time with the tempo | `F#4` | Tape: wow, flutter, drive |
-| `F#3` | Gate 16: the synths chopped in 1/16s (trance gate) | `G4` | M:KICK, a momentary mute |
+| `F#3` | Gate 16: the synths chopped in 1/16s (trance gate) | `G4` | FILTER (tracks) |
 | `G3` | Ring mod: a metallic tone | `G#4` | Roll: repeats that speed up |
-| `G#3` | Gate 8: the same in 1/8s | `A4` | M:HATS |
+| `G#3` | Gate 8: the same in 1/8s | `A4` | DELAY (tracks) |
 | `A3` | Freeze: holds the sound still | `A#4` | Pump: the mix ducks in time (sidechain) |
-| `A#3` | Gate pattern: the gate with its own pattern | `B4` | M:SNARE (snare and clap) |
-| `B3` | Reverse swell | `C5` | M:PERC |
+| `A#3` | Gate pattern: the gate with its own pattern | `B4` | PHASE (tracks) |
+| `B3` | Reverse swell | `C5` | M:DRUMS |
 | `C4` | Talk: a vowel filter, A E I O U | `C#5` | Riser: a build, filter and wash climbing |
 | `C#4` | Phaser | `D5` | Throw: sends the mix into the echo |
 | `D4` | Wah: an auto-wah that follows the loudness | `D#5` | Vinyl: crackle, hiss and pops |
@@ -326,7 +326,7 @@ Each knob picks one drum's sound from the same fourteen kits: Kick, Snare (and c
 
 ### The pluck
 
-The counter-melody: two plucked voices taking turns, an arpeggio of the chord on the bar's grid, swung off-sixteenths. Under the mix by default (Level 50, Density 45; Level 0 for none); thinner in a breakdown. **Pluck** (ARP x6): Level, Sound, Density, Octave. **Pluck 2**: Decay (for DX sounds, how long the key is held, 0.12-1.7 s), Style (up, down, up-down, random, skip = every second note, thirds), Rate (1/4, 3/16, 1/8, 1/16), Range (1-3 octaves).
+The counter-melody: two plucked voices taking turns, an arpeggio of the chord on the bar's grid, swung off-sixteenths. Level 50 and Density 45 by default (Level 0 for none); thinner in a breakdown. **Pluck** (ARP x6): Level, Sound, Density, Octave. **Pluck 2**: Decay (for DX sounds, how long the key is held, 0.12-1.7 s), Style (up, down, up-down, random, skip = every second note, thirds), Rate (1/4, 3/16, 1/8, 1/16), Range (1-3 octaves).
 
 **Deja vu** (ARP x8) makes the pluck remember its last 4, 8, 16 or 32 notes (**Loop**). **Pluck vu** is the chance a note coming round is the same as last time (0 all new, 100 locked); a locked phrase still follows the chord. **Leaps**: how often a new note jumps an octave. **Motif**: the first bar of each eight-bar phrase is the idea, and the bars after develop it (moved up or down, turned upside down now and then, a new ending, back in the fifth bar). 60 by default; 0 makes up every bar fresh. Changing Loop, or a new piece, forgets the loop.
 

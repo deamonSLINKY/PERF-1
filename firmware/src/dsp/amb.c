@@ -4442,6 +4442,16 @@ static float tp_m, fl_m, ph_m, tp_ph, tp_ph2, fl_ph, ph_ph, tp_lp[2], ph_z[2][4]
  * performer's, not a piece's: they start neutral and are not stored. The smoothed values follow them. */
 static volatile int16_t fxk_v[EN_NFXK];
 static float lpk_s, hpk_s, crk_s, thk_s, wash_s;
+/* THE PUNCH-INS ON TRACKS (0.15.19, after Caustic's per-machine effects): the tracks a held FILTER, DELAY or PHASER targets are mixed into a bus of
+ * their own (busl/busr) instead of the mix, at the same points and with the same gains, the pumps and the gate; the bus goes through the filter and the
+ * phaser, into the echo for the delay, and back into the mix before the echoes and the reverb. Two held together share the bus: both act on every
+ * track either one targets. The drums go as one (any drum in the targets takes all four), after their crush and mixer. */
+const char *const EN_PT_NAME[EN_NPT] = {"ALL", "DRUMS", "SYNTHS", "PAD", "BASS", "ACID", "PLUCK", "ACID+PLK", "PAD+PLK", "BASS+ACID"};
+static const uint8_t PT_MASK[EN_NPT] = {0xFF, 0x0F, 0xF0, 0x40, 0x10, 0x20, 0x80, 0xA0, 0xC0, 0x30};
+static uint32_t bus_m;                          /* the tracks in the bus this chunk (a bit a track, EN_TR_*): 0, no bus */
+static float tfx_m, tdx_m, tpx_m;               /* the three faded in and out (0..1) */
+static float tf_c[4], tf_s[4], tp_a[2], tp_z[2][4], tp_fb[2], tp_ph;   /* the filter's coefficients and states; the phaser's */
+static uint8_t tf_type;
 static float lp_amt_e, hp_amt_e;                 /* the filters' amounts: the key's or the knob's, the higher */
 static float cr_lv = 2048.0f, cr_wet;
 static int cr_hold = 1;
@@ -4450,7 +4460,7 @@ const char *const EN_FX_NAME[EN_NFX] = {
     [FX_RPT2] = "Rpt 1/2", "Rpt 1/4", "Rpt 1/6", "Rpt 1/8", "Rpt 1/16", "Rpt 1/32", "Reverse", "Tape stop",
     "Mute kick", "Mute hats", "Mute snare", "Mute perc", "Low-pass", "High-pass",
     "Gate 1/16", "Gate 1/8", "Gate pattern", "Echo throw", "Fill", "Phaser", "Flanger", "Tape", "Roll", "Pump", "Riser", "Vinyl", "Scatter", "Brake", "Spin back", "Half time", "Sweep", "Scratch", "Freeze", "Rev swell", "Ring mod", "Rpt 1/8T", "Rpt 1/16T",
-    "Flex Beat", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "Talk", "Wah", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
+    "Flex Beat", "Filter", "Delay", "Phaser", "Mute drums", "", "", "", "", "", "", "", "", "", "", "Talk", "Wah", "Hat roll", "Hat trip", "Snr roll", "Flam", "Dbl kick"};
 
 static void rpt_engage(int r)                   /* the slice that just ended, looped from its start */
 {
@@ -5036,7 +5046,8 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
     const uint64_t m = fx_req;
     uint32_t solo = trk_solo,
              mute = trk_mute | (uint32_t)(m >> FX_MUTE_KICK & 1u) << EN_TR_KICK | (uint32_t)(m >> FX_MUTE_HATS & 1u) << EN_TR_HATS |
-                    (uint32_t)(m >> FX_MUTE_SNARE & 1u) << EN_TR_SNARE | (uint32_t)(m >> FX_MUTE_PERC & 1u) << EN_TR_PERC;
+                    (uint32_t)(m >> FX_MUTE_SNARE & 1u) << EN_TR_SNARE | (uint32_t)(m >> FX_MUTE_PERC & 1u) << EN_TR_PERC |
+                    (uint32_t)(m >> FX_MDRUMS & 1u) * 0x0Fu;   /* (M:DRUMS: all four) */
     float dt = (float)n * (1.0f / EN_SR);
     int t, want = -1;
     fx_on = m;
@@ -5145,6 +5156,42 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         tp_m = tp_m < 0.002f && !(m >> FX_TAPE & 1u) ? 0.0f : tp_m;
         fl_m = fl_m < 0.002f && !(m >> FX_FLANGER & 1u) ? 0.0f : fl_m;
         ph_m = ph_m < 0.002f && !(m >> FX_PHASER & 1u) ? 0.0f : ph_m;
+        tfx_m += ((float)(uint32_t)(m >> FX_TFILT & 1u) - tfx_m) * sm;     /* the punch-ins on tracks: faded as the others */
+        tdx_m += ((float)(uint32_t)(m >> FX_TDELAY & 1u) - tdx_m) * sm;
+        tpx_m += ((float)(uint32_t)(m >> FX_TPHASE & 1u) - tpx_m) * sm;
+        tfx_m = tfx_m < 0.002f && !(m >> FX_TFILT & 1u) ? 0.0f : tfx_m;
+        tdx_m = tdx_m < 0.002f && !(m >> FX_TDELAY & 1u) ? 0.0f : tdx_m;
+        tpx_m = tpx_m < 0.002f && !(m >> FX_TPHASE & 1u) ? 0.0f : tpx_m;
+        {
+#define PT_OF(i) PT_MASK[(unsigned)fxs_v[i] < EN_NPT ? fxs_v[i] : 0]
+            const uint32_t bm = (tfx_m > 0.0f ? PT_OF(EN_FXS_TF_TGT) : 0u) | (tdx_m > 0.0f ? PT_OF(EN_FXS_TD_TGT) : 0u) | (tpx_m > 0.0f ? PT_OF(EN_FXS_TP_TGT) : 0u);
+            if (bm && !bus_m) {                 /* the bus starts: its effects' states from silence */
+                int c, k;
+                for (c = 0; c < 4; c++)
+                    tf_s[c] = 0.0f;
+                for (c = 0; c < 2; c++) {
+                    tp_fb[c] = 0.0f;
+                    for (k = 0; k < 4; k++)
+                        tp_z[c][k] = 0.0f;
+                }
+            }
+            bus_m = bm;
+        }
+        if (tfx_m > 0.0f) {                     /* 40 Hz .. 16 kHz; resonance from none to near ringing */
+            svf_coefs(tf_c, 40.0f * fm_exp2f((float)fxs_v[EN_FXS_TF_CUT] * 0.0864f), 2.0f - 0.0195f * (float)fxs_v[EN_FXS_TF_RESO]);
+            tf_type = (uint8_t)((unsigned)fxs_v[EN_FXS_TF_TYPE] < 5u ? fxs_v[EN_FXS_TF_TYPE] : 0);
+        }
+        if (tpx_m > 0.0f) {                     /* the phaser's sweep, as the master's: 0.08 .. 2.6 Hz, up to 4.5 octaves from 250 Hz */
+            int c;
+            const float oct = (float)fxs_v[EN_FXS_TP_DEPTH] * 0.045f;
+            tp_ph += dt * 0.08f * fm_exp2f((float)fxs_v[EN_FXS_TP_RATE] * 0.05f);
+            tp_ph -= (float)(int)tp_ph;
+            for (c = 0; c < 2; c++) {
+                const float x = fm_sin_turns(tp_ph + 0.25f * (float)c) * 0.5f + 0.5f;
+                const float w = fm_minf(3.14159265f * 250.0f * fm_exp2f(oct * x) * (1.0f / EN_SR), 0.9f);
+                tp_a[c] = (1.0f - w) / (1.0f + w);
+            }
+        }
         ph_fbk = (float)fxs_v[EN_FXS_PH_FB] * 0.009f;     /* 0 .. 0.9 */
         ph_wet = (float)fxs_v[EN_FXS_PH_MIX] * 0.005f;    /* the wet's share: 0 .. 0.5 (half and half: the deepest notches) */
         ph_k0 = (1.0f - ph_wet) * 0.88f;
@@ -5210,7 +5257,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         lp_amt_e = fm_maxf(fm_maxf(lp_amt, lpk_s), 0.35f * fm_maxf(brk, 0.0f));   /* (a breakdown darkens the whole mix) */
         hp_amt_e = fm_maxf(fm_maxf(hp_amt, hpk_s), rs_filt * riser_amt);   /* the build: a high-pass rising */
     }
-    echo_fbx = echo_fb + (0.86f - echo_fb) * throw_amt;
+    echo_fbx = echo_fb + (0.86f - echo_fb) * fm_maxf(throw_amt, tdx_m * (float)fxs_v[EN_FXS_TD_FB] * 0.0095f);   /* (the punch-in DELAY's repeats too) */
     if (fill_hold != (uint8_t)(m >> FX_FILL & 1u)) {
         fill_hold = (uint8_t)(m >> FX_FILL & 1u);
         drum_publish();
@@ -5900,6 +5947,8 @@ static void drain(void)
 #define EN_MIN_CHUNK 128                        /* frames: the shortest chunk a swung or humanized hit may cut (en_render; the clock pulse cuts anywhere) */
 #endif
 static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK];
+static float busl[BLK], busr[BLK];              /* the punch-ins' bus (0.15.19) */
+static float dsn_l[BLK], dsn_r[BLK];            /* the mix before the drums (their crush, and the drums into the bus) */
 
 /* the pad's bus: a 12 dB low-pass, darker than it sounds on paper (Brian Eno darkened everything: the
  * Synthi's filter below half, then tape). No chorus: a modulated delay against pure tones beats (on
@@ -6993,7 +7042,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     int rv_c2;
     shed3 = en_shed_level >= 3;
     for (j = 0; j < n; j++)
-        mixl[j] = mixr[j] = rsend[j] = esend[j] = 0.0f;
+        mixl[j] = mixr[j] = rsend[j] = esend[j] = busl[j] = busr[j] = 0.0f;
     {   /* the tank for this chunk starts now (it reads input older than this chunk's), here or on the other core */
         const dl_t *pd = &dl[L_PRE];
         rv_job.n = (int)n;
@@ -7028,6 +7077,12 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     DT(2);
     render_fm(n);                               /* the DX voices' samples from a chunk ago (the other core's), into the fm_ buffers added below */
     mx_end(3, n);
+    if (bus_m >> TR_CM & 1u)                    /* the plain pluck to the punch-ins' bus: it is all the mix holds so far */
+        for (j = 0; j < n; j++) {
+            busl[j] = mixl[j];
+            busr[j] = mixr[j];
+            mixl[j] = mixr[j] = 0.0f;
+        }
     DT(3);
     render_dj(n);
     DT(4);
@@ -7046,8 +7101,21 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         for (j = 0; j < n; j++) {
             const uint32_t q = (rp + j) & (PAD_R - 1);
             const float ds = pad_ring[2][q] * ps;
-            mixl[j] += pad_ring[0][q] * pl + fm_ol[j] * fl;
-            mixr[j] += pad_ring[1][q] * pr + fm_or[j] * fr;
+            const float pdl = pad_ring[0][q] * pl, pdr = pad_ring[1][q] * pr, fml = fm_ol[j] * fl, fmr = fm_or[j] * fr;
+            if (bus_m >> TR_PAD & 1u) {         /* (each into the punch-ins' bus when targeted) */
+                busl[j] += pdl;
+                busr[j] += pdr;
+            } else {
+                mixl[j] += pdl;
+                mixr[j] += pdr;
+            }
+            if (bus_m >> TR_CM & 1u) {
+                busl[j] += fml;
+                busr[j] += fmr;
+            } else {
+                mixl[j] += fml;
+                mixr[j] += fmr;
+            }
             rsend[j] += ds * 0.6f + fm_rs[j] * fs;
             esend[j] += ds * 0.2f + fm_es[j] * fs;
         }
@@ -7068,6 +7136,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         de *= duck_dec;
         mixl[j] *= dk[j] * gg;
         mixr[j] *= dk[j] * gg;
+        busl[j] *= dk[j] * gg;                  /* (the bus pumps and gates as the mix does) */
+        busr[j] *= dk[j] * gg;
         rsend[j] *= gg;
         esend[j] *= gg;
         {   /* the noise: its own pump, from none to deep */
@@ -7087,7 +7157,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         static uint32_t hc;
         const uint32_t hold = 2u + (uint32_t)(KK->crush * 4.0f);
         const float c = KK->crush, q = 24.0f;
-        static float bl[BLK], br[BLK];      /* static: the audio interrupt's stack is small (and this never re-enters) */
+        float *const bl = dsn_l, *const br = dsn_r;   /* (the mix before the drums: what they add is crushed) */
         for (j = 0; j < n; j++) {
             bl[j] = mixl[j];
             br[j] = mixr[j];
@@ -7104,9 +7174,21 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             mixr[j] = br[j] + dr + (hr - dr) * c;
         }
     } else {
+        if (bus_m & 0x0Fu)                      /* (the drums to the bus: the mix before them, to take out what they add) */
+            for (j = 0; j < n; j++) {
+                dsn_l[j] = mixl[j];
+                dsn_r[j] = mixr[j];
+            }
         render_drums(n);                        /* (the kick sets duck_env for the next chunk) */
     }
     mx_end(4, n);
+    if (bus_m & 0x0Fu)                          /* the drums to the punch-ins' bus: what they added (crushed, through the mixer), out of the mix */
+        for (j = 0; j < n; j++) {
+            busl[j] += mixl[j] - dsn_l[j];
+            busr[j] += mixr[j] - dsn_r[j];
+            mixl[j] = dsn_l[j];
+            mixr[j] = dsn_r[j];
+        }
     DT(8);
     PT(5);                                      /* the drums */
     if (rv_c2 && rv_job.bass) {                 /* the drone and the acid are the other core's: wait for them (the reverb goes on behind) */
@@ -7135,17 +7217,51 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mx_gains(2, &al, &ar, &as);
         for (j = 0; j < n; j++) {
             const float b = bass_o[j], a = acid_o[j], dg = dk[j] * gg_v[j];
-            mixl[j] += (b * bl + a * al) * dg;
-            mixr[j] += (b * br + a * ar) * dg;
+            float *const tbl = bus_m >> TR_DRONE & 1u ? busl : mixl, *const tbr = bus_m >> TR_DRONE & 1u ? busr : mixr;   /* (the punch-ins' bus when targeted) */
+            float *const tal = bus_m >> TR_ACID & 1u ? busl : mixl, *const tar = bus_m >> TR_ACID & 1u ? busr : mixr;
+            tbl[j] += b * bl * dg;
+            tbr[j] += b * br * dg;
+            tal[j] += a * al * dg;
+            tar[j] += a * ar * dg;
             rsend[j] += (b * 0.06f * bs + a * 0.15f * as) * gg_v[j];
             esend[j] += (b * 0.04f * bs + a * 0.35f * as) * gg_v[j];
         }
     }
     duck_env = fm_flush(de);
     DT(9);
+    if (bus_m) {                                /* the punch-ins' bus: the filter, the phaser, then back into the mix */
+        const float pk1 = (float)fxs_v[EN_FXS_TP_MIX] * 0.005f;   /* the phaser's wet share, 0 .. 0.5 */
+        for (j = 0; j < n; j++) {
+            float x[2];
+            int c;
+            x[0] = busl[j];
+            x[1] = busr[j];
+            for (c = 0; c < 2; c++) {
+                if (tfx_m > 0.0f)
+                    x[c] += (svf_mm(x[c], tf_c, &tf_s[2 * c], tf_type) - x[c]) * tfx_m;
+                if (tpx_m > 0.0f) {             /* four all-passes, a little feedback, mixed with the dry: as the master's phaser */
+                    float y = x[c] + 0.5f * tp_fb[c], v;
+                    const float a = tp_a[c];
+                    v = a * y + tp_z[c][0];  tp_z[c][0] = y - a * v;  y = v;
+                    v = a * y + tp_z[c][1];  tp_z[c][1] = y - a * v;  y = v;
+                    v = a * y + tp_z[c][2];  tp_z[c][2] = y - a * v;  y = v;
+                    v = a * y + tp_z[c][3];  tp_z[c][3] = y - a * v;  y = v;
+                    tp_fb[c] = fm_flush(y);
+                    x[c] += pk1 * (y - x[c]) * tpx_m;   /* (Mix 100: half and half, the deepest notches) */
+                }
+            }
+            busl[j] = x[0];
+            busr[j] = x[1];
+            mixl[j] += x[0];
+            mixr[j] += x[1];
+        }
+        for (j = 0; j < 4; j++)
+            tf_s[j] = fm_flush(tf_s[j]);
+    }
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
         float el, er, xl, xr;
-        echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]), &el, &er, &xl, &xr);
+        echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]) + (tdx_m > 0.0f ? tdx_m * (float)fxs_v[EN_FXS_TD_SEND] * 0.006f * (busl[j] + busr[j]) : 0.0f),
+               &el, &er, &xl, &xr);
         push(&dl[L_PRE], (rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f);
         mixl[j] = (mixl[j] + (0.75f * el + 0.15f * xl) * dk[j]) * 0.36f;
         mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;

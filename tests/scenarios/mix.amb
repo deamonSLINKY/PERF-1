@@ -59,12 +59,12 @@ expect trkmute 0
 tapkey 1
 expect pool 0x7AD
 tapkey 1
-# FX menu: the drums' mutes are there too (momentary, G4 = kick), not latched
+# FX menu (0.15.19): the first page's C5 mutes all four drums while held (the single drums' mutes are on the BEAT FX bank), momentary, not latched
 tap FX
-key 14 down
+key 19 down
 wait 200
-expect fxmask 256
+expect fxbit41 1
 expect trkmute 0
-key 14 up
+key 19 up
 tap FX
 wait 100

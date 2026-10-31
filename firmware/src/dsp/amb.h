@@ -212,7 +212,9 @@ enum {
     FX_SCRATCH, FX_FREEZE, FX_RVSWELL, FX_RING,               /* an automatic scratch; a granular freeze; a reverse swell; a ring modulator */
     FX_RPT8T, FX_RPT16T,                                      /* beat repeats in triplets: 1/8, 1/16 */
     FX_FLEX,                                                  /* Flex Beat: one bit; the pattern (a one-bar table, en_flex_step) is en_flex_select's */
-    FX_SPARE1, FX_SPARE2, FX_SPARE3, FX_SPARE4, FX_SPARE5, FX_SPARE6, FX_SPARE7,   /* fourteen bits the Flex pads used to take: free for new effects */
+    FX_TFILT, FX_TDELAY, FX_TPHASE, FX_MDRUMS,                /* (0.15.19, on the first page's G4 A4 B4 C5, where the drums' mutes were) punch-ins on the tracks
+                                                               * chosen (each page's Targets): a multimode filter, a delay, a phaser; and all four drums muted */
+    FX_SPARE5, FX_SPARE6, FX_SPARE7,                          /* bits the Flex pads used to take: free for new effects */
     FX_SPARE8, FX_SPARE9, FX_SPARE10, FX_SPARE11, FX_SPARE12, FX_SPARE13, FX_SPARE14,
     FX_TALK, FX_WAH,                                          /* a vowel filter sweeping across everything; an auto-wah that follows the loudness */
     FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM, FX_DBLKICK,   /* drum rolls (held): the hats in 32nds; in triplets; a snare roll; flams on snare and clap; a double kick */
@@ -259,15 +261,21 @@ enum {
     EN_FXS_RP_PITCH, EN_FXS_RP_DECAY, EN_FXS_RP_GATE, EN_FXS_RP_REFRESH,   /* the beat repeats (0.14.10): the pitch reached over four beats held (0..24: -12..+12 semitones), a decay a repeat (0..100: 0..6 dB), the gate (0..3: all, 3/4, half, a quarter of the slice), the slip refresh (0 off, 1 each beat, 2 each bar: the slice is the newest again) */
     EN_FXS_FT_PAD, EN_FXS_FT_BASS, EN_FXS_FT_ACID,                       /* the synths' filter types (0.15.15, the FILTERS page, after Caustic's MultiFilter): 0 low-pass (as before),
                                                                           * 1 high-pass, 2 band-pass, 3 notch, 4 peak; the pad's for its saw sounds (the others have none) */
+    EN_FXS_TF_TYPE, EN_FXS_TF_CUT, EN_FXS_TF_RESO, EN_FXS_TF_TGT,        /* (0.15.19) the punch-in FILTER: its type (as above), cutoff (40 Hz .. 16 kHz), resonance, targets (EN_PT_*) */
+    EN_FXS_TD_SEND, EN_FXS_TD_FB, EN_FXS_TD_TGT,                         /* the punch-in DELAY (into the echo, at the piece's echo time): how much, how long it repeats, targets */
+    EN_FXS_TP_RATE, EN_FXS_TP_DEPTH, EN_FXS_TP_MIX, EN_FXS_TP_TGT,       /* the punch-in PHASER: rate, depth, mix, targets */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0xF0, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
-                         12, 0, 0, 0, 0, 0, 0}
+                         12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
+/* the punch-ins' targets (0.15.19): all, the drums, the synths, the pad, the bass, the acid, the pluck, acid and pluck, pad and pluck, bass and acid */
+#define EN_NPT 10
+extern const char *const EN_PT_NAME[EN_NPT];
 uint8_t en_flex_step(int pat, int step);       /* Flex Beat pattern pat (0..EN_NFLEX-1), step 0..15: e | rev << 4 | mute << 5 | div << 6 (e 15: live) */
 extern volatile uint8_t en_flx_state;          /* 0 idle, 1 armed, 2 playing */
 extern volatile uint32_t en_flx_done;          /* one shots played out so far */

@@ -55,7 +55,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 28
+#define NFXP 31
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
@@ -166,6 +166,12 @@ static const struct {
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
     {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 2}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
+    {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, FT_NAME, 5}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
+                             {"Targets", KN_NAME, EN_FXS_TF_TGT, EN_PT_NAME, EN_NPT}}},   /* (0.15.19) the punch-ins on tracks: a multimode filter on the tracks chosen */
+    {"DELAY", FX_TDELAY, 0, {{"Send", KN_PLAIN, EN_FXS_TD_SEND, 0, 0}, {"Repeats", KN_PLAIN, EN_FXS_TD_FB, 0, 0}, {"Targets", KN_NAME, EN_FXS_TD_TGT, EN_PT_NAME, EN_NPT},
+                             {"", KN_NONE, 0, 0, 0}}},   /* those tracks into the echo (at the piece's echo time) */
+    {"PHASE", FX_TPHASE, 0, {{"Rate", KN_PLAIN, EN_FXS_TP_RATE, 0, 0}, {"Depth", KN_PLAIN, EN_FXS_TP_DEPTH, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_TP_MIX, 0, 0},
+                             {"Targets", KN_NAME, EN_FXS_TP_TGT, EN_PT_NAME, EN_NPT}}},   /* a phaser on them */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -287,8 +293,8 @@ static uint8_t fx_bank;                /* 0 .. 2: the effects, the beat effects,
 static const uint8_t KEY_FX[4][NKEYS] = {
     {FX_SWEEP, FX_GATE16, FX_RING, FX_GATE8, FX_FREEZE, FX_GATEX, FX_RVSWELL,          /* F3 F#3 G3 G#3 A3 A#3 B3 */
      FX_TALK, FX_PHASER, FX_WAH, FX_FLANGER, FX_REV,                                   /* C4 C#4 D4 D#4 E4 */
-     FX_STOP, FX_TAPE, FX_MUTE_KICK, FX_ROLL, FX_MUTE_HATS, FX_PUMP, FX_MUTE_SNARE,    /* F4 F#4 G4 G#4 A4 A#4 B4 */
-     FX_MUTE_PERC, FX_RISER, FX_THROW, FX_VINYL, FX_FILL,                              /* C5 C#5 D5 D#5 E5 */
+     FX_STOP, FX_TAPE, FX_TFILT, FX_ROLL, FX_TDELAY, FX_PUMP, FX_TPHASE,               /* F4 F#4 G4 G#4 A4 A#4 B4 (0.15.19: the punch-ins on tracks where the drums' mutes were) */
+     FX_MDRUMS, FX_RISER, FX_THROW, FX_VINYL, FX_FILL,                                 /* C5 C#5 D5 D#5 E5 */
      FX_LP, FX_NONE, FX_HP},                                                           /* F5 F#5 G5 */
     {FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32, FX_RPT8T,                 /* the repeats together, slow to fast: F3 .. B3 */
      FX_RPT16T, FX_NONE, FX_SCATTER, FX_BRAKE, FX_SPIN,                                /* C4 (the last repeat) C#4 D4 D#4 E4 */
@@ -311,7 +317,7 @@ static const char *const FX_LABEL[EN_NFX] = {
     "M:KICK", "M:HATS", "M:SNARE", "M:PERC", "LOWPASS", "HIPASS",
     "GATE 16", "GATE 8", "GATE PAT", "THROW", "FILL", "PHASER", "FLANGER", "TAPE", "ROLL", "PUMP", "RISER", "VINYL",
     "SCATTER", "BRAKE", "SPIN BK", "HALFTIME", "SWEEP", "SCRATCH", "FREEZE", "RV SWELL", "RING MOD", "RPT 1/8T", "RPT1/16T", 
-    "FLEX", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "TALK", "WAH", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
+    "FLEX", "FILTER", "DELAY", "PHASE", "M:DRUMS", "", "", "", "", "", "", "", "", "", "", "TALK", "WAH", "HAT ROLL", "HAT TRIP", "SN ROLL", "FLAM", "DBL KICK",
     [FX_NONE] = ""};
 /* every kind of effect its own colour (the same in every theme, so a key is found by its colour as well as its name):
  * repeats cyan, filters green, gates and the pump yellow, the drums' mutes red, the colour effects pink, the transport
@@ -331,11 +337,11 @@ static uint16_t fx_color(int fx)
     switch (fx) {
     case FX_RPT2: case FX_RPT4: case FX_RPT6: case FX_RPT8: case FX_RPT16: case FX_RPT32: case FX_RPT8T: case FX_RPT16T:
     case FX_HATROLL: case FX_HATTRIP: case FX_SNROLL: case FX_FLAM: case FX_DBLKICK: return KC_REPEAT;
-    case FX_LP: case FX_HP: case FX_SWEEP: return KC_FILTER;
+    case FX_LP: case FX_HP: case FX_SWEEP: case FX_TFILT: return KC_FILTER;
     case FX_GATE16: case FX_GATE8: case FX_GATEX: case FX_PUMP: return KC_GATE;
-    case FX_MUTE_KICK: case FX_MUTE_HATS: case FX_MUTE_SNARE: case FX_MUTE_PERC: return KC_MUTE;
-    case FX_PHASER: case FX_FLANGER: case FX_TAPE: case FX_VINYL: case FX_RING: case FX_TALK: case FX_WAH: return KC_COLOR;
-    case FX_RISER: case FX_ROLL: case FX_FILL: case FX_THROW: case FX_RVSWELL: return KC_BUILD;
+    case FX_MUTE_KICK: case FX_MUTE_HATS: case FX_MUTE_SNARE: case FX_MUTE_PERC: case FX_MDRUMS: return KC_MUTE;
+    case FX_PHASER: case FX_FLANGER: case FX_TAPE: case FX_VINYL: case FX_RING: case FX_TALK: case FX_WAH: case FX_TPHASE: return KC_COLOR;
+    case FX_RISER: case FX_ROLL: case FX_FILL: case FX_THROW: case FX_RVSWELL: case FX_TDELAY: return KC_BUILD;
     default: return KC_MOVE;
     }
 }
@@ -2050,7 +2056,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 }
 
 /* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 26, 27, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET; 26: MIDI IN; 27: FILTERS) */
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 26, 27, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET; 26: MIDI IN; 27: FILTERS; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
 static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
 {
     int i;

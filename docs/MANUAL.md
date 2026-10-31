@@ -1285,12 +1285,12 @@ The 27 keys run from `F3` to `G5`. On the screen they're laid out in three colum
 | E4 | Reverse | Plays the music backwards. |
 | F4 | Tape stop | The music slows down and stops, like a tape machine switched off. |
 | F#4 | Tape | Makes it sound like worn tape: wobbling pitch (wow and flutter) and drive. |
-| G4 | M:KICK | Mutes the kick while you hold the key. |
+| G4 | FILTER | A filter on the tracks you choose: low, high, band, notch or peak (see below). |
 | G#4 | Roll | Repeats that speed up. |
-| A4 | M:HATS | Mutes the hi-hats while held. |
+| A4 | DELAY | Sends the tracks you choose into the echo, with long repeats (see below). |
 | A#4 | Pump | Ducks the sound in a rhythm so it "pumps", the way music does when a kick is pushing it down. This is called sidechain ducking. |
-| B4 | M:SNARE | Mutes the snare and the clap while held. |
-| C5 | M:PERC | Mutes the percussion while held. |
+| B4 | PHASE | A phaser on the tracks you choose (see below). |
+| C5 | M:DRUMS | Mutes all four drums while held: the classic drop-the-drums move. |
 | C#5 | Riser | A build-up: a filter and the reverb climbing. |
 | D5 | Throw | Throws the mix into the echo. |
 | D#5 | Vinyl | Adds record crackle, hiss and pops underneath. |
@@ -1299,7 +1299,30 @@ The 27 keys run from `F3` to `G5`. On the screen they're laid out in three colum
 | F#5 | FILL> | Tap it and the drums play a fill in the next bar. |
 | G5 | High-pass | A high-pass filter that thins the sound out from the bottom. |
 
-The drum mutes here work only while you hold them, like any held key. To mute the other tracks, or to solo anything, use the mix map on the **GLO** layer (section 10).
+M:DRUMS works only while you hold it, like any held key. The single drums' mutes (kick, hats, snare, perc) are on the same keys of the BEAT FX bank. To mute the other tracks, or to solo anything, use the mix map on the **GLO** layer (section 10).
+
+**Punch-ins on tracks: FILTER, DELAY and PHASE.** The other effects work on the whole mix. These three work only on the
+tracks you pick, the way Caustic puts effects on one machine: hold DELAY and only the acid and the pluck echo away, hold
+FILTER and only the synths go thin while the drums stay punchy. Hold **SEL** and press the key to open its settings
+page; its last knob is **Targets**:
+
+| Targets | What it hits |
+|---|---|
+| ALL | Everything |
+| DRUMS | All four drums together |
+| SYNTHS | Pad, bass, acid and pluck (everything but the drums) |
+| PAD, BASS, ACID, PLUCK | That one track |
+| ACID+PLK, PAD+PLK, BASS+ACID | Those two |
+
+| Key | Settings |
+|---|---|
+| FILTER | Type (low, high, band, notch, peak), Cutoff, Reso, Targets |
+| DELAY | Send (how much goes into the echo), Repeats (how long it echoes on; it uses the piece's echo time), Targets |
+| PHASE | Rate, Depth, Mix (100 is the deepest swirl), Targets |
+
+Hold two of them at once and they share their tracks: both act on everything either one is aimed at. The effect is on a
+track's own sound; its reverb and echo sends carry on as before, so a filtered pad still has its unfiltered reverb tail.
+The whole-mix versions are still here: Phaser on C#4, Throw on D5, the filters on F5 and G5.
 
 ### Bank 2: BEAT FX
 
@@ -1434,6 +1457,9 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
 | MIDI IN | Notes: scale, pads | Channel: all, 1-16 | USB host: off, on (never kept) | - |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
+| FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
+| DELAY (A4) | Send | Repeats | Targets | - |
+| PHASE (B4) | Rate | Depth | Mix | Targets |
 | Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |

@@ -222,6 +222,17 @@ expect fxpage 26
 spin SELECT 1
 wait 100
 expect fxpage 27
+# the punch-ins on tracks (0.15.19): FILTER, DELAY, PHASE, each with its Targets
+spin SELECT 1
+wait 100
+expect fxpage 28
+shot fx_punch_filter.png
+spin SELECT 1
+wait 100
+expect fxpage 29
+spin SELECT 1
+wait 100
+expect fxpage 30
 # Flex Beat's page, the last: its quantize (bar), mode (one shot), mix (all)
 spin SELECT 1
 wait 100
