@@ -11,9 +11,9 @@ tap ARP
 expect view 14
 tap ARP
 expect view 15
-expect par98 30
+expect par98 50
 turn K1 1
-expect par98 31
+expect par98 51
 turn K2 2
 expect par99 3
 wait 2000

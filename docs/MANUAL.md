@@ -877,7 +877,7 @@ one after another rather than all at once. Two plucked voices take turns, so eac
 next. It plays in time with the bar, with swing on the off-sixteenths (swing makes every second note land a little
 late, for a shuffle), and it thins out in a breakdown.
 
-It's quiet by default (Level 30, Density 45). Turn Level to 0 to turn it off. Its two pages are **Pluck** and
+It sits under the other parts by default (Level 50, Density 45). Turn Level to 0 to turn it off. Its two pages are **Pluck** and
 **Pluck 2**, on **ARP** (press it six and seven times). The mood (section 10) moves its level, decay and density.
 
 | Setting | Does |

@@ -326,7 +326,7 @@ Each knob picks one drum's sound from the same fourteen kits: Kick, Snare (and c
 
 ### The pluck
 
-The counter-melody: two plucked voices taking turns, an arpeggio of the chord on the bar's grid, swung off-sixteenths. Quiet by default (Level 30, Density 45; Level 0 for none); thinner in a breakdown. **Pluck** (ARP x6): Level, Sound, Density, Octave. **Pluck 2**: Decay (for DX sounds, how long the key is held, 0.12-1.7 s), Style (up, down, up-down, random, skip = every second note, thirds), Rate (1/4, 3/16, 1/8, 1/16), Range (1-3 octaves).
+The counter-melody: two plucked voices taking turns, an arpeggio of the chord on the bar's grid, swung off-sixteenths. Under the mix by default (Level 50, Density 45; Level 0 for none); thinner in a breakdown. **Pluck** (ARP x6): Level, Sound, Density, Octave. **Pluck 2**: Decay (for DX sounds, how long the key is held, 0.12-1.7 s), Style (up, down, up-down, random, skip = every second note, thirds), Rate (1/4, 3/16, 1/8, 1/16), Range (1-3 octaves).
 
 **Deja vu** (ARP x8) makes the pluck remember its last 4, 8, 16 or 32 notes (**Loop**). **Pluck vu** is the chance a note coming round is the same as last time (0 all new, 100 locked); a locked phrase still follows the chord. **Leaps**: how often a new note jumps an octave. **Motif**: the first bar of each eight-bar phrase is the idea, and the bars after develop it (moved up or down, turned upside down now and then, a new ending, back in the fifth bar). 60 by default; 0 makes up every bar fresh. Changing Loop, or a new piece, forgets the loop.
 
