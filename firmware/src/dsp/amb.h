@@ -177,6 +177,7 @@ void en_play(int on);                          /* play / stop (the tails ring on
 void en_next(void);                            /* the next chord: on the next bar (now while resting) */
 void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
+void en_note_v(int voice, int note, int vel);   /* the same, with a velocity (1 .. 127; 0 the note off; en_note's is 100): the pluck's, bass's and acid's level and accent (0.15.23) */
 void en_note(int voice, int note, int on);      /* a key played on the page of a voice off the algorithm (P_*_MAN):
                                                  * EN_V_*, MIDI note, on / off */
 void en_mute(int on);                          /* remote: silent, no MIDI out (1) or back (0), in turn */

@@ -913,7 +913,8 @@ void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
 void en_mute(int on) { post(C_MUTE, on, 0); }
 void en_hush(int on) { post(C_HUSH, on, 0); }
-void en_note(int voice, int note, int on) { post(C_NOTE, voice, (note & 0x7F) | (on ? 0x100 : 0)); }
+void en_note_v(int voice, int note, int vel) { post(C_NOTE, voice, (note & 0x7F) | (vel < 0 ? 0 : vel > 127 ? 127 : vel) << 8); }   /* (the velocity in b's bits 8-14) */
+void en_note(int voice, int note, int on) { en_note_v(voice, note, on ? 100 : 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_section(int cmd) { post(C_SECTION, cmd, 0); }
@@ -1586,6 +1587,7 @@ static struct {
     float gtarget;                              /* the chord's root, while the keys play it */
     uint8_t midi_note, rest, env_up;            /* env_up: attacking */
     uint8_t play;                               /* played from the keys */
+    float vd;                                   /* a key's velocity, as a gain less 1 (0: as the algorithm plays it; 0.15.23) */
 } bass;
 static float bl_env, bl_gate;                   /* the bass line's envelope, 0..1, and the samples its note still holds */
 static uint8_t bl_up, bl_kick, bl_beat;         /* attacking; the kick hit this step; the notes since the bar (the riff's place) */
@@ -2789,14 +2791,14 @@ static void cm_trigger(int note, float vel)     /* a note: the next voice, its d
     cm[voice].vel = vel;
     cm[voice].dm = fm_expf(-6.9f / (dec * EN_SR));
 }
-static void cm_play(int key)                    /* a note played by hand (the JAM page): the key is the pitch, within the song's and the pluck's octaves */
+static void cm_play(int key, float vg)          /* a note played by hand (the JAM page, pads): the key is the pitch, within the song's and the pluck's octaves; vg the velocity / 100 */
 {
     int note = key + 12 * (par[P_OCT] + par[P_CM_OCT]);
     while (note > 100)
         note -= 12;
     while (note < 36)
         note += 12;
-    cm_trigger(note, 0.95f);
+    cm_trigger(note, fm_minf(0.95f * vg, 1.15f));
 }
 
 static int cm_ladder(int *arp)                  /* the chord's tones over the pluck's octaves, low to high: the ladder a slot's index points into */
@@ -4164,12 +4166,14 @@ static void pad_play(int key, int on)
     }
 }
 static void smp_note(int key, int on);
-static void note_cmd(int voice, int key, int on)
+static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 100 a plain press (en_note), 127 the loudest (0.15.23: a pad's or SEL's accent) */
 {
+    const int on = vel > 0;
+    const float vg = (float)vel * 0.01f;
     int k, t, legato;
     if (voice == EN_V_PLUCK) {                  /* the counter-melody played by hand: the note's pitch (the off does nothing: it rings out) */
         if (on)
-            cm_play(key);
+            cm_play(key, vg);
         return;
     }
     if (voice == EN_V_SAMPLE) {                 /* the sampler: its key (the note less 53) */
@@ -4201,19 +4205,22 @@ static void note_cmd(int voice, int key, int on)
     } else if (voice == EN_V_DRONE) {
         if (t >= 0) {
             int m = fold_note(t - 24 + 12 * (par[P_BASSOCT] + par[P_OCT]), 24, 83);
-            if (on && !legato)
-                bass.env_up = 1;                /* a new press: the envelope again */
+            if (on && !legato) {
+                bass.env_up = 1;                /* a new press: the envelope again, at its velocity */
+                bass.vd = fm_clampf(vg, 0.3f, 1.2f) - 1.0f;
+            }
             if (bass.amp < 0.02f)
                 bass.note = (float)m;           /* from silence: straight there, no glide */
             if (bass.midi_note != m) {
                 midi(0x82, bass.midi_note, 0);
-                midi(0x92, (uint32_t)m, 100);
+                midi(0x92, (uint32_t)m, (uint32_t)(vel ? vel : 100));
             }
             bass.play = 1;
             bass.target = (float)m;
             bass.midi_note = (uint8_t)m;
         } else if (bass.play) {                 /* let go: back to the chord's root */
             bass.play = 0;
+            bass.vd = 0.0f;
             bass_to((int)bass.gtarget % 12);
         }
     } else if (t >= 0) {                        /* the acid */
@@ -4225,15 +4232,15 @@ static void note_cmd(int voice, int key, int on)
             float dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);
             acid.inc = acid.inc_t;
             acid.env = 1.0f;
-            acid.acc = 0.6f;
+            acid.acc = vel >= 115 ? 1.0f : 0.6f * vg;   /* (a plain press 0.6, as before; 115 up a full accent) */
             acid.edec = fm_expf(-6.9f * 32.0f / (dec * EN_SR));
             acid.sliding = 0;
         }
         if (acid.note)
             midi(0x83, acid.note, 0);
-        midi(0x93, (uint32_t)m, 110);
+        midi(0x93, (uint32_t)m, (uint32_t)(vel >= 115 ? 120 : vel));
         acid.note = (uint8_t)m;
-        acid.amp_t = 1.0f;
+        acid.amp_t = fm_minf(1.0f, 0.3f + 0.7f * vg);
         acid.gate_left = -1;                    /* held while the key is */
         acid.play = 1;
         en_acid_glow = 1.0f;
@@ -6245,7 +6252,7 @@ static void render_bass(uint32_t n)
     const int dest = par[P_DL_DEST], osc = DS->osc;
     const float depth = (float)par[P_DL_DEPTH] * 0.01f, lv = dest == 2 ? 1.0f - 0.8f * depth * (0.5f - 0.5f * drone_lfo.v) : 1.0f,
                 drv = 1.4f * DS->drive * (dest == 3 ? 1.0f + 2.5f * depth * (0.5f + 0.5f * drone_lfo.v) : 1.0f),
-                g = bass_vol * 0.36f * lv * DS->g / fm_minf(1.0f + 0.15f * (DS->drive - 1.0f), 1.3f),
+                g = bass_vol * 0.36f * lv * DS->g / fm_minf(1.0f + 0.15f * (DS->drive - 1.0f), 1.3f) * (1.0f + bass.vd),
                 dsaw = DS->saw, dsub = DS->sub,
                 tgt = (en_playing && !par[P_DR_MAN]) || bass.play ? 1.0f : 0.0f,
                 rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),

@@ -1,0 +1,69 @@
+# Velocity by hand (0.15.23): on JAM, SEL held makes a key an accent (and not the shift); an Akai MPK mini (MIDI IN's Notes: MPK): its keys play the
+# JAM page's voice with their velocity, its pads (channel 10) are the pads' bank A, its knobs (CC 70-77) and mod wheel (CC 1) the FX knobs, the
+# acid, bass and reverb, and the mood. The pluck's MIDI out shows the velocity: 40 + 87 x the level (a plain key 0.95: 122, an accent 127).
+seed 0
+wait 3000
+tap PLAY
+wait 300
+expect playing 0
+tap GLO
+wait 100
+spin SELECT 1
+wait 100
+spin SELECT 1
+wait 200
+expect view 33
+expect jamv 0
+key 5 down
+wait 100
+expect lastvel 122
+key 5 up
+wait 100
+press SEL
+wait 100
+key 7 down
+wait 100
+expect lastvel 127
+key 7 up
+release SEL
+wait 100
+expect view 33
+# the MPK on MIDI IN
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 3
+wait 100
+expect fxpage 26
+spin K1 1
+wait 100
+spin K1 1
+wait 100
+spin K1 1
+wait 200
+expect minpads 3
+shot midiin_mpk.png
+# a key at velocity 64: the pluck at 0.95 x 0.64
+midi 90 3C 40
+wait 100
+expect lastvel 92
+midi 80 3C 00
+# a key on the MPK (and a chord's notes let go with it)
+tap PLAY
+wait 300
+# pad 9 (bank B's first, note 44 on channel 10): the breakdown on the bar
+midi 99 2C 64
+wait 2500
+expect sec 1
+# the knobs: the first (CC 70) the filter right down, the mod wheel the mood
+midi B0 46 00
+midi B0 01 7F
+wait 100
+expect fxk0 -50
+expect mood 100
+# kept
+wait 6000
+reboot
+wait 3000
+expect minpads 3

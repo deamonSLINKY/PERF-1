@@ -1456,7 +1456,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | - |
 | Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
-| MIDI IN | Notes: scale, pads, M:S | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
+| MIDI IN | Notes: scale, pads, M:S, MPK | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
 | DELAY (A4) | Send | Repeats | Targets | - |
@@ -1642,6 +1642,8 @@ The **Jam** page turns the 27 keys into an instrument so you can play along with
 | **KNOB4** | Answer | When it's on and you stop playing (after at least two notes and a short pause), the pluck plays your phrase back an octave higher at the next bar line. It does this once, then waits for your next phrase. |
 
 The page shows a keyboard with the scale's notes lit and the keys you hold bright (orange). While the music plays, the notes of the chord playing are blue, and its name is in the top right, like `Am7`. If the pluck's level is turned almost all the way down, playing it raises it to 40 so you can hear it.
+
+**Accents (SEL).** The FM-1's keys can't feel how hard you press, so hold **SEL** while you play a key for an accent: a louder note, and on the acid a full accent (brighter, punchier). On the Jam page SEL + a key always plays; it doesn't change the pattern as it does elsewhere.
 
 **Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page and makes it that voice's own line:
 
@@ -1864,7 +1866,7 @@ The pads are read in banks of 16, from note 36, the way an MPC's pads come out o
 | Bank | Pads |
 |---|---|
 | A | 1-6: the drums (kick, snare, clap, closed hat, open hat, perc), with the pad's velocity. 7: all the drums muted, or back. 9: breakdown. 10: build. 11: drop. 12: the next chord. 13: a fill. 14: freeze. 15: the auto-DJ on or off. 16: the next piece. The sections, chords and pieces wait for the bar, as from the panel. |
-| B | The pluck: each pad is the next note of the scale up from the root, so every pad is in key. |
+| B | The pluck: each pad is the next note of the scale up from the root, so every pad is in key. The pad's velocity sets the note's level (on the acid, hit hard for an accent), as it does for the drums. |
 | C | The bass, the same way. |
 | D | The acid, the same way. |
 | E | The chords: pads 1-7 jump to the scale's chords I to VII at once. |
@@ -1887,6 +1889,19 @@ This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tr
 | PERF-1 | Next chord | Fill | Breakdown | Build | Drop | Next piece |
 
 The sections and pieces wait for the bar, as they do from the pads. Connect its MIDI out to the FM-1's TRS MIDI input. On the Model:Samples, turn on MIDI out for the tracks you want to use as triggers and leave it off for the ones you play yourself. Its trigs still play their own samples, so a trigger track can be a quiet one, or one you like hearing with the change.
+
+**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the FM-1's TRS MIDI input (the MPK mini MK4's DIN MIDI out, with a TRS type A to DIN cable or adapter), or over USB through a computer. It expects the MPK's factory program: keys on channel 1, pads on channel 10 from note 36, knobs on CC 70-77.
+
+| MPK | PERF-1 |
+|---|---|
+| Keys | Play the Jam page's voice (pluck, pad, acid or bass) with their velocity, snapped to the scale, so there are no wrong notes. With Jam's Keys on Chords, every key plays a triad of the scale. |
+| Pads, bank A (1-8) | The drums (kick, snare, clap, closed hat, open hat, perc), with velocity; pad 7 mutes all the drums or brings them back. |
+| Pads, bank B (9-16) | Breakdown, build, drop, next chord, fill, freeze, auto-DJ on or off, next piece (as the MPC's pads 9-16). |
+| Knobs 1-4 (CC 70-73) | The FX knobs: Filter, Crush, Throw, Wash. |
+| Knobs 5-8 (CC 74-77) | The acid's cutoff and resonance, the bass's cutoff, the reverb. |
+| Mod wheel (CC 1) | The mood. |
+
+The keys play over the song from any page. On the Jam page the voice is all yours: its own line stops while the page is up. The **Channel** setting doesn't apply in this mode (keys and pads come on their own channels). Pitch bend isn't used. If your MPK's program sends other numbers, the MIDI IN page's `LAST IN` line shows what each knob and pad sends; tell us and we'll match it.
 
 **Knob CCs** (the MIDI IN page's fourth knob) turn the four FX knobs over MIDI:
 

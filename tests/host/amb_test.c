@@ -413,6 +413,41 @@ int main(void)
         CHECK(!bad, "pad let go");
     }
 
+    /* velocity by hand (0.15.23: a pad's velocity, SEL's accent on Jam): the pluck, the bass and the acid, each alone and off the algorithm, a soft note
+     * (40) against an accent (127): the accent louder (energy over the note's first 0.4 s) */
+    {
+        static const struct { int v, tr, man, note; const char *name; } V[3] = {
+            {EN_V_PLUCK, EN_TR_PLUCK, P_CM_MAN, 72, "pluck"}, {EN_V_DRONE, EN_TR_DRONE, P_DR_MAN, 48, "bass"}, {EN_V_ACID, EN_TR_ACID, P_AC_MAN, 60, "acid"}};
+        int r, w;
+        float lv[2], q[3];
+        for (r = 0; r < 3; r++) {
+            for (w = 0; w < 2; w++) {
+                en_init();
+                en_dj_sync(0);
+                en_play(0);
+                en_genre(2);
+                en_set(P_CM_LVL, 80);
+                en_set(V[r].man, 1);
+                en_trk(0, 1u << V[r].tr);
+                run(1.0f);
+                en_note_v(V[r].v, V[r].note, w ? 127 : 40);
+                sum2 = 0.0f;
+                bad = 0;
+                run(0.4f);
+                lv[w] = sum2;
+                en_note_v(V[r].v, V[r].note, 0);
+                run(0.5f);
+            }
+            q[r] = lv[0] > 0.0f ? lv[1] / lv[0] : 0.0f;
+            CHECK(!bad && lv[0] > 0.0f && lv[1] > 2.0f * lv[0], "velocity on the %s: an accent %.2f times a soft note's energy", V[r].name, (double)q[r]);
+        }
+        printf("  velocity by hand, accent / soft energy: pluck %.1f, bass %.1f, acid %.1f\n", (double)q[0], (double)q[1], (double)q[2]);
+        en_trk(0, 0);
+        en_init();
+        en_play(1);
+        run(0.1f);
+    }
+
     /* sounds changed and keys played at random while it plays, for a minute: bounded, never stuck */
     {
         uint32_t r = 12345u;
