@@ -1799,7 +1799,7 @@ On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its M
 
 - **Power:** the FM-1 doesn't power the port. Plug the device in through a **powered USB hub**, or an adapter that powers the device. One device, directly or behind one hub.
 - **While it's on,** the computer side of the port is off: no USB audio, no MIDI to the computer, no editor, no updates. Turn it off to get them back. It's never kept: every power-on starts with USB host off, so the installer always works.
-- **What it says:** `ON: PLUG IN A DEVICE`, then `DEVICE CONNECTED` when it finds one. `NO MIDI DEVICE FOUND` means the device has no USB MIDI (unplug it, or try another port of the hub). Low-speed devices (some old keyboards) aren't supported. `DEVICE LOST: LOOKING` means it came unplugged; it reconnects by itself.
+- **What it says:** `ON: PLUG IN A DEVICE`, then `DEVICE CONNECTED` when it finds one. `NO MIDI DEVICE` means it found something without USB MIDI, or nothing answered: the MIDI IN page then shows what it found (`NO ANSWER` with its codes, `HUB INSIDE` for a dock with a hub behind its hub, or the device and the step it stopped at). The page also shows the last MIDI message that came in and whether a clock is coming in, from any input. Low-speed devices (some old keyboards) aren't supported. `DEVICE LOST: LOOKING` means it came unplugged; it reconnects by itself.
 - Full-speed USB MIDI 1.0 only, notes and clock: no SysEx goes to or comes from the device.
 
 This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.

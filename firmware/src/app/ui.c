@@ -455,6 +455,7 @@ static struct {
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
     uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); the channel listened to, 0 all (set_t.uiv[11]) */
     uint8_t usb_host;                            /* the USB port is the host of a USB-MIDI device (plat_usb_host); never kept */
+    uint32_t min_last, min_n;                    /* MIDI in: the last message (not clock), as a USB-MIDI packet, and how many (the MIDI IN page shows them) */
     uint8_t pad_note[48];                        /* the notes the melodic pads started (banks B-D), for their note-offs */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
@@ -1611,11 +1612,9 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
             static const char *const HM[7] = {0, "ON: PLUG IN A DEVICE", "OFF: USB AS BEFORE", "DEVICE CONNECTED", "NO MIDI DEVICE FOUND",
                                               "LOW SPEED: NOT SUPPORTED", "DEVICE LOST: LOOKING"};
             const int m = plat_usb_host_msg();
-            if (m == PLAT_UH_NOMIDI) {           /* what it found instead, so the player can tell a hub inside a dock from a device with no MIDI */
-                static char d[28];
-                plat_usb_host_diag(d);
-                say("NO MIDI DEVICE", d[0] ? d : 0);
-                ui.msg_until = plat_ms() + 10000u;
+            if (m == PLAT_UH_NOMIDI) {           /* what it found instead is on the MIDI IN page (the header has no room for it) */
+                say("NO MIDI DEVICE", "SEE MIDI IN");
+                ui.msg_until = plat_ms() + 4000u;
             } else if (m > 0 && m < 7) {
                 say("USB HOST", HM[m]);
                 ui.msg_until = plat_ms() + 2500u;
@@ -2452,6 +2451,10 @@ static void midi_in(void)
     while (plat_midi_in(&pkt)) {
         uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = pkt >> 24;
         const int ch_ok = !ui.min_ch || (st & 15u) == (uint32_t)(ui.min_ch - 1);
+        if (st < 0xF8u) {
+            ui.min_last = pkt;
+            ui.min_n++;
+        }
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
         else if (ui.min_pads && ch_ok && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u))
@@ -4048,6 +4051,44 @@ static void draw_fxedit(void)
             cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
             }
+        } else if (p == NFXP - 2) {              /* MIDI IN (0.15.11): what comes in, and the USB host's state and what it found */
+            static const char *const HS[4] = {"OFF", "LOOKING FOR A DEVICE", "DEVICE CONNECTED", "NO MIDI DEVICE"};
+            static const char *const KIND[8] = {"NOTE OFF", "NOTE ON", "AFTERTOUCH", "CC", "PROGRAM", "PRESSURE", "PITCH BEND", "?"};
+            const int hs = plat_usb_host_state() & 3;
+            char t[40];
+            int n = 0;
+            cv_text(4, 46, &FONT_XS, "LAST IN", K_DIM);
+            if (!ui.min_n) {
+                cv_text(64, 46, &FONT_XS, "NOTHING YET", K_DIM);
+            } else {
+                const uint32_t st = ui.min_last >> 8 & 0xFFu, d1 = ui.min_last >> 16 & 0x7Fu, d2 = ui.min_last >> 24 & 0x7Fu;
+                const char *k = KIND[st >= 0x80u && st < 0xF0u ? (st >> 4) - 8u : 7u];
+                t[n++] = 'C';
+                t[n++] = 'H';
+                itoa_u((st & 15u) + 1u, t + n);
+                while (t[n])
+                    n++;
+                t[n++] = ' ';
+                while (*k)
+                    t[n++] = *k++;
+                t[n++] = ' ';
+                itoa_u(d1, t + n);
+                while (t[n])
+                    n++;
+                t[n++] = ' ';
+                itoa_u(d2, t + n);
+                cv_text(64, 46, &FONT_XS, t, K_TEXT);
+            }
+            cv_text(4, 62, &FONT_XS, "CLOCK IN", K_DIM);
+            cv_text(64, 62, &FONT_XS, en_ext ? "YES: THE TEMPO FOLLOWS IT" : "NO", en_ext ? K_ACC : K_DIM);
+            cv_text(4, 78, &FONT_XS, "USB HOST", K_DIM);
+            cv_text(64, 78, &FONT_XS, HS[hs], hs == 2 ? K_ACC : hs == 3 ? K_TEXT : K_DIM);
+            if (hs == 3) {
+                plat_usb_host_diag(t);
+                cv_text(64, 92, &FONT_XS, t, K_TEXT);
+            }
+            cv_text(4, 112, &FONT_XS, "USB HOST NEEDS A POWERED HUB; ITS", K_DIM);
+            cv_text(4, 126, &FONT_XS, "COMPUTER USB IS OFF WHILE IT'S ON.", K_DIM);
         } else {
             cv_text(4, 50, &FONT_XS, p == 16 ? "THE AUTO-DJ AND SCENES: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
                                      FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
@@ -5214,6 +5255,8 @@ static void draw_main(void)
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
         h = hash(h, ui.flex_last | (uint32_t)ui.flex_cur << 8 | (uint32_t)ui.flex_lock << 16);
+        if (ui.fx_page == NFXP - 1)               /* MIDI IN: what comes in, the host */
+            h = hash(hash(h, ui.min_last ^ ui.min_n << 3), (uint32_t)plat_usb_host_state() | (uint32_t)en_ext << 4 | (uint32_t)plat_ms() / 500u << 5);
         if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
             int j;
             h = hash(h, scope_tick());

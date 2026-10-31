@@ -115,6 +115,7 @@ int plat_store_locked(void) { return store_lock; }
 int plat_store_seamless(void) { return flash_ok && !susp_bad; }
 #if PERF_USB_HOST
 void plat_usb_host(int on) { uh.want = (uint8_t)(on != 0); }   /* uh_task (the main loop) switches the port */
+int plat_usb_host_state(void) { return !uh.on ? 0 : uh.run ? 2 : uh.tried ? 3 : 1; }
 int plat_usb_host_msg(void)
 {
     const int m = uh.msg;
@@ -177,6 +178,7 @@ void plat_usb_host_diag(char *b)
 void plat_usb_host(int on) { (void)on; }
 int plat_usb_host_msg(void) { return 0; }
 void plat_usb_host_diag(char *b) { b[0] = 0; }
+int plat_usb_host_state(void) { return 0; }
 #endif
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {

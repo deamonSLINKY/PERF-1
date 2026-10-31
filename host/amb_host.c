@@ -142,6 +142,7 @@ void plat_usb_host(int on)
     host_uh_want = on;
 }
 void plat_usb_host_diag(char *b) { b[0] = 0; }
+int plat_usb_host_state(void) { return host_uh_want; }
 int plat_usb_host_msg(void)
 {
     const int m = host_uh_msg;

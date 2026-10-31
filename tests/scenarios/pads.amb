@@ -16,6 +16,8 @@ expect minch 0
 spin K1 1
 wait 200
 expect minpads 1
+midi 90 24 64
+wait 100
 shot midi_in_page.png
 tap FX
 wait 200
