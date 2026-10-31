@@ -1086,7 +1086,14 @@ int main(void)
             ns--;
             for (i = 1; i + 4 < ns; i++)
                 ok &= seq[i] == seq[i + 4];
-            CHECK(ns >= 10 && ok && seq[2] == 2 && seq[3] == 3 && seq[0] != seq[2], "chain 1 1 3 4: patterns %d %d %d %d %d %d %d %d", seq[0], seq[1], seq[2], seq[3], seq[4], seq[5], seq[6], seq[7]);
+            {   /* the cycle 1 1 3 4 in whatever phase the first counted bar falls (it depends on what the blocks before left behind) */
+                int z = -1, q;
+                for (q = 0; q < 4 && q < ns; q++)
+                    if (seq[q] == 2)
+                        z = q;
+                ok &= z >= 0 && z + 3 < ns && seq[z + 1] == 3 && seq[z + 2] == 0 && seq[z + 3] == 0;
+            }
+            CHECK(ns >= 10 && ok, "chain 1 1 3 4: patterns %d %d %d %d %d %d %d %d", seq[0], seq[1], seq[2], seq[3], seq[4], seq[5], seq[6], seq[7]);
         }
         for (m = 0; m < 5; m++) {
             int q;
@@ -1939,6 +1946,34 @@ int main(void)
             else
                 CHECK(bass_n > 0u, "dub's break is a dub-out: the bass line goes on (%u notes)", bass_n);
         }
+        en_init();
+        en_play(1);
+    }
+
+    /* the filter types (0.15.15, the FILTERS page): low, high, band, notch and peak on the pad, the bass and the acid at once: no NaN, nothing over
+     * full scale, still heard */
+    {
+        int t;
+        for (t = 0; t < 5; t++) {
+            en_init();
+            en_play(0);
+            en_genre(2);
+            en_set(P_PADTONE, 9);                    /* Trance: a saw sound, filtered */
+            en_set(P_BL_MODE, 1);
+            en_set(P_ACID, 70);
+            en_fxs(EN_FXS_FT_PAD, t);
+            en_fxs(EN_FXS_FT_BASS, t);
+            en_fxs(EN_FXS_FT_ACID, t);
+            en_regrow();
+            en_play(1);
+            bad = 0;
+            peak = 0.0f;
+            run(3.0f);
+            CHECK(bad == 0 && peak < 1.0f && peak > 0.02f, "filter type %d on pad, bass and acid: peak %.3f, %d bad samples", t, (double)peak, bad);
+        }
+        en_fxs(EN_FXS_FT_PAD, 0);
+        en_fxs(EN_FXS_FT_BASS, 0);
+        en_fxs(EN_FXS_FT_ACID, 0);
         en_init();
         en_play(1);
     }

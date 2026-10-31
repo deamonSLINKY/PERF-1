@@ -1,0 +1,31 @@
+# the FILTERS page (0.15.15, after MIDI IN in the settings walk): the synths' filter types, low (as before), high, band, notch, peak, for the pad's
+# saw sounds, the bass and the acid; kept with the settings across power-off (EN_FXS_FT_PAD 74, _BASS 75, _ACID 76)
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 4
+wait 100
+expect fxpage 27
+expect fxs74 0
+expect fxs75 0
+expect fxs76 0
+spin K2 1
+spin K3 2
+spin K1 4
+wait 300
+expect fxs74 4
+expect fxs75 1
+expect fxs76 2
+shot filters_page.png
+tap FX
+wait 2000
+tap PLAY
+wait 5000
+reboot
+wait 3000
+expect fxs74 4
+expect fxs75 1
+expect fxs76 2

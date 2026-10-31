@@ -546,6 +546,20 @@ and Drift, or **EDIT**). The **Chords** page (**ENV** four times) sets what kind
 | Dub | The same minor 9 shape on every chord, whatever the scale says. These are the parallel chord stabs of dub techno. |
 | Fourths | Notes stacked in fourths, an m11 sound. Deep, hollow and modal. |
 
+**Filter types.** The pad's saw sounds, the bass and the acid each run through a resonant filter, low-pass as
+standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** past MIDI IN) changes each one's type:
+
+| Type | Sounds like |
+|---|---|
+| Low | As before: the top rolled off, Cutoff closes it down. |
+| High | The bottom taken away: thin, airy, good for a build or a lead that cuts through. |
+| Band | Only a band around the cutoff: nasal, telephone-like, great with resonance. |
+| Notch | A gap at the cutoff: hollow and phasey as the cutoff moves. |
+| Peak | The cutoff's band boosted against the rest: a vowel-like bite. |
+
+The bass's LFO moving the cutoff (a wobble) works with every type. The setting is for every piece, kept with the
+settings. It's the MultiFilter idea from Caustic, rebuilt here.
+
 **Voicing** sets how the chord is spread. Close keeps the four notes together. Open drops the second-highest
 note an octave, spreading the chord out. **Chorus** makes the pad sound wider, like several players at once,
 without an obvious pulsing. 0 is off. The genres set it between 20 and 50. The page also has **Root**, the
@@ -1419,6 +1433,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
 | MIDI IN | Notes: scale, pads | Channel: all, 1-16 | USB host: off, on (never kept) | - |
+| FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |
@@ -1712,7 +1727,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the MIDI IN page, the FILTERS page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 

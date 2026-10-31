@@ -1387,6 +1387,25 @@ static inline float svf_lp(float x, const float *c, float *s)   /* TPT SVF (Zava
     s[1] = 2.0f * v2 - s[1];
     return v2;
 }
+static inline float svf_pick(float x, float v1, float v2, float k, int t)   /* one of the SVF's outputs: 0 low, 1 high, 2 band (unity at the centre), 3 notch, 4 peak */
+{
+    switch (t) {
+    case 1: return x - k * v1 - v2;
+    case 2: return k * v1;
+    case 3: return x - k * v1;
+    case 4: return 2.0f * v2 - x + k * v1;
+    default: return v2;
+    }
+}
+static inline float svf_mm(float x, const float *c, float *s, int t)   /* the multimode TPT SVF (0.15.15, the FILTERS page) */
+{
+    float v3 = x - s[1], v1 = c[0] * s[0] + c[1] * v3, v2 = s[1] + c[1] * s[0] + c[2] * v3;
+    s[0] = 2.0f * v1 - s[0];
+    s[1] = 2.0f * v2 - s[1];
+    return svf_pick(x, v1, v2, c[3], t);
+}
+/* a voice's two filter stages by its type: low and high are 24 dB (the second stage the same), band, notch and peak the first stage alone */
+#define FT_TWO(t) ((t) <= 1)
 
 static void midi(uint32_t st, uint32_t d1, uint32_t d2);
 /* the pad's MIDI notes are queued, and sent by the first core once the pad's render is done (MIDI out is not for the other core to call) */
@@ -5977,6 +5996,7 @@ static void pad_chorus(uint32_t n)
 
 static void render_pad(uint32_t n)
 {
+    const int ft_pad = fxs_v[EN_FXS_FT_PAD];   /* the FILTERS page's type for the saw sounds */
     int i;
     float lvl = 0.0f;
     uint32_t j0;
@@ -6090,19 +6110,21 @@ static void render_pad(uint32_t n)
                 x = b1 + 0.5f * b2 + 0.45f * l1;
                 break;
             }
-            if (saw) {                           /* the sub, an octave down; then the sweep: resonant pair, flat pair */
+            if (saw) {                           /* the sub, an octave down; then the sweep: resonant pair, flat pair (the FILTERS page's type) */
+                float y1;
                 x += 0.15f * sine(ps);
                 v3 = x - s1;
                 v1 = v->c1[0] * s0 + v->c1[1] * v3;
                 v2 = s1 + v->c1[1] * s0 + v->c1[2] * v3;
                 s0 = 2.0f * v1 - s0;
                 s1 = 2.0f * v2 - s1;
-                v3 = v2 - s3;
+                y1 = svf_pick(x, v1, v2, v->c1[3], ft_pad);
+                v3 = y1 - s3;
                 v1 = v->c2[0] * s2 + v->c2[1] * v3;
                 v2 = s3 + v->c2[1] * s2 + v->c2[2] * v3;
                 s2 = 2.0f * v1 - s2;
                 s3 = 2.0f * v2 - s3;
-                x = v2 * 1.1f;
+                x = (FT_TWO(ft_pad) ? svf_pick(y1, v1, v2, v->c2[3], ft_pad) : y1) * 1.1f;
                 p2 += v->inc[2];
                 if (p2 >= 1.0f)
                     p2 -= 1.0f;
@@ -6150,6 +6172,7 @@ static void render_pad(uint32_t n)
  * cannot reach the flash from RAM (R_PI32V2_LONG_JUMP_23M2 truncated), so it needs those helpers inlined or in RAM with it first.) */
 static void render_bass(uint32_t n)
 {
+    const int ft_bass = fxs_v[EN_FXS_FT_BASS];
     uint32_t j;
     const drone_snd_t *DS = &DRONE_SOUND[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0];
     const int dest = par[P_DL_DEST], osc = DS->osc;
@@ -6264,8 +6287,9 @@ static void render_bass(uint32_t n)
             p2 -= 1.0f;
         if (sp >= 1.0f)
             sp -= 1.0f;
-        x = svf_lp(x, bass.c1, &bass.s[0]);
-        x = svf_lp(x, bass.c2, &bass.s[2]);
+        x = svf_mm(x, bass.c1, &bass.s[0], ft_bass);
+        if (FT_TWO(ft_bass))
+            x = svf_mm(x, bass.c2, &bass.s[2], ft_bass);
         amp += (tgt - amp) * rate;
         if (bl_on) {                            /* the line's note: 4 ms attack, a slow fall while it holds, 30 ms release after */
             if (bl_up) {
@@ -6401,6 +6425,7 @@ static void render_cm(uint32_t n)
 
 static void render_acid(uint32_t n)
 {
+    const int ft_acid = fxs_v[EN_FXS_FT_ACID];
     uint32_t j;
     const acid_snd_t *AS = &ACID_SOUND[(unsigned)par[P_AC_WAVE] < EN_NACID ? par[P_AC_WAVE] : 0];
     const int osc = AS->osc;
@@ -6587,9 +6612,10 @@ static void render_acid(uint32_t n)
             if (osc == AO_SYNC)
                 ps = ph * sratio;               /* the sync: the slave starts again with the note */
         }
-        y = svf_lp(x, acid.c1, &acid.s[0]);
+        y = svf_mm(x, acid.c1, &acid.s[0], ft_acid);
         y = fm_tanhf(y * (1.6f + 1.5f * res) * adrv) / fm_minf(adrv, 1.3f);   /* the squelch: driven between the two */
-        y = svf_lp(y, acid.c2, &acid.s[2]);
+        if (FT_TWO(ft_acid))
+            y = svf_mm(y, acid.c2, &acid.s[2], ft_acid);
         amp += (acid.amp_t - amp) * 0.006f;     /* ~4 ms edges */
         acid_o[j] = y * amp * vel * g * TG(TR_ACID, j);   /* (the sends: 0.15 and 0.35 of it) */
         lvl = fm_maxf(lvl, amp);

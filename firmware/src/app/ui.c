@@ -53,7 +53,8 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 230 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 27
+#define NFXP 28
+#define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
@@ -98,6 +99,7 @@ static const char *const INTRO_NAME[5] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 M
 static const uint16_t INTRO_S[5] = {0, 60, 120, 240, 480};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const char *const MIN_NAME[2] = {"SCALE", "PADS"};
+static const char *const FT_NAME[5] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK"};
 static const char *const MCH_NAME[17] = {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
 static const struct {
     const char *name;
@@ -161,6 +163,7 @@ static const struct {
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
     {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 2}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
+    {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -2045,7 +2048,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 }
 
 /* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 26, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET; 26: MIDI IN) */
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 26, 27, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET; 26: MIDI IN; 27: FILTERS) */
 static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
 {
     int i;
@@ -4055,7 +4058,14 @@ static void draw_fxedit(void)
             cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
             }
-        } else if (p == NFXP - 2) {              /* MIDI IN (0.15.11): what comes in, and the USB host's state and what it found */
+        } else if (p == FXP_MIDIIN + 1) {        /* FILTERS: what the types do */
+            cv_text(4, 46, &FONT_XS, "EACH SYNTH'S FILTER TYPE:", K_DIM);
+            cv_text(4, 60, &FONT_XS, "LOW (AS BEFORE), HIGH, BAND,", K_DIM);
+            cv_text(4, 74, &FONT_XS, "NOTCH OR PEAK.", K_DIM);
+            cv_text(4, 94, &FONT_XS, "THE PAD'S: ITS SAW SOUNDS", K_DIM);
+            cv_text(4, 108, &FONT_XS, "(STRINGS, TRANCE, RAVE ...).", K_DIM);
+            cv_text(4, 122, &FONT_XS, "KEPT FOR EVERY PIECE.", K_DIM);
+        } else if (p == FXP_MIDIIN) {            /* MIDI IN (0.15.11): what comes in, and the USB host's state and what it found */
             static const char *const HS[4] = {"OFF", "LOOKING FOR A DEVICE", "DEVICE CONNECTED", "NO MIDI DEVICE"};
             static const char *const KIND[8] = {"NOTE OFF", "NOTE ON", "AFTERTOUCH", "CC", "PROGRAM", "PRESSURE", "PITCH BEND", "?"};
             const int hs = plat_usb_host_state() & 3;
@@ -5259,7 +5269,7 @@ static void draw_main(void)
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
         h = hash(h, ui.flex_last | (uint32_t)ui.flex_cur << 8 | (uint32_t)ui.flex_lock << 16);
-        if (ui.fx_page == NFXP - 1)               /* MIDI IN: what comes in, the host */
+        if (ui.fx_page == FXP_MIDIIN + 1)         /* MIDI IN: what comes in, the host */
             h = hash(hash(h, ui.min_last ^ ui.min_n << 3), (uint32_t)plat_usb_host_state() | (uint32_t)en_ext << 4 | (uint32_t)plat_ms() / 500u << 5);
         if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
             int j;
