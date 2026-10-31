@@ -88,6 +88,10 @@ static uint8_t fm1_led[FM1_NCOL];
 static uint8_t fm1_led_dim[FM1_NCOL];
 static volatile uint8_t fm1_led_dim_div;
 static uint8_t fm1__dim_frame;
+/* a second dim set with its own divisor (PERF-1 0.15.24: the keys' scale fainter than the buttons' glow, so the chord's keys stand out) */
+static uint8_t fm1_led_dim2[FM1_NCOL];
+static volatile uint8_t fm1_led_dim2_div;
+static uint8_t fm1__dim2_frame;
 
 static void fm1__led_lines(uint32_t rowmask)
 {
@@ -270,11 +274,14 @@ static void fm1_input_tick(void)
     fm1__led_lines(0);
     fm1_in.raw[p] = (uint8_t)fm1__rows();          /* column p has been latched one tick */
     fm1__sr_word(0xFFFFu ^ (1u << n) ^ (n < 2u ? 1u << (11u + n) : 0u));
-    fm1__led_lines(fm1_led[n] | (fm1_led_dim_div && fm1__dim_frame == 0u ? fm1_led_dim[n] : 0u));
+    fm1__led_lines(fm1_led[n] | (fm1_led_dim_div && fm1__dim_frame == 0u ? fm1_led_dim[n] : 0u) |
+                   (fm1_led_dim2_div && fm1__dim2_frame == 0u ? fm1_led_dim2[n] : 0u));
     fm1__tick_col = (uint8_t)n;
     if (n == 0u) {
         if (++fm1__dim_frame >= fm1_led_dim_div)
             fm1__dim_frame = 0;
+        if (++fm1__dim2_frame >= fm1_led_dim2_div)
+            fm1__dim2_frame = 0;
         fm1__frame();
     }
 }

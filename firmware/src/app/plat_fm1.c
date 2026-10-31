@@ -60,6 +60,7 @@ static void led_pos_init(void)
 }
 /* Glow: every button not lit is lit dim, on one scan frame in GLOW_DIV (the HAL's fm1_led_dim) */
 #define GLOW_DIV 4u
+#define KEYS_DIV 6u                             /* the keys' dim (the scale while a chord plays): one frame in six, ~150 Hz; fainter than the glow (0.15.24) */
 static uint8_t glow_on = 1;
 void plat_glow(int on) { glow_on = (uint8_t)(on != 0); }
 static uint32_t keys_dim;               /* (plat_keys_dim: the next plat_leds only) */
@@ -70,7 +71,7 @@ static uint8_t play_red;
 void plat_play_red(int red) { play_red = (uint8_t)(red != 0); }
 void plat_leds(uint32_t buttons, uint32_t keys)
 {
-    uint8_t nl[FM1_NCOL] = {0}, dl[FM1_NCOL] = {0};
+    uint8_t nl[FM1_NCOL] = {0}, dl[FM1_NCOL] = {0}, dk[FM1_NCOL] = {0};
     uint32_t i, c;
     for (i = 0; i < NB + NKEYS; i++) {
         uint32_t id = i < NB ? panel.btn[i] : 14u + (i - NB);
@@ -82,14 +83,18 @@ void plat_leds(uint32_t buttons, uint32_t keys)
             continue;
         if (on)
             nl[q >> 3] |= (uint8_t)(1u << (q & 7u));
-        else if (i < NB ? glow_on : (keys_dim >> (i - NB)) & 1u)
+        else if (i < NB && glow_on)
             dl[q >> 3] |= (uint8_t)(1u << (q & 7u));
+        else if (i >= NB && (keys_dim >> (i - NB) & 1u))
+            dk[q >> 3] |= (uint8_t)(1u << (q & 7u));
     }
     for (c = 0; c < FM1_NCOL; c++) {
         fm1_led[c] = nl[c];
         fm1_led_dim[c] = dl[c];
+        fm1_led_dim2[c] = dk[c];
     }
-    fm1_led_dim_div = glow_on || keys_dim ? GLOW_DIV : 0u;
+    fm1_led_dim_div = glow_on ? GLOW_DIV : 0u;
+    fm1_led_dim2_div = keys_dim ? KEYS_DIV : 0u;
     keys_dim = 0;
 }
 
