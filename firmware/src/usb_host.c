@@ -39,6 +39,8 @@ static struct {                                             /* what the last sea
     uint8_t ports, nested, devs;                            /* the hub's ports; hubs found inside it (not searched); devices tried */
     uint8_t cls, step;                                      /* the last device's class, and the step it stopped at (UH_D_*) */
     uint16_t cfg;                                           /* its configuration's length, as it says */
+    uint8_t err;                                            /* the last control transfer's failure: 1 no handshake, 2 stall, 3 timeout, 4 short (0.15.11) */
+    uint8_t line, devctl;                                   /* D+ / D- and DEVCTL when the search began (speed, session) */
 } uh_d;
 enum { UH_D_OK, UH_D_DEV, UH_D_ADDR, UH_D_CFG, UH_D_NOMIDI, UH_D_SETCFG, UH_D_SETIF };
 static struct {
@@ -106,14 +108,18 @@ static int uh_ctl(uint8_t addr, uint8_t rt, uint8_t rq, uint16_t val, uint16_t i
     fm1_usb_ep0_send(ep0buf, 8);
     sie_wr(S_CSR0, 0x0Au);                              /* SetupPkt | TxPktRdy */
     r = uh_csr0(0, 0x02u);
-    if (r < 0)
+    if (r < 0) {
+        uh_d.err = (uint8_t)-r;
         return r;
+    }
     if (len && (rt & 0x80u)) {
         while (got < len) {
             sie_wr(S_CSR0, 0x20u);                      /* ReqPkt */
             r = uh_csr0(0x01u, 0);
-            if (r < 0)
+            if (r < 0) {
+                uh_d.err = (uint8_t)-r;
                 return r;
+            }
             n = sie_rd(S_COUNT0);
             if (n > 64u)
                 n = 64u;
@@ -150,8 +156,11 @@ static int uh_probe(uint8_t depth, uh_midi_t *m)
     int r;
     r = uh_ctl(0, 0x80, 6, 0x0100, 0, 8, d8, 8);        /* GET_DESCRIPTOR(device), first 8 bytes */
     uh_d.step = UH_D_DEV;
-    if (r < 8)
+    if (r < 8) {
+        if (r >= 0)
+            uh_d.err = 4;
         return 0;
+    }
     mps = d8[7] == 16u || d8[7] == 32u || d8[7] == 64u ? d8[7] : 8u;
     cls = d8[4];
     if (!depth)
@@ -339,6 +348,7 @@ static void uh_host_up(void)
 static void uh_connect(void)
 {
     uh_midi_t m;
+    const uint8_t line = (uint8_t)fm1_usb_line(), devctl = (uint8_t)sie_rd(S_DEVCTL);
     if (sie_rd(S_DEVCTL) & 0x20u) {                     /* low speed (FSDev is bit 6, LSDev bit 5) */
         if (!uh.tried)
             uh.msg = UH_MSG_LOW;                        /* said once per attach, as NO MIDI is */
@@ -351,6 +361,8 @@ static void uh_connect(void)
     uh_wait(30);
     uh.next_addr = UH_FIRST_ADDR;
     uh_d = (__typeof__(uh_d)){0};
+    uh_d.line = line;
+    uh_d.devctl = devctl;
     if (uh_probe(0, &m)) {
         uh_start_ep(&m);
         uh.msg = UH_MSG_MIDI;

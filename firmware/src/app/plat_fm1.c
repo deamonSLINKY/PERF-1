@@ -143,8 +143,20 @@ static char *diag_num(char *b, uint32_t v)
 void plat_usb_host_diag(char *b)
 {
     static const char *const STEP[7] = {"OK", "NO ANSWER", "NO ADDR", "NO CONFIG", "NO MIDI", "CFG REFUSED", "IF REFUSED"};
+    static const char HX[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
     char *p = b;
     *p = 0;
+    if (!uh_d.root) {                            /* nothing answered the first request: the error, the line and DEVCTL (0.15.11) */
+        p = diag_put(p, "NO ANSWER E");
+        p = diag_num(p, uh_d.err);
+        p = diag_put(p, " L");
+        p = diag_num(p, uh_d.line);
+        p = diag_put(p, " D");
+        *p++ = HX[uh_d.devctl >> 4];
+        *p++ = HX[uh_d.devctl & 15u];
+        *p = 0;
+        return;
+    }
     if (uh_d.root == 1) {
         p = diag_put(p, "HUB ");
         p = diag_num(p, uh_d.ports);
