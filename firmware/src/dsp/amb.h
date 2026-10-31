@@ -163,6 +163,7 @@ void en_dj_sync(int on);                       /* the auto-DJ follows the chord 
 enum { EN_MAP_GM, EN_MAP_MS, EN_MAP_MPC, EN_MAP_SP404, EN_NMAP };
 extern const char *const EN_MAP_NAME[EN_NMAP];
 void en_midi_map(int m);
+void en_midi_cc(uint32_t cc, uint32_t v);      /* a control change on every channel the MIDI map uses (MIDI out on) */
 int en_build_len(void);                        /* the genre's build, in bars (the auto-DJ keeps its phrases on 8 bars with it) */
 void en_drum_tap(int d, int vel);               /* a drum hit by hand (a pad on MIDI in): lane d (kick, snare, clap, closed hat, open hat, perc), velocity 1-127 */
 void en_chord_deg(int d);                       /* the chord to the scale's degree d (0 the home chord) at once (a pad on MIDI in) */                        /* (the notes sounding are let go on the old map's channels first) */

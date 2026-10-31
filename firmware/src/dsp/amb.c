@@ -1045,19 +1045,35 @@ static void midi_drum(int d, uint32_t vel)      /* a drum hit: its lane's channe
     en_midi_out(0x90u | m->dch[d], m->dn[d], vel < 1u ? 1u : vel > 127u ? 127u : vel);
     en_midi_out(0x80u | m->dch[d], m->dn[d], 0);
 }
-static void midi_all_off(void)                  /* all notes off on every channel the map uses */
+static uint32_t map_channels(void)              /* the channels the map uses, a bit each */
 {
     const midimap_t *m = &MAPS[midi_map];
-    uint32_t used = 0, c;
+    uint32_t used = 0;
     int k;
     for (k = 0; k < 4; k++)
         if (m->ch[k] != MAP_OFF)
             used |= 1u << m->ch[k];
     for (k = 0; k < EN_NDRUM; k++)
         used |= 1u << m->dch[k];
+    return used;
+}
+static void midi_all_off(void)                  /* all notes off on every channel the map uses */
+{
+    const uint32_t used = map_channels();
+    uint32_t c;
     for (c = 0; c < 16u; c++)
         if (used >> c & 1u)
             en_midi_out(0xB0u | c, 123, 0);
+}
+void en_midi_cc(uint32_t cc, uint32_t v)        /* a control change on every channel the map uses (0.15.22: the FX knobs out; MIDI out on) */
+{
+    const uint32_t used = map_channels();
+    uint32_t c;
+    if (!par[P_MIDI])
+        return;
+    for (c = 0; c < 16u; c++)
+        if (used >> c & 1u)
+            en_midi_out(0xB0u | c, cc & 0x7Fu, v > 127u ? 127u : v);
 }
 
 static float mtof(float n) { return 440.0f * tunefac * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }

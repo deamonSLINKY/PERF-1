@@ -1456,7 +1456,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | - |
 | Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
-| MIDI IN | Notes: scale, pads | Channel: all, 1-16 | USB host: off, on (never kept) | - |
+| MIDI IN | Notes: scale, pads, M:S | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
 | DELAY (A4) | Send | Repeats | Targets | - |
@@ -1879,6 +1879,30 @@ On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its M
 - Full-speed USB MIDI 1.0 only, notes and clock: no SysEx goes to or comes from the device.
 
 This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.
+
+**A Model:Samples (or any Elektron Model) as a controller.** The Model:Samples sends each of its six tracks on its own channel (1-6), at whatever note that track is pitched to, so the **Pads** layout doesn't fit it. Set **Notes** to **M:S** instead, and the channel decides what a trig does, whatever its note:
+
+| M:S track (channel) | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| PERF-1 | Next chord | Fill | Breakdown | Build | Drop | Next piece |
+
+The sections and pieces wait for the bar, as they do from the pads. Connect its MIDI out to the FM-1's TRS MIDI input. On the Model:Samples, turn on MIDI out for the tracks you want to use as triggers and leave it off for the ones you play yourself. Its trigs still play their own samples, so a trigger track can be a quiet one, or one you like hearing with the change.
+
+**Knob CCs** (the MIDI IN page's fourth knob) turn the four FX knobs over MIDI:
+
+| FX knob | CC | On a Model:Samples |
+|---|---|---|
+| Filter (open in the middle) | 74 | Filter cutoff |
+| Crush | 71 | Resonance |
+| Throw | 12 | Delay send |
+| Wash | 13 | Reverb send |
+| Mood (in only) | 1 | (the mod wheel on a keyboard) |
+
+- **In:** these CCs on the listened channel (**Channel**, All by default) move PERF-1's FX knobs. On a Model:Samples, turn on its knobs' MIDI out (ENCS), and its filter, resonance, delay send and reverb send knobs play PERF-1's Filter, Crush, Throw and Wash.
+- **Out:** turning PERF-1's FX knobs sends the same CCs on every channel the **MIDI map** uses (GM: 1-4 and 10; M:Samples: 1-6, so the filter sweeps all six tracks at once). It needs MIDI out on, and it goes out over USB, so the same limits apply as for notes (below). A CC that came in isn't sent back out.
+- **In+Out:** both.
+
+What the FM-1 can't do here: its TRS jack is an input, so nothing goes back to the Model:Samples over TRS. PERF-1's notes and knob CCs reach it only over USB, through a computer, a USB MIDI host box, or the FM-1's own USB host (above; not yet tried with a Model:Samples). Clock works both ways: PERF-1 follows the Model:Samples' clock over TRS, or sends its own over USB.
 
 **USB audio:** the FM-1 also shows up on a computer as a stereo USB audio input (16-bit, 44.1 kHz). It carries the master output, so you can record the FM-1 over the same cable. On the USB & MIDI settings page, the level can follow the **MASTER** knob (KNOB) or stay at a fixed level (FIXED, about the same as the knob at three quarters). With FIXED you can turn your speakers down without changing the recording.
 

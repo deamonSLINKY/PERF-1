@@ -100,7 +100,8 @@ static const uint8_t RAMP_BPM[5] = {0, 2, 4, 8, 12};
 static const char *const INTRO_NAME[5] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 MIN"};             /* the slow progression from Play */
 static const uint16_t INTRO_S[5] = {0, 60, 120, 240, 480};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
-static const char *const MIN_NAME[2] = {"SCALE", "PADS"};
+static const char *const MIN_NAME[3] = {"SCALE", "PADS", "M:S"};
+static const char *const CC_NAME[4] = {"OFF", "IN", "OUT", "IN+OUT"};
 static const char *const FT_NAME[5] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK"};
 static const char *const MCH_NAME[17] = {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
 static const struct {
@@ -164,7 +165,7 @@ static const struct {
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
-    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 2}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
+    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 3}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"Knob CCs", KN_NAME, 22, CC_NAME, 4}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
     {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, FT_NAME, 5}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
                              {"Targets", KN_NAME, EN_FXS_TF_TGT, EN_PT_NAME, EN_NPT}}},   /* (0.15.19) the punch-ins on tracks: a multimode filter on the tracks chosen */
@@ -467,7 +468,10 @@ static struct {
     uint8_t fm_dy;                               /* the Settings page's Voices: 1, the DY set stands in for the DX voices (kept in set_t.usb's bit 1) */
     uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
-    uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); the channel listened to, 0 all (set_t.uiv[11]) */
+    uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); 2, a Model:Samples' channels do (ms_in;
+                                                  * set_t.viz's bit 3); the channel listened to, 0 all (set_t.uiv[11]) */
+    uint8_t cc_mode;                             /* the FX knobs as CCs (0.15.22): bit 0 in, bit 1 out (set_t.viz's bits 4-5) */
+    int8_t cc_sent[4];                           /* the FX knobs as last sent (or received: not sent back) */
     uint8_t usb_host;                            /* the USB port is the host of a USB-MIDI device (plat_usb_host); never kept */
     uint32_t min_last, min_n;                    /* MIDI in: the last message (not clock), as a USB-MIDI packet, and how many (the MIDI IN page shows them) */
     uint8_t pad_note[48];                        /* the notes the melodic pads started (banks B-D), for their note-offs */
@@ -847,7 +851,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
            i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
-           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
+           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : i == 22 ? &ui.cc_mode : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -2576,6 +2580,45 @@ static void pads_in(int on, int n, int v)
     }
 }
 
+/* A Model:Samples (MIDI IN's Notes: M:S, 0.15.22): its six tracks send on channels 1-6, each at its own note, so the channel says what: a trig on
+ * track 1 the next chord, 2 a fill, 3 a breakdown, 4 a build, 5 the drop, 6 the next piece (the sections and pieces on the bar, as the pads' are) */
+static void ms_in(int ch)
+{
+    static const uint8_t PAD[6] = {11, 12, 8, 9, 10, 15};
+    if (ch < 6)
+        pads_in(1, PADS_BASE + PAD[ch], 100);
+}
+/* the FX knobs as CCs (MIDI IN's Knob CCs, 0.15.22), the numbers a Model:Samples' knobs send: its filter (74, open in the middle, as Filter here),
+ * resonance (71: Crush), delay send (12: Throw), reverb send (13: Wash); and the mod wheel (1) for the mood. Out: the same four, as they turn. */
+static const uint8_t CC_NUM[4] = {74, 71, 12, 13};
+static void cc_in(int cc, int v)
+{
+    int k;
+    if (cc == 1) {
+        ui.mood = (uint8_t)((v * 100 + 63) / 127);
+        mood_apply();
+        return;
+    }
+    for (k = 0; k < 4; k++)
+        if (cc == CC_NUM[k]) {
+            const int x = k == 0 ? (v == 64 ? 0 : (v - 64) * 50 / (v < 64 ? 64 : 63)) : (v * 100 + 63) / 127;
+            knob_set(K_FXF + k, x);
+            ui.cc_sent[k] = ui.fxk[k];           /* (not sent back out) */
+        }
+}
+static void cc_out(void)                        /* each frame: an FX knob moved since it was last sent goes out */
+{
+    int k;
+    if (!(ui.cc_mode & 2u))
+        return;
+    for (k = 0; k < 4; k++)
+        if (ui.fxk[k] != ui.cc_sent[k]) {
+            const int v = ui.fxk[k];
+            ui.cc_sent[k] = (int8_t)v;
+            en_midi_cc(CC_NUM[k], (uint32_t)(k == 0 ? (v <= 0 ? 64 + v * 64 / 50 : 64 + v * 63 / 50) : (v * 127 + 50) / 100));
+        }
+}
+
 /* MIDI in (USB and the TRS jack): on the channel chosen (MIDI IN page; all by default), notes add or remove their note from the scale
  * (channel 1 only, as before), or with PADS play PERF (pads_in); clock and start / stop drive the grid */
 static void midi_in(void)
@@ -2590,7 +2633,11 @@ static void midi_in(void)
         }
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
-        else if (ui.min_pads && ch_ok && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u))
+        else if ((st & 0xF0u) == 0xB0u && (ui.cc_mode & 1u) && ch_ok)
+            cc_in((int)n, (int)v);
+        else if (ui.min_pads == 2 && (st & 0xF0u) == 0x90u && v)
+            ms_in((int)(st & 15u));
+        else if (ui.min_pads == 1 && ch_ok && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u))
             pads_in((st & 0xF0u) == 0x90u && v, (int)n, (int)v);
         else if (!ui.min_pads && st == 0x90u && v && ch_ok)
             toggle_note((int)(n % 12u));
@@ -3133,6 +3180,7 @@ static void input(void)
     if (btn || keys || ch)
         ui.act_t = plat_ms();
     midi_in();
+    cc_out();
     if ((btn >> B_SEQ & 1u) && !ui.seq_held && ui.view != V_SEQ && plat_ms() - ui.down_t[B_SEQ] >= SEQ_HOLD) {
         ui.seq_held = 1;                       /* SEQ held: the sequencer */
         ui.btn_used |= 1u << B_SEQ;
@@ -6370,8 +6418,8 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads & 1) << 15);
-    s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
+    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1) << 15);
+    s.viz = (uint8_t)(ui.viz | (ui.min_pads == 2) << 3 | (ui.cc_mode & 3) << 4 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
         set_have = 1;
@@ -6437,7 +6485,9 @@ static void settings_load(void)
                 else if (FXP[p].c[c].idx == 19)
                     fxp_set(k, s.uiv[11] <= 16u ? s.uiv[11] : 0);
                 else if (FXP[p].c[c].idx == 20)
-                    fxp_set(k, s.usb >> 15 & 1);
+                    fxp_set(k, (s.viz >> 3 & 1u) ? 2 : s.usb >> 15 & 1);   /* (M:S in set_t.viz's bit 3, 0.15.22) */
+                else if (FXP[p].c[c].idx == 22)
+                    fxp_set(k, s.viz >> 4 & 3u);
             } else if (kind == KN_TGT) {
                 fxp_set(k, s.gx_tgt);
             } else if (kind == KN_PTGT) {
@@ -6451,7 +6501,7 @@ static void settings_load(void)
         ui.gx_pat = s.gx_pat;
         en_gate_pat(ui.gx_pat);
     }
-    ui.viz = (uint8_t)((s.viz & 0x7Fu) % VZ_N);
+    ui.viz = (uint8_t)((s.viz & 7u) % VZ_N);
     ui.centre_imp = (uint8_t)(s.viz >> 7);
     ui.set_dirty = 0;
 }

@@ -107,9 +107,12 @@ int plat_midi_in(uint32_t *pkt)
     *pkt = min_q[mi_r++ % MQ];
     return 1;
 }
+static uint32_t cc_out_n[128];                   /* control changes out, by number (0.15.22) */
 void plat_midi_out(uint32_t pkt)
 {
     midi_out_count++;
+    if (((pkt >> 8) & 0xF0u) == 0xB0u)
+        cc_out_n[pkt >> 16 & 0x7Fu]++;
     if (((pkt >> 8) & 0xFF) != 0xF8)
         last_out = (pkt >> 8 & 0xFFu) << 16 | (pkt >> 16 & 0xFFu) << 8 | pkt >> 24;
     if (((pkt >> 8) & 0xFF) == 0xF8) {
@@ -694,6 +697,10 @@ static int expect(const char *what, const char *val)
         got = rm.on;
     else if (!strcmp(what, "remotelink"))
         got = rm.link;
+    else if (!strncmp(what, "ccout", 5))          /* ccoutN: control changes N sent so far */
+        got = (int)cc_out_n[atoi(what + 5) & 127];
+    else if (!strcmp(what, "ccmode"))             /* MIDI IN's Knob CCs: bit 0 in, bit 1 out */
+        got = ui.cc_mode;
     else if (!strcmp(what, "lastout"))            /* the last MIDI out: status << 16 | d1 << 8 | d2 */
         got = (int)last_out;
     else if (!strcmp(what, "litbtn"))             /* the buttons lit (bit b: B_*) */

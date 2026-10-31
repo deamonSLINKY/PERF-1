@@ -419,7 +419,7 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 
 **USB audio.** The FM-1 is a stereo USB audio input (16-bit, 44.1 kHz) carrying the master output. The USB & MIDI page's Level: KNOB (follows MASTER) or FIXED (a recording stays put when you turn the speakers down). Its third knob, **Scanlines**, darkens every other row of the screen, like a CRT.
 
-**MIDI out** (USB): the pad on channel 1, pluck 2, bass 3, acid 4, drums 10 (General MIDI notes), and MIDI clock with start, continue and stop. **MIDI map**, **MIDI IN**: a sampler plays the drums; an MPC's pads play PERF (manual, 14). **FILTERS**: pad, bass, acid low/high/band/notch/peak. Notes played by hand go on their voice's channel; the DJ snips aren't sent. On and off on the USB & MIDI page.
+**MIDI out** (USB): the pad on channel 1, pluck 2, bass 3, acid 4, drums 10 (General MIDI notes), and MIDI clock with start, continue and stop. **MIDI map**, **MIDI IN**: a sampler plays the drums; an MPC or M:S plays PERF (manual, 14). **FILTERS**: pad, bass, acid low/high/band/notch/peak. Notes played by hand go on their voice's channel; the DJ snips aren't sent. On and off on the USB & MIDI page.
 
 **MIDI in:** notes on channel 1 add or remove their note from the scale (use another channel to avoid that). Clock and start / stop drive the tempo (`EXT`). It listens on the USB MIDI port, and the TRS input where your version has it.
 

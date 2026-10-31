@@ -1,0 +1,59 @@
+# A Model:Samples on MIDI in (0.15.22): Notes M:S, its tracks' channels say what (1 next chord, 2 fill, 3 breakdown, 4 build, 5 drop, 6 next piece);
+# Knob CCs: in, its filter (74), resonance (71), delay send (12), reverb send (13) turn Filter, Crush, Throw, Wash, the mod wheel (1) the mood;
+# out, the FX knobs send the same numbers as they turn (not what came in). Both kept.
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 3
+wait 100
+expect fxpage 26
+spin K1 1
+wait 100
+spin K1 1
+wait 200
+expect minpads 2
+spin K4 1
+wait 100
+spin K4 1
+wait 100
+spin K4 1
+wait 200
+expect ccmode 3
+shot midiin_ms.png
+# track 3 (channel 3, any note): the breakdown on the bar
+midi 92 30 64
+wait 2500
+expect sec 1
+# track 6: the next piece on the bar
+midi 95 30 64
+wait 2500
+expect piece 1
+# the knobs: the filter right down (low-pass), the delay send full, the mood from the wheel
+midi B0 4A 00
+midi B3 0C 7F
+midi B0 01 7F
+wait 100
+expect fxk0 -50
+expect fxk2 100
+expect mood 100
+expect ccout74 0
+expect ccout12 0
+# out: the Filter knob turned (the visualizers: the FX knobs) goes out as CC 74, on each channel the map uses (GM: 1-4 and 10)
+tap FX
+wait 100
+tap HOME
+wait 100
+tap HOME
+wait 100
+spin K1 1
+wait 100
+expect ccout74 5
+# kept
+wait 6000
+reboot
+wait 3000
+expect minpads 2
+expect ccmode 3
