@@ -178,7 +178,7 @@ wait 300
 expect genre 0
 expect fxlock 0
 expect piece 1
-# the first bank keeps its session changes while you are in the others: its tempo changed, away and back
+# the first bank is like the others (0.15.20): its tempo changed, away and back, and the change not saved is gone
 tap GLO
 tap HOME
 wait 100
@@ -195,7 +195,7 @@ turn PRESET -1
 release GLO
 wait 300
 expect genre 0
-expect tempo 127
+expect tempo 124
 # the others come back as their recipes: lofi piece 1, its tempo changed, away and back: 78 again
 press GLO
 turn PRESET 1

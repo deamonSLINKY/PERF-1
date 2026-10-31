@@ -1,0 +1,35 @@
+# Restoring an older backup (0.15.20): settings written by a build with fewer effect settings, and a genre bank from before 0.15.6 (the records only,
+# without the progressions), are taken as their loaders take them (both were refused before).
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+spin K1 2
+wait 6000
+expect keyset 2
+tap HOME
+wait 100
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+# the settings, as an older build packed them: valid, written, and read back at the restart with the key change kept
+restore 2 old
+wait 600
+expect rsvalid 1
+expect rsstate 2
+reboot
+wait 6500
+expect storelock 0
+expect keyset 2
+# the bank, as before 0.15.6: valid and written; the pieces load at the restart
+restore 0 old
+wait 600
+expect rsvalid 1
+expect rsstate 2
+reboot
+wait 3000
+expect storelock 0
+expect saved 1

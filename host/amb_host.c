@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <math.h>
 #include <time.h>
 #define __attribute__(x)
@@ -890,11 +891,28 @@ int main(int argc, char **argv)
         } else if (!strcmp(cmd, "restore")) {          /* restore OBJ [bad]: the object as it is in flash, checked and written back as a backup's (bad: one byte changed) */
             static uint8_t tmp[PLAT_STORE_MAX];
             const int o = atoi(a), n = plat_store_load((uint32_t)o, tmp, sizeof tmp);
+            int m = n;
             if (b[0] == 'b' && n > 0)
                 tmp[0] ^= 0xFFu;
-            rs_valid = n > 0 && ui_restore_valid((uint32_t)o, tmp, (uint32_t)n);
+            if (b[0] == 'o' && n > 0 && rd32(tmp) == IMG_MAGIC) {      /* old: a bank as before 0.15.6, the records only */
+                tmp[14] = 0;
+                m = (int)IMG_TAIL;
+            } else if (b[0] == 'o' && n == (int)sizeof(set_t)) {       /* old: settings with three effect settings fewer, packed as an older build wrote them */
+                static uint8_t o2[sizeof(set_t)];
+                const int old = EN_NFXS - 3;
+                int q = 8 + old;
+                memcpy(o2, tmp, 8u + (uint32_t)old);
+                o2[4] = (uint8_t)old, o2[5] = (uint8_t)(old >> 8);
+                memcpy(o2 + q, tmp + offsetof(set_t, uiv), 16), q += 16;
+                q += q & 1;
+                memcpy(o2 + q, tmp + offsetof(set_t, gx_pat), 4), q += 4;
+                memcpy(tmp, o2, (uint32_t)q);
+                m = q;
+            }
+
+            rs_valid = m > 0 && ui_restore_valid((uint32_t)o, tmp, (uint32_t)m);
             if (rs_valid)
-                ui_restore_start((uint32_t)o, tmp, (uint32_t)n);
+                ui_restore_start((uint32_t)o, tmp, (uint32_t)m);
         } else if (!strcmp(cmd, "bank76")) {
             static uint8_t bk[PLAT_STORE_MAX];
             static int16_t par[P_NPARAMS];

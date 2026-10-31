@@ -298,7 +298,7 @@ static const uint8_t KEY_FX[4][NKEYS] = {
      FX_LP, FX_NONE, FX_HP},                                                           /* F5 F#5 G5 */
     {FX_RPT2, FX_RPT4, FX_RPT6, FX_RPT8, FX_RPT16, FX_RPT32, FX_RPT8T,                 /* the repeats together, slow to fast: F3 .. B3 */
      FX_RPT16T, FX_NONE, FX_SCATTER, FX_BRAKE, FX_SPIN,                                /* C4 (the last repeat) C#4 D4 D#4 E4 */
-     FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the mutes where they are on the first page) */
+     FX_HALF, FX_SCRATCH, FX_MUTE_KICK, FX_REV, FX_MUTE_HATS, FX_STOP, FX_MUTE_SNARE,  /* F4 F#4 G4 G#4 A4 A#4 B4 (the drums' single mutes: the first page has the punch-ins there since 0.15.19) */
      FX_MUTE_PERC, FX_HATROLL, FX_HATTRIP, FX_SNROLL, FX_FLAM,                         /* C5 .. E5: the drum rolls */
      FX_DBLKICK, FX_NONE, FX_NONE},
     {FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX, FX_FLEX,                    /* Flex Beat: a pattern on each key (FLEX_PAT), F3 .. G5 */
@@ -6091,15 +6091,24 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
         if (obj >= OBJ_NOBJ || g >= EN_NGENRE || len < 20u)
             return 0;
         if (rd32(b) == IMG_MAGIC)
-            return len >= IMG_LEN && b[4] == IMG_VER && b[5] == (uint8_t)g && rd16(b + 10) == IMG_REC;
+            return len >= IMG_TAIL && b[4] == IMG_VER && b[5] == (uint8_t)g && rd16(b + 10) == IMG_REC;   /* (0.15.20: a bank from before 0.15.6 ends at
+                                                 * the records, without the progressions: image_load takes it; this asked for IMG_LEN and refused it) */
         return obj == OBJ_PROJ && (rd32(b) == BANK_MAGIC || rd32(b) == OLD_KIT_MAGIC);
     }
     if (obj == OBJ_GLOB)
         return len == sizeof(glob_t) && rd32(b) == GLOB_MAGIC;
     if (obj == OBJ_VOICES)
         return len == sizeof(vox_t) && rd32(b) == VOX_MAGIC && rd32(b + 4) <= EN_NUSER;
-    if (obj == OBJ_SET)
-        return len == sizeof(set_t) && rd32(b) == SET_MAGIC && rd16(b + 4) == EN_NFXS && rd16(b + 6) == 12u;
+    if (obj == OBJ_SET) {                        /* as settings_load takes it: this build's record, or an older one with fewer effect settings (0.15.20: only the
+                                                 * first was let through, so a backup's settings were refused whenever a build had added an effect setting) */
+        uint32_t nf, q;
+        if (len < 8u || rd32(b) != SET_MAGIC || rd16(b + 6) != 12u)
+            return 0;
+        nf = rd16(b + 4);
+        q = 8u + nf + 12u + 4u;
+        q += q & 1u;
+        return (nf == EN_NFXS && len == sizeof(set_t)) || (nf < EN_NFXS && len < sizeof(set_t) && len >= q + 4u);
+    }
     return 0;                                    /* (not the panel's calibration: it is this unit's own) */
 }
 void ui_param_set(int p, int v)               /* the editor (main_fm1.c px_service): a parameter as its knob sets it */

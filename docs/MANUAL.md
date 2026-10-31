@@ -1338,7 +1338,7 @@ These effects chop and rework the beat.
 | E4 | Spin back | Spins the music backwards, like a DJ pulling a record back. |
 | F4 | Half time | Makes the music play at half speed. |
 | F#4 | Scratch | An automatic record scratch. |
-| G4, A4, B4, C5 | Drum mutes | The same as on bank 1: kick, hats, snare, perc. |
+| G4, A4, B4, C5 | Drum mutes | Kick, hats, snare, perc, each muted while held (bank 1 has M:DRUMS, all four, on C5). |
 | G#4 | Reverse | Plays the music backwards. |
 | A#4 | Tape stop | Slows the music to a stop. |
 | C#5 | Hat roll | The hi-hats play every step, in 32nd notes. |

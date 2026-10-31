@@ -126,7 +126,7 @@
 | `F3` .. `C4` | Beat repeats (a slice looped) 1/2, 1/4, 1/6, 1/8, 1/16, 1/32, 1/8T, 1/16T; the shortest held wins |
 | `D4` `D#4` `E4` | Scatter (slices shuffled), Brake (a vinyl brake), Spin back |
 | `F4` `F#4` | Half time, Scratch (automatic) |
-| `G4` `A4` `B4` `C5` | Mutes, as in bank 1: kick, hats, snare, perc |
+| `G4` `A4` `B4` `C5` | Mutes, held: kick, hats, snare, perc |
 | `G#4` `A#4` | Reverse, Tape stop |
 | `C#5` .. `F5` | Hat roll (32nds), Hat trip (triplets), Snare roll (louder through the bar), Flam (a grace note before each snare), Double kick |
 

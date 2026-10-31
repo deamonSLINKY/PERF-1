@@ -1389,6 +1389,8 @@ static inline float svf_lp(float x, const float *c, float *s)   /* TPT SVF (Zava
 }
 static inline float svf_pick(float x, float v1, float v2, float k, int t)   /* one of the SVF's outputs: 0 low, 1 high, 2 band (unity at the centre), 3 notch, 4 peak */
 {
+    if (!t)                                      /* (0.15.20: the low-pass, nearly always, by one test rather than the switch's four) */
+        return v2;
     switch (t) {
     case 1: return x - k * v1 - v2;
     case 2: return k * v1;
@@ -7098,26 +7100,19 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         const uint32_t rp = pad_ctr - PAD_D;
         mx_gains(0, &pl, &pr, &ps);
         mx_gains(3, &fl, &fr, &fs);
+        {   /* (each into the punch-ins' bus when targeted: chosen once a chunk, 0.15.20, not tested a sample) */
+            float *const pal = bus_m >> TR_PAD & 1u ? busl : mixl, *const par_ = bus_m >> TR_PAD & 1u ? busr : mixr;
+            float *const fal = bus_m >> TR_CM & 1u ? busl : mixl, *const far_ = bus_m >> TR_CM & 1u ? busr : mixr;
         for (j = 0; j < n; j++) {
             const uint32_t q = (rp + j) & (PAD_R - 1);
             const float ds = pad_ring[2][q] * ps;
-            const float pdl = pad_ring[0][q] * pl, pdr = pad_ring[1][q] * pr, fml = fm_ol[j] * fl, fmr = fm_or[j] * fr;
-            if (bus_m >> TR_PAD & 1u) {         /* (each into the punch-ins' bus when targeted) */
-                busl[j] += pdl;
-                busr[j] += pdr;
-            } else {
-                mixl[j] += pdl;
-                mixr[j] += pdr;
-            }
-            if (bus_m >> TR_CM & 1u) {
-                busl[j] += fml;
-                busr[j] += fmr;
-            } else {
-                mixl[j] += fml;
-                mixr[j] += fmr;
-            }
+            pal[j] += pad_ring[0][q] * pl;
+            par_[j] += pad_ring[1][q] * pr;
+            fal[j] += fm_ol[j] * fl;
+            far_[j] += fm_or[j] * fr;
             rsend[j] += ds * 0.6f + fm_rs[j] * fs;
             esend[j] += ds * 0.2f + fm_es[j] * fs;
+        }
         }
         pad_ctr += n;
     }
@@ -7136,8 +7131,6 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         de *= duck_dec;
         mixl[j] *= dk[j] * gg;
         mixr[j] *= dk[j] * gg;
-        busl[j] *= dk[j] * gg;                  /* (the bus pumps and gates as the mix does) */
-        busr[j] *= dk[j] * gg;
         rsend[j] *= gg;
         esend[j] *= gg;
         {   /* the noise: its own pump, from none to deep */
@@ -7147,6 +7140,11 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             rsend[j] += (nzl[j] + nzr[j]) * pk * 0.15f;
         }
     }
+    if (bus_m)                                  /* the bus pumps and gates as the mix does (only while it is in use, 0.15.20) */
+        for (j = 0; j < n; j++) {
+            busl[j] *= dk[j] * gg_v[j];
+            busr[j] *= dk[j] * gg_v[j];
+        }
     gate_g = gg;
     DT(7);
     PT(4);                                      /* the merge, the sidechain */
@@ -7258,14 +7256,16 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         for (j = 0; j < 4; j++)
             tf_s[j] = fm_flush(tf_s[j]);
     }
+    {
+    const float thr = throw_amt * 0.5f, tdg = tdx_m * (float)fxs_v[EN_FXS_TD_SEND] * 0.006f;   /* (the bus is cleared each chunk, so 0 when unused) */
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
         float el, er, xl, xr;
-        echoes(esend[j] * eg + throw_amt * 0.5f * (mixl[j] + mixr[j]) + (tdx_m > 0.0f ? tdx_m * (float)fxs_v[EN_FXS_TD_SEND] * 0.006f * (busl[j] + busr[j]) : 0.0f),
-               &el, &er, &xl, &xr);
+        echoes(esend[j] * eg + thr * (mixl[j] + mixr[j]) + tdg * (busl[j] + busr[j]), &el, &er, &xl, &xr);
         push(&dl[L_PRE], (rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f);
         mixl[j] = (mixl[j] + (0.75f * el + 0.15f * xl) * dk[j]) * 0.36f;
         mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;
         dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
+    }
     }
     DT(10);
     PT(6);                                      /* the echoes, the reverb's input */

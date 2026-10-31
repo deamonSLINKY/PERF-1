@@ -380,8 +380,8 @@ void project_piece(int i)
 }
 
 /* the genres: each is its own object in flash (the pieces saved in it, the rest its recipes). A switch brings up the other bank with the
- * same piece number; the changes not saved last while you stay in a genre (the original genre's, as you left it, come back with it). */
-static slot_t gset0[NPIECES];                /* the original bank as it was left (its session changes) */
+ * same piece number; the changes not saved last while you stay in a genre. (0.15.20: the original genre is like the others: its unsaved
+ * changes no longer wait for it while you are in another, which freed 5.5 KB of the tight RAM.) */
 void project_set_genre(int g)
 {
     g = ((g % EN_NGENRE) + EN_NGENRE) % EN_NGENRE;
@@ -390,12 +390,8 @@ void project_set_genre(int g)
     keep();
     if (pending)
         project_flush();                     /* (a piece saved but not yet written goes first) */
-    if (proj.genre == 0)
-        memcpy(gset0, proj.slot, sizeof proj.slot);
     proj.genre = (uint8_t)g;
     image_load(g);
-    if (g == 0)
-        memcpy(proj.slot, gset0, sizeof proj.slot);
     proj.edited = 0;
     take(proj.piece);
 }
