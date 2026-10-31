@@ -51,7 +51,9 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
  * the four knobs, the effect itself held on while the page is up, so it is heard as it is edited. K_FXP + 4 *
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
-enum { K_FXP = 230 };
+enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progression page's four knob codes (0.15.6) moved Throw and Wash onto it: they turned the
+                                * GATE page's pattern and length) */
+_Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
 #define NFXP 28
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */

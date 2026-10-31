@@ -27,13 +27,16 @@ shot fxknobs_crush.png
 wait 2700
 spin K2 -100
 wait 3000
-# 13 s: throw
+# 13 s: throw (0.15.16: checked; 0.15.6-0.15.15 sent knobs 3 and 4 to the GATE page's pattern and length)
 spin K3 60
+expect fxk2 60
+expect fxs0 16
 wait 3000
 spin K3 -60
 wait 3000
 # 16 s: wash
 spin K4 70
+expect fxk3 70
 wait 300
 shot fxknobs_wash.png
 wait 2700
