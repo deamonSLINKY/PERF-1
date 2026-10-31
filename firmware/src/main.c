@@ -42,6 +42,9 @@ static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ?
 #define FELUCCA_ID "FM-1_700"     /* package identity (tools/build.py) */
 #endif
 #define USB_DX 1                    /* the DX7's SysEx: the player's voices (dx_service) */
+#ifndef PERF_USB_HOST
+#define PERF_USB_HOST 1             /* the MIDI IN page's USB host (usb_host.c); never in the update loader */
+#endif
 #include "usb.c"
 #ifndef EN_TRS
 #define EN_TRS 1                  /* MIDI IN on the TRS jack */

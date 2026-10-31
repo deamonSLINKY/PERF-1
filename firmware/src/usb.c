@@ -12,13 +12,18 @@
  * output as 16-bit stereo at 44.1 kHz on an isochronous asynchronous IN endpoint (EP4), so a
  * computer can record the FM-1 over the cable. The audio ISR fills a ring (uac_render_start,
  * uac_tap); uac_service sends one packet per USB frame from the TIMER5 ISR, nested in the render
- * too (main_fm1.c). The update loader leaves it off: MIDI only. */
+ * too (main_fm1.c). The update loader leaves it off: MIDI only.
+ * PERF_USB_HOST=1 (the app, main.c; never the loader) adds usb_host.c (Melodee 1.5.0's): the MIDI IN page's USB host
+ * makes the port the host of a USB-MIDI device instead (usb.up is 0 meanwhile); every boot is a device. */
 #include "../hal/fm1_usb.h"   /* registers; relative, so the loader and the host tests find it too */
 #ifndef FELUCCA_CDC
 #define FELUCCA_CDC 0
 #endif
 #ifndef FELUCCA_UAC
 #define FELUCCA_UAC 0
+#endif
+#ifndef PERF_USB_HOST
+#define PERF_USB_HOST 0
 #endif
 enum { S_FADDR = 0, S_POWER = 1, S_INTRTX1 = 2, S_INTRTX2 = 3, S_INTRRX1 = 4, S_INTRRX2 = 5, S_INTRUSB = 6,
        S_INTRTX1E = 7, S_INTRTX2E = 8, S_INTRRX1E = 9, S_INTRRX2E = 10, S_INTRUSBE = 11, S_FRAME1 = 12,
@@ -134,10 +139,11 @@ static volatile uint32_t so_w, so_r;
 #define MQ 64u
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
 static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
+static volatile uint8_t uh_out;                     /* the port is a host with an OUT endpoint (usb_host.c): MIDI out goes to the device */
 
 static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
 {
-    if (usb.config && mo_w - mo_r < MQ) {
+    if ((usb.config || uh_out) && mo_w - mo_r < MQ) {
         midi_out_q[mo_w % MQ] = pkt;
         RING_PUBLISH();
         mo_w++;
@@ -1073,9 +1079,18 @@ static void uac_service(void)
 }
 #endif
 
+static uint32_t usb_retry_t;                            /* the last retry (usb_retry; usb_host.c brings it forward) */
+#include "usb_host.c"                                   /* PERF_USB_HOST: the port as a MIDI host (the MIDI IN page's USB host) */
+
 static void usb_poll(void)                              /* TIMER5 ISR, 2 kHz */
 {
     uint32_t iu, it, ir;
+#if PERF_USB_HOST
+    if (uh.run) {                                       /* a host: its endpoints, nothing of the device side */
+        uh_poll();
+        return;
+    }
+#endif
     if (!usb.up)
         return;
     if (fm1_usb_sof_take()) {                           /* SOF pending: not a reliable "host is there", */
@@ -1184,10 +1199,13 @@ static void usb_start(void)                             /* boot, or main-loop re
  * later still enumerates. */
 static void usb_retry(uint32_t now_ms)
 {
-    static uint32_t t;
-    if (usb.up || usb.detached || now_ms - t < 1000u)
+#if PERF_USB_HOST
+    if (uh.on)
+        return;                                         /* the port is a host: uh_task owns it */
+#endif
+    if (usb.up || usb.detached || now_ms - usb_retry_t < 1000u)
         return;
-    t = now_ms;
+    usb_retry_t = now_ms;
     usb.retries++;
     usb_start();
 }
@@ -1196,5 +1214,10 @@ static void usb_detach(void)
 {
     usb.detached = 1;
     usb.up = 0;
+#if PERF_USB_HOST
+    uh.run = 0;
+    uh.on = uh.want = 0;
+    uh_out = 0;
+#endif
     fm1_usb_off();
 }

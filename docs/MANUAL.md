@@ -1411,7 +1411,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | - |
 | Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
-| MIDI IN | Notes: scale, pads | Channel: all, 1-16 | - | - |
+| MIDI IN | Notes: scale, pads | Channel: all, 1-16 | USB host: off, on (never kept) | - |
 | Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |
@@ -1794,6 +1794,15 @@ The pads are read in banks of 16, from note 36, the way an MPC's pads come out o
 | E | The chords: pads 1-7 jump to the scale's chords I to VII at once. |
 
 On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its MIDI port to External for the TRS cable. With Notes on Pads, channel 1 notes no longer change the scale; set it back to Scale for that.
+
+**USB host: plugging a MIDI device straight into the FM-1.** Normally the FM-1's USB port is a device: a computer plugs into it. Turn **USB host** on (the MIDI IN page's third knob) and the port becomes the host instead, so a class-compliant USB MIDI device plugs straight in: an MPC Sample, a keyboard, a pad controller, a groovebox. Its notes, clock and transport come in like any MIDI in (so with Notes on Pads its pads play PERF-1), and PERF-1's MIDI out goes to it, following the MIDI map.
+
+- **Power:** the FM-1 doesn't power the port. Plug the device in through a **powered USB hub**, or an adapter that powers the device. One device, directly or behind one hub.
+- **While it's on,** the computer side of the port is off: no USB audio, no MIDI to the computer, no editor, no updates. Turn it off to get them back. It's never kept: every power-on starts with USB host off, so the installer always works.
+- **What it says:** `ON: PLUG IN A DEVICE`, then `DEVICE CONNECTED` when it finds one. `NO MIDI DEVICE FOUND` means the device has no USB MIDI (unplug it, or try another port of the hub). Low-speed devices (some old keyboards) aren't supported. `DEVICE LOST: LOOKING` means it came unplugged; it reconnects by itself.
+- Full-speed USB MIDI 1.0 only, notes and clock: no SysEx goes to or comes from the device.
+
+This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.
 
 **USB audio:** the FM-1 also shows up on a computer as a stereo USB audio input (16-bit, 44.1 kHz). It carries the master output, so you can record the FM-1 over the same cable. On the USB & MIDI settings page, the level can follow the **MASTER** knob (KNOB) or stay at a fixed level (FIXED, about the same as the knob at three quarters). With FIXED you can turn your speakers down without changing the recording.
 

@@ -1,0 +1,28 @@
+# the USB host switch (0.15.9, the MIDI IN page's third knob): the port as the host of a USB-MIDI device (an MPC, a keyboard) through a
+# powered hub; the simulator has no USB, so this checks the switch, its messages and that it is never kept (every power-on is a device)
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 3
+wait 100
+expect fxpage 26
+expect usbhost 0
+spin K3 1
+wait 200
+expect usbhost 1
+shot usb_host_on.png
+spin K3 -1
+wait 200
+expect usbhost 0
+spin K3 1
+wait 200
+expect usbhost 1
+tap FX
+tap PLAY
+wait 5000
+reboot
+wait 3000
+expect usbhost 0

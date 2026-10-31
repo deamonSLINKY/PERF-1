@@ -785,6 +785,9 @@ static void fm1_main(void)
         }
         fm1_wdt_feed();
         usb_retry(fm1_ms);
+#if PERF_USB_HOST
+        uh_task(fm1_ms);                            /* the port as a MIDI host, when the MIDI IN page asks */
+#endif
         if (fm1_ms > 30000u && bootguard.pending) {     /* a crash or hang in the first 30 s counts */
             bootguard.pending = 0;
             bootguard.failed = 0;

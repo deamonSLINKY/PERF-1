@@ -160,7 +160,7 @@ static const struct {
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
-    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 2}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to */
+    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 2}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -454,6 +454,7 @@ static struct {
     uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
     uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); the channel listened to, 0 all (set_t.uiv[11]) */
+    uint8_t usb_host;                            /* the USB port is the host of a USB-MIDI device (plat_usb_host); never kept */
     uint8_t pad_note[48];                        /* the notes the melodic pads started (banks B-D), for their note-offs */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
@@ -803,7 +804,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
            i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
-           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
+           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -1593,7 +1594,7 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
     if (!ui.dj_on)
         ui.dj_fill = 0;
     {   /* the intro's length and the MIDI map to the engine when the setting changes (and once at boot) */
-        static uint8_t isent = 255, msent = 255;
+        static uint8_t isent = 255, msent = 255, hsent;
         if (ui.intro != isent) {
             isent = ui.intro;
             en_intro(INTRO_S[ui.intro % 5u]);
@@ -1601,6 +1602,19 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
         if (ui.midi_map != msent) {
             msent = ui.midi_map;
             en_midi_map(ui.midi_map);
+        }
+        if (ui.usb_host != hsent) {
+            hsent = ui.usb_host;
+            plat_usb_host(ui.usb_host);
+        }
+        {   /* what the USB host has to say */
+            static const char *const HM[7] = {0, "ON: PLUG IN A DEVICE", "OFF: USB AS BEFORE", "DEVICE CONNECTED", "NO MIDI DEVICE FOUND",
+                                              "LOW SPEED: NOT SUPPORTED", "DEVICE LOST: LOOKING"};
+            const int m = plat_usb_host_msg();
+            if (m > 0 && m < 7) {
+                say("USB HOST", HM[m]);
+                ui.msg_until = plat_ms() + 2500u;
+            }
         }
     }
     if (!en_playing) {

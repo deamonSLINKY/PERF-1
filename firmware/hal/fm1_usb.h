@@ -91,6 +91,28 @@ FM1_INLINE void fm1_usb_ep4_send(void *p, uint32_t n)
 }
 
 FM1_INLINE void fm1_usb_ep_txbuf(uint32_t ep, void *p) { FM1_USB_EP_TADR(ep) = (uint32_t)(uintptr_t)p; }
+/* Host (A-device) on USB0 (from Melodee 1.5.0, Kerem Kilic; usb_host.c), the sequence of the AC79 SDK's usb_h_sie_init(0):
+ * D+ / D- digital inputs with their pull-downs (USB_IO_CON0 DPDIE DMDIE DPPD DMPD, no pull-ups), PHY on, SIE out of reset,
+ * VBUS valid, CID 0 (A-device). The caller waits >= 20 ms after fm1_usb_reset and again after this before touching the SIE,
+ * then writes DEVCTL = 3 (session + host request). Nothing here drives VBUS: the port needs power from outside. */
+FM1_INLINE void fm1_usb_host_attach(void *ep0)
+{
+    uint32_t n;
+    FM1_CLK_CON1 &= ~3u;                                /* USB clock = PLL48M */
+    FM1_USB_EP0_ADR = (uint32_t)(uintptr_t)ep0;
+    for (n = 1; n <= 3u; n++)
+        FM1_USB_EP_RADR(n) = (uint32_t)(uintptr_t)ep0;
+    FM1_USB_EP4_RADR = (uint32_t)(uintptr_t)ep0;
+    FM1_USB_CON0 = 0;
+    FM1_USB_CON1 = 0;
+    FM1_USB_IO_CON0 = 0;
+    FM1_USB_IO_CON0 |= (1u << 10) | (1u << 9) | (1u << 5) | (1u << 4);
+    FM1_USB_IO_CON0 &= ~((1u << 11) | (1u << 8));
+    FM1_USB_CON0 |= 0x25u;                              /* PHY_ON | USB_NRST | VBUS */
+}
+/* D+ / D- single-ended levels (CON0 bit 17 / 16): both 0 = nothing attached, else a device pulls one up */
+FM1_INLINE uint32_t fm1_usb_line(void) { return (FM1_USB_CON0 >> 16) & 3u; }
+
 FM1_INLINE void fm1_usb_ep_rxbuf(uint32_t ep, void *p) { FM1_USB_EP_RADR(ep) = (uint32_t)(uintptr_t)p; }
 FM1_INLINE void fm1_usb_ep0_send(void *p, uint32_t n)
 {

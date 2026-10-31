@@ -134,6 +134,19 @@ int plat_store_load(uint32_t obj, void *dst, uint32_t max)
 static int store_lock, rs_valid;                 /* a restored object was written (nothing else is until the restart); the last restore's check */
 static int host_seamless;
 int plat_store_seamless(void) { return host_seamless; }
+static int host_uh_want, host_uh_msg;            /* the USB host: asked for, and what it says (the simulator has no USB: it only answers on and off) */
+void plat_usb_host(int on)
+{
+    if (on != host_uh_want)
+        host_uh_msg = on ? PLAT_UH_ON : PLAT_UH_OFF;
+    host_uh_want = on;
+}
+int plat_usb_host_msg(void)
+{
+    const int m = host_uh_msg;
+    host_uh_msg = 0;
+    return m;
+}
 int plat_store_locked(void) { return store_lock; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
@@ -524,6 +537,8 @@ static int expect(const char *what, const char *val)
         got = ui.min_pads;
     else if (!strcmp(what, "minch"))
         got = ui.min_ch;
+    else if (!strcmp(what, "usbhost"))            /* the USB host asked for (MIDI IN page; never kept) */
+        got = host_uh_want;
     else if (!strncmp(what, "padnote", 7))
         got = ui.pad_note[atoi(what + 7) % 48];
     else if (!strncmp(what, "drumglow", 8))

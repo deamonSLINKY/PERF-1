@@ -113,6 +113,18 @@ static volatile uint32_t tel_stores, tel_store_us;       /* telemetry: flash wri
 static uint8_t store_lock;                               /* a backup was restored: what is in RAM is out of date, so nothing more is written until the restart */
 int plat_store_locked(void) { return store_lock; }
 int plat_store_seamless(void) { return flash_ok && !susp_bad; }
+#if PERF_USB_HOST
+void plat_usb_host(int on) { uh.want = (uint8_t)(on != 0); }   /* uh_task (the main loop) switches the port */
+int plat_usb_host_msg(void)
+{
+    const int m = uh.msg;
+    uh.msg = UH_MSG_NONE;
+    return m;
+}
+#else
+void plat_usb_host(int on) { (void)on; }
+int plat_usb_host_msg(void) { return 0; }
+#endif
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
     uint32_t t0, r;
