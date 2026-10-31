@@ -1,0 +1,21 @@
+# The chord playing on the keys (0.15.21, a GitHub ask): while playing, its tones lit bright and the rest of the scale dim, on the home page and
+# on JAM (where it is on the screen too, in its own colour, with its name); stopped, the whole scale lit as before.
+seed 0
+wait 3000
+expect playing 1
+expect keychord 1
+tap GLO
+spin SELECT 1
+wait 100
+spin SELECT 1
+wait 300
+expect view 33
+expect keychord 1
+shot jam_chord.png
+wait 8000
+expect keychord 1
+shot jam_chord2.png
+tap PLAY
+wait 300
+expect playing 0
+expect dimkeys 0

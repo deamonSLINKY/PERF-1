@@ -1,0 +1,85 @@
+# The set list (0.15.21): GLO pressed again from Global. Sixteen slots (K1 or a white key); turning Genre on an empty slot puts the piece playing in,
+# then Genre and Piece change it; Play on: PRESETS steps through the list (across genres), and the auto-DJ's next piece is the next slot. Kept
+# with the player's three (theme, Tune, MIDI out) and back after a restart; an older record of those reads with the list empty.
+seed 0
+wait 3000
+tap GLO
+wait 100
+expect view 31
+tap GLO
+wait 100
+expect view 32
+expect setsl0 0
+shot setlist_empty.png
+# slot 1: the piece playing (HYPNO 01)
+spin K2 1
+wait 100
+expect setsl0 1
+# slot 2: HOUSE 05
+spin K1 1
+spin K2 1
+spin K2 2
+spin K3 4
+wait 100
+expect setsl1 25
+# slot 3 by its white key: HYPNO 03
+tapkey 4
+wait 50
+spin K2 1
+spin K3 2
+wait 100
+expect setsl2 3
+# Play on: it is at slot 1 (the piece playing)
+spin K4 1
+wait 100
+expect seton 1
+expect setpos 0
+shot setlist.png
+# PRESETS: the next slot, across genres
+turn PRESET 1
+wait 300
+expect genre 2
+expect piece 4
+expect setpos 1
+turn PRESET 1
+wait 300
+expect genre 0
+expect piece 2
+expect setpos 2
+turn PRESET 1
+wait 300
+expect piece 0
+expect setpos 0
+turn PRESET -1
+wait 300
+expect piece 2
+expect setpos 2
+# kept: back after a restart
+wait 8000
+reboot
+wait 3000
+expect setsl0 1
+expect setsl1 25
+expect setsl2 3
+expect seton 1
+# the auto-DJ (GLO held, F5): its next piece is the list's next slot
+press GLO
+tapkey 24
+release GLO
+expect djon 1
+expect piece 0
+wait 35000
+expect genre 2
+expect piece 4
+press GLO
+tapkey 24
+release GLO
+# an older record of the player's three (no list) restores, the list empty
+restore 4 old
+wait 600
+expect rsvalid 1
+expect rsstate 2
+reboot
+wait 3000
+expect setsl0 0
+expect seton 0

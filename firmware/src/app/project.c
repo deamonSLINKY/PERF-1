@@ -30,11 +30,15 @@ typedef char rec_fits[REC_PAR + P_NPARAMS <= REC_CML1 && REC_CML1 + 6u <= REC_AC
 static uint8_t image[PLAT_STORE_MAX];        /* the playing genre's object, as it is in flash (and as the next save writes it: its first IMG_LEN bytes; the old bank is read here whole first) */
 static uint16_t saved;                       /* bit i: piece i is in the image */
 static uint8_t pending, pending_glob;        /* the pieces; the player's three (theme, Tune, MIDI out) */
+#define SL_N 16                              /* the set list (0.15.21): sixteen pieces in order, kept with the player's three */
 typedef struct {
     uint32_t magic;
     int16_t tune, midi, theme, rsv;
+    uint8_t sl[SL_N];                        /* a slot: genre * NPIECES + piece + 1; 0 empty */
+    uint8_t sl_on, sl_rsv[3];                /* Play: the auto-DJ and PRESETS go through the list */
 } glob_t;
 #define GLOB_MAGIC 0x4C474D50u               /* "PMGL" */
+#define GLOB_OLD 12u                         /* the record before the set list (0.15.20 and older): read, the list empty */
 static glob_t glob;
 static int glob_from_old;                    /* the old bank's header had them */
 
@@ -303,7 +307,10 @@ static void image_load(int g)
 static void glob_load(void)                  /* the player's three: their object, else the old bank's header, else the defaults */
 {
     glob_t g;
-    if (plat_store_load(OBJ_GLOB, &g, sizeof g) == (int)sizeof g && g.magic == GLOB_MAGIC) {
+    const int n = plat_store_load(OBJ_GLOB, &g, sizeof g);
+    if ((n == (int)sizeof g || n == (int)GLOB_OLD) && g.magic == GLOB_MAGIC) {
+        if (n == (int)GLOB_OLD)
+            memset(g.sl, 0, sizeof g - GLOB_OLD);
         glob = g;
     } else if (!glob_from_old) {
         glob.tune = en_param_info(P_TUNE)->def;

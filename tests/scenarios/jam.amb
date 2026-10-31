@@ -1,4 +1,4 @@
-# The JAM page (the SELECT dial, after Global): the keys are an instrument and never edit the scale. Voice (K1): pluck, pad, acid, drone; Keys (K2): scale, chords,
+# The JAM page (the SELECT dial, after Global and the Set list): the keys are an instrument and never edit the scale. Voice (K1): pluck, pad, acid, drone; Keys (K2): scale, chords,
 # harp; Octave (K3); Answer (K4): after you stop it plays your phrase back an octave up on the next bar.
 seed 0
 wait 3000
@@ -6,7 +6,9 @@ tap GLO
 expect view 31
 spin SELECT 1
 wait 100
-expect view 32
+spin SELECT 1
+wait 100
+expect view 33
 expect jamv 0
 shot jam_pluck.png
 # the pad, scale keys: one key, one note held; the scale untouched

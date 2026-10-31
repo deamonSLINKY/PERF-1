@@ -440,6 +440,7 @@ columns are **KNOB1** to **KNOB4**.
 | Comp/Limit | **SELECT** | Ratio (off to 10:1) | Thresh (-30 to 0 dB) | Make-up (0 to +12 dB) | Ceiling (-12 to 0 dB) |
 | Mixer | **SELECT** | Track (pad, bass, acid, pluck, drums) | Level | Pan (L100, C, R100) | Send (0-100) |
 | Global | **GLO** | Root | Theme (6) | Tune (+-50 cents) | Genre (the bank, the same as **GLO** + **PRESETS**) |
+| Set list | **GLO** x2 | Slot (1-16; or a white key) | Genre (or Empty) | Piece (01-10) | Play (off, on) |
 | Jam | **SELECT** | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off, on) |
 
 Words on these pages:
@@ -1583,6 +1584,29 @@ The **SET** settings page shapes a longer set. It comes after USB & MIDI on the 
 - **Ramp** makes the tempo climb over a piece's rounds of groove, by +2, +4, +8 or +12 BPM, one BPM at a time. If you change the tempo by hand, the climb carries on from there. The next piece starts at its own tempo.
 - **Intro** builds the music up slowly from nothing. When you press Play, the tracks come in one at a time over 1, 2, 4 or 8 minutes. The pad starts in the first bar, then come the hats, the perc, the kick, the snare, the bass, the pluck and last the acid, each a seventh of the way further through. This is handy for mixing in from another deck, or for scratching or sampling over just a pad and a hat. The header counts down, like `INTRO 1:42`, and the auto-DJ stays in its groove until every track is in. Stop and Play again to restart the intro.
 
+### The set list
+
+![The Set list page](img/perf-screen-setlist.png)
+
+A set list is the pieces you want to play, in your order, from any genres. Press **GLO** twice (Global, then **Set list**) to open it.
+
+| Knob | Setting | What it does |
+|---|---|---|
+| **KNOB1** | Slot | Which of the 16 slots you're editing. The first 16 white keys choose a slot too. |
+| **KNOB2** | Genre | The slot's genre. Turn it on an empty slot and the piece playing goes in. Turn it right down to *Empty* to clear the slot. |
+| **KNOB3** | Piece | The slot's piece, 01 to 10. |
+| **KNOB4** | Play | *On*: the set list takes over from the bank (below). |
+
+With **Play** on:
+
+- **PRESETS** steps to the next or last slot in the list, across genres, instead of the next piece in the bank. With **SEL** held while the music plays, the slot waits for the next bar. The header says `SET 2/5` and the piece's title.
+- The **auto-DJ** brings in the next slot instead of the bank's next piece (you don't need DJ new pieces on). It changes on the fill's bar, after the piece's **Rounds**, so the breakdown and the drop belong to the new piece.
+- Empty slots are skipped, and after the last slot it goes back to the first.
+
+The list on screen shows each slot's genre and piece. The slot playing is bright, and the slot you're editing has a bar behind it. The white keys light the slots in use, and the slot playing blinks.
+
+The set list is kept with the theme, Tune and MIDI out. It plays your stored pieces as they are stored, and factory pieces as they come.
+
 ### Mood
 
 Mood is one control that makes the whole piece calmer or more intense. On the Perform screen and the visualizers, **ALGORITHM** sets it. 0 is chill, 100 is peak, and 50 (the middle, and the default) leaves the piece as it is.
@@ -1600,6 +1624,10 @@ The further you turn from 50, the more it changes these:
 
 Mood changes what you hear, but it doesn't change the stored piece. It stays where you left it when you change piece. It isn't remembered when you power off.
 
+### The keys' lights
+
+On most pages the keys light the scale. While the music plays, the notes of the chord playing are lit bright and the rest of the scale dim, so you can see which keys fit right now. Stopped, the whole scale is lit.
+
 ### Jam
 
 ![The Jam page](img/perf-screen-jam.png)
@@ -1613,7 +1641,7 @@ The **Jam** page turns the 27 keys into an instrument so you can play along with
 | **KNOB3** | Octave | -2 to +2. |
 | **KNOB4** | Answer | When it's on and you stop playing (after at least two notes and a short pause), the pluck plays your phrase back an octave higher at the next bar line. It does this once, then waits for your next phrase. |
 
-The page shows a keyboard with the scale's notes lit and the keys you hold bright. If the pluck's level is turned almost all the way down, playing it raises it to 40 so you can hear it.
+The page shows a keyboard with the scale's notes lit and the keys you hold bright (orange). While the music plays, the notes of the chord playing are blue, and its name is in the top right, like `Am7`. If the pluck's level is turned almost all the way down, playing it raises it to 40 so you can hear it.
 
 **Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page and makes it that voice's own line:
 
@@ -1752,7 +1780,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 | Kept | When it's saved |
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
-| Theme, Tune, MIDI out | A couple of seconds after your last change. |
+| Theme, Tune, MIDI out, the set list | A couple of seconds after your last change. |
 | Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the MIDI IN page, the FILTERS page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |

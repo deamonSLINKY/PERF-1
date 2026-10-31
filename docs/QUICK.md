@@ -49,7 +49,7 @@
 
 ## The pages on the SELECT dial
 
-**SELECT** steps through 33 pages in this order. The buttons (**ENV**, **LFO**, **ARP**, **SEQ**, **GLO**, **HOME**) jump to their group and step through it; from elsewhere, a button returns to the page you last used in its group. Columns a-d are **KNOB1**-**KNOB4**; on a voice's main page KNOB1 is its level. Pages that shape a sound draw it. Off the dial: the **sequencer** (hold SEQ), **Perform** (HOME on Tempo), the **visualizers** (HOME twice quickly).
+**SELECT** steps through 34 pages in this order. The buttons (**ENV**, **LFO**, **ARP**, **SEQ**, **GLO**, **HOME**) jump to their group and step through it; from elsewhere, a button returns to the page you last used in its group. Columns a-d are **KNOB1**-**KNOB4**; on a voice's main page KNOB1 is its level. Pages that shape a sound draw it. Off the dial: the **sequencer** (hold SEQ), **Perform** (HOME on Tempo), the **visualizers** (HOME twice quickly).
 
 | Page | Button | a | b | c | d |
 |---|---|---|---|---|---|
@@ -85,6 +85,7 @@
 | Comp/Limit | dial | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
 | Mixer | dial | Track (pad .. drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
 | Global | GLO | Root | Theme (6) | Tune (+-50 cents) | Genre (the bank) |
+| Set list | GLO x2 | Slot (1-16, a white key) | Genre (on empty: the piece playing) | Piece | Play: PRESETS, auto-DJ go through it |
 | Jam | dial | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Answer (off, on) |
 
 <div class="cols">

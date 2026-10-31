@@ -82,10 +82,14 @@ static uint32_t host_batt = 0xFFFFFFFFu;
 uint32_t plat_battery(void) { return host_batt; }
 static int host_usb;
 int plat_usb_power(void) { return host_usb; }
+static uint32_t keys_dim, dim_keys;
+void plat_keys_dim(uint32_t k) { keys_dim = k; }
 void plat_leds(uint32_t b, uint32_t k)
 {
     lit_btn = b;
     lit_keys = k;
+    dim_keys = keys_dim & ~k;            /* the keys lit dim (plat_keys_dim, for this call only) */
+    keys_dim = 0;
 }
 static int glow_on = 1;                 /* the device's button glow (plat_glow); the lights printed are the bright ones */
 void plat_glow(int on) { glow_on = on; }
@@ -640,6 +644,12 @@ static int expect(const char *what, const char *val)
         got = ui.fxs[atoi(what + 3) % EN_NFXS];
     else if (!strcmp(what, "scenes"))             /* the scenes stored (a bit a slot) */
         got = ui.scene_set;
+    else if (!strncmp(what, "setsl", 5))          /* the set list's slot N (0.15.21): genre * 10 + piece + 1, 0 empty */
+        got = glob.sl[atoi(what + 5) % SL_N];
+    else if (!strcmp(what, "setpos"))             /* the slot playing (255 none) */
+        got = ui.sl_pos;
+    else if (!strcmp(what, "seton"))              /* the set list's Play */
+        got = glob.sl_on;
     else if (!strcmp(what, "djon"))               /* the auto-DJ: on */
         got = ui.dj_on;
     else if (!strcmp(what, "djphase"))            /* groove 0, breakdown 1, build 2 */
@@ -688,6 +698,17 @@ static int expect(const char *what, const char *val)
         got = (int)last_out;
     else if (!strcmp(what, "litbtn"))             /* the buttons lit (bit b: B_*) */
         got = (int)lit_btn;
+    else if (!strcmp(what, "keychord")) {         /* the keys show the chord playing (0.15.21): lit = its tones, dim = the rest of the scale, none both, some dim */
+        const uint32_t ch = chord_pcs(), ap = pool_abs();
+        uint32_t i, ok = dim_keys != 0 && !(lit_keys & dim_keys);
+        for (i = 0; i < NKEYS; i++) {
+            const uint32_t pc = (5u + i) % 12u, l = lit_keys >> i & 1u, d = dim_keys >> i & 1u;
+            if (l != (ch >> pc & 1u) || d != ((ap >> pc & 1u) && !(ch >> pc & 1u)))
+                ok = 0;
+        }
+        got = (int)ok;
+    } else if (!strcmp(what, "dimkeys"))            /* the keys lit dim (the scale while a chord plays, 0.15.21) */
+        got = (int)dim_keys;
     else if (!strcmp(what, "litkeys"))            /* the keys lit (bit k: key k) */
         got = (int)lit_keys;
     else if (!strcmp(what, "seqlane"))            /* the sequencer's lane (OCT- / OCT+) */
@@ -897,6 +918,8 @@ int main(int argc, char **argv)
             if (b[0] == 'o' && n > 0 && rd32(tmp) == IMG_MAGIC) {      /* old: a bank as before 0.15.6, the records only */
                 tmp[14] = 0;
                 m = (int)IMG_TAIL;
+            } else if (b[0] == 'o' && o == OBJ_GLOB && n == (int)sizeof(glob_t)) {   /* old: the player's three without the set list (0.15.20 and older) */
+                m = (int)GLOB_OLD;
             } else if (b[0] == 'o' && n == (int)sizeof(set_t)) {       /* old: settings with three effect settings fewer, packed as an older build wrote them */
                 static uint8_t o2[sizeof(set_t)];
                 const int old = EN_NFXS - 3;

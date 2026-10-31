@@ -22,10 +22,10 @@ MANUAL = {                                  # docs/img/perf-screen-NAME.png: sce
     "seq": "seq/seq", "seq-tricks": "seqtricks/seq_tricks", "fx-menu": "fx/fx_latched", "beat-fx": "beatfx/beatfx_bank",
     "flex": "flex/flex_bank", "snips": "sampler/snips_held", "gate": "fxedit/gate_page", "sweep": "fxscopes/fxs_sweep",
     "glo-mix": "keymap/keymap_perf_glo", "shift": "keymap/keymap_shift", "perform": "perf/perf_screen", "settings": "settings/settings",
-    "store": "store/global_stored", "breakdown": "sections/breakdown", "build": "sections/build", "jam": "jam/jam_pluck",
+    "store": "store/global_stored", "breakdown": "sections/breakdown", "build": "sections/build", "jam": "chordkeys/jam_chord",
     "remote": "remote/remote_link", "saver": "stage/saver", "help": "help/help_lfo", "viz-disco": "viz/viz_disco",
     "viz-kaleido": "viz/viz_kaleido", "groove": "arrange/groove", "acid-answer": "answer/answer_page", "steps": "steps/steps", "acsteps": "acsteps/acsteps", "phrase": "phrase/phrase", "feel": "feel/feel", "bassline": "bassline/bassline", "dejavu": "dejavu/dejavu",
-    "pluck-steps": "plucksteps/plucksteps_play", "set": "setpage/set_page_on", "home-synth": "look/home_synth", "intro": "setpage/intro_header",
+    "pluck-steps": "plucksteps/plucksteps_play", "set": "setpage/set_page_on", "home-synth": "look/home_synth", "intro": "setpage/intro_header", "setlist": "setlist/setlist",
 }
 BG = (20, 14, 12)
 
