@@ -1890,7 +1890,7 @@ This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tr
 
 The sections and pieces wait for the bar, as they do from the pads. Connect its MIDI out to the FM-1's TRS MIDI input. On the Model:Samples, turn on MIDI out for the tracks you want to use as triggers and leave it off for the ones you play yourself. Its trigs still play their own samples, so a trigger track can be a quiet one, or one you like hearing with the change.
 
-**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the FM-1's TRS MIDI input (the MPK mini MK4's DIN MIDI out, with a TRS type A to DIN cable or adapter), or over USB through a computer. It expects the MPK's factory program: keys on channel 1, pads on channel 10 from note 36, knobs on CC 24-31 (the MK4's; an older MPK mini's CC 70-77 work too).
+**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the FM-1's TRS MIDI input (the MPK mini MK4's DIN MIDI out, with a TRS type A to DIN cable or adapter), or over USB through a computer. It expects the MPK's factory program: keys on channel 1, pads on channel 10 from note 36, knobs on CC 24-31 (the MK4's; an older MPK mini's CC 70-77 work too). The MK4's knobs turn endlessly and send steps, so PERF-1 moves each setting from where it is, about fifty clicks from one end to the other; an older MPK's knobs (CC 70-77) set the value straight to where the knob points.
 
 | MPK | PERF-1 |
 |---|---|

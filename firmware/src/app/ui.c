@@ -2678,18 +2678,35 @@ static void mpk_cc(int cc, int v)               /* the knobs: CC 24-31 (the MK4'
 {
     static const uint8_t P[3] = {P_AC_CUT, P_AC_RES, P_DR_CUT};
     const int k = cc >= 24 && cc <= 31 ? cc - 24 : cc >= 70 && cc <= 77 ? cc - 70 : -1;
+    /* the MK4's knobs are endless and send steps, not places (0.15.27: they jumped end to end): 1 .. 63 that many clicks right, 127 .. 65 left
+     * (two's complement); the older MPK minis' 70-77 send places, 0 .. 127 */
+    const int rel = cc >= 24 && cc <= 31, d = v < 64 ? v : v - 128;
     int lo, hi;
     if (cc == 1) {                               /* the mod wheel: a vibrato on the voice the keys play (0.15.26; it was the mood) */
         en_modw(MPK_VC[ui.jam_voice & 3], v);
-    } else if (k >= 0 && k < 4) {                /* the FX knobs: as Knob CCs' */
+    } else if (k >= 0 && k < 4 && rel) {         /* the FX knobs, a click 2 of their 100 */
+        knob_set(K_FXF + k, ui.fxk[k] + 2 * d);
+        ui.cc_sent[k] = ui.fxk[k];               /* (not sent back out) */
+    } else if (k >= 0 && k < 4) {                /* as Knob CCs' */
         static const uint8_t AS[4] = {74, 71, 12, 13};
         cc_in(AS[k], v);
     } else if (k == 7) {                         /* the eighth: the mood (0.15.26, the maker's ask; it was the reverb) */
-        cc_in(1, v);
+        if (rel) {
+            const int m = (int)ui.mood + 2 * d;
+            ui.mood = (uint8_t)(m < 0 ? 0 : m > 100 ? 100 : m);
+            mood_apply();
+        } else {
+            cc_in(1, v);
+        }
     } else if (k >= 4) {
         const int p = P[k - 4];
         knob_range(p, &lo, &hi);
-        knob_set(p, lo + (v * (hi - lo) + 63) / 127);
+        if (rel) {
+            const int step = (hi - lo) / 50 > 1 ? (hi - lo) / 50 : 1;   /* (about fifty clicks end to end, as on the FX knobs) */
+            knob_set(p, knob_get(p) + step * d);
+        } else {
+            knob_set(p, lo + (v * (hi - lo) + 63) / 127);
+        }
     }
 }
 
