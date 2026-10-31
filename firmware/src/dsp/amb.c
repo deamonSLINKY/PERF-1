@@ -887,7 +887,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_MAP, C_DTAP, C_DEG };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_MAP, C_DTAP, C_DEG, C_BEND };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -936,6 +936,8 @@ void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 3 ? 3 : level, 0)
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
 void en_drum_tap(int d, int vel) { post(C_DTAP, d, vel < 1 ? 1 : vel > 127 ? 127 : vel); }
 void en_chord_deg(int d) { post(C_DEG, d < 0 ? 0 : d, 0); }
+void en_bend(int voice, int bend) { post(C_BEND, voice & 0x7F, bend < -8192 ? -8192 : bend > 8191 ? 8191 : bend); }
+void en_modw(int voice, int depth) { post(C_BEND, (voice & 0x7F) | 0x80, depth < 0 ? 0 : depth > 127 ? 127 : depth); }
 void en_midi_map(int m) { post(C_MAP, (unsigned)m < (unsigned)EN_NMAP ? m : 0, 0); }
 void en_intro(int secs) { post(C_INTRO, secs < 0 ? 0 : secs > 1800 ? 1800 : secs, 0); }
 volatile float en_intro_k = 1.0f;
@@ -2736,7 +2738,23 @@ static const char *const FM_DX_NAME[EN_NFMFACT] = {   /* (the same thirty, to pu
     "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
 const char *const EN_CM_RATE[4] = {"1/4", "3/16", "1/8", "1/16"};   /* slowest to fastest */
+static int32_t fm_bend;                          /* a keyboard's bend on the DX pluck, as a Q24 log (fm6's pitch; hb_tick sets it) */
 #include "fm6.inc"
+/* a keyboard's pitch bend and mod wheel (0.15.26: an MPK mini's) on the voice its keys play: the pluck (plain: its phase; DX: fm_bend), the drone, the acid.
+ * Taken once a chunk (hb_tick): hb_semi semitones now (the bend, and the vibrato at 5.5 Hz), hb_pf the frequency's factor; the pad isn't bent. */
+static uint8_t hb_voice = 0xFF;
+static float hb_bend, hb_mod, hb_ph, hb_semi, hb_pf = 1.0f;
+
+static void hb_tick(uint32_t n)
+{
+    hb_ph += 5.5f * (float)n * (1.0f / EN_SR);
+    if (hb_ph >= 1.0f)
+        hb_ph -= 1.0f;
+    hb_semi = hb_bend + (hb_mod > 0.0f ? 0.5f * hb_mod * sine(hb_ph) : 0.0f);
+    hb_pf = hb_semi != 0.0f ? fm_exp2f(hb_semi * (1.0f / 12.0f)) : 1.0f;
+    fm_bend = hb_voice == EN_V_PLUCK ? (int32_t)(hb_semi * (16777216.0f / 12.0f)) : 0;
+}
+#define HB(v) (hb_voice == (v))
 #define BLK_FM 256                              /* = BLK (checked below) */
 #define FM_OUT 0.22f                            /* the DX voices' level against the plain sounds; FM_GAIN: each patch's, to level them */
 /* fmcal levels each voice's peak to the plain sounds'; the ear hears loudness, and a voice that sustains sits 30-40 dB above a plain pluck 0.3 s into
@@ -5943,6 +5961,16 @@ static void drain(void)
             if ((unsigned)a < (unsigned)EN_NDRUM)
                 drum_hit(a, (float)b * (1.0f / 127.0f), 0);
             break;
+        case C_BEND:                             /* a = the voice (bit 7: the mod wheel), b = the bend or the depth */
+            if ((a & 0x7F) != hb_voice) {
+                hb_bend = hb_mod = 0.0f;         /* (another voice: the old one straightens) */
+                hb_voice = (uint8_t)(a & 0x7F);
+            }
+            if (a & 0x80)
+                hb_mod = (float)b * (1.0f / 127.0f);
+            else
+                hb_bend = (float)b * (2.0f / 8192.0f);
+            break;
         case C_DEG:
             if (a < nsteps && a != deg)
                 chord_to(a);
@@ -6272,7 +6300,7 @@ static void render_bass(uint32_t n)
             gk = par[P_BL_GLIDE] ? 1.0f / ((0.01f + 0.004f * (float)par[P_BL_GLIDE]) * EN_SR) : 1.0f;
         bass.note += (bass.target - bass.note) * fm_minf((float)n * gk, 1.0f);
     }
-    f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f));   /* the LFO on the pitch: a semitone at most */
+    f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f) + (HB(EN_V_DRONE) ? hb_semi : 0.0f));   /* the LFO on the pitch: a semitone at most; a keyboard's bend */
     i0 = f * (osc == DO_FIFTHS ? 1.49831f : osc == DO_REESE || osc == DO_HOOVER ? 0.9862f : 0.99481f) *
          (1.0f / EN_SR);                        /* -9, 0, +9 cents (Reese and Hoover: 24; Fifths: a fifth) */
     i1 = f * (1.0f / EN_SR);
@@ -6456,7 +6484,7 @@ static void render_cm(uint32_t n)
 {
     const int sn = par[P_CM_SND] < 0 ? 0 : par[P_CM_SND] >= CM_NPLAIN ? CM_NPLAIN - 1 : par[P_CM_SND];
     const cm_snd_t *S = &CM_SOUND[sn];
-    const float g = cm_vol * 0.5f * S->g;
+    const float g = cm_vol * 0.5f * S->g, pfc = HB(EN_V_PLUCK) ? hb_pf : 1.0f;   /* (a keyboard's bend) */
     float lvl = 0.0f;
     int v;
     uint32_t j;
@@ -6482,10 +6510,10 @@ static void render_cm(uint32_t n)
             mixr[j] += y * pr * 2.0f;
             rsend[j] += y * 0.35f;
             esend[j] += y * 0.5f;
-            cm[v].ph += cm[v].inc;
+            cm[v].ph += cm[v].inc * pfc;
             if (cm[v].ph >= 1.0f)
                 cm[v].ph -= 1.0f;
-            cm[v].ps += cm[v].inc * S->fr;
+            cm[v].ps += cm[v].inc * pfc * S->fr;
             if (cm[v].ps >= 1.0f)
                 cm[v].ps -= (float)(int)cm[v].ps;
             cm[v].env *= cm[v].dm;
@@ -6532,7 +6560,7 @@ static void render_acid(uint32_t n)
         }
         if (acid.gate_left > 0 && --acid.gate_left == 0)
             acid.amp_t = 0.0f;                  /* the gate closes */
-        inc += (acid.inc_t - inc) * glide;      /* a slide: ~50 ms */
+        inc += (acid.inc_t * (HB(EN_V_ACID) ? hb_pf : 1.0f) - inc) * glide;      /* a slide: ~50 ms (a keyboard's bend on the target) */
         switch (osc) {
         case AO_SQUARE: case AO_PWM: {          /* a square (or a pulse): a saw less itself, part a turn on */
             float p2 = ph + (osc == AO_PWM ? pw : 0.5f);
@@ -7066,6 +7094,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
     int rv_c2;
     shed3 = en_shed_level >= 3;
+    hb_tick(n);
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = busl[j] = busr[j] = 0.0f;
     {   /* the tank for this chunk starts now (it reads input older than this chunk's), here or on the other core */

@@ -1898,10 +1898,12 @@ The sections and pieces wait for the bar, as they do from the pads. Connect its 
 | Pads, bank A (1-8) | The drums (kick, snare, clap, closed hat, open hat, perc), with velocity; pad 7 mutes all the drums or brings them back. |
 | Pads, bank B (9-16) | Breakdown, build, drop, next chord, fill, freeze, auto-DJ on or off, next piece (as the MPC's pads 9-16). |
 | Knobs 1-4 (CC 24-27) | The FX knobs: Filter, Crush, Throw, Wash. |
-| Knobs 5-8 (CC 28-31) | The acid's cutoff and resonance, the bass's cutoff, the reverb. |
-| Mod wheel (CC 1) | The mood. |
+| Knobs 5-7 (CC 28-30) | The acid's cutoff and resonance, the bass's cutoff. |
+| Knob 8 (CC 31) | The mood. |
+| Pitch bend | Bends the voice the keys play, two semitones each way. |
+| Mod wheel (CC 1) | Vibrato on the voice the keys play, up to half a semitone each way. |
 
-The keys play over the song from any page. On the Jam page the voice is all yours: its own line stops while the page is up. The **Channel** setting doesn't apply in this mode (keys and pads come on their own channels). Pitch bend isn't used. If your MPK's program sends other numbers, the MIDI IN page's `LAST IN` line shows what each knob and pad sends; tell us and we'll match it.
+The keys play over the song from any page. On the Jam page the voice is all yours: its own line stops while the page is up. The **Channel** setting doesn't apply in this mode (keys and pads come on their own channels). The bend and vibrato work on the pluck (plain and DX sounds), the bass and the acid, not the pad, and they bend that voice's own line too while you hold them. If your MPK's program sends other numbers, the MIDI IN page's `LAST IN` line shows what each knob and pad sends; tell us and we'll match it.
 
 **Knob CCs** (the MIDI IN page's fourth knob) turn the four FX knobs over MIDI:
 

@@ -178,7 +178,9 @@ void en_next(void);                            /* the next chord: on the next ba
 void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_note_v(int voice, int note, int vel);   /* the same, with a velocity (1 .. 127; 0 the note off; en_note's is 100): the pluck's, bass's and acid's level and accent (0.15.23) */
-void en_note(int voice, int note, int on);      /* a key played on the page of a voice off the algorithm (P_*_MAN):
+void en_note(int voice, int note, int on);
+void en_bend(int voice, int bend);              /* a keyboard's pitch bend on a voice played by hand (pluck, drone, acid): -8192 .. 8191, two semitones each way (0.15.26) */
+void en_modw(int voice, int depth);             /* its mod wheel: a vibrato on that voice, 0 .. 127 (up to half a semitone each way) */      /* a key played on the page of a voice off the algorithm (P_*_MAN):
                                                  * EN_V_*, MIDI note, on / off */
 void en_mute(int on);                          /* remote: silent, no MIDI out (1) or back (0), in turn */
 void en_hush(int on);                          /* a store while playing: fade out (1), back in (0) */

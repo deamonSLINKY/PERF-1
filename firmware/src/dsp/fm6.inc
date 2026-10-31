@@ -446,7 +446,7 @@ static void fm_control(fm_slot_t *x)
     pm = (int32_t)((float)pmd * (float)dly * (float)sens * (1.0f / 549755813888.0f));
     pm = pm < 0 ? -pm : pm;
     pm = sens < 0 ? -pm : pm;
-    pm += fm_tune;
+    pm += fm_tune + fm_bend;                     /* (fm_bend: a keyboard's bend and vibrato, amb.c's hb_tick) */
     /* amplitude: the LFO (AMD, after the delay) */
     lfo = (1 << 24) - lfo;
     a1 = (int32_t)((float)(((uint32_t)ed[FP_LAMD] * 165u) >> 6) * (float)dly * (float)lfo * (1.0f / 4294967296.0f));

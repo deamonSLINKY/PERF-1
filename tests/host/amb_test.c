@@ -93,6 +93,9 @@ static int popcount(uint32_t m)
 static int32_t buf[2 * 256];
 static float peak, sum2;
 static int bad;
+#define REC_N 13230                             /* 0.3 s of the left channel, kept while rec_on (a pitch's measure: rec_period) */
+static float rec[REC_N];
+static int rec_n, rec_on;
 static void run(float secs)
 {
     int blocks = (int)(secs * 44100.0f / 256.0f), b, j;
@@ -100,6 +103,8 @@ static void run(float secs)
         en_render(buf, 256, 2048);
         for (j = 0; j < 512; j++) {
             float x = (float)buf[j] / 8388608.0f;
+            if (rec_on && !(j & 1) && rec_n < REC_N)
+                rec[rec_n++] = x;
             if (x != x)
                 bad++;
             if (fabsf(x) > peak)
@@ -107,6 +112,27 @@ static void run(float secs)
             sum2 += x * x;
         }
     }
+}
+
+static float rec_period(void)                   /* the recording's period, samples: the first autocorrelation peak within 0.9 of the best (20 .. 2400) */
+{
+    static float r[2401];
+    float best = 0.0f;
+    int lag, i, m = rec_n - 2400;
+    for (lag = 20; lag <= 2400; lag++) {
+        double acc = 0.0;
+        for (i = 0; i < m; i++)
+            acc += (double)rec[i] * (double)rec[i + lag];
+        r[lag] = (float)acc;
+        if (r[lag] > best)
+            best = r[lag];
+    }
+    for (lag = 21; lag < 2400; lag++)
+        if (r[lag] >= 0.9f * best && r[lag] >= r[lag - 1] && r[lag] >= r[lag + 1]) {
+            const float a = r[lag - 1], b = r[lag], c = r[lag + 1], d = a - 2.0f * b + c;
+            return (float)lag + (d != 0.0f ? 0.5f * (a - c) / d : 0.0f);   /* (between samples: the parabola's top) */
+        }
+    return 0.0f;
 }
 
 int main(void)
@@ -442,6 +468,51 @@ int main(void)
             CHECK(!bad && lv[0] > 0.0f && lv[1] > 2.0f * lv[0], "velocity on the %s: an accent %.2f times a soft note's energy", V[r].name, (double)q[r]);
         }
         printf("  velocity by hand, accent / soft energy: pluck %.1f, bass %.1f, acid %.1f\n", (double)q[0], (double)q[1], (double)q[2]);
+        en_trk(0, 0);
+        en_init();
+        en_play(1);
+        run(0.1f);
+    }
+
+    /* a keyboard's pitch bend (0.15.26: an MPK mini's) on the voice its keys play: full up is two semitones, 1.122 times the pitch (zero crossings over a
+     * held note, each voice alone and off the algorithm, against the same note unbent); the plain pluck, the DX pluck, the bass, the acid */
+    {
+        static const struct { int v, tr, man, note, snd; const char *name; } B[4] = {
+            {EN_V_PLUCK, EN_TR_PLUCK, P_CM_MAN, 72, 0, "plain pluck"}, {EN_V_PLUCK, EN_TR_PLUCK, P_CM_MAN, 72, 12, "DX pluck"},
+            {EN_V_DRONE, EN_TR_DRONE, P_DR_MAN, 60, -1, "bass"}, {EN_V_ACID, EN_TR_ACID, P_AC_MAN, 60, -1, "acid"}};
+        int r, w;
+        float x[2], q[4];
+        for (r = 0; r < 4; r++) {
+            for (w = 0; w < 2; w++) {
+                en_init();
+                en_dj_sync(0);
+                en_play(0);
+                en_genre(2);
+                en_set(P_CM_LVL, 80);
+                en_set(P_CM_DEC, 100);
+                en_set(P_ECHO, 0);
+                en_set(P_REVERB, 0);
+                if (B[r].snd >= 0)
+                    en_set(P_CM_SND, B[r].snd);
+                en_set(B[r].man, 1);
+                en_trk(0, 1u << B[r].tr);
+                en_bend(B[r].v, w ? 8191 : 0);
+                run(0.5f);
+                en_note_v(B[r].v, B[r].note, 100);
+                run(0.1f);
+                rec_n = 0;
+                rec_on = 1;
+                run(0.31f);
+                rec_on = 0;
+                x[w] = rec_period();
+                en_note_v(B[r].v, B[r].note, 0);
+                en_bend(B[r].v, 0);
+                run(0.3f);
+            }
+            q[r] = x[1] > 0.0f ? x[0] / x[1] : 0.0f;
+            CHECK(x[0] > 0.0f && q[r] > 1.10f && q[r] < 1.15f, "pitch bend on the %s: period %.1f unbent, %.1f bent (%.3f; 1.122 wanted)", B[r].name, (double)x[0], (double)x[1], (double)q[r]);
+        }
+        printf("  pitch bend up two semitones (1.122): plain pluck %.3f, DX pluck %.3f, bass %.3f, acid %.3f\n", (double)q[0], (double)q[1], (double)q[2], (double)q[3]);
         en_trk(0, 0);
         en_init();
         en_play(1);
@@ -952,6 +1023,7 @@ int main(void)
         for (gi = 0; gi < 4; gi++) {
             int i, n = 0, tn = 0, bk = 0, r0, a = -1, b = -1, cnt[12] = {0};
             en_init();
+            en_test_reseed(11u + (uint32_t)gi);  /* (its own random walk, not what the blocks before it used up) */
             en_genre(G[gi]);
             en_set(P_CH_LOOP, 0);
             en_set(P_TEMPO, 240);

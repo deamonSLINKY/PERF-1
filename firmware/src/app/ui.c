@@ -2623,14 +2623,16 @@ static void cc_out(void)                        /* each frame: an FX knob moved 
  * older ones: both are taken), the mod wheel CC 1).
  * The keys play the JAM page's voice, with their velocity, snapped down to the scale (the JAM page's Chords: a triad of the scale); the pads are the
  * pads' bank A (pads_in: 1-6 the drums, 7 all the drums muted, 9 breakdown .. 16 the next piece: the MPK's bank B is pads 9-16); the knobs Filter,
- * Crush, Throw, Wash, the acid's cutoff and reso, the bass's cutoff and the reverb; the mod wheel the mood. */
+ * Crush, Throw, Wash, the acid's cutoff and reso, the bass's cutoff and the mood (0.15.26; it was the reverb); the pitch bend and the mod wheel (a vibrato)
+ * on the voice the keys play (en_bend, en_modw). */
 static int jam_snap(int m, uint32_t pool);
 #define MPK_N 8
+static const uint8_t MPK_VC[4] = {EN_V_PLUCK, EN_V_PAD, EN_V_ACID, EN_V_DRONE};   /* the JAM page's voice, as the engine's */
 static struct { uint8_t in, n, vc, out[3]; } mpk[MPK_N];   /* the keys held: the note in, and the notes played for it */
 static void mpk_key(int on, int n, int v)
 {
-    static const uint8_t VC[4] = {EN_V_PLUCK, EN_V_PAD, EN_V_ACID, EN_V_DRONE};
     static const int8_t OFS[4] = {0, 0, 12, 24};   /* (the engine plays the acid an octave and the drone two below the key, as on JAM) */
+    const uint8_t *const VC = MPK_VC;
     const uint32_t pool = pool_abs();
     const int vc = ui.jam_voice & 3;
     int s, k, m, cnt, t[5], r;
@@ -2674,12 +2676,16 @@ static void mpk_key(int on, int n, int v)
 }
 static void mpk_cc(int cc, int v)               /* the knobs: CC 24-31 (the MK4's factory program, found on the maker's: 0.15.25), or 70-77 (older MPK minis') */
 {
-    static const uint8_t P[4] = {P_AC_CUT, P_AC_RES, P_DR_CUT, P_REVERB};
+    static const uint8_t P[3] = {P_AC_CUT, P_AC_RES, P_DR_CUT};
     const int k = cc >= 24 && cc <= 31 ? cc - 24 : cc >= 70 && cc <= 77 ? cc - 70 : -1;
     int lo, hi;
-    if (cc == 1 || (k >= 0 && k < 4)) {          /* the mod wheel, the FX knobs: as Knob CCs' */
-        static const uint8_t AS[5] = {1, 74, 71, 12, 13};
-        cc_in(AS[cc == 1 ? 0 : k + 1], v);
+    if (cc == 1) {                               /* the mod wheel: a vibrato on the voice the keys play (0.15.26; it was the mood) */
+        en_modw(MPK_VC[ui.jam_voice & 3], v);
+    } else if (k >= 0 && k < 4) {                /* the FX knobs: as Knob CCs' */
+        static const uint8_t AS[4] = {74, 71, 12, 13};
+        cc_in(AS[k], v);
+    } else if (k == 7) {                         /* the eighth: the mood (0.15.26, the maker's ask; it was the reverb) */
+        cc_in(1, v);
     } else if (k >= 4) {
         const int p = P[k - 4];
         knob_range(p, &lo, &hi);
@@ -2703,6 +2709,8 @@ static void midi_in(void)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
         else if (ui.min_pads == 3 && (st & 0xF0u) == 0xB0u)
             mpk_cc((int)n, (int)v);
+        else if (ui.min_pads == 3 && (st & 0xF0u) == 0xE0u)   /* its pitch bend: on the voice the keys play (14 bits, 8192 the middle) */
+            en_bend(MPK_VC[ui.jam_voice & 3], (int)(v << 7 | n) - 8192);
         else if (ui.min_pads == 3 && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u)) {
             if ((st & 15u) == 9u)                /* its pads (channel 10): PERF's pads, bank A from note 36 */
                 pads_in((st & 0xF0u) == 0x90u && v, (int)n, (int)v);
