@@ -56,11 +56,13 @@ wait 300
 midi 99 2C 64
 wait 2500
 expect sec 1
-# the knobs: the first (CC 70) the filter right down, the mod wheel the mood
-midi B0 46 00
+# the knobs: the first (CC 24, the MK4's; 70 on older ones) the filter right down, the mod wheel the mood
+midi B0 18 00
+midi B0 1A 7F
 midi B0 01 7F
 wait 100
 expect fxk0 -50
+expect fxk2 100
 expect mood 100
 # kept
 wait 6000

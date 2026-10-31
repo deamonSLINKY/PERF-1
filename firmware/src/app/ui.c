@@ -2619,7 +2619,8 @@ static void cc_out(void)                        /* each frame: an FX knob moved 
         }
 }
 
-/* An Akai MPK mini (MIDI IN's Notes: MPK, 0.15.23; its factory program: keys on channel 1, pads on 10 from note 36, knobs CC 70-77, the mod wheel CC 1).
+/* An Akai MPK mini (MIDI IN's Notes: MPK, 0.15.23; its factory program: keys on channel 1, pads on 10 from note 36, knobs CC 24-31 on the MK4 (70-77 on
+ * older ones: both are taken), the mod wheel CC 1).
  * The keys play the JAM page's voice, with their velocity, snapped down to the scale (the JAM page's Chords: a triad of the scale); the pads are the
  * pads' bank A (pads_in: 1-6 the drums, 7 all the drums muted, 9 breakdown .. 16 the next piece: the MPK's bank B is pads 9-16); the knobs Filter,
  * Crush, Throw, Wash, the acid's cutoff and reso, the bass's cutoff and the reverb; the mod wheel the mood. */
@@ -2671,15 +2672,16 @@ static void mpk_key(int on, int n, int v)
         en_note_v(VC[vc], mpk[s].out[k], v);
     }
 }
-static void mpk_cc(int cc, int v)
+static void mpk_cc(int cc, int v)               /* the knobs: CC 24-31 (the MK4's factory program, found on the maker's: 0.15.25), or 70-77 (older MPK minis') */
 {
     static const uint8_t P[4] = {P_AC_CUT, P_AC_RES, P_DR_CUT, P_REVERB};
+    const int k = cc >= 24 && cc <= 31 ? cc - 24 : cc >= 70 && cc <= 77 ? cc - 70 : -1;
     int lo, hi;
-    if (cc == 1 || (cc >= 70 && cc <= 73)) {     /* the mod wheel, the FX knobs: as Knob CCs' */
+    if (cc == 1 || (k >= 0 && k < 4)) {          /* the mod wheel, the FX knobs: as Knob CCs' */
         static const uint8_t AS[5] = {1, 74, 71, 12, 13};
-        cc_in(AS[cc == 1 ? 0 : cc - 69], v);
-    } else if (cc >= 74 && cc <= 77) {
-        const int p = P[cc - 74];
+        cc_in(AS[cc == 1 ? 0 : k + 1], v);
+    } else if (k >= 4) {
+        const int p = P[k - 4];
         knob_range(p, &lo, &hi);
         knob_set(p, lo + (v * (hi - lo) + 63) / 127);
     }

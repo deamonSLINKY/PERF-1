@@ -1890,15 +1890,15 @@ This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tr
 
 The sections and pieces wait for the bar, as they do from the pads. Connect its MIDI out to the FM-1's TRS MIDI input. On the Model:Samples, turn on MIDI out for the tracks you want to use as triggers and leave it off for the ones you play yourself. Its trigs still play their own samples, so a trigger track can be a quiet one, or one you like hearing with the change.
 
-**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the FM-1's TRS MIDI input (the MPK mini MK4's DIN MIDI out, with a TRS type A to DIN cable or adapter), or over USB through a computer. It expects the MPK's factory program: keys on channel 1, pads on channel 10 from note 36, knobs on CC 70-77.
+**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the FM-1's TRS MIDI input (the MPK mini MK4's DIN MIDI out, with a TRS type A to DIN cable or adapter), or over USB through a computer. It expects the MPK's factory program: keys on channel 1, pads on channel 10 from note 36, knobs on CC 24-31 (the MK4's; an older MPK mini's CC 70-77 work too).
 
 | MPK | PERF-1 |
 |---|---|
 | Keys | Play the Jam page's voice (pluck, pad, acid or bass) with their velocity, snapped to the scale, so there are no wrong notes. With Jam's Keys on Chords, every key plays a triad of the scale. |
 | Pads, bank A (1-8) | The drums (kick, snare, clap, closed hat, open hat, perc), with velocity; pad 7 mutes all the drums or brings them back. |
 | Pads, bank B (9-16) | Breakdown, build, drop, next chord, fill, freeze, auto-DJ on or off, next piece (as the MPC's pads 9-16). |
-| Knobs 1-4 (CC 70-73) | The FX knobs: Filter, Crush, Throw, Wash. |
-| Knobs 5-8 (CC 74-77) | The acid's cutoff and resonance, the bass's cutoff, the reverb. |
+| Knobs 1-4 (CC 24-27) | The FX knobs: Filter, Crush, Throw, Wash. |
+| Knobs 5-8 (CC 28-31) | The acid's cutoff and resonance, the bass's cutoff, the reverb. |
 | Mod wheel (CC 1) | The mood. |
 
 The keys play over the song from any page. On the Jam page the voice is all yours: its own line stops while the page is up. The **Channel** setting doesn't apply in this mode (keys and pads come on their own channels). Pitch bend isn't used. If your MPK's program sends other numbers, the MIDI IN page's `LAST IN` line shows what each knob and pad sends; tell us and we'll match it.
