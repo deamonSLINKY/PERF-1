@@ -79,6 +79,38 @@ int main(void)
         got = fm1_in.enc_steps[0];
         CHECK(got == -10, "10 detents counter-clockwise, one scan a state: %d", got);
     }
+    /* a slow turn (0.15.18): the hand pauses inside each click, 60 scans (~40 ms) on every state on the way. The old decoder learned any
+     * 25 ms pause as a rest, and a pause halfway (the complement of the detent) made every later click count twice */
+    {
+        int d, k, p;
+        reset();
+        fm1_in.enc_steps[0] = 0;
+        for (d = 0; d < 10; d++)
+            for (k = 0; k < 4; k++)
+                for (p = 0; p < 60; p++)
+                    frame(CW[k]);
+        for (k = 0; k < 200; k++)
+            frame(0);
+        got = fm1_in.enc_steps[0];
+        CHECK(got == 10, "10 slow detents, a pause on every state: %d", got);
+    }
+    /* a slow turn that stops halfway through each click for ~0.3 s (the knob between its detents), then on: still one a click */
+    {
+        int d, k, p;
+        reset();
+        fm1_in.enc_steps[0] = 0;
+        for (d = 0; d < 10; d++)
+            for (k = 0; k < 4; k++)
+                for (p = 0; p < (k == 1 ? 480 : 8); p++)
+                    frame(CW[k]);
+        for (k = 0; k < 200; k++)
+            frame(0);
+        got = fm1_in.enc_steps[0];
+        CHECK(got == 10, "10 detents, each paused halfway: %d", got);
+        /* and after that, a quick turn still counts one a click */
+        got = turn(5, 2, 0, 1);
+        CHECK(got == 5, "then 5 quick detents: %d", got);
+    }
     /* a bounce at rest: one scan of state 1, back to 0 */
     reset();
     frame(1);
