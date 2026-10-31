@@ -661,9 +661,12 @@ static void tap_tempo(void)                    /* four taps or so: the tempo fro
 }
 static const uint8_t DJ_LEN[5] = {8, 16, 32, 64, 16};   /* the fifth: SYNC, with the drift's chord changes (16 only for the bar of the count) */
 #define DJ_G() (DJ_LEN[ui.dj_len % 5u])
-static int dj_break_len(int g)
+static int dj_break_len(int g)                  /* the breakdown's bars: short, half the groove or full, then made so that it and the genre's build end on an
+                                                 * 8-bar line (0.15.13: groove 16 + break 8 + build 4 was 28 bars, and a DJ mixing in lost the grid) */
 {
-    return ui.dj_break == 0 ? 4 : ui.dj_break == 1 ? (g / 2 < 4 ? 4 : g / 2) : g;
+    const int b = ui.dj_break == 0 ? 4 : ui.dj_break == 1 ? (g / 2 < 4 ? 4 : g / 2) : g, bl = en_build_len();
+    const int t = (b + bl + 4) / 8 * 8;          /* the nearest multiple of 8 (a tie goes up) */
+    return t - bl >= 2 ? t - bl : t + 8 - bl;
 }
 static void mix_key(int k)
 {

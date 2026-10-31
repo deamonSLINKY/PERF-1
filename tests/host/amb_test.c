@@ -25,6 +25,7 @@ static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's not
 static uint32_t bass_pc[12];                    /* the bass line's note-ons by pitch class */
 static int cm_on_n, cm_off_n, cm_bal[128];      /* the pluck's note-ons and note-offs (channel 2), and each note's ons less offs */
 static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
+void en_test_reseed(uint32_t s);              /* (amb.c, EN_HOST: a block's random walk from a known start) */
 static uint32_t map_on[16][128], map_cc;        /* the MIDI maps' test: note-ons by channel and note, the channels given all-notes-off */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
@@ -1558,7 +1559,7 @@ int main(void)
         CHECK(kk[0] > 0u && hh[0] == 0u, "a house breakdown keeps the kick only (kicks %u, hats %u)", kk[0], hh[0]);
         CHECK(kk[1] == 0u && hh[1] > 0u, "a drum and bass breakdown keeps the hats only (kicks %u, hats %u)", kk[1], hh[1]);
         CHECK(kk[2] == 0u && hh[2] == 0u, "a lofi breakdown stops the drums (kicks %u, hats %u)", kk[2], hh[2]);
-        CHECK(bt[3] > 0u && bt[0] > 3u * bt[3] && bt[0] < 5u * bt[3], "a house build is four times a trap's (%u and %u blocks)", bt[0], bt[3]);
+        CHECK(bt[3] > 0u && bt[0] > (3u * bt[3]) / 2u && bt[0] < (5u * bt[3]) / 2u, "a house build is twice a trap's (8 and 4 bars since 0.15.13: %u and %u blocks)", bt[0], bt[3]);
         en_init();
         en_play(1);
     }
@@ -1569,6 +1570,7 @@ int main(void)
         char t[12];
         en_init();
         en_play(0);                              /* resting: en_next changes the chord at once */
+        en_test_reseed(1);
         en_genre(1);                             /* lofi: 2 bars a chord, cadences with a dominant */
         en_pool(EN_MODE_POOL[MODE_AEOLIAN]);
         en_set(P_ROOT, 9);                       /* A minor: V is E, its third G (7) or, as a dominant, G# (8) */
@@ -1736,6 +1738,7 @@ int main(void)
         int i, ok = 1;
         en_init();
         en_play(0);
+        en_test_reseed(1);
         en_genre(2);
         en_set(P_CM_LVL, 60);
         en_set(P_CM_RATE, 3);
@@ -1780,6 +1783,7 @@ int main(void)
         int i;
         en_init();
         en_play(0);
+        en_test_reseed(1);
         en_genre(12);
         en_set(P_MIDI, 1);
         en_regrow();
@@ -1875,6 +1879,68 @@ int main(void)
         en_midi_map(EN_MAP_GM);
         en_play(1);
         run(0.1f);
+    }
+
+    /* the genre fixes (0.15.13): dubstep cuts the mix for the build's last beat (the drop gap), and after the drop its kicks double in bars 9-16
+     * (the time plan: 8 bars as written, 8 at double time); a dub-out keeps the bass line going in the break, lofi's stops */
+    {
+        uint32_t k1, k2, j;
+        int blk;
+        int32_t quiet = 1 << 30;
+        en_init();
+        en_dj_sync(0);                           /* (an earlier block left the auto-DJ following the chords: its breaks would come in here) */
+        en_test_reseed(3);
+        en_play(0);
+        en_genre(3);
+        en_set(P_MIDI, 1);
+        en_set(P_TEMPO, 140);
+        en_regrow();
+        en_play(1);
+        run(1.0f);
+        en_section(EN_CMD_BREAK);
+        for (blk = 0; blk < 3000 && en_sec != EN_SEC_BREAK; blk++)
+            en_render(buf, 256, 2048);
+        en_section(EN_CMD_BUILD);
+        for (blk = 0; blk < 3000 && en_sec != EN_SEC_BUILD; blk++)
+            en_render(buf, 256, 2048);
+        for (blk = 0; blk < 20000 && en_sec == EN_SEC_BUILD; blk++) {
+            int32_t pk = 0;
+            en_render(buf, 256, 2048);
+            for (j = 0; j < 512u; j++)
+                pk = buf[j] > pk ? buf[j] : -buf[j] > pk ? -buf[j] : pk;
+            if (en_sec_bars == 1 && pk < quiet)
+                quiet = pk;
+        }
+        CHECK(quiet == 0, "dubstep's drop gap: the build's last beat silent (quietest block's peak %d)", (int)quiet);
+        kick_n = 0;
+        run(8.0f * 4.0f * 60.0f / 140.0f);
+        k1 = kick_n;
+        kick_n = 0;
+        run(8.0f * 4.0f * 60.0f / 140.0f);
+        k2 = kick_n;
+        CHECK(k1 > 0u && k2 * 10u > k1 * 16u, "dubstep's time plan: bars 9-16 after the drop at double time (kicks %u, then %u)", k1, k2);
+        printf("  dubstep: drop gap, kicks %u then %u after the drop\n", k1, k2);
+        for (j = 0; j < 2u; j++) {               /* dub (4) keeps the bass line in the break, lofi (1) does not */
+            en_init();
+            en_play(0);
+            en_genre(j ? 1 : 4);
+            en_set(P_MIDI, 1);
+            en_set(P_BL_MODE, 1);
+            en_regrow();
+            en_play(1);
+            run(1.0f);
+            en_section(EN_CMD_BREAK);
+            for (blk = 0; blk < 3000 && en_sec != EN_SEC_BREAK; blk++)
+                en_render(buf, 256, 2048);
+            bass_n = 0;
+            run(3.0f);
+            if (j)
+                CHECK(bass_n == 0u, "lofi's break stops the bass line (%u notes)", bass_n);
+            else
+                CHECK(bass_n > 0u, "dub's break is a dub-out: the bass line goes on (%u notes)", bass_n);
+        }
+        en_init();
+        en_play(1);
     }
 
     /* stop: the tails die away */

@@ -56,7 +56,7 @@
 | Tempo | HOME | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts; HYPNO 20 s - 5 min) |
 | Pad | ENV | Level | Bright | Sound (24; the saw sounds sweep a filter) | Detune |
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
-| Pad LFO | ENV x3 | Rate (1/4 note - 32 bars) | Depth | Shape (6: sine .. drift) | Target (filter, level, pan, pitch) |
+| Pad LFO | ENV x3 | Rate (1/4 note - 32 bars, 1/8 - 1/16T) | Depth | Shape (6: sine .. drift) | Target (filter, level, pan, pitch) |
 | Chords | ENV x4 | Chord (7 kinds, below) | Voicing (close, open) | Chorus (0-100) | Loop (off; 2, 4, 8 chords) |
 | Progression | ENV x5 | Slot (1-8) | Chord (I-VII, Hold) | Bars (1-8) | Play (Walk, Loop) |
 | Bass | LFO | Level | Sound (24) | Cutoff | Reso |

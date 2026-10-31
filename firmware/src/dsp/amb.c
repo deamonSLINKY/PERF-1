@@ -28,13 +28,13 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_BRIGHT] = {"Bright", 0, 100, 35},    [P_PADTONE] = {"Sound", 0, EN_NSOUND - 1, 1},     [P_DETUNE] = {"Detune", 0, 100, 30},
     [P_PE_ATK] = {"Attack", 0, 100, 45},    [P_PE_HOLD] = {"Hold", 0, 100, 35},    [P_PE_REL] = {"Release", 0, 100, 55},
     [P_PE_REST] = {"Rest", 0, 100, 20},
-    [P_PL_RATE] = {"Rate", 0, 7, 4},        [P_PL_DEPTH] = {"Depth", 0, 100, 25},  [P_PL_SHAPE] = {"Shape", 0, 5, 0},
+    [P_PL_RATE] = {"Rate", 0, 11, 4},        [P_PL_DEPTH] = {"Depth", 0, 100, 25},  [P_PL_SHAPE] = {"Shape", 0, 5, 0},
     [P_PL_DEST] = {"Target", 0, 3, 0},
     [P_NZ_COLOR] = {"Wear", 0, 7, 1},     [P_AC_EVERY] = {"Every", 0, 7, 0},    [P_NZ_PUMP] = {"Pump", 0, 100, 60},
     [P_BASSOCT] = {"Octave", -3, 3, 0},     [P_DR_CUT] = {"Cutoff", 0, 100, 45},   [P_DR_RES] = {"Reso", 0, 100, 45},
     [P_DE_TRIG] = {"Trigger", 0, 5, 0},     [P_DE_ATK] = {"Attack", 0, 100, 25},   [P_DE_DEC] = {"Decay", 0, 100, 55},
     [P_DE_AMT] = {"Amount", 0, 100, 35},
-    [P_DL_RATE] = {"Rate", 0, 7, 6},        [P_DL_DEPTH] = {"Depth", 0, 100, 55},  [P_DL_SHAPE] = {"Shape", 0, 5, 0},
+    [P_DL_RATE] = {"Rate", 0, 11, 6},        [P_DL_DEPTH] = {"Depth", 0, 100, 55},  [P_DL_SHAPE] = {"Shape", 0, 5, 0},
     [P_DL_DEST] = {"Target", 0, 3, 0},
     [P_AC_CUT] = {"Cutoff", 0, 100, 35},    [P_AC_RES] = {"Reso", 0, 100, 70},     [P_AC_ENV] = {"Env mod", 0, 100, 55},
     [P_AC_DEC] = {"Decay", 0, 100, 40},     [P_AC_ACC] = {"Accent", 0, 100, 50},   [P_AC_SLIDE] = {"Slide", 0, 100, 30},
@@ -217,7 +217,7 @@ static const int16_t X_SYNTHWAVE[] = {P_CH_LOOP, 2, P_PULSE, 78, P_DRIVE, 35, P_
     KIT(11), P_PATTERN, 0, P_EVOLVE, 35, P_PL_CHO, 60, P_RV_TYPE, 2, P_RV_X, 40, P_BL_MODE, 3, P_BL_LEN, 28, P_BL_MOVE, 12, P_CM_VU, 60, P_MC_RATIO, 3, P_MC_THR, 46, P_MC_MAKE, 32, -1};
 static const int16_t X_AMAPIANO[] = {P_CH_LOOP, 1, P_PULSE, 70, P_DRIVE, 15, P_SWING, 25, P_PAD, 45, P_ACID, 40, P_BASS, 80, P_AC_DENS, 40, P_AC_LEN, 12, P_ECHO, 30, P_REVERB, 40, P_PL_CHO, 25,
     KIT(5), P_PATTERN, 0, P_EVOLVE, 35, P_BL_MODE, 6, P_BL_LEN, 45, P_BL_MOVE, 12, P_BL_GLIDE, 35, P_CM_VU, 50, P_HUMAN, 20, P_MC_RATIO, 2, P_MC_THR, 50, P_MC_MAKE, 35, -1};
-static const int16_t X_TRIPHOP[] = {P_CH_LOOP, 1, P_PULSE, 72, P_DRIVE, 40, P_SWING, 18, P_PAD, 50, P_ACID, 25, P_BASS, 80, P_AC_DENS, 25, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 50, P_SIZE, 70, P_RV_DAMP, 55,
+static const int16_t X_TRIPHOP[] = {P_CH_LOOP, 1, P_PULSE, 72, P_DRIVE, 40, P_SWING, 36,   /* (swing 36, 59 %, 0.15.13: the MPC shuffle; was 18) */ P_PAD, 50, P_ACID, 25, P_BASS, 80, P_AC_DENS, 25, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 50, P_SIZE, 70, P_RV_DAMP, 55,
     P_NOISE, 20, P_NZ_COLOR, 7, KIT(8), P_PATTERN, 0, P_EVOLVE, 30, P_BL_MODE, 1, P_BL_LEN, 75, P_BL_MOVE, 12, P_CM_VU, 55, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 30,
     P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 32, -1};
 static const int16_t *const XBASE[12] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP};
@@ -239,14 +239,14 @@ static const uint16_t XPAT[12][6][6] = {
     {{0x0100, 0x0100, 0x0000, 0x4444, 0x0000, 0x0000}, {0x1111, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x2111, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0000, 0x0000, 0x4000, 0x0000}, {0x0101, 0x0100, 0x0100, 0x4444, 0x0000, 0x2020}, {0x1111, 0x1010, 0x0000, 0x4444, 0x4040, 0x0000}},
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0401, 0x1010, 0x8080, 0xFF7F, 0x0000, 0x4040}, {0x0405, 0x1010, 0x8080, 0xFFFF, 0x0000, 0x0000}, {0x0401, 0x1010, 0x0000, 0x4444, 0x0000, 0x8008}, {0x0409, 0x1010, 0x0000, 0x5555, 0x0000, 0x4080}, {0x4041, 0x0100, 0x0100, 0x5555, 0x1000, 0x0000}},
     {{0x2445, 0x1010, 0x8A80, 0xDF7F, 0x2080, 0x0000}, {0x4181, 0x1010, 0x0000, 0x51D5, 0x0400, 0x0000}, {0x0C83, 0x1010, 0x0000, 0x0000, 0x5555, 0x0000}, {0x0501, 0x9090, 0x0000, 0x5555, 0x0000, 0x0000}, {0x4405, 0x1010, 0x1010, 0x5555, 0x8000, 0x0080}, {0x0005, 0xF510, 0x1000, 0x0155, 0x0000, 0x0000}},
-    {{0x0401, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0421, 0x1010, 0x0000, 0x1313, 0x4044, 0x8880}, {0x1111, 0x8080, 0x1010, 0x4444, 0x0000, 0x0000}, {0x0449, 0x1010, 0x0000, 0x1111, 0x4044, 0x0000}, {0x0401, 0x9244, 0x1010, 0x0111, 0x4000, 0x0000}, {0x0401, 0xF010, 0x0000, 0x1111, 0x0044, 0x0000}},
+    {{0x0401, 0x1010, 0x0000, 0x5D5D, 0x4044, 0x0000}, {0x0421, 0x1010, 0x0000, 0x1313, 0x4044, 0x8880}, {0x1111, 0x8080, 0x1010, 0x4444, 0x0000, 0x0000}, {0x0449, 0x1010, 0x0000, 0xDDDD, 0x4044, 0x0000},   /* (0.15.13: two rows of shuffled 16ths) */ {0x0401, 0x9244, 0x1010, 0x0111, 0x4000, 0x0000}, {0x0401, 0xF010, 0x0000, 0x1111, 0x0044, 0x0000}},
     {{0x2449, 0x0000, 0x1010, 0x4444, 0x0000, 0x0200}, {0x0909, 0x0000, 0x1010, 0x5555, 0x0000, 0x4040}, {0x0505, 0x1010, 0x1010, 0x5555, 0x0000, 0x8040}, {0x2449, 0x1000, 0x0010, 0x4444, 0x0000, 0x1449}, {0x050B, 0x0000, 0x1010, 0xFFFF, 0x0000, 0x0000}, {0x0109, 0xF000, 0x1110, 0x0055, 0x0000, 0x0000}},
-    {{0x1001, 0x0000, 0x0100, 0x5555, 0x0000, 0x0000}, {0x0481, 0x0100, 0x0100, 0x5555, 0x0000, 0x0000}, {0x0009, 0x0100, 0x0100, 0xF555, 0x0000, 0x0000}, {0x2041, 0x0100, 0x0100, 0x5575, 0x0000, 0x0000}, {0x0401, 0x0100, 0x0100, 0x1111, 0x0000, 0x0000}, {0x0801, 0xD100, 0x0100, 0xFF55, 0x0000, 0x0000}},
+    {{0x1001, 0x0000, 0x0100, 0xFFFF, 0x0000, 0x0820}, {0x0481, 0x0100, 0x0100, 0x5555, 0x8000, 0x0000}, {0x0009, 0x0100, 0x0100, 0xF555, 0x0000, 0x2008}, {0x2041, 0x0100, 0x0100, 0x7575, 0x8000, 0x0000}, {0x0401, 0x0100, 0x0100, 0x5555, 0x0000, 0x0820}, {0x0801, 0xD100, 0x0100, 0xFF55, 0x0000, 0x0000}},   /* (0.15.13: hats in 16ths and 8ths that can roll, an open hat on the last 16th, a rim: the genre audit) */
     {{0x1111, 0x1010, 0x1010, 0x5555, 0x4444, 0x0000}, {0x1111, 0x1010, 0x1010, 0xFFFF, 0x4444, 0x2222}, {0x1111, 0x1010, 0x1010, 0x7777, 0x4444, 0x0A0A}, {0x1151, 0x1010, 0x1010, 0x5555, 0x4444, 0x2020}, {0x1111, 0x1010, 0x1010, 0xDDDD, 0x4040, 0x0000}, {0x9111, 0x1010, 0x3030, 0xFFFF, 0x4444, 0x2222}},
     {{0x0405, 0x1010, 0x0000, 0xFFFF, 0x0000, 0x0000}, {0x0485, 0x1010, 0x0000, 0xFFFF, 0x2000, 0x0220}, {0x4411, 0x1010, 0x0000, 0x7777, 0x0020, 0x0000}, {0x0525, 0x9010, 0x0000, 0xFFFF, 0x0000, 0x8888}, {0x0409, 0x1090, 0x0000, 0xDDDD, 0x4000, 0x0000}, {0x2485, 0x1210, 0x0000, 0xFFFF, 0x0020, 0x2424}},
     {{0x0100, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0000, 0xFFFF, 0x0000, 0x0000}, {0x1111, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0101, 0x0100, 0x0000, 0x5555, 0x4000, 0x0000}, {0x1111, 0x1010, 0x0000, 0xFFFF, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0100, 0x5D5D, 0x0000, 0x2020}},
     {{0x1111, 0x1010, 0x1010, 0x5555, 0x0000, 0x0000}, {0x1111, 0x1010, 0x1010, 0xFFFF, 0x0000, 0x0808}, {0x1151, 0x1010, 0x1010, 0x5555, 0x4000, 0x0000}, {0x1111, 0x1010, 0x1010, 0x5D5D, 0x0000, 0x8080}, {0x0101, 0x0100, 0x0100, 0x5555, 0x0000, 0x0000}, {0x1115, 0x1010, 0x1010, 0xFFFF, 0x4040, 0x0000}},
-    {{0x1111, 0x0000, 0x1010, 0x5555, 0x0000, 0x2424}, {0x1101, 0x0000, 0x1010, 0x7777, 0x0000, 0x2A2A}, {0x1111, 0x0100, 0x1010, 0xFFFF, 0x0000, 0x8484}, {0x1151, 0x0000, 0x1010, 0x5D5D, 0x4000, 0x2424}, {0x1111, 0x1000, 0x1010, 0x5555, 0x0000, 0x0A0A}, {0x1131, 0x0000, 0x1010, 0xDDDD, 0x0000, 0x2222}},
+    {{0x1111, 0x0000, 0x1010, 0x5555, 0x4444, 0x2424}, {0x1101, 0x0000, 0x1010, 0x7777, 0x4444, 0x2A2A}, {0x1111, 0x0100, 0x1010, 0xFFFF, 0x4444, 0x8484}, {0x1151, 0x0000, 0x1010, 0x5D5D, 0x4000, 0x2424}, {0x1111, 0x1000, 0x1010, 0x5555, 0x4444, 0x0A0A}, {0x1131, 0x0000, 0x1010, 0xDDDD, 0x0000, 0x2222}},   /* (0.15.13: the open hat on the off-beats in four rows) */
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0481, 0x1010, 0x0000, 0x5D5D, 0x0000, 0x0220}, {0x0109, 0x1010, 0x0000, 0x5555, 0x4000, 0x0000}, {0x0421, 0x9010, 0x0000, 0xDDDD, 0x0000, 0x8080}, {0x0201, 0x1010, 0x1010, 0x5555, 0x0040, 0x0000}, {0x4401, 0x1090, 0x0000, 0xFFFF, 0x0000, 0x2020}},
 };
 static const char *const XNAME[12][10] = {
@@ -319,7 +319,7 @@ static void house_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
 static void dub_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
 {
     static const uint16_t KICK[7] = {0x0001, 0x0401, 0x0041, 0x0081, 0x0801, 0x0021, 0x0A01};
-    static const uint16_t SNARE[3] = {0x0100, 0x4100, 0x0110};
+    static const uint16_t SNARE[3] = {0x0100, 0x4100, 0x8100};   /* 3; 3 and 4+; 3 and 4a (0.15.13: 0x0110 put a hit on 2 and blurred the half time) */
     static const uint16_t HAT[6] = {0x5555, 0x4444, 0x7777, 0x5D5D, 0xFFFF, 0x1515};
     static const uint16_t OPEN[4] = {0x0000, 0x0400, 0x0040, 0x4000};
     static const uint16_t PERC[4] = {0x0000, 0x2000, 0x0010, 0x0220};
@@ -365,7 +365,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 9}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
     {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
     {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 3}, {21, 4, 17, 19, 12}, {35, 24, 39, 15, 25}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
-    {{17, 21, 13, 19, 0}, {1, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {36, 24, 35, 41, 12}, {4, 8, 4}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},
+    {{17, 21, 13, 19, 0}, {1, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {36, 24, 35, 41, 12}, {8, 10, 8}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},   /* (funk's kick 0.15.13: Dusty and 909, not Break: its chops and crush broke the pocket) */
     {{13, 6, 17, 21, 19}, {9, 1, 8, 7, 5}, {12, 21, 15, 4, 16}, {34, 35, 18, 30, 31}, {8, 5, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 5}},
     {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {39, 27, 12, 26, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
     {{0, 5, 17, 2, 18}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
@@ -443,7 +443,6 @@ void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]) { en_piece_pats_g(0,
 void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
 {
     int s, l;
-    (void)i;
     for (l = 0; l < EN_NLANE; l++)
         for (s = 0; s < 16; s++)
             mod[l][s] = 0;
@@ -477,16 +476,20 @@ void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
         if (g == 14)
             mod[5][s] = (uint8_t)(2u << 6);                 /* amapiano: the shakers soft */
     }
-    if (g == 9) {
-        mod[3][7] = 2u;
-        mod[3][15] = 7u;
+    if (g == 9) {                                       /* trap's hat rolls (0.15.13: two a piece, on steps its hats play; x3 on step 8 never sounded) */
+        static const uint8_t ROLL[5][2] = {{14, 3}, {6, 2}, {10, 1}, {12, 4}, {14, 7}};   /* step, ratchet: x4, x3, x2, x6, swell 4 */
+        const int a = i % 5, b = (i + 2) % 5;
+        mod[3][ROLL[a][0]] = (uint8_t)(mod[3][ROLL[a][0]] & ~7u) | ROLL[a][1];
+        mod[3][ROLL[b][0]] = (uint8_t)(mod[3][ROLL[b][0]] & ~7u) | ROLL[b][1];
     }
 }
 
 static const char *const ETIME_NAME[6] = {"1/8", "3/16", "1/4", "1/4.", "1/2", "1 bar"};
 static const float ETIME_BEATS[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
-static const char *const LFO_RATE_NAME[8] = {"1/4", "1/2", "1 bar", "2 bars", "4 bars", "8 bars", "16 bars", "32 bars"};
-static const float LFO_RATE_BEATS[8] = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f, 32.0f, 64.0f, 128.0f};
+/* the LFOs' rates (0.15.13: 1/8, 1/8T, 1/16, 1/16T appended for the dubstep wobble; the stored values never renumbered) */
+#define NLFO_RATE 12
+static const char *const LFO_RATE_NAME[NLFO_RATE] = {"1/4", "1/2", "1 bar", "2 bars", "4 bars", "8 bars", "16 bars", "32 bars", "1/8", "1/8T", "1/16", "1/16T"};
+static const float LFO_RATE_BEATS[NLFO_RATE] = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f, 32.0f, 64.0f, 128.0f, 0.5f, 1.0f / 3.0f, 0.25f, 1.0f / 6.0f};
 static const char *const LFO_SHAPE_NAME[6] = {"Sine", "Triangle", "Saw", "Square", "S&H", "Drift"};
 static const char *const PAD_DEST_NAME[4] = {"Filter", "Level", "Pan", "Pitch"};
 static const char *const DRONE_DEST_NAME[4] = {"Cutoff", "Pitch", "Level", "Drive"};
@@ -569,7 +572,7 @@ void en_param_text(int i, int v, char *b)
     case P_KIT_KICK: case P_KIT_SNARE: case P_KIT_HAT: case P_KIT_PERC: s = EN_KIT_NAME[(unsigned)v < EN_NKIT ? v : 0]; break;
     case P_MODE: s = EN_MODE_NAME[(unsigned)v < EN_NMODES ? v : 0]; break;
     case P_ROOT: s = EN_NOTE_NAME[(unsigned)v < 12u ? v : 0]; break;
-    case P_PL_RATE: case P_DL_RATE: s = LFO_RATE_NAME[v & 7]; break;
+    case P_PL_RATE: case P_DL_RATE: s = LFO_RATE_NAME[(unsigned)v < NLFO_RATE ? v : 0]; break;
     case P_PL_SHAPE: case P_DL_SHAPE: s = LFO_SHAPE_NAME[(unsigned)v < 6u ? v : 0]; break;
     case P_PL_DEST: s = PAD_DEST_NAME[v & 3]; break;
     case P_DL_DEST: s = DRONE_DEST_NAME[v & 3]; break;
@@ -975,6 +978,13 @@ static float pfrand(void)
     return (float)(prng >> 8) * (1.0f / 16777216.0f);
 }
 static int irand(int n) { return n > 0 ? (int)((rnd() >> 8) % (uint32_t)n) : 0; }
+#ifdef EN_HOST
+void en_test_reseed(uint32_t s)                 /* the host tests: a block's random walk its own, not what the blocks before it used up */
+{
+    rng = s ? s : 0x9E3779B9u;
+    prng = 0x2545F491u ^ s;
+}
+#endif
 
 /* the MIDI out maps (en_midi_map): each part's channel (pad, pluck, bass, acid; MAP_OFF not sent) and a transposition for a sampler's root key,
  * each drum lane's channel and note (kick, snare, clap, closed hat, open hat, perc). Channels count from 0. */
@@ -1326,7 +1336,7 @@ static float frand(void);
 static void lfo_step(lfo_t *l, int rate, int shape, float n, float step_samples)
 {
     float p;
-    l->ph += n / (step_samples * 4.0f * LFO_RATE_BEATS[rate & 7]);
+    l->ph += n / (step_samples * 4.0f * LFO_RATE_BEATS[(unsigned)rate < NLFO_RATE ? rate : 0]);
     if (l->ph >= 1.0f) {
         l->ph -= (float)(int)l->ph;
         l->a = l->b;
@@ -2239,9 +2249,29 @@ static uint8_t riser_cut;                         /* the drop: the build's riser
 static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the next bar; this bar's; the DJ follows the chords; the drop's impact is due */
 /* SECTIONS by genre (audit M-13): what a breakdown keeps (the kick: house, techno, dub; the hats: drum and bass), how far the pad rises in it (percent),
  * how many bars a build takes (a trap's two, a house's eight), and whether the kick comes back for the build's last bar (the four on the floor) */
-static const struct { uint8_t kick, hat, build, pad, kret; } SECT[EN_NGENRE] = {
-    {1, 0, 4, 90, 1}, {0, 0, 2, 60, 0}, {1, 0, 8, 90, 1}, {1, 0, 4, 40, 0}, {1, 0, 4, 40, 0}, {0, 1, 4, 90, 0}, {0, 0, 4, 90, 0}, {0, 0, 4, 80, 0},
-    {0, 0, 4, 90, 1}, {0, 0, 2, 40, 0}, {0, 0, 4, 90, 1}, {0, 0, 4, 80, 0}, {0, 0, 4, 60, 0}, {0, 0, 4, 90, 1}, {0, 0, 4, 80, 0}, {0, 0, 2, 60, 0}};
+/* each genre's sections: what the breakdown keeps (kick, hats, snare, the bass line: a dub-out keeps drums and bass), the build's bars, how far the pad
+ * rises in the break, the kick back for the build's last bar; ft: the time plan (0.15.13, the DJ's dubstep): after a drop ft bars as written, ft bars at
+ * double time, then as written again, and the build's last two bars double; fl: SF_ROLL the build's last bar ends in 32nds and triplets, SF_WOB the
+ * drone's LFO steps through fast rates for 8 bars after the drop, SF_HROLL a fill rolls the hats too */
+enum { SF_ROLL = 1, SF_WOB = 2, SF_HROLL = 4, SF_GAP = 8, SF_PBUILD = 16, SF_PFILL = 32, SF_KDROP = 64 };   /* SF_GAP: the whole mix cut for the build's last beat;
+                                                 * SF_PBUILD: the build rolls on the perc, not the snare (genres that don't snare-roll); SF_PFILL: the triplet fill on the perc (garage's rim);
+                                                 * SF_KDROP: the kick drops out for the last beat of every 8th bar (techno) */
+static const struct { uint8_t kick, hat, build, pad, kret, snare, bass, ft, fl; } SECT[EN_NGENRE] = {
+    {1, 0, 4, 90, 1, 0, 0, 0, SF_KDROP}, {0, 0, 2, 60, 0, 0, 0, 0, SF_PBUILD}, {1, 0, 8, 90, 1, 0, 0, 0, SF_GAP}, {0, 0, 8, 80, 0, 0, 0, 8, SF_ROLL | SF_WOB | SF_GAP},
+    {1, 1, 4, 40, 0, 1, 1, 0, SF_PBUILD}, {0, 1, 8, 90, 0, 0, 0, 0, SF_ROLL | SF_GAP}, {1, 1, 4, 0, 0, 1, 0, 0, 0}, {0, 0, 4, 80, 0, 0, 0, 0, SF_PFILL},
+    {0, 0, 4, 90, 1, 0, 0, 0, 0}, {0, 0, 4, 40, 0, 0, 0, 0, SF_ROLL | SF_HROLL | SF_GAP}, {0, 0, 4, 90, 1, 0, 0, 0, SF_GAP}, {1, 1, 4, 0, 0, 1, 0, 0, 0},
+    {0, 0, 4, 60, 0, 0, 0, 0, SF_PBUILD}, {0, 0, 4, 90, 1, 0, 0, 0, SF_GAP}, {0, 0, 4, 80, 0, 0, 0, 0, SF_PBUILD}, {0, 0, 2, 60, 0, 0, 0, 0, SF_PBUILD}};
+/* (0.15.13, from the genre research: breaks and funk break to the drums alone; house, dubstep, DnB, trap, disco and synthwave cut the mix for the beat
+ * before the drop; lofi, dub, reggae, amapiano and trip-hop build on the perc, not with a snare roll; garage's triplet fill is on the rim) */
+/* the fills each genre may use (0.15.13): bit k is fill kind k (0 the ramp, 1-5 FILLS, 6 a triplet roll on the last beat): house and disco ramp and rush,
+ * dub and reggae drag and breathe, trap and dubstep roll */
+static const uint8_t FILL_OK[EN_NGENRE] = {0x3F, 0x16, 0x07, 0x49, 0x14, 0x7F, 0x7E, 0x5A, 0x3F, 0x64, 0x87, 0x9E, 0x14, 0x87, 0x12, 0x16};   /* (bit 7: a tom fill, the perc
+                                                 * falling: disco, funk, synthwave) */
+static uint8_t gap_on;                          /* the drop gap: the mix cut for the build's last beat (SF_GAP) */
+static float gap_g = 1.0f, perc_fall;           /* its gain; a tom fill's pitch, semitones under the perc's */
+static uint8_t grv_bars;                        /* bars of groove since the drop (the time plan) */
+static int8_t wob_rate = -1;                    /* the drone LFO's rate for this bar after a dubstep drop (-1: the piece's) */
+int en_build_len(void) { return SECT[chord_genre].build; }
 static int sec_n = 4;                           /* the build's length in bars (from SECT when it starts) */
 static float snr_rise;                          /* the snare's pitch, semitones: it climbs through a build */
 static uint8_t crash_next, fill_kind;           /* the next open hat is the drop's crash (long); this bar's fill */
@@ -2394,6 +2424,8 @@ static void section_cmd(int c)                  /* the player's: on the bar */
         drop_imp = 1;
         riser_cut = 1;
         drop_tonic = 0;
+        grv_bars = 0;
+        gap_on = 0;
         if (deg != 0 && nsteps > 1 && frand() < 0.7f) {   /* the drop lands at home, mostly */
             drop_tonic = 1;
             change_pending = 1;
@@ -2408,7 +2440,7 @@ static int kick_note(void) { return 28 + (par[P_ROOT] + 8) % 12; }   /* E1 .. Eb
 static void drum_fire(int d, float vel)
 {
     drum_t *v = &drum[d];
-    const float dec = d == L_OHAT && crash_next ? 1.0f : lane_dec[d], tf = fm_exp2f((lane_tune[d] + (d == L_SNARE ? snr_rise : 0.0f)) * (1.0f / 12.0f));
+    const float dec = d == L_OHAT && crash_next ? 1.0f : lane_dec[d], tf = fm_exp2f((lane_tune[d] + (d == L_SNARE ? snr_rise : d == L_PERC ? perc_fall : 0.0f)) * (1.0f / 12.0f));
     if (d == L_OHAT)
         crash_next = 0;
     v->on = 1;
@@ -2984,7 +3016,7 @@ static void bl_step(int st, int32_t w)
         return;
     if (st == 0)
         bl_beat = 0;
-    if (sec == SEC_BREAK)
+    if (sec == SEC_BREAK && !SECT[g].bass)
         return;
     switch (mode) {
     case 1: hit = BL_ROOT[g] >> st & 1; break;
@@ -3092,7 +3124,9 @@ static const uint8_t SLICE[8][16] = {
 static uint8_t chain_i, slice_perm;              /* the chain's place; the slice in force this bar (0 none) */
 static int pat_bit(uint16_t m, int ls, int poly) /* the lane's hit on step ls of its bar */
 {
-    const int tm = par[P_TIME];
+    const uint32_t ft = SECT[chord_genre].ft;
+    const int tm = par[P_TIME] ? par[P_TIME] :   /* the player's Time first; else the genre's time plan */
+                   ft && ((sec == SEC_GROOVE && grv_bars > ft && grv_bars <= 2u * ft) || (sec == SEC_BUILD && sec_bars <= 2)) ? 2 : 0;
     if (poly)
         return m >> ls & 1;
     if (tm == 1) {
@@ -3154,7 +3188,13 @@ static void tick(void)
         int tb = TRIG_BARS[(unsigned)par[P_DE_TRIG] < 6u ? par[P_DE_TRIG] : 0];
         fill_bar = fill_q;                      /* the fill the DJ asked for a bar ahead */
         fill_q = 0;
-        fill_kind = (uint8_t)((bars + (uint32_t)chord_genre * 2u) % 6u);   /* this bar's fill, if there is one: one of the six */
+        {   /* this bar's fill, if there is one: one the genre uses (FILL_OK), turning with the bars */
+            const uint32_t ok = FILL_OK[chord_genre];
+            uint32_t k = (bars + (uint32_t)chord_genre * 2u) % 8u, n;
+            for (n = 0; n < 8u && !(ok >> k & 1u); n++)
+                k = (k + 1u) % 8u;
+            fill_kind = (uint8_t)k;
+        }
         if (dj_sync && sec == SEC_GROOVE && en_playing && !en_frozen) {   /* the DJ follows the chords: the bar before a change is a fill, the change's bar a breakdown */
             if (change_pending)
                 section_cmd(EN_CMD_BREAK);
@@ -3166,6 +3206,13 @@ static void tick(void)
         if (sec_req) {
             section_cmd(sec_req - 1);
             sec_req = 0;
+        }
+        if (sec == SEC_GROOVE && grv_bars < 255u)
+            grv_bars++;                         /* (the drop set it to 0: its first bar is 1) */
+        gap_on = 0;
+        {   /* the wobble after a dubstep drop: the drone's LFO a different fast rate each bar for 8 bars */
+            static const int8_t WR[4] = {8, 10, 9, 1};   /* 1/8, 1/16, 1/8T, 1/2 */
+            wob_rate = (int8_t)((SECT[chord_genre].fl & SF_WOB) && sec == SEC_GROOVE && grv_bars >= 1u && grv_bars <= 8u ? WR[(bars * 3u + grv_bars) % 4u] : -1);
         }
         dd_bar();                               /* drum drift: a fill coming, or a change now */
         {   /* the acid's answer, Sync: Bar: this bar? (every 2nd .. 8th bar, or the bar before the drums change); Sync: Loop is decided where the line starts (acid_step) */
@@ -3202,6 +3249,9 @@ static void tick(void)
     drum_publish();
     lk_hat = 0;
     snr_rise = sec == SEC_BUILD ? 7.0f * (float)((sec_n - sec_bars) * 16 + st) / (float)(sec_n * 16) : 0.0f;   /* the snare climbs a fifth through a build */
+    if (sec == SEC_BUILD && sec_bars == 1 && st >= 12 && (SECT[chord_genre].fl & SF_GAP))
+        gap_on = 1;                             /* the drop gap: the beat before the drop, silence */
+    perc_fall = (fill_hold || fill_bar || (dd_fill && sec == SEC_GROOVE)) && fill_kind == 7 && st >= 8 ? -0.9f * (float)(st - 8) : 0.0f;
     for (l = 0; l < EN_NDRUM; l++) {
         const int llen = par[P_LLEN + l] < 16 && par[P_LLEN + l] >= 1 ? par[P_LLEN + l] : 16;
         const int ls = llen < 16 ? (int)(sixteenth % (uint32_t)llen) : st;   /* a shorter lane runs against the bar: polymeter */
@@ -3211,16 +3261,25 @@ static void tick(void)
         float vel = 0.9f;
         int32_t push = 0;
         int rat = 0;
+        if (l == L_KICK && sec == SEC_GROOVE && st >= 12 && (SECT[chord_genre].fl & SF_KDROP) && grv_bars % 8u == 0u)
+            hit = 0;                            /* techno: the kick out for the last beat of every 8th bar */
         if (sec == SEC_BREAK) {                 /* the breakdown: the drums stop, but for what the genre keeps (the kick, the hats) */
-            hit = hit && ((l == L_KICK && SECT[chord_genre].kick) || (l == L_HAT && SECT[chord_genre].hat));
+            hit = hit && ((l == L_KICK && SECT[chord_genre].kick) || (l == L_HAT && SECT[chord_genre].hat) || (l == L_SNARE && SECT[chord_genre].snare));
         } else if (sec == SEC_BUILD) {
-            if (l == L_KICK || l == L_CLAP || l == L_PERC) {
+            if (l == L_PERC && (SECT[chord_genre].fl & SF_PBUILD)) {   /* the build on the perc: eighths, then sixteenths, rising */
+                hit = sec_bars > 1 ? (st & 1) == 0 : st < 14;
+                vel = 0.3f + 0.6f * ((float)((sec_n - sec_bars) * 16 + st)) / (float)(sec_n * 16);
+            } else if (l == L_KICK || l == L_CLAP || l == L_PERC) {
                 hit = 0;
                 if (l == L_KICK && sec_bars == 1 && SECT[chord_genre].kret && (st == 0 || st == 8))   /* the kick comes back for the last bar: before the drop */
                     hit = 1;
+            } else if (l == L_SNARE && (SECT[chord_genre].fl & SF_PBUILD)) {
+                hit = 0;
             } else if (l == L_SNARE) {          /* the roll: quarters, eighths, sixteenths, and a breath before the drop */
                 hit = sec_bars > 2 ? (st & 3) == 0 : sec_bars == 2 ? (st & 1) == 0 : st < 14;
                 vel = 0.3f + 0.7f * ((float)((sec_n - sec_bars) * 16 + st)) / (float)(sec_n * 16);
+                if (sec_bars == 1 && (SECT[chord_genre].fl & SF_ROLL) && st >= 8 && st < 14)
+                    dbl = st >= 12 ? 2 : 1;     /* the last beats in 32nds, then triplets (dubstep, DnB, trap) */
             } else if (l == L_OHAT && sec_bars == 1) {   /* the last bar: the open hat on every eighth */
                 hit = (st & 1) == 0;
                 vel = 0.55f;
@@ -3228,14 +3287,30 @@ static void tick(void)
         } else if (sec == SEC_GROOVE && sec_req == EN_CMD_BREAK + 1 && (l == L_PERC || l == L_OHAT || (l == L_HAT && (st & 1)))) {
             hit = 0;                            /* the break is asked for: the rest of the bar thins out, so it comes as a release */
         }
+        if ((fill_hold || fill_bar || (dd_fill && st >= 8 && sec == SEC_GROOVE)) && l == L_PERC && st >= 8 &&
+            ((fill_kind == 6 && (SECT[chord_genre].fl & SF_PFILL)) || fill_kind == 7)) {   /* the fill on the perc: the rim in triplets (garage), or a tom falling */
+            hit = fill_kind == 7 ? st != 9 && st != 11 : st >= 12 || !(st & 1);
+            vel = 0.5f + 0.05f * (float)(st - 8);
+            dbl = fill_kind == 6 && st >= 12 ? 2 : 0;
+        }
         if ((fill_hold || fill_bar || (dd_fill && st >= 8 && sec == SEC_GROOVE)) && (l == L_SNARE || l == L_HAT)) {   /* FILL; the DJ's; drift's */
             if (!fill_kind) {                   /* the ramp: every step */
                 hit = 1;
                 vel = l == L_SNARE ? 0.35f + 0.04f * (float)st : 0.5f;
+            } else if (l == L_SNARE && st >= 8 && (fill_kind == 7 || (fill_kind == 6 && (SECT[chord_genre].fl & SF_PFILL)))) {
+                hit = 0;                        /* (the perc has the fill) */
+            } else if (l == L_SNARE && st >= 8 && fill_kind == 6) {   /* a triplet roll: the third beat in eighths, the last in triplets */
+                hit = st >= 12 || !(st & 1);
+                vel = 0.45f + 0.06f * (float)(st - 8);
+                dbl = st >= 12 ? 2 : 0;
             } else if (l == L_SNARE && st >= 8) {   /* one of the others, in the bar's second half; the hats play on */
                 const uint8_t fv = FILLS[fill_kind - 1][st];
                 hit = fv != 0;
                 vel = 0.1f * (float)fv + 0.1f;
+            } else if (l == L_HAT && st >= 8 && (SECT[chord_genre].fl & SF_HROLL)) {   /* trap: the hats roll, 32nds then triplets */
+                hit = 1;
+                vel = (st & 1) ? 0.45f : 0.6f;
+                dbl = st >= 12 ? 2 : 1;
             }
         }
         if (chop > 0.0f && sec == SEC_GROOVE && !fill_hold) {   /* breakcore: ghosts, and some hits rolled */
@@ -7236,7 +7311,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     {   /* the LFOs, and where the pad's goes */
         float d = (float)par[P_PL_DEPTH] * 0.01f;
         lfo_step(&pad_lfo, par[P_PL_RATE], par[P_PL_SHAPE], (float)n, step_len);
-        lfo_step(&drone_lfo, par[P_DL_RATE], par[P_DL_SHAPE], (float)n, step_len);
+        lfo_step(&drone_lfo, wob_rate >= 0 ? wob_rate : par[P_DL_RATE], par[P_DL_SHAPE], (float)n, step_len);
         pad_filt = par[P_PL_DEST] == 0 ? d * pad_lfo.v : 0.0f;
         pad_lvl = par[P_PL_DEST] == 1 ? 1.0f - 0.85f * d * (0.5f - 0.5f * pad_lfo.v) : 1.0f;
         pad_pan = par[P_PL_DEST] == 2 ? 0.9f * d * pad_lfo.v : 0.0f;
@@ -7309,6 +7384,18 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         RT(35, drums_wait_step((int32_t)k));
         out += 2 * k;
         n -= k;
+    }
+    if (gap_on || gap_g < 1.0f) {               /* the drop gap: out in ~6 ms, back in ~1 ms (the drop's first hit whole) */
+        uint32_t j;
+        for (j = 0; j < n0; j++) {
+            gap_g = gap_on ? fm_maxf(gap_g - 1.0f / (0.006f * EN_SR), 0.0f) : fm_minf(gap_g + 1.0f / (0.001f * EN_SR), 1.0f);
+            out0[2 * j] = (int32_t)((float)out0[2 * j] * gap_g);
+            out0[2 * j + 1] = (int32_t)((float)out0[2 * j + 1] * gap_g);
+            if (en_usb_out) {
+                en_usb_out[2 * j] = (int16_t)((float)en_usb_out[2 * j] * gap_g);
+                en_usb_out[2 * j + 1] = (int16_t)((float)en_usb_out[2 * j + 1] * gap_g);
+            }
+        }
     }
     if (hush || hush_g < 1.0f) {                /* the hush: ~6 ms each way */
         const float step = 1.0f / (0.006f * EN_SR), tgt = hush ? 0.0f : 1.0f;

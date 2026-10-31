@@ -411,12 +411,12 @@ columns are **KNOB1** to **KNOB4**.
 | Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO; hold **SEL** and turn it for bars or seconds) |
 | Pad | **ENV** | Level | Bright | Sound (24) | Detune |
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
-| Pad LFO | **ENV** x3 | Rate (a 1/4 note to 32 bars) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
+| Pad LFO | **ENV** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
 | Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Chorus (0-100) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
 | Progression | **ENV** x5, or hold **EDIT** | Slot (1-8, or a white key) | Chord (a chord of the scale, or Hold) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
-| Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
+| Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T for a fast wobble) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
 | Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, and nine named figures) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
@@ -608,19 +608,25 @@ a made-up title, such as `VELVET RAIN`, the same one every time.
 | HYPNO | 01-10 | 118-138 | The original hypnotic techno and acid set. |
 | LOFI | L01-L10 | 70-94 | Swung boom-bap. Rhodes chords in 7ths and 9ths over a warm bass, a soft sparse lead, the Dusty kit. Vinyl and tape latched on. |
 | HOUSE | H01-H10 | 118-126 | Four on the floor, claps on 2 and 4, open hats on the off-beats, stabs and organ, a sub or square bass, the House kit. The pump latched on. |
-| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, a wobble bass (its LFO moves the cutoff), a harsh lead, dark pads, chords in fourths. |
-| DUB | V01-V10 | 64-76 | One-drop, steppers and rockers rhythms. A sparse kick and rim, a deep bass on beats one and three, the off-beat chord chops (the skank), a long dotted echo and worn tape latched on. A breakdown keeps the kick. |
+| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, a wobble bass (its LFO moves the cutoff), a harsh lead, dark pads, chords in fourths. After a drop: 8 bars half time with the wobble changing speed each bar, then 8 bars at full time, then half time again. 8-bar builds that end in 32nds and triplets. |
+| DUB | V01-V10 | 64-76 | One-drop, steppers and rockers rhythms. A sparse kick and rim, a deep bass on beats one and three, the off-beat chord chops (the skank), a long dotted echo and worn tape latched on. A breakdown is a dub-out: the drums and the bass line go on, the rest falls away. |
 | DNB | N01-N10 | 170-178 | Two-step, liquid, roller, neuro, jump-up and half-time. The DnB kit, a shimmer reverb, a light pump and tape. |
 | BREAKS | B01-B10 | 100-135 | Patterns after classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat) and a big-beat stomp. Some are approximations. The Break kit, a gated reverb, tape and the phaser latched on. |
 | GARAGE | G01-G10 | 126-138 | Swung two-step, skippy beats and speed garage. A conga kick, rim shots that call and answer, the Minimal snare and House hats. Tape and a light pump. |
 | ELECTRO | E01-E10 | 118-130 | A syncopated kick, the clap on the backbeat, the Electro kit, a gated reverb. The phaser latched on. |
-| TRAP | T01-T10 | 130-150 | The long 808 bass (the Trap kit), the clap on beat 3, hat rolls. A shimmer reverb, and a pump under the 808. |
+| TRAP | T01-T10 | 130-150 | The long 808 bass (the Trap kit), the clap on beat 3, hats in 16ths with rolls (two per piece), an open hat and a rim. Fills roll the hats in 32nds and triplets. A shimmer reverb, and a pump under the 808. |
 | DISCO | S01-S10 | 112-126 | Four on the floor, accented open hats on the off-beats, a bass bouncing in octaves, strings and brass stabs, Wurli and clav, a little swing. |
-| FUNK | F01-F10 | 96-110 | Syncopated sixteenths, ghost snares and soft kick pickups, a funk bass figure, a clav line, sixteenth-note chords, the Break kit. |
+| FUNK | F01-F10 | 96-110 | Syncopated sixteenths, ghost snares and soft kick pickups, a funk bass figure, a clav line, sixteenth-note chords, the Dusty and 909 kicks. A breakdown is the drums alone. |
 | REGGAE | R01-R10 | 70-84 | One-drop, steppers and rockers, the rim a touch late, a melodic bass, an off-beat skank, a long echo, the Dusty kit. |
 | SYNTHWAVE | W01-W10 | 100-118 | A driving eighth-note bass, a gated reverb, a big accented snare, lots of chorus, an arpeggiating acid. (On the screen: SYNTHWV.) |
 | AMAPIANO | A01-A10 | 108-115 | A soft kick with shakers, a gliding syncopated bass (playing the log drum's part), jazzy 9ths, marimba and kalimba plucks. (On the screen: AMAPI.) |
 | TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back, ghost notes, vinyl noise, a pluck loop that comes round again, minor and sparse. |
+
+The sections follow each genre's habits too. House, dubstep, DnB, trap, disco and synthwave cut everything for the
+last beat before the drop. Lofi, dub, reggae, amapiano and trip-hop build on the perc instead of a snare roll. Breaks
+and funk break down to the drums alone. Each genre has its own fills: house and disco ramp and rush, dub and reggae
+drag, trap and dubstep roll in triplets, garage rolls its rim, and disco, funk and synthwave play a falling tom. In
+HYPNO the kick drops out for the last beat of every eighth bar.
 
 Pieces in the same genre differ in sound as well as in key and tempo. Each genre has a set of sounds for the
 pad, bass, acid, pluck and kits, and each piece takes one of each, picked by its number. The pluck's sound,
