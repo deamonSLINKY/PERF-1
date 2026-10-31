@@ -41,6 +41,7 @@ int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR
 void plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
 void plat_usb_host(int on);            /* the USB port as the host of a USB-MIDI device (on), or a device again (off); never kept */
 int plat_usb_host_msg(void);           /* what the host has to say since the last call: 0 nothing, PLAT_UH_* */
+void plat_usb_host_diag(char *b);      /* what its last search found, in a few words (up to 24 characters): "HUB 4 PORTS, HUB INSIDE" */
 enum { PLAT_UH_NONE, PLAT_UH_ON, PLAT_UH_OFF, PLAT_UH_MIDI, PLAT_UH_NOMIDI, PLAT_UH_LOW, PLAT_UH_LOST };   /* (usb_host.c's UH_MSG_*) */
 
 /* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */

@@ -121,9 +121,50 @@ int plat_usb_host_msg(void)
     uh.msg = UH_MSG_NONE;
     return m;
 }
+static char *diag_put(char *b, const char *s)
+{
+    while (*s)
+        *b++ = *s++;
+    *b = 0;
+    return b;
+}
+static char *diag_num(char *b, uint32_t v)
+{
+    char t[8];
+    int n = 0;
+    do
+        t[n++] = (char)('0' + v % 10u);
+    while ((v /= 10u) && n < 7);
+    while (n)
+        *b++ = t[--n];
+    *b = 0;
+    return b;
+}
+void plat_usb_host_diag(char *b)
+{
+    static const char *const STEP[7] = {"OK", "NO ANSWER", "NO ADDR", "NO CONFIG", "NO MIDI", "CFG REFUSED", "IF REFUSED"};
+    char *p = b;
+    *p = 0;
+    if (uh_d.root == 1) {
+        p = diag_put(p, "HUB ");
+        p = diag_num(p, uh_d.ports);
+        p = diag_put(p, uh_d.nested ? "P, HUB INSIDE" : uh_d.devs ? "P " : "P, NOTHING ON IT");   /* (23 characters at most: say) */
+        if (uh_d.nested || !uh_d.devs)
+            return;
+    }
+    if (uh_d.devs || uh_d.root == 2) {
+        p = diag_put(p, "C");
+        p = diag_num(p, uh_d.cls);
+        p = diag_put(p, " ");
+        p = diag_num(p, uh_d.cfg);
+        p = diag_put(p, "B ");
+        diag_put(p, STEP[uh_d.step % 7u]);
+    }
+}
 #else
 void plat_usb_host(int on) { (void)on; }
 int plat_usb_host_msg(void) { return 0; }
+void plat_usb_host_diag(char *b) { b[0] = 0; }
 #endif
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {

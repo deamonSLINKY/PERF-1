@@ -32,7 +32,15 @@ enum { UH_MSG_NONE, UH_MSG_ON, UH_MSG_OFF, UH_MSG_MIDI, UH_MSG_NOMIDI, UH_MSG_LO
 
 #define UH_ROOM 16u                                 /* a packet's events at most: the ring keeps the packet until it has room */
 static uint8_t uh_rx[64 + 4] __attribute__((aligned(4)));
-static uint8_t uh_cfg[320];                                  /* a configuration, cut short if longer */
+static uint8_t uh_cfg[768];                                  /* a configuration, cut short if longer (0.15.10: 768, was 320: a device
+                                                             * with audio and MIDI describes both, and the MIDI interface can come last) */
+static struct {                                             /* what the last search found (0.15.10, for the UI when there is no MIDI) */
+    uint8_t root;                                           /* 1 a hub, 2 a device */
+    uint8_t ports, nested, devs;                            /* the hub's ports; hubs found inside it (not searched); devices tried */
+    uint8_t cls, step;                                      /* the last device's class, and the step it stopped at (UH_D_*) */
+    uint16_t cfg;                                           /* its configuration's length, as it says */
+} uh_d;
+enum { UH_D_OK, UH_D_DEV, UH_D_ADDR, UH_D_CFG, UH_D_NOMIDI, UH_D_SETCFG, UH_D_SETIF };
 static struct {
     uint8_t want;                                       /* the menu (main loop) */
     uint8_t on;                                         /* the port is a host */
@@ -141,17 +149,33 @@ static int uh_probe(uint8_t depth, uh_midi_t *m)
     uint32_t total;
     int r;
     r = uh_ctl(0, 0x80, 6, 0x0100, 0, 8, d8, 8);        /* GET_DESCRIPTOR(device), first 8 bytes */
+    uh_d.step = UH_D_DEV;
     if (r < 8)
         return 0;
     mps = d8[7] == 16u || d8[7] == 32u || d8[7] == 64u ? d8[7] : 8u;
     cls = d8[4];
+    if (!depth)
+        uh_d.root = cls == 9u ? 1u : 2u;
+    if (cls == 9u && depth) {
+        uh_d.nested++;                                  /* a hub inside the hub: not searched */
+        return 0;
+    }
+    if (cls != 9u) {
+        uh_d.devs++;
+        uh_d.cls = cls;
+        uh_d.cfg = 0;
+    }
+    uh_d.step = UH_D_ADDR;
     if (uh_ctl(0, 0x00, 5, addr, 0, 0, 0, mps) < 0)     /* SET_ADDRESS */
         return 0;
     uh_wait(10);                                        /* the device settles to its new address */
+    uh_d.step = UH_D_CFG;
     r = uh_ctl(addr, 0x80, 6, 0x0200, 0, 9, uh_cfg, mps);
     if (r < 9)
         return 0;
     total = (uint32_t)(uh_cfg[2] | uh_cfg[3] << 8);
+    if (cls != 9u)
+        uh_d.cfg = (uint16_t)total;
     if (total > sizeof uh_cfg)
         total = sizeof uh_cfg;
     if (total > 9u) {
@@ -162,12 +186,16 @@ static int uh_probe(uint8_t depth, uh_midi_t *m)
     }
     if (cls == 9u)                                      /* a hub */
         return depth == 0u ? uh_hub_probe(addr, mps, uh_cfg[5], m) : 0;
+    uh_d.step = UH_D_NOMIDI;
     if (!uh_parse_midi(uh_cfg, total, m))
         return 0;
+    uh_d.step = UH_D_SETCFG;
     if (uh_ctl(addr, 0x00, 9, m->cfg, 0, 0, 0, mps) < 0)   /* SET_CONFIGURATION */
         return 0;
+    uh_d.step = UH_D_SETIF;
     if (m->alt && uh_ctl(addr, 0x01, 11, m->alt, m->iface, 0, 0, mps) < 0)   /* SET_INTERFACE */
         return 0;
+    uh_d.step = UH_D_OK;
     uh.dev = addr;
     return 1;
 }
@@ -220,6 +248,7 @@ static int uh_hub_probe(uint8_t addr, uint8_t mps, uint8_t cfgval, uh_midi_t *m)
     if (uh_ctl(addr, 0xA0, 6, 0x2900, 0, 9, b, mps) < 7)   /* hub descriptor */
         return 0;
     ports = b[2] > 7u ? 7u : b[2];
+    uh_d.ports = ports;
     good = (uint32_t)b[5] * 2u;                         /* bPwrOn2PwrGood, in 2 ms */
     for (p = 1; p <= ports; p++)
         uh_ctl(addr, 0x23, 3, 8, p, 0, 0, mps);         /* SET_FEATURE(PORT_POWER) */
@@ -321,6 +350,7 @@ static void uh_connect(void)
     sie_wr(S_POWER, 0);
     uh_wait(30);
     uh.next_addr = UH_FIRST_ADDR;
+    uh_d = (__typeof__(uh_d)){0};
     if (uh_probe(0, &m)) {
         uh_start_ep(&m);
         uh.msg = UH_MSG_MIDI;

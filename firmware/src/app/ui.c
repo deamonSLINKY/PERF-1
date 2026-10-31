@@ -1611,7 +1611,12 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
             static const char *const HM[7] = {0, "ON: PLUG IN A DEVICE", "OFF: USB AS BEFORE", "DEVICE CONNECTED", "NO MIDI DEVICE FOUND",
                                               "LOW SPEED: NOT SUPPORTED", "DEVICE LOST: LOOKING"};
             const int m = plat_usb_host_msg();
-            if (m > 0 && m < 7) {
+            if (m == PLAT_UH_NOMIDI) {           /* what it found instead, so the player can tell a hub inside a dock from a device with no MIDI */
+                static char d[28];
+                plat_usb_host_diag(d);
+                say("NO MIDI DEVICE", d[0] ? d : 0);
+                ui.msg_until = plat_ms() + 10000u;
+            } else if (m > 0 && m < 7) {
                 say("USB HOST", HM[m]);
                 ui.msg_until = plat_ms() + 2500u;
             }
