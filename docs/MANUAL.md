@@ -1411,6 +1411,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | - |
 | Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
+| MIDI IN | Notes: scale, pads | Channel: all, 1-16 | - | - |
 | Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |
@@ -1704,7 +1705,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -1779,6 +1780,20 @@ On the sampler:
 These maps follow the samplers' manuals and default settings (for the MPC Sample, the pad map in its default project). They haven't all been tried on the real boxes yet, so if a pad doesn't answer, check the sampler's MIDI settings first, and tell us what you found.
 
 **MIDI in:** notes on channel 1 add their note to the scale, or remove it if it's already there. MIDI clock and start / stop from other gear set the tempo, and `EXT` shows where the tempo usually is. The FM-1 listens on its USB MIDI port, and on the TRS MIDI input where the build has one.
+
+**Playing PERF-1 from a pad controller.** An MPC, or any box with pads that sends MIDI notes, can play PERF-1. Connect the pad box's MIDI out to the FM-1's TRS MIDI input with a 3.5 mm TRS MIDI cable (both ends type A for an MPC Sample), or over USB through a computer. Then open the **MIDI IN** settings page (hold **HOME**, then turn **SELECT** past SET) and set **Notes** to **Pads**. **Channel** listens to all channels, or only the one you pick.
+
+The pads are read in banks of 16, from note 36, the way an MPC's pads come out of the box (bank A is notes 36-51, bank B 52-67, and so on):
+
+| Bank | Pads |
+|---|---|
+| A | 1-6: the drums (kick, snare, clap, closed hat, open hat, perc), with the pad's velocity. 7: all the drums muted, or back. 9: breakdown. 10: build. 11: drop. 12: the next chord. 13: a fill. 14: freeze. 15: the auto-DJ on or off. 16: the next piece. The sections, chords and pieces wait for the bar, as from the panel. |
+| B | The pluck: each pad is the next note of the scale up from the root, so every pad is in key. |
+| C | The bass, the same way. |
+| D | The acid, the same way. |
+| E | The chords: pads 1-7 jump to the scale's chords I to VII at once. |
+
+On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its MIDI port to External for the TRS cable. With Notes on Pads, channel 1 notes no longer change the scale; set it back to Scale for that.
 
 **USB audio:** the FM-1 also shows up on a computer as a stereo USB audio input (16-bit, 44.1 kHz). It carries the master output, so you can record the FM-1 over the same cable. On the USB & MIDI settings page, the level can follow the **MASTER** knob (KNOB) or stay at a fixed level (FIXED, about the same as the knob at three quarters). With FIXED you can turn your speakers down without changing the recording.
 

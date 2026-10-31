@@ -10,13 +10,16 @@ static void fm1_delay_ms(uint32_t ms) { (void)ms; }
 #include "midi_uart.c"
 
 static int fails;
-static void feed(const uint8_t *b, uint32_t n)
+static uint32_t dma_w;                                   /* where the DMA writes next */
+static void feed_count(const uint8_t *b, uint32_t n, uint32_t count)   /* count: what the DMA's counter says (it once missed a byte) */
 {
-    uint32_t i, w = (um.rd + um.pend) & (UM_RING - 1u);
+    uint32_t i;
     for (i = 0; i < n; i++)
-        um_ring[(w + i) & (UM_RING - 1u)] = b[i];
-    uart_midi_take(n);
+        um_ring[(dma_w + i) & (UM_RING - 1u)] = b[i];
+    dma_w = (dma_w + n) & (UM_RING - 1u);
+    uart_midi_take(count);
 }
+static void feed(const uint8_t *b, uint32_t n) { feed_count(b, n, n); }
 static void want(const char *what, const uint32_t *pk, uint32_t n)
 {
     uint32_t i, got = mi_w - mi_r;
@@ -36,6 +39,11 @@ static void want(const char *what, const uint32_t *pk, uint32_t n)
 
 int main(void)
 {
+    {
+        uint32_t i;
+        for (i = 0; i < UM_RING; i++)
+            um_ring[i] = UM_EMPTY;
+    }
     {   /* a note on, then two more by running status, a clock in the middle of one */
         static const uint8_t b[] = {0x91, 60, 100, 62, 0xF8, 90, 64, 0};
         static const uint32_t p[] = {PK(0x91, 60, 100), RT(0xF8), PK(0x91, 62, 90), PK(0x91, 64, 0)};
@@ -70,6 +78,20 @@ int main(void)
         memcpy(b + sizeof b - 3, "\xB0\x4A\x63", 3);
         feed(b, sizeof b);
         want("overrun: resync on the next status", p, 1);
+    }
+    {   /* the count misses a byte (an MPC pad: note on, then its note off): the ring is read by content, so nothing waits for the next byte */
+        static const uint8_t b[] = {0x90, 36, 100}, c[] = {0x80, 36, 0};
+        static const uint32_t p[] = {PK(0x90, 36, 100)}, q[] = {PK(0x80, 36, 0)};
+        feed_count(b, sizeof b, sizeof b - 1);
+        want("a missed count: the note on is whole at once", p, 1);
+        feed_count(c, sizeof c, sizeof c);
+        want("and the note off after it, not a byte behind", q, 1);
+    }
+    {   /* a noise byte that looks like an empty slot is passed over */
+        static const uint8_t b[] = {0x90, 38, 90, UM_EMPTY, 0x80, 38, 0};
+        static const uint32_t p[] = {PK(0x90, 38, 90), PK(0x80, 38, 0)};
+        feed(b, sizeof b);
+        want("UM_EMPTY on the line: ignored", p, 2);
     }
     printf(fails ? "trs: %d FAILED\n" : "trs: ok\n", fails);
     return fails != 0;

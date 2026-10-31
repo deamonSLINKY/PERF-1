@@ -520,6 +520,14 @@ static int expect(const char *what, const char *val)
         got = en_chord_root;
     else if (!strcmp(what, "midimap"))            /* the MIDI out map (USB & MIDI page): 0 GM, 1 Model:Samples, 2 MPC Sample, 3 SP-404 */
         got = ui.midi_map;
+    else if (!strcmp(what, "minpads"))            /* MIDI in (MIDI IN page): pads on, the channel (0 all); a melodic pad's note sounding; a drum lit by a hit (its glow over half) */
+        got = ui.min_pads;
+    else if (!strcmp(what, "minch"))
+        got = ui.min_ch;
+    else if (!strncmp(what, "padnote", 7))
+        got = ui.pad_note[atoi(what + 7) % 48];
+    else if (!strncmp(what, "drumglow", 8))
+        got = en_drum_glow[atoi(what + 8) % EN_NDRUM] > 0.5f;
     else if (!strcmp(what, "progpos"))            /* the progression: the slot playing (-1 the walk), Play, Drift's unit, a slot's chord (0 none, 1.. a degree) and bars (1, 2, 4, 8) */
         got = en_prog_pos;
     else if (!strcmp(what, "prgplay"))

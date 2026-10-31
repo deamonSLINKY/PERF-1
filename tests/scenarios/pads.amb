@@ -1,0 +1,79 @@
+# MIDI in's pads (0.15.8, the MIDI IN settings page after SET): Notes PADS makes a pad controller (an MPC's default pad map: bank A from note 36)
+# play PERF. Bank A: the drums on pads 1-6, the performance on 7-16 (9 breakdown ...); banks B-D the pluck, bass, acid in key; bank E the chords.
+# Channel: all, or one. SCALE (the default) keeps channel 1 notes editing the scale, as before.
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+turn SELECT 3
+wait 100
+expect fxpage 26
+expect minpads 0
+expect minch 0
+spin K1 1
+wait 200
+expect minpads 1
+shot midi_in_page.png
+tap FX
+wait 200
+# the seeded piece is A natural minor: bank E pad 6 (note 105) is VI, F
+midi 90 69 64
+wait 300
+expect chordroot 5
+midi 80 69 00
+# bank E pad 1 (note 100): home, A
+midi 90 64 64
+wait 300
+expect chordroot 9
+# bank A pad 1 (note 36): the kick, at once
+midi 99 24 7F
+wait 20
+expect drumglow0 1
+midi 89 24 00
+# bank B pad 1 (note 52): the pluck on the root (A3 = 57), and its note off
+midi 90 34 64
+wait 50
+expect padnote0 57
+midi 80 34 00
+wait 50
+expect padnote0 0
+# bank C pad 3 (note 70): the bass on the scale's third tone (C4 = 60, played two octaves up the key: 84)
+midi 90 46 64
+wait 50
+expect padnote18 84
+midi 90 46 00
+wait 50
+expect padnote18 0
+# bank A pad 9 (note 44): the breakdown, on the bar
+midi 90 2C 64
+wait 2500
+expect sec 1
+# the channel: 2 only, so a pad on channel 1 does nothing
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 3
+wait 100
+expect fxpage 26
+spin K2 2
+wait 200
+expect minch 2
+tap FX
+wait 200
+midi 90 69 64
+wait 300
+expect chordroot 9
+midi 91 69 64
+wait 300
+expect chordroot 5
+# kept with the settings
+tap PLAY
+wait 5000
+reboot
+wait 3000
+expect minpads 1
+expect minch 2

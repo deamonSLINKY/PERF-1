@@ -214,6 +214,10 @@ spin K1 -1
 spin SELECT 1
 wait 100
 expect fxpage 25
+# the MIDI IN page (0.15.8): pads, the channel
+spin SELECT 1
+wait 100
+expect fxpage 26
 # Flex Beat's page, the last: its quantize (bar), mode (one shot), mix (all)
 spin SELECT 1
 wait 100

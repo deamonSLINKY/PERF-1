@@ -53,7 +53,7 @@ static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
  * page + knob. The gate's pattern is on the white keys, as the sequencer's steps. */
 enum { K_FXP = 230 };
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 26
+#define NFXP 27
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
@@ -97,6 +97,8 @@ static const uint8_t RAMP_BPM[5] = {0, 2, 4, 8, 12};
 static const char *const INTRO_NAME[5] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 MIN"};             /* the slow progression from Play */
 static const uint16_t INTRO_S[5] = {0, 60, 120, 240, 480};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
+static const char *const MIN_NAME[2] = {"SCALE", "PADS"};
+static const char *const MCH_NAME[17] = {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
 static const struct {
     const char *name;
     uint8_t bit;                        /* the effect (FX_*) held on while the page is up */
@@ -158,6 +160,7 @@ static const struct {
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
+    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 2}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -450,6 +453,8 @@ static struct {
     uint8_t fm_dy;                               /* the Settings page's Voices: 1, the DY set stands in for the DX voices (kept in set_t.usb's bit 1) */
     uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
+    uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); the channel listened to, 0 all (set_t.uiv[11]) */
+    uint8_t pad_note[48];                        /* the notes the melodic pads started (banks B-D), for their note-offs */
     uint32_t saver_t;
     float glide_f[4];                  /* a scene's FX knobs gliding: where they are, where they go, which */
     int8_t glide_t[4];
@@ -798,7 +803,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
            i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
-           i == 18 ? &ui.midi_map : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
+           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -2018,7 +2023,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 }
 
 /* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET) */
+static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 26, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET; 26: MIDI IN) */
 static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
 {
     int i;
@@ -2335,16 +2340,104 @@ static void button(int b)
     }
 }
 
-/* MIDI in (USB and the TRS jack): channel 1 notes add or remove their note from the scale; clock and
- * start / stop drive the grid */
+/* PADS ON MIDI IN (0.15.8, the MIDI IN page's Notes: PADS): a pad controller plays PERF, sixteen pads a bank from note 36 (an MPC's default
+ * pad map: bank A 36-51, B 52-67 ...; most pad controllers start at 36 too). Bank A: pads 1-6 the drums (kick, snare, clap, closed hat, open
+ * hat, perc), 7 all the drums muted or back, 9 breakdown, 10 build, 11 drop, 12 the next chord, 13 a fill, 14 freeze, 15 the auto-DJ, 16 the
+ * next piece (on the bar). Banks B, C, D: the pluck, the bass, the acid, a pad a note of the scale up from the root (as the Jam page's HARP),
+ * so every pad is in key. Bank E: pads 1-7 the chord on the scale's degrees I-VII, at once. */
+#define PADS_BASE 36
+static int pads_tone(int p, int base)           /* the p-th tone of the scale up from the root, from base */
+{
+    const uint32_t pool = pool_abs();
+    int m, cnt = 0;
+    for (m = base + sound_root(); m < 128; m++)
+        if (pool >> (m % 12) & 1u) {
+            if (cnt == p)
+                return m;
+            cnt++;
+        }
+    return 60;
+}
+static void pads_in(int on, int n, int v)
+{
+    static const uint8_t VC[3] = {EN_V_PLUCK, EN_V_DRONE, EN_V_ACID};
+    static const int8_t OFS[3] = {0, 24, 12};    /* (the engine plays the drone two octaves and the acid one below the key, as on Jam) */
+    const int k = n - PADS_BASE, bank = k >> 4, p = k & 15;
+    if (k < 0 || bank > 4)
+        return;
+    if (bank >= 1 && bank <= 3) {
+        uint8_t *mem = &ui.pad_note[(bank - 1) * 16 + p];
+        if (on) {
+            const int note = pads_tone(p, 48) + OFS[bank - 1];
+            if (bank == 1 && proj.par[P_CM_LVL] < 15)
+                knob_set(P_CM_LVL, 40);          /* the pluck has to be audible to be played */
+            if (*mem)
+                en_note(VC[bank - 1], *mem, 0);
+            *mem = (uint8_t)(note > 127 ? 127 : note);
+            en_note(VC[bank - 1], *mem, 1);
+        } else if (*mem) {
+            en_note(VC[bank - 1], *mem, 0);
+            *mem = 0;
+        }
+        return;
+    }
+    if (!on)
+        return;
+    if (bank == 4) {
+        if (p < 7) {
+            static const char *const RN[7] = {"I", "II", "III", "IV", "V", "VI", "VII"};
+            en_chord_deg(p);
+            say("CHORD", RN[p]);
+        }
+        return;
+    }
+    if (p < 6) {
+        en_drum_tap(p, v);
+        return;
+    }
+    switch (p) {
+    case 6:
+        undo_save();
+        ui.trk_m = (ui.trk_m & 15u) == 15u ? (uint8_t)(ui.trk_m & ~15u) : (uint8_t)(ui.trk_m | 15u);
+        say((ui.trk_m & 15u) ? "MUTE" : "UNMUTE", "ALL DRUMS");
+        break;
+    case 8: en_section(EN_CMD_BREAK); say("BREAKDOWN", "NEXT BAR"); break;
+    case 9: en_section(EN_CMD_BUILD); say("BUILD", "NEXT BAR"); break;
+    case 10: en_section(EN_CMD_DROP); say("DROP", "NEXT BAR"); break;
+    case 11: en_next(); say("NEXT CHORD", "ON THE BAR"); break;
+    case 12: en_fill_next(); say("FILL", "NEXT BAR"); break;
+    case 13: say("FREEZE", en_frozen ? "OFF" : "ON"); en_freeze(!en_frozen); break;
+    case 14:
+        ui.dj_on = (uint8_t)!ui.dj_on;
+        ui.dj_phase = 0;
+        ui.dj_n = 0;
+        ui.dj_round = 0;
+        ui.dj_fill = 0;
+        say("AUTO-DJ", ui.dj_on ? "ON" : "OFF");
+        break;
+    case 15:
+        if (en_playing) {
+            ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
+            say("NEXT PIECE", "NEXT BAR");
+        }
+        break;
+    default: break;
+    }
+}
+
+/* MIDI in (USB and the TRS jack): on the channel chosen (MIDI IN page; all by default), notes add or remove their note from the scale
+ * (channel 1 only, as before), or with PADS play PERF (pads_in); clock and start / stop drive the grid */
 static void midi_in(void)
 {
     uint32_t pkt;
     while (plat_midi_in(&pkt)) {
         uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = pkt >> 24;
+        const int ch_ok = !ui.min_ch || (st & 15u) == (uint32_t)(ui.min_ch - 1);
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
-        else if (st == 0x90u && v)
+        else if (ui.min_pads && ch_ok && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u))
+            pads_in((st & 0xF0u) == 0x90u && v, (int)n, (int)v);
+        else if (!ui.min_pads && st == 0x90u && v && ch_ok)
             toggle_note((int)(n % 12u));
     }
 }
@@ -5972,11 +6065,12 @@ static void settings_save(void)
             s.fxs[GENRE_FXS[i]] = set_disk.fxs[GENRE_FXS[i]];
     for (i = 0; i < 11; i++)
         s.uiv[i] = *uiv(i);
+    s.uiv[11] = ui.min_ch;                       /* (the spare byte: 0 in an older record, all channels) */
     s.gx_preset = ui.gx_preset;
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12);
+    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads & 1) << 15);
     s.viz = (uint8_t)(ui.viz | ui.centre_imp << 7);
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -6040,6 +6134,10 @@ static void settings_load(void)
                     fxp_set(k, s.usb >> (3 + 3 * (FXP[p].c[c].idx - 15)) & 7);
                 else if (FXP[p].c[c].idx == 18)
                     fxp_set(k, s.usb >> 12 & 7);
+                else if (FXP[p].c[c].idx == 19)
+                    fxp_set(k, s.uiv[11] <= 16u ? s.uiv[11] : 0);
+                else if (FXP[p].c[c].idx == 20)
+                    fxp_set(k, s.usb >> 15 & 1);
             } else if (kind == KN_TGT) {
                 fxp_set(k, s.gx_tgt);
             } else if (kind == KN_PTGT) {

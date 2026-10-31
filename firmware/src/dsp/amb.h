@@ -162,7 +162,9 @@ void en_dj_sync(int on);                       /* the auto-DJ follows the chord 
  * the drums on 10 with GM notes (as before). The others: amb.c MAPS. */
 enum { EN_MAP_GM, EN_MAP_MS, EN_MAP_MPC, EN_MAP_SP404, EN_NMAP };
 extern const char *const EN_MAP_NAME[EN_NMAP];
-void en_midi_map(int m);                        /* (the notes sounding are let go on the old map's channels first) */
+void en_midi_map(int m);
+void en_drum_tap(int d, int vel);               /* a drum hit by hand (a pad on MIDI in): lane d (kick, snare, clap, closed hat, open hat, perc), velocity 1-127 */
+void en_chord_deg(int d);                       /* the chord to the scale's degree d (0 the home chord) at once (a pad on MIDI in) */                        /* (the notes sounding are let go on the old map's channels first) */
 void en_intro(int secs);                       /* the intro (a setting): from Play the tracks come in one by one over this many seconds (the pad first, then hats, perc, kick, snare, bass, pluck, acid); 0 none */
 extern volatile float en_intro_k;              /* how far the intro is, 0..1 (1: in, or none) */
 extern volatile float en_drift_bars;           /* bars to the next chord change (the drift's), 99 when none is coming */

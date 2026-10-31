@@ -866,7 +866,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_MAP };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_MAP, C_DTAP, C_DEG };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -912,6 +912,8 @@ volatile uint8_t en_shed_level;
 static uint8_t shed3;                          /* shed level 3 (the chunk's copy): the first core gives up the Echoplex, the vinyl noise and the exact output clip */
 void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 3 ? 3 : level, 0); }
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
+void en_drum_tap(int d, int vel) { post(C_DTAP, d, vel < 1 ? 1 : vel > 127 ? 127 : vel); }
+void en_chord_deg(int d) { post(C_DEG, d < 0 ? 0 : d, 0); }
 void en_midi_map(int m) { post(C_MAP, (unsigned)m < (unsigned)EN_NMAP ? m : 0, 0); }
 void en_intro(int secs) { post(C_INTRO, secs < 0 ? 0 : secs > 1800 ? 1800 : secs, 0); }
 volatile float en_intro_k = 1.0f;
@@ -5750,6 +5752,14 @@ static void drain(void)
         case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
         case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
         case C_PROG: pg_lo = (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8; break;
+        case C_DTAP:
+            if ((unsigned)a < (unsigned)EN_NDRUM)
+                drum_hit(a, (float)b * (1.0f / 127.0f), 0);
+            break;
+        case C_DEG:
+            if (a < nsteps && a != deg)
+                chord_to(a);
+            break;
         case C_MAP:                              /* another map: the old one's notes let go first */
             if (a != midi_map) {
                 notes_off();
