@@ -12,11 +12,15 @@
 
 **0.15.2 is a second fix-up.** Its code is identical to development build 0.15.5.
 
+**0.16.0 is the fourth release.** Its code is identical to development build 0.15.27; the builds 0.15.6 to 0.15.27 in the git history are its steps.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Unreleased (the builds 0.15.6 .. are its steps)
+## 0.16.0 (the builds 0.15.6 .. 0.15.27 are its steps)
+
+**In short.** Your own chord progressions (8 slots from the scale, hold EDIT). Punch-in FILTER, DELAY and PHASE on the tracks you choose, and filter types for the pad, bass and acid. Industrial, the 17th genre. A set list of 16 pieces from any genre that PRESETS and the auto-DJ follow. The playing chord lit on the keys. PERF-1 played from other gear: an MPC's pads, a Model:Samples, an Akai MPK mini (keys, pads, knobs, pitch bend, mod wheel), with velocity on the synths, and its FX knobs sent out as CCs; SEL accents on the Jam page. The genres closer to how they are made. Fixes: knobs that count every click, Throw and Wash on the Perform screen, older backups that restore, a steadier TRS MIDI input. USB host mode is in, experimental.
 
 - **The MPK mini MK4's knobs turn smoothly** (0.15.27), found by the maker: they jumped from one end to the other. The MK4's knobs are endless and its factory program sends steps (1 a click right, 127 a click left), which were read as places. CC 24-31 are now steps: each click moves the setting from where it is, two of the FX knobs' and the mood's 100, a fiftieth of the acid's and bass's ranges. CC 70-77 (the older MPK minis') stay places.
 - **The MPK mini's pitch bend and mod wheel** (0.15.26), the maker's ask. Its pitch bend bends the voice the keys play two semitones each way, and its mod wheel puts a vibrato on it (5.5 Hz, up to half a semitone each way), on the pluck (plain: its phase; DX: the FM pitch, as the tune is added), the bass and the acid; not the pad, whose oscillators are spread through its sounds. Taken once a chunk. The mood moves to the eighth knob (it was the reverb; the mod wheel had it). Engine test, pitch by autocorrelation over a held note: full bend up gives 1.122 on the plain pluck, 1.123 on the DX, 1.127 on the bass, 1.122 on the acid (two semitones: 1.122). The chord-habits test gets its own random seed (the new block moved its walk; lofi read 0.10 against a limit of 0.08).
