@@ -158,6 +158,11 @@ void en_flex_select(int pat);                  /* the Flex Beat pattern the FX_F
 void en_flx_hold(int on);                      /* a Flex Beat pad is held down (not latched): a one shot goes on, bar after bar, while it is, and ends on the bar line after it is let go */
 void en_fill_next(void);                       /* a drum fill in the next bar (the auto-DJ asks one bar ahead: the fill is the last bar before the break) */
 void en_dj_sync(int on);                       /* the auto-DJ follows the chord changes: the engine fills the bar before one and breaks on it */
+/* MIDI OUT MAPS (0.15.7, the USB & MIDI page): where each part's notes go, so a sampler or groovebox plays them as it comes. GM: pad 1, pluck 2, bass 3, acid 4,
+ * the drums on 10 with GM notes (as before). The others: amb.c MAPS. */
+enum { EN_MAP_GM, EN_MAP_MS, EN_MAP_MPC, EN_MAP_SP404, EN_NMAP };
+extern const char *const EN_MAP_NAME[EN_NMAP];
+void en_midi_map(int m);                        /* (the notes sounding are let go on the old map's channels first) */
 void en_intro(int secs);                       /* the intro (a setting): from Play the tracks come in one by one over this many seconds (the pad first, then hats, perc, kick, snare, bass, pluck, acid); 0 none */
 extern volatile float en_intro_k;              /* how far the intro is, 0..1 (1: in, or none) */
 extern volatile float en_drift_bars;           /* bars to the next chord change (the drift's), 99 when none is coming */

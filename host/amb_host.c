@@ -518,6 +518,8 @@ static int expect(const char *what, const char *val)
         got = (int)(en_bass_level * 100.0f);
     else if (!strcmp(what, "chordroot"))
         got = en_chord_root;
+    else if (!strcmp(what, "midimap"))            /* the MIDI out map (USB & MIDI page): 0 GM, 1 Model:Samples, 2 MPC Sample, 3 SP-404 */
+        got = ui.midi_map;
     else if (!strcmp(what, "progpos"))            /* the progression: the slot playing (-1 the walk), Play, Drift's unit, a slot's chord (0 none, 1.. a degree) and bars (1, 2, 4, 8) */
         got = en_prog_pos;
     else if (!strcmp(what, "prgplay"))

@@ -866,7 +866,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2 };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_MAP };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -912,6 +912,7 @@ volatile uint8_t en_shed_level;
 static uint8_t shed3;                          /* shed level 3 (the chunk's copy): the first core gives up the Echoplex, the vinyl noise and the exact output clip */
 void en_shed(int level) { post(C_SHED, level < 0 ? 0 : level > 3 ? 3 : level, 0); }
 void en_dj_sync(int on) { post(C_DJSYNC, on ? 1 : 0, 0); }
+void en_midi_map(int m) { post(C_MAP, (unsigned)m < (unsigned)EN_NMAP ? m : 0, 0); }
 void en_intro(int secs) { post(C_INTRO, secs < 0 ? 0 : secs > 1800 ? 1800 : secs, 0); }
 volatile float en_intro_k = 1.0f;
 static int32_t intro_len, intro_t;              /* the intro's length and how far it is, samples (0 length: none) */
@@ -973,10 +974,60 @@ static float pfrand(void)
 }
 static int irand(int n) { return n > 0 ? (int)((rnd() >> 8) % (uint32_t)n) : 0; }
 
+/* the MIDI out maps (en_midi_map): each part's channel (pad, pluck, bass, acid; MAP_OFF not sent) and a transposition for a sampler's root key,
+ * each drum lane's channel and note (kick, snare, clap, closed hat, open hat, perc). Channels count from 0. */
+#define MAP_OFF 0xFFu
+typedef struct { uint8_t ch[4]; int8_t tr[4]; uint8_t dch[EN_NDRUM], dn[EN_NDRUM]; } midimap_t;
+const char *const EN_MAP_NAME[EN_NMAP] = {"GM", "M:Samples", "MPC Sample", "SP-404"};
+static const midimap_t MAPS[EN_NMAP] = {
+    {{0, 1, 2, 3}, {0, 0, 0, 0}, {9, 9, 9, 9, 9, 9}, {36, 38, 39, 42, 46, 37}},
+    /* Model:Samples (manual OS 1.13, 7.5): its six tracks on channels 1-6, the drums one a track at note 36 (the sample's own pitch: 12-60 is -24..+24);
+     * the melodic parts would land on its drum tracks, so they are not sent */
+    {{MAP_OFF, MAP_OFF, MAP_OFF, MAP_OFF}, {0, 0, 0, 0}, {0, 1, 2, 3, 4, 5}, {36, 36, 36, 36, 36, 36}},
+    /* MPC Sample: its default pad map is pad index + 36 (Melodee's transcription of blank.xpj, banks E-H; A is 36-51), so A01-A06 on channel 1;
+     * with MIDI In on All any channel plays the pads, so the melodic parts are not sent */
+    {{MAP_OFF, MAP_OFF, MAP_OFF, MAP_OFF}, {0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {36, 37, 38, 39, 40, 41}},
+    /* SP-404MKII, MIDI mode A (Roland's note map v5.50): channel 1 is bank A, notes 36-39 pads 13-16, 40-43 pads 9-12; channels 2-10 are banks B-J,
+     * so the melodic parts are not sent */
+    {{MAP_OFF, MAP_OFF, MAP_OFF, MAP_OFF}, {0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {36, 37, 38, 39, 40, 41}},
+};
+static volatile uint8_t midi_map;
 static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 {
-    if (par[P_MIDI] && !muted)
-        en_midi_out(st, d1, d2);
+    if (!par[P_MIDI] || muted)
+        return;
+    if (st < 0xF0u && (st & 15u) < 4u) {         /* a part's note: its channel on the map, transposed */
+        const midimap_t *m = &MAPS[midi_map];
+        const uint32_t p = st & 15u;
+        const int n = (int)d1 + m->tr[p];
+        if (m->ch[p] == MAP_OFF)
+            return;
+        st = (st & 0xF0u) | m->ch[p];
+        d1 = (uint32_t)(n < 0 ? 0 : n > 127 ? 127 : n);
+    }
+    en_midi_out(st, d1, d2);
+}
+static void midi_drum(int d, uint32_t vel)      /* a drum hit: its lane's channel and note (a note-off at once: one-shots) */
+{
+    const midimap_t *m = &MAPS[midi_map];
+    if (!par[P_MIDI] || muted || (unsigned)d >= (unsigned)EN_NDRUM)
+        return;
+    en_midi_out(0x90u | m->dch[d], m->dn[d], vel < 1u ? 1u : vel > 127u ? 127u : vel);
+    en_midi_out(0x80u | m->dch[d], m->dn[d], 0);
+}
+static void midi_all_off(void)                  /* all notes off on every channel the map uses */
+{
+    const midimap_t *m = &MAPS[midi_map];
+    uint32_t used = 0, c;
+    int k;
+    for (k = 0; k < 4; k++)
+        if (m->ch[k] != MAP_OFF)
+            used |= 1u << m->ch[k];
+    for (k = 0; k < EN_NDRUM; k++)
+        used |= 1u << m->dch[k];
+    for (c = 0; c < 16u; c++)
+        if (used >> c & 1u)
+            en_midi_out(0xB0u | c, 123, 0);
 }
 
 static float mtof(float n) { return 440.0f * tunefac * fm_exp2f((n - 69.0f) * (1.0f / 12.0f)); }
@@ -2419,8 +2470,7 @@ static void drum_fire(int d, float vel)
             lk_snare = fm_maxf(lk_snare, vel);
     }
     en_drum_glow[d] = 1.0f;
-    midi(0x99, v->note, (uint32_t)(vel * 100.0f));
-    midi(0x89, v->note, 0);
+    midi_drum(d, (uint32_t)(vel * 100.0f));
 }
 
 static void drum_hit(int d, float vel, int32_t wait)   /* wait: a swung sixteenth's delay */
@@ -3921,11 +3971,8 @@ static void regrow(void)                        /* a new piece: a fresh acid lin
 
 static void notes_off(void)
 {
-    int i;
     cm_midi_flush();
-    for (i = 0; i < 4; i++)
-        en_midi_out(0xB0 | (uint32_t)i, 123, 0);
-    en_midi_out(0xB9, 123, 0);
+    midi_all_off();
 }
 
 /* KEYS PLAYED ON A VOICE'S PAGE (en_note, from the UI): the pad takes up to four at once, each on one of its
@@ -5703,6 +5750,12 @@ static void drain(void)
         case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
         case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
         case C_PROG: pg_lo = (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8; break;
+        case C_MAP:                              /* another map: the old one's notes let go first */
+            if (a != midi_map) {
+                notes_off();
+                midi_map = (uint8_t)a;
+            }
+            break;
         case C_PROG2: prog_take(pg_lo, (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8); break;
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:

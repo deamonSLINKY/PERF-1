@@ -25,8 +25,13 @@ static uint32_t bass_n, kick_n, bass_lo = 999, bass_hi;   /* the bass line's not
 static uint32_t bass_pc[12];                    /* the bass line's note-ons by pitch class */
 static int cm_on_n, cm_off_n, cm_bal[128];      /* the pluck's note-ons and note-offs (channel 2), and each note's ons less offs */
 static uint32_t hat_t[512], hat_v[512], hat_n, blk_now, kick_last;   /* the closed hat's note-ons (GM 42): the block, the velocity, the blocks since the kick before (the step tricks' test) */
+static uint32_t map_on[16][128], map_cc;        /* the MIDI maps' test: note-ons by channel and note, the channels given all-notes-off */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
+    if ((st & 0xF0u) == 0x90u && d2)
+        map_on[st & 15u][d1 & 127u]++;
+    if ((st & 0xF0u) == 0xB0u && d1 == 123u)
+        map_cc |= 1u << (st & 15u);
     if (st == 0x91u) {
         cm_on_n++;
         cm_bal[d1 & 127u]++;
@@ -1823,6 +1828,53 @@ int main(void)
         printf("  pluck on MIDI: %d plain notes, %d DX notes, all let go\n", ons[0], ons[1]);
         en_init();
         en_play(1);
+    }
+
+    /* the MIDI out maps: GM as before; Model:Samples the drums one a track on channels 1-6 at note 36; MPC Sample and SP-404 the drums on channel 1,
+     * notes 36-41; the samplers get no melodic notes; Stop lets go on every channel the map uses */
+    {
+        int m, c, n;
+        for (m = 0; m < EN_NMAP; m++) {
+            uint32_t chans = 0, notes_ok = 1, total = 0, part = 0;
+            en_init();
+            en_play(0);
+            en_genre(2);                             /* house: four on the floor, hats, a bass line and an acid */
+            en_set(P_MIDI, 1);
+            en_set(P_CM_LVL, 60);
+            en_midi_map(m);
+            en_regrow();
+            memset(map_on, 0, sizeof map_on);
+            en_play(1);
+            run(6.0f);
+            for (c = 0; c < 16; c++)
+                for (n = 0; n < 128; n++)
+                    if (map_on[c][n]) {
+                        chans |= 1u << c;
+                        total += map_on[c][n];
+                        if (m == EN_MAP_MS)
+                            notes_ok &= c < 6 && n == 36;
+                        else if (m != EN_MAP_GM)
+                            notes_ok &= c == 0 && n >= 36 && n <= 41;
+                        else
+                            part += c < 4;
+                    }
+            map_cc = 0;
+            en_play(0);
+            run(0.1f);
+            if (m == EN_MAP_GM) {
+                CHECK((chans >> 9 & 1u) && part > 0, "MIDI map GM: drums on 10 and the parts on 1-4 (channels 0x%x)", (unsigned)chans);
+                CHECK((map_cc & 0x20Fu) == 0x20Fu, "MIDI map GM: all-notes-off on 1-4 and 10 (0x%x)", (unsigned)map_cc);
+            } else {
+                CHECK(total > 20 && notes_ok, "MIDI map %s: %u hits, every one on its channel and note (channels 0x%x)", EN_MAP_NAME[m], (unsigned)total, (unsigned)chans);
+                CHECK(m != EN_MAP_MS || ((chans & 9u) == 9u), "MIDI map M:Samples: the kick (track 1) and the closed hat (track 4) play (0x%x)", (unsigned)chans);
+                CHECK(map_cc == (m == EN_MAP_MS ? 0x3Fu : 0x1u), "MIDI map %s: all-notes-off on its channels only (0x%x)", EN_MAP_NAME[m], (unsigned)map_cc);
+            }
+        }
+        printf("  MIDI maps: GM, Model:Samples, MPC Sample, SP-404\n");
+        en_init();
+        en_midi_map(EN_MAP_GM);
+        en_play(1);
+        run(0.1f);
     }
 
     /* stop: the tails die away */

@@ -1,0 +1,30 @@
+# the MIDI map (0.15.7): the USB & MIDI settings page's fourth knob sends MIDI out's parts where a sampler plays them as it comes (GM, Model:Samples,
+# MPC Sample, SP-404); kept with the settings across power-off
+seed 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+turn SELECT 1
+wait 100
+expect fxpage 24
+expect midimap 0
+spin K4 1
+wait 200
+expect midimap 1
+shot midimap.png
+spin K4 5
+wait 100
+expect midimap 3
+spin K4 -1
+wait 100
+expect midimap 2
+tap HOME
+wait 300
+tap PLAY
+wait 5000
+reboot
+wait 3000
+expect midimap 2

@@ -1410,7 +1410,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | - |
 | Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
-| USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | - |
+| USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
 | Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |
@@ -1424,7 +1424,7 @@ What some of these mean:
 - **Roll.** From and To set the speed the repeats start and end at. Each sets how often a roll happens.
 - **Riser.** Time is how long it takes to climb. Filter, Wash and Echo set how much of each it builds up.
 - **Settings page.** Key is the drop's key change (section 13). Saver is the screensaver. Lights makes the key lights follow the music. Voices chooses which set of thirty built-in DX7 voices the pluck's `DX` sounds use (section 7).
-- **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. Scanlines darkens every other row of the screen by a quarter, like an old CRT TV.
+- **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. Scanlines darkens every other row of the screen by a quarter, like an old CRT TV. MIDI map chooses where the notes go (section 14).
 - **Repeat page.** Pitch makes each repeat step toward that pitch over four beats while you hold the key, which sounds like a build. Every repeat still starts on the beat grid. Decay makes each repeat quieter than the last, for a dub-style tail. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh grabs a fresh slice of the newest music every beat or bar, which DJs call a slip roll. It only works where there's enough recent music held to do it.
 
 **The Gate page.** The white keys show the pattern's steps. They're lit where the gate opens, and the step that's playing is marked. Press a key to edit a step, and the pattern becomes "custom". A pattern of 12 or 10 steps against the bar of 16 drifts against the beat and comes back around, which is called a polymeter. **Gate 16** and **Gate 8** share this page.
@@ -1704,7 +1704,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
 | Theme, Tune, MIDI out | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level and Scanlines, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -1758,6 +1758,25 @@ The theme, Tune and MIDI out apply to all pieces.
 | Drums | 10 (General MIDI drum notes) |
 
 It also sends MIDI clock (the tempo signal other gear follows) with start, continue and stop. A pluck note lasts as long as it sounds (a plain sound's decay, or a DX voice's key time), and its level is sent as the velocity. The DJ snips are not sent. Notes you play by hand go out on their voice's channel. You can switch MIDI out off on the USB & MIDI settings page.
+
+**MIDI map: playing a sampler's drums.** The fourth knob on the USB & MIDI page sends the drums where a sampler plays them with little or no setup on the sampler. Load your kick, snare, clap, closed hat, open hat and perc samples as shown below. The samplers' maps send the drums and the clock only: the pad, pluck, bass and acid would land on the sampler's other pads or tracks, so they aren't sent.
+
+| Map | Kick | Snare | Clap | Closed hat | Open hat | Perc |
+|---|---|---|---|---|---|---|
+| GM | ch 10, note 36 | 38 | 39 | 42 | 46 | 37 |
+| M:Samples | track 1 (ch 1) | track 2 (ch 2) | track 3 (ch 3) | track 4 (ch 4) | track 5 (ch 5) | track 6 (ch 6) |
+| MPC Sample | pad A01 (ch 1, note 36) | A02 (37) | A03 (38) | A04 (39) | A05 (40) | A06 (41) |
+| SP-404 | pad 13 of bank A (ch 1, note 36) | pad 14 (37) | pad 15 (38) | pad 16 (39) | pad 9 (40) | pad 10 (41) |
+
+The FM-1 sends MIDI over its USB port only (its TRS jack is an input), and the samplers are USB devices too. So the notes need a computer in between (route the FM-1's MIDI to the sampler in your music software), or a USB MIDI host box that joins two USB devices.
+
+On the sampler:
+
+- **Model:Samples:** its tracks listen on channels 1-6 as they come. Each hit is note 36, the sample's own pitch. Set the MIDI input to USB (or MIDI, for a host box with a DIN or TRS out), and turn clock in on to follow PERF-1's tempo.
+- **MPC Sample:** set the MIDI port to USB (or External), Pad MIDI In on, the MIDI In channel to All or 1, and MIDI Sync In to MIDI Clock. The notes follow the MPC's default pad map, bank A.
+- **SP-404MKII:** set MIDI mode A, where channel 1 plays bank A, and MIDI Sync to Auto. The pads are counted as Roland counts them: 13 to 16 is the bottom row.
+
+These maps follow the samplers' manuals and default settings (for the MPC Sample, the pad map in its default project). They haven't all been tried on the real boxes yet, so if a pad doesn't answer, check the sampler's MIDI settings first, and tell us what you found.
 
 **MIDI in:** notes on channel 1 add their note to the scale, or remove it if it's already there. MIDI clock and start / stop from other gear set the tempo, and `EXT` shows where the tempo usually is. The FM-1 listens on its USB MIDI port, and on the TRS MIDI input where the build has one.
 
