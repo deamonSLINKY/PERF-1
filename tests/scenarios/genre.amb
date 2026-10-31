@@ -159,6 +159,17 @@ expect tempo 78
 peakreset
 wait 2500
 expect peak_db_min -40
+# industrial (0.15.14): its second piece, 132 BPM
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 16
+expect tempo 132
+peakreset
+wait 2500
+expect peak_db_min -40
+shot genre_indus.png
 # round to the first again; its piece 1 as it was
 press GLO
 turn PRESET 1

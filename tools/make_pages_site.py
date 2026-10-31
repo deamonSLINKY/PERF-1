@@ -67,7 +67,7 @@ for img in [*(SRC / "docs" / "img").glob("perf-screen-*.png"), *(SRC / "docs" / 
 (OUT / "index.html").write_text(f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PERF-1</title><link rel="icon" href="img/favicon.png">
-<meta name="description" content="PERF-1: live-performance firmware for the M-VAVE FM-1: sixteen genres of generative pieces, an auto-DJ, effects, a web editor and DX7 voices.">
+<meta name="description" content="PERF-1: live-performance firmware for the M-VAVE FM-1: seventeen genres of generative pieces, an auto-DJ, effects, a web editor and DX7 voices.">
 <style>
 :root{{--bg:#140e0c;--panel:#2a1e1b;--line:#4e3831;--text:#f4e8c8;--dim:#a68c7e;--acc:#ffd447;--red:#e0344f}}
 @media (prefers-color-scheme:light){{:root{{--bg:#f6efe2;--panel:#ebe0cc;--line:#cdbb9f;--text:#2a1c16;--dim:#7a6657;--acc:#a86b00;--red:#b3203a}}}}
@@ -83,7 +83,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <img class="logo" src="img/slinky.png" alt="the PERF-1 slinky">
 <h1>PERF<span>-1</span></h1>
 <p class="tag">Free firmware that turns the M-VAVE FM-1 into a groovebox that plays by itself. By deamonSLINKY. Version <span class="v">{ver}</span>.</p>
-<p>Switch it on and music starts: drums, bass, a pad, an acid line and a plucked melody, in sixteen styles from techno to reggae. You steer it with the buttons and keys: change the chords, break it down and drop it back in, mute parts, throw on effects, or let the auto-DJ run the show. When you want more, nearly everything can be edited and saved. New here? Start with the beginner's guide.</p>
+<p>Switch it on and music starts: drums, bass, a pad, an acid line and a plucked melody, in seventeen styles from techno to reggae. You steer it with the buttons and keys: change the chords, break it down and drop it back in, mute parts, throw on effects, or let the auto-DJ run the show. When you want more, nearly everything can be edited and saved. New here? Start with the beginner's guide.</p>
 <div class="grid">
 <a class="card" href="install/"><b>Install</b><span>Install it from this website in Chrome or Edge, with the FM-1 plugged in. You can go back to the original firmware the same way.</span></a>
 <a class="card" href="emu/"><b>Try it in your browser</b><span>Play with PERF-1 on screen, with sound, before you install anything.</span></a>

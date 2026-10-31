@@ -220,8 +220,13 @@ static const int16_t X_AMAPIANO[] = {P_CH_LOOP, 1, P_PULSE, 70, P_DRIVE, 15, P_S
 static const int16_t X_TRIPHOP[] = {P_CH_LOOP, 1, P_PULSE, 72, P_DRIVE, 40, P_SWING, 36,   /* (swing 36, 59 %, 0.15.13: the MPC shuffle; was 18) */ P_PAD, 50, P_ACID, 25, P_BASS, 80, P_AC_DENS, 25, P_AC_LEN, 12, P_ECHO, 45, P_REVERB, 50, P_SIZE, 70, P_RV_DAMP, 55,
     P_NOISE, 20, P_NZ_COLOR, 7, KIT(8), P_PATTERN, 0, P_EVOLVE, 30, P_BL_MODE, 1, P_BL_LEN, 75, P_BL_MOVE, 12, P_CM_VU, 55, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 30,
     P_MC_RATIO, 3, P_MC_THR, 45, P_MC_MAKE, 32, -1};
-static const int16_t *const XBASE[12] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP};
-static const uint8_t XROW[12][10][7] = {
+/* INDUSTRIAL (0.15.14, genre 17): industrial techno, EBM and industrial breakbeat, 118-145 BPM, phrygian and minor, suspended and fourths chords; driven,
+ * harsh and detuned drums (the snare a tritone up, the perc a semitone off), a gated reverb, a 3/16 echo, the tape latched */
+static const int16_t X_INDUS[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 40, P_BL_MOVE, 15, P_BL_GLIDE, 10, P_CM_VU, 40, P_GHOST, 50, P_HUMAN, 10, P_PULSE, 85, P_DRIVE, 75,
+    P_SWING, 4, P_DETUNE, 40, P_PAD, 40, P_ACID, 50, P_BASS, 80, P_AC_DENS, 55, P_AC_LEN, 16, P_AC_RES, 65, P_ECHO, 30, P_ETIME, 1, P_REVERB, 30, P_RV_TYPE, 2, P_RV_X, 30,
+    KIT(6), TU(1), 25, TU(5), 4, TU(0), -8, P_PATTERN, 0, P_EVOLVE, 45, P_MC_RATIO, 4, P_MC_THR, 38, P_MC_MAKE, 35, -1};
+static const int16_t *const XBASE[13] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP, X_INDUS};
+static const uint8_t XROW[13][10][7] = {
     {{70, 9, 5, 5, 0, 0, 0}, {66, 2, 1, 5, 0, 0, 0}, {72, 7, 2, 5, 0, 0, 0}, {68, 0, 5, 5, 0, 0, 0}, {74, 4, 1, 5, 0, 0, 0}, {64, 5, 5, 2, 0, 0, 0}, {76, 10, 1, 5, 0, 0, 0}, {70, 3, 2, 5, 0, 0, 0}, {66, 6, 5, 5, 0, 0, 0}, {72, 11, 1, 2, 0, 0, 0}},
     {{174, 9, 1, 3, 0, 9, 4}, {172, 2, 5, 2, 1, 1, 15}, {174, 5, 3, 3, 3, 9, 11}, {175, 4, 2, 6, 7, 4, 14}, {174, 0, 5, 4, 11, 3, 2}, {176, 7, 1, 2, 5, 9, 4}, {170, 10, 5, 3, 2, 1, 15}, {175, 6, 2, 4, 7, 13, 13}, {172, 11, 1, 2, 0, 9, 11}, {178, 3, 5, 6, 11, 2, 14}},
     {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 4, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 1, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
@@ -234,8 +239,10 @@ static const uint8_t XROW[12][10][7] = {
     {{108, 9, 5, 1, 10, 0, 26}, {112, 4, 5, 2, 20, 10, 24}, {104, 0, 0, 1, 2, 5, 25}, {116, 7, 1, 2, 9, 1, 30}, {100, 2, 5, 1, 5, 22, 26}, {110, 5, 1, 2, 10, 0, 24}, {118, 10, 5, 1, 20, 10, 25}, {106, 3, 0, 2, 2, 5, 28}, {114, 6, 5, 1, 9, 1, 30}, {102, 11, 1, 2, 5, 22, 26}},
     {{112, 9, 5, 3, 0, 9, 16}, {110, 4, 1, 3, 5, 1, 4}, {108, 2, 1, 2, 16, 8, 18}, {113, 7, 5, 3, 2, 21, 15}, {111, 0, 0, 2, 23, 9, 16}, {109, 5, 1, 3, 0, 1, 4}, {114, 10, 5, 3, 5, 9, 18}, {112, 3, 4, 3, 16, 8, 15}, {110, 6, 5, 3, 2, 21, 16}, {115, 11, 1, 3, 23, 9, 4}},
     {{84, 9, 5, 2, 7, 9, 15}, {78, 4, 2, 3, 2, 1, 17}, {72, 2, 1, 2, 16, 8, 4}, {88, 7, 5, 3, 5, 3, 20}, {80, 0, 5, 2, 1, 9, 11}, {70, 5, 2, 2, 7, 1, 15}, {86, 10, 1, 3, 2, 8, 17}, {76, 3, 5, 2, 16, 3, 4}, {82, 6, 2, 3, 5, 9, 20}, {74, 11, 5, 2, 7, 1, 11}},
+    {{128, 4, 2, 4, 7, 13, 2}, {132, 9, 5, 6, 13, 20, 14}, {135, 2, 2, 6, 14, 4, 3}, {118, 7, 7, 4, 6, 2, 27}, {130, 0, 2, 4, 7, 3, 2}, {140, 5, 2, 6, 13, 13, 14},
+     {122, 11, 5, 4, 14, 20, 3}, {145, 1, 2, 6, 7, 4, 2}, {126, 10, 7, 4, 6, 3, 27}, {142, 6, 2, 6, 13, 2, 14}},   /* industrial: 118-145 (techno at 135, breakbeat at 140-145) */
 };
-static const uint16_t XPAT[12][6][6] = {
+static const uint16_t XPAT[13][6][6] = {
     {{0x0100, 0x0100, 0x0000, 0x4444, 0x0000, 0x0000}, {0x1111, 0x0100, 0x0000, 0x5555, 0x0000, 0x0000}, {0x2111, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0100, 0x0100, 0x0000, 0x0000, 0x4000, 0x0000}, {0x0101, 0x0100, 0x0100, 0x4444, 0x0000, 0x2020}, {0x1111, 0x1010, 0x0000, 0x4444, 0x4040, 0x0000}},
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0401, 0x1010, 0x8080, 0xFF7F, 0x0000, 0x4040}, {0x0405, 0x1010, 0x8080, 0xFFFF, 0x0000, 0x0000}, {0x0401, 0x1010, 0x0000, 0x4444, 0x0000, 0x8008}, {0x0409, 0x1010, 0x0000, 0x5555, 0x0000, 0x4080}, {0x4041, 0x0100, 0x0100, 0x5555, 0x1000, 0x0000}},
     {{0x2445, 0x1010, 0x8A80, 0xDF7F, 0x2080, 0x0000}, {0x4181, 0x1010, 0x0000, 0x51D5, 0x0400, 0x0000}, {0x0C83, 0x1010, 0x0000, 0x0000, 0x5555, 0x0000}, {0x0501, 0x9090, 0x0000, 0x5555, 0x0000, 0x0000}, {0x4405, 0x1010, 0x1010, 0x5555, 0x8000, 0x0080}, {0x0005, 0xF510, 0x1000, 0x0155, 0x0000, 0x0000}},
@@ -248,8 +255,11 @@ static const uint16_t XPAT[12][6][6] = {
     {{0x1111, 0x1010, 0x1010, 0x5555, 0x0000, 0x0000}, {0x1111, 0x1010, 0x1010, 0xFFFF, 0x0000, 0x0808}, {0x1151, 0x1010, 0x1010, 0x5555, 0x4000, 0x0000}, {0x1111, 0x1010, 0x1010, 0x5D5D, 0x0000, 0x8080}, {0x0101, 0x0100, 0x0100, 0x5555, 0x0000, 0x0000}, {0x1115, 0x1010, 0x1010, 0xFFFF, 0x4040, 0x0000}},
     {{0x1111, 0x0000, 0x1010, 0x5555, 0x4444, 0x2424}, {0x1101, 0x0000, 0x1010, 0x7777, 0x4444, 0x2A2A}, {0x1111, 0x0100, 0x1010, 0xFFFF, 0x4444, 0x8484}, {0x1151, 0x0000, 0x1010, 0x5D5D, 0x4000, 0x2424}, {0x1111, 0x1000, 0x1010, 0x5555, 0x4444, 0x0A0A}, {0x1131, 0x0000, 0x1010, 0xDDDD, 0x0000, 0x2222}},   /* (0.15.13: the open hat on the off-beats in four rows) */
     {{0x0401, 0x1010, 0x0000, 0x5555, 0x0000, 0x0000}, {0x0481, 0x1010, 0x0000, 0x5D5D, 0x0000, 0x0220}, {0x0109, 0x1010, 0x0000, 0x5555, 0x4000, 0x0000}, {0x0421, 0x9010, 0x0000, 0xDDDD, 0x0000, 0x8080}, {0x0201, 0x1010, 0x1010, 0x5555, 0x0040, 0x0000}, {0x4401, 0x1090, 0x0000, 0xFFFF, 0x0000, 0x2020}},
+    {{0x0405, 0x9290, 0x0000, 0x5555, 0x4000, 0x2020}, {0x2449, 0x1010, 0x8000, 0xDDDD, 0x0404, 0x2222}, {0x0421, 0x0100, 0x4100, 0xDDDD, 0x0000, 0x4924},
+     {0x1249, 0x1010, 0x0000, 0x5555, 0x8000, 0x0000}, {0x1111, 0x1010, 0x4444, 0xFFFF, 0x0000, 0x0808}, {0x1405, 0xED10, 0x1000, 0x0055, 0x4000, 0x9200}},   /* industrial: broken
+                                                 * (Amen ghosts), off-beat kick, half-time grind (perc 3 against 4), dotted, EBM stomp, a fill */
 };
-static const char *const XNAME[12][10] = {
+static const char *const XNAME[13][10] = {
     {"V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10"},
     {"N01", "N02", "N03", "N04", "N05", "N06", "N07", "N08", "N09", "N10"},
     {"B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10"},
@@ -262,6 +272,7 @@ static const char *const XNAME[12][10] = {
     {"W01", "W02", "W03", "W04", "W05", "W06", "W07", "W08", "W09", "W10"},
     {"A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"},
     {"P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10"},
+    {"I01", "I02", "I03", "I04", "I05", "I06", "I07", "I08", "I09", "I10"},
 };
 static void x_pats(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE])
 {
@@ -341,7 +352,7 @@ static const char *const PIECE_NAME[EN_NPIECES] = {"01", "02", "03", "04", "05",
 
 const char *en_piece_name(int i) { return PIECE_NAME[(unsigned)i < EN_NPIECES ? i : 0]; }
 static const int16_t *const *const GENRE_PIECES[EN_NGENRE] = {PIECES, LOFI_PIECES, HOUSE_PIECES, DUB_PIECES};
-static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP"};
+static const char *const GENRE_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP", "INDUS"};
 const char *en_genre_name(int g) { return GENRE_NAME[(unsigned)g < EN_NGENRE ? g : 0]; }
 const char *en_piece_name_g(int g, int i)
 {
@@ -370,8 +381,11 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {39, 27, 12, 26, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
     {{0, 5, 17, 2, 18}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
     {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {35, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
+    {{7, 13, 14, 6, 11}, {13, 20, 4, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
+                                                 * Hollow; Metal, Gnarl, Reese, Grit, Dirty; Driven, Fold, Sync, Hyper, Saw; TUBUL-BELL, TEMPLEBELL, Gong, Bleep, Digital; the Hard
+                                                 * kick (the Break kit's chop in a third of the pieces), Break and Hard snares, Techno hats, a Hard clank */
 };
-static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 0, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
+static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 0, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0, 3};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
 static void vary(int g, int i, int16_t *par)
 {
     const int pw = g * 3 + i, h = i / 5;
@@ -476,7 +490,11 @@ void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
         if (g == 14)
             mod[5][s] = (uint8_t)(2u << 6);                 /* amapiano: the shakers soft */
     }
-    if (g == 9) {                                       /* trap's hat rolls (0.15.13: two a piece, on steps its hats play; x3 on step 8 never sounded) */
+    if (g == 16) {                                      /* industrial: the snare's last 16th in triplets, the perc doubled before it */
+        mod[1][15] = 2u;
+        mod[5][13] = 1u;
+    }
+    if (g == 9 || g == 16) {                            /* trap's (and industrial's) hat rolls (0.15.13: two a piece, on steps its hats play; x3 on step 8 never sounded) */
         static const uint8_t ROLL[5][2] = {{14, 3}, {6, 2}, {10, 1}, {12, 4}, {14, 7}};   /* step, ratchet: x4, x3, x2, x6, swell 4 */
         const int a = i % 5, b = (i + 2) % 5;
         mod[3][ROLL[a][0]] = (uint8_t)(mod[3][ROLL[a][0]] & ~7u) | ROLL[a][1];
@@ -1786,6 +1804,7 @@ static const struct { uint8_t tonic, cad_every, cad_to, back, hr, dom; ch_edge_t
     {3, 4, 6, 0, 2, 0, {{0, 5, 8}, {5, 2, 8}, {2, 6, 8}, {6, 0, 7}, {6, 5, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* synthwave: i-VI-III-VII */
     {2, 8, 4, 0, 4, 1, {{1, 4, 10}, {4, 0, 9}, {0, 1, 5}, {0, 3, 4}, {3, 1, 5}, {5, 1, 5}, {0, 0, 0}, {0, 0, 0}}},   /* amapiano: jazzy turnarounds */
     {5, 8, 6, 0, 4, 0, {{0, 5, 5}, {5, 0, 7}, {0, 3, 4}, {3, 0, 6}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* trip-hop: minor, sparse, home */
+    {5, 4, 1, 1, 2, 0, {{0, 1, 9}, {1, 0, 9}, {0, 6, 4}, {6, 0, 4}, {0, 4, 3}, {4, 1, 3}, {0, 0, 0}, {0, 0, 0}}},    /* industrial: the grind between i and the flat II */
 };
 static volatile uint8_t chord_genre;
 void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
@@ -2260,12 +2279,13 @@ static const struct { uint8_t kick, hat, build, pad, kret, snare, bass, ft, fl; 
     {1, 0, 4, 90, 1, 0, 0, 0, SF_KDROP}, {0, 0, 2, 60, 0, 0, 0, 0, SF_PBUILD}, {1, 0, 8, 90, 1, 0, 0, 0, SF_GAP}, {0, 0, 8, 80, 0, 0, 0, 8, SF_ROLL | SF_WOB | SF_GAP},
     {1, 1, 4, 40, 0, 1, 1, 0, SF_PBUILD}, {0, 1, 8, 90, 0, 0, 0, 0, SF_ROLL | SF_GAP}, {1, 1, 4, 0, 0, 1, 0, 0, 0}, {0, 0, 4, 80, 0, 0, 0, 0, SF_PFILL},
     {0, 0, 4, 90, 1, 0, 0, 0, 0}, {0, 0, 4, 40, 0, 0, 0, 0, SF_ROLL | SF_HROLL | SF_GAP}, {0, 0, 4, 90, 1, 0, 0, 0, SF_GAP}, {1, 1, 4, 0, 0, 1, 0, 0, 0},
-    {0, 0, 4, 60, 0, 0, 0, 0, SF_PBUILD}, {0, 0, 4, 90, 1, 0, 0, 0, SF_GAP}, {0, 0, 4, 80, 0, 0, 0, 0, SF_PBUILD}, {0, 0, 2, 60, 0, 0, 0, 0, SF_PBUILD}};
+    {0, 0, 4, 60, 0, 0, 0, 0, SF_PBUILD}, {0, 0, 4, 90, 1, 0, 0, 0, SF_GAP}, {0, 0, 4, 80, 0, 0, 0, 0, SF_PBUILD}, {0, 0, 2, 60, 0, 0, 0, 0, SF_PBUILD},
+    {0, 1, 4, 50, 1, 0, 0, 0, SF_ROLL | SF_HROLL | SF_GAP}};   /* industrial: the hats grind on through the break, the kick back for the build's last bar */
 /* (0.15.13, from the genre research: breaks and funk break to the drums alone; house, dubstep, DnB, trap, disco and synthwave cut the mix for the beat
  * before the drop; lofi, dub, reggae, amapiano and trip-hop build on the perc, not with a snare roll; garage's triplet fill is on the rim) */
 /* the fills each genre may use (0.15.13): bit k is fill kind k (0 the ramp, 1-5 FILLS, 6 a triplet roll on the last beat): house and disco ramp and rush,
  * dub and reggae drag and breathe, trap and dubstep roll */
-static const uint8_t FILL_OK[EN_NGENRE] = {0x3F, 0x16, 0x07, 0x49, 0x14, 0x7F, 0x7E, 0x5A, 0x3F, 0x64, 0x87, 0x9E, 0x14, 0x87, 0x12, 0x16};   /* (bit 7: a tom fill, the perc
+static const uint8_t FILL_OK[EN_NGENRE] = {0x3F, 0x16, 0x07, 0x49, 0x14, 0x7F, 0x7E, 0x5A, 0x3F, 0x64, 0x87, 0x9E, 0x14, 0x87, 0x12, 0x16, 0x70};   /* (bit 7: a tom fill, the perc
                                                  * falling: disco, funk, synthwave) */
 static uint8_t gap_on;                          /* the drop gap: the mix cut for the build's last beat (SF_GAP) */
 static float gap_g = 1.0f, perc_fall;           /* its gain; a tom fill's pitch, semitones under the perc's */
@@ -2937,12 +2957,13 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
  * takes the first again), so a figure of four hits plays the same each bar. Move is how often a note goes up an octave, to the fifth or to the
  * scale note below the root instead. The fifth is the perfect fifth unless the chord has an altered one (bl_fifth; a 9th, Dub or Fourths chord
  * leaves the fifth out of its voicing, and the line used to take the chord's third tone, the seventh, for it). A breakdown plays none. */
-static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x0501, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401, 0x5555, 0x4529, 0x0149, 0x5555, 0x2449, 0x0401};
+static const uint16_t BL_ROOT[EN_NGENRE] = {0x1111, 0x0421, 0x1111, 0x0401, 0x0501, 0x0441, 0x1121, 0x0449, 0x5555, 0x2401, 0x5555, 0x4529, 0x0149, 0x5555, 0x2449, 0x0401, 0x0405};
 typedef struct { uint16_t mask; int8_t iv[4]; } bl_fig_t;
 static const bl_fig_t BL_RIFF[EN_NGENRE] = {
     {0x5555, {0, 0, 12, 0}},  {0x0421, {0, 7, 5, 0}},   {0x4444, {0, 0, 12, 0}},  {0x0401, {0, 0, -2, 0}},  {0x0501, {0, 0, 7, 5}},
     {0x0441, {0, 0, 7, 5}},   {0x1121, {0, 0, 12, 7}},  {0x0449, {0, 7, 0, 12}},  {0x5555, {0, 0, 12, 0}},  {0x2401, {0, 0, 12, 7}},
-    {0x5555, {0, 12, 0, 12}}, {0x0509, {0, 12, 7, 0}},  {0x0149, {0, 0, 7, 5}},   {0x5555, {0, 0, 12, 0}},  {0x2449, {0, 0, 7, 0}},   {0x0401, {0, 0, -2, 0}}};
+    {0x5555, {0, 12, 0, 12}}, {0x0509, {0, 12, 7, 0}},  {0x0149, {0, 0, 7, 5}},   {0x5555, {0, 0, 12, 0}},  {0x2449, {0, 0, 7, 0}},   {0x0401, {0, 0, -2, 0}},
+    {0x1249, {0, 1, 0, -2}}};                    /* industrial: the dotted 3-3-3-3-4 grind on root, flat II, root, flat VII */
 static const bl_fig_t BL_FIG[EN_NBLFIG] = {      /* the figures by name (the bass line's modes 7 ..): see BL_FIG_NAME */
     {0x5555, {0, 12, 0, 12}},                   /* Octaves: eighths, root and octave (disco) */
     {0x0441, {0, 0, 12, 0}},                    /* Two-step: 1, and-of-2, and-of-3 (garage, drum and bass) */
@@ -3100,7 +3121,7 @@ static void flx_tick(int st);
 static uint64_t fx_on;
 /* The pad's comping: the steps of the bar its stabs fall on. Comp 2 .. 8 chooses one; Auto takes the genre's (hypnotic: the off-beats, as ever). */
 static const uint16_t COMP_MASK[7] = {0x4444, 0x1111, 0x4949, 0x0041, 0x2448, 0x0401, 0x5555};   /* off-beat, on-beat, 3-3-2, Charleston, syncopated, sparse, eighths */
-static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4444, 0x0408, 0x0A48, 0x2448, 0x2222, 0x0401, 0x4545, 0x2448, 0x4444, 0x0401, 0x2448, 0x0401};
+static const uint16_t COMP_GENRE[EN_NGENRE] = {0x4444, 0x0041, 0x4949, 0x0401, 0x4444, 0x0408, 0x0A48, 0x2448, 0x2222, 0x0401, 0x4545, 0x2448, 0x4444, 0x0401, 0x2448, 0x0401, 0x1249};
 static uint16_t comp_mask(void)
 {
     const int c = par[P_PAD_COMP];
@@ -3109,8 +3130,8 @@ static uint16_t comp_mask(void)
 static int comp_hit(int st) { return comp_mask() >> st & 1; }
 
 /* The genre's ghost notes: steps where a soft snare (or kick) may sound that the pattern does not have, with the chance Ghosts gives (at 100: six in ten). */
-static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0, 0x8200, 0xC288, 0x0408, 0, 0, 0, 0x8A48, 0, 0, 0, 0x8280};
-static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0x4400};
+static const uint16_t GHOST_SN[EN_NGENRE] = {0, 0x8480, 0x0200, 0, 0, 0x8200, 0xC288, 0x0408, 0, 0, 0, 0x8A48, 0, 0, 0, 0x8280, 0x8A20};
+static const uint16_t GHOST_KK[EN_NGENRE] = {0, 0x4400, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0, 0x2200, 0, 0, 0, 0x4400, 0x0880};
 
 /* THE PHRASE. Chain: from the bar line the pattern is the chain's next (the bars of 1 2 / 1 1 1 2 / 1 1 2 3 / the Amen's 1 1 3 4 / 1 2 1 3 / 1 2 3 4 / 1 2 3 2 / 1 1 1 5 /
  * all six), so a piece has a phrase of its own and drum drift's changes give way to it. Slice: the drum steps read in another order (halves swapped, a beat stuttered,

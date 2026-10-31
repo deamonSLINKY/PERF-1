@@ -6,7 +6,7 @@
 
 <div class="cols">
 
-**What it is.** PERF-1 turns the M-VAVE FM-1 into a groovebox that makes up music as it plays. Five tracks start when you switch it on: a slow pad, a bass, a 303-style acid line, a plucked counter-melody and drums you can program, all written on the spot from the key, scale and chord, in sixteen genres of ten pieces. You steer: break it down, build it, drop it, mute and solo, throw effects, edit the drums, play along, store what you like, and record it over the same USB cable (the FM-1 is a USB audio and MIDI device). By deamonSLINKY; a fork of HYP-1 (RedtailWorks), itself a fork of AMB-1 (Charles Vestal). GPL-3.0-only, no warranty. It's still in development and can crash.
+**What it is.** PERF-1 turns the M-VAVE FM-1 into a groovebox that makes up music as it plays. Five tracks start when you switch it on: a slow pad, a bass, a 303-style acid line, a plucked counter-melody and drums you can program, all written on the spot from the key, scale and chord, in seventeen genres of ten pieces. You steer: break it down, build it, drop it, mute and solo, throw effects, edit the drums, play along, store what you like, and record it over the same USB cable (the FM-1 is a USB audio and MIDI device). By deamonSLINKY; a fork of HYP-1 (RedtailWorks), itself a fork of AMB-1 (Charles Vestal). GPL-3.0-only, no warranty. It's still in development and can crash.
 
 ## Install in five steps
 
@@ -356,7 +356,7 @@ The 27 keys become an instrument and never edit the scale. **Voice**: pluck, pad
 
 ## Genres, pieces and what is kept
 
-Sixteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through the bank (01-10, wraps round); **GLO** held + **PRESETS**, or Global's Genre knob, changes bank. The piece number stays, and the genre's own effects come with it (lofi latches vinyl and tape, house the pump; switching first clears latched vinyl, tape, pump and phaser). Each piece has its own settings, six patterns and drum sounds, a set of sounds by its number and a made-up title (`VELVET RAIN`); each genre its own compressor, reverb, stab rhythm, ghost notes, chord habits and section lengths. Power-on always starts in HYPNO on a random piece.
+Seventeen **genres**, each a bank of ten **pieces**. **PRESETS** steps through the bank (01-10, wraps round); **GLO** held + **PRESETS**, or Global's Genre knob, changes bank. The piece number stays, and the genre's own effects come with it (lofi latches vinyl and tape, house the pump; switching first clears latched vinyl, tape, pump and phaser). Each piece has its own settings, six patterns and drum sounds, a set of sounds by its number and a made-up title (`VELVET RAIN`); each genre its own compressor, reverb, stab rhythm, ghost notes, chord habits and section lengths. Power-on always starts in HYPNO on a random piece.
 
 | Genre | Tag | BPM | What it is |
 |---|---|---|---|
@@ -376,6 +376,7 @@ Sixteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through the
 | SYNTHWAVE | W01 | 100-118 | A driving eighth-note bass, gated reverb, a big snare, lots of chorus, an arpeggiating acid. (SYNTHWV) |
 | AMAPIANO | A01 | 108-115 | A soft kick with shakers, a gliding syncopated bass (the log drum), jazzy 9ths, marimba, kalimba. (AMAPI) |
 | TRIPHOP | P01 | 70-88 | Slow and dusty, the snare laid back, ghosts, vinyl noise, a pluck loop that comes round; minor, sparse. |
+| INDUS | I01 | 118-145 | Industrial: harsh tuned drums, broken kicks, phrygian. |
 
 | HYPNO | Character | BPM | Key | HYPNO | Character | BPM | Key |
 |---|---|---|---|---|---|---|---|
@@ -427,7 +428,7 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 
 **The editor** has two tabs. **Sound**: every setting of the piece playing, with the FM-1's page names and ranges, plus a page for the rest (lane levels, tunings, decays, chances, lengths; pans and sends; octaves; by-hand switches). Changes play at once; store the piece on the FM-1 to keep them. **DX7 voices**: read the 16 slots, edit a voice (name, algorithm, feedback, LFO, pitch envelope, each operator's level, ratio, envelope, scaling, velocity); **Live** sends each change as you make it; load `.syx` banks, save a slot or the bank as `.syx`.
 
-**Your own DX7 voices**: up to 16, kept after power-off, after the Pluck page's 30 built-in DX sounds. From the installer: **Load DX7 voices**, choose `.syx` files (32-voice banks, single voices, bare 4096-byte banks), tick up to 16, press **Send the chosen voices**. **Clear the loaded voices** empties the slots. From any librarian app, a 32-voice bank dump to the FM-1's USB MIDI port replaces the loaded voices with its first 16; a single-voice dump adds one after the last. The header says `DX7 VOICES 16 LOADED`, `1 ADDED` or `BAD CHECKSUM` (a damaged file). Levels aren't matched (adjust the pluck's Level). A piece stores the pluck's sound by slot number. Free banks: Bobby Blues' DX7 archive, Soundarchive, Yamaha Black Boxes (licences are their authors').
+**Your own DX7 voices**: up to 16, kept after power-off, after the Pluck page's 30 built-in DX sounds. From the installer: **Load DX7 voices**, choose `.syx` files (32-voice banks, single voices, bare 4096-byte banks), tick up to 16, press **Send the chosen voices**. **Clear the loaded voices** empties the slots. A librarian app's bank dump to the FM-1's USB MIDI port works too (the first 16; a single voice adds one). Levels aren't matched; a piece stores the slot number. Free banks: Bobby Blues' DX7 archive, Soundarchive, Yamaha Black Boxes (licences are their authors').
 
 **The emulator** runs the firmware in the browser. Drag or scroll a knob, click buttons and keys; Shift-click (or right-click) holds a button until the next click. **New start** restarts it (stored pieces stay, in that browser); **Forget stored** clears them. Keys: Space PLAY, Enter REC, Esc HOME, V / L / P ENV / LFO / ARP, M SEQ (hold it for the sequencer), O / C / N GLO / EDIT / SEL, backtick FX, B SAVE, Z / X OCT- / OCT+, Up / Down SELECT, Q-I and A-K the white keys 1-8 and 9-16, 1-0 and - the black keys 1-11.
 
