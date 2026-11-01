@@ -2,51 +2,10 @@
 # groove the engine's root rises; the next breakdown puts it back. The piece's own root is left alone.
 seed 0
 wait 3000
-press SEL
-tap FX
-release SEL
-wait 100
-# (talk and wah come after the flanger now: two more turns to the same pages)
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-# (the Repeat page, 23, walks before the sweep since 0.14.10: one more turn)
-spin SELECT 1
+# the key change is on the SETTINGS page, the first of the settings' walk (HOME held, 0.16.1)
+press HOME
+wait 800
+release HOME
 wait 100
 expect fxpage 18
 spin K1 1

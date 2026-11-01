@@ -55,8 +55,10 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 31
+#define NFXP 33
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
+#define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
+#define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
 static const char *const RATE_NAME[7] = {"1/2", "1/4", "1/6", "1/8", "1/16", "1/32", "1/64"};          /* the roll's rates */
 static const char *const RTIME_NAME[4] = {"1/2 BEAT", "1 BEAT", "2 BEATS", "4 BEATS"};         /* beats at each rate */
 static const char *const PRATE_NAME[5] = {"1/2", "1/4", "1/8", "1/16", "KICK"};                        /* the pump's period, in notes */
@@ -100,6 +102,11 @@ static const uint8_t RAMP_BPM[5] = {0, 2, 4, 8, 12};
 static const char *const INTRO_NAME[5] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 MIN"};             /* the slow progression from Play */
 static const uint16_t INTRO_S[5] = {0, 60, 120, 240, 480};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
+static const char *const XMIX_NAME[5] = {"CUT", "4 BARS", "8 BARS", "16 BARS", "32 BARS"};       /* the SET page's Mix: how long the next piece glides to its tempo */
+static const uint8_t XMIX_BARS[5] = {0, 4, 8, 16, 32};
+static const char *const SMPM_NAME[4] = {"ALL", "DRUMS", "SYNTHS", "BY KEY"};                   /* the SAMPLE page: what a run plays, or a key a sound */
+static const char *const SMPG_NAME[4] = {"0.5 S", "1 S", "2 S", "4 S"};
+static const uint16_t SMP_GAP_MS[4] = {500, 1000, 2000, 4000};
 static const char *const MIN_NAME[4] = {"SCALE", "PADS", "M:S", "MPK"};
 static const char *const CC_NAME[4] = {"OFF", "IN", "OUT", "IN+OUT"};
 static const char *const FT_NAME[5] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK"};
@@ -150,8 +157,8 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
-                         {"Voices", KN_NAME, 13, VOICES_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set */
+    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Voices", KN_NAME, 13, VOICES_NAME, 2}, {"", KN_NONE, 0, 0, 0},
+                         {"", KN_NONE, 0, 0, 0}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set; Saver and Lights on SCREEN (0.16.1) */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SNIPS", 62, 0, {{"Pitch", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 3}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
@@ -163,8 +170,8 @@ static const struct {
     /* the JAM page's four knobs (the UI's own: uiv 7 .. 10): not an FX page, the dial never walks to it */
     {"REPEAT", FX_RPT2, 1, {{"Pitch", KN_NAME, EN_FXS_RP_PITCH, RPP_NAME, 25}, {"Decay", KN_PLAIN, EN_FXS_RP_DECAY, 0, 0},
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
-    {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}}},   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
-    {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the set: rounds a piece, the tempo's climb, the intro */
+    {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}, {"", KN_NONE, 0, 0, 0}}},   /* (Scanlines on SCREEN, 0.16.1) */   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
+    {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"Mix", KN_NAME, 24, XMIX_NAME, 5}}},   /* the set: rounds a piece, the tempo's climb, the intro; the mix into the next piece (0.16.1) */
     {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 4}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"Knob CCs", KN_NAME, 22, CC_NAME, 4}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 5}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
     {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, FT_NAME, 5}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
@@ -173,6 +180,10 @@ static const struct {
                              {"", KN_NONE, 0, 0, 0}}},   /* those tracks into the echo (at the piece's echo time) */
     {"PHASE", FX_TPHASE, 0, {{"Rate", KN_PLAIN, EN_FXS_TP_RATE, 0, 0}, {"Depth", KN_PLAIN, EN_FXS_TP_DEPTH, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_TP_MIX, 0, 0},
                              {"Targets", KN_NAME, EN_FXS_TP_TGT, EN_PT_NAME, EN_NPT}}},   /* a phaser on them */
+    {"SCREEN", 63, 0, {{"Zoom", KN_NAME, 23, ONOFF_NAME, 2}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
+                       {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}}},   /* (0.16.1) the screen's settings together; Zoom: a knob turned shows its name and value across the screen */
+    {"SAMPLE", 63, 0, {{"Sounds", KN_NAME, 25, SMPM_NAME, 4}, {"FX", KN_NAME, 26, ONOFF_NAME, 2}, {"Gap", KN_NAME, 27, SMPG_NAME, 4},
+                       {"", KN_NONE, 0, 0, 0}}},   /* (0.16.1) the sampling helper: PERF's drums and voices one at a time, for a sampler (not kept) */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -503,6 +514,12 @@ static struct {
     uint8_t dj_rounds, dj_ramp, intro; /* the SET page: rounds a piece gets (1, 2, 4, 8), the tempo's climb over them, the intro (kept in set_t.usb's bits 3 ..) */
     uint8_t dj_round;                  /* the round the piece is in (from 0) */
     int16_t dj_t0, dj_tlast;           /* the ramp: the piece's tempo at its start, and the last tempo the ramp set (another: the player turned it, so it starts again from there) */
+    int16_t mx_from, mx_to, mx_last;   /* the mix (0.16.1, the SET page's Mix): a piece on the bar starts at the tempo playing and glides to its own */
+    uint8_t mx_bars, mx_n;             /* over mx_bars bars (0: no glide), mx_n of them gone */
+    uint8_t smp_mode, smp_fx, smp_gap; /* the SAMPLE page (0.16.1): what it plays (all, drums, synths, by key), with the effects or dry, the gap between sounds */
+    uint8_t smp_dry, smp_vc, smp_nn, smp_note[3];   /* dry now; the voice and notes held */
+    int8_t smp_cur;                    /* the sound playing (-1: none) */
+    uint32_t smp_t0, smp_off;          /* the run's start (0: none); when the held notes let go */
     uint16_t dj_n;                     /* bars in the phase */
     uint64_t fx_mask;                  /* the effects held (and locked), as last sent */
     uint64_t fx_lock;                  /* the effects latched on */
@@ -851,7 +868,8 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
            i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
-           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : i == 22 ? &ui.cc_mode : &proj.genre;   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
+           i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : i == 22 ? &ui.cc_mode :
+           i == 23 ? &glob.sl_rsv[0] : i == 24 ? &glob.sl_rsv[1] : i == 25 ? &ui.smp_mode : i == 26 ? &ui.smp_fx : i == 27 ? &ui.smp_gap : &proj.genre;   /* 23 zoom, 24 the mix (0.16.1: the global record's spare bytes) */   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -917,6 +935,8 @@ static void fxp_set(int k, int v)
                 en_usb_fixed = (uint8_t)v;       /* the engine renders the USB audio at unity when a computer is recording */
             else if (FXP_CTL(k).idx == 13)
                 en_fm_set_dy(v);                 /* the DX or the DY voices: the names change at once, the patch at the next chunk */
+            else if (FXP_CTL(k).idx == 23 || FXP_CTL(k).idx == 24)
+                project_globals();               /* (zoom and the mix: the global record, stored at once) */
             break;
         }
         if (v != ui.fxs[FXP_CTL(k).idx]) {
@@ -1641,6 +1661,48 @@ static void dj_next(void)                       /* the auto-DJ's next piece, on 
     else
         ui.piece_q = (uint8_t)((proj.piece + 1) % NPIECES + 1);
 }
+/* THE MIX (the SET page's Mix, 0.16.1): a piece that comes on the bar (the auto-DJ's, the set list's, SEL + PRESETS) starts at the tempo that was
+ * playing and glides to its own over 4 to 32 bars, as a DJ brings the next record in at the old one's speed and lets it go back to its own. A tempo
+ * turned by hand stops it there. */
+static void mix_start(int from)
+{
+    const int bars = XMIX_BARS[glob.sl_rsv[1] % 5u];
+    ui.mx_bars = 0;
+    if (!bars || from == proj.par[P_TEMPO])
+        return;
+    ui.mx_from = (int16_t)from;
+    ui.mx_to = proj.par[P_TEMPO];
+    ui.mx_bars = (uint8_t)bars;
+    ui.mx_n = 0;
+    proj.par[P_TEMPO] = (int16_t)from;
+    en_set(P_TEMPO, from);
+    ui.mx_last = (int16_t)from;
+}
+static void mix_tick(void)                       /* each frame: the glide, by the bar and the step */
+{
+    int t;
+    if (!ui.mx_bars)
+        return;
+    if (!en_playing || proj.par[P_TEMPO] != ui.mx_last) {
+        ui.mx_bars = 0;                          /* stopped, or turned by hand */
+        return;
+    }
+    {
+        const int span = ui.mx_bars * EN_NSTEP, at0 = (ui.mx_n - 1) * EN_NSTEP + en_drum_pos, at = at0 < 0 ? 0 : at0;
+        const int d = (ui.mx_to - ui.mx_from) * at;
+        if (at >= span) {
+            t = ui.mx_to;
+            ui.mx_bars = 0;
+        } else {
+            t = ui.mx_from + (d >= 0 ? (d + span / 2) / span : -((-d + span / 2) / span));
+        }
+    }
+    if (t != proj.par[P_TEMPO]) {
+        proj.par[P_TEMPO] = (int16_t)t;
+        en_set(P_TEMPO, t);
+    }
+    ui.mx_last = (int16_t)t;
+}
 static void dj_bar(void)                       /* a new bar (while playing) */
 {
     const int g = DJ_G(), b = dj_break_len(g), sync = ui.dj_len == 4, rounds = DJ_ROUNDS[ui.dj_rounds & 3];
@@ -1658,7 +1720,7 @@ static void dj_bar(void)                       /* a new bar (while playing) */
         return;
     }
     ui.dj_n++;
-    if (ph == 0 && ui.dj_ramp) {               /* the ramp: the tempo climbs over the piece's rounds of groove; turned by hand, it climbs on from there */
+    if (ph == 0 && ui.dj_ramp && !ui.mx_bars) {   /* the ramp: the tempo climbs over the piece's rounds of groove; turned by hand, it climbs on from there (not while the mix glides) */
         const int bpm = RAMP_BPM[ui.dj_ramp % 5u], total = rounds * g, prog = (ui.dj_round < rounds ? ui.dj_round : rounds - 1) * g + (int)ui.dj_n;
         int t;
         if (proj.par[P_TEMPO] != ui.dj_tlast)
@@ -1748,6 +1810,8 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
                 ui.scene_q = 0;
                 scene_apply(s);
             }
+            if (ui.mx_bars && ui.mx_n < 255)
+                ui.mx_n++;                       /* the mix's glide: a bar more */
             if (ui.dj_on)
                 dj_bar();
         }
@@ -2177,12 +2241,27 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
     *t = 0;
 }
 
-/* the order the dial and SEL + FX walk the settings pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger */
-static const uint8_t FX_ORDER[NFXP - 1] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 17, 18, 24, 25, 26, 27, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 24: USB & MIDI, with the settings; 25: SET; 26: MIDI IN; 27: FILTERS; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static int fx_pos(int pg)                       /* where a page is in the walk (0 ..), -1: none */
+/* the order the dial and SEL + FX walk the effects' pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger.
+ * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
+ * filters, the screen's, the sampling helper. */
+static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
+static const uint8_t ST_ORDER[] = {18, 17, 25, 24, 26, 27, 31, 32};   /* SETTINGS, AUTO DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREEN, SAMPLE */
+#define FX_N ((int)sizeof FX_ORDER)
+#define ST_N ((int)sizeof ST_ORDER)
+static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
 {
     int i;
-    for (i = 0; i < NFXP - 1; i++)
+    for (i = 0; i < ST_N; i++)
+        if (ST_ORDER[i] == pg)
+            return i;
+    return -1;
+}
+static int fx_pos(int pg)                       /* where a page is in its walk (0 ..), the effects' or the settings', -1: none */
+{
+    int i;
+    if (st_pos(pg) >= 0)
+        return st_pos(pg);
+    for (i = 0; i < FX_N; i++)
         if (FX_ORDER[i] == pg)
             return i;
     return -1;
@@ -2627,6 +2706,115 @@ static void cc_out(void)                        /* each frame: an FX knob moved 
  * on the voice the keys play (en_bend, en_modw). */
 static int jam_snap(int m, uint32_t pool);
 #define MPK_N 8
+/* THE SAMPLING HELPER (the SAMPLE settings page, 0.16.1): PERF's sounds one at a time for a sampler (an MPC sampling its input, say), so a project keeps
+ * them without the FM-1. ALL, DRUMS or SYNTHS: a key starts a run (a key again stops it): the music stops, a count-in of 1.5 s, then each sound once,
+ * Gap apart: the six drums, then the pad (the scale's triad on the root), the bass, the acid and the pluck on the root, held for three quarters of the
+ * gap; recorded as one sample, it chops into pads. BY KEY: white keys 1-6 the drums, 7-10 the pad, bass, acid and pluck, held as long as the key.
+ * FX OFF (dry): no echo, reverb, latched effects or FX knobs while the page is up. */
+#define SMP_N 10
+#define SMP_COUNT 1500u
+static const char *const SMP_NAME[SMP_N] = {"KICK", "SNARE", "CLAP", "HAT", "OPEN HAT", "PERC", "PAD", "BASS", "ACID", "PLUCK"};
+static void smp_release(void)                    /* the held notes let go */
+{
+    int k;
+    for (k = 0; k < ui.smp_nn; k++)
+        en_note(ui.smp_vc, ui.smp_note[k], 0);
+    ui.smp_nn = 0;
+    ui.smp_off = 0;
+}
+static void smp_play(int it)                     /* a sound: a drum, or a voice's note (the pad: the triad), held */
+{
+    static const uint8_t VC[4] = {EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_PLUCK};
+    static const int8_t OFS[4] = {0, 24, 12, 0};   /* (the engine plays the drone two octaves and the acid one below the key, as on Jam) */
+    int k;
+    smp_release();
+    if (en_playing)
+        en_play(0);                              /* the sound alone */
+    ui.smp_cur = (int8_t)it;
+    if (it < 6) {
+        en_drum_tap(it, 110);
+        return;
+    }
+    it -= 6;
+    if (it == 3 && proj.par[P_CM_LVL] < 15)
+        knob_set(P_CM_LVL, 40);                  /* the pluck has to be audible */
+    ui.smp_vc = VC[it];
+    ui.smp_note[ui.smp_nn++] = (uint8_t)(pads_tone(0, 48) + OFS[it]);
+    if (it == 0) {
+        ui.smp_note[ui.smp_nn++] = (uint8_t)pads_tone(2, 48);
+        ui.smp_note[ui.smp_nn++] = (uint8_t)pads_tone(4, 48);
+    }
+    for (k = 0; k < ui.smp_nn; k++)
+        en_note_v(ui.smp_vc, ui.smp_note[k], 100);
+}
+static int smp_first(void) { return ui.smp_mode == 2 ? 6 : 0; }
+static int smp_last(void) { return ui.smp_mode == 1 ? 5 : SMP_N - 1; }
+static void smp_stop(void)
+{
+    smp_release();
+    ui.smp_t0 = 0;
+    ui.smp_cur = -1;
+}
+static void smp_keys(uint32_t down, uint32_t up)   /* the SAMPLE page's keys */
+{
+    int s;
+    if (ui.smp_mode != 3) {                      /* a run: any key starts it, any key stops it */
+        if (!down)
+            return;
+        if (ui.smp_t0) {
+            smp_stop();
+            say("SAMPLE", "STOPPED");
+        } else {
+            if (en_playing)
+                en_play(0);
+            ui.smp_t0 = plat_ms() | 1u;
+            ui.smp_cur = -1;
+            say("SAMPLE", "RECORD NOW");
+        }
+        return;
+    }
+    for (s = 0; s < SMP_N; s++) {                /* by key: white 1-10, a sound each */
+        const int key = WHITE_KEY[s];
+        if (down >> key & 1u)
+            smp_play(s);
+        else if ((up >> key & 1u) && ui.smp_cur == s) {
+            smp_release();
+            ui.smp_cur = -1;
+        }
+    }
+}
+static void smp_tick(void)                       /* each frame: the run's next sound, the notes' let-go, dry while the page is up */
+{
+    const int on = ui.fx_menu && ui.fx_page == FXP_SAMPLE + 1, dry = on && !ui.smp_fx, gap = SMP_GAP_MS[ui.smp_gap & 3];
+    const uint32_t now = plat_ms();
+    if (dry != ui.smp_dry) {                     /* dry: the sends and the FX knobs to nothing (the effects: ui_input's mask), and back */
+        int k;
+        ui.smp_dry = (uint8_t)dry;
+        en_set(P_ECHO, dry ? 0 : proj.par[P_ECHO]);
+        en_set(P_REVERB, dry ? 0 : proj.par[P_REVERB]);
+        for (k = 0; k < 4; k++)
+            en_fxk(k, dry ? 0 : ui.fxk[k]);
+    }
+    if (!on) {
+        if (ui.smp_t0 || ui.smp_nn)
+            smp_stop();
+        return;
+    }
+    if (ui.smp_off && (int32_t)(now - ui.smp_off) >= 0)
+        smp_release();
+    if (ui.smp_t0 && ui.smp_mode != 3) {
+        const int32_t t = (int32_t)(now - ui.smp_t0) - (int32_t)SMP_COUNT;
+        const int i = t < 0 ? -1 : smp_first() + t / gap;
+        if (i > smp_last() && !ui.smp_nn && t >= (smp_last() - smp_first() + 1) * gap) {
+            smp_stop();
+            say("SAMPLE", "DONE");
+        } else if (i >= 0 && i <= smp_last() && i != ui.smp_cur) {
+            smp_play(i);
+            if (ui.smp_nn)
+                ui.smp_off = (now + (uint32_t)(gap * 3 / 4)) | 1u;
+        }
+    }
+}
 static const uint8_t MPK_VC[4] = {EN_V_PLUCK, EN_V_PAD, EN_V_ACID, EN_V_DRONE};   /* the JAM page's voice, as the engine's */
 static struct { uint8_t in, n, vc, out[3]; } mpk[MPK_N];   /* the keys held: the note in, and the notes played for it */
 static void mpk_key(int on, int n, int v)
@@ -2760,14 +2948,10 @@ static void help_tick(uint32_t btn, uint32_t keys)
     if (!btn || (btn & (btn - 1u)) || keys)
         return;
     if (btn == 1u << B_HOME && !(ui.btn_used & btn) && now - ui.down_t[B_HOME] >= 700u && (int32_t)(ui.turn_t - ui.down_t[B_HOME]) <= 0) {   /* HOME held: the settings */
-        int p;
-        for (p = 0; p < NFXP; p++)
-            if (FXP[p].name[0] == 'S' && FXP[p].name[1] == 'E' && FXP[p].name[2] == 'T')
-                break;
         ui.btn_used |= btn;                      /* its release now does nothing */
         ui.fx_menu = 1;
-        ui.fx_page = (uint8_t)(p < NFXP ? p + 1 : 1);
-        say("SETTINGS", "KEY, SAVER, LIGHTS, VOICES");
+        ui.fx_page = ST_ORDER[0];                /* the settings' walk (0.16.1: their own; the dial goes through them) */
+        say("SETTINGS", "DIAL: NEXT PAGE");
         return;
     }
     for (i = 0; i < NB; i++)
@@ -2984,8 +3168,8 @@ static void input(void)
             }
             if (i == B_FX && (btn >> B_SEL & 1u)) {   /* shift: the effects' edit pages, one by one, then the keys again */
                 {   /* (the walk's order, then the keys again) */
-                    const int nx = ui.fx_menu ? fx_pos(ui.fx_page) + 1 : 0;
-                    ui.fx_page = (uint8_t)(nx >= 0 && nx < NFXP - 1 ? FX_ORDER[nx] : 0);
+                    const int nx = ui.fx_menu && st_pos(ui.fx_page) < 0 ? fx_pos(ui.fx_page) + 1 : 0;   /* (from a setting: the first effect) */
+                    ui.fx_page = (uint8_t)(nx >= 0 && nx < FX_N ? FX_ORDER[nx] : 0);
                 }
                 ui.fx_menu = 1;
                 ui.lock_mode = 0;
@@ -3199,11 +3383,15 @@ static void input(void)
             if (en_sec == EN_SEC_BUILD)
                 m |= FXB(FX_RISER);
         }
+        if (ui.smp_dry)
+            m = 0;                               /* (the SAMPLE page, dry: nothing on) */
         if (m != ui.fx_mask) {
             ui.fx_mask = m;
             en_fx(m);
         }
     }
+    if (ui.fx_menu && ui.fx_page == FXP_SAMPLE + 1)   /* the SAMPLE page: a key a sound, or a run */
+        smp_keys(ch & keys & ~ui.shift_keys, ch & ~keys);
     if (ui.fx_menu && ui.fx_page == 1)           /* the gate's page: the white keys are the pattern's steps */
         for (i = 0; i < NKEYS; i++)
             if ((ch & keys & ~ui.shift_keys) >> i & 1u) {
@@ -3293,10 +3481,10 @@ static void input(void)
             fx_bank = (uint8_t)(e > 0 ? (fx_bank < 3 ? fx_bank + 1 : 3) : (fx_bank > 0 ? fx_bank - 1 : 0));
             say(fx_bank == 3 ? "DJ SNIPS" : fx_bank == 2 ? "FLEX BEAT" : fx_bank ? "BEAT FX" : "FX", "HOLD A KEY");
         } else if (!(btn >> B_HOME & 1u) && ui.fx_menu && ui.fx_page) {   /* the FX edit pages: the dial walks them */
-            const int pos = fx_pos(ui.fx_page) + (e > 0 ? 1 : -1);
-            if (pos >= 0 && pos < NFXP - 1) {         /* (the JAM page's, the last, is not an FX page) */
-                ui.fx_page = FX_ORDER[pos];
-                say(FXP[ui.fx_page - 1].name, "EDIT");
+            const int st = st_pos(ui.fx_page) >= 0, pos = fx_pos(ui.fx_page) + (e > 0 ? 1 : -1);
+            if (pos >= 0 && pos < (st ? ST_N : FX_N)) {   /* (a setting: the settings' walk; an effect: the effects') */
+                ui.fx_page = st ? ST_ORDER[pos] : FX_ORDER[pos];
+                say(FXP[ui.fx_page - 1].name, st ? "SETTINGS" : "EDIT");
             }
         } else if (btn >> B_HOME & 1u) {
             turn(EN_SELECT, P_TEMPO, e);
@@ -3377,14 +3565,18 @@ static void input(void)
         ui.turn_t = plat_ms();
     }
     if (ui.sl_q && !ui.store_wait && (!en_playing || en_drum_pos == EN_NSTEP - 1)) {   /* the bar's last step: the set list's slot */
-        const int s = ui.sl_q - 1;
+        const int s = ui.sl_q - 1, t0 = proj.par[P_TEMPO], pl = en_playing;
         ui.sl_q = 0;
         sl_go(s);
+        if (pl)
+            mix_start(t0);
     }
     if (ui.piece_q && (!en_playing || en_drum_pos == EN_NSTEP - 1)) {   /* the bar's last step: the piece */
-        int t = ui.piece_q - 1;
+        const int t = ui.piece_q - 1, t0 = proj.par[P_TEMPO], pl = en_playing;
         ui.piece_q = 0;
         set_piece(t);
+        if (pl)
+            mix_start(t0);
     }
     if ((btn >> B_SEL & 1u) && !(ui.btn_used >> B_SEL & 1u) && !ui.shift_hint && !(ui.view == V_JAM && !ui.fx_menu) &&
         plat_ms() - ui.down_t[B_SEL] >= 400u) {   /* (not on JAM: SEL is the accent there, held before the key) */
@@ -4320,7 +4512,7 @@ static void draw_fxedit(void)
     const int p = ui.fx_page - 1;
     const int32_t cw = 14;
     int s;
-    cv_text(4, 1, &FONT_XS, "FX EDIT: DIAL OR SEL + FX", K_ACC);
+    cv_text(4, 1, &FONT_XS, st_pos(ui.fx_page) >= 0 ? "SETTINGS: DIAL FOR THE NEXT" : "FX EDIT: DIAL OR SEL + FX", K_ACC);
     if (p == 0) {
         const int len = ui.fxs[EN_FXS_GX_LEN], head = gx_head();
         cv_text(4, 18, &FONT_B, "GATE", K_TEXT);
@@ -4359,6 +4551,33 @@ static void draw_fxedit(void)
             cv_text(4, 112, &FONT_XS, FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
             cv_text(4, 126, &FONT_XS, "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
             }
+        } else if (p == FXP_SAMPLE) {            /* SAMPLE (0.16.1): the sounds, in the run's order, the one sounding lit */
+            static const char *const SN[SMP_N] = {"KICK", "SNARE", "CLAP", "HAT", "O HAT", "PERC", "PAD", "BASS", "ACID", "PLUCK"};
+            const int run = ui.smp_t0 != 0, cnt = run && plat_ms() - ui.smp_t0 < SMP_COUNT;
+            int k;
+            for (k = 0; k < SMP_N; k++) {
+                const int32_t x = 3 + (k % 5) * 47, y = 42 + (k / 5) * 22;
+                const int in = ui.smp_mode == 3 || (k >= smp_first() && k <= smp_last());
+                const int lit = ui.smp_mode == 3 ? (int)(ui.keys >> WHITE_KEY[k] & 1u) : run && !cnt && ui.smp_cur == k;
+                cv_round(x, y, 44, 19, 3, lit ? K_ACC : K_PANEL);
+                text_c(x + 22, y + 2, &FONT_XS, SN[k], lit ? K_BG : in ? K_TEXT : K_DIM);
+            }
+            if (ui.smp_mode == 3) {
+                cv_text(4, 92, &FONT_XS, "WHITE KEYS 1-10: A SOUND EACH,", K_DIM);
+                cv_text(4, 106, &FONT_XS, "HELD AS LONG AS THE KEY.", K_DIM);
+            } else if (run) {
+                cv_text(4, 92, &FONT_XS, cnt ? "COUNT-IN ..." : "RECORDING: ONE SOUND A GAP.", K_ACC);
+                cv_text(4, 106, &FONT_XS, "A KEY: STOP.", K_DIM);
+            } else {
+                cv_text(4, 92, &FONT_XS, "A KEY: START (1.5 S COUNT-IN).", K_DIM);
+                cv_text(4, 106, &FONT_XS, "RECORD IT AS ONE SAMPLE, THEN CHOP.", K_DIM);
+            }
+            cv_text(4, 122, &FONT_XS, ui.smp_fx ? "WITH THE EFFECTS. THE MUSIC STOPS." : "DRY: NO ECHO, REVERB OR FX. MUSIC STOPS.", K_DIM);
+        } else if (p == FXP_SCREEN) {            /* SCREEN (0.16.1) */
+            cv_text(4, 50, &FONT_XS, "THE SCREEN'S SETTINGS. ZOOM: A KNOB", K_DIM);
+            cv_text(4, 64, &FONT_XS, "TURNED SHOWS ITS NAME AND VALUE", K_DIM);
+            cv_text(4, 78, &FONT_XS, "LARGE, FOR PLAYING AT A DISTANCE.", K_DIM);
+            cv_text(4, 98, &FONT_XS, "THE KNOBS SET THEM. DIAL: NEXT PAGE.", K_DIM);
         } else if (p == FXP_MIDIIN + 1) {        /* FILTERS: what the types do */
             cv_text(4, 46, &FONT_XS, "EACH SYNTH'S FILTER TYPE:", K_DIM);
             cv_text(4, 60, &FONT_XS, "LOW (AS BEFORE), HIGH, BAND,", K_DIM);
@@ -5568,6 +5787,56 @@ static uint32_t chord_pcs(void)                 /* the chord playing: a bit a pi
         m |= 1u << (en_chord[i] % 12u);
     return m;
 }
+/* ZOOM (the SCREEN page, 0.16.1, for playing at a distance or outdoors): a knob turned fills the main area with its name and its value, twice the
+ * largest type, and a bar, for as long as the knob strip lights it (1.2 s) */
+static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)   /* text at twice the size: a pixel two by two */
+{
+    for (; *s; s++) {
+        const uint32_t gi = glyph(f, (uint8_t)*s), w = f->bw[gi], bpr = (w + 1u) / 2u;
+        const uint8_t *gd = f->data + f->off[gi];
+        uint32_t gx, gy;
+        for (gy = 0; gy < f->h; gy++)
+            for (gx = 0; gx < w; gx++) {
+                uint32_t a = gd[gy * bpr + gx / 2u];
+                a = (gx & 1u) ? (a & 15u) : (a >> 4);
+                if (a >= 7u)
+                    cv_rect(x + 2 * ((int32_t)gx - f->pad), y + 2 * (int32_t)gy, 2, 2, c);
+            }
+        x += 2 * f->adv[gi];
+    }
+}
+static uint16_t view_color(void);
+static int zoom_knob(void)                       /* the knob to zoom on (0 .. 3), -1: none */
+{
+    return glob.sl_rsv[0] && ui.touched >= 0 && ui.touched < 4 && plat_ms() < ui.touch_until && view_knob(ui.touched) != K_NONE ? ui.touched : -1;
+}
+static void draw_zoom(int i)
+{
+    const int k = view_knob(i);
+    int lo, hi, v;
+    char t[16], vt[16];
+    knob_range(k, &lo, &hi);
+    v = knob_get(k);
+    caps(t, view_label(i), sizeof t);
+    text_c(120, 6, &FONT_M, t, K_DIM);
+    knob_text(k, t);
+    caps(vt, t, sizeof vt);
+    if (2 * text_w(&FONT_L, vt) <= 236)
+        cv_text2(120 - text_w(&FONT_L, vt), 38, &FONT_L, vt, K_ACC);
+    else if (text_w(&FONT_L, vt) <= 236)
+        text_c(120, 56, &FONT_L, vt, K_ACC);
+    else
+        text_c(120, 60, &FONT_M, vt, K_ACC);
+    cv_rect(20, 124, 200, 6, K_LINE);
+    if (hi > lo) {
+        if (lo < 0) {                            /* bipolar: from the middle */
+            const int32_t m = (int32_t)(v - lo) * 200 / (hi - lo);
+            cv_rect(20 + (m < 100 ? m : 100), 124, m < 100 ? 100 - m : m - 100, 6, view_color());
+        } else {
+            cv_rect(20, 124, (int32_t)(v - lo) * 200 / (hi - lo), 6, view_color());
+        }
+    }
+}
 static void draw_main(void)
 {
     uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)sound_root() << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
@@ -5597,6 +5866,17 @@ static void draw_main(void)
         }
         return;
     }
+    if (zoom_knob() >= 0) {                      /* ZOOM: the knob turned, large */
+        const int zi = zoom_knob(), zk = view_knob(zi);
+        h = hash(hash(0x5A4F4F4Du, (uint32_t)zi | (uint32_t)ui.theme << 4 | (uint32_t)ui.view << 8 | (uint32_t)ui.fx_page << 16), (uint32_t)knob_get(zk) ^ (uint32_t)zk << 20);
+        if (h != ui.sig[1]) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_zoom(zi);
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (ui.fx_menu) {
         h = hash(hash(0x46584D4Eu, h32(ui.fx_mask) ^ (uint32_t)ui.theme << 28 ^ (uint32_t)ui.lock_mode << 31), h32(ui.fx_lock));
         h = hash(h, (uint32_t)fx_bank << 29);
@@ -5606,6 +5886,9 @@ static void draw_main(void)
         if (ui.fx_page == 1)
             h = hash(h, (uint32_t)(gx_head() + 1));
         h = hash(h, ui.flex_last | (uint32_t)ui.flex_cur << 8 | (uint32_t)ui.flex_lock << 16);
+        if (ui.fx_page == FXP_SAMPLE + 1)         /* SAMPLE: the sound playing, the keys, the count-in */
+            h = hash(hash(h, ui.keys), (uint32_t)(ui.smp_cur + 1) | (uint32_t)ui.smp_mode << 8 | (uint32_t)(ui.smp_t0 != 0) << 10 | (uint32_t)ui.smp_fx << 11 |
+                                       (uint32_t)(ui.smp_t0 && plat_ms() - ui.smp_t0 < SMP_COUNT) << 12);
         if (ui.fx_page == FXP_MIDIIN + 1)         /* MIDI IN: what comes in, the host */
             h = hash(hash(h, ui.min_last ^ ui.min_n << 3), (uint32_t)plat_usb_host_state() | (uint32_t)en_ext << 4 | (uint32_t)plat_ms() / 500u << 5);
         if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
@@ -5852,7 +6135,7 @@ static void draw_knobs(void)
     {   /* the rule; at its right end, where you are: the page, then the dots */
         char t[24];
         int k;
-        const int ndots = ui.fx_menu ? (ui.fx_page ? NFXP - 1 : 4) : NDIAL;   /* the dots: the pages; in the FX menu the banks, in an effect's settings the edit pages */
+        const int ndots = ui.fx_menu ? (ui.fx_page ? (st_pos(ui.fx_page) >= 0 ? ST_N : FX_N) : 4) : NDIAL;   /* the dots: the pages; in the FX menu the banks, in an effect's settings the edit pages */
         int32_t xd = 237 - ndots * 5, xt;
         if (ui.view == V_SEQ) {
             char u[24] = "SEQ: ";
@@ -6058,6 +6341,11 @@ static void leds(void)
         b |= 1u << B_FX;
         for (i = 0; i < 16; i++)
             if (((int)i < len && (ui.gx_pat >> i & 1u)) ^ (int)((int)i == head))
+                k |= 1u << WHITE_KEY[i];
+    } else if (ui.fx_menu && ui.fx_page == FXP_SAMPLE + 1) {   /* SAMPLE: by key, its ten keys (held: dark); a run, the sound's key */
+        b |= 1u << B_FX;
+        for (i = 0; i < SMP_N; i++)
+            if (ui.smp_mode == 3 ? !(ui.keys >> WHITE_KEY[i] & 1u) : ui.smp_t0 && ui.smp_cur == (int)i)
                 k |= 1u << WHITE_KEY[i];
     } else if (ui.fx_menu && ui.fx_page) {       /* another effect's page: FX lit */
         b |= 1u << B_FX;
@@ -6787,6 +7075,8 @@ void ui_init(void)
     rs_state = 0;
     ui.pat_key = -1;                             /* (no pattern key held) */
     ui.gr_all = 50;
+    ui.smp_gap = 1;                              /* (the SAMPLE page: a second between sounds; none playing) */
+    ui.smp_cur = -1;
     {   /* the effects' settings start at the engine's defaults; the gate at its first pattern, on the synths */
         int i;
         for (i = 0; i < EN_NFXS; i++)
@@ -6867,6 +7157,8 @@ void ui_frame(void)
     input();
     scene_tick();
     dj_tick();
+    mix_tick();
+    smp_tick();
     key_tick();
     glide_tick();
     saver_tick();

@@ -1,0 +1,35 @@
+# The mix (the SET page's Mix, 0.16.1): a piece that comes on the bar starts at the tempo playing and glides to its own over the bars set (4 here);
+# a tempo turned by hand stops the glide.
+seed 0
+wait 3000
+expect playing 1
+press HOME
+wait 800
+release HOME
+wait 100
+turn SELECT 2
+wait 100
+expect fxpage 25
+spin K4 1
+wait 100
+expect mix 1
+tap FX
+wait 100
+# the tempo 20 down by hand (HOME held: SELECT is the tempo), so the next piece's differs
+press HOME
+spin SELECT -20
+release HOME
+wait 100
+expect tempo 108
+# the next piece on the bar (SEL + PRESETS)
+press SEL
+spin PRESET 1
+release SEL
+wait 2500
+expect piece 1
+expect mixbars 4
+# (a bar in: 108 on its way to the piece's own 124)
+expect tempo 110
+wait 9000
+expect mixbars 0
+expect tempo 124

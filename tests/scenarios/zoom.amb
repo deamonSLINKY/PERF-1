@@ -1,0 +1,33 @@
+# Zoom (the SCREEN settings page, 0.16.1): on, a knob turned fills the main area with its name and value for 1.2 s, on any page; kept (the global record).
+seed 0
+wait 3000
+press HOME
+wait 800
+release HOME
+wait 100
+turn SELECT 6
+wait 100
+expect fxpage 31
+expect zoom 0
+spin K1 1
+wait 100
+expect zoom 1
+expect zoomknob 0
+shot zoom_setting.png
+tap FX
+wait 1500
+expect zoomknob -1
+expect view 0
+spin K1 3
+wait 100
+expect zoomknob 0
+shot zoom_tempo.png
+spin K3 1
+wait 100
+expect zoomknob 2
+wait 1500
+expect zoomknob -1
+wait 3000
+reboot
+wait 6500
+expect zoom 1

@@ -628,6 +628,20 @@ static int expect(const char *what, const char *val)
         got = en_fm_dy;
     else if (!strcmp(what, "lights"))
         got = ui.lights;
+    else if (!strcmp(what, "zoom"))               /* (0.16.1) the SCREEN page's Zoom, and the knob it shows now (-1: none) */
+        got = glob.sl_rsv[0];
+    else if (!strcmp(what, "zoomknob"))
+        got = zoom_knob();
+    else if (!strcmp(what, "mix"))                /* the SET page's Mix, and the glide's bars (0: none) */
+        got = glob.sl_rsv[1];
+    else if (!strcmp(what, "mixbars"))
+        got = ui.mx_bars;
+    else if (!strcmp(what, "samplecur"))          /* the SAMPLE page: the sound playing (-1 none), a run going, dry */
+        got = ui.smp_cur;
+    else if (!strcmp(what, "samplerun"))
+        got = ui.smp_t0 != 0;
+    else if (!strcmp(what, "sampledry"))
+        got = ui.smp_dry;
     else if (!strcmp(what, "glide"))              /* an FX knob still gliding to a scene's value (bits) */
         got = ui.glide_on;
     else if (!strcmp(what, "keyon"))              /* the drop's key change is on */

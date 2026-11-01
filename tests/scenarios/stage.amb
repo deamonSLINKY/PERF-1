@@ -2,53 +2,15 @@
 # the key lights; any touch brings the page back.
 seed 0
 wait 3000
-press SEL
-tap FX
-release SEL
-wait 100
-# (talk and wah come after the flanger now: two more turns to the same pages)
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-# (the Repeat page, 23, walks before the sweep since 0.14.10: one more turn)
-spin SELECT 1
+# (0.16.1) the key change on SETTINGS, the screensaver and the lights on SCREEN: the settings' walk, HOME held
+press HOME
+wait 800
+release HOME
 wait 100
 expect fxpage 18
+turn SELECT 6
+wait 100
+expect fxpage 31
 expect saver 0
 expect lights 0
 spin K2 1

@@ -3,51 +3,15 @@
 # and the groove again, on the bar clock. The timings below are for the first piece (seed 0).
 seed 0
 wait 1500
-# the groove length (8 bars) is on the PERFORM edit page now (the key it was on is the pluck's solo): SEL + FX, to page 17, Groove
-press SEL
-tap FX
-release SEL
+# the groove length (8 bars) is on the AUTO DJ settings page: HOME held opens the settings (0.16.1: their own walk), SETTINGS first, AUTO DJ next
+press HOME
+wait 800
+release HOME
 wait 100
-# (talk and wah come after the flanger now, and the Repeat page before the sweep: three more turns to the same pages)
+expect fxpage 18
 spin SELECT 1
 wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-spin SELECT 1
-wait 30
-# (the Repeat page comes before the sweep since 0.14.10: one more turn)
-spin SELECT 1
-wait 30
+expect fxpage 17
 spin K2 -1
 wait 50
 expect djlen 0

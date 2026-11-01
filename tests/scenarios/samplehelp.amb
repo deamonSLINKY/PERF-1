@@ -1,0 +1,64 @@
+# The sampling helper (the SAMPLE settings page, 0.16.1: HOME held, the settings' last page). FX OFF: dry while the page is up (no echo, reverb, effects
+# or FX knobs). A key starts a run: the music stops, a count-in of 1.5 s, then each sound a gap apart (1 s): the six drums, the pad, the bass, the acid,
+# the pluck; a key again stops it. BY KEY: white keys 1-10 a sound each, held as long as the key. Leaving the page: as before.
+seed 0
+wait 3000
+expect playing 1
+press HOME
+wait 800
+release HOME
+wait 100
+turn SELECT 7
+wait 100
+expect fxpage 32
+expect sampledry 1
+expect samplerun 0
+shot sample_page.png
+tapkey 0
+wait 200
+expect samplerun 1
+expect playing 0
+expect samplecur -1
+wait 1500
+expect samplecur 0
+wait 1000
+expect samplecur 1
+wait 5000
+expect samplecur 6
+shot sample_run.png
+wait 4000
+expect samplerun 0
+expect samplecur -1
+# a run stopped by a key
+tapkey 2
+wait 2000
+expect samplecur 0
+tapkey 2
+wait 100
+expect samplerun 0
+# by key: the seventh white key (E4) is the pad, held while the key is
+spin K1 3
+wait 100
+key 11 down
+wait 100
+expect samplecur 6
+key 11 up
+wait 100
+expect samplecur -1
+key 0 down
+wait 100
+expect samplecur 0
+key 0 up
+wait 100
+# FX on: not dry
+spin K2 1
+wait 100
+expect sampledry 0
+spin K2 -1
+wait 100
+expect sampledry 1
+# leaving the page: the sends and effects back
+tap FX
+wait 100
+expect fxon 0
+expect sampledry 0

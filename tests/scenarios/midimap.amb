@@ -7,18 +7,18 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-turn SELECT 1
+turn SELECT 3
 wait 100
 expect fxpage 24
 expect midimap 0
-spin K4 1
+spin K3 1
 wait 200
 expect midimap 1
 shot midimap.png
-spin K4 5
+spin K3 5
 wait 100
 expect midimap 3
-spin K4 -1
+spin K3 -1
 wait 100
 expect midimap 2
 tap HOME

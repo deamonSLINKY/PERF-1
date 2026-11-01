@@ -315,7 +315,7 @@ back to the page you were last on in that group.
 | Hold **SEQ** | 0.4 s | Opens the sequencer. |
 | Hold **SAVE** | 0.5 s | The drop, straight away on the next bar. |
 | Hold **SEL** + **SAVE** on Global | 1.5 s | Puts the piece back to factory. From 0.4 s a card says `KEEP HOLDING: FACTORY`. A plain **SAVE** on Global only stores. |
-| Hold **HOME** | 0.7 s | The settings page. |
+| Hold **HOME** | 0.7 s | The settings pages (**SELECT** walks them). |
 | Hold **GLO** | 0.4 s | The mix map. |
 | Hold **SEL** alone | 0.4 s | A card shows what shift does on this page. |
 | Hold **EDIT** | 0.4 s | The Progression page. |
@@ -1425,7 +1425,7 @@ Every effect that has settings has its own page, with a picture of what the effe
 
 - In the FX menu, hold **SEL** and press a key. You get the page for that key's effect. If the effect has no settings, the screen says so.
 - Press **FX** twice quickly for the page of the effect you used last.
-- Press **SEL** + **FX** to step through all the settings pages, then back to the keys. Talk and Wah come right after the phaser and the flanger.
+- Press **SEL** + **FX** to step through all the effects' pages, then back to the keys. Talk and Wah come right after the phaser and the flanger. (The unit's own settings, such as Auto DJ, SET and MIDI IN, are a separate walk: hold **HOME**, section 13.)
 - Once you're on a settings page, turn the **SELECT** dial to move to the next or previous one. It stops at the ends.
 
 Press **FX** to close the page.
@@ -1453,11 +1453,13 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Rv swell (backwards, getting louder) | Length: 1/2, 1, 2 beats | Mix | - | - |
 | Ring mod (a metallic clang) | Tone: 40-800 Hz | Mix | - | - |
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
-| SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | - |
-| Settings | Key: same, +2, +3, +5, +7 | Saver: off, 1, 3, 10 min | Lights: off, show | Voices: DX, DY |
-| USB & MIDI | Level: knob, fixed | MIDI out: off, on | Scanlines: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 |
+| SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | Mix: cut, 4, 8, 16, 32 bars |
+| Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
+| USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: scale, pads, M:S, MPK | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
+| SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Scanlines: off, on |
+| SAMPLE (section 13) | Sounds: all, drums, synths, by key | FX: off, on | Gap: 0.5, 1, 2, 4 s | - |
 | FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
 | DELAY (A4) | Send | Repeats | Targets | - |
 | PHASE (B4) | Rate | Depth | Mix | Targets |
@@ -1473,8 +1475,9 @@ What some of these mean:
 - **Gate patterns.** Euclid 5, 7 or 9 spreads 5, 7 or 9 hits as evenly as possible over the steps. Custom is a pattern you edit yourself (below).
 - **Roll.** From and To set the speed the repeats start and end at. Each sets how often a roll happens.
 - **Riser.** Time is how long it takes to climb. Filter, Wash and Echo set how much of each it builds up.
-- **Settings page.** Key is the drop's key change (section 13). Saver is the screensaver. Lights makes the key lights follow the music. Voices chooses which set of thirty built-in DX7 voices the pluck's `DX` sounds use (section 7).
-- **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. Scanlines darkens every other row of the screen by a quarter, like an old CRT TV. MIDI map chooses where the notes go (section 14).
+- **Settings page.** Key is the drop's key change (section 13). Voices chooses which set of thirty built-in DX7 voices the pluck's `DX` sounds use (section 7).
+- **SCREEN page.** Zoom shows a knob's name and value large as you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Scanlines darkens every other row of the screen by a quarter, like an old CRT TV.
+- **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. MIDI map chooses where the notes go (section 14).
 - **Repeat page.** Pitch makes each repeat step toward that pitch over four beats while you hold the key, which sounds like a build. Every repeat still starts on the beat grid. Decay makes each repeat quieter than the last, for a dub-style tail. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh grabs a fresh slice of the newest music every beat or bar, which DJs call a slip roll. It only works where there's enough recent music held to do it.
 
 **The Gate page.** The white keys show the pattern's steps. They're lit where the gate opens, and the step that's playing is marked. Press a key to edit a step, and the pattern becomes "custom". A pattern of 12 or 10 steps against the bar of 16 drifts against the beat and comes back around, which is called a polymeter. **Gate 16** and **Gate 8** share this page.
@@ -1578,11 +1581,12 @@ Turn on **DJ new pieces** (**GLO** + `G5`) and the auto-DJ brings in the next pi
 
 ![The SET page](img/perf-screen-set.png)
 
-The **SET** settings page shapes a longer set. It comes after USB & MIDI on the dial.
+The **SET** settings page shapes a longer set. Hold **HOME** for the settings; it comes after Auto DJ on the dial.
 
 - **Rounds** gives each piece 1, 2, 4 or 8 rounds before DJ new pieces moves on. A round is one groove, breakdown, build and drop. The header and the Perform screen count them, like `R2/4`.
 - **Ramp** makes the tempo climb over a piece's rounds of groove, by +2, +4, +8 or +12 BPM, one BPM at a time. If you change the tempo by hand, the climb carries on from there. The next piece starts at its own tempo.
 - **Intro** builds the music up slowly from nothing. When you press Play, the tracks come in one at a time over 1, 2, 4 or 8 minutes. The pad starts in the first bar, then come the hats, the perc, the kick, the snare, the bass, the pluck and last the acid, each a seventh of the way further through. This is handy for mixing in from another deck, or for scratching or sampling over just a pad and a hat. The header counts down, like `INTRO 1:42`, and the auto-DJ stays in its groove until every track is in. Stop and Play again to restart the intro.
+- **Mix** changes pieces the way a DJ changes records. A piece that comes in on the bar (the auto-DJ's next piece, the set list's next slot, or **SEL** + **PRESETS**) starts at the tempo that was playing, then glides to its own tempo over 4, 8, 16 or 32 bars. **Cut** jumps straight to the new tempo, as before. With a set list that goes from a slow piece to a fast one, a long Mix carries the whole set up (or down) smoothly. Turning the tempo by hand stops the glide where it is.
 
 ### The set list
 
@@ -1745,14 +1749,39 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 ![The settings page](img/perf-screen-settings.png)
 
-To open the **settings** page, **hold HOME** for just under a second (0.7 s) without turning anything. The **SELECT** dial moves on to the other effect pages. **FX** leaves.
+To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **FILTERS**, **SCREEN** and **SAMPLE**. It stops at the ends. **FX** leaves.
+
+The Settings page:
 
 | Knob | What it does |
 |---|---|
 | Key | A key change for the drop: same, +2, +3, +5 or +7 semitones. When a breakdown or build ends and the groove comes back in, the whole piece moves up by this much for that round. The next breakdown, a stop or another piece moves it back. `KEY` shows in the header while it's on. |
+| Voices | Which set of DX7 voices the pluck uses: **DY**, thirty human-made voices from public-domain banks (the default), or **DX**, the thirty built-in ones. |
+
+### The SCREEN page
+
+| Knob | What it does |
+|---|---|
+| Zoom | Off or on. With Zoom on, turning any knob fills the middle of the screen with its name and value in large type for a second, on any page. It's for playing at a distance, outdoors, or on camera. |
 | Saver | The screensaver: off, 1, 3 or 10 minutes. If you leave the FM-1 alone while it plays, the visualizers (the AUTO one) take over the **whole screen**, with no header and no knobs. Any key, button or knob brings the page back. It doesn't come on in the FX menu or while a visualizer is already up. |
 | Lights | Off or show. With show, the key lights join in with the visualizers. In a groove you get two chasers and flashes on the kick and snare. In a breakdown they slowly pulse. In a build they fill up. |
-| Voices | Which set of DX7 voices the pluck uses: **DY**, thirty human-made voices from public-domain banks (the default), or **DX**, the thirty built-in ones. |
+| Scanlines | Off or on. Darkens every other row of the screen by a quarter, like an old CRT TV. |
+
+### The sampling helper (SAMPLE)
+
+The **SAMPLE** page plays PERF-1's sounds one at a time, so a sampler (an MPC sampling its input, say) can record them and your project keeps them without the FM-1. It's the last settings page.
+
+| Knob | What it does |
+|---|---|
+| Sounds | **All**, **Drums** or **Synths**: press any key to start a run. **By key**: the white keys play one sound each. |
+| FX | **Off** (dry): no echo, reverb, effects or FX knobs while the page is up. **On**: the piece's own effects. |
+| Gap | The time between sounds in a run: 0.5, 1, 2 or 4 seconds. Use a longer gap for the pad and bass tails. |
+
+**A run.** Start your sampler recording, then press a key. The music stops, there's a count-in of 1.5 seconds, and then each sound plays once, Gap apart: the six drums (kick, snare, clap, hat, open hat, perc), then the pad (a chord), the bass, the acid and the pluck, each on the scale's root. Record it as one sample and chop it into pads. Press a key again to stop early.
+
+**By key.** White keys 1-6 are the drums, 7-10 the pad, bass, acid and pluck. A synth sound holds as long as the key does. The ten keys are lit while the page is up.
+
+The sounds are those of the piece that was playing: its kit, its sounds, its key. Pick the piece first, then open the page.
 
 ### Visualizers
 
@@ -1782,8 +1811,8 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 | Kept | When it's saved |
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
-| Theme, Tune, MIDI out, the set list | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, saver, lights, voices), the USB & MIDI page's USB level, Scanlines and MIDI map, the MIDI IN page, the FILTERS page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Theme, Tune, MIDI out, the set list, Zoom, the SET page's Mix | A couple of seconds after your last change. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, scanlines), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the FILTERS page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -1812,7 +1841,7 @@ The **Global** page (**GLO**) has four knobs:
 - **Tune**: fine tuning, +-50 cents (a cent is a hundredth of a semitone).
 - **Genre**: the bank of pieces, the same as **GLO** + **PRESETS**.
 
-MIDI out and the USB audio level are on the **USB & MIDI** settings page. Press **SEL** + **FX** to walk to it; it comes right after Settings.
+MIDI out and the USB audio level are on the **USB & MIDI** settings page. Hold **HOME** for the settings and turn **SELECT** to it.
 
 Synth is a look of its own, the Synth Imp, shown below. A night sky sits behind the sigil, with a striped sun on the horizon. The sun sinks in a breakdown, rises through a build and flashes on the drop. A floor of lines runs towards the horizon once a beat, and the imp glows like a neon tube.
 
@@ -1838,7 +1867,7 @@ The theme, Tune and MIDI out apply to all pieces.
 
 It also sends MIDI clock (the tempo signal other gear follows) with start, continue and stop. A pluck note lasts as long as it sounds (a plain sound's decay, or a DX voice's key time), and its level is sent as the velocity. The DJ snips are not sent. Notes you play by hand go out on their voice's channel. You can switch MIDI out off on the USB & MIDI settings page.
 
-**MIDI map: playing a sampler's drums.** The fourth knob on the USB & MIDI page sends the drums where a sampler plays them with little or no setup on the sampler. Load your kick, snare, clap, closed hat, open hat and perc samples as shown below. The samplers' maps send the drums and the clock only: the pad, pluck, bass and acid would land on the sampler's other pads or tracks, so they aren't sent.
+**MIDI map: playing a sampler's drums.** The third knob on the USB & MIDI page sends the drums where a sampler plays them with little or no setup on the sampler. Load your kick, snare, clap, closed hat, open hat and perc samples as shown below. The samplers' maps send the drums and the clock only: the pad, pluck, bass and acid would land on the sampler's other pads or tracks, so they aren't sent.
 
 | Map | Kick | Snare | Clap | Closed hat | Open hat | Perc |
 |---|---|---|---|---|---|---|
@@ -1859,7 +1888,7 @@ These maps follow the samplers' manuals and default settings (for the MPC Sample
 
 **MIDI in:** notes on channel 1 add their note to the scale, or remove it if it's already there. MIDI clock and start / stop from other gear set the tempo, and `EXT` shows where the tempo usually is. The FM-1 listens on its USB MIDI port, and on the TRS MIDI input where the build has one.
 
-**Playing PERF-1 from a pad controller.** An MPC, or any box with pads that sends MIDI notes, can play PERF-1. Connect the pad box's MIDI out to the FM-1's TRS MIDI input with a 3.5 mm TRS MIDI cable (both ends type A for an MPC Sample), or over USB through a computer. Then open the **MIDI IN** settings page (hold **HOME**, then turn **SELECT** past SET) and set **Notes** to **Pads**. **Channel** listens to all channels, or only the one you pick.
+**Playing PERF-1 from a pad controller.** An MPC, or any box with pads that sends MIDI notes, can play PERF-1. Connect the pad box's MIDI out to the FM-1's TRS MIDI input with a 3.5 mm TRS MIDI cable (both ends type A for an MPC Sample), or over USB through a computer. Then open the **MIDI IN** settings page (hold **HOME**, then turn **SELECT** past USB & MIDI) and set **Notes** to **Pads**. **Channel** listens to all channels, or only the one you pick.
 
 The pads are read in banks of 16, from note 36, the way an MPC's pads come out of the box (bank A is notes 36-51, bank B 52-67, and so on):
 

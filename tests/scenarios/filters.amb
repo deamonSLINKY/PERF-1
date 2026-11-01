@@ -6,7 +6,7 @@ press HOME
 wait 900
 release HOME
 wait 100
-turn SELECT 4
+turn SELECT 5
 wait 100
 expect fxpage 27
 expect fxs74 0

@@ -28,10 +28,10 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-turn SELECT 1
+turn SELECT 6
 wait 100
-expect fxpage 24
-spin K3 1
+expect fxpage 31
+spin K4 1
 wait 300
 shot settings_scan.png
 tap HOME

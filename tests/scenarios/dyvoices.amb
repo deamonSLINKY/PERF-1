@@ -12,7 +12,7 @@ release HOME
 wait 100
 expect fxpage 18
 expect dyvoices 1
-spin K4 -1
+spin K2 -1
 wait 100
 expect dyvoices 0
 peakreset
@@ -34,7 +34,7 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-spin K4 1
+spin K2 1
 wait 100
 expect dyvoices 1
 peakreset
