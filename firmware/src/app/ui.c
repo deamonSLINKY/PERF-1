@@ -91,7 +91,7 @@ static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", 
 static const char *const RPG_NAME[4] = {"FULL", "3/4", "HALF", "1/4"};                              /* the repeat's gate: the part of the slice that sounds */
 static const char *const RPR_NAME[3] = {"OFF", "BEAT", "BAR"};                                      /* the repeat's slip refresh */                                       /* the USB audio's level: the master knob's, or fixed (a recording that does not move with the knob) */
 static const char *const KEYSET_NAME[5] = {"SAME", "+2", "+3", "+5", "+7"};                     /* the drop's key change, in semitones */
-static const char *const GENRE_UI_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP", "INDUS"};
+static const char *const GENRE_UI_NAME[EN_NGENRE] = {"HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWV", "AMAPI", "TRIPHOP", "INDUS", "PSY", "FOREST"};
 static const char *const SCQ_NAME[2] = {"AT ONCE", "NEXT BAR"};                                  /* when a scene comes */
 static const char *const DJG_NAME[5] = {"8 BARS", "16 BARS", "32 BARS", "64 BARS", "SYNC"};   /* the auto-DJ's groove (SYNC: until the chord changes) */
 static const char *const DJB_NAME[3] = {"SHORT", "HALF", "FULL"};                                /* its breakdown, against the groove */
@@ -1940,8 +1940,8 @@ static void genre_fx(int g)
         for (i = 0; i < 4; i++)
             fxs_put(SET[8 + i], HOUSE[i]);
         ui.fx_lock |= FXB(FX_PUMP);
-    } else if (g >= 4 && g - 4 < 13) {           /* the others: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
-        static const uint8_t XFX[13][12] = {
+    } else if (g >= 4 && g - 4 < 15) {           /* the others: each its tape, vinyl and pump (255: as it is), and what is latched (1 vinyl, 2 tape, 4 pump, 8 phaser) */
+        static const uint8_t XFX[15][12] = {
             {14, 16, 22, 38, 255, 255, 255, 255, 255, 255, 255, 255},   /* dub: a worn tape (and the long echo) */
             {5, 5, 25, 20, 255, 255, 255, 255, 30, 30, 1, 0xF0},      /* dnb: a light pump, a very light tape */
             {20, 15, 60, 30, 255, 255, 255, 255, 255, 255, 255, 255}, /* breaks: tape drive, the phaser */
@@ -1954,8 +1954,10 @@ static void genre_fx(int g)
             {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* synthwave: nothing latched (the chorus and the gated reverb are in the piece) */
             {255, 255, 255, 255, 255, 255, 255, 255, 30, 40, 1, 0x70},      /* amapiano: a soft pump */
             {18, 14, 28, 40, 30, 22, 36, 36, 255, 255, 255, 255},           /* trip-hop: the vinyl and the tape, gentler than lofi's */
-            {20, 10, 70, 25, 255, 255, 255, 255, 255, 255, 255, 255}};      /* industrial: a hard tape drive */
-        static const uint8_t XLK[13] = {2, 6, 10, 6, 8, 4, 4, 0, 2, 0, 4, 3, 2};
+            {20, 10, 70, 25, 255, 255, 255, 255, 255, 255, 255, 255},       /* industrial: a hard tape drive */
+            {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255},   /* psy: nothing latched (the echo and the shimmer are in the piece) */
+            {255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}};  /* dark forest: the same */
+        static const uint8_t XLK[15] = {2, 6, 10, 6, 8, 4, 4, 0, 2, 0, 4, 3, 2, 0, 0};
         for (i = 0; i < 12; i++)
             if (XFX[g - 4][i] != 255)
                 fxs_put(SET[i], XFX[g - 4][i]);

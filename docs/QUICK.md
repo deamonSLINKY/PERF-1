@@ -1,4 +1,4 @@
-<!-- footer: PERF-1 quick manual · 0.15, 30 October 2026 · full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
+<!-- footer: PERF-1 quick manual · 0.16, 1 November 2026 · full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
 
 # PERF-1 quick manual
 
@@ -357,7 +357,7 @@ The 27 keys become an instrument and never edit the scale. **Voice**: pluck, pad
 
 ## Genres, pieces and what is kept
 
-Seventeen **genres**, each a bank of ten **pieces**. **PRESETS** steps through the bank (01-10, wraps round); **GLO** held + **PRESETS**, or Global's Genre knob, changes bank. The piece number stays, and the genre's own effects come with it (lofi latches vinyl and tape, house the pump; switching first clears latched vinyl, tape, pump and phaser). Each piece has its own settings, six patterns and drum sounds, a set of sounds by its number and a made-up title (`VELVET RAIN`); each genre its own compressor, reverb, stab rhythm, ghost notes, chord habits and section lengths. Power-on always starts in HYPNO on a random piece.
+Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through the bank (01-10, wraps round); **GLO** held + **PRESETS**, or Global's Genre knob, changes bank. The piece number stays, and the genre's own effects come with it (lofi latches vinyl and tape, house the pump; switching first clears latched vinyl, tape, pump and phaser). Each piece has its own settings, six patterns and drum sounds, a set of sounds by its number and a made-up title (`VELVET RAIN`); each genre its own compressor, reverb, stab rhythm, ghost notes, chord habits and section lengths. Power-on always starts in HYPNO on a random piece.
 
 | Genre | Tag | BPM | What it is |
 |---|---|---|---|
@@ -378,6 +378,8 @@ Seventeen **genres**, each a bank of ten **pieces**. **PRESETS** steps through t
 | AMAPIANO | A01 | 108-115 | A soft kick with shakers, a gliding syncopated bass (the log drum), jazzy 9ths, marimba, kalimba. (AMAPI) |
 | TRIPHOP | P01 | 70-88 | Slow and dusty, the snare laid back, ghosts, vinyl noise, a pluck loop that comes round; minor, sparse. |
 | INDUS | I01 | 118-145 | Industrial: harsh tuned drums, broken kicks, phrygian. |
+| PSY | Y01 | 92-146 | Psytrance, rolling bass; Y01, Y02, Y10 psychill. |
+| FOREST | O01 | 148-165 | Dark forest: glitching perc, hat rolls. |
 
 | HYPNO | Character | BPM | Key | HYPNO | Character | BPM | Key |
 |---|---|---|---|---|---|---|---|
@@ -395,7 +397,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default, DX7 voices made by people) or DX (the built-in set). Then **Auto DJ**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (Level: KNOB follows MASTER, FIXED stays at unity; MIDI out; MIDI map), **MIDI IN**, **FILTERS**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time for a sampler (a key starts a run of all ten, or By key: white keys 1-10). **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six colour sets), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default, DX7 voices made by people) or DX (the built-in set). Then **Auto DJ**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **FILTERS**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time, to sample. **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six colour sets), Tune (+-50 cents), Genre.
 
 ### Visualizers
 
@@ -441,11 +443,11 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 
 - **No sound:** MASTER; PLAY lit; a Level at 0 (KNOB1 on its page; the Mixer shows all); `BY HAND` (SEL + ENV); a mute on the mix map; an effect latched (`FX` in the header; OCT- in the menu clears all). Jam silences the voice it plays; REMOTE silences the FM-1 on purpose.
 - **A short dip or tick when you store or change a setting:** normal (saving to memory). **A stored piece came back as before:** the power went off during the save. **My changes vanished:** only a stored piece (Global, SAVE) is kept.
-- **The installer doesn't find the FM-1:** Chrome or Edge, a data cable, no DAW using the port, MIDI with SysEx allowed. **It offers an old version:** hard-refresh. **An install was cut off:** run it again; the FM-1 stays in update mode. **`PERF-1 SAFE MODE`:** two crashes while starting; reinstall, or PLAY to try again. **`UPDATE MODE IN 3..`:** you're holding OCT- and OCT+; let go.
-- **Buttons or knobs don't match their labels:** hold OCT- and OCT+ while switching on; the calibration asks for each control in turn (it gives up after 30 s untouched).
-- **Loaded DX7 voices don't show:** they come after the 30 built-in DX sounds; check for `LOADED`, the pluck's Level, the checksum.
-- **Crackles or dropouts:** watch `XR` and `S1`/`S2`; run Live status a minute and send the CSV with the piece, its sounds, the tempo.
-- **The emulator doesn't see the FM-1:** no DAW on the port; Chrome, Edge or Firefox (not Safari); SEL + GLO for remote.
+- **The installer doesn't find the FM-1:** Chrome or Edge, a data cable, no DAW using the port, MIDI with SysEx allowed. **It offers an old version:** hard-refresh. **An install was cut off:** run it again; the FM-1 stays in update mode. **`PERF-1 SAFE MODE`:** two crashes while starting; reinstall, or PLAY to try again.
+- **Buttons or knobs don't match their labels:** hold OCT- and OCT+ while switching on to calibrate.
+- **Loaded DX7 voices don't show:** they come after the 30 built-in DX sounds; check for `LOADED`.
+- **Crackles or dropouts:** watch `XR` and `S1`/`S2`; send a Live status CSV with the piece.
+- **The emulator doesn't see the FM-1:** no DAW on the port; not Safari; SEL + GLO.
 
 ### Credits and licence
 

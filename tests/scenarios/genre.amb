@@ -170,6 +170,28 @@ peakreset
 wait 2500
 expect peak_db_min -40
 shot genre_indus.png
+# psy (0.16.2): its second piece, psychill at 104 BPM (one of the three slow pieces: the downtempo beat)
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 17
+expect tempo 104
+peakreset
+wait 2500
+expect peak_db_min -40
+shot genre_psy.png
+# dark forest (0.16.2): its second piece, 152 BPM
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 18
+expect tempo 152
+peakreset
+wait 2500
+expect peak_db_min -40
+shot genre_forest.png
 # round to the first again; its piece 1 as it was
 press GLO
 turn PRESET 1

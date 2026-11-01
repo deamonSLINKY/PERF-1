@@ -47,7 +47,7 @@ Only a few. The rest can wait.
 
 **4. Turn PRESETS one click.** A new piece starts: a new key, a new tempo, new sounds. There are ten pieces in each style.
 
-**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are seventeen: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop and industrial. Let go of GLO when you find one you like.
+**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are nineteen: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance and dark forest. Let go of GLO when you find one you like.
 
 ## Make it move
 
@@ -115,7 +115,7 @@ You don't need any of this to have fun, but it is there.
 | Word | Means |
 |---|---|
 | **Piece** | One song: its key, tempo, sounds and drum patterns. Ten in each style. |
-| **Genre** | A style of music, with its own drums, sounds and habits. Seventeen of them. |
+| **Genre** | A style of music, with its own drums, sounds and habits. Nineteen of them. |
 | **Pad** | The soft, long chords in the background. |
 | **Bass** | The low notes. |
 | **Acid** | The squelchy, twisting line, after the classic Roland TB-303. |

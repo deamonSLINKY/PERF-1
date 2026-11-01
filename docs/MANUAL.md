@@ -60,7 +60,7 @@ Only a few. The rest can wait.
 
 **4. Turn PRESETS one click.** A new piece starts: a new key, a new tempo, new sounds. There are ten pieces in each style.
 
-**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are seventeen: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop and industrial. Let go of GLO when you find one you like.
+**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are nineteen: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance and dark forest. Let go of GLO when you find one you like.
 
 ### Make it move
 
@@ -128,7 +128,7 @@ You don't need any of this to have fun, but it is there.
 | Word | Means |
 |---|---|
 | **Piece** | One song: its key, tempo, sounds and drum patterns. Ten in each style. |
-| **Genre** | A style of music, with its own drums, sounds and habits. Seventeen of them. |
+| **Genre** | A style of music, with its own drums, sounds and habits. Nineteen of them. |
 | **Pad** | The soft, long chords in the background. |
 | **Bass** | The low notes. |
 | **Acid** | The squelchy, twisting line, after the classic Roland TB-303. |
@@ -603,7 +603,7 @@ genre takes over again, with your slots kept for later. The progression is store
 
 ![Storing a piece on Global](img/perf-screen-store.png)
 
-PERF-1 has seventeen **genres**. Each is a bank of ten **pieces**, ready-made songs to play and change.
+PERF-1 has nineteen **genres**. Each is a bank of ten **pieces**, ready-made songs to play and change.
 
 - Turn **PRESETS** for another piece in the bank. It goes from 01 to 10 and wraps round.
 - Hold **GLO** and turn **PRESETS** for another bank (it wraps round too), or use the Genre knob on the Global
@@ -637,6 +637,8 @@ a made-up title, such as `VELVET RAIN`, the same one every time.
 | AMAPIANO | A01-A10 | 108-115 | A soft kick with shakers, a gliding syncopated bass (playing the log drum's part), jazzy 9ths, marimba and kalimba plucks. (On the screen: AMAPI.) |
 | TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back, ghost notes, vinyl noise, a pluck loop that comes round again, minor and sparse. |
 | INDUS | I01-I10 | 118-145 | Industrial techno, EBM and industrial breakbeat. Driven, harsh drums tuned against each other (the snare a tritone up, the perc a semitone off), the Hard kit with the Break kit's chops in some pieces, broken and off-beat kicks, an EBM stomp, perc in threes against the beat. Phrygian and minor, suspended and fourths chords, a grinding bass, metal and bell sounds, a gated reverb and hard tape. Fills roll on the off-beats and in triplets. |
+| PSY | Y01-Y10 | 92-146 | Psytrance: progressive, full-on and goa (132-146), the kick on every beat with the rolling bass between (K-B-B-B), soft 16th hats, the open hat off the beat, the acid as the squelching lead, a dotted (3/16) echo, phrygian and minor, a chord held for 8 bars. Y01, Y02 and Y10 are psy-ambient and psychill (92-112): a downtempo beat, a held bass, a wide shimmer reverb. With the set list and the SET page's Mix you can go from the cosmic into the trance and back. |
+| FOREST | O01-O10 | 148-165 | Dark forest and dark psy: the same rolling bass under every-16th hats and a glitching percussion in threes against the four, hat rolls, triplets, the Hard kit, phrygian and fourths, the chord barely moving. |
 
 The sections follow each genre's habits too. House, dubstep, DnB, trap, disco and synthwave cut everything for the
 last beat before the drop. Lofi, dub, reggae, amapiano and trip-hop build on the perc instead of a snare roll. Breaks
