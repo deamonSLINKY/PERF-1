@@ -20,7 +20,7 @@
  *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound
  *   reboot                       re-run boot (power off and on)
  *   seed N                       the seed the next boot uses (0: the first piece, exact)
- *   restore OBJ [bad]            write an object back as a restored backup's (checked first); expect rsvalid, rsstate, storelock
+ *   restore OBJ [bad|old|shared] write an object back as a restored backup's (checked first); expect rsvalid, rsstate, storelock
  *   seamless 0/1                 a store without the fade (the sliced erase)
  *   battery N                    the battery divider's reading, 0..1023 (default: none)
  *   storefuzz SEED               fill the project object with random damage (for the sanitizer runs)
@@ -526,7 +526,14 @@ static int expect(const char *what, const char *val)
         }
         for (i = 0; i < NPIECES; i++)
             got += !(proj.slot[i].pool & 1u) || (proj.slot[i].pool >> 12);
-    } else if (!strcmp(what, "edited"))             /* the pieces changed since taken up (bit i: piece i) */
+    } else if (!strcmp(what, "parwide")) {        /* settings spanning 255 steps or more (none may: a stored 0xFF means "the recipe's", project.c REC_RECIPE) */
+        int p;
+        got = 0;
+        for (p = 0; p < P_NPARAMS; p++)
+            got += en_param_info(p)->hi - en_param_info(p)->lo >= 255;
+    } else if (!strcmp(what, "uservoices"))         /* the player's DX7 voices loaded */
+        got = en_user_count();
+    else if (!strcmp(what, "edited"))             /* the pieces changed since taken up (bit i: piece i) */
         got = proj.edited;
     else if (!strcmp(what, "store_writes"))
         got = (int)store_writes;
@@ -935,12 +942,37 @@ int main(int argc, char **argv)
             }
 #undef FZ
             plat_store_save(OBJ_PROJ, bk, n);
+        } else if (!strcmp(cmd, "dumpobj") || !strcmp(cmd, "loadobj")) {   /* dumpobj OBJ FILE: a flash object to a file; loadobj OBJ FILE: a file into one, as is
+                                                 * (tests/web_piece_test.js: a bank the pieces page builds, loaded at the next boot) */
+            static uint8_t tmp[PLAT_STORE_MAX];
+            FILE *fo = fopen(b, cmd[0] == 'd' ? "wb" : "rb");
+            if (!fo) {
+                fprintf(stderr, "%s: cannot open %s\n", cmd, b);
+                fails++;
+            } else if (cmd[0] == 'd') {
+                const int n = plat_store_load((uint32_t)atoi(a), tmp, sizeof tmp);
+                if (n > 0)
+                    fwrite(tmp, 1, (size_t)n, fo);
+                fclose(fo);
+            } else {
+                const size_t n = fread(tmp, 1, sizeof tmp, fo);
+                fclose(fo);
+                plat_store_save((uint32_t)atoi(a), tmp, (uint32_t)n);
+            }
         } else if (!strcmp(cmd, "restore")) {          /* restore OBJ [bad]: the object as it is in flash, checked and written back as a backup's (bad: one byte changed) */
             static uint8_t tmp[PLAT_STORE_MAX];
             const int o = atoi(a), n = plat_store_load((uint32_t)o, tmp, sizeof tmp);
             int m = n;
             if (b[0] == 'b' && n > 0)
                 tmp[0] ^= 0xFFu;
+            if (b[0] == 's' && n > 0 && rd32(tmp) == IMG_MAGIC) {      /* shared: the first saved piece's Tempo as the pieces page writes a setting the piece predates */
+                const uint32_t sv = rd16(tmp + 8);
+                int i = 0;
+                while (i < NPIECES && !(sv >> i & 1u))
+                    i++;
+                if (i < NPIECES)
+                    tmp[IMG_HDR + (uint32_t)i * IMG_REC + REC_PAR + P_TEMPO] = REC_RECIPE;
+            }
             if (b[0] == 'o' && n > 0 && rd32(tmp) == IMG_MAGIC) {      /* old: a bank as before 0.15.6, the records only */
                 tmp[14] = 0;
                 m = (int)IMG_TAIL;

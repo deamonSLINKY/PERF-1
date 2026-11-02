@@ -615,6 +615,8 @@ static void px_end(void)
         e = 5u << 28 | (uint32_t)(m[4] & 0x1Fu) << 14 | (uint32_t)((m[5] << 7 | m[6]) & 0x3FFF);
     else if (n == 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x05u)         /* restore: restart */
         e = 6u << 28;
+    else if (n == 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x06u)         /* about: what this firmware is (the pieces page) */
+        e = 7u << 28;
     if (e && px_w - px_r < PX_N) {
         px_q[px_w % PX_N] = e;
         RING_PUBLISH();

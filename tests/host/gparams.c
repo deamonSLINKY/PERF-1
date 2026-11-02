@@ -28,10 +28,32 @@ static void put_str(const char *s)
     putchar('"');
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
     int p, v;
     en_init();
+    if (argc > 1 && !strcmp(argv[1], "pieces")) {   /* the pieces page's names (web/pieces): every genre's and piece's, and where the pluck's DX voices start */
+        int g, i;
+        printf("{\"genres\":[");
+        for (g = 0; g < EN_NGENRE; g++) {
+            if (g)
+                putchar(',');
+            put_str(en_genre_name(g));
+        }
+        printf("],\"pieces\":[");
+        for (g = 0; g < EN_NGENRE; g++) {
+            printf("%s[", g ? "," : "");
+            for (i = 0; i < EN_NPIECES; i++) {
+                if (i)
+                    putchar(',');
+                put_str(en_piece_name_g(g, i));
+            }
+            putchar(']');
+        }
+        printf("],\"nplain\":%d,\"nfmfact\":%d,\"nuser\":%d,\"prglen\":%d,\"npat\":%d,\"nlane\":%d}\n", EN_NCMSND - EN_NCMFM, EN_NFMFACT, EN_NUSER, EN_PRG_LEN,
+               EN_NPAT, EN_NLANE);
+        return 0;
+    }
     printf("[\n");
     for (p = 0; p < P_NPARAMS; p++) {
         const en_param_t *q = en_param_info(p);

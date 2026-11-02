@@ -1,0 +1,27 @@
+# A shared piece (the pieces page, 0.16.3) made before a setting existed: the page writes that setting's byte as 0xFF, and the piece loads with its
+# recipe's value there and everything else as shared (an 0xFF used to make the whole piece out of range: not loaded).
+seed 0
+wait 3000
+tap GLO
+tap HOME
+wait 100
+expect tempo 128
+spin K1 4
+spin K2 3
+wait 200
+expect tempo 132
+expect par6 43
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+restore 0 shared
+wait 600
+expect rsvalid 1
+expect rsstate 2
+reboot
+wait 3000
+expect saved 1
+expect tempo 128
+expect par6 43
+expect parwide 0

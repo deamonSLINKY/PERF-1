@@ -25,6 +25,8 @@ project_t proj;
 #define REC_ACL (REC_MOD - 24u)                  /* the frozen acid line before them (18 bytes; zeros in an older record) */
 #define REC_CML1 250u                            /* the frozen pluck line (12 bytes) in the two gaps: six after the settings, six after the acid line */
 #define REC_CML2 (REC_ACL + 18u)
+#define REC_RECIPE 0xFFu                     /* a setting's byte that says "the piece's recipe" (0.16.3: the pieces page fills a shared piece's newer settings with it; no
+                                              * setting spans 255 steps, so pack_slot never writes it) */
 typedef char img_fits[IMG_LEN <= PLAT_STORE_MAX ? 1 : -1];
 typedef char rec_fits[REC_PAR + P_NPARAMS <= REC_CML1 && REC_CML1 + 6u <= REC_ACL ? 1 : -1];
 static uint8_t image[PLAT_STORE_MAX];        /* the playing genre's object, as it is in flash (and as the next save writes it: its first IMG_LEN bytes; the old bank is read here whole first) */
@@ -173,6 +175,8 @@ static int unpack_slot(int i, uint32_t npar, int tail, slot_t *s)   /* tail: the
     memcpy(s->cml + 6, rec + REC_CML2, 6);
     for (p = 0; (uint32_t)p < npar && p < P_NPARAMS; p++) {
         const int v = en_param_info(p)->lo + rec[REC_PAR + p];
+        if (rec[REC_PAR + p] == REC_RECIPE)      /* a shared piece made before this setting existed (web/pieces): the recipe's, as an older bank's missing ones */
+            continue;
         if (p == P_AC_CHANCE && v > 1) {         /* (a development build kept a chance here, 100: now the sync, bars) */
             s->par[p] = 0;
             continue;

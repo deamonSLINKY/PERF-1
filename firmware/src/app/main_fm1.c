@@ -485,6 +485,7 @@ static void dx_service(void)
 static void px_service(void)
 {
     static uint32_t dump_i = 0xFFFFFFFFu, vox_req = 0xFFFFFFFFu;
+    static uint8_t about_req;                        /* the pieces page asked what this firmware is */
     uint8_t f[PX_FRAME_MAX];                         /* the longest frame (a voice) fits: dx_proto.h, checked by tests/host/dxproto_test.c */
     while (px_r != px_w) {
         const uint32_t e = px_q[px_r % PX_N];
@@ -520,8 +521,12 @@ static void px_service(void)
             usb_detach();
             fm1_delay_ms(30);
             fm1_reboot();
+        } else if (e >> 28 == 7u) {                      /* about: answered below, as the queue has room */
+            about_req = 1;
         }
     }
+    if (about_req && usb_sysex_try(f, bk_build_about(f, (uint32_t)P_NPARAMS, (uint32_t)EN_NGENRE, (uint32_t)en_user_count())) == 0)
+        about_req = 0;
     if (bk_wait_obj != 0xFFFFFFFFu && ui_restore_state() >= 2) {   /* the written object's answer */
         bk_restored |= ui_restore_state() == 2;
         bk_ack_put(bk_wait_obj, 0x7Fu, ui_restore_state() == 2 ? 0u : 3u);

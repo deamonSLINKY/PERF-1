@@ -1830,6 +1830,36 @@ Installing another firmware, or reinstalling, can wipe what PERF-1 has stored. T
 - **Restore the chosen backup** (choose the file first) writes everything in the file back, one item at a time, then the FM-1 restarts. It replaces what is stored now. The music fades out for each write, and nothing else is saved until the restart. A backup from an older PERF-1 loads into a newer one. Anything in the file the firmware doesn't recognise is refused and never written.
 - Only PERF-1 reads these files, and the FM-1 must be running PERF-1 0.14 or later. An older version doesn't answer, and the page tells you so.
 
+### Sharing pieces
+
+The **Pieces** page on the PERF-1 website shares one piece at a time: you send a piece you made to someone else, and you add the pieces other people share. Plug the FM-1 in by USB and open the page in Chrome or Edge.
+
+**What goes with a piece:** all of its settings, its six drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice its pluck plays if that voice is one you loaded yourself (section 15). Your effects settings, the theme and the set list stay yours.
+
+**To share a piece:**
+
+1. Store it on the FM-1 (**GLO**, then **SAVE**). Only stored pieces can be shared.
+2. On the Pieces page, press **Read my saved pieces** and choose the piece.
+3. Add a title, your name and a note if you like (what to play, what to try).
+4. **Download .piece** saves a small file. **Copy link** copies a link that opens the Pieces page with your piece in it, ready to add. **Copy code** copies the same thing as text, starting `P1.`, for places where links don't work.
+
+**To add a shared piece:**
+
+1. Open the link, or paste the code into the box, or choose the `.piece` file. The page shows the piece's genre and number, tempo, key and pluck sound, and the title and note if it has them.
+2. Choose where it goes. It always goes into its own genre; you pick which of the ten pieces it replaces. It starts on the number it had.
+3. Press **Add to my FM-1**. If you already stored a piece there, the page asks before it replaces it.
+4. The FM-1 restarts to load it. Then go to the genre (**GLO** + **PRESETS**) and the piece (**PRESETS**). Store what you were playing before you add a piece, because the restart loses changes you haven't stored.
+
+**Its DX7 voice.** If the piece's pluck plays its own DX7 voice, the voice comes with it:
+
+- If you already have that voice loaded, nothing changes and the piece uses yours.
+- If the voice's slot on your FM-1 is empty, the voice goes there.
+- If the slot holds a different voice of yours, the page asks: put the new voice in your next empty slot (nothing of yours changes), or replace your voice in that slot. Replacing it changes the sound of any of your pieces that use the old voice.
+
+**Hear it in the emulator** puts the piece into the browser emulator (section 17) instead, with its voice, so you can listen before you add it to your FM-1.
+
+**Versions.** Both of you need PERF-1 0.16.3 or later to add a piece. A piece made on an older PERF-1 loads into a newer one: anything it doesn't have yet plays as the piece's genre sets it. A piece made on a newer PERF-1 loads into an older one without the newer settings, and the page tells you so.
+
 ---
 
 ## 14. Themes and MIDI
