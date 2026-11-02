@@ -103,7 +103,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 {quick_card}
 <a class="card" href="firmware/{name}"><b>Download the firmware file</b><span>{name} ({len(raw) // 1024} KB). You only need this if you install another way than the page above.</span></a>
 <a class="card" href="{REPO}/issues/new/choose"><b>Ideas and problems</b><span>Tell me what you'd like next, or what went wrong. Most new features started as someone's idea.</span></a>
-<a class="card" href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener"><b>Support PERF-1</b><span>PERF-1 is free. If it makes your music, a coffee on Ko-fi keeps new features coming.</span></a>
+<a class="card" href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener"><b>Buy me a coffee</b><span>PERF-1 is free. If it makes your music, a coffee on Ko-fi keeps new features coming.</span></a>
 <a class="card" href="{REPO}"><b>Source code</b><span>Free and open source (GPL-3.0), on GitHub.</span></a>
 </div>
 <p class="small">Installing firmware is at your own risk. If something goes wrong, the installer can put the original firmware back, and an FM-1 that fails to start twice in a row starts in a safe mode the installer can reach. Section 1 of the manual explains it all.</p>
