@@ -20,6 +20,10 @@ Before the first release the firmware was developed on two lines: a "main line" 
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
+## Unreleased (the builds 0.16.5 .. are its steps)
+
+- **Sharing pieces and the Library back on the site** (0.16.5): the Pieces and Library pages (0.16.3, 0.16.4) were held out of 0.16.1 (make_pages_site.py --no-sharing); the manual's Sharing pieces section and the README's bullet are back for 0.17.
+
 ## 0.16.1 (the builds 0.16.1 .. 0.16.4 are its steps)
 
 **In short.** A new settings menu: hold HOME and turn SELECT to walk the unit's own settings (Settings, Auto DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN, SAMPLE), while SEL + FX walks only the effects. SCREAM pushes the acid and bass filters into self-oscillating resonance. Both LFOs reach new targets: the acid's cutoff and resonance, the echo time, the punch-in filter, the bass's resonance. PSY and FOREST, the 18th and 19th genres. Zoom shows a turned knob's name and value full screen. SAMPLE plays a piece's sounds one by one to sample into an MPC. Mix glides the tempo into the next piece of a set. The installer's live status counts the pieces from 1, as the FM-1 does. Sharing pieces and the Library are held for 0.17.
