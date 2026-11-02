@@ -5,7 +5,8 @@
   python3 tools/make_pages_site.py VERSION OUTDIR      (after tools/release.sh VERSION)
 
 OUTDIR gets index.html (the landing page), install/ (the web installer with the package in it),
-emu/ (the browser emulator), editor/ (the parameter and DX7 voice editor), manual/ and firmware/perf1-VERSION.fwsc.
+emu/ (the browser emulator), editor/ (the parameter and DX7 voice editor), pieces/ and library/ (sharing), manual/ and firmware/perf1-VERSION.fwsc.
+  --no-sharing   leaves out pieces/ and library/ and their links (a release whose sharing pages are not ready: 0.16.1)
 All links are relative, so it works at any path (https://USER.github.io/PERF-1/ and a local server alike)."""
 import json
 import re
@@ -17,8 +18,10 @@ SRC = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SRC / "web"))
 from make_site import product_of, strip_module  # noqa: E402
 
-ver = sys.argv[1] if len(sys.argv) > 1 else sys.exit(__doc__)
-OUT = Path(sys.argv[2] if len(sys.argv) > 2 else SRC / "build" / "site")
+SHARING = "--no-sharing" not in sys.argv
+args = [a for a in sys.argv[1:] if a != "--no-sharing"]
+ver = args[0] if args else sys.exit(__doc__)
+OUT = Path(args[1] if len(args) > 1 else SRC / "build" / "site")
 REPO = "https://github.com/deamonSLINKY/PERF-1"
 pkg = SRC / "build" / f"amb-{ver}.fwsc"
 raw = pkg.read_bytes()
@@ -52,7 +55,7 @@ if params.exists():
     (OUT / "editor" / "index.html").write_text(ed, encoding="utf-8", newline="\n")
     plib = "\n".join(strip_module((SRC / "web" / f).read_text(encoding="utf-8")) for f in ("fm1backup.js", "fm1piece.js", "fm1card.js", "fm1share.js"))
     lib_json = (SRC / "web" / "library" / "library.json").read_text(encoding="utf-8")
-    for d in ("pieces", "library"):             # sharing pieces and sets, and the library of them: the modules, the parameters' names, the library's codes
+    for d in ("pieces", "library") if SHARING else ():   # sharing pieces and sets, and the library of them: the modules, the parameters' names, the library's codes
         (OUT / d).mkdir(exist_ok=True)
         pg = (SRC / "web" / d / "index.html").read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8")).replace("/*LIB*/", plib)
         (OUT / d / "index.html").write_text(pg.replace("/*LIBRARY*/", lib_json), encoding="utf-8", newline="\n")
@@ -100,10 +103,17 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 {quick_card}
 <a class="card" href="firmware/{name}"><b>Download the firmware file</b><span>{name} ({len(raw) // 1024} KB). You only need this if you install another way than the page above.</span></a>
 <a class="card" href="{REPO}/issues/new/choose"><b>Ideas and problems</b><span>Tell me what you'd like next, or what went wrong. Most new features started as someone's idea.</span></a>
+<a class="card" href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener"><b>Support PERF-1</b><span>PERF-1 is free. If it makes your music, a coffee on Ko-fi keeps new features coming.</span></a>
 <a class="card" href="{REPO}"><b>Source code</b><span>Free and open source (GPL-3.0), on GitHub.</span></a>
 </div>
 <p class="small">Installing firmware is at your own risk. If something goes wrong, the installer can put the original firmware back, and an FM-1 that fails to start twice in a row starts in a safe mode the installer can reach. Section 1 of the manual explains it all.</p>
 <p class="small">PERF-1 is a fork of HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a>, itself a fork of AMB-1 by Charles Vestal, built on Felucca by Leo Kuroshita (Hügelton Instruments); the six-operator FM engine is Melodee's by Kerem Kilic (Ellic Studio), after Dexed. GPL-3.0-only; see LICENSING.md in the repository. "M-VAVE" and "FM-1" are trademarks of their owners: PERF-1 is independent firmware, not affiliated with or endorsed by them.</p>
 </main></body></html>
 ''', encoding="utf-8", newline="\n")
+if not SHARING:                                 # the menus and the landing page without them
+    for f in OUT.rglob("*.html"):
+        t = f.read_text(encoding="utf-8")
+        u = re.sub(r'<a (?:class="card" )?href="(?:\.\./)?(?:pieces|library)/"[^>]*>.*?</a>\n?', "", t)
+        if u != t:
+            f.write_text(u, encoding="utf-8", newline="\n")
 print(f"site: {OUT}: index, install/, emu/, editor/, manual/, firmware/{name} ({len(raw)} B, {product})")

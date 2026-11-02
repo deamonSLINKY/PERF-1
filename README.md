@@ -32,7 +32,6 @@ PERF-1 is a custom firmware for the M-VAVE FM-1: a 5 track generative groovebox 
 - **The bass can be a line, the pluck can remember.** The bass plays held, on the genre's rhythm, on the kick, in eighths, off the beat, walking or in a riff, and the pluck can keep its last few notes and bring them round again (deja vu), morphing them a note at a time.
 - **Real FM voices, and yours.** A built-in six-operator FM engine plays 30 DX7-style voices as the pluck, and you can load up to 16 of your own DX7 voices from a `.syx` file over USB and play them from the pluck page. A browser **editor** shows every parameter and edits DX7 voices with a live preview on the unit.
 - **You keep what you make.** Any piece, in any genre, can be stored (one button); the unit remembers your theme, tuning, effect settings and DX7 voices across power-off, and the installer page can back all of it up to a file and restore it (so trying another firmware costs you nothing).
-- **Share what you make.** The **Pieces** page turns a stored piece into a link, a code or a small file, with its own DX7 voice if it plays one, and adds the pieces other people share to your FM-1 (asking before it replaces your piece or your voice), or lets you hear them first in the browser emulator.
 - **A screen that tells you what is going on.** The middle of the home screen is the **sigil**: a circle that turns so the chord's root is always at the top, draws the chord as a shape (a triad is a triangle, a seventh a four-sided figure), fills round with the four-bar phrase, shows the sixteen steps of the bar and flares a rune for each plucked note. Its eye is half open in a groove, shut in a breakdown, wide and shaking in a build, and flashes on the drop. The header counts down to the drop or the next break.
 - **Five tracks at once, with a safety net.** Pad, bass, acid, pluck and drums all play together (a generative firmware often runs four), which asks a lot of a chip with a 5.8 ms deadline. So the engine is built around not breaking: a second core takes the reverb, and under load more of the work; each piece is checked for level and load; a master bus with a compressor and a look-ahead limiter keeps the sum from clipping; and if a piece still gets too heavy, the engine sheds the least important work before it would drop a sample.
 - **Honest about its limits.** It runs two cores and watches its own load: a status line shows CPU, dropouts and which core is doing what, USB telemetry logs it, and when a piece gets too heavy the engine sheds the least important work before it would drop audio.
@@ -60,6 +59,17 @@ The manual ([docs/MANUAL.md](docs/MANUAL.md), or the page on the site with scree
 The screen is drawn in one look (warm black, one colour per voice: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink) in six palettes, chosen on the Global page.
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
+
+## What's new in 0.16.1
+
+- **A new settings menu:** hold HOME, then turn SELECT through Settings, Auto DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN and SAMPLE. SEL + FX now walks only the effects.
+- **SCREAM:** push the acid and bass filters until they howl, with Drive, Scream, Wow on accented notes, and which voice.
+- **More LFO targets:** the pad LFO can sweep the acid's cutoff or resonance, the echo time (a dub siren) or the punch-in filter (an auto-wah); the bass LFO its own resonance, the acid or the echo.
+- **PSY and FOREST,** the 18th and 19th genres: psytrance from psy-ambient to full-on, and dark forest at 148-165 BPM.
+- **Zoom:** turn any knob and its name and value fill the screen, readable from a distance (SCREEN page).
+- **Sampling helper:** SAMPLE plays a piece's drums and synths one at a time, to record into an MPC or sampler and chop.
+- **Mix:** a new piece in a set starts at the old tempo and glides to its own over 4 to 32 bars.
+- **Fix:** the installer's live status shows the same piece number as the FM-1.
 
 ## What's new in 0.16.0
 
@@ -126,6 +136,8 @@ Use the web installer, <https://deamonslinky.github.io/PERF-1/install/>, in Chro
 ## Feedback, ideas and help
 
 PERF-1 is young and I welcome all of it: comments, suggestions, ideas, bug reports, and help improving it. [Open an issue](https://github.com/deamonSLINKY/PERF-1/issues/new/choose) (there are templates for a bug report and a feature request, and a free-form one for anything else). A bug report is most useful with the version (shown on the boot card), the genre and piece, and, for anything about load or crackles, a status log (`tools/fm1log.py`, or the "Live status" on the installer page). Code, documentation and sound-design contributions are welcome too: see `CONTRIBUTING.md`.
+
+PERF-1 is free. If it makes your music and you'd like to support it, there's [Ko-fi](https://ko-fi.com/deamonslinky).
 
 ## Credits and licence
 
