@@ -8,8 +8,8 @@ release HOME
 wait 100
 expect fxpage 18
 spin K1 2
-# the screensaver: on the SCREEN page (0.16.1), the settings' seventh
-turn SELECT 6
+# the screensaver: on the SCREEN page (0.16.1), the settings' eighth (0.16.4: SCREAM before it)
+turn SELECT 7
 wait 100
 expect fxpage 31
 spin K2 1

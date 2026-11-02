@@ -149,7 +149,7 @@ def main():
         tabs[-1]["sections"].append({"name": "More", "knobs": [{"p": i, "label": params[i]["n"]} for i in left]})
     other = left
     out = {"params": params, "tabs": tabs, "alg": algorithms(), "lanes": LANES, "layers": LAYERS,
-           "enum": {k: v for k, v in P.items() if k in ("P_CM_SND", "P_CM_LVL", "P_NPARAMS", "P_TEMPO", "P_ROOT", "P_MODE", "P_PADTONE", "P_AC_WAVE")},
+           "enum": {k: v for k, v in P.items() if k in ("P_CM_SND", "P_CM_LVL", "P_NPARAMS", "P_TEMPO", "P_ROOT", "P_MODE", "P_PADTONE", "P_AC_WAVE", "P_PATTERN", "P_TUNE", "P_MIDI", "P_THEME")},
            "names": json.loads(subprocess.check_output([exe, "pieces"]).decode("utf-8"))}   # the pieces page: genres, pieces, where the DX voices start
     json.dump(out, open(OUT, "w", encoding="utf-8"), separators=(",", ":"))
     sys.stdout.write("params.json: %d parameters, %d tabs, %d sections, %d not on any tab, %d algorithms (%d B)\n" % (len(params), len(tabs), sum(len(x["sections"]) for x in tabs), len(left), len(out["alg"]), os.path.getsize(OUT)))

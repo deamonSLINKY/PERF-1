@@ -411,12 +411,12 @@ columns are **KNOB1** to **KNOB4**.
 | Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO; hold **SEL** and turn it for bars or seconds) |
 | Pad | **ENV** | Level | Bright | Sound (24) | Detune |
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
-| Pad LFO | **ENV** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch) |
+| Pad LFO | **ENV** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
 | Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Chorus (0-100) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
 | Progression | **ENV** x5, or hold **EDIT** | Slot (1-8, or a white key) | Chord (a chord of the scale, or Hold) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
-| Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T for a fast wobble) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
+| Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T for a fast wobble) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
 | Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, and nine named figures) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
@@ -447,6 +447,7 @@ Words on these pages:
 
 - An **envelope** (env) shapes how a sound starts and fades each time it plays.
 - An **LFO** is a slow wobble that moves the Target up and down. S&H jumps to a random value each cycle.
+  Either LFO can also move another voice or an effect, stored with the piece: **Acid cut** and **Acid reso** give the acid a wah or a wobble of its own; **Echo time** wobbles the tape echo (a dub siren at full depth); the pad LFO's **Punch cut** sweeps the punch-in FILTER while you hold it (an auto-wah on the tracks it takes); the bass LFO's **Reso** moves the bass's resonance. The rates from 1/8 on lock it to the beat.
 - **Cutoff** is where the filter starts cutting the highs (lower is darker). **Reso** (resonance) adds a
   squelchy peak there. **Env mod** is how far the acid's envelope opens the filter on each note.
 - An **accent** is a louder note. A **slide** or **glide** bends smoothly into the next note.
@@ -557,6 +558,17 @@ standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** pas
 | Band | Only a band around the cutoff: nasal, telephone-like, great with resonance. |
 | Notch | A gap at the cutoff: hollow and phasey as the cutoff moves. |
 | Peak | The cutoff's band boosted against the rest: a vowel-like bite. |
+
+**Making it scream.** The **SCREAM** settings page (the next one after FILTERS) pushes the acid's and the bass's filters into the raw, screaming sound of an acid line through a distortion pedal. It is for all pieces (it is kept with the settings, not with a piece), and at 0 everything sounds as it did:
+
+| Knob | What it does |
+|---|---|
+| Drive | Pushes the sound harder into the filter and saturates it: thicker, louder, rawer. |
+| Scream | Takes the resonance far past Reso's top, towards the filter singing on its own. With Reso high and Cutoff moving, this is the scream. |
+| Wow | Accented notes open the resonance and the drive further: the acid's wow on the accents. |
+| Target | Which voice: the acid, the bass, or both. |
+
+Start with Scream at 60 and Drive at 40 on an acid piece, then turn the acid's Cutoff and Env mod (or let an LFO on **Acid cut** do it). Turn the acid's level down a little if it gets too loud: the limiter will hold it, but it squashes the rest of the mix.
 
 The bass's LFO moving the cutoff (a wobble) works with every type. The setting is for every piece, kept with the
 settings. It's the MultiFilter idea from Caustic, rebuilt here.
@@ -1460,6 +1472,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: scale, pads, M:S, MPK | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
+| SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
 | SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Scanlines: off, on |
 | SAMPLE (section 13) | Sounds: all, drums, synths, by key | FX: off, on | Gap: 0.5, 1, 2, 4 s | - |
 | FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
@@ -1751,7 +1764,7 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 ![The settings page](img/perf-screen-settings.png)
 
-To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **FILTERS**, **SCREEN** and **SAMPLE**. It stops at the ends. **FX** leaves.
+To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **FILTERS**, **SCREAM**, **SCREEN** and **SAMPLE**. It stops at the ends. **FX** leaves.
 
 The Settings page:
 
@@ -1814,7 +1827,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
 | Theme, Tune, MIDI out, the set list, Zoom, the SET page's Mix | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, scanlines), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the FILTERS page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, scanlines), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the FILTERS and SCREAM pages, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
@@ -1857,6 +1870,14 @@ The **Pieces** page on the PERF-1 website shares one piece at a time: you send a
 - If the slot holds a different voice of yours, the page asks: put the new voice in your next empty slot (nothing of yours changes), or replace your voice in that slot. Replacing it changes the sound of any of your pieces that use the old voice.
 
 **Hear it in the emulator** puts the piece into the browser emulator (section 17) instead, with its voice, so you can listen before you add it to your FM-1.
+
+**Sharing a whole set.** The first row after **Read my pieces and set list** is **My set list**: your set list (section 10) with every piece in it, their DX7 voices, Play and the SET page's Mix. Pieces you stored go with it; a factory piece is the same on every FM-1, so only its place is sent. It downloads as a `.perfset` file, or copies as a link or code (a long one: for a set with many stored pieces, share the file where links are cut short, as in a Discord message). Adding a set puts each stored piece back at its own number in its genre, its voices in your empty voice slots (a voice you already have is used as it is), and replaces your set list with it. The page lists the stored pieces of yours it would replace and asks first.
+
+**The card.** **Card** draws a picture of the piece or set to post with its link: its name, title, maker, tempo and key, and its drum pattern as rings (one ring a drum, the kick inside, sixteen steps round), or a set's places as a ring. **Save the card (PNG)** downloads it.
+
+**Based on.** When you add a piece from a share, this browser remembers where it came from. If you change it, store it and share it again, it goes out as "based on" the original (its title and maker), and the card says so. If you share it unchanged, the page fills in its original title and maker for you.
+
+**The Library.** The **Library** page on the website collects pieces and sets people made: each with its card, title, maker and note, to hear in the emulator or add to your FM-1. To suggest one, share it from the Pieces page and press **suggest one for the Library**: it opens a GitHub issue with the link in it.
 
 **Versions.** Both of you need PERF-1 0.16.3 or later to add a piece. A piece made on an older PERF-1 loads into a newer one: anything it doesn't have yet plays as the piece's genre sets it. A piece made on a newer PERF-1 loads into an older one without the newer settings, and the page tells you so.
 

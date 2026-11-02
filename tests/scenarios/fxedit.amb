@@ -230,7 +230,7 @@ expect fxon 0
 tapkey 1
 expect pool 0x7AD
 # the settings' own walk (0.16.1): HOME held opens it at SETTINGS (the drop's key change); the dial goes SETTINGS, AUTO DJ, SET, USB & MIDI,
-# MIDI IN, FILTERS, SCREEN, SAMPLE and stops there
+# MIDI IN, FILTERS, SCREAM, SCREEN, SAMPLE and stops there
 press HOME
 wait 800
 release HOME
@@ -283,6 +283,29 @@ expect fxpage 26
 spin SELECT 1
 wait 100
 expect fxpage 27
+# SCREAM (0.16.4): Drive, Scream, Wow, Target (EN_FXS_SQ_*: 88 .. 91), all 0 to begin with
+spin SELECT 1
+wait 100
+expect fxpage 33
+expect fxs88 0
+spin K1 10
+spin K2 5
+spin K3 3
+spin K4 2
+wait 50
+expect fxs88 >0
+expect fxs89 >0
+expect fxs90 >0
+expect fxs91 2
+spin K1 -100
+spin K2 -100
+spin K3 -100
+spin K4 -2
+wait 50
+expect fxs88 0
+expect fxs89 0
+expect fxs90 0
+expect fxs91 0
 spin SELECT 1
 wait 100
 expect fxpage 31

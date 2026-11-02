@@ -1,14 +1,15 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only
-     PERF-1's pieces page: share a piece saved on the FM-1 as a file, a code or a link, and add the pieces others share (with the DX7 voice a piece uses).
-     The site scripts (tools/make_pages_site.py, scripts/make_vis_site.py) put fm1backup.js and fm1piece.js in at /*LIB*/ and the firmware's own parameter data
-     (tools/make_params.py -> build/params.json) at /*PARAMS*/. It talks to the FM-1 over WebMIDI SysEx: the backup messages (firmware/src/backup_proto.h). -->
+     PERF-1's pieces page: share a piece saved on the FM-1, or the whole set list, as a file, a code or a link (and a card to post with it), and add the
+     pieces and sets others share (with the DX7 voices they use). The site scripts (tools/make_pages_site.py, scripts/make_vis_site.py) put fm1backup.js,
+     fm1piece.js, fm1card.js and fm1share.js in at /*LIB*/ and the firmware's own parameter data (tools/make_params.py -> build/params.json) at /*PARAMS*/.
+     It talks to the FM-1 over WebMIDI SysEx: the backup messages (firmware/src/backup_proto.h). -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PERF-1 pieces</title>
-<meta name="description" content="Share a PERF-1 piece as a file, a code or a link, and add the pieces other people share to your FM-1.">
+<meta name="description" content="Share a PERF-1 piece or set as a file, a code or a link, and add the pieces other people share to your FM-1.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
@@ -52,63 +53,70 @@
   .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
   .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin: 0 0 1rem; }
   .card.hot { border-color: var(--orange); }
-  #mine { max-height: 320px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
+  #mine { max-height: 340px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
   #mine:empty { display: none; }
   #mine label { display: flex; gap: .7em; align-items: baseline; padding: 4px 12px; cursor: pointer; }
   #mine label:nth-child(odd) { background: rgba(255,255,255,.03); }
+  #mine label.set { border-bottom: 1px solid var(--rule); }
   #mine input { accent-color: var(--purple); }
   #mine .sub, .info .sub { color: var(--muted); font-size: 14px; }
   .info { margin: 0 0 14px; }
   .info .tag { font-size: 1.5rem; font-weight: 700; color: var(--horn); letter-spacing: .04em; }
   .info .title { font-size: 1.15rem; color: var(--orange); }
   .info .note { white-space: pre-wrap; }
+  .info ol { margin: .3em 0 0; padding-left: 1.6em; color: var(--muted); font-size: 15px; }
+  canvas.card-img { width: 100%; max-width: 600px; height: auto; border-radius: 8px; border: 1px solid var(--rule); display: block; margin: 0 0 12px; }
   dialog { background: var(--card); color: var(--ink); border: 1px solid var(--orange); border-radius: 10px; max-width: 520px; padding: 18px 20px; }
   dialog::backdrop { background: rgba(10, 4, 6, .7); }
   dialog h3 { font: 700 1.1rem "Chakra Petch", sans-serif; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 .6rem; color: var(--orange); }
+  #dlgp { white-space: pre-wrap; }
 </style>
 </head>
 <body>
 <main>
-  <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Pieces</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
+  <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Pieces</a><a href="../library/">Library</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
   <h1>Pieces</h1>
   <div class="card">
-    <p>Share a piece you saved on your FM-1 as a file, a code or a link, and add the pieces other people share. Everything in the piece goes with it: its settings, its drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice its pluck plays if it is one you loaded yourself.</p>
-    <p class="small">Plug the FM-1 in by USB and use Chrome or Edge. Both of you need PERF-1 0.16.3 or later to add a piece; sharing works from any version that has Backup.</p>
+    <p>Share a piece you saved on your FM-1, or your whole set list, as a file, a code or a link, and add what other people share. Everything in a piece goes with it: its settings, its drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice its pluck plays if it is one you loaded yourself. Find pieces to try in the <a href="../library/">Library</a>.</p>
+    <p class="small">Plug the FM-1 in by USB and use Chrome or Edge. Adding needs PERF-1 0.16.3 or later; sharing works from any version that has Backup.</p>
   </div>
 
-  <h2 id="addh">Add a shared piece</h2>
+  <h2 id="addh">Add a shared piece or set</h2>
   <div class="card" id="addcard">
-    <label class="f">Paste a piece code or link
+    <label class="f">Paste a code or link
       <textarea id="code" placeholder="P1.…  or  https://…/pieces/#p=P1.…" spellcheck="false"></textarea></label>
-    <p><button id="read" class="alt">Read it</button> <span class="small">or choose a .piece file:</span> <input type="file" id="pfile" accept=".piece"></p>
+    <p><button id="read" class="alt">Read it</button> <span class="small">or choose a file:</span> <input type="file" id="pfile" accept=".piece,.perfset"></p>
     <div id="incoming" hidden>
       <div class="info" id="ininfo"></div>
-      <p><label class="small" for="slot">Put it in </label><span id="ingenre" class="small"></span> <select id="slot"></select> <span id="slotsub" class="small"></span></p>
-      <p><button id="add">Add to my FM-1</button> <button id="hear" class="alt">Hear it in the emulator</button></p>
-      <p class="small">Adding writes it into the FM-1 and restarts it (a few seconds). Save what you are playing first: changes you have not saved are lost in the restart.</p>
+      <p id="slotrow"><label class="small" for="slot">Put it in </label><span id="ingenre" class="small"></span> <select id="slot"></select></p>
+      <p><button id="add">Add to my FM-1</button> <button id="hear" class="alt">Hear it in the emulator</button> <button id="incard" class="alt">Card</button></p>
+      <p class="small">Adding writes into the FM-1 and restarts it (a few seconds). Save what you are playing first: changes you have not saved are lost in the restart.</p>
     </div>
     <progress id="addbar" max="100" value="0"></progress>
     <p class="say" id="addsay"></p>
   </div>
 
-  <h2>Share a piece from your FM-1</h2>
+  <h2>Share from your FM-1</h2>
   <div class="card">
-    <p class="small">Save the piece on the FM-1 first (<b>GLO</b>, then <b>SAVE</b>): only saved pieces can be shared. Then read them here.</p>
-    <p><button id="scan">Read my saved pieces</button></p>
+    <p class="small">Save the piece on the FM-1 first (<b>GLO</b>, then <b>SAVE</b>): only saved pieces can be shared. The first row shares your set list: every piece in it (stored or factory), their voices, Play and the Mix.</p>
+    <p><button id="scan">Read my pieces and set list</button></p>
     <div id="mine"></div>
     <div id="sharebox" hidden>
+      <p class="small" id="basedrow" hidden></p>
       <div class="row2">
         <label class="f">Title (optional)<input type="text" id="mtitle" maxlength="60"></label>
         <label class="f">Your name (optional)<input type="text" id="mby" maxlength="40"></label>
       </div>
       <label class="f">A note: how to play it, what to try (optional)<textarea id="mnote" maxlength="400" style="font: inherit; font-size: 16px"></textarea></label>
-      <p><button id="dl">Download .piece</button> <button id="cplink" class="alt">Copy link</button> <button id="cpcode" class="alt">Copy code</button></p>
+      <p><button id="dl">Download file</button> <button id="cplink" class="alt">Copy link</button> <button id="cpcode" class="alt">Copy code</button> <button id="mycard" class="alt">Card</button></p>
       <textarea id="outcode" readonly hidden></textarea>
     </div>
+    <canvas id="cardview" class="card-img" hidden></canvas>
+    <p id="cardsave" hidden><button id="cardpng" class="alt">Save the card (PNG)</button> <span class="small">Post it with the link: the picture shows what it is, the link adds it.</span></p>
     <progress id="scanbar" max="100" value="0"></progress>
     <p class="say" id="scansay"></p>
   </div>
-  <p class="small">Post your pieces in <a href="https://github.com/deamonSLINKY/PERF-1/discussions" target="_blank" rel="noopener">the PERF-1 discussions on GitHub</a>, on Reddit or under a video: a link is enough.</p>
+  <p class="small">Post your pieces on Reddit, under a video, or <a id="suggest" href="https://github.com/deamonSLINKY/PERF-1/issues/new" target="_blank" rel="noopener">suggest one for the Library</a>: a link is enough.</p>
   <p class="small">PERF-1 by deamonSLINKY, GPL-3.0, no warranty. <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a>.</p>
 </main>
 
@@ -118,28 +126,13 @@
 <script type="module">
 /*LIB*/
 const $ = (id) => document.getElementById(id);
-const D = JSON.parse($("pdata").textContent), P = D.params, E = D.enum, N = D.names;
-const NOTE = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-const objOf = (g) => (g === 0 ? 0 : 4 + g);                       // plat.h: OBJ_PROJ, then OBJ_G1 .. at 5
-const OBJ_VOICES = 3;
-const genreName = (g) => N.genres[g] || "genre " + g;
-const pieceName = (g, i) => (N.pieces[g] && N.pieces[g][i]) || String(i + 1).padStart(2, "0");
-const isUser = (v) => v >= N.nplain + N.nfmfact;
-
-// what the piece is, in a line: its tag, tempo, key, its pluck
-function describe(pc) {
-  const get = (k) => pcGet(pc, E[k], P[E[k]].min);
-  const tempo = get("P_TEMPO"), root = get("P_ROOT"), mode = get("P_MODE"), snd = pcGet(pc, E.P_CM_SND, P[E.P_CM_SND].min);
-  const modeName = mode !== undefined && P[E.P_MODE].t ? P[E.P_MODE].t[mode - P[E.P_MODE].min] : "";
-  const bits = [];
-  if (tempo !== undefined) bits.push(tempo + " BPM");
-  if (root !== undefined) bits.push(NOTE[((root % 12) + 12) % 12] + " " + modeName.toLowerCase());
-  if (snd !== undefined) bits.push("pluck: " + (isUser(snd) ? (pc.voice ? pcVoiceName(pc.voice) + " (its own DX7 voice)" : "your DX7 voice " + (snd - N.nplain - N.nfmfact + 1)) : (P[E.P_CM_SND].t || [])[snd] || snd));
-  return bits.join(" · ");
-}
+const D = JSON.parse($("pdata").textContent), S = shareNames(D), { P, E, N } = S;
+const PAGE_URL = new URL("./", location.href).href;
+const SITE_TEXT = PAGE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 // ---------------------------------------------------------------- the FM-1's MIDI port
 let port = null;
+const NOANS = "The FM-1 did not answer. Replug it and try again.";
 async function openPort() {
   if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
   if (!navigator.requestMIDIAccess) throw new Error("This browser cannot talk to the FM-1. Open the page in Chrome or Edge.");
@@ -191,6 +184,7 @@ function readObject(p, obj) {                                     // its bytes (
     p.out.send(bkReadMsg(obj));
   });
 }
+async function readMust(p, obj) { const d = await readObject(p, obj); if (d === undefined) throw new Error(NOANS); return d; }
 function waitBk(p, ms) {
   return new Promise((res) => {
     const w = (a) => { clearTimeout(tm); res(a); };
@@ -199,7 +193,6 @@ function waitBk(p, ms) {
   });
 }
 async function writeObject(p, obj, data) {                        // in chunks, then the write; the FM-1 answers each
-  const NOANS = "The FM-1 did not answer. Replug it and try again.";
   for (let idx = 0; idx * BK_CHUNK < data.length; idx++) {
     p.out.send(bkChunkMsg(obj, idx, data.length, data.subarray(idx * BK_CHUNK, Math.min(data.length, (idx + 1) * BK_CHUNK))));
     const a = await waitBk(p, 3000);
@@ -229,25 +222,53 @@ function ask(head, text, buttons) {
   });
 }
 
-// ---------------------------------------------------------------- adding a piece
+// the card: drawn into the page's canvas, saved as a PNG
+async function showCard(x) {
+  const cv = $("cardview");
+  await drawCard(cv, S.cardOf(x, SITE_TEXT + " · add it to your FM-1"));
+  cv.hidden = false; $("cardsave").hidden = false;
+  cv.dataset.name = (x.kind === "set" ? "set" : S.tagOf(x).replace(/\s+/g, "-")) + (x.meta && x.meta.t ? "-" + x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") : "");
+  cv.scrollIntoView({ block: "nearest" });
+}
+$("cardpng").addEventListener("click", () => {
+  const cv = $("cardview"), a = document.createElement("a");
+  a.href = cv.toDataURL("image/png"); a.download = "perf1-" + (cv.dataset.name || "card") + ".png"; a.click();
+});
+
+// ---------------------------------------------------------------- adding
 let incoming = null;
-function showIncoming(pc) {
-  incoming = pc;
-  const m = pc.meta || {}, info = $("ininfo");
+function showIncoming(x) {
+  incoming = x;
+  const m = x.meta || {}, info = $("ininfo");
   info.textContent = "";
-  const add = (cls, txt) => { if (!txt) return; const e = document.createElement("div"); e.className = cls; e.textContent = txt; info.append(e); };
-  add("tag", genreName(pc.genre) + " " + pieceName(pc.genre, pc.slot));
-  add("title", m.t ? m.t + (m.a ? "  by " + m.a : "") : m.a ? "by " + m.a : "");
-  add("sub", describe(pc));
-  add("note", m.n);
-  if (pc.genre >= N.genres.length) add("sub", "This piece is from a genre this page does not know: it needs a newer PERF-1.");
-  $("ingenre").textContent = genreName(pc.genre);
-  const s = $("slot"); s.textContent = "";
-  for (let i = 0; i < 10; i++) { const o = document.createElement("option"); o.value = i; o.textContent = pieceName(pc.genre, i); s.append(o); }
-  s.value = pc.slot;
-  $("slotsub").textContent = "";
+  const add = (cls, txt) => { if (!txt) return null; const e = document.createElement("div"); e.className = cls; e.textContent = txt; info.append(e); return e; };
+  if (x.kind === "set") {
+    const used = x.list.filter((v) => v);
+    add("tag", "A set of " + used.length + " piece" + (used.length === 1 ? "" : "s"));
+    add("title", m.t ? m.t + (m.a ? "  by " + m.a : "") : m.a ? "by " + m.a : "");
+    add("sub", (x.on ? "Play on" : "Play off") + " · Mix: " + (["cut", "4 bars", "8 bars", "16 bars", "32 bars"][x.mix % 5]) + (x.voices.length ? " · " + x.voices.length + " DX7 voice" + (x.voices.length > 1 ? "s" : "") : ""));
+    const ol = document.createElement("ol");
+    for (const v of x.list) if (v) { const li = document.createElement("li"); const q = pcSetPlaces([v])[0], pc = x.pieces.find((p) => p.genre === q.genre && p.slot === q.slot); li.textContent = S.placeName(v) + (pc ? " (shared: " + S.describe(pc) + ")" : " (factory)"); ol.append(li); }
+    info.append(ol);
+    add("note", m.n);
+    $("slotrow").hidden = true;
+  } else {
+    add("tag", S.tagOf(x));
+    add("title", m.t ? m.t + (m.a ? "  by " + m.a : "") : m.a ? "by " + m.a : "");
+    if (m.b) add("sub", "based on " + S.basedText(m));
+    add("sub", S.describe(x));
+    add("note", m.n);
+    $("ingenre").textContent = S.genreName(x.genre);
+    const s = $("slot"); s.textContent = "";
+    for (let i = 0; i < 10; i++) { const o = document.createElement("option"); o.value = i; o.textContent = S.pieceName(x.genre, i); s.append(o); }
+    s.value = x.slot;
+    $("slotrow").hidden = false;
+  }
+  const genres = x.kind === "set" ? x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre) : [x.genre];
+  const unknown = genres.some((g) => g >= N.genres.length);
+  if (unknown) add("sub", "This needs a genre this page does not know: a newer PERF-1.");
   $("incoming").hidden = false;
-  $("add").disabled = $("hear").disabled = pc.genre >= N.genres.length;
+  $("add").disabled = $("hear").disabled = unknown;
   $("addsay").textContent = "";
 }
 async function readCode(text) {
@@ -257,151 +278,205 @@ $("read").addEventListener("click", () => readCode($("code").value));
 $("pfile").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;
-  try { showIncoming(pcDecode(new Uint8Array(await f.arrayBuffer()))); } catch (err) { $("incoming").hidden = true; $("addsay").textContent = err.message; }
+  try { showIncoming(pcDecodeAny(new Uint8Array(await f.arrayBuffer()))); } catch (err) { $("incoming").hidden = true; $("addsay").textContent = err.message; }
 });
+$("incard").addEventListener("click", () => { if (incoming) showCard(incoming); });
+
+// a piece's own voice: where it goes (asking when its slot holds another); the slot, or a thrown "Not added."
+async function placeVoice(cur, voice, want) {
+  const plan = pcVoicePlan(cur, voice, want), name = pcVoiceName(voice);
+  if (plan.kind !== "conflict") return plan.slot;
+  const opts = [["Replace " + plan.other, plan.slot]];
+  if (plan.free >= 0) opts.unshift(["Use empty slot " + (plan.free + 1), plan.free]);
+  opts.push(["Cancel", -1, true]);
+  const to = await ask("Its DX7 voice", "This piece plays its own DX7 voice, " + name + ", from voice slot " + (plan.slot + 1) + ". On your FM-1 that slot holds " + plan.other +
+    ". Replacing it changes the sound of any of your pieces that use " + plan.other + "." + (plan.free >= 0 ? " Or put " + name + " in your empty slot " + (plan.free + 1) + " instead: nothing of yours changes." : " All 16 of your slots are in use."), opts);
+  if (to === null || to < 0) throw new Error("Not added.");
+  return to;
+}
 $("add").addEventListener("click", async () => {
-  const pc = incoming, slot = +$("slot").value, say = (t) => { $("addsay").textContent = t; };
-  if (!pc) return;
+  const x = incoming, say = (t) => { $("addsay").textContent = t; };
+  if (!x) return;
   $("add").disabled = true;
   try {
     const p = await openPort();
     const ab = await about(p);
-    if (!ab) throw new Error("This FM-1 has a PERF-1 older than 0.16.3: update it on the Install page first, then add the piece.");
-    if (pc.genre >= ab.genres) throw new Error("This FM-1 does not have " + genreName(pc.genre) + " yet: update PERF-1 on the Install page first.");
-    say("Reading " + genreName(pc.genre) + " from the FM-1…"); $("addbar").value = 10;
-    const obj = objOf(pc.genre), bank = await readObject(p, obj);
-    if (bank === undefined) throw new Error("The FM-1 did not answer. Replug it and try again.");
-    const piece = { ...pc, rec: pc.rec.slice() };
+    if (!ab) throw new Error("This FM-1 has a PERF-1 older than 0.16.3: update it on the Install page first, then add it.");
+    const pieces = x.kind === "set" ? x.pieces.map((q) => ({ ...q, rec: q.rec.slice() })) : [{ ...x, rec: x.rec.slice(), slot: +$("slot").value }];
+    const genres = [...new Set((x.kind === "set" ? x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre) : []).concat(pieces.map((q) => q.genre)))];
+    const missing = genres.filter((g) => g >= ab.genres);
+    if (missing.length) throw new Error("This FM-1 does not have " + missing.map(S.genreName).join(", ") + " yet: update PERF-1 on the Install page first.");
+    // the voices
     let vox = null;
-    const want = pcUserSlot(piece, E.P_CM_SND, N.nplain, N.nfmfact);
-    if (want >= 0 && piece.voice) {                               // its own voice: where it goes
-      const cur = await readObject(p, OBJ_VOICES);
-      if (cur === undefined) throw new Error("The FM-1 did not answer. Replug it and try again.");
-      const plan = pcVoicePlan(cur, piece.voice, want), name = pcVoiceName(piece.voice);
-      let to = plan.slot;
-      if (plan.kind === "conflict") {
-        const opts = [["Replace " + plan.other, plan.slot]];
-        if (plan.free >= 0) opts.unshift(["Use empty slot " + (plan.free + 1), plan.free]);
-        opts.push(["Cancel", -1, true]);
-        to = await ask("Its DX7 voice", "This piece plays its own DX7 voice, " + name + ", from your voice slot " + (plan.slot + 1) + ". On your FM-1 that slot holds " + plan.other +
-          ". Replacing it changes the sound of any of your pieces that use " + plan.other + "." + (plan.free >= 0 ? " Or put " + name + " in your empty slot " + (plan.free + 1) + " instead: nothing of yours changes." : " All 16 of your slots are in use."), opts);
-        if (to === null || to < 0) throw new Error("Not added.");
+    const cur = await readMust(p, S.OBJ_VOICES);
+    if (x.kind === "set") {
+      if (x.voices.length) {
+        const r = pcSetVoices(cur, x.voices), lost = r.map.filter((k) => k < 0).length;
+        if (lost && !(await ask("Its DX7 voices", "Your 16 voice slots have no room for " + lost + " of this set's voices: the pieces on them will play whatever is in your slots.", [["Add it anyway", 1], ["Cancel", 0, true]])))
+          throw new Error("Not added.");
+        vox = r.vox;
+        for (const q of pieces) if (q.vidx >= 0 && r.map[q.vidx] >= 0 && S.userSlot(q) >= 0) pcSet(q, E.P_CM_SND, P[E.P_CM_SND].min, N.nplain + N.nfmfact + r.map[q.vidx]);
       }
-      if (plan.kind !== "same") vox = pcVoicesWith(cur, piece.voice, to);
-      pcSet(piece, E.P_CM_SND, P[E.P_CM_SND].min, N.nplain + N.nfmfact + to);
-    } else if (want >= 0) {
-      if (!(await ask("Its DX7 voice", "This piece plays a DX7 voice from slot " + (want + 1) + " that was not shared with it, so it will play whatever voice is in your slot " + (want + 1) + ".", [["Add it anyway", 1], ["Cancel", 0, true]])))
+    } else {
+      const q = pieces[0], want = S.userSlot(q);
+      if (want >= 0 && q.voice) {
+        const to = await placeVoice(cur, q.voice, want);
+        if (pcVoicePlan(cur, q.voice, want).kind !== "same" || to !== pcVoicePlan(cur, q.voice, want).slot) vox = pcVoicesWith(cur, q.voice, to);
+        pcSet(q, E.P_CM_SND, P[E.P_CM_SND].min, N.nplain + N.nfmfact + to);
+      } else if (want >= 0 && !(await ask("Its DX7 voice", "This piece plays a DX7 voice from slot " + (want + 1) + " that was not shared with it, so it will play whatever voice is in your slot " + (want + 1) + ".", [["Add it anyway", 1], ["Cancel", 0, true]])))
         throw new Error("Not added.");
     }
-    const r = pcIntoBank(bank, pc.genre, slot, piece, ab.npar);
-    if (r.replaced && !(await ask("Replace your piece?", "You have a piece saved as " + genreName(pc.genre) + " " + pieceName(pc.genre, slot) + ". Adding this one there replaces it (back it up on the Install page first if you want to keep it).",
-      [["Replace it", 1], ["Cancel", 0, true]])))
-      throw new Error("Not added. Choose another place for it.");
-    $("addbar").value = 40;
-    if (vox) { say("Writing its voice…"); await writeObject(p, OBJ_VOICES, vox); }
-    say("Writing the piece…"); $("addbar").value = 70;
-    await writeObject(p, obj, r.bank);
+    // the banks
+    say("Reading from the FM-1…"); $("addbar").value = 10;
+    const banks = {}, replaced = [];
+    for (const g of new Set(pieces.map((q) => q.genre))) banks[g] = await readMust(p, S.objOf(g));
+    for (const q of pieces) {
+      const r = pcIntoBank(banks[q.genre], q.genre, q.slot, q, ab.npar);
+      if (r.replaced) replaced.push(S.tagOf(q));
+      banks[q.genre] = r.bank;
+    }
+    if (replaced.length && !(await ask(replaced.length > 1 ? "Replace your pieces?" : "Replace your piece?", "You have " + (replaced.length > 1 ? "pieces" : "a piece") + " saved as " + replaced.join(", ") +
+      ". Adding replaces " + (replaced.length > 1 ? "them" : "it") + " (back up on the Install page first if you want to keep " + (replaced.length > 1 ? "them" : "it") + ").", [["Replace", 1], ["Cancel", 0, true]])))
+      throw new Error("Not added." + (x.kind === "set" ? "" : " Choose another place for it."));
+    let glob = null;
+    if (x.kind === "set") glob = pcGlobWith(await readMust(p, S.OBJ_GLOB), x, S.globDefs);
+    // the writes, then the restart
+    const steps = (vox ? 1 : 0) + Object.keys(banks).length + (glob ? 1 : 0);
+    let done = 0;
+    const step = (t) => { say(t); $("addbar").value = 20 + Math.round((75 * done++) / steps); };
+    if (vox) { step("Writing the voices…"); await writeObject(p, S.OBJ_VOICES, vox); }
+    for (const g of Object.keys(banks)) { step("Writing " + S.genreName(+g) + "…"); await writeObject(p, S.objOf(+g), banks[g]); }
+    if (glob) { step("Writing the set list…"); await writeObject(p, S.OBJ_GLOB, glob); }
     p.out.send(bkRestartMsg());
     port = null;
     $("addbar").value = 100;
-    say("Added as " + genreName(pc.genre) + " " + pieceName(pc.genre, slot) + ". The FM-1 restarts: then GLO + PRESETS to " + genreName(pc.genre) + ", PRESETS to " + pieceName(pc.genre, slot) + "." +
-      (r.dropped ? " It was made with a newer PERF-1: update yours to hear all of it." : ""));
+    const m = x.meta || {};
+    originsSet(pieces.map((q) => ({ genre: q.genre, slot: q.slot, t: m.t || (x.kind === "set" ? "a shared set" : S.tagOf(x)), a: m.a, rec: q.rec })));
+    say(x.kind === "set" ? "Added. The FM-1 restarts: GLO twice shows the set list." :
+      "Added as " + S.tagOf(pieces[0]) + ". The FM-1 restarts: then GLO + PRESETS to " + S.genreName(x.genre) + ", PRESETS to " + S.pieceName(x.genre, pieces[0].slot) + "." +
+      (x.npar > ab.npar ? " It was made with a newer PERF-1: update yours to hear all of it." : ""));
   } catch (err) { say(err.message); $("addbar").value = 0; }
   $("add").disabled = false;
 });
-// the emulator keeps its flash in this browser (web/emu: localStorage "hyp1-emu-store", an object's bytes in base64 by its number): the piece goes in there
 $("hear").addEventListener("click", () => {
-  const pc = incoming, slot = +$("slot").value, KEY = "hyp1-emu-store";
-  if (!pc) return;
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY) || "{}");
-    const get = (o) => (raw[o] ? Uint8Array.from(atob(raw[o]), (c) => c.charCodeAt(0)) : new Uint8Array(0));
-    const put = (o, u8) => { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); };
-    const piece = { ...pc, rec: pc.rec.slice() };
-    const want = pcUserSlot(piece, E.P_CM_SND, N.nplain, N.nfmfact);
-    if (want >= 0 && piece.voice) {
-      const plan = pcVoicePlan(get(OBJ_VOICES), piece.voice, want);
-      const to = plan.kind === "conflict" ? (plan.free >= 0 ? plan.free : plan.slot) : plan.slot;
-      put(OBJ_VOICES, pcVoicesWith(get(OBJ_VOICES), piece.voice, to));
-      pcSet(piece, E.P_CM_SND, P[E.P_CM_SND].min, N.nplain + N.nfmfact + to);
-    }
-    let bank = get(objOf(pc.genre));
-    if (pcBankCheck(bank, pc.genre) === "old") bank = new Uint8Array(0);
-    put(objOf(pc.genre), pcIntoBank(bank, pc.genre, slot, piece, P.length).bank);
-    localStorage.setItem(KEY, JSON.stringify(raw));
-    $("addsay").textContent = "In the emulator as " + genreName(pc.genre) + " " + pieceName(pc.genre, slot) + ": switch it on, GLO + PRESETS to " + genreName(pc.genre) + ", PRESETS to " + pieceName(pc.genre, slot) + ".";
-    window.open("../emu/", "_blank", "noopener");
-  } catch (err) { $("addsay").textContent = "Could not put it in the emulator: " + err.message; }
+  if (!incoming) return;
+  try { $("addsay").textContent = emuPut(S, incoming, +$("slot").value); window.open("../emu/", "_blank", "noopener"); }
+  catch (err) { $("addsay").textContent = "Could not put it in the emulator: " + err.message; }
 });
 
-// ---------------------------------------------------------------- sharing a piece
-let mine = [], voicesObj = null;
+// ---------------------------------------------------------------- sharing
+let mine = [], mySet = null;
 $("scan").addEventListener("click", async () => {
   const say = (t) => { $("scansay").textContent = t; };
   $("scan").disabled = true;
-  mine = []; $("mine").textContent = ""; $("sharebox").hidden = true;
+  mine = []; mySet = null; $("mine").textContent = ""; $("sharebox").hidden = true;
   try {
     const p = await openPort();
+    const banks = {};
     for (let g = 0; g < N.genres.length; g++) {
-      say("Reading " + genreName(g) + "…"); $("scanbar").value = Math.round((100 * g) / N.genres.length);
-      const bank = await readObject(p, objOf(g));
+      say("Reading " + S.genreName(g) + "…"); $("scanbar").value = Math.round((100 * g) / N.genres.length);
+      const bank = await readObject(p, S.objOf(g));
       if (bank === undefined) { if (g === 0) throw new Error("The FM-1 did not answer (a PERF-1 without Backup?). Replug it and try again."); continue; }
+      banks[g] = bank;
       const saved = pcSaved(bank);
       for (let i = 0; i < 10; i++) if ((saved >> i) & 1) mine.push(pcFromBank(bank, g, i));
     }
-    voicesObj = await readObject(p, OBJ_VOICES);
-    const have = pcVoices(voicesObj || new Uint8Array(0));
-    for (const pc of mine) {                                      // a piece on one of your own DX7 voices takes it along
-      const k = pcUserSlot(pc, E.P_CM_SND, N.nplain, N.nfmfact);
-      if (k >= 0 && k < have.length) pc.voice = have[k];
+    const have = pcVoices((await readObject(p, S.OBJ_VOICES)) || new Uint8Array(0));
+    for (const pc of mine) { const k = S.userSlot(pc); if (k >= 0 && k < have.length) pc.voice = have[k]; }   // a piece on your own voice takes it along
+    const gl = pcGlobList((await readObject(p, S.OBJ_GLOB)) || new Uint8Array(0));
+    if (gl.list.some((v) => v)) {                                  // the set list: its stored pieces (a factory one is the same everywhere) and their voices
+      const voices = [], vslot = [], pieces = [];
+      for (const q of pcSetPlaces(gl.list)) {
+        if (!q || pieces.some((x) => x.genre === q.genre && x.slot === q.slot)) continue;
+        const pc = mine.find((x) => x.genre === q.genre && x.slot === q.slot);
+        if (!pc) continue;
+        const k = S.userSlot(pc);
+        let vidx = -1;
+        if (k >= 0 && pc.voice) { vidx = vslot.indexOf(k); if (vidx < 0) { vslot.push(k); voices.push(pc.voice); vidx = voices.length - 1; } }
+        pieces.push({ ...pc, vidx });
+      }
+      mySet = { kind: "set", list: gl.list, on: gl.on, mix: gl.mix, pieces, voices, meta: {} };
     }
     $("scanbar").value = 100;
-    if (!mine.length) { say("No saved pieces on the FM-1 yet. Save one (GLO, then SAVE) and read again."); return; }
-    mine.forEach((pc, i) => {
+    const row = (cls, i, name, sub) => {
       const l = document.createElement("label"), r = document.createElement("input"), n = document.createElement("b"), s = document.createElement("span");
+      if (cls) l.className = cls;
       r.type = "radio"; r.name = "mine"; r.value = i;
-      r.addEventListener("change", () => { $("sharebox").hidden = false; $("outcode").hidden = true; });
-      n.textContent = genreName(pc.genre) + " " + pieceName(pc.genre, pc.slot);
-      s.className = "sub"; s.textContent = describe(pc);
+      r.addEventListener("change", picked);
+      n.textContent = name; s.className = "sub"; s.textContent = sub;
       l.append(r, n, s); $("mine").append(l);
-    });
-    say(mine.length + " saved piece" + (mine.length > 1 ? "s" : "") + ". Choose one to share.");
+    };
+    if (mySet) { const n = mySet.list.filter((v) => v).length; row("set", "set", "My set list", n + " piece" + (n === 1 ? "" : "s") + ", " + mySet.pieces.length + " stored · " + mySet.list.filter((v) => v).slice(0, 3).map(S.placeName).join(", ") + (n > 3 ? " …" : "")); }
+    mine.forEach((pc, i) => row("", i, S.tagOf(pc), S.describe(pc)));
+    if (!mine.length && !mySet) { say("No saved pieces and no set list on the FM-1 yet. Save one (GLO, then SAVE) and read again."); }
+    else say((mine.length ? mine.length + " saved piece" + (mine.length > 1 ? "s" : "") : "No saved pieces") + (mySet ? " and your set list" : "") + ". Choose what to share.");
   } catch (err) { say(err.message); }
   $("scanbar").value = 0;
   $("scan").disabled = false;
 });
+function picked() {                                               // a row chosen: what it came from, when it came from a share
+  const r = document.querySelector("#mine input:checked");
+  $("sharebox").hidden = !r; $("outcode").hidden = true;
+  $("cardview").hidden = true; $("cardsave").hidden = true;
+  $("dl").textContent = r && r.value === "set" ? "Download .perfset" : "Download .piece";
+  const row = $("basedrow");
+  row.hidden = true;
+  if (!r || r.value === "set") return;
+  const o = originOf(mine[+r.value]);
+  if (!o) return;
+  if (o.same) { row.textContent = "You added this piece from a share (" + o.t + (o.a ? " by " + o.a : "") + ") and have not changed it."; if (!$("mtitle").value) $("mtitle").value = o.t; if (!$("mby").value) $("mby").value = o.a; }
+  else row.textContent = "Changed from a piece you added (" + o.b.t + (o.b.a ? " by " + o.b.a : "") + "): it is shared as based on that one.";
+  row.hidden = false;
+}
 function chosen() {
   const r = document.querySelector("#mine input:checked");
   if (!r) return null;
-  const pc = mine[+r.value], m = {};
+  const m = {};
   if ($("mtitle").value.trim()) m.t = $("mtitle").value.trim();
   if ($("mby").value.trim()) m.a = $("mby").value.trim();
   if ($("mnote").value.trim()) m.n = $("mnote").value.trim();
-  m.g = genreName(pc.genre); m.p = pieceName(pc.genre, pc.slot); m.d = new Date().toISOString().slice(0, 10);
+  m.d = new Date().toISOString().slice(0, 10);
+  if (r.value === "set") return { ...mySet, meta: m };
+  const pc = mine[+r.value], o = originOf(pc);
+  m.g = S.genreName(pc.genre); m.p = S.pieceName(pc.genre, pc.slot);
+  if (o && !o.same) m.b = o.b;
   return { ...pc, meta: m };
 }
-const fileName = (pc) => (pc.meta.t ? pc.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") + "-" : "") + pc.meta.g + "-" + pc.meta.p + ".piece";
+const fileName = (x) => (x.meta.t ? x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") + "-" : "") + (x.kind === "set" ? "set.perfset" : x.meta.g + "-" + x.meta.p + ".piece");
+const voiceNote = (x) => (x.kind === "set" ? (x.voices.length ? " (with " + x.voices.length + " DX7 voice" + (x.voices.length > 1 ? "s" : "") + ")" : "") : x.voice && S.userSlot(x) >= 0 ? " (with its DX7 voice " + pcVoiceName(x.voice) + ")" : "");
 $("dl").addEventListener("click", () => {
-  const pc = chosen();
-  if (!pc) return;
+  const x = chosen();
+  if (!x) return;
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([pcEncode(pc)], { type: "application/octet-stream" }));
-  a.download = fileName(pc);
+  a.href = URL.createObjectURL(new Blob([x.kind === "set" ? pcSetEncode(x) : pcEncode(x)], { type: "application/octet-stream" }));
+  a.download = fileName(x);
   a.click();
-  $("scansay").textContent = "Saved " + a.download + (pc.voice ? " (with its DX7 voice " + pcVoiceName(pc.voice) + ")" : "") + ".";
+  $("scansay").textContent = "Saved " + a.download + voiceNote(x) + ".";
 });
 async function copy(link) {
-  const pc = chosen();
-  if (!pc) return;
-  const code = await pcToCode(pc), text = link ? new URL("./", location.href).href + "#p=" + code : code;
+  const x = chosen();
+  if (!x) return;
+  const code = await pcToCode(x), text = link ? PAGE_URL + "#p=" + code : code;
   $("outcode").value = text; $("outcode").hidden = false;
-  try { await navigator.clipboard.writeText(text); $("scansay").textContent = (link ? "Link" : "Code") + " copied" + (pc.voice ? " (with its DX7 voice " + pcVoiceName(pc.voice) + ")" : "") + "."; }
-  catch (_) { $("outcode").select(); $("scansay").textContent = "Copy it from the box below."; }
+  const long = text.length > 1900 ? " It is " + text.length + " characters: too long for a Discord message, so share the file there." : "";
+  try { await navigator.clipboard.writeText(text); $("scansay").textContent = (link ? "Link" : "Code") + " copied" + voiceNote(x) + "." + long; }
+  catch (_) { $("outcode").select(); $("scansay").textContent = "Copy it from the box below." + long; }
 }
 $("cplink").addEventListener("click", () => copy(true));
 $("cpcode").addEventListener("click", () => copy(false));
+$("mycard").addEventListener("click", () => { const x = chosen(); if (x) showCard(x); });
 
-// a link that came with a piece (#p=P1.…): read it at once (and when another link is opened in this tab)
+// the Library's "suggest" link: an issue with the piece's link in it (when one is open here)
+$("suggest").addEventListener("click", async (e) => {
+  const x = chosen() || incoming;
+  if (!x) return;
+  e.preventDefault();
+  const link = PAGE_URL + "#p=" + (await pcToCode(x));
+  const t = (x.kind === "set" ? "Set: " : "Piece: ") + ((x.meta && x.meta.t) || (x.kind === "set" ? "my set" : S.tagOf(x)));
+  window.open("https://github.com/deamonSLINKY/PERF-1/issues/new?title=" + encodeURIComponent("Library: " + t) + "&body=" + encodeURIComponent("For the Library:\n\n" + link + "\n"), "_blank", "noopener");
+});
+
+// a link that came with a piece or set (#p=P1.…): read it at once (and when another link is opened in this tab)
 function fromHash() {
   if (!/[#&]p=P1\./.test(location.hash)) return;
   $("code").value = decodeURIComponent(location.hash.replace(/^#/, ""));

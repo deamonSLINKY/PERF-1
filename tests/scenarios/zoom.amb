@@ -5,7 +5,7 @@ press HOME
 wait 800
 release HOME
 wait 100
-turn SELECT 6
+turn SELECT 7
 wait 100
 expect fxpage 31
 expect zoom 0

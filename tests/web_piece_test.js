@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const src = fs.readFileSync(path.join(__dirname, "..", "web", "fm1piece.js"), "utf8").replace(/^export /gm, "");
-const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg };")();
+const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash };")();
 let bad = 0;
 const check = (name, ok) => { console.log((ok ? "  ok   " : "  FAIL ") + name); if (!ok) bad++; };
 const eq = (a, b) => a.length === b.length && Array.from(a).every((x, i) => x === b[i]);
@@ -96,6 +96,29 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
   check("all sixteen in use: no free slot", M.pcVoicePlan(full, pc.voice, 4).free === -1 && throws(() => M.pcVoicesWith(full, pc.voice, 16)));
   check("a slot past the next free one is refused", throws(() => M.pcVoicesWith(vox, v0, 5)));
 
+  // a set: its list, Play and Mix, its stored pieces and their voices once each; through a code; into the player's record; its voices placed
+  const pa = { ...pc, slot: 4, vidx: 0 }, pb = { ...M.pcFromBank(bank, 18, 1), vidx: -1 };
+  const set = { kind: "set", list: [1, 0, 185, 0, 182, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], on: true, mix: 3, pieces: [pa, pb], voices: [pc.voice], meta: { t: "Forest night", a: "someone", b: { t: "a set", a: "else" } } };
+  const sf = M.pcSetEncode(set), sb = M.pcSetDecode(sf);
+  check("a set comes back as it went (" + sf.length + " bytes)", sb.kind === "set" && eq(sb.list, set.list) && sb.on && sb.mix === 3 && sb.pieces.length === 2 && eq(sb.pieces[0].rec, pa.rec) &&
+    sb.pieces[0].slot === 4 && sb.pieces[0].vidx === 0 && eq(sb.pieces[0].voice, pc.voice) && sb.pieces[1].vidx === -1 && sb.pieces[1].voice === null && sb.meta.b.a === "else");
+  const sdmg = sf.slice(); sdmg[40] ^= 4;
+  check("a damaged set is refused", throws(() => M.pcSetDecode(sdmg)));
+  const scode = await M.pcToCode(set), sback = await M.pcFromCode(scode);
+  check("a set through a code (" + scode.length + " characters), told from a piece", sback.kind === "set" && sback.pieces.length === 2 && fromCode.kind !== "set" && M.pcDecodeAny(file).kind !== "set");
+  check("its places", JSON.stringify(M.pcSetPlaces([1, 0, 185, 23])) === JSON.stringify([{ genre: 0, slot: 0 }, null, { genre: 18, slot: 4 }, { genre: 2, slot: 2 }]));
+  const defs = { tune: 0, midi: 1, theme: 0 };
+  const g0 = M.pcGlobWith(new Uint8Array(0), set, defs);
+  check("into an empty player's record: the defaults, the list, Play and Mix", g0.length === M.PC_GLOB_LEN && g0[6] === 1 && eq(g0.slice(12, 28), set.list) && g0[28] === 1 && g0[30] === 3 &&
+    JSON.stringify(M.pcGlobList(g0)) === JSON.stringify({ list: set.list, on: true, mix: 3 }));
+  const gx = g0.slice(); gx[4] = 7; gx[8] = 3; gx[29] = 1;
+  const g1 = M.pcGlobWith(gx, { ...set, on: false, mix: 0 }, defs);
+  check("into one with the player's tuning, theme and Zoom: kept", g1[4] === 7 && g1[8] === 3 && g1[29] === 1 && g1[28] === 0 && g1[30] === 0);
+  const sv = M.pcSetVoices(vox, [v1, pc.voice, voiceOf("NEW TWO", 4)]);
+  check("a set's voices: one loaded, two to the next empty slots", JSON.stringify(sv.map) === JSON.stringify([1, 2, 3]) && M.pcVoices(sv.vox).length === 4);
+  const sfull = M.pcSetVoices(full, [pc.voice]);
+  check("no room: said, nothing written", sfull.map[0] === -1 && sfull.vox === null);
+
   // the about answer (tests/host/dxproto_test.c: bk_build_about(f, 176, 19, 5))
   const ab = M.pcParseAbout([0xF0, 0x7D, 0x50, 0x45, 0x01, 0x01, 0x30, 0x13, 0x05, 0xF7]);
   check("the firmware's about answer", ab && ab.ver === 1 && ab.npar === 176 && ab.genres === 19 && ab.voices === 5);
@@ -126,6 +149,12 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
     check("the simulator plays it as 04, with its voice, the settings it predates its recipe's", vplan.kind === "free" && vplan.slot === 0 && run("load", [
       "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "seed 0", "reboot", "wait 2000", "expect saved 8", "expect uservoices 1",
       "turn PRESET 3", "wait 1500", "expect piece 3", "expect tempo 132", "expect par" + P_EVOLVE + " 43", "expect par" + P_CM_SND + " " + (NPLAIN + NFMFACT), "expect parsbad 0"]));
+    // a set: HYPNO 04 (as stored above) and two factory places, Play on, Mix 8 bars, as the player's record; the simulator reads the list and Mix back
+    const sset = { kind: "set", list: [4, 23, 0, 182, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], on: true, mix: 2, pieces: [], voices: [], meta: {} };
+    fs.writeFileSync(path.join(dir, "glob_new.bin"), M.pcGlobWith(new Uint8Array(0), sset, { tune: 0, midi: 1, theme: 0 }));
+    check("the simulator reads a shared set list: its places, Play and Mix", run("set", [
+      "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 4 " + path.join(dir, "glob_new.bin"), "seed 0", "reboot", "wait 2000",
+      "expect setsl0 4", "expect setsl1 23", "expect setsl3 182", "expect setsl2 0", "expect seton 1", "expect mix 2", "expect saved 8"]));
   }
   console.log(bad ? "web piece: FAILED" : "web piece: ok");
   process.exit(bad ? 1 : 0);

@@ -2085,6 +2085,93 @@ int main(void)
         en_play(1);
     }
 
+    /* SCREAM (0.16.4): the acid and the bass alone (soloed), as they are, then driven and screaming at full: no NaN, under full scale, the level kept
+     * within reach of the plain one, and changed; aimed at the other voice, a voice is exactly as it was. And the LFOs' new targets: the pad's on
+     * the acid's cutoff and resonance and the echo's time, the bass's on its own resonance, change what they reach and nothing goes bad. */
+    {
+        static const struct { int tr, me, other; const char *name; } V[2] = {{EN_TR_ACID, 0, 1, "acid"}, {EN_TR_DRONE, 1, 0, "bass"}};
+        static float was[2][REC_N];
+        int v, k;
+        float lv[3];
+        for (v = 0; v < 2; v++) {
+            for (k = 0; k < 3; k++) {            /* 0 plain, 1 screaming, 2 screaming aimed at the other voice */
+                en_init();
+                en_dj_sync(0);
+                en_test_reseed(7);
+                en_play(0);
+                en_genre(2);
+                en_set(P_BL_MODE, 1);
+                en_set(P_ACID, 70);
+                en_fxs(EN_FXS_SQ_DRIVE, k ? 100 : 0);
+                en_fxs(EN_FXS_SQ_AMT, k ? 100 : 0);
+                en_fxs(EN_FXS_SQ_WOW, k ? 100 : 0);
+                en_fxs(EN_FXS_SQ_TGT, k == 2 ? V[v].other : V[v].me);
+                en_trk(0, 1u << V[v].tr);
+                en_regrow();
+                en_play(1);
+                run(0.5f);
+                sum2 = 0.0f;
+                bad = 0;
+                peak = 0.0f;
+                run(4.0f);
+                lv[k] = sum2;
+                CHECK(bad == 0 && peak < 1.0f, "scream on the %s (%d): peak %.3f, %d bad samples", V[v].name, k, (double)peak, bad);
+            }
+            CHECK(lv[0] > 0.0f && lv[1] > 0.25f * lv[0] && lv[1] < 4.0f * lv[0] && fabsf(lv[1] - lv[0]) > 0.05f * lv[0],
+                  "scream on the %s: its energy %.2f of the plain one's (changed, and kept within reach)", V[v].name, (double)(lv[0] > 0.0f ? lv[1] / lv[0] : 0.0f));
+            CHECK(fabsf(lv[2] - lv[0]) < 0.02f * lv[0], "scream aimed at the other voice leaves the %s as it was (%.4f of it: only the shared echo and reverb move)",
+                  V[v].name, (double)(lv[0] > 0.0f ? lv[2] / lv[0] : 0.0f));
+        }
+        {
+            static const struct { int p, dest, tr; const char *name; } L[4] = {
+                {P_PL_DEST, 4, EN_TR_ACID, "the pad's LFO on the acid's cutoff"}, {P_PL_DEST, 5, EN_TR_ACID, "the pad's LFO on the acid's resonance"},
+                {P_DL_DEST, 4, EN_TR_DRONE, "the bass's LFO on its resonance"}, {P_PL_DEST, 6, EN_TR_ACID, "the pad's LFO on the echo's time"}};
+            for (v = 0; v < 4; v++) {
+                for (k = 0; k < 2; k++) {
+                    en_init();
+                    en_dj_sync(0);
+                    en_test_reseed(7);
+                    en_play(0);
+                    en_genre(2);
+                    en_set(P_BL_MODE, 1);
+                    en_set(P_ACID, 70);
+                    en_set(P_ECHO, 80);
+                    en_set(L[v].p, k ? L[v].dest : L[v].p == P_PL_DEST ? 1 : 5);   /* (the other: one that does not reach this voice) */
+                    en_set(L[v].p == P_PL_DEST ? P_PL_DEPTH : P_DL_DEPTH, 100);
+                    en_set(L[v].p == P_PL_DEST ? P_PL_RATE : P_DL_RATE, 8);
+                    en_trk(0, 1u << L[v].tr);
+                    en_regrow();
+                    en_play(1);
+                    bad = 0;
+                    peak = 0.0f;
+                    run(2.0f);
+                    rec_n = 0;
+                    rec_on = 1;
+                    run(0.3f);
+                    rec_on = 0;
+                    memcpy(was[k], rec, sizeof rec);
+                    CHECK(bad == 0 && peak < 1.0f, "%s: peak %.3f, %d bad samples", L[v].name, (double)peak, bad);
+                }
+                {   /* the waveforms, the same seed: how far apart, against the plain one's energy */
+                    double d2 = 0.0, a2 = 0.0;
+                    int i;
+                    for (i = 0; i < REC_N; i++) {
+                        d2 += (double)((was[1][i] - was[0][i]) * (was[1][i] - was[0][i]));
+                        a2 += (double)(was[0][i] * was[0][i]);
+                    }
+                    CHECK(a2 > 0.0 && d2 > 0.02 * a2, "%s changes it (the difference %.3f of its energy)", L[v].name, a2 > 0.0 ? d2 / a2 : 0.0);
+                }
+            }
+        }
+        en_fxs(EN_FXS_SQ_DRIVE, 0);
+        en_fxs(EN_FXS_SQ_AMT, 0);
+        en_fxs(EN_FXS_SQ_WOW, 0);
+        en_fxs(EN_FXS_SQ_TGT, 0);
+        en_trk(0, 0u);
+        en_init();
+        en_play(1);
+    }
+
     /* the punch-ins on tracks (0.15.19): the targeted tracks go through a bus of their own. Each track alone (soloed), the FILTER held as a high-pass at
      * 16 kHz (it takes nearly everything away): aimed at that track it goes nearly silent, aimed at another it plays on. So every way in (the kick with
      * the drums, the bass, the acid, the pad, the plain pluck and the DX pluck) reaches the bus, and nothing else does. M:DRUMS silences the kick. */

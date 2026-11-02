@@ -55,7 +55,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 33
+#define NFXP 34
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -110,6 +110,7 @@ static const uint16_t SMP_GAP_MS[4] = {500, 1000, 2000, 4000};
 static const char *const MIN_NAME[4] = {"SCALE", "PADS", "M:S", "MPK"};
 static const char *const CC_NAME[4] = {"OFF", "IN", "OUT", "IN+OUT"};
 static const char *const FT_NAME[5] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK"};
+static const char *const SQT_NAME[3] = {"ACID", "BASS", "BOTH"};   /* SCREAM's target (0.16.4) */
 static const char *const MCH_NAME[17] = {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
 static const struct {
     const char *name;
@@ -184,6 +185,8 @@ static const struct {
                        {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}}},   /* (0.16.1) the screen's settings together; Zoom: a knob turned shows its name and value across the screen */
     {"SAMPLE", 63, 0, {{"Sounds", KN_NAME, 25, SMPM_NAME, 4}, {"FX", KN_NAME, 26, ONOFF_NAME, 2}, {"Gap", KN_NAME, 27, SMPG_NAME, 4},
                        {"", KN_NONE, 0, 0, 0}}},   /* (0.16.1) the sampling helper: PERF's drums and voices one at a time, for a sampler (not kept) */
+    {"SCREAM", FX_SPARE13, 0, {{"Drive", KN_PLAIN, EN_FXS_SQ_DRIVE, 0, 0}, {"Scream", KN_PLAIN, EN_FXS_SQ_AMT, 0, 0}, {"Wow", KN_PLAIN, EN_FXS_SQ_WOW, 0, 0},
+                       {"Target", KN_NAME, EN_FXS_SQ_TGT, SQT_NAME, 3}}},   /* (0.16.4; a spare effect bit, as FILTERS: nothing held) the acid's and the bass's filters pushed to scream: drive into it, resonance towards singing, accents opening it */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -2247,7 +2250,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {18, 17, 25, 24, 26, 27, 31, 32};   /* SETTINGS, AUTO DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREEN, SAMPLE */
+static const uint8_t ST_ORDER[] = {18, 17, 25, 24, 26, 27, 33, 31, 32};   /* SETTINGS, AUTO DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN, SAMPLE */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */

@@ -88,13 +88,95 @@ async function pipe(u8, stream) {
   const r = new Blob([u8]).stream().pipeThrough(stream);
   return new Uint8Array(await new Response(r).arrayBuffer());
 }
-export async function pcToCode(piece) { return "P1." + b64u(await pipe(pcEncode(piece), new CompressionStream("deflate-raw"))); }
+export async function pcToCode(x) { return "P1." + b64u(await pipe(x.kind === "set" ? pcSetEncode(x) : pcEncode(x), new CompressionStream("deflate-raw"))); }
+// a piece, or a set (kind "set") when the code holds one
 export async function pcFromCode(text) {
   const m = /P1\.([A-Za-z0-9_-]+)/.exec(String(text || ""));
   if (!m) throw new Error("no piece code there");
   let raw;
   try { raw = await pipe(unb64u(m[1]), new DecompressionStream("deflate-raw")); } catch (_) { throw new Error("the code is damaged (cut short?)"); }
-  return pcDecode(raw);
+  return pcDecodeAny(raw);
+}
+export const pcDecodeAny = (buf) => (buf.length > 4 && buf[3] === 0x54 ? pcSetDecode(buf) : pcDecode(buf));   // "P1ST" or "P1PC"
+export const pcHash = (rec) => crc32(rec);
+
+// ---- a set: the set list (sixteen places, each a genre's piece or empty), whether Play goes through it, the SET page's Mix, the pieces in it that are
+// stored (a factory piece needs nothing: it is the same everywhere), and their DX7 voices once each. "P1ST", 1, then 16 places (genre * 10 + piece + 1, 0
+// empty), Play, Mix, the pieces, the voices, the note's length (2); each piece: genre, place, its voice (0xFF none), settings (2), record, progression; each
+// voice 128 bytes; the note (JSON); the CRC-32
+export function pcSetEncode(set) {
+  const meta = new TextEncoder().encode(JSON.stringify(set.meta || {}));
+  const ps = set.pieces, vs = set.voices;
+  const out = new Uint8Array(4 + 1 + 16 + 2 + 2 + 2 + ps.length * (5 + PC_REC + PC_PRG) + vs.length * 128 + meta.length + 4);
+  out.set([0x50, 0x31, 0x53, 0x54, 1], 0);
+  let p = 5;
+  for (let i = 0; i < 16; i++) out[p++] = set.list[i] || 0;
+  out[p++] = set.on ? 1 : 0; out[p++] = set.mix || 0;
+  out[p++] = ps.length; out[p++] = vs.length;
+  wr16(out, p, meta.length); p += 2;
+  for (const pc of ps) {
+    out.set([pc.genre, pc.slot, pc.vidx === undefined || pc.vidx < 0 ? 0xFF : pc.vidx], p); p += 3;
+    wr16(out, p, pc.npar); p += 2;
+    out.set(pc.rec, p); p += PC_REC;
+    out.set(pc.prg, p); p += PC_PRG;
+  }
+  for (const v of vs) { out.set(v, p); p += 128; }
+  out.set(meta, p); p += meta.length;
+  wr32(out, p, crc32(out.subarray(0, p)));
+  return out;
+}
+export function pcSetDecode(buf) {
+  if (buf.length < 30 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x53 || buf[3] !== 0x54) throw new Error("not a PERF-1 set");
+  if (buf[4] !== 1) throw new Error("a set from a newer PERF-1 page: open the latest pieces page");
+  if (crc32(buf.subarray(0, buf.length - 4)) !== rd32(buf, buf.length - 4)) throw new Error("the set is damaged");
+  let p = 5;
+  const list = Array.from(buf.slice(p, p + 16)); p += 16;
+  const on = !!buf[p++], mix = buf[p++], np = buf[p++], nv = buf[p++], ml = rd16(buf, p); p += 2;
+  if (p + np * (5 + PC_REC + PC_PRG) + nv * 128 + ml + 4 !== buf.length) throw new Error("the set is damaged");
+  const pieces = [], voices = [];
+  for (let i = 0; i < np; i++) {
+    const genre = buf[p], slot = buf[p + 1], vi = buf[p + 2], npar = rd16(buf, p + 3);
+    p += 5;
+    pieces.push({ genre, slot, vidx: vi === 0xFF ? -1 : vi, npar, rec: buf.slice(p, p + PC_REC), prg: buf.slice(p + PC_REC, p + PC_REC + PC_PRG), voice: null, meta: {} });
+    p += PC_REC + PC_PRG;
+  }
+  for (let i = 0; i < nv; i++) { voices.push(buf.slice(p, p + 128)); p += 128; }
+  let meta = {};
+  try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
+  for (const pc of pieces) if (pc.vidx >= 0 && pc.vidx < voices.length) pc.voice = voices[pc.vidx];
+  return { kind: "set", list, on, mix, pieces, voices, meta };
+}
+// the set list's places as genre and piece (null: empty)
+export const pcSetPlaces = (list) => list.map((x) => (x ? { genre: Math.floor((x - 1) / 10), slot: (x - 1) % 10 } : null));
+
+// the player's record (OBJ_GLOB, project.c glob_t: magic, tune, midi, theme, rsv, sl[16], sl_on, sl_rsv[3] = zoom, mix, -) with a set's list, Play and Mix;
+// an empty one (or the old 12 bytes) takes the defaults given (tune, midi, theme)
+export const PC_GLOB_LEN = 32;
+export function pcGlobWith(glob, set, defs) {
+  const out = new Uint8Array(PC_GLOB_LEN);
+  if (glob && glob.length >= 12 && rd32(glob, 0) === 0x4C474D50) out.set(glob.subarray(0, Math.min(glob.length, PC_GLOB_LEN)));
+  else { wr32(out, 0, 0x4C474D50); wr16(out, 4, defs.tune & 0xFFFF); wr16(out, 6, defs.midi & 0xFFFF); wr16(out, 8, defs.theme & 0xFFFF); }
+  out.set(set.list.slice(0, 16), 12);
+  out[28] = set.on ? 1 : 0;
+  out[30] = set.mix || 0;
+  return out;
+}
+export const pcGlobList = (glob) => (glob && glob.length === PC_GLOB_LEN && rd32(glob, 0) === 0x4C474D50 ? { list: Array.from(glob.slice(12, 28)), on: !!glob[28], mix: glob[30] } : { list: new Array(16).fill(0), on: false, mix: 0 });
+
+// a set's voices into the voices' object: each to a voice already loaded, else the next empty slot; the answer maps the set's voice i to a slot (-1: no room)
+export function pcSetVoices(vox, voices) {
+  let cur = vox && vox.length ? vox : new Uint8Array(0);
+  const map = [];
+  let changed = false;
+  for (const v of voices) {
+    const plan = pcVoicePlan(cur, v, PC_NUSER);
+    if (plan.kind === "same") { map.push(plan.slot); continue; }
+    if (plan.slot >= PC_NUSER) { map.push(-1); continue; }
+    cur = pcVoicesWith(cur, v, plan.slot);
+    map.push(plan.slot);
+    changed = true;
+  }
+  return { vox: changed ? cur : null, map };
 }
 
 // ---- into a bank: the piece in slot `slot` of genre's bank (bank: what the FM-1 has, maybe empty), for a firmware with `npar` settings a piece

@@ -8,7 +8,7 @@ press HOME
 wait 800
 release HOME
 wait 100
-turn SELECT 7
+turn SELECT 8
 wait 100
 expect fxpage 32
 expect sampledry 1

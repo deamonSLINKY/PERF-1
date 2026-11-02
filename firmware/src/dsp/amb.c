@@ -29,13 +29,13 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_PE_ATK] = {"Attack", 0, 100, 45},    [P_PE_HOLD] = {"Hold", 0, 100, 35},    [P_PE_REL] = {"Release", 0, 100, 55},
     [P_PE_REST] = {"Rest", 0, 100, 20},
     [P_PL_RATE] = {"Rate", 0, 11, 4},        [P_PL_DEPTH] = {"Depth", 0, 100, 25},  [P_PL_SHAPE] = {"Shape", 0, 5, 0},
-    [P_PL_DEST] = {"Target", 0, 3, 0},
+    [P_PL_DEST] = {"Target", 0, 7, 0},
     [P_NZ_COLOR] = {"Wear", 0, 7, 1},     [P_AC_EVERY] = {"Every", 0, 7, 0},    [P_NZ_PUMP] = {"Pump", 0, 100, 60},
     [P_BASSOCT] = {"Octave", -3, 3, 0},     [P_DR_CUT] = {"Cutoff", 0, 100, 45},   [P_DR_RES] = {"Reso", 0, 100, 45},
     [P_DE_TRIG] = {"Trigger", 0, 5, 0},     [P_DE_ATK] = {"Attack", 0, 100, 25},   [P_DE_DEC] = {"Decay", 0, 100, 55},
     [P_DE_AMT] = {"Amount", 0, 100, 35},
     [P_DL_RATE] = {"Rate", 0, 11, 6},        [P_DL_DEPTH] = {"Depth", 0, 100, 55},  [P_DL_SHAPE] = {"Shape", 0, 5, 0},
-    [P_DL_DEST] = {"Target", 0, 3, 0},
+    [P_DL_DEST] = {"Target", 0, 7, 0},
     [P_AC_CUT] = {"Cutoff", 0, 100, 35},    [P_AC_RES] = {"Reso", 0, 100, 70},     [P_AC_ENV] = {"Env mod", 0, 100, 55},
     [P_AC_DEC] = {"Decay", 0, 100, 40},     [P_AC_ACC] = {"Accent", 0, 100, 50},   [P_AC_SLIDE] = {"Slide", 0, 100, 30},
     [P_AC_WAVE] = {"Sound", 0, EN_NACID - 1, 0},
@@ -566,8 +566,8 @@ static const float ETIME_BEATS[6] = {0.5f, 0.75f, 1.0f, 1.5f, 2.0f, 4.0f};
 static const char *const LFO_RATE_NAME[NLFO_RATE] = {"1/4", "1/2", "1 bar", "2 bars", "4 bars", "8 bars", "16 bars", "32 bars", "1/8", "1/8T", "1/16", "1/16T"};
 static const float LFO_RATE_BEATS[NLFO_RATE] = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f, 32.0f, 64.0f, 128.0f, 0.5f, 1.0f / 3.0f, 0.25f, 1.0f / 6.0f};
 static const char *const LFO_SHAPE_NAME[6] = {"Sine", "Triangle", "Saw", "Square", "S&H", "Drift"};
-static const char *const PAD_DEST_NAME[4] = {"Filter", "Level", "Pan", "Pitch"};
-static const char *const DRONE_DEST_NAME[4] = {"Cutoff", "Pitch", "Level", "Drive"};
+static const char *const PAD_DEST_NAME[8] = {"Filter", "Level", "Pan", "Pitch", "Acid cut", "Acid reso", "Echo time", "Punch cut"};   /* (4-7: 0.16.4, the LFO on other voices and effects) */
+static const char *const DRONE_DEST_NAME[8] = {"Cutoff", "Pitch", "Level", "Drive", "Reso", "Acid cut", "Acid reso", "Echo time"};
 static const char *const NOISE_NAME[8] = {"Mint", "Clean", "Light", "Used", "Worn", "Scratched", "Dusty", "Trashed"};   /* the vinyl's wear */
 static const char *const TRIG_NAME[6] = {"Chord", "1 bar", "2 bars", "4 bars", "8 bars", "Off"};
 static const char *const THEME_NAME[EN_NTHEME] = {"Imp", "Synth", "Acid", "Ice", "Ember", "Phosphor"};
@@ -649,8 +649,8 @@ void en_param_text(int i, int v, char *b)
     case P_ROOT: s = EN_NOTE_NAME[(unsigned)v < 12u ? v : 0]; break;
     case P_PL_RATE: case P_DL_RATE: s = LFO_RATE_NAME[(unsigned)v < NLFO_RATE ? v : 0]; break;
     case P_PL_SHAPE: case P_DL_SHAPE: s = LFO_SHAPE_NAME[(unsigned)v < 6u ? v : 0]; break;
-    case P_PL_DEST: s = PAD_DEST_NAME[v & 3]; break;
-    case P_DL_DEST: s = DRONE_DEST_NAME[v & 3]; break;
+    case P_PL_DEST: s = PAD_DEST_NAME[v & 7]; break;
+    case P_DL_DEST: s = DRONE_DEST_NAME[v & 7]; break;
     case P_NZ_COLOR: s = NOISE_NAME[v & 7]; break;
     case P_DE_TRIG: s = TRIG_NAME[(unsigned)v < 6u ? v : 0]; break;
     case P_AC_WAVE: s = EN_ACID_SOUND[(unsigned)v < EN_NACID ? v : 0]; break;
@@ -1406,6 +1406,7 @@ static const float START_T[EN_NPAD] = {0.0f, 0.9f, 0.82f, 0.95f};    /* the firs
 static const float VOWEL[4][2] = {{320.0f, 800.0f}, {480.0f, 900.0f}, {730.0f, 1090.0f}, {530.0f, 1840.0f}};
 static float arcm;                              /* the slow arc, -1 sparse .. +1 full, times Motion */
 static float pad_filt, pad_lvl = 1.0f, pad_pan, pad_pitch;   /* the pad's LFO, where it goes this chunk */
+static float lfo_acut, lfo_ares, lfo_echo, lfo_tcut;   /* (0.16.4) the LFOs on others: the acid's cutoff (octaves) and resonance (0..1), the echo's time, the punch-in filter's cutoff */
 
 static float breath(const pad_t *v, float t)    /* rise, hang, fall, rest: the envelope */
 {
@@ -3958,7 +3959,7 @@ tape_part:
         tape_ph = 0;
         echo_len += (echo_len_t - echo_len) * 0.001f;
         head2 += head2_v;
-        d = echo_len * (1.0f + 0.003f * motion * mod[5].v);   /* wow */
+        d = echo_len * (1.0f + 0.003f * motion * mod[5].v + lfo_echo);   /* wow (and an LFO on the echo's time) */
         if (d > (float)(TAPE_N - 4))
             d = (float)(TAPE_N - 4);
         h1 = tape_read(d);
@@ -5283,7 +5284,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
             bus_m = bm;
         }
         if (tfx_m > 0.0f) {                     /* 40 Hz .. 16 kHz; resonance from none to near ringing */
-            svf_coefs(tf_c, 40.0f * fm_exp2f((float)fxs_v[EN_FXS_TF_CUT] * 0.0864f), 2.0f - 0.0195f * (float)fxs_v[EN_FXS_TF_RESO]);
+            svf_coefs(tf_c, 40.0f * fm_exp2f((float)fxs_v[EN_FXS_TF_CUT] * 0.0864f + lfo_tcut), 2.0f - 0.0195f * (float)fxs_v[EN_FXS_TF_RESO]);
             tf_type = (uint8_t)((unsigned)fxs_v[EN_FXS_TF_TYPE] < 5u ? fxs_v[EN_FXS_TF_TYPE] : 0);
         }
         if (tpx_m > 0.0f) {                     /* the phaser's sweep, as the master's: 0.08 .. 2.6 Hz, up to 4.5 octaves from 250 Hz */
@@ -6339,10 +6340,13 @@ static void render_bass(uint32_t n)
     const int ft_bass = fxs_v[EN_FXS_FT_BASS];
     uint32_t j;
     const drone_snd_t *DS = &DRONE_SOUND[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0];
-    const int dest = par[P_DL_DEST], osc = DS->osc;
+    const int dest = par[P_DL_DEST], osc = DS->osc, sq = fxs_v[EN_FXS_SQ_TGT] >= 1;   /* SCREAM on the bass (its Target: 1 the bass, 2 both) */
+    const float sqd = sq ? (float)fxs_v[EN_FXS_SQ_DRIVE] * 0.01f : 0.0f, sqa = sq ? (float)fxs_v[EN_FXS_SQ_AMT] * 0.01f : 0.0f;
     const float depth = (float)par[P_DL_DEPTH] * 0.01f, lv = dest == 2 ? 1.0f - 0.8f * depth * (0.5f - 0.5f * drone_lfo.v) : 1.0f,
-                drv = 1.4f * DS->drive * (dest == 3 ? 1.0f + 2.5f * depth * (0.5f + 0.5f * drone_lfo.v) : 1.0f),
-                g = bass_vol * 0.36f * lv * DS->g / fm_minf(1.0f + 0.15f * (DS->drive - 1.0f), 1.3f) * (1.0f + bass.vd),
+                drv = 1.4f * DS->drive * (dest == 3 ? 1.0f + 2.5f * depth * (0.5f + 0.5f * drone_lfo.v) : 1.0f) * (1.0f + 3.0f * sqd),
+                k1 = reso_k * (1.0f - 0.93f * sqa) * (dest == 4 ? 1.0f - 0.85f * depth * (0.5f + 0.5f * drone_lfo.v) : 1.0f),   /* Scream; the LFO on Reso */
+                k2 = 1.4f * (1.0f - 0.75f * sqa), sqin = 1.0f + 2.0f * sqd,
+                g = bass_vol * 0.36f * lv * DS->g / fm_minf(1.0f + 0.15f * (DS->drive - 1.0f), 1.3f) * (1.0f + bass.vd) / (1.0f + 0.5f * sqd + 0.4f * sqa),
                 dsaw = DS->saw, dsub = DS->sub,
                 tgt = (en_playing && !par[P_DR_MAN]) || bass.play ? 1.0f : 0.0f,
                 rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),
@@ -6377,8 +6381,8 @@ static void render_bass(uint32_t n)
                   2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) - 0.35f * bass_duck * pulse_vol +
                   4.0f * (float)par[P_LK_KICK] * 0.01f * lk_kick;   /* the links: the kick opens it */
             fc = fm_clampf(f * 2.0f * fm_exp2f(oct), 45.0f, 9000.0f);
-            svf_coefs(bass.c1, fc, reso_k);
-            svf_coefs(bass.c2, fc * 1.3f, 1.4f);
+            svf_coefs(bass.c1, fc, k1);
+            svf_coefs(bass.c2, fc * 1.3f, k2);
         }
         switch (osc) {
         case DO_REESE:                          /* two saws far apart: a slow phasing growl */
@@ -6451,7 +6455,7 @@ static void render_bass(uint32_t n)
             p2 -= 1.0f;
         if (sp >= 1.0f)
             sp -= 1.0f;
-        x = svf_mm(x, bass.c1, &bass.s[0], ft_bass);
+        x = svf_mm(x * sqin, bass.c1, &bass.s[0], ft_bass);
         if (FT_TWO(ft_bass))
             x = svf_mm(x, bass.c2, &bass.s[2], ft_bass);
         amp += (tgt - amp) * rate;
@@ -6593,10 +6597,15 @@ static void render_acid(uint32_t n)
     uint32_t j;
     const acid_snd_t *AS = &ACID_SOUND[(unsigned)par[P_AC_WAVE] < EN_NACID ? par[P_AC_WAVE] : 0];
     const int osc = AS->osc;
-    const float g = acid_vol * 0.75f * AS->g, adrv = AS->drive, res = (float)par[P_AC_RES] * 0.01f, envmod = (float)par[P_AC_ENV] * 0.06f,
-                accamt = (float)par[P_AC_ACC] * 0.01f,
-                base = (float)par[P_AC_CUT] * 0.066f, k1 = 1.45f - 1.38f * res,
+    const int sq = fxs_v[EN_FXS_SQ_TGT] != 1;    /* SCREAM on the acid (its Target: 0 the acid, 2 both); at 0 each factor below is exactly 1 */
+    const float sqd = sq ? (float)fxs_v[EN_FXS_SQ_DRIVE] * 0.01f : 0.0f, sqa = sq ? (float)fxs_v[EN_FXS_SQ_AMT] * 0.01f : 0.0f,
+                sqw = sq ? (float)fxs_v[EN_FXS_SQ_WOW] * 0.01f : 0.0f;
+    const float g = acid_vol * 0.75f * AS->g / (1.0f + 0.5f * sqd + 0.4f * sqa), adrv = AS->drive, res = (float)par[P_AC_RES] * 0.01f,
+                envmod = (float)par[P_AC_ENV] * 0.06f, accamt = (float)par[P_AC_ACC] * 0.01f, base = (float)par[P_AC_CUT] * 0.066f + lfo_acut,
+                k1 = (1.45f - 1.38f * res) * (1.0f - 0.93f * sqa) * (1.0f - 0.85f * lfo_ares),   /* Scream: the resonance to about Q 200; an LFO on it */
+                k2 = 1.2f * (1.0f - 0.75f * sqa), sqin = 1.0f + 3.0f * sqd,   /* the second stage follows (it held the peak down); Drive: harder into the filter */
                 vel = 0.75f + 0.5f * accamt * acid.acc, glide = acid.sliding ? 0.0012f : 1.0f;
+    float sqg = sqin;                            /* this block's drive: Wow, an accent opening the resonance and the drive further */
     float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, p4 = acid.p4, p5 = acid.p5, sratio = 1.0f, pw = 0.5f, lz = 1.0f;
     if (amp < 1e-5f && acid.amp_t <= 0.0f) {
         acid.amp = 0.0f;
@@ -6610,8 +6619,10 @@ static void render_acid(uint32_t n)
         if (!(ac_ctl++ & 31u)) {                /* the cutoff: its knob, the envelope, an accent's push (every 32 samples, counted across chunks) */
             float oct = base + envmod * acid.env * (1.0f + accamt * acid.acc) + 1.2f * accamt * acid.acc * acid.env;
             float fc = fm_clampf(60.0f * fm_exp2f(oct), 50.0f, 14000.0f);
-            svf_coefs(acid.c1, fc, k1);
-            svf_coefs(acid.c2, fc * 1.15f, 1.2f);
+            const float wow = sqw * acid.acc * acid.env;
+            sqg = sqin + 2.0f * wow;
+            svf_coefs(acid.c1, fc, k1 * (1.0f - 0.8f * wow));
+            svf_coefs(acid.c2, fc * 1.15f, k2);
             sratio = 1.6f + 2.6f * acid.env;    /* Sync: the slave's pitch, swept by the envelope */
             acid.lph += 32.0f * 0.35f / EN_SR;  /* PWM: its width, 0.35 Hz */
             if (acid.lph >= 1.0f)
@@ -6776,8 +6787,8 @@ static void render_acid(uint32_t n)
             if (osc == AO_SYNC)
                 ps = ph * sratio;               /* the sync: the slave starts again with the note */
         }
-        y = svf_mm(x, acid.c1, &acid.s[0], ft_acid);
-        y = fm_tanhf(y * (1.6f + 1.5f * res) * adrv) / fm_minf(adrv, 1.3f);   /* the squelch: driven between the two */
+        y = svf_mm(x * sqin, acid.c1, &acid.s[0], ft_acid);
+        y = fm_tanhf(y * (1.6f + 1.5f * res) * adrv * sqg) / fm_minf(adrv, 1.3f);   /* the squelch: driven between the two (Drive and Wow: harder) */
         if (FT_TWO(ft_acid))
             y = svf_mm(y, acid.c2, &acid.s[2], ft_acid);
         amp += (acid.amp_t - amp) * 0.006f;     /* ~4 ms edges */
@@ -7593,6 +7604,15 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         pad_lvl = par[P_PL_DEST] == 1 ? 1.0f - 0.85f * d * (0.5f - 0.5f * pad_lfo.v) : 1.0f;
         pad_pan = par[P_PL_DEST] == 2 ? 0.9f * d * pad_lfo.v : 0.0f;
         pad_pitch = par[P_PL_DEST] == 3 ? 0.5f * d * pad_lfo.v : 0.0f;
+        {   /* (0.16.4) either LFO on another voice or an effect: the acid's cutoff (2.5 octaves either way) and resonance, the tape echo's time (a wobble,
+             * 6 % at full: a dub siren), the punch-in filter's cutoff (3 octaves either way: a wah on the tracks it takes) */
+            const float e = (float)par[P_DL_DEPTH] * 0.01f, pv = pad_lfo.v, dv = drone_lfo.v;
+            const int pd = par[P_PL_DEST], dd = par[P_DL_DEST];
+            lfo_acut = 2.5f * ((pd == 4 ? d * pv : 0.0f) + (dd == 5 ? e * dv : 0.0f));
+            lfo_ares = fm_minf((pd == 5 ? d * (0.5f + 0.5f * pv) : 0.0f) + (dd == 6 ? e * (0.5f + 0.5f * dv) : 0.0f), 1.0f);
+            lfo_echo = 0.06f * ((pd == 6 ? d * pv : 0.0f) + (dd == 7 ? e * dv : 0.0f));
+            lfo_tcut = pd == 7 ? 3.0f * d * pv : 0.0f;
+        }
     }
     {   /* the drone's envelope: attack (a line), then decay */
         if (bass.env_up) {
