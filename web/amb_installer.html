@@ -499,7 +499,7 @@ function stRender(w) {
     [w.xruns + " / " + w.late, w.xruns ? "bad" : w.late ? "hot" : "", 0],
     [(w.max_us / 1000).toFixed(1) + " ms", pct > 95 ? "bad" : pct > 85 ? "hot" : "", Math.min(100, pct)],
     [(w.shed ? "S" + (w.shed & 255) + " " : "") + ((w.shed >> 8) & 1 ? "chorus -> core 1 " : "") + ((w.shed >> 9) & 1 ? "bass -> core 2" : "") || "-", (w.shed & 255) ? "hot" : "", 0],
-    [(GENRES[w.genre] || w.genre) + " " + w.piece, "", 0],
+    [(GENRES[w.genre] || w.genre) + " " + (w.piece + 1), "", 0],   // (the FM-1 counts its pieces from 1)
     [String(w.stores), "", 0],
     [String(w.ui_frames), "", 0],
   ];
