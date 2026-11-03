@@ -5,6 +5,27 @@
  * 10 kHz), audio (ALNK0), USB; then the main loop: UI at ~60 frames/s, input polled in between. */
 extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
 extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[], _dsp_start[], _dsp_end[], _dsp_load[], _rh_start[], _rh_end[], _rh_load[];
+extern char _ustack_top[];                          /* (the others: fm1_guard.h, fm1_core1.h) */
+#define STK_W(a) ((uint32_t *)(void *)(a))
+
+/* how deep the stacks went (telemetry, 0.16.5: is there room for more, a Bluetooth stack, say): each is painted at boot below what is in
+ * use, and the lowest word no longer painted is the deepest it reached; bytes used, of the main 24 KB, the interrupts' 8 KB, CPU1's 4 + 4 KB */
+#define STK_PAINT 0x5354ACC5u
+static void stk_paint(uint32_t *lo, uint32_t *top)
+{
+    uint32_t here, *p = &here;
+    if (p >= lo && p < top)                         /* the stack this runs on: only well below its frame */
+        top = p - 64;
+    while (lo < top)
+        *lo++ = STK_PAINT;
+}
+static uint32_t stk_used(const uint32_t *lo, const uint32_t *top)
+{
+    const uint32_t *p = lo;
+    while (p < top && *p == STK_PAINT)
+        p++;
+    return (uint32_t)(top - p) * 4u;
+}
 
 /* --------------------------------------------------------------- audio --- */
 /* Felucca's 256-frame halves (5.8 ms): AMB-1's render is light, and a strum wants the short latency */
@@ -644,8 +665,8 @@ static void tel_service(void)
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
-        uint32_t w[35], i;
-        uint8_t f[4 + 35 * 5 + 2];
+        uint32_t w[39], i;
+        uint8_t f[4 + 39 * 5 + 2];
         uint32_t n = 4;
         w[0] = seq;
         w[1] = fm1_ms;
@@ -678,11 +699,15 @@ static void tel_service(void)
         w[32] = tel_isr_in / FM1_TICKS_PER_US;      /* the timer interrupt: us nested into renders, and outside them */
         w[33] = tel_isr_out / FM1_TICKS_PER_US;
         w[34] = batt_raw;                           /* the battery divider's reading (0xFFFFFFFF: none yet) */
+        w[35] = stk_used(STK_W(_ustack_lo), STK_W(_ustack_top));   /* the stacks' deepest (bytes): main, interrupts, CPU1's user and supervisor */
+        w[36] = stk_used(STK_W(_sstack_lo), STK_W(_sstack_top));
+        w[37] = stk_used(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 4096));
+        w[38] = stk_used(STK_W(_cpu1_stacks_lo + 4096), STK_W(_cpu1_stacks_lo + 8192));
         tel_isr_in = tel_isr_out = 0;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
         {
-            uint8_t b[35 * 4];
-            for (i = 0; i < 35u; i++)
+            uint8_t b[39 * 4];
+            for (i = 0; i < 39u; i++)
                 b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
             n += ota_pack7(b, sizeof b, f + n);
         }
@@ -914,6 +939,9 @@ void fm1_cstart(void)
     for (s = _rh_load, d = _rh_start; d < _rh_end; s++, d++)
         *d = *s;                                    /* the hot render code (.ram_hot) */
     fm1_mailbox_clear();
+    stk_paint(STK_W(_ustack_lo), STK_W(_ustack_top));   /* (CPU1 is held: its stacks are free to paint) */
+    stk_paint(STK_W(_sstack_lo), STK_W(_sstack_top));
+    stk_paint(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 8192));
 #if EN_CORE2
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS);
     /* One core after a crash (CPU1's data can go bad where no check reaches), in safe mode, or after CPU1

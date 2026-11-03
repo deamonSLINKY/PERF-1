@@ -21,7 +21,8 @@ import time
 PREFIX = [0x7D, 0x50, 0x46]
 FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing",
           "stores", "store_us", "crashes", "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece",
-          "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums", "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt"]
+          "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums", "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt",
+          "stk_main", "stk_irq", "stk_c1u", "stk_c1s"]   # (the stacks' deepest, bytes: 0.16.5 on)
 
 
 def pack7(data):
@@ -58,10 +59,12 @@ def decode(msg):
     if msg[:3] != PREFIX:
         return None
     raw = unpack7(msg[3:])
-    n = len(FIELDS) * 4
-    if len(raw) < n:
+    k = min(len(FIELDS), len(raw) // 4)          # (an older firmware sends fewer: the rest read 0)
+    if k < 35:
         return None
-    d = dict(zip(FIELDS, struct.unpack("<%dI" % len(FIELDS), bytes(raw[:n]))))
+    d = dict(zip(FIELDS, struct.unpack("<%dI" % k, bytes(raw[:4 * k]))))
+    for f in FIELDS[k:]:
+        d[f] = 0
     d["chorus"] = d["shed"] >> 8 & 1              # the pad's chorus on the first core (the firmware balances it)
     d["bass"] = d["shed"] >> 9 & 1                # the drone and the acid on the other core
     d["shed"] &= 0xFF
@@ -146,7 +149,10 @@ def selftest():
     d = decode(msg)
     assert d and d.pop("chorus") == 0 and d.pop("bass") == 0 and [d[k] for k in FIELDS] == w, d
     assert decode([0x00, 0x59, 0x11]) is None
-    wb = [1500, 240] + [3000 + 100 * k for k in range(9)]
+    w = list(range(1, 36))                        # a firmware before 0.16.5: no stack words, they read 0
+    d = decode(PREFIX + pack7(struct.pack("<35I", *w)))
+    assert d and d["batt"] == 35 and d["stk_main"] == 0 and d["stk_c1s"] == 0, d
+    wb =[1500, 240] + [3000 + 100 * k for k in range(9)]
     wb = wb + [7] * 5
     assert decode_bench(PREFIX[:2] + [0x47] + pack7(struct.pack("<16I", *wb))) == tuple(wb)
     we = list(range(1, 21))                       # an older firmware's 20 words: the rest read 0

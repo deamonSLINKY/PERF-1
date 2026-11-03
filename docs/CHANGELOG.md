@@ -22,6 +22,8 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Unreleased (the builds 0.16.5 .. are its steps)
 
+- **How deep the stacks go** (0.16.5): to size a Bluetooth stack (the RAM map: about 42 KB unused outside the 96 KB region, in RAMTEXT, the debug window and NOINIT), the four stacks are painted at boot below what is in use, and the status frame carries each one's deepest point in bytes: `stk_main` (of 24 KB), `stk_irq` (of 8 KB), `stk_c1u` and `stk_c1s` (CPU1's, of 4 KB each), as the frame's words 35-38. The installer's live status and `tools/fm1log.py` log them (and the logger reads an older firmware's shorter frame, the new columns 0).
+
 - **Sharing pieces and the Library back on the site** (0.16.5): the Pieces and Library pages (0.16.3, 0.16.4) were held out of 0.16.1 (make_pages_site.py --no-sharing); the manual's Sharing pieces section and the README's bullet are back for 0.17.
 
 ## 0.16.1 (the builds 0.16.1 .. 0.16.4 are its steps)

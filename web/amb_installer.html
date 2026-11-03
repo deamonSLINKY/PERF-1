@@ -269,7 +269,7 @@ const meta = /*META*/;
 /* ---------------------------------------------------- the FM-1's MIDI port, for the voices and the status */
 const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing", "stores", "store_us", "crashes",
   "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece", "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums",
-  "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt"];
+  "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt", "stk_main", "stk_irq", "stk_c1u", "stk_c1s"];
 /* the second frame (F0 7D 50 5A): the slowest chunk of the window (its stages in us, its total, its info) and how many renders took <5, 5-6 ... 11-12, >=12 ms; kept with the status frame before it */
 const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
   "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
