@@ -646,7 +646,7 @@ a made-up title, such as `VELVET RAIN`, the same one every time.
 | DISCO | S01-S10 | 112-126 | Four on the floor, accented open hats on the off-beats, a bass bouncing in octaves, strings and brass stabs, Wurli and clav, a little swing. |
 | FUNK | F01-F10 | 96-110 | Syncopated sixteenths, ghost snares and soft kick pickups, a funk bass figure, a clav line, sixteenth-note chords, the Dusty and 909 kicks. A breakdown is the drums alone. |
 | REGGAE | R01-R10 | 70-84 | One-drop, steppers and rockers, the rim a touch late, a melodic bass, an off-beat skank, a long echo, the Dusty kit. |
-| SYNTHWAVE | W01-W10 | 100-118 | A driving eighth-note bass, a gated reverb, a big accented snare, lots of chorus, an arpeggiating acid. (On the screen: SYNTHWV.) |
+| SYNTHWAVE | W01-W10 | 100-118 | A driving eighth-note bass, a gated reverb, a big accented snare, lots of chorus, an arpeggiating acid. The minor pieces circle i-VI-III-VII; the major ones play the decade's I-vi-IV-V. (On the screen: SYNTHWV.) |
 | AMAPIANO | A01-A10 | 108-115 | A soft kick with shakers, a gliding syncopated bass (playing the log drum's part), jazzy 9ths, marimba and kalimba plucks. (On the screen: AMAPI.) |
 | TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back, ghost notes, vinyl noise, a pluck loop that comes round again, minor and sparse. |
 | INDUS | I01-I10 | 118-145 | Industrial techno, EBM and industrial breakbeat. Driven, harsh drums tuned against each other (the snare a tritone up, the perc a semitone off), the Hard kit with the Break kit's chops in some pieces, broken and off-beat kicks, an EBM stomp, perc in threes against the beat. Phrygian and minor, suspended and fourths chords, a grinding bass, metal and bell sounds, a gated reverb and hard tape. Fills roll on the off-beats and in triplets. |
@@ -798,7 +798,7 @@ sixteenths either side of the "and". So "and-of-2" is halfway between beats 2 an
 | Kick | On every kick, as an 808 or sub bass does |
 | Eighths | On every eighth |
 | Off-beat | On the off-beat eighths, as in house |
-| Walk | On the beats: the root, then the third or fifth, then the fifth, then the scale note just below the root, leading into the next bar |
+| Walk | On the beats: the root, then the third or fifth, then the fifth, then a lead-in to the next bar: the scale note just below the root, or half the time the note a half step below (a chromatic approach, the one passing note PERF-1 plays outside the scale) |
 | Riff | On the genre's own figure. Disco bounces the octave, funk and amapiano syncopate, reggae leans on the fifth. |
 | Octaves | Eighths bouncing between the root and its octave (disco) |
 | Two-step | 1, and-of-2, and-of-3 (garage, drum and bass) |

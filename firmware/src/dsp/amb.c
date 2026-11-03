@@ -154,7 +154,7 @@ static const int16_t PL_04[] = {LOFI_BASE, P_TEMPO, 90, P_ROOT, 0, P_MODE, 0, P_
 static const int16_t PL_05[] = {LOFI_BASE, P_TEMPO, 70, P_ROOT, 5, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 2, P_AC_WAVE, 4, P_REVERB, 42, -1};   /* F dorian, strings, slow */
 static const int16_t PL_06[] = {LOFI_BASE, P_TEMPO, 80, P_ROOT, 10, P_MODE, 5, P_CHORD, EN_CH_9TH, P_CH_LOOP, 1, P_PADTONE, 4, P_AC_WAVE, 11, P_PAD, 52, -1};  /* Bb aeolian, organ, a two-chord 9ths loop */
 static const int16_t PL_07[] = {LOFI_BASE, P_TEMPO, 86, P_ROOT, 3, P_MODE, 5, P_AC_DENS, 22, P_SWING, 34, -1};                /* Eb Aeolian, sparse (minor pentatonic until 0.14.15: it lost the turnaround) */
-static const int16_t PL_08[] = {LOFI_BASE, P_TEMPO, 76, P_ROOT, 4, P_MODE, 1, P_CHORD, EN_CH_9TH, P_PADTONE, 3, P_BRIGHT, 24, P_ECHO, 40, -1};   /* E dorian, glass */
+static const int16_t PL_08[] = {LOFI_BASE, P_TEMPO, 76, P_ROOT, 4, P_MODE, 1, P_CHORD, EN_CH_11TH, P_PADTONE, 3, P_BRIGHT, 24, P_ECHO, 40, -1};   /* E dorian, glass */
 static const int16_t PL_09[] = {LOFI_BASE, P_TEMPO, 74, P_ROOT, 1, P_MODE, 3, P_DR_INST, 9, P_REVERB, 46, P_SIZE, 70, -1};   /* C# lydian, dreamy */
 static const int16_t PL_10[] = {LOFI_BASE, P_TEMPO, 94, P_ROOT, 8, P_MODE, 4, P_CHORD, EN_CH_9TH, P_SWING, 45, P_AC_DENS, 38, P_LANE_LVL(0), 90, -1};   /* G# mixolydian, busier */
 /* HOUSE: ten pieces, 118 .. 126 beats a minute, four on the floor, a clap on 2 and 4, open hats on the off-beats, stabs and
@@ -168,11 +168,11 @@ static const int16_t PH_02[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 0, P_MODE, 5, 
 static const int16_t PH_03[] = {HOUSE_BASE, P_TEMPO, 120, P_ROOT, 5, P_MODE, 1, P_PADTONE, 0, P_CHORD, EN_CH_9TH, -1};
 static const int16_t PH_04[] = {HOUSE_BASE, P_TEMPO, 126, P_ROOT, 2, P_MODE, 5, P_PADTONE, 10, P_DR_INST, 5, -1};
 static const int16_t PH_05[] = {HOUSE_BASE, P_TEMPO, 118, P_ROOT, 7, P_MODE, 4, P_PADTONE, 8, P_CHORD, EN_CH_9TH, P_DR_INST, 1, P_AC_WAVE, 15, -1};
-static const int16_t PH_06[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 11, P_MODE, 5, P_AC_WAVE, 9, -1};
+static const int16_t PH_06[] = {HOUSE_BASE, P_TEMPO, 124, P_ROOT, 11, P_MODE, 5, P_AC_WAVE, 9, P_CHORD, EN_CH_9TH, -1};
 static const int16_t PH_07[] = {HOUSE_BASE, P_TEMPO, 122, P_ROOT, 3, P_MODE, 7, P_PADTONE, 4, P_DR_INST, 10, -1};
-static const int16_t PH_08[] = {HOUSE_BASE, P_TEMPO, 125, P_ROOT, 10, P_MODE, 1, P_PADTONE, 1, -1};
-static const int16_t PH_09[] = {HOUSE_BASE, P_TEMPO, 121, P_ROOT, 4, P_MODE, 5, P_PADTONE, 14, P_DR_INST, 5, P_AC_WAVE, 8, -1};
-static const int16_t PH_10[] = {HOUSE_BASE, P_TEMPO, 126, P_ROOT, 8, P_MODE, 1, P_SWING, 20, -1};
+static const int16_t PH_08[] = {HOUSE_BASE, P_TEMPO, 125, P_ROOT, 10, P_MODE, 1, P_PADTONE, 1, P_CHORD, EN_CH_9TH, -1};
+static const int16_t PH_09[] = {HOUSE_BASE, P_TEMPO, 121, P_ROOT, 4, P_MODE, 5, P_PADTONE, 14, P_DR_INST, 5, P_AC_WAVE, 8, P_CHORD, EN_CH_SUS, -1};
+static const int16_t PH_10[] = {HOUSE_BASE, P_TEMPO, 126, P_ROOT, 8, P_MODE, 1, P_SWING, 20, P_CHORD, EN_CH_11TH, -1};
 static const int16_t *const HOUSE_PIECES[EN_NPIECES] = {PH_01, PH_02, PH_03, PH_04, PH_05, PH_06, PH_07, PH_08, PH_09, PH_10};
 static const char *const HOUSE_NAME[EN_NPIECES] = {"H01", "H02", "H03", "H04", "H05", "H06", "H07", "H08", "H09", "H10"};
 /* DUBSTEP: ten pieces at 136 .. 150, the beat in half time (the snare on the third beat), a deep sub kick, the drone as the wobble
@@ -188,8 +188,8 @@ static const int16_t PD_04[] = {DUB_BASE, P_TEMPO, 138, P_ROOT, 7, P_MODE, 5, P_
 static const int16_t PD_05[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 9, P_MODE, 7, P_DR_INST, 6, P_DL_RATE, 1, -1};
 static const int16_t PD_06[] = {DUB_BASE, P_TEMPO, 145, P_ROOT, 1, P_MODE, 2, P_DR_INST, 13, P_DL_SHAPE, 4, -1};
 static const int16_t PD_07[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 0, P_MODE, 5, P_DR_INST, 3, -1};
-static const int16_t PD_08[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 10, P_MODE, 2, P_DR_INST, 8, P_DL_RATE, 1, P_DL_SHAPE, 0, -1};
-static const int16_t PD_09[] = {DUB_BASE, P_TEMPO, 136, P_ROOT, 6, P_MODE, 5, P_PADTONE, 11, -1};
+static const int16_t PD_08[] = {DUB_BASE, P_TEMPO, 140, P_ROOT, 10, P_MODE, 2, P_DR_INST, 8, P_DL_RATE, 1, P_DL_SHAPE, 0, P_CHORD, EN_CH_DUB, -1};
+static const int16_t PD_09[] = {DUB_BASE, P_TEMPO, 136, P_ROOT, 6, P_MODE, 5, P_PADTONE, 11, P_CHORD, EN_CH_SUS, -1};
 static const int16_t PD_10[] = {DUB_BASE, P_TEMPO, 150, P_ROOT, 11, P_MODE, 2, P_DR_INST, 11, P_DL_SHAPE, 3, -1};
 static const int16_t *const DUB_PIECES[EN_NPIECES] = {PD_01, PD_02, PD_03, PD_04, PD_05, PD_06, PD_07, PD_08, PD_09, PD_10};
 static const char *const DUB_NAME[EN_NPIECES] = {"D01", "D02", "D03", "D04", "D05", "D06", "D07", "D08", "D09", "D10"};
@@ -240,22 +240,22 @@ static const int16_t X_FOREST[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 22, P_B
     P_MC_MAKE, 35, -1};
 static const int16_t *const XBASE[15] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP, X_INDUS, X_PSY, X_FOREST};
 static const uint8_t XROW[15][10][7] = {
-    {{70, 9, 5, 5, 0, 0, 0}, {66, 2, 1, 5, 0, 0, 0}, {72, 7, 2, 5, 0, 0, 0}, {68, 0, 5, 5, 0, 0, 0}, {74, 4, 1, 5, 0, 0, 0}, {64, 5, 5, 2, 0, 0, 0}, {76, 10, 1, 5, 0, 0, 0}, {70, 3, 2, 5, 0, 0, 0}, {66, 6, 5, 5, 0, 0, 0}, {72, 11, 1, 2, 0, 0, 0}},
+    {{70, 9, 5, 5, 0, 0, 0}, {66, 2, 1, 5, 0, 0, 0}, {72, 7, 2, 5, 0, 0, 0}, {68, 0, 5, 5, 0, 0, 0}, {74, 4, 1, 5, 0, 0, 0}, {64, 5, 5, 2, 0, 0, 0}, {76, 10, 1, 3, 0, 0, 0}, {70, 3, 2, 5, 0, 0, 0}, {66, 6, 5, 5, 0, 0, 0}, {72, 11, 1, 2, 0, 0, 0}},
     {{174, 9, 1, 3, 0, 9, 4}, {172, 2, 5, 2, 1, 1, 15}, {174, 5, 3, 3, 3, 9, 11}, {175, 4, 2, 6, 7, 4, 14}, {174, 0, 5, 4, 11, 3, 2}, {176, 7, 1, 2, 5, 9, 4}, {170, 10, 5, 3, 2, 1, 15}, {175, 6, 2, 4, 7, 13, 13}, {172, 11, 1, 2, 0, 9, 11}, {178, 3, 5, 6, 11, 2, 14}},
     {{100, 2, 1, 1, 4, 3, 2}, {110, 4, 4, 4, 14, 2, 0}, {118, 9, 5, 1, 6, 11, 3}, {125, 0, 4, 1, 4, 3, 1}, {130, 7, 2, 6, 7, 4, 14}, {104, 5, 1, 2, 10, 2, 2}, {135, 11, 5, 4, 14, 11, 13}, {120, 3, 1, 1, 6, 3, 0}, {112, 10, 4, 1, 4, 2, 6}, {128, 6, 5, 4, 13, 13, 2}},
-    {{130, 5, 1, 3, 0, 9, 4}, {132, 9, 5, 2, 4, 5, 11}, {128, 0, 4, 3, 1, 9, 12}, {134, 2, 1, 2, 5, 10, 4}, {130, 7, 5, 3, 0, 4, 15}, {136, 10, 1, 2, 1, 9, 11}, {126, 4, 5, 3, 4, 5, 12}, {132, 1, 4, 2, 5, 9, 4}, {130, 6, 1, 3, 3, 1, 15}, {138, 10, 5, 2, 0, 10, 11}},
+    {{130, 5, 1, 3, 0, 9, 4}, {132, 9, 5, 2, 4, 5, 11}, {128, 0, 4, 3, 1, 9, 12}, {134, 2, 1, 2, 5, 10, 4}, {130, 7, 5, 3, 0, 4, 15}, {136, 10, 1, 7, 1, 9, 11}, {126, 4, 5, 7, 4, 5, 12}, {132, 1, 4, 2, 5, 9, 4}, {130, 6, 1, 3, 3, 1, 15}, {138, 10, 5, 2, 0, 10, 11}},
     {{118, 9, 5, 1, 2, 10, 13}, {120, 2, 2, 6, 3, 6, 3}, {122, 0, 1, 4, 14, 11, 9}, {124, 4, 5, 1, 2, 10, 13}, {125, 7, 2, 6, 3, 6, 3}, {126, 5, 1, 4, 14, 11, 9}, {127, 11, 5, 1, 2, 10, 13}, {128, 9, 2, 6, 3, 6, 3}, {129, 6, 1, 4, 14, 11, 9}, {130, 2, 5, 1, 2, 10, 13}},
     {{130, 1, 5, 6, 7, 9, 11}, {134, 5, 5, 4, 12, 9, 4}, {136, 9, 2, 1, 2, 9, 15}, {138, 3, 5, 6, 13, 3, 11}, {140, 7, 5, 4, 7, 9, 4}, {140, 11, 5, 1, 12, 9, 15}, {142, 6, 2, 6, 2, 9, 11}, {144, 0, 5, 4, 13, 3, 4}, {146, 4, 2, 1, 7, 9, 15}, {150, 10, 5, 6, 12, 9, 11}},
-    {{118, 9, 1, 2, 2, 10, 21}, {120, 2, 4, 3, 19, 9, 4}, {122, 7, 1, 2, 17, 1, 17}, {116, 4, 5, 2, 2, 5, 19}, {124, 0, 0, 3, 13, 10, 21}, {112, 5, 1, 2, 19, 17, 4}, {120, 10, 4, 2, 0, 9, 12}, {126, 3, 5, 3, 2, 10, 21}, {114, 6, 1, 2, 17, 5, 17}, {122, 11, 4, 2, 19, 1, 19}},
-    {{100, 4, 4, 2, 17, 17, 21}, {104, 9, 1, 3, 4, 5, 4}, {96, 2, 7, 2, 13, 10, 19}, {108, 7, 4, 2, 0, 9, 21}, {102, 0, 1, 3, 19, 17, 17}, {98, 5, 5, 2, 17, 5, 21}, {106, 10, 4, 2, 4, 10, 4}, {110, 3, 1, 3, 13, 9, 19}, {100, 11, 1, 2, 19, 17, 21}, {104, 6, 4, 2, 0, 5, 17}},
-    {{76, 9, 5, 1, 13, 9, 12}, {72, 4, 1, 2, 6, 1, 21}, {80, 2, 4, 1, 17, 8, 15}, {74, 7, 5, 2, 21, 7, 4}, {78, 0, 0, 1, 19, 9, 16}, {70, 5, 1, 2, 13, 5, 12}, {82, 10, 4, 1, 6, 9, 21}, {84, 3, 5, 1, 17, 1, 15}, {74, 6, 5, 2, 21, 8, 4}, {78, 11, 1, 1, 19, 7, 16}},
-    {{108, 9, 5, 1, 10, 0, 26}, {112, 4, 5, 2, 20, 10, 24}, {104, 0, 0, 1, 2, 5, 25}, {116, 7, 1, 2, 9, 1, 30}, {100, 2, 5, 1, 5, 22, 26}, {110, 5, 1, 2, 10, 0, 24}, {118, 10, 5, 1, 20, 10, 25}, {106, 3, 0, 2, 2, 5, 28}, {114, 6, 5, 1, 9, 1, 30}, {102, 11, 1, 2, 5, 22, 26}},
-    {{112, 9, 5, 3, 0, 9, 16}, {110, 4, 1, 3, 5, 1, 4}, {108, 2, 1, 2, 16, 8, 18}, {113, 7, 5, 3, 2, 21, 15}, {111, 0, 0, 2, 23, 9, 16}, {109, 5, 1, 3, 0, 1, 4}, {114, 10, 5, 3, 5, 9, 18}, {112, 3, 4, 3, 16, 8, 15}, {110, 6, 5, 3, 2, 21, 16}, {115, 11, 1, 3, 23, 9, 4}},
-    {{84, 9, 5, 2, 7, 9, 15}, {78, 4, 2, 3, 2, 1, 17}, {72, 2, 1, 2, 16, 8, 4}, {88, 7, 5, 3, 5, 3, 20}, {80, 0, 5, 2, 1, 9, 11}, {70, 5, 2, 2, 7, 1, 15}, {86, 10, 1, 3, 2, 8, 17}, {76, 3, 5, 2, 16, 3, 4}, {82, 6, 2, 3, 5, 9, 20}, {74, 11, 5, 2, 7, 1, 11}},
+    {{118, 9, 1, 2, 2, 10, 21}, {120, 2, 4, 3, 19, 9, 4}, {122, 7, 1, 2, 17, 1, 17}, {116, 4, 5, 2, 2, 5, 19}, {124, 0, 0, 3, 13, 10, 21}, {112, 5, 1, 3, 19, 17, 4}, {120, 10, 4, 2, 0, 9, 12}, {126, 3, 5, 3, 2, 10, 21}, {114, 6, 1, 2, 17, 5, 17}, {122, 11, 4, 2, 19, 1, 19}},
+    {{100, 4, 4, 2, 17, 17, 21}, {104, 9, 1, 3, 4, 5, 4}, {96, 2, 7, 2, 13, 10, 19}, {108, 7, 4, 2, 0, 9, 21}, {102, 0, 1, 3, 19, 17, 17}, {98, 5, 5, 2, 17, 5, 21}, {106, 10, 4, 2, 4, 10, 4}, {110, 3, 1, 3, 13, 9, 19}, {100, 11, 1, 2, 19, 17, 21}, {104, 6, 4, 3, 0, 5, 17}},
+    {{76, 9, 5, 1, 13, 9, 12}, {72, 4, 1, 2, 6, 1, 21}, {80, 2, 4, 1, 17, 8, 15}, {74, 7, 5, 2, 21, 7, 4}, {78, 0, 0, 1, 19, 9, 16}, {70, 5, 1, 1, 13, 5, 12}, {82, 10, 4, 2, 6, 9, 21}, {84, 3, 5, 1, 17, 1, 15}, {74, 6, 5, 2, 21, 8, 4}, {78, 11, 1, 1, 19, 7, 16}},
+    {{108, 9, 5, 1, 10, 0, 26}, {112, 4, 5, 2, 20, 10, 24}, {104, 0, 0, 1, 2, 5, 25}, {116, 7, 1, 2, 9, 1, 30}, {100, 2, 5, 1, 5, 22, 26}, {110, 5, 1, 3, 10, 0, 24}, {118, 10, 5, 1, 20, 10, 25}, {106, 3, 0, 2, 2, 5, 28}, {114, 6, 5, 1, 9, 1, 30}, {102, 11, 1, 2, 5, 22, 26}},
+    {{112, 9, 5, 3, 0, 9, 16}, {110, 4, 1, 3, 5, 1, 4}, {108, 2, 1, 2, 16, 8, 18}, {113, 7, 5, 3, 2, 21, 15}, {111, 0, 0, 2, 23, 9, 16}, {109, 5, 1, 7, 0, 1, 4}, {114, 10, 5, 3, 5, 9, 18}, {112, 3, 4, 3, 16, 8, 15}, {110, 6, 5, 2, 2, 21, 16}, {115, 11, 1, 3, 23, 9, 4}},
+    {{84, 9, 5, 2, 7, 9, 15}, {78, 4, 2, 3, 2, 1, 17}, {72, 2, 1, 2, 16, 8, 4}, {88, 7, 5, 3, 5, 3, 20}, {80, 0, 5, 2, 1, 9, 11}, {70, 5, 2, 2, 7, 1, 15}, {86, 10, 1, 3, 2, 8, 17}, {76, 3, 5, 2, 16, 3, 4}, {82, 6, 2, 2, 5, 9, 20}, {74, 11, 5, 2, 7, 1, 11}},
     {{128, 4, 2, 4, 7, 13, 2}, {132, 9, 5, 6, 13, 20, 14}, {135, 2, 2, 6, 14, 4, 3}, {118, 7, 7, 4, 6, 2, 27}, {130, 0, 2, 4, 7, 3, 2}, {140, 5, 2, 6, 13, 13, 14},
      {122, 11, 5, 4, 14, 20, 3}, {145, 1, 2, 6, 7, 4, 2}, {126, 10, 7, 4, 6, 3, 27}, {142, 6, 2, 6, 13, 2, 14}},   /* industrial: 118-145 (techno at 135, breakbeat at 140-145) */
     {{92, 2, 1, 3, 23, 1, 15}, {104, 9, 5, 4, 1, 9, 11}, {132, 6, 5, 1, 9, 9, 0}, {136, 9, 2, 4, 3, 10, 3}, {140, 4, 2, 1, 2, 5, 8},
-     {142, 7, 5, 6, 9, 10, 13}, {145, 6, 2, 1, 23, 9, 14}, {145, 4, 5, 2, 10, 0, 24}, {146, 1, 2, 4, 7, 6, 2}, {112, 4, 1, 3, 11, 1, 4}},   /* psy: 01, 02 psychill,
+     {142, 7, 5, 6, 9, 10, 13}, {145, 6, 2, 2, 23, 9, 14}, {145, 4, 5, 2, 10, 0, 24}, {146, 1, 2, 4, 7, 6, 2}, {112, 4, 1, 3, 11, 1, 4}},   /* psy: 01, 02 psychill,
                                                  * 03-04 progressive, 05-09 full-on and goa, 10 psychill again */
     {{150, 4, 2, 6, 7, 9, 13}, {152, 5, 2, 4, 11, 13, 14}, {155, 1, 5, 1, 23, 20, 2}, {158, 7, 2, 6, 22, 9, 27}, {160, 2, 2, 5, 7, 8, 9},
      {148, 9, 5, 4, 16, 6, 13}, {162, 6, 2, 6, 11, 9, 14}, {165, 11, 2, 1, 7, 20, 2}, {156, 8, 7, 4, 23, 13, 27}, {160, 0, 2, 6, 22, 9, 13}},   /* dark forest: 148-165 */
@@ -422,6 +422,9 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
                                                  * Hollow, Air, Chapel, Ooh; Sub, Metal, Gnarl, Rumble, FM; Laser, Fold, Driven, Hyper, Bleep; Gong, Bleep, Digital, DX Tubular, Glass; the Hard kick */
 };
 static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 0, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0, 3, 3, 3};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
+/* pieces 6-10's pad: the palette shifted by PAD_K[g] from pieces 1-5's (0.16.7: it was 2 for all, which gave 1 and 9, 3 and 6, 4 and 7 one pad over the
+ * same mode and chord kind: the audit's "twins"; each genre's shift chosen by tests/host/gtwin.c, SEARCH=1, for the fewest pairs too alike) */
+static const uint8_t PAD_K[EN_NGENRE] = {2, 4, 2, 4, 4, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 4, 4, 2, 0};
 static void vary(int g, int i, int16_t *par)
 {
     const int pw = g * 3 + i, h = i / 5;
@@ -430,7 +433,7 @@ static void vary(int g, int i, int16_t *par)
     par[P_CM_RATE] = PLUCK_RATE[g];
     if (g == 0)
         return;                                 /* the original pieces keep their pad, drone, acid and kit */
-    par[P_PADTONE] = PALETTE[g].pad[(i + 2 * h) % 5];
+    par[P_PADTONE] = PALETTE[g].pad[(i + PAD_K[g] * h) % 5];
     par[P_DR_INST] = PALETTE[g].drone[(i * 2 + g + 2 * h) % 5];
     par[P_AC_WAVE] = PALETTE[g].acid[(i * 3 + pw + 2 * h) % 5];
     par[P_KIT_KICK] = PALETTE[g].kick[(i + g) % 3];
@@ -1014,11 +1017,11 @@ static const uint8_t EN_TRIM[EN_NGENRE][10] = {   /* (median -15.3 dBFS; a piece
     {0, 2, 0, 0, 3, 0, 0, 1, 0, 0},   /* BREAKS */
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* GARAGE */
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* ELECTRO */
-    {0, 2, 0, 3, 0, 0, 0, 2, 0, 1},   /* TRAP */
+    {0, 2, 0, 3, 0, 0, 0, 2, 0, 0},   /* TRAP */
     {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},   /* DISCO */
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* FUNK */
     {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},   /* REGGAE */
-    {0, 0, 0, 0, 0, 0, 2, 0, 0, 1},   /* SYNTHWV */
+    {0, 0, 0, 0, 0, 0, 2, 0, 0, 2},   /* SYNTHWV */
     {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},   /* AMAPI */
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* TRIPHOP */
     {0, 5, 3, 0, 3, 3, 0, 5, 3, 0},   /* INDUS */
@@ -1920,29 +1923,34 @@ static void drift_reset(void)
  * heard on the phrase boundary; back: the move straight back to the chord before (A B A) is allowed (a house loop wants it, a lofi turnaround does not).
  * hr: the genre's harmonic rhythm, bars a chord (0: Drift's clock in seconds, hypno); Drift then halves or doubles it (hr_bars_v). dom: a dominant
  * in minor: on V the scale's seventh degree is raised a semitone (the chord's third, the acid's and the bass's note) so the cadence is a real one.
- * A diminished degree (its fifth a tritone: vii in a major mode, ii in a minor one) is rare, and a leading chord that is one is replaced by V (or IV). */
+ * A diminished degree (its fifth a tritone: vii in a major mode, ii in a minor one) is rare, and a leading chord that is one is replaced by V (or IV).
+ * An edge's weight with EB2 set counts only when the scale's second is a semitone above the root (0.16.7, the audit's "bII": a Phrygian piece's flat II,
+ * the chord that makes Phrygian Phrygian; in Aeolian or Dorian the same degree is ii and the edge does nothing). */
+#define EB2 0x80u
 typedef struct { uint8_t from, to, w; } ch_edge_t;
 static const struct { uint8_t tonic, cad_every, cad_to, back, hr, dom; ch_edge_t e[8]; } CHT[EN_NGENRE] = {
     {0, 0, 0, 0, 0, 0, {{0}}},                                                                    /* HYPNO: the walk by degree (W7) */
     {2, 8, 4, 0, 2, 1, {{1, 4, 12}, {4, 0, 12}, {0, 1, 4}, {0, 3, 4}, {3, 1, 5}, {5, 1, 6}, {2, 5, 6}, {6, 2, 5}}},   /* lofi: ii-V-I, turnarounds */
     {2, 4, 6, 1, 2, 0, {{0, 6, 8}, {6, 5, 6}, {5, 6, 6}, {6, 0, 5}, {5, 0, 3}, {0, 5, 5}, {3, 6, 3}, {0, 0, 0}}},    /* house: i-VII-VI-VII loops */
-    {4, 8, 6, 0, 8, 0, {{0, 5, 6}, {5, 0, 8}, {0, 6, 4}, {6, 0, 6}, {0, 4, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* dubstep: sparse, VI and home */
+    {4, 8, 6, 0, 8, 0, {{0, 5, 6}, {5, 0, 8}, {0, 6, 4}, {6, 0, 6}, {0, 4, 3}, {0, 1, EB2 | 5}, {1, 0, EB2 | 8}, {0, 0, 0}}},   /* dubstep: sparse, VI and home (Phrygian: bII) */
     {3, 4, 3, 1, 4, 0, {{0, 3, 8}, {3, 0, 8}, {0, 6, 5}, {6, 0, 5}, {0, 5, 3}, {5, 6, 3}, {0, 0, 0}, {0, 0, 0}}},    /* dub: a minor vamp, one and four */
     {2, 4, 4, 0, 4, 1, {{1, 4, 10}, {4, 0, 8}, {0, 5, 5}, {5, 1, 6}, {0, 3, 4}, {3, 1, 4}, {0, 0, 0}, {0, 0, 0}}},   /* dnb: liquid ii-V */
     {3, 4, 4, 0, 4, 1, {{0, 3, 4}, {3, 4, 4}, {4, 0, 6}, {0, 5, 4}, {5, 3, 4}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* breaks: even, V home */
     {2, 4, 4, 0, 2, 1, {{1, 4, 8}, {4, 0, 8}, {0, 5, 5}, {5, 3, 5}, {3, 1, 5}, {2, 5, 4}, {0, 0, 0}, {0, 0, 0}}},    /* garage: soulful */
     {4, 4, 4, 0, 4, 0, {{0, 4, 5}, {4, 0, 7}, {0, 3, 4}, {3, 0, 6}, {0, 6, 3}, {6, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* electro: a fifth, home */
-    {5, 4, 6, 0, 4, 0, {{0, 5, 6}, {5, 6, 5}, {6, 0, 8}, {0, 3, 3}, {3, 0, 7}, {5, 0, 5}, {0, 0, 0}, {0, 0, 0}}},    /* trap: dark, home */
+    {5, 4, 6, 0, 4, 0, {{0, 5, 6}, {5, 6, 5}, {6, 0, 8}, {0, 3, 3}, {3, 0, 7}, {5, 0, 5}, {0, 1, EB2 | 5}, {1, 0, EB2 | 8}}},   /* trap: dark, home (Phrygian: bII) */
     {2, 4, 4, 0, 2, 1, {{1, 4, 10}, {4, 0, 9}, {0, 3, 5}, {3, 6, 6}, {6, 2, 6}, {2, 5, 6}, {5, 1, 6}, {0, 0, 0}}},   /* disco: the circle of fifths */
     {5, 4, 3, 1, 4, 0, {{0, 3, 8}, {3, 0, 8}, {0, 6, 3}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* funk: the dorian vamp (i-IV) */
     {3, 4, 4, 1, 2, 1, {{0, 3, 7}, {3, 0, 7}, {0, 4, 5}, {4, 0, 7}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* reggae: one, four, five */
     {3, 4, 6, 0, 2, 0, {{0, 5, 8}, {5, 2, 8}, {2, 6, 8}, {6, 0, 7}, {6, 5, 3}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* synthwave: i-VI-III-VII */
     {2, 8, 4, 0, 4, 1, {{1, 4, 10}, {4, 0, 9}, {0, 1, 5}, {0, 3, 4}, {3, 1, 5}, {5, 1, 5}, {0, 0, 0}, {0, 0, 0}}},   /* amapiano: jazzy turnarounds */
-    {5, 8, 6, 0, 4, 0, {{0, 5, 5}, {5, 0, 7}, {0, 3, 4}, {3, 0, 6}, {6, 0, 5}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},    /* trip-hop: minor, sparse, home */
+    {5, 8, 6, 0, 4, 0, {{0, 5, 5}, {5, 0, 7}, {0, 3, 4}, {3, 0, 6}, {6, 0, 5}, {0, 1, EB2 | 4}, {1, 0, EB2 | 7}, {0, 0, 0}}},   /* trip-hop: minor, sparse, home (Phrygian: bII) */
     {5, 4, 1, 1, 2, 0, {{0, 1, 9}, {1, 0, 9}, {0, 6, 4}, {6, 0, 4}, {0, 4, 3}, {4, 1, 3}, {0, 0, 0}, {0, 0, 0}}},    /* industrial: the grind between i and the flat II */
     {5, 8, 1, 1, 8, 0, {{0, 1, 8}, {1, 0, 10}, {0, 6, 4}, {6, 0, 5}, {0, 5, 3}, {5, 0, 4}, {0, 0, 0}, {0, 0, 0}}},    /* psy: home held 8 bars, the flat II and back */
     {6, 8, 1, 1, 8, 0, {{0, 1, 10}, {1, 0, 10}, {0, 3, 3}, {3, 0, 4}, {0, 6, 2}, {6, 0, 3}, {0, 0, 0}, {0, 0, 0}}},   /* dark forest: i and the flat II, barely moving */
 };
+/* synthwave in a major mode (0.16.7, the audit's 2b): I-vi-IV-V, the decade's own loop, in place of its minor i-VI-III-VII edges */
+static const ch_edge_t SYN_MAJ[8] = {{0, 5, 8}, {5, 3, 8}, {3, 4, 8}, {4, 0, 8}, {0, 3, 4}, {4, 5, 3}, {0, 0, 0}, {0, 0, 0}};
 static volatile uint8_t chord_genre;
 void en_genre(int g) { chord_genre = (uint8_t)((unsigned)g < EN_NGENRE ? g : 0); }
 static int hr_bars_v(int v)                     /* the genre's bars a chord, by Drift: a quarter below 20, half below 45, double above 80, four times above 95 */
@@ -2068,11 +2076,12 @@ static void chord_change(void)                  /* to another degree: the genre'
         if (i == deg) {
             w[i] = 0.0f;
         } else if (rich) {
+            const ch_edge_t *const e = cg == 13 && deg_nat(2) == 4 ? SYN_MAJ : CHT[cg].e;   /* (synthwave, a major third: its major loop) */
             int k;
             w[i] = 1.0f + (i == 0 ? (float)CHT[cg].tonic : 0.0f);
             for (k = 0; k < 8; k++)
-                if (CHT[cg].e[k].w && CHT[cg].e[k].from == deg && CHT[cg].e[k].to == i)
-                    w[i] += (float)CHT[cg].e[k].w;
+                if (e[k].w && e[k].from == deg && e[k].to == i && (!(e[k].w & EB2) || deg_nat(1) == 1))
+                    w[i] += (float)(e[k].w & ~EB2);
             if (!CHT[cg].back && i == deg_prev && deg_prev != deg && cad_n)   /* no A B A (a loop's own chord is the pull back) */
                 w[i] = 0.0f;
             if (deg_dim(i))
@@ -3220,7 +3229,8 @@ static void bl_step(int st, int32_t w)
         else if (beat == 2)
             n = five;
         else if (beat == 3 && frand() * 100.0f < (float)par[P_BL_MOVE] + 20.0f)
-            n = bl_below(root);
+            n = frand() < 0.5f ? root - 1 : bl_below(root);   /* the lead-in to the bar's one: half the time the semitone below, a chromatic approach (0.16.7,
+                                                 * the audit's; a passing note, the only one the engine plays outside the scale), else the scale's note below */
         bl_go(n, w);
         bl_beat++;
         return;
