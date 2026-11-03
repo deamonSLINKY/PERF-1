@@ -1701,10 +1701,12 @@ typedef struct {
     float pend2;
     int32_t rgap;                               /* a ratchet: the samples between its hits, the hits still to come (rn), and what each is of the one before (rmul) */
     float rmul;
+    float xl, fo;                               /* the last sample out; a hit on a sounding voice: the old hit's last sample, fading (no step, no click) */
     uint8_t rn;
     uint8_t on, note;
 } drum_t;
 static drum_t drum[EN_NDRUM];
+#define DR_FADE (1.0f - 1.0f / (0.0008f * EN_SR))   /* the old hit's fade: ~0.8 ms, gone in ~4 */
 static float pulse_vol, swing, drive_k = 1.0f, lane_g[EN_NDRUM], lane_tune[EN_NDRUM], lane_dec[EN_NDRUM];
 static float kick_age = 1e9f;                  /* samples since the last kick (the pump can follow it) */
 static float step_len, pulse_left;               /* a sixteenth, in samples; to the next MIDI clock pulse */
@@ -2566,6 +2568,7 @@ static void drum_fire(int d, float vel)
     const float dec = d == L_OHAT && crash_next ? 1.0f : lane_dec[d], tf = fm_exp2f((lane_tune[d] + (d == L_SNARE ? snr_rise : d == L_PERC ? perc_fall : 0.0f)) * (1.0f / 12.0f));
     if (d == L_OHAT)
         crash_next = 0;
+    v->fo = v->on ? v->xl : 0.0f;               /* the new hit starts from 0 (att): the old one fades out from where it was */
     v->on = 1;
     v->amp = vel;
     v->att = 0.0f;
@@ -6892,12 +6895,12 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr)
 {
     uint32_t j;
     int k;
-    float x1, x2, amp, att;
+    float x1, x2, amp, att, fo, x = 0.0f;
     if (!v->on)
         return;
-    x1 = v->x1, x2 = v->x2, amp = v->amp, att = v->att;
+    x1 = v->x1, x2 = v->x2, amp = v->amp, att = v->att, fo = v->fo;
     for (j = 0; j < n; j++) {
-        float in = 0.0f, hp, x;
+        float in = 0.0f, hp;
         for (k = 0; k < 4; k++) {
             v->mph[k] += hat_inc[k];
             if (v->mph[k] >= 1.0f)
@@ -6909,7 +6912,8 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr)
         hp = in - x2 - 0.8f * x1;
         x1 += v->hp * hp;
         x2 += v->hp * x1;
-        x = hp * amp * att * g * TG(TR_HATS, j);
+        x = hp * amp * att * g * TG(TR_HATS, j) + fo;
+        fo *= DR_FADE;
         mixl[j] += x * pl;
         mixr[j] += x * pr;
         rsend[j] += x * 0.2f;
@@ -6921,6 +6925,8 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr)
     v->x2 = fm_flush(x2);
     v->amp = amp;
     v->att = att;
+    v->fo = fm_flush(fo);
+    v->xl = x;
     v->on = amp > 0.0005f;
 }
 
@@ -6928,12 +6934,12 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr)
 static void render_clap(drum_t *v, uint32_t n, float g)
 {
     uint32_t j;
-    float s1 = v->x1, s2 = v->x2, amp = v->amp, t = v->t, ph = v->ph;
+    float s1 = v->x1, s2 = v->x2, amp = v->amp, t = v->t, ph = v->ph, fo = v->fo, x = 0.0f;
     const float gap = KS->cl_gap;
     if (!v->on)
         return;
     for (j = 0; j < n; j++) {
-        float in, bp, x;
+        float in, bp;
         if (t == gap || t == 2.0f * gap)
             amp = v->pend;                      /* the next burst */
         noise = noise * 1664525u + 1013904223u;
@@ -6941,7 +6947,8 @@ static void render_clap(drum_t *v, uint32_t n, float g)
         bp = in - s2 - 0.7f * s1;               /* Chamberlin SVF: the band-pass is s1 */
         s1 += v->hp * bp;
         s2 += v->hp * s1;
-        x = (s1 * 1.6f + 0.35f * sine(ph) * fm_maxf(1.0f - t * (1.0f / 2500.0f), 0.0f)) * amp * g * TG(TR_SNARE, j);
+        x = (s1 * 1.6f + 0.35f * sine(ph) * fm_maxf(1.0f - t * (1.0f / 2500.0f), 0.0f)) * amp * g * TG(TR_SNARE, j) + fo;
+        fo *= DR_FADE;
         ph += v->inc;
         if (ph >= 1.0f)
             ph -= 1.0f;
@@ -6957,6 +6964,8 @@ static void render_clap(drum_t *v, uint32_t n, float g)
     v->amp = amp;
     v->t = t;
     v->ph = ph;
+    v->fo = fm_flush(fo);
+    v->xl = x;
     v->on = t < 2.0f * gap || amp > 0.0005f;
 }
 
@@ -6964,19 +6973,20 @@ static void render_clap(drum_t *v, uint32_t n, float g)
 static void render_snare(drum_t *v, uint32_t n, float g)
 {
     uint32_t j;
-    float s1 = v->x1, s2 = v->x2, amp = v->amp, ph = v->ph, ph2 = v->ph2, att = v->att, body = v->idx;
+    float s1 = v->x1, s2 = v->x2, amp = v->amp, ph = v->ph, ph2 = v->ph2, att = v->att, body = v->idx, fo = v->fo, x = 0.0f;
     if (!v->on)
         return;
     if (v->t == 0.0f)
         body = 1.0f;
     for (j = 0; j < n; j++) {
-        float in, bp, x;
+        float in, bp;
         noise = noise * 1664525u + 1013904223u;
         in = (float)(int32_t)noise * (1.0f / 2147483648.0f);
         bp = in - s2 - 0.5f * s1;
         s1 += v->hp * bp;
         s2 += v->hp * s1;
-        x = ((sine(ph) + 0.6f * sine(ph2)) * body * KS->sn_body + s1 * KS->sn_noise) * amp * att * g * TG(TR_SNARE, j);
+        x = ((sine(ph) + 0.6f * sine(ph2)) * body * KS->sn_body + s1 * KS->sn_noise) * amp * att * g * TG(TR_SNARE, j) + fo;
+        fo *= DR_FADE;
         ph += v->inc;
         ph2 += v->inc2;
         if (ph >= 1.0f)
@@ -6999,6 +7009,8 @@ static void render_snare(drum_t *v, uint32_t n, float g)
     v->att = att;
     v->idx = body;
     v->t = 1.0f;
+    v->fo = fm_flush(fo);
+    v->xl = x;
     v->on = amp > 0.0005f;
 }
 
@@ -7006,11 +7018,13 @@ static void render_snare(drum_t *v, uint32_t n, float g)
 static void render_perc(drum_t *v, uint32_t n, float g)
 {
     uint32_t j;
-    float ph = v->ph, ph2 = v->ph2, inc = v->inc, amp = v->amp, idx = v->idx, att = v->att;
+    float ph = v->ph, ph2 = v->ph2, inc = v->inc, amp = v->amp, idx = v->idx, att = v->att, fo = v->fo, x = 0.0f;
     if (!v->on)
         return;
     for (j = 0; j < n; j++) {
-        float m = sine(ph2) * idx, x = sine(ph + m + 4.0f) * amp * att * g * TG(TR_PERC, j);
+        float m = sine(ph2) * idx;
+        x = sine(ph + m + 4.0f) * amp * att * g * TG(TR_PERC, j) + fo;
+        fo *= DR_FADE;
         ph += inc;
         ph2 += inc * v->inc2;
         if (ph >= 1.0f)
@@ -7032,6 +7046,8 @@ static void render_perc(drum_t *v, uint32_t n, float g)
     v->amp = amp;
     v->idx = idx;
     v->att = att;
+    v->fo = fm_flush(fo);
+    v->xl = x;
     v->on = amp > 0.0005f;
 }
 
@@ -7042,12 +7058,12 @@ static void render_drums(uint32_t n)
     drum_t *v;
     v = &drum[L_KICK];                           /* kick: a sine falling fast to its note, a click, driven */
     if (v->on) {
-        float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, ck = v->idx, gk = g * lane_g[L_KICK] * 1.15f;
+        float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, ck = v->idx, gk = g * lane_g[L_KICK] * 1.15f, fo = v->fo, x = 0.0f;
         float r1 = v->x1, r2 = v->x2, rl1 = v->mph[0], rl2 = v->mph[1], rp = v->ph2;
         const float dk = drive_k * KK->k_drive, drop = KK->k_drop, cka = KK->k_click, rum = KK->k_rumble;
         const float norm = 0.85f / fm_minf(1.0f + 0.25f * (dk - 1.0f), 1.6f);
         for (j = 0; j < n; j++) {
-            float x, nz;
+            float nz;
             noise = noise * 1664525u + 1013904223u;
             nz = (float)(int32_t)noise * (1.0f / 2147483648.0f);
             x = sine(ph) * amp * att + ck * cka * nz;
@@ -7061,7 +7077,8 @@ static void render_drums(uint32_t n)
                 r1 *= 0.99985f;                       /* ~0.35 s */
                 r2 *= 0.9985f;                        /* ~35 ms */
             }
-            x = fm_tanhf(x * 1.3f * dk) * norm * gk * TG(TR_KICK, j);
+            x = fm_tanhf(x * 1.3f * dk) * norm * gk * TG(TR_KICK, j) + fo;
+            fo *= DR_FADE;
             mixl[j] += x;
             mixr[j] += x;
             ph += inc;
@@ -7082,6 +7099,8 @@ static void render_drums(uint32_t n)
         v->mph[0] = fm_flush(rl1);
         v->mph[1] = fm_flush(rl2);
         v->ph2 = rp;
+        v->fo = fm_flush(fo);
+        v->xl = x;
         v->on = amp > 0.0005f || r1 - r2 > 0.002f;
     }
     render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE]);

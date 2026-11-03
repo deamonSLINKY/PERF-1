@@ -22,6 +22,8 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Unreleased (the builds 0.16.5 .. are its steps)
 
+- **No click when a drum hits itself** (after 0.16.5): a hit on a drum still sounding (a pad's kick on the pattern's kick, a ratchet, a flam) started from 0 and cut the old hit dead, a step heard as a click (found on the MPC Sample port, SAMPERF; the FM-1 the same). Now the old hit's last sample fades out over about a millisecond under the new one (each voice keeps its last sample; one add and one multiply a sample). A kick on a loud kick: the largest jump between samples 0.199 before, 0.128 after (a hit from silence: 0.115). Render cost unchanged within noise (SAMPERF's 60 s scripted session: 32-37 us a 128-frame block, before and after). Test: amb_test (a kick on itself steps no more than a kick from silence). RAM +48 bytes (two floats in each of the six voices); not yet built for the FM-1.
+
 - **How deep the stacks go** (0.16.5): to size a Bluetooth stack (the RAM map: about 42 KB unused outside the 96 KB region, in RAMTEXT, the debug window and NOINIT), the four stacks are painted at boot below what is in use, and the status frame carries each one's deepest point in bytes: `stk_main` (of 24 KB), `stk_irq` (of 8 KB), `stk_c1u` and `stk_c1s` (CPU1's, of 4 KB each), as the frame's words 35-38. The installer's live status and `tools/fm1log.py` log them (and the logger reads an older firmware's shorter frame, the new columns 0).
 
 - **Sharing pieces and the Library back on the site** (0.16.5): the Pieces and Library pages (0.16.3, 0.16.4) were held out of 0.16.1 (make_pages_site.py --no-sharing); the manual's Sharing pieces section and the README's bullet are back for 0.17.

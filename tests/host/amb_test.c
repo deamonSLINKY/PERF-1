@@ -731,6 +731,58 @@ int main(void)
         en_play(1);
         run(1.0f);
     }
+    /* a drum hit on the same drum still sounding (a pad's kick on the pattern's, 0.16.6): no step. The new hit starts from 0, so the old one fades
+     * out from where it was (~1 ms) rather than stopping dead. The largest jump between samples in the two blocks after the second hit is held to
+     * what a hit from silence makes (the hit reaches the output a little late: the master's chain; the kick's own click is noise, so some room).
+     * The kick only: it is where it was heard (before: 0.199 on itself against 0.115 from silence; after: 0.128); the snare's and the perc's own
+     * noise and highs jump more than their step did, so this measure cannot see theirs */
+    {
+        static const int LANE[1] = {0};
+        int k, blk, j;
+        for (k = 0; k < 1; k++) {
+            float jump[2] = {0.0f, 0.0f}, prev = 0.0f, top = 0.0f, at = 0.0f;
+            int h;
+            en_init();
+            en_set(P_PAD, 0);
+            en_set(P_BASS, 0);
+            en_set(P_ACID, 0);
+            en_set(P_CM_LVL, 0);
+            en_set(P_NOISE, 0);
+            run(0.2f);
+            prev = (float)buf[510] / 8388608.0f;
+            for (h = 0; h < 2; h++) {
+                en_drum_tap(LANE[k], 127);
+                for (blk = 0; blk < 2; blk++) {
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j += 2) {   /* the left channel */
+                        const float x = (float)buf[j] / 8388608.0f, d = fabsf(x - prev);
+                        if (d > jump[h])
+                            jump[h] = d;
+                        prev = x;
+                    }
+                }
+                if (h)
+                    break;
+                for (blk = 0; blk < 40; blk++) {     /* on until the drum is loud at a block's end: the next hit lands there */
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 512; j += 2)
+                        top = fmaxf(top, fabsf((float)buf[j] / 8388608.0f));
+                    prev = (float)buf[510] / 8388608.0f;
+                    if (blk >= 1 && fabsf(prev) > 0.3f * top)
+                        break;
+                }
+                at = fabsf(prev);
+            }
+            printf("drum retrigger: lane %d: from silence %.4f, on itself %.4f (it was at %.4f, its peak %.4f)\n", LANE[k], (double)jump[0], (double)jump[1],
+                   (double)at, (double)top);
+            CHECK(at > 0.1f * top, "drum retrigger: lane %d never loud at a block's end", LANE[k]);
+            CHECK(jump[1] < 1.5f * jump[0] + 0.05f * top, "drum retrigger: lane %d steps %.4f on itself (%.4f from silence)", LANE[k], (double)jump[1],
+                  (double)jump[0]);
+        }
+        en_init();
+        en_play(1);
+        run(1.0f);
+    }
     /* the DJ snips (the FX menu's fourth bank): each of the 27 keys is heard, nothing breaks, and every one is silent again once let go / played out;
      * in one-shot mode the long ones end by themselves */
     {
