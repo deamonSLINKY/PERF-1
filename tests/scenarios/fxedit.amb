@@ -267,6 +267,30 @@ wait 50
 expect djbreak 2
 spin K3 -1
 wait 50
+# AUTO FX (0.16.8): Auto FX (off, gentle, medium, wild), Every (4 .. 32 bars), Length (a beat .. 2 bars), Pick (genre, any): EN_FXS_AF_* 92 .. 95
+spin SELECT 1
+wait 100
+expect fxpage 34
+expect fxmask 0
+expect fxs92 0
+expect fxs93 1
+expect fxs94 2
+expect fxs95 0
+spin K1 3
+spin K2 -1
+spin K3 -2
+spin K4 1
+wait 50
+expect fxs92 3
+expect fxs93 0
+expect fxs94 0
+expect fxs95 1
+spin K1 -3
+spin K2 1
+spin K3 2
+spin K4 -1
+wait 50
+expect fxs92 0
 spin SELECT 1
 wait 100
 expect fxpage 25

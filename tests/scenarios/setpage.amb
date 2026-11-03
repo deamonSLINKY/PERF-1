@@ -6,7 +6,7 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-turn SELECT 2
+turn SELECT 3
 wait 100
 expect fxpage 25
 shot set_page.png

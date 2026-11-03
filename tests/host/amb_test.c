@@ -2146,7 +2146,14 @@ int main(void)
         int v, k;
         float lv[3];
         for (v = 0; v < 2; v++) {
-            for (k = 0; k < 3; k++) {            /* 0 plain, 1 screaming, 2 screaming aimed at the other voice */
+            static const int KS[4] = {0, 0, 2, 1};   /* (0.16.8: the engine keeps some state through en_init (the bass's 2 s fade, the lines), so a
+                                                 * throwaway plain run first, and the two compared, plain and aimed at the other voice, each after a plain one) */
+            int ki;
+            for (ki = 0; ki < 4; ki++) {         /* 0 plain, 1 screaming, 2 screaming aimed at the other voice */
+                int f;
+                k = KS[ki];
+                for (f = 0; f < EN_NFXS; f++)          /* (0.16.8: from the effects' defaults, not what the tests before left) */
+                    en_fxs(f, EN_FXS_DEF[f]);
                 en_init();
                 en_dj_sync(0);
                 en_test_reseed(7);
@@ -2154,6 +2161,8 @@ int main(void)
                 en_genre(2);
                 en_set(P_BL_MODE, 1);
                 en_set(P_ACID, 70);
+                en_set(P_ECHO, 0);                /* (0.16.8: the shared echo and reverb off, so a voice the scream is not aimed at must come out the same;
+                en_set(P_REVERB, 0);               * with them on the check rode on the timing of the commands before the first block) */
                 en_fxs(EN_FXS_SQ_DRIVE, k ? 100 : 0);
                 en_fxs(EN_FXS_SQ_AMT, k ? 100 : 0);
                 en_fxs(EN_FXS_SQ_WOW, k ? 100 : 0);
@@ -2171,7 +2180,7 @@ int main(void)
             }
             CHECK(lv[0] > 0.0f && lv[1] > 0.25f * lv[0] && lv[1] < 4.0f * lv[0] && fabsf(lv[1] - lv[0]) > 0.05f * lv[0],
                   "scream on the %s: its energy %.2f of the plain one's (changed, and kept within reach)", V[v].name, (double)(lv[0] > 0.0f ? lv[1] / lv[0] : 0.0f));
-            CHECK(fabsf(lv[2] - lv[0]) < 0.02f * lv[0], "scream aimed at the other voice leaves the %s as it was (%.4f of it: only the shared echo and reverb move)",
+            CHECK(fabsf(lv[2] - lv[0]) < 0.02f * lv[0], "scream aimed at the other voice leaves the %s as it was (%.4f of it: echo and reverb off)",
                   V[v].name, (double)(lv[0] > 0.0f ? lv[2] / lv[0] : 0.0f));
         }
         {

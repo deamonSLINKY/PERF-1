@@ -28,7 +28,7 @@ wait 900
 release HOME
 wait 100
 expect fxpage 18
-turn SELECT 7
+turn SELECT 8
 wait 100
 expect fxpage 31
 spin K4 1

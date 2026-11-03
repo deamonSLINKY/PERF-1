@@ -1,0 +1,47 @@
+# AUTO FX (0.16.8, a settings page after AUTO DJ): effects played by themselves, each ending on a phrase line. Wild, every 4 bars, up to a bar: within a few
+# phrases one is planned, ends on a line (a multiple of 64 sixteenths), sounds, and goes; one played by hand stops it; Off: none.
+seed 0
+wait 3000
+press HOME
+wait 800
+release HOME
+wait 100
+turn SELECT 2
+wait 100
+expect fxpage 34
+spin K1 3
+spin K2 -1
+wait 100
+expect fxs92 3
+expect fxs93 0
+expect fxs94 2
+shot autofx_page.png
+# in the FX menu it waits
+wait 9000
+expect afplanned 0
+tap FX
+wait 500
+expect view 0
+# out of it: within 40 s (about 20 bars at the piece's tempo, five phrase lines at 90 %) one has been planned, on a line
+waitfor afplanned 1 40000
+expect afline 1
+waitfor aflive 1 8000
+expect fxmask >0
+shot autofx_live.png
+waitfor aflive 0 8000
+# off: nothing more
+press HOME
+wait 800
+release HOME
+wait 100
+turn SELECT 2
+wait 100
+expect fxpage 34
+spin K1 -3
+wait 100
+expect fxs92 0
+tap FX
+wait 500
+wait 20000
+expect afplanned 0
+expect aflive 0

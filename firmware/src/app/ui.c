@@ -55,7 +55,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 34
+#define NFXP 35
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -111,6 +111,10 @@ static const char *const MIN_NAME[4] = {"SCALE", "PADS", "M:S", "MPK"};
 static const char *const CC_NAME[4] = {"OFF", "IN", "OUT", "IN+OUT"};
 static const char *const FT_NAME[5] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK"};
 static const char *const SQT_NAME[3] = {"ACID", "BASS", "BOTH"};   /* SCREAM's target (0.16.4) */
+static const char *const AFA_NAME[4] = {"OFF", "GENTLE", "MEDIUM", "WILD"};   /* AUTO FX (0.16.8): how much, how often, how long, which */
+static const char *const AFE_NAME[4] = {"4 BARS", "8 BARS", "16 BARS", "32 BARS"};
+static const char *const AFL_NAME[4] = {"A BEAT", "HALF BAR", "A BAR", "2 BARS"};
+static const char *const AFP_NAME[2] = {"GENRE", "ANY"};
 static const char *const MCH_NAME[17] = {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
 static const struct {
     const char *name;
@@ -187,6 +191,9 @@ static const struct {
                        {"", KN_NONE, 0, 0, 0}}},   /* (0.16.1) the sampling helper: PERF's drums and voices one at a time, for a sampler (not kept) */
     {"SCREAM", FX_SPARE13, 0, {{"Drive", KN_PLAIN, EN_FXS_SQ_DRIVE, 0, 0}, {"Scream", KN_PLAIN, EN_FXS_SQ_AMT, 0, 0}, {"Wow", KN_PLAIN, EN_FXS_SQ_WOW, 0, 0},
                        {"Target", KN_NAME, EN_FXS_SQ_TGT, SQT_NAME, 3}}},   /* (0.16.4; a spare effect bit, as FILTERS: nothing held) the acid's and the bass's filters pushed to scream: drive into it, resonance towards singing, accents opening it */
+    {"AUTO FX", FX_SPARE12, 0, {{"Auto FX", KN_NAME, EN_FXS_AF_AMT, AFA_NAME, 4}, {"Every", KN_NAME, EN_FXS_AF_EVERY, AFE_NAME, 4},
+                        {"Length", KN_NAME, EN_FXS_AF_LEN, AFL_NAME, 4}, {"Pick", KN_NAME, EN_FXS_AF_PICK, AFP_NAME, 2}}},   /* (0.16.8; a spare effect bit: nothing held) effects played by
+                                                    * themselves, ending on the phrase lines (af_tick) */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Answer", KN_NAME, 10, ONOFF_NAME, 2}}},   /* (the last: ui_knob_param counts on it) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -469,6 +476,10 @@ static struct {
     uint8_t undo_m, undo_s, undo_ok, tap_n;
     int8_t undo_k[4];
     uint8_t dj_on, dj_len, dj_piece;   /* the auto-DJ: on; its groove length (8, 16, 32, 64 bars); a new piece each round */
+    uint8_t af_fx, af_live, af_user, af_sec, af_said, af_last[2];   /* AUTO FX (af_tick): the effect planned, sounding now, one played by hand, the section seen,
+                                                                  * its name shown, the last two */
+    uint32_t af_start, af_end, af_bar, af_quiet, af_rng;   /* where it starts and ends (sixteenths, en_bars; end 0: none), the bar planned on, the bar it
+                                                            * may plan again from (after a drop), its dice */
     uint8_t dj_break, dj_fillon;       /* its breakdown (0 short: 4 bars, 1 half the groove, 2 as long); a drum fill before it */
     uint8_t scene_quant, scene_q;      /* a scene waits for the next bar (1) or comes at once (0); the one waiting: slot + 1 */
     uint8_t key_set, key_on, sec_last; /* the drop's key change (0 same, 1 +2, 2 +3, 3 +5, 4 +7); it is on; the section last seen */
@@ -1837,6 +1848,125 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
     }
 }
 
+/* AUTO FX (0.16.8; the idea after DARK-1's Auto FX, by Polystellarflow, rebuilt for PERF-1's sections and genres): now and then an effect plays by itself and lets
+ * go, timed to END on a phrase line (every 4, 8, 16 or 32 bars, as set: its last beat, half bar, bar or two bars), as a DJ leads into the next phrase. Which:
+ * one that suits the section (the groove's gates, repeats and sweeps, the breakdown's washes, the build's rolls), four times as likely when it is the genre's
+ * own (dub's throws and tape, house's pump and filters, breaks' scratches and repeats, trap's hat rolls and half time ...), up to the amount set (Gentle: the
+ * washes and sweeps; Medium: and the gates, filters, repeats and rolls; Wild: and the stops, brakes, scatters, half time), and never one of the last two.
+ * At the end of a build (Medium and up) a stop, a reverse, a brake or a spin-back leads into the drop; the four bars after a drop are left alone. It keeps
+ * out of the way: nothing while an effect is played or latched by hand (that ends one under way), in the FX menu, in the intro, or stopped; with the
+ * auto-DJ on, its fill and riser are left to it. */
+#define AG(g) (1u << (g))                       /* the genres: 0 HYPNO, 1 LOFI, 2 HOUSE, 3 DUBSTEP, 4 DUB, 5 DNB, 6 BREAKS, 7 GARAGE, 8 ELECTRO, 9 TRAP, 10 DISCO,
+                                                 * 11 FUNK, 12 REGGAE, 13 SYNTHWAVE, 14 AMAPIANO, 15 TRIP-HOP, 16 INDUSTRIAL, 17 PSY, 18 FOREST */
+static const struct {
+    uint8_t fx, lvl, sec, len;                   /* the effect; the amount it comes in at (0 gentle, 1 medium, 2 wild); the sections (1 groove, 2 breakdown, 4 build);
+                                                 * the longest it may take, sixteenths (a throw or a stop is short however long the setting) */
+    uint32_t fav;                                /* the genres it is theirs in */
+} AFX[] = {
+    {FX_PHASER, 0, 3, 32, AG(13) | AG(17) | AG(18) | AG(10) | AG(2)},
+    {FX_FLANGER, 0, 3, 32, AG(13) | AG(17) | AG(18) | AG(0)},
+    {FX_TAPE, 0, 3, 32, AG(1) | AG(15) | AG(4) | AG(12) | AG(13)},
+    {FX_THROW, 0, 3, 4, AG(4) | AG(12) | AG(3) | AG(14) | AG(2)},
+    {FX_SWEEP, 0, 5, 32, AG(0) | AG(2) | AG(17) | AG(18) | AG(16)},
+    {FX_RVSWELL, 0, 6, 16, AG(4) | AG(15) | AG(1) | AG(3)},
+    {FX_FILL, 0, 1, 16, AG(6) | AG(11) | AG(5) | AG(7)},
+    {FX_LP, 1, 3, 16, AG(2) | AG(10) | AG(7) | AG(0)},
+    {FX_HP, 1, 5, 16, AG(2) | AG(0) | AG(17) | AG(5)},
+    {FX_GATE16, 1, 1, 16, AG(0) | AG(17) | AG(18) | AG(16) | AG(13)},
+    {FX_GATE8, 1, 1, 16, AG(2) | AG(10) | AG(13) | AG(7)},
+    {FX_PUMP, 1, 1, 32, AG(2) | AG(10) | AG(7) | AG(14)},
+    {FX_RPT8, 1, 1, 8, AG(6) | AG(5) | AG(8) | AG(11)},
+    {FX_RPT16, 1, 5, 8, AG(5) | AG(6) | AG(9) | AG(3) | AG(17)},
+    {FX_RPT8T, 1, 1, 8, AG(14) | AG(9) | AG(7)},
+    {FX_HATROLL, 1, 5, 8, AG(9) | AG(18) | AG(5) | AG(16)},
+    {FX_SNROLL, 1, 4, 16, AG(3) | AG(9) | AG(5) | AG(6)},
+    {FX_ROLL, 1, 4, 16, AG(2) | AG(0) | AG(17) | AG(10)},
+    {FX_FREEZE, 1, 2, 16, AG(0) | AG(15) | AG(16) | AG(18)},
+    {FX_RING, 2, 3, 8, AG(16) | AG(18) | AG(8)},
+    {FX_SCATTER, 2, 1, 8, AG(6) | AG(5) | AG(8) | AG(16)},
+    {FX_SCRATCH, 2, 1, 8, AG(6) | AG(11) | AG(8) | AG(15) | AG(1)},
+    {FX_HALF, 2, 1, 16, AG(3) | AG(9) | AG(15)},
+    {FX_DBLKICK, 2, 1, 8, AG(0) | AG(16) | AG(18) | AG(17)},
+    {FX_REV, 2, 1, 4, AG(5) | AG(6) | AG(3)},
+    {FX_STOP, 2, 1, 4, AG(3) | AG(9) | AG(4) | AG(1) | AG(15)},
+    {FX_BRAKE, 2, 1, 8, AG(1) | AG(15) | AG(4) | AG(12)},
+    {FX_SPIN, 2, 1, 4, AG(4) | AG(12) | AG(6)},
+};
+#define NAFX ((int)(sizeof AFX / sizeof AFX[0]))
+static uint32_t af_dice(void)
+{
+    ui.af_rng ^= ui.af_rng << 13;
+    ui.af_rng ^= ui.af_rng >> 17;
+    ui.af_rng ^= ui.af_rng << 5;
+    return ui.af_rng;
+}
+static void af_tick(void)
+{
+    static const uint8_t CHANCE[4] = {0, 50, 70, 90};   /* how often a phrase line gets one, by the amount */
+    const int amt = ui.fxs[EN_FXS_AF_AMT] & 3, len_set = 4 << (ui.fxs[EN_FXS_AF_LEN] & 3), every = 4 << (ui.fxs[EN_FXS_AF_EVERY] & 3);
+    const uint32_t s16 = en_bars, bar = s16 >> 4;
+    int i, n = 0, tot = 0, pick, len, nb, predrop;
+    uint8_t cand[NAFX], w[NAFX];
+    if (!ui.af_rng)
+        ui.af_rng = plat_ms() * 2654435761u | 1u;
+    if (en_sec != ui.af_sec) {                   /* a drop: four bars left alone, and nothing carried over */
+        if (en_sec == EN_SEC_GROOVE && ui.af_sec == EN_SEC_BUILD) {
+            ui.af_quiet = bar + 4u;
+            ui.af_end = 0;
+        }
+        ui.af_sec = en_sec;
+    }
+    if (!amt || !en_playing || ui.fx_menu || ui.af_user || en_intro_k < 1.0f) {
+        ui.af_live = 0;
+        if (!amt || !en_playing || ui.af_user)
+            ui.af_end = 0;                      /* (by hand: the one under way ends, and no other till the next line) */
+        ui.af_bar = bar;
+        return;
+    }
+    if (ui.af_end && s16 >= ui.af_end)
+        ui.af_end = 0;
+    ui.af_live = (uint8_t)(ui.af_end && s16 >= ui.af_start);
+    if (ui.af_live && !ui.af_said) {
+        ui.af_said = 1;
+        say("AUTO FX", EN_FX_NAME[ui.af_fx]);
+    }
+    if (bar == ui.af_bar)
+        return;
+    ui.af_bar = bar;                             /* a new bar: is this one to lead into a phrase line? */
+    if (ui.af_end || bar < ui.af_quiet)
+        return;
+    predrop = en_sec == EN_SEC_BUILD && en_sec_bars == 1 && amt >= 2;
+    nb = len_set > 16 ? 2 : 1;                   /* (two bars long: planned two bars before the line) */
+    if (predrop)
+        nb = 1;
+    else if ((bar + (uint32_t)nb) % (uint32_t)every || af_dice() % 100u >= CHANCE[amt])
+        return;
+    for (i = 0; i < NAFX; i++) {
+        const uint8_t fx = AFX[i].fx;
+        if (AFX[i].lvl >= amt || fx == ui.af_last[0] || fx == ui.af_last[1])
+            continue;
+        if (predrop ? !(fx == FX_STOP || fx == FX_REV || fx == FX_BRAKE || fx == FX_SPIN) : !(AFX[i].sec >> en_sec & 1u))
+            continue;
+        if (ui.dj_on && fx == FX_FILL)
+            continue;                            /* (the auto-DJ's own) */
+        cand[n] = (uint8_t)i;
+        w[n] = (uint8_t)(!(ui.fxs[EN_FXS_AF_PICK] & 1) && (AFX[i].fav >> (proj.genre % 32u) & 1u) ? 4 : 1);
+        tot += w[n++];
+    }
+    if (!n)
+        return;
+    for (pick = (int)(af_dice() % (uint32_t)tot), i = 0; i < n - 1 && pick >= w[i]; i++)
+        pick -= w[i];
+    i = cand[i];
+    len = predrop ? AFX[i].len : len_set < AFX[i].len ? len_set : AFX[i].len;
+    ui.af_fx = AFX[i].fx;
+    ui.af_last[1] = ui.af_last[0];
+    ui.af_last[0] = ui.af_fx;
+    ui.af_end = (bar + (uint32_t)nb) * 16u;      /* it ends on the line */
+    ui.af_start = ui.af_end - (uint32_t)len;
+    ui.af_said = 0;
+}
+
 /* the key change on the drop (the DROP page: SAME, +2, +3, +5, +7 semitones): when a breakdown or a build gives way to the groove, the
  * root rises for the round; the next breakdown (or a stop, or another piece) puts it back. The engine alone moves; the piece's
  * own root (the Global page) stays. */
@@ -2265,7 +2395,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {18, 17, 25, 24, 26, 27, 33, 31, 32};   /* SETTINGS, AUTO DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN, SAMPLE */
+static const uint8_t ST_ORDER[] = {18, 17, 34, 25, 24, 26, 27, 33, 31, 32};   /* SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN, SAMPLE */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
@@ -3404,6 +3534,9 @@ static void input(void)
                 en_flx_hold(flxh);
             }
         }
+        ui.af_user = m != 0;                     /* (an effect played or latched by hand: AUTO FX gives way) */
+        if (ui.af_live && !ui.af_user)
+            m |= FXB(ui.af_fx);
         if (ui.dj_on && en_playing) {              /* the auto-DJ: a fill before the breakdown, the riser in the build */
             if (ui.dj_fill)
                 m |= FXB(FX_FILL);
@@ -4651,9 +4784,14 @@ static void draw_fxedit(void)
             cv_text(4, 112, &FONT_XS, "USB HOST NEEDS A POWERED HUB; ITS", K_DIM);
             cv_text(4, 126, &FONT_XS, "COMPUTER USB IS OFF WHILE IT'S ON.", K_DIM);
         } else {
+            const int spare = FXP[p].bit >= FX_SPARE5 && FXP[p].bit <= FX_SPARE14;   /* (a settings page on a spare bit: FILTERS, SCREAM, AUTO FX; nothing held) */
             cv_text(4, 50, &FONT_XS, p == 16 ? "THE AUTO-DJ AND SCENES: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
+                                     p == 33 ? "EFFECTS PLAYED BY THEMSELVES, EACH" : spare ? "SETTINGS, KEPT: NO KEY TO HOLD." :
                                      FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
-            cv_text(4, 64, &FONT_XS, p == 16 || p == 17 ? "THE KNOBS SET THEM. DIAL: NEXT PAGE." : "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
+            cv_text(4, 64, &FONT_XS, p == 33 ? "ENDING ON A PHRASE LINE. DIAL: NEXT." : p == 16 || p == 17 || spare ? "THE KNOBS SET THEM. DIAL: NEXT PAGE." :
+                                     "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
+            if (p == 33 && ui.fxs[EN_FXS_AF_AMT])   /* AUTO FX: what it played last (it waits while the FX menu is open) */
+                cv_text(4, 78, &FONT_XS, ui.af_said ? EN_FX_NAME[ui.af_last[0]] : "NOTHING YET", ui.af_said ? K_ACC : K_DIM);
         }
     }
 }
@@ -7186,6 +7324,7 @@ void ui_frame(void)
     input();
     scene_tick();
     dj_tick();
+    af_tick();
     mix_tick();
     smp_tick();
     key_tick();

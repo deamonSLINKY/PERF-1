@@ -397,7 +397,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default, DX7 voices made by people) or DX (the built-in set). Then **Auto DJ**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **FILTERS**, **SCREAM**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time, to sample. **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six colour sets), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default, DX7 voices made by people) or DX (the built-in set). Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **FILTERS**, **SCREAM**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time, to sample. **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six colour sets), Tune (+-50 cents), Genre.
 
 ### Visualizers
 
@@ -442,15 +442,15 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 ### Troubleshooting
 
 - **No sound:** MASTER; PLAY lit; a Level at 0 (KNOB1 on its page; the Mixer shows all); `BY HAND` (SEL + ENV); a mute on the mix map; an effect latched (`FX` in the header; OCT- in the menu clears all). Jam silences the voice it plays; REMOTE silences the FM-1 on purpose.
-- **A short dip or tick when you store or change a setting:** normal (saving to memory). **A stored piece came back as before:** the power went off during the save. **My changes vanished:** only a stored piece (Global, SAVE) is kept.
-- **The installer doesn't find the FM-1:** Chrome or Edge, a data cable, no DAW using the port, MIDI with SysEx allowed. **It offers an old version:** hard-refresh. **An install was cut off:** run it again; the FM-1 stays in update mode. **`PERF-1 SAFE MODE`:** two crashes while starting; reinstall, or PLAY to try again.
+- **A short dip when you store or change a setting:** normal. **A stored piece came back as before:** the power went off during the save. **My changes vanished:** only a stored piece (Global, SAVE) is kept.
+- **The installer doesn't find the FM-1:** Chrome or Edge, a data cable, no DAW using the port, MIDI with SysEx allowed. **It offers an old version:** hard-refresh. **An install was cut off:** run it again. **`PERF-1 SAFE MODE`:** two crashes at start; reinstall, or PLAY to retry.
 - **Buttons or knobs don't match their labels:** hold OCT- and OCT+ while switching on to calibrate.
 - **Loaded DX7 voices don't show:** they come after the 30 built-in DX sounds; check for `LOADED`.
 - **Crackles or dropouts:** watch `XR` and `S1`/`S2`; send a Live status CSV with the piece.
-- **The emulator doesn't see the FM-1:** no DAW on the port; not Safari; SEL + GLO.
+- **The emulator doesn't see the FM-1:** no DAW on the port, not Safari.
 
 ### Credits and licence
 
-PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1** (RedtailWorks), itself a fork of **AMB-1** by Charles Vestal. The platform layer (USB, update loader, storage, installer, the panel calibration) is **Felucca** by Leo Kuroshita (Hügelton Instruments), by way of X0X and FoMni. The six-operator FM engine, its factory voices and the second-core work are from **Melodee** by Kerem Kilic (Ellic Studio); its synthesis is after **Dexed** by Pascal Gauthier, on **MSFA** by Raph Levien (Google). The bass line modes, pad comping, ghost notes, deja vu and the motif follow ideas in **Tuna** by delirioux, written afresh for this engine. The plate reverb is Jon Dattorro's; the emulator idea is Groove OS's; the hardware knowledge is FM-1-RE's. Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Source and issues: https://github.com/deamonSLINKY/PERF-1 (a bug report is most useful with the version, the genre and piece, and a status log). **Licence: GPL-3.0-only, no warranty.** M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.
+PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1** (RedtailWorks), itself a fork of **AMB-1** by Charles Vestal. The platform layer (USB, update loader, storage, installer, the panel calibration) is **Felucca** by Leo Kuroshita (Hügelton Instruments), by way of X0X and FoMni. The six-operator FM engine, its factory voices and the second-core work are from **Melodee** by Kerem Kilic (Ellic Studio); its synthesis is after **Dexed** by Pascal Gauthier, on **MSFA** by Raph Levien (Google). The bass line modes, pad comping, ghost notes, deja vu and the motif follow ideas in **Tuna** by delirioux, written afresh for this engine. The plate reverb is Jon Dattorro's; the emulator idea is Groove OS's; the hardware knowledge is FM-1-RE's. Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Source and issues: https://github.com/deamonSLINKY/PERF-1. **Licence: GPL-3.0-only, no warranty.** M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.
 
 </div>

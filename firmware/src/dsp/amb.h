@@ -272,13 +272,16 @@ enum {
     EN_FXS_SQ_DRIVE, EN_FXS_SQ_AMT, EN_FXS_SQ_WOW, EN_FXS_SQ_TGT,        /* (0.16.4) SCREAM, for the YouTube commenter who wanted the filters to scream: the voice driven harder into its
                                                                           * filter, the resonance taken towards singing (both stages), an accent opening it further, and which voice
                                                                           * (0 acid, 1 bass, 2 both); all at 0 the voices are as before */
+    EN_FXS_AF_AMT, EN_FXS_AF_EVERY, EN_FXS_AF_LEN, EN_FXS_AF_PICK,       /* (0.16.8) AUTO FX, the UI's (ui.c af_tick; the engine keeps them only): how much (0 off,
+                                                                          * 1 gentle, 2 medium, 3 wild), every 4/8/16/32 bars, the longest (a beat, half a bar,
+                                                                          * a bar, two bars), the genre's own first or any */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0xF0, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
-                         12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0}
+                         12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0, 0, 1, 2, 0}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the punch-ins' targets (0.15.19): all, the drums, the synths, the pad, the bass, the acid, the pluck, acid and pluck, pad and pluck, bass and acid */

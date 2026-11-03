@@ -7,7 +7,7 @@ press HOME
 wait 800
 release HOME
 wait 100
-turn SELECT 2
+turn SELECT 3
 wait 100
 expect fxpage 25
 spin K4 1

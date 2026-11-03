@@ -456,6 +456,7 @@ static int key_of(const char *s)
     return atoi(s);
 }
 
+static int expect_quiet;                         /* (waitfor: the tries before the last say nothing) */
 static int expect(const char *what, const char *val)
 {
     int got;
@@ -585,6 +586,14 @@ static int expect(const char *what, const char *val)
         got = en_chord[atoi(what + 5) & 3];
     else if (!strcmp(what, "sec"))                /* the section: 0 groove, 1 breakdown, 2 build */
         got = en_sec;
+    else if (!strcmp(what, "aflive"))             /* AUTO FX (0.16.8): one sounding now; one planned (or sounding); its effect; its end on a phrase line (1), off it (0), none (-1) */
+        got = ui.af_live;
+    else if (!strcmp(what, "afplanned"))
+        got = ui.af_end != 0;
+    else if (!strcmp(what, "affx"))
+        got = ui.af_end ? ui.af_fx : -1;
+    else if (!strcmp(what, "afline"))
+        got = ui.af_end ? (int)(ui.af_end % (64u << (ui.fxs[EN_FXS_AF_EVERY] & 3)) == 0) : -1;
     else if (!strcmp(what, "fxmask"))             /* the effects held (FX menu) */
         got = (int)(uint32_t)ui.fx_mask;
     else if (!strncmp(what, "fxbit", 5))          /* fxbitN: effect N (FX_*) held (the mask's upper half too) */
@@ -768,17 +777,21 @@ static int expect(const char *what, const char *val)
     if (val[0] == '<' || val[0] == '>') {
         int lim = (int)strtol(val + 1, 0, 0);
         if (val[0] == '<' ? got >= lim : got <= lim) {
-            printf("FAIL expect %s %s, got %d\n", what, val, got);
+            if (!expect_quiet)
+                printf("FAIL expect %s %s, got %d\n", what, val, got);
             return 1;
         }
-        printf("  ok %s == %d (%s)\n", what, got, val);
+        if (!expect_quiet)
+            printf("  ok %s == %d (%s)\n", what, got, val);
         return 0;
     }
     if (got != (int)strtol(val, 0, 0)) {
-        printf("FAIL expect %s == %s, got %d\n", what, val, got);
+        if (!expect_quiet)
+            printf("FAIL expect %s == %s, got %d\n", what, val, got);
         return 1;
     }
-    printf("  ok %s == %d\n", what, got);
+    if (!expect_quiet)
+        printf("  ok %s == %d\n", what, got);
     return 0;
 }
 
@@ -920,6 +933,15 @@ int main(int argc, char **argv)
             printf("\n");
         } else if (!strcmp(cmd, "expect"))
             fails += expect(a, b);
+        else if (!strcmp(cmd, "waitfor")) {         /* waitfor WHAT VALUE MS (0.16.8): the simulation runs on until the expectation holds or MS have passed,
+                                                         * then it is checked (for what comes at a moment the script cannot know: AUTO FX's dice) */
+            uint32_t t;
+            expect_quiet = 1;
+            for (t = 0; t < (uint32_t)atoi(c) && expect(a, b); t += 10u)
+                run_ms(10u);
+            expect_quiet = 0;
+            fails += expect(a, b);
+        }
         else if (!strcmp(cmd, "storefuzz")) {         /* storefuzz SEED: the project object filled with damage:
                                                          * random bytes behind a header that is now valid, now not */
             static uint8_t bk[PLAT_STORE_MAX];

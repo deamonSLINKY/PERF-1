@@ -1468,6 +1468,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Rv swell (backwards, getting louder) | Length: 1/2, 1, 2 beats | Mix | - | - |
 | Ring mod (a metallic clang) | Tone: 40-800 Hz | Mix | - | - |
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
+| Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any |
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | Mix: cut, 4, 8, 16, 32 bars |
 | Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
@@ -1597,7 +1598,19 @@ Turn on **DJ new pieces** (**GLO** + `G5`) and the auto-DJ brings in the next pi
 
 ![The SET page](img/perf-screen-set.png)
 
-The **SET** settings page shapes a longer set. Hold **HOME** for the settings; it comes after Auto DJ on the dial.
+### Auto FX
+
+**Auto FX** plays effects by itself, like a DJ who throws in a filter sweep or a tape stop before the next phrase. Turn it on from the **Auto FX** settings page (hold **HOME**, then turn **SELECT**: it comes right after Auto DJ). It works with or without the auto-DJ.
+
+- **Each effect ends on a phrase line.** With **Every** at 8 bars, an effect leads into bar 9, 17, 25 and so on, finishing exactly as the next phrase starts. **Length** is the longest one may take: a beat, half a bar, a bar or two bars. Short effects such as a throw or a tape stop always stay short.
+- **It picks what suits the moment.** In a groove: gates, repeats, sweeps and filters. In a breakdown: washes such as the reverse swell, freeze and tape. In a build: rolls and rising filters. At the end of a build (Medium and Wild), a stop, reverse, brake or spin-back leads into the drop, and the four bars after a drop are left alone.
+- **It knows the genre.** With **Pick** on Genre, each genre's own effects come four times as often: throws and tape in dub and reggae, the pump and filters in house and disco, scratches and repeats in breaks and funk, hat rolls and half time in trap and dubstep, gates and flangers in psy. **Any** treats them all alike.
+- **Auto FX** sets how much: **Gentle** keeps to washes and sweeps; **Medium** adds gates, filters, repeats and rolls; **Wild** adds stops, brakes, scatter and half time. It never plays the same effect twice in a row. A phrase line is sometimes skipped (more often at Gentle).
+- **It gets out of your way.** Nothing plays while you hold or latch an effect yourself, and playing one ends an automatic one at once. It also waits while the FX menu is open, during the intro, and when the music is stopped.
+
+The name of each effect shows in the header as it plays. The settings are kept across power-off.
+
+The **SET** settings page shapes a longer set. Hold **HOME** for the settings; it comes after Auto FX on the dial.
 
 - **Rounds** gives each piece 1, 2, 4 or 8 rounds before DJ new pieces moves on. A round is one groove, breakdown, build and drop. The header and the Perform screen count them, like `R2/4`.
 - **Ramp** makes the tempo climb over a piece's rounds of groove, by +2, +4, +8 or +12 BPM, one BPM at a time. If you change the tempo by hand, the climb carries on from there. The next piece starts at its own tempo.
