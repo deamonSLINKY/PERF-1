@@ -19,6 +19,7 @@ typedef struct {
     uint8_t acl[18];                     /* the acid line as it was when the piece was left (used when the piece's acid is frozen) */
     uint8_t cml[12];                     /* the pluck line, likewise (its sixteen steps, six bits each) */
     uint8_t prg[EN_PRG_LEN];             /* its progression set by hand, and Drift's unit (amb.h EN_PRG_*) */
+    uint8_t prk[EN_PRK_LEN];             /* and the slots' chord types (amb.h EN_PRK_LEN, 0.16.6) */
 } slot_t;
 
 typedef struct {
@@ -27,6 +28,7 @@ typedef struct {
     uint8_t acl[18];                     /* the piece's frozen acid line (a slot's, while it plays) */
     uint8_t cml[12];                     /* and its frozen pluck line */
     uint8_t prg[EN_PRG_LEN];             /* and its progression (the Progression page) and Drift's unit */
+    uint8_t prk[EN_PRK_LEN];             /* and its slots' chord types */
     uint8_t leds;                        /* lights: 0 off, 1 keys and the buttons' glow, 2 keys only */
     uint8_t piece;                       /* which piece */
     uint8_t genre;                       /* which bank of ten pieces (EN_NGENRE): the original, lofi; the others are factory sets */

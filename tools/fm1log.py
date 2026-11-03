@@ -22,7 +22,7 @@ PREFIX = [0x7D, 0x50, 0x46]
 FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing",
           "stores", "store_us", "crashes", "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece",
           "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums", "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt",
-          "stk_main", "stk_irq", "stk_c1u", "stk_c1s"]   # (the stacks' deepest, bytes: 0.16.5 on)
+          "stk_main", "stk_irq", "stk_c1u", "stk_c1s", "midi_last"]   # (the stacks' deepest, bytes: 0.16.5 on)
 
 
 def pack7(data):
@@ -78,7 +78,8 @@ BENCH_NAMES = ["float mul-add x10 (flash code)", "float mul-add x10 (RAM code)",
 EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
          "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
          "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits",
-         "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames"]
+         "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames",
+         "taps0123", "taps45_drops"]   # (0.16.6: the drums tapped from MIDI, a byte each, kick first; the TRS bytes lost)
 
 
 DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"]

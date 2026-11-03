@@ -58,7 +58,7 @@
 | Pad env | ENV x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | ENV x3 | Rate (1/4 note - 32 bars, 1/8 - 1/16T) | Depth | Shape (6: sine .. drift) | Target (filter, level, pan, pitch) |
 | Chords | ENV x4 | Chord (7 kinds, below) | Voicing (close, open) | Chorus (0-100) | Loop (off; 2, 4, 8 chords) |
-| Progression | ENV x5 | Slot (1-8) | Chord (I-VII, Hold) | Bars (1-8) | Play (Walk, Loop) |
+| Progression | ENV x5 | Chord (I-VII, Hold) | Type (Piece's, Triad .. 11th) | Bars (1-8) | Play (Walk, Loop) |
 | Bass | LFO | Level | Sound (24) | Cutoff | Reso |
 | Bass env | LFO x2 | Trigger (chord; 1-8 bars; off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | LFO x3 | Rate | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
@@ -98,7 +98,7 @@
 
 **Chords** (ENV x4) are built from the scale's notes. **Auto**: 7ths on a 7-note scale, triads on a pentatonic. **Triads**: Am, C, G. **7ths**: Am7, Dm7, CM7. **9ths**: root, 3rd, 7th, 9th. **Sus**: root, 4th, 5th, 7th. **Dub**: one m9 shape on every chord, the dub techno stab. **Fourths**: stacked fourths, a hollow m11.
 
-**Voicing**: Open drops the second note from the top an octave. **Chorus** thickens the pad. **Loop** repeats the last 2, 4 or 8 chords (with a ~, one is swapped now and then); many genres bring one. **Progression** (hold EDIT): your own chords, eight slots of the scale's chords and bars (Hold: the chord before rings on). Turning one starts the loop next bar; Walk hands back to the genre.
+**Voicing**: Open drops the second note from the top an octave. **Chorus** thickens the pad. **Loop** repeats the last 2, 4 or 8 chords (with a ~, one is swapped now and then); many genres bring one. **Progression** (hold EDIT): your own chords, eight slots (white keys) of the scale's chords, each its own type and bars (Hold: the chord before rings on). Turning one starts the loop next bar; Walk hands back to the genre.
 
 **Sound words.** Cutoff is where the filter starts cutting the highs (lower is darker); Reso adds a squelchy peak there. An env (envelope) shapes each note: attack fades in, decay and release fade out. An LFO is a slow wobble: Rate is its speed, Depth how far, Target what it moves.
 

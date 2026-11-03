@@ -43,6 +43,12 @@ typedef struct {
 #define GLOB_OLD 12u                         /* the record before the set list (0.15.20 and older): read, the list empty */
 static glob_t glob;
 static int glob_from_old;                    /* the old bank's header had them */
+/* THE SLOTS' CHORD TYPES (0.16.6): every genre's pieces' in one object (OBJ_KINDS), as the banks have no byte left; a piece's are its slot's
+ * prk while the power is on, and go into this with SAVE like the rest of it. An older object (fewer genres) is read as far as it goes. */
+#define KND_MAGIC 0x31444E4Bu               /* "KND1" */
+typedef struct { uint32_t magic; uint8_t k[EN_NGENRE][NPIECES][EN_PRK_LEN]; } knd_t;
+static knd_t knd;
+static uint8_t pending_knd;
 
 #define BANK_MAGIC 0x32505948u               /* "HYP2": the old bank, one object, ten pieces of 16-bit settings */
 #define BANK_FORMAT 1u
@@ -65,6 +71,7 @@ static void recipe(int i, slot_t *s)
     memset(s->acl, 0, sizeof s->acl);
     memset(s->cml, 0, sizeof s->cml);
     memset(s->prg, 0, sizeof s->prg);
+    memset(s->prk, 0, sizeof s->prk);
 }
 
 static int16_t clamp_par(int p, int v)
@@ -98,6 +105,7 @@ static void take(int i)                      /* piece i's slot into play (its pa
     memcpy(proj.acl, s->acl, sizeof proj.acl);
     memcpy(proj.cml, s->cml, sizeof proj.cml);
     memcpy(proj.prg, s->prg, sizeof proj.prg);
+    memcpy(proj.prk, s->prk, sizeof proj.prk);
 }
 
 static void keep(void)                       /* the piece playing, into its slot */
@@ -118,6 +126,7 @@ static void keep(void)                       /* the piece playing, into its slot
     if (proj.par[P_CM_LOCK])
         en_pluck_pack(s->cml);
     memcpy(s->prg, proj.prg, sizeof s->prg);
+    memcpy(s->prk, proj.prk, sizeof s->prk);
 }
 
 static uint16_t rd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
@@ -139,6 +148,11 @@ static void pack_slot(const slot_t *s, int i)
     uint8_t *rec = image + IMG_HDR + (uint32_t)i * IMG_REC;
     int p, l;
     memcpy(image + IMG_TAIL + (uint32_t)i * EN_PRG_LEN, s->prg, EN_PRG_LEN);
+    for (p = 0; p < EN_PRK_LEN; p++)          /* (a changed type: the object goes with the next write; no memcmp in the emulator's libc) */
+        if (knd.k[proj.genre][i][p] != s->prk[p]) {
+            knd.k[proj.genre][i][p] = s->prk[p];
+            pending_knd = 1;
+        }
     memset(rec, 0, IMG_REC);
     wr16(rec, s->pool);
     for (p = 0; p < EN_NPAT; p++)
@@ -163,6 +177,7 @@ static int unpack_slot(int i, uint32_t npar, int tail, slot_t *s)   /* tail: the
         memcpy(s->prg, image + IMG_TAIL + (uint32_t)i * EN_PRG_LEN, EN_PRG_LEN);
     else
         memset(s->prg, 0, EN_PRG_LEN);
+    memcpy(s->prk, knd.k[proj.genre][i], EN_PRK_LEN);
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             s->pats[p][l] = rd16(rec + 2 + 2 * (p * EN_NLANE + l));
@@ -308,6 +323,16 @@ static void image_load(int g)
     image_header(g);
 }
 
+static void knd_load(void)                   /* the slots' chord types: as far as the object goes (none: every slot the piece's) */
+{
+    int n;
+    memset(&knd, 0, sizeof knd);
+    n = plat_store_load(OBJ_KINDS, &knd, sizeof knd);   /* (read in place: what an older, shorter object lacks stays 0) */
+    if (n < 4 || knd.magic != KND_MAGIC)
+        memset(&knd, 0, sizeof knd);
+    knd.magic = KND_MAGIC;
+}
+
 static void glob_load(void)                  /* the player's three: their object, else the old bank's header, else the defaults */
 {
     glob_t g;
@@ -334,6 +359,7 @@ void project_start(uint32_t seed)
                                     P_AC_ENV, P_AC_DEC, P_AC_DENS, P_AC_MUT, P_ECHO, P_REVERB, P_SIZE, P_DRIVE};
     uint32_t r = seed, i;
     memset(&proj, 0, sizeof proj);
+    knd_load();
     image_load(0);
     glob_load();
     for (i = 0; i < P_NPARAMS; i++)
@@ -381,6 +407,8 @@ void project_apply(void)
             en_pluck_unpack(proj.cml);
     }
     en_prog(proj.prg);
+    en_prog_kinds(proj.prk);
+    en_trim(proj.genre, proj.piece);
 }
 
 void project_piece(int i)
@@ -424,6 +452,8 @@ void project_piece_factory(void)
         saved &= (uint16_t)~(1u << proj.piece);
         memset(image + IMG_HDR + (uint32_t)proj.piece * IMG_REC, 0, IMG_REC);
         memset(image + IMG_TAIL + (uint32_t)proj.piece * EN_PRG_LEN, 0, EN_PRG_LEN);
+        memset(knd.k[proj.genre][proj.piece], 0, EN_PRK_LEN);
+        pending_knd = 1;
         pending = 1;
     }
     proj.edited &= (uint16_t)~(1u << proj.piece);
@@ -436,18 +466,24 @@ void project_globals(void)
 }
 
 int project_saved(int i) { return (unsigned)i < NPIECES && (saved >> i & 1u); }
-int project_pending(void) { return pending || pending_glob; }
+int project_pending(void) { return pending || pending_glob || pending_knd; }
 int project_pending_globals(void) { return pending_glob; }
 
 int project_flush(void)
 {
-    if (!pending && !pending_glob)
+    if (!pending && !pending_glob && !pending_knd)
         return 0;
     if (pending) {
         image_header(proj.genre);
         if (plat_store_save(obj_of(proj.genre), image, IMG_LEN) != 0)
             return -1;
         pending = 0;
+    }
+    if (pending_knd) {
+        knd.magic = KND_MAGIC;
+        if (plat_store_save(OBJ_KINDS, &knd, sizeof knd) != 0)
+            return -1;
+        pending_knd = 0;
     }
     return project_flush_globals();
 }

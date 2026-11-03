@@ -45,7 +45,7 @@ static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LF
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -213,8 +213,9 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {P_PL_RATE, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
     {P_CHORD, P_VOICING, P_PL_CHO, P_CH_LOOP},     /* the harmony together, the pad's chorus, and how many chords repeat (Root is on Global, Drift on Tempo) */
-    {K_PGSL, K_PGCH, K_PGBR, K_PGPL},              /* the progression by hand (0.15.6, after DUB-1's Chords page): the slot (or a white key), its chord (a degree of the scale, or none: the
-                                                    * chord before holds), its bars, and Play: the genre's walk or the slots in turn */
+    {K_PGCH, K_PGTY, K_PGBR, K_PGPL},              /* the progression by hand (0.15.6, after DUB-1's Chords page): the slot chosen on the white keys, its chord (a degree of
+                                                    * the scale, or none: the chord before holds), its type (0.16.6: the piece's or a kind of its own; the slot knob gave
+                                                    * way, the keys choose it), its bars, and Play: the genre's walk or the slots in turn */
     {P_BASS, P_DR_INST, P_DR_CUT, P_DR_RES},
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
@@ -254,7 +255,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Chord", "Voicing", "Chorus", "Loop"},
-    {"Slot", "Chord", "Bars", "Play"},
+    {"Chord", "Type", "Bars", "Play"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
@@ -1066,17 +1067,24 @@ static int pg_scale(void)                       /* the degrees there are: the sc
     const int m = en_scale(proj.pool, st);
     return m > 7 ? 7 : m;
 }
-static const char *pg_name(int d, char *b)      /* a slot's chord (1 ..): its name, "Am7" */
+static int pk_get(int s) { return (int)(((uint32_t)proj.prk[0] | (uint32_t)proj.prk[1] << 8 | (uint32_t)proj.prk[2] << 16) >> 3 * s & 7u); }   /* a slot's type */
+static void pk_put(int s, int v)
+{
+    uint32_t k = (uint32_t)proj.prk[0] | (uint32_t)proj.prk[1] << 8 | (uint32_t)proj.prk[2] << 16;
+    k = (k & ~(7u << 3 * s)) | (uint32_t)(v & 7) << 3 * s;
+    proj.prk[0] = (uint8_t)k, proj.prk[1] = (uint8_t)(k >> 8), proj.prk[2] = (uint8_t)(k >> 16);
+}
+static const char *pg_name(int d, int kind, char *b)   /* a slot's chord (1 ..) of its type (0 the piece's): its name, "Am7" */
 {
     int pcs[4];
-    const int n = en_prog_chord(d - 1, pcs);
+    const int n = en_prog_chord(d - 1, kind, pcs);
     return en_chord_name(pcs, n, b);
 }
-static const char *pg_roman(int d, char *b)     /* and its degree, lower case when it is minor */
+static const char *pg_roman(int d, char *b)     /* and its degree, lower case when it is minor (as the piece's chord type has it) */
 {
     static const char *const R[7] = {"I", "II", "III", "IV", "V", "VI", "VII"};
     int pcs[4], k = 0;
-    const int n = en_prog_chord(d - 1, pcs), minor = n > 1 && (pcs[1] - pcs[0] + 12) % 12 == 3;
+    const int n = en_prog_chord(d - 1, EN_CH_TRIAD, pcs), minor = n > 1 && (pcs[1] - pcs[0] + 12) % 12 == 3;
     const char *r = R[(d - 1) % 7];
     while (r[k]) {
         b[k] = (char)(minor ? r[k] - 'A' + 'a' : r[k]);
@@ -1119,6 +1127,8 @@ static int knob_get(int k)
     }
     if (k == K_SLON)
         return glob.sl_on;
+    if (k == K_PGTY)
+        return pk_get(ui.pgsl & 7);
     if (k == K_PGCH || k == K_PGBR || k == K_PGPL) {
         uint8_t tmp[EN_PRG_LEN];
         const uint8_t *b = pg_view(tmp);
@@ -1183,9 +1193,9 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = k == K_SLSL ? SL_N - 1 : k == K_SLGN ? EN_NGENRE : k == K_SLPC ? NPIECES - 1 : 1;
         return;
     }
-    if (k == K_PGSL || k == K_PGCH || k == K_PGBR || k == K_PGPL) {
+    if (k == K_PGSL || k == K_PGCH || k == K_PGBR || k == K_PGPL || k == K_PGTY) {
         *lo = 0;
-        *hi = k == K_PGSL ? EN_PRG_N - 1 : k == K_PGCH ? pg_scale() : k == K_PGBR ? 3 : 1;
+        *hi = k == K_PGSL ? EN_PRG_N - 1 : k == K_PGCH ? pg_scale() : k == K_PGBR ? 3 : k == K_PGTY ? EN_NCHORD - 1 : 1;
         return;
     }
     if (k >= K_FXP) {
@@ -1267,17 +1277,18 @@ static void knob_text(int k, char *b)
         b[n] = 0;
         return;
     }
-    if (k == K_PGSL || k == K_PGCH || k == K_PGBR || k == K_PGPL) {   /* the progression: the slot (1 ..), its chord, its bars, Play */
+    if (k == K_PGSL || k == K_PGCH || k == K_PGBR || k == K_PGPL || k == K_PGTY) {   /* the progression: the slot (1 ..), its chord, its type, its bars, Play */
         static const char *const BR[4] = {"1 bar", "2 bars", "4 bars", "8 bars"};
+        static const char *const TY[EN_NCHORD] = {"Piece's", "Triad", "7th", "9th", "Sus", "Dub", "Fourths", "11th"};
         const int v = knob_get(k);
-        const char *s = k == K_PGBR ? BR[v & 3] : k == K_PGPL ? (v ? "Loop" : "Walk") : k == K_PGCH && !v ? "Hold" : 0;
+        const char *s = k == K_PGBR ? BR[v & 3] : k == K_PGPL ? (v ? "Loop" : "Walk") : k == K_PGCH && !v ? "Hold" : k == K_PGTY ? TY[(unsigned)v < EN_NCHORD ? v : 0] : 0;
         int n = 0;
         if (k == K_PGSL) {
             itoa_u((uint32_t)v + 1u, b);
             return;
         }
         if (!s)
-            s = pg_name(v, b);
+            s = pg_name(v, pk_get(ui.pgsl & 7), b);
         while (s[n]) {
             b[n] = s[n];
             n++;
@@ -1422,11 +1433,15 @@ static void knob_set(int k, int v)
         project_globals();
         return;
     }
-    if (k == K_PGCH || k == K_PGBR || k == K_PGPL) {   /* the progression: a chord or its bars set makes the slots the piece's and plays them; Play: the walk or the slots */
+    if (k == K_PGCH || k == K_PGBR || k == K_PGPL || k == K_PGTY) {   /* the progression: a chord, its type or its bars set makes the slots the piece's and plays them; Play: the walk
+                                                 * or the slots */
         const int s = ui.pgsl & 7;
         if (!pg_any(proj.prg) && (k != K_PGPL || v > 0))
             en_prog_capture(proj.prg);           /* (the chords heard last, as the page showed them) */
-        if (k == K_PGCH)
+        if (k == K_PGTY) {
+            pk_put(s, v < 0 ? 0 : v > EN_NCHORD - 1 ? EN_NCHORD - 1 : v);
+            en_prog_kinds(proj.prk);
+        } else if (k == K_PGCH)
             en_prg_put(proj.prg, 3 * s, 3, v < 0 ? 0 : v > pg_scale() ? pg_scale() : v);
         else if (k == K_PGBR)
             en_prg_put(proj.prg, 24 + 2 * s, 2, v < 0 ? 0 : v > 3 ? 3 : v);
@@ -2597,6 +2612,7 @@ static int pads_tone(int p, int base)           /* the p-th tone of the scale up
         }
     return 60;
 }
+static uint8_t tap_n[6];                         /* the drums tapped from MIDI, each (the status log's: did a stray kick come in, 0.16.6) */
 static void pads_in(int on, int n, int v)
 {
     static const uint8_t VC[3] = {EN_V_PLUCK, EN_V_DRONE, EN_V_ACID};
@@ -2631,6 +2647,7 @@ static void pads_in(int on, int n, int v)
         return;
     }
     if (p < 6) {
+        tap_n[p]++;
         en_drum_tap(p, v);
         return;
     }
@@ -2917,7 +2934,12 @@ static void midi_in(void)
         }
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
-        else if (ui.min_pads == 3 && (st & 0xF0u) == 0xB0u)
+        else if ((st & 0xF0u) == 0xB0u && n == 64u && ch_ok) {   /* CC 64 (a sustain pedal, an editor's button): REC's Freeze while it is down, in any mode (0.16.6) */
+            if ((v >= 64u) != (en_frozen != 0)) {
+                say("FREEZE", v >= 64u ? "ON" : "OFF");
+                en_freeze(v >= 64u);
+            }
+        } else if (ui.min_pads == 3 && (st & 0xF0u) == 0xB0u)
             mpk_cc((int)n, (int)v);
         else if (ui.min_pads == 3 && (st & 0xF0u) == 0xE0u)   /* its pitch bend: on the voice the keys play (14 bits, 8192 the middle) */
             en_bend(MPK_VC[ui.jam_voice & 3], (int)(v << 7 | n) - 8192);
@@ -5438,7 +5460,7 @@ static void draw_scope(int kind)
             }
             if (d) {
                 cv_text(x0 + 3, y0 + 11, &FONT_B, pg_roman(d, tx), now ? K_ACC : fg);
-                cv_text(x0 + 3, y0 + 26, &FONT_XS, pg_name(d, tx), fg);
+                cv_text(x0 + 3, y0 + 26, &FONT_XS, pg_name(d, mine ? pk_get(s) : 0, tx), fg);
             } else if (s < last) {
                 cv_text(x0 + 3, y0 + 17, &FONT_XS, "HOLDS", K_LINE);
             }
@@ -5990,7 +6012,7 @@ static void draw_main(void)
         if (ui.view == V_PROG) {
             int s;
             for (s = 0; s < EN_PRG_LEN; s++)
-                h = hash(h, proj.prg[s]);
+                h = hash(h, proj.prg[s] | (uint32_t)(s < EN_PRK_LEN ? proj.prk[s] : 0) << 8);
             h = hash(h, (uint32_t)ui.pgsl | (uint32_t)(uint8_t)en_prog_pos << 8 | (uint32_t)en_chord_root << 16 | (uint32_t)en_playing << 24);
         }
         if (ui.view == V_CMSTEP) {
@@ -6736,7 +6758,7 @@ static void voices_load(void)
 }
 int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
 {
-    if (obj == OBJ_PROJ || obj >= OBJ_G1) {      /* a genre's pieces (the original genre's may still be the old bank) */
+    if (obj == OBJ_PROJ || (obj >= OBJ_G1 && obj <= OBJ_G18)) {   /* a genre's pieces (the original genre's may still be the old bank) */
         const int g = obj == OBJ_PROJ ? 0 : (int)(obj - OBJ_G1) + 1;
         if (obj >= OBJ_NOBJ || g >= EN_NGENRE || len < 20u)
             return 0;
@@ -6746,7 +6768,9 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
         return obj == OBJ_PROJ && (rd32(b) == BANK_MAGIC || rd32(b) == OLD_KIT_MAGIC);
     }
     if (obj == OBJ_GLOB)
-        return (len == sizeof(glob_t) || len == GLOB_OLD) && rd32(b) == GLOB_MAGIC;   /* (0.15.21: the set list after the old record) */
+        return (len == sizeof(glob_t) || len == GLOB_OLD) && rd32(b) == GLOB_MAGIC;
+    if (obj == OBJ_KINDS)                        /* the slots' chord types (0.16.6): this build's, or an older one's with fewer genres */
+        return len >= 4u && len <= sizeof(knd_t) && (len - 4u) % (NPIECES * EN_PRK_LEN) == 0u && rd32(b) == KND_MAGIC;   /* (0.15.21: the set list after the old record) */
     if (obj == OBJ_VOICES)
         return len == sizeof(vox_t) && rd32(b) == VOX_MAGIC && rd32(b + 4) <= EN_NUSER;
     if (obj == OBJ_SET) {                        /* as settings_load takes it: this build's record, or an older one with fewer effect settings (0.15.20: only the

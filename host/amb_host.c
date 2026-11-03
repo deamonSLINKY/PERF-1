@@ -571,6 +571,8 @@ static int expect(const char *what, const char *val)
         got = en_prg_get(proj.prg, EN_PRG_UNIT, 2);
     else if (!strncmp(what, "prgslot", 7))
         got = en_prg_get(proj.prg, 3 * (atoi(what + 7) & 7), 3);
+    else if (!strncmp(what, "prgtype", 7))       /* a slot's chord type (0.16.6: 0 the piece's, else EN_CH_*) */
+        got = (int)(((uint32_t)proj.prk[0] | (uint32_t)proj.prk[1] << 8 | (uint32_t)proj.prk[2] << 16) >> 3 * (atoi(what + 7) & 7) & 7u);
     else if (!strncmp(what, "prgbars", 7))
         got = 1 << en_prg_get(proj.prg, 24 + 2 * (atoi(what + 7) & 7), 2);
     else if (!strcmp(what, "chordiv")) {          /* the pad's notes as intervals over the chord's root (bits) */

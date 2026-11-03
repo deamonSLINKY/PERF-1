@@ -8,7 +8,7 @@ export const BK_CHUNK = 256, BK_FRAME = 64, BK_MAX = 3840;
 const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP", "INDUS", "PSY", "FOREST"];
 export const BK_OBJECTS = [
   { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
-  ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })),
+  ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })), { id: 5 + BK_GENRES.length - 1, name: "chord types" },   // (0.16.6: the progression slots' types, plat.h OBJ_KINDS)
 ];
 export const bkName = (id) => (BK_OBJECTS.find((o) => o.id === id) || { name: "object " + id }).name;
 

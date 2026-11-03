@@ -176,6 +176,7 @@ void en_pool(uint32_t pool);                   /* the scale, relative to the roo
 void en_play(int on);                          /* play / stop (the tails ring on) */
 void en_next(void);                            /* the next chord: on the next bar (now while resting) */
 void en_freeze(int on);
+void en_trim(int g, int piece);                /* the playing piece's level: the loudest pieces turned down to the rest (0.16.6) */
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_note_v(int voice, int note, int vel);   /* the same, with a velocity (1 .. 127; 0 the note off; en_note's is 100): the pluck's, bass's and acid's level and accent (0.15.23) */
 void en_note(int voice, int note, int on);
@@ -333,8 +334,12 @@ static inline void en_prg_put(uint8_t *b, int bit, int n, int v)
         b[bit >> 3] = (uint8_t)((b[bit >> 3] & ~(1u << (bit & 7))) | (uint32_t)(v >> k & 1) << (bit & 7));
 }
 void en_prog(const uint8_t *b6);                /* a piece's progression (as stored) into the engine */
+/* THE SLOTS' CHORD TYPES (0.16.6, GitHub issue 2: "set each chord type individually"): three bits a slot, slot s at bits 3s..3s+2; 0 the piece's
+ * (the Pad page's Chord, P_CHORD), else an EN_CH_* kind. Stored beside the progression in their own flash object (project.c, OBJ_KINDS). */
+#define EN_PRK_LEN 3
+void en_prog_kinds(const uint8_t *b3);          /* a piece's slot types into the engine */
 void en_prog_capture(uint8_t *b6);              /* the chords heard last (the chord loop, else the last four), as the slots and their bars (Play and the unit kept) */
-int en_prog_chord(int deg, int *pcs);           /* the scale degree's chord as the engine plays it (the chord kind, a cadence's raised seventh): its tones */
+int en_prog_chord(int deg, int kind, int *pcs);   /* (kind: a slot type, 0 the piece's) the scale degree's chord as the engine plays it (the chord kind, a cadence's raised seventh): its tones */
 extern volatile int8_t en_prog_pos;             /* the slot playing (-1: the genre's walk) */
 int en_genre_bars(void);                        /* 1: the genre counts its chords in bars (Drift's own unit), 0: in seconds (hypno) */
 void en_acid_capture(int s, int note, int accent, int slide);   /* Capture: a note played by hand (MIDI) into step s, as the nearest offset and octave the chord and scale of now give; the step sounds */
@@ -392,7 +397,7 @@ int en_chord_tones(uint32_t pool, int root, int deg, int *pcs);
 /* the kinds of chord (P_CHORD): as the scale has it (sevenths on a 7-note scale, else triads); triads;
  * sevenths; ninths (1 3 7 9); sus (1 4 5 b7); dub (a minor 9 shape on each degree, the scale or not);
  * fourths (stacked fourths: an m11 sound) */
-enum { EN_CH_AUTO, EN_CH_TRIAD, EN_CH_7TH, EN_CH_9TH, EN_CH_SUS, EN_CH_DUB, EN_CH_4THS, EN_NCHORD };
+enum { EN_CH_AUTO, EN_CH_TRIAD, EN_CH_7TH, EN_CH_9TH, EN_CH_SUS, EN_CH_DUB, EN_CH_4THS, EN_CH_11TH, EN_NCHORD };   /* (11ths: 0.16.6) */
 extern const char *const EN_CHORD_NAME[EN_NCHORD];
 int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs);   /* en_chord_tones, of a kind */
 /* voice leading: new pad notes for the tones, each voice moving as little as possible, all in lo..hi */

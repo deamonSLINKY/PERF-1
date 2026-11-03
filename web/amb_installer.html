@@ -269,12 +269,12 @@ const meta = /*META*/;
 /* ---------------------------------------------------- the FM-1's MIDI port, for the voices and the status */
 const FIELDS = ["seq", "ms", "cpu", "cpu1", "core2", "xruns", "late", "max_us", "last_us", "nested", "shed", "playing", "stores", "store_us", "crashes",
   "renders", "ui_frames", "budget_us", "gap_us", "ui_us", "genre", "piece", "p_clear", "p_bassacid", "p_pluck", "w_pad", "p_merge", "p_drums",
-  "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt", "stk_main", "stk_irq", "stk_c1u", "stk_c1s"];
+  "p_echo", "w_rev", "p_master", "chunks", "isr_in", "isr_out", "batt", "stk_main", "stk_irq", "stk_c1u", "stk_c1s", "midi_last"];
 /* the second frame (F0 7D 50 5A): the slowest chunk of the window (its stages in us, its total, its info) and how many renders took <5, 5-6 ... 11-12, >=12 ms; kept with the status frame before it */
 const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drums", "pk_echo", "pk_w_rev", "pk_master", "pk_total", "pk_info",
   "h_lt5", "h_5", "h_6", "h_7", "h_8", "h_9", "h_10", "h_11", "h_ge12",
   "pkr_us", "pkr_stages", "pkr_chunks", "pkr_isr", "pkr_nested", "pkr_where", "pkr_waits",   /* 0.14.1 on: the slowest half dissected */
-  "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames"];   /* 0.14.3 on: the short chunks' stages; older firmware sends fewer words and the rest read 0 */
+  "sm_clear", "sm_bassacid", "sm_pluck", "sm_w_pad", "sm_merge", "sm_drums", "sm_echo", "sm_w_rev", "sm_master", "sm_n", "sm_frames", "taps0123", "taps45_drops"];   /* 0.16.6 on: the drums tapped from MIDI (a byte each, kick first) and the TRS bytes lost; 0.14.3 on: the short chunks' stages; older firmware sends fewer words and the rest read 0 */
 /* the third frame (F0 7D 50 5B, 0.14.3 on): fourteen pieces inside the stages (us; all chunks, then the chunks shorter than 256 frames), the chunk sizes (counts), the work between chunks (us) */
 const DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"];
 const DIAG = DIAG_PIECES.map((p) => "d_" + p).concat(DIAG_PIECES.map((p) => "ds_" + p), ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits"]);

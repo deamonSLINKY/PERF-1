@@ -235,7 +235,7 @@ static const int16_t X_PSY[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 25, P_BL_M
 /* DARK FOREST (0.16.2, genre 19): forest and dark psy, 148-165 BPM, the same K-B-B-B under a dense, glitching percussion (3-against-4 perc, rolls, triplets),
  * driven hard drums, phrygian and fourths, the chord barely moving (i and the flat II), a dry room and a short echo */
 static const int16_t X_FOREST[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 22, P_BL_MOVE, 6, P_BL_GLIDE, 0, P_CM_VU, 40, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 5, P_PULSE, 88,
-    P_DRIVE, 55, P_SWING, 0, P_DETUNE, 45, P_PAD, 35, P_ACID, 55, P_BASS, 85, P_AC_DENS, 85, P_AC_LEN, 16, P_AC_RES, 80, P_AC_ENV, 70, P_AC_CUT, 35, P_AC_MUT, 45,
+    P_DRIVE, 55, P_SWING, 0, P_DETUNE, 45, P_PAD, 35, P_ACID, 55, P_BASS, 72, P_AC_DENS, 85, P_AC_LEN, 16, P_AC_RES, 80, P_AC_ENV, 70, P_AC_CUT, 35, P_AC_MUT, 45,
     P_ECHO, 30, P_ETIME, 0, P_REVERB, 35, P_SIZE, 55, P_RV_TYPE, 0, P_RV_DAMP, 55, KIT(6), TU(5), 7, P_PATTERN, 0, P_EVOLVE, 60, P_MOTION, 60, P_MC_RATIO, 4, P_MC_THR, 38,
     P_MC_MAKE, 35, -1};
 static const int16_t *const XBASE[15] = {X_DUBR, X_DNB, X_BREAKS, X_GARAGE, X_ELECTRO, X_TRAP, X_DISCO, X_FUNK, X_REGGAE, X_SYNTHWAVE, X_AMAPIANO, X_TRIPHOP, X_INDUS, X_PSY, X_FOREST};
@@ -477,6 +477,7 @@ void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
         par[P_PULSE] = 70;
         par[P_SWING] = 10;
         par[P_EVOLVE] = 35;
+        par[P_BASS] = 68;                       /* (0.16.6: held, at 85 it was as loud as the whole mix) */
     }
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
@@ -837,7 +838,7 @@ int en_scale(uint32_t pool, int *steps)
     return m;
 }
 
-const char *const EN_CHORD_NAME[EN_NCHORD] = {"Auto", "Triads", "7ths", "9ths", "Sus", "Dub", "Fourths"};
+const char *const EN_CHORD_NAME[EN_NCHORD] = {"Auto", "Triads", "7ths", "9ths", "Sus", "Dub", "Fourths", "11ths"};
 
 int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs)
 {
@@ -846,6 +847,7 @@ int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs)
         {0, 2, 4, 6, 1, 3, 5},                  /* thirds: 1 3 5 7 */
         {0, 2, 6, 1, 4, 3, 5},                  /* ninths: 1 3 7 9 (the fifth left out) */
         {0, 3, 4, 6, 1, 2, 5},                  /* sus: 1 4 5 b7 */
+        {0, 6, 1, 3, 2, 4, 5},                  /* elevenths: 1 b7 9 11 (the third and fifth left out, as it is usually voiced) */
     };
     static const uint8_t SHAPE[2][4] = {{0, 3, 10, 14}, {0, 5, 10, 15}};   /* dub: m9 (no fifth); fourths */
     int st[12], m = en_scale(pool, st), want, n = 0, i, j;
@@ -861,6 +863,8 @@ int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs)
         off = OFF[1];
     else if (kind == EN_CH_SUS)
         off = OFF[2];
+    else if (kind == EN_CH_11TH)
+        off = OFF[3];
     for (i = 0; i < 7 && n < want; i++) {
         int pc = (root + st[(deg + off[i]) % m]) % 12, dup = 0;
         for (j = 0; j < n; j++)
@@ -933,7 +937,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
         else
             q = iv >> 11 & 1u ? "mM7" : iv >> 9 & 1u ? "m6" : iv >> 2 & 1u ? "madd9" : "m";
     } else {
-        q = iv >> 5 & 1u ? (iv >> 10 & 1u ? "7sus4" : "sus4") : iv >> 2 & 1u ? "sus2" : "5";
+        q = iv >> 5 & 1u ? (iv >> 10 & 1u ? (iv >> 2 & 1u ? "11" : "7sus4") : "sus4") : iv >> 2 & 1u ? "sus2" : "5";   /* (1 b7 9 11, no third: the 11ths' "A11") */
     }
     while (*r)
         buf[k++] = *r++;
@@ -944,7 +948,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_MAP, C_DTAP, C_DEG, C_BEND };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -998,6 +1002,35 @@ void en_modw(int voice, int depth) { post(C_BEND, (voice & 0x7F) | 0x80, depth <
 void en_midi_map(int m) { post(C_MAP, (unsigned)m < (unsigned)EN_NMAP ? m : 0, 0); }
 void en_intro(int secs) { post(C_INTRO, secs < 0 ? 0 : secs > 1800 ? 1800 : secs, 0); }
 volatile float en_intro_k = 1.0f;
+/* THE PIECES' LEVELS (0.16.6): each piece's whole mix measured on the host (tests/host/glevel.c: 20 s from a fresh start), and the ones
+ * louder than the rest turned down at the output in half dB, so a change of piece never jumps up; the quieter ones stay as they are */
+static const uint8_t EN_TRIM[EN_NGENRE][10] = {   /* (median -15.3 dBFS; a piece louder than -14.3 turned down to it) */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* HYPNO */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* LOFI */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* HOUSE */
+    {0, 0, 4, 2, 0, 2, 0, 0, 1, 3},   /* DUBSTEP */
+    {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},   /* DUB */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* DNB */
+    {0, 2, 0, 0, 3, 0, 0, 1, 0, 0},   /* BREAKS */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* GARAGE */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* ELECTRO */
+    {0, 2, 0, 3, 0, 0, 0, 2, 0, 1},   /* TRAP */
+    {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},   /* DISCO */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* FUNK */
+    {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},   /* REGGAE */
+    {0, 0, 0, 0, 0, 0, 2, 0, 0, 1},   /* SYNTHWV */
+    {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},   /* AMAPI */
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* TRIPHOP */
+    {0, 5, 3, 0, 3, 3, 0, 5, 3, 0},   /* INDUS */
+    {0, 0, 0, 0, 1, 0, 0, 0, 0, 0},   /* PSY */
+    {4, 0, 0, 4, 0, 0, 4, 0, 0, 4},   /* FOREST */
+};
+static float trim_to = 1.0f, trim_k = 1.0f;
+void en_trim(int g, int piece)
+{
+    const int h = (unsigned)g < (unsigned)EN_NGENRE && (unsigned)piece < 10u ? EN_TRIM[g][piece] : 0;
+    trim_to = fm_exp2f(-0.0830482f * (float)h);   /* (half dB: 2^(-h / 2 / 20 * log2 10)) */
+}
 static int32_t intro_len, intro_t;              /* the intro's length and how far it is, samples (0 length: none) */
 volatile float en_drift_bars = 99.0f;
 
@@ -1028,6 +1061,7 @@ static int nsteps, steps[12];                   /* the scale */
 static int deg;                                 /* the chord's scale degree */
 static uint8_t dom_on;
 static uint8_t dh[8], dh_n, dh_i, dh_ln;        /* the progression loop: its chords, how many, the next, its length */
+static uint8_t pg_kind[EN_PRG_N];               /* each slot's chord type (en_prog_kinds: 0 the piece's) */
 static uint8_t pg_deg[EN_PRG_N], pg_bars[EN_PRG_N], pg_len, pg_i, pg_on, drift_unit;   /* the progression set by hand (en_prog): each slot's chord (0 empty, 1..7 a degree) and
                                                 * bars (1 << it), the slots in use, the one playing, Play; Drift's unit (0 the genre's, 1 bars, 2 seconds) */
 static uint8_t hist[8], hist_n;                 /* the last chords, the newest last (for the progression's capture) */
@@ -1813,7 +1847,7 @@ int en_acid_preview(int st, int v)
 static void pad_retarget(void)                  /* the chord's tones to the four voices */
 {
     int from[4], to[4], i;
-    chord_nt = en_chord_kind(pool, par[P_ROOT], deg, par[P_CHORD], chord_pcs);
+    chord_nt = en_chord_kind(pool, par[P_ROOT], deg, pg_on && pg_kind[pg_i] ? pg_kind[pg_i] : par[P_CHORD], chord_pcs);   /* (the slot's own type, when it has one) */
     if (dom_on) {                               /* the dominant's third (the scale's seventh): a semitone up, as the scale has it now */
         const int nat = (par[P_ROOT] + steps[6] - 1) % 12;
         for (i = 0; i < chord_nt; i++)
@@ -1931,9 +1965,9 @@ static void dom_apply(void)                     /* the dominant in minor: the se
     dom_on = (uint8_t)(CHT[chord_genre].dom && deg == 4 && steps[6] - steps[4] == 3 && steps[6] < 11);
     steps[6] += dom_on;
 }
-int en_prog_chord(int d, int *pcs)               /* a degree's chord as chord_change would play it (for the Progression page) */
+int en_prog_chord(int d, int kind, int *pcs)     /* a degree's chord as chord_change would play it, of a slot's type (0 the piece's: the Progression page) */
 {
-    const int n = en_chord_kind(pool, par[P_ROOT], d, par[P_CHORD], pcs);
+    const int n = en_chord_kind(pool, par[P_ROOT], d, kind ? kind : par[P_CHORD], pcs);
     if (nsteps == 7 && CHT[chord_genre].dom && d % 7 == 4 && deg_nat(6) - deg_nat(4) == 3 && deg_nat(6) < 11) {   /* the cadence's V in minor: its raised seventh */
         const int lt = (par[P_ROOT] + deg_nat(6)) % 12;
         int k;
@@ -1949,6 +1983,7 @@ void en_prog(const uint8_t *b)                  /* (a command carries 24 bits: t
     post(C_PROG, b[0], b[1] | b[2] << 8);
     post(C_PROG2, b[3], b[4] | b[5] << 8);
 }
+void en_prog_kinds(const uint8_t *b) { post(C_PROGK, b[0], b[1] | b[2] << 8); }
 void en_prog_capture(uint8_t *b)
 {
     int s, n, bc, hb = hr_bars_v(par[P_DRIFT]);
@@ -6048,6 +6083,15 @@ static void drain(void)
             }
             break;
         case C_PROG2: prog_take(pg_lo, (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8); break;
+        case C_PROGK: {                          /* the slots' types: the chord playing takes its slot's at once */
+            const uint32_t k = (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8;
+            int s, was = pg_on ? pg_kind[pg_i] : -1;
+            for (s = 0; s < EN_PRG_N; s++)
+                pg_kind[s] = (uint8_t)(k >> 3 * s & 7u);
+            if (pg_on && pg_kind[pg_i] != was)
+                pad_retarget();
+            break;
+        }
         case C_DJSYNC: dj_sync = (uint8_t)a; break;
         case C_FXS:
             if (a < EN_NFXS)
@@ -7655,6 +7699,9 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     RT(32, drain());
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     usb_gain = muted ? 0.0f : 1.0f;             /* the USB audio at a fixed level (en_usb_out): unity, the knob at about three quarters */
+    trim_k += (trim_to - trim_k) * 0.15f;       /* the piece's level (en_trim), over about 40 ms */
+    gain *= trim_k;
+    usb_gain *= trim_k;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
     while (n) {

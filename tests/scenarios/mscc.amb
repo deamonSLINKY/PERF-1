@@ -52,6 +52,13 @@ spin K1 1
 wait 100
 expect ccout74 5
 # kept
+# CC 64 (a sustain pedal, an editor's REC, 0.16.6): Freeze while it is down, in any mode
+midi B0 40 7F
+wait 100
+expect frozen 1
+midi B0 40 00
+wait 100
+expect frozen 0
 wait 6000
 reboot
 wait 3000

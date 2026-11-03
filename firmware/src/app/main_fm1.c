@@ -612,9 +612,9 @@ static void tel_service(void)
         return;
     }
     if (extra == 1) {                               /* the second frame (F0 7D 50 5A): the slowest chunk's stages and when it was, the histogram of renders, the slowest half dissected */
-        uint32_t w[38], i, o = 4;
-        uint8_t f[4 + 38 * 5 + 2], b[38 * 4];
-        _Static_assert(4 + (38 * 4 * 8 + 6) / 7 + 1 <= 4 + 38 * 5 + 2, "the frame fits its buffer");
+        uint32_t w[40], i, o = 4;
+        uint8_t f[4 + 40 * 5 + 2], b[40 * 4];
+        _Static_assert(4 + (40 * 4 * 8 + 6) / 7 + 1 <= 192, "the frame fits usb.c's SysEx queue (64 packets)");
         for (i = 0; i < 9u; i++)
             w[i] = en_peak_stage[i] / FM1_TICKS_PER_US;
         w[9] = en_peak_total / FM1_TICKS_PER_US;
@@ -627,7 +627,9 @@ static void tel_service(void)
             w[27 + i] = en_prof_sm[i] / FM1_TICKS_PER_US;
         w[36] = en_prof_sm[9];
         w[37] = en_prof_sm[10];
-        for (i = 0; i < 38u; i++)
+        w[38] = (uint32_t)tap_n[0] | (uint32_t)tap_n[1] << 8 | (uint32_t)tap_n[2] << 16 | (uint32_t)tap_n[3] << 24;   /* the drums tapped from MIDI (0.16.6: */
+        w[39] = (uint32_t)tap_n[4] | (uint32_t)tap_n[5] << 8 | (um.drops & 0xFFFFu) << 16;   /* kick .. perc, a byte each) and the TRS bytes lost */
+        for (i = 0; i < 40u; i++)
             b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x5A;
         o += ota_pack7(b, sizeof b, f + o);
@@ -665,8 +667,8 @@ static void tel_service(void)
     if ((int32_t)(fm1_ms - next) < 0)
         return;
     {
-        uint32_t w[39], i;
-        uint8_t f[4 + 39 * 5 + 2];
+        uint32_t w[40], i;
+        uint8_t f[4 + 40 * 5 + 2];   /* (40 words, 188 bytes: usb.c's SysEx queue takes 64 packets, 192 bytes) */
         uint32_t n = 4;
         w[0] = seq;
         w[1] = fm1_ms;
@@ -703,11 +705,12 @@ static void tel_service(void)
         w[36] = stk_used(STK_W(_sstack_lo), STK_W(_sstack_top));
         w[37] = stk_used(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 4096));
         w[38] = stk_used(STK_W(_cpu1_stacks_lo + 4096), STK_W(_cpu1_stacks_lo + 8192));
+        w[39] = ui.min_last;                        /* MIDI in's last message, a USB-MIDI packet (0.16.6; the drums tapped: the second frame) */
         tel_isr_in = tel_isr_out = 0;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
         {
-            uint8_t b[39 * 4];
-            for (i = 0; i < 39u; i++)
+            uint8_t b[40 * 4];
+            for (i = 0; i < 40u; i++)
                 b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
             n += ota_pack7(b, sizeof b, f + n);
         }

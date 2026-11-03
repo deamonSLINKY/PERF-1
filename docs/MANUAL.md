@@ -413,7 +413,7 @@ columns are **KNOB1** to **KNOB4**.
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | **ENV** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T) | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
 | Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Chorus (0-100) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
-| Progression | **ENV** x5, or hold **EDIT** | Slot (1-8, or a white key) | Chord (a chord of the scale, or Hold) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
+| Progression | **ENV** x5, or hold **EDIT** | Chord (a chord of the scale, or Hold) | Type (Piece's, Triad, 7th, 9th, Sus, Dub, Fourths, 11th) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T for a fast wobble) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
@@ -588,17 +588,18 @@ piece 06 is set up that way.
 The **Progression** page lets you write the chords yourself. Hold **EDIT** to open it, or press **ENV** five
 times. A tap of **EDIT** still moves on to the next chord.
 
-The page has eight slots. Each slot is one chord of the scale and how many bars it lasts. Until you change
-something, the page shows the chords you just heard, so you can start from those.
+The page has eight slots. Each slot is one chord of the scale, its type and how many bars it lasts. The first
+eight white keys pick the slot you're editing. Until you change something, the page shows the chords you just
+heard, so you can start from those.
 
 | Knob | Does |
 |---|---|
-| Slot | Which slot you're editing, 1 to 8. The first eight white keys pick a slot too. |
 | Chord | The slot's chord, picked from the chords of the scale. The page shows each as a numeral (I to VII, small for a minor chord) and its name, like Am7. **Hold** leaves the slot empty: the chord before keeps playing for its bars. |
+| Type | The kind of chord this slot plays. **Piece's** follows the Chord setting on the Pad's Chords page, like every slot did before. The others give the slot its own: **Triad** (three notes), **7th**, **9th**, **Sus** (the third swapped for the fourth), **Dub** (a minor ninth stab), **Fourths** (stacked fourths) or **11th** (root, seventh, ninth and eleventh). All of them use only notes of the scale. |
 | Bars | How long the slot's chord lasts: 1, 2, 4 or 8 bars. |
 | Play | **Walk**: the genre picks the chords, as usual. **Loop**: your slots play in turn. |
 
-Turning Chord or Bars switches Play to Loop. Your progression starts on the next bar, from slot 1. The loop
+Turning Chord, Type or Bars switches Play to Loop. Your progression starts on the next bar, from slot 1. The loop
 ends at the last slot that has a chord, so a four-chord progression only needs slots 1 to 4. **EDIT** jumps
 to the next slot, and the drop of a build goes back to slot 1.
 
@@ -2000,6 +2001,8 @@ The keys play over the song from any page. On the Jam page the voice is all your
 - **In:** these CCs on the listened channel (**Channel**, All by default) move PERF-1's FX knobs. On a Model:Samples, turn on its knobs' MIDI out (ENCS), and its filter, resonance, delay send and reverb send knobs play PERF-1's Filter, Crush, Throw and Wash.
 - **Out:** turning PERF-1's FX knobs sends the same CCs on every channel the **MIDI map** uses (GM: 1-4 and 10; M:Samples: 1-6, so the filter sweeps all six tracks at once). It needs MIDI out on, and it goes out over USB, so the same limits apply as for notes (below). A CC that came in isn't sent back out.
 - **In+Out:** both.
+
+**Freeze from MIDI:** CC 64, the sustain pedal's number, works like holding **REC**: the chord freezes while the pedal is down (or the CC is 64 or more) and thaws when it's let up. It works in every Notes mode, on the listened channel, so a pedal on a keyboard or a button in an editor can freeze PERF-1. Start, Continue and Stop always start and stop the music.
 
 What the FM-1 can't do here: its TRS jack is an input, so nothing goes back to the Model:Samples over TRS. PERF-1's notes and knob CCs reach it only over USB, through a computer, a USB MIDI host box, or the FM-1's own USB host (above; not yet tried with a Model:Samples). Clock works both ways: PERF-1 follows the Model:Samples' clock over TRS, or sends its own over USB.
 
