@@ -3050,6 +3050,87 @@ static void mpk_cc(int cc, int v)               /* the knobs: CC 24-31 (the MK4'
     }
 }
 
+/* THE PLAYER'S MIDI MAP (0.16.11): any controller's notes and CCs as the panel's buttons, keys and knobs, learned in the emulator (web/emu: MIDI learn)
+ * and sent from the Install page into flash (OBJ_MMAP). An entry: the channel, a CC (0x10) or a note, how a knob's CC counts (bits 5-6: 0 a place,
+ * 1 64 +- clicks, 2 1 up / 127 down) | the note or CC | the control (0-13 a button B_*, 32 + k a key, 64 + e a knob EN_*). A learned message is
+ * taken before anything else MIDI does, and acts as the panel's own: a button or key held while its note or CC (64 and over) is down, a knob
+ * turned (a place: a click every two steps, as the emulator counts). The panel reads the hardware and the map together (in_buttons and the rest,
+ * standing in for plat_buttons in this file). MASTER is the hardware's alone (the emulator's learned MASTER is not sent). */
+#define MM_MAGIC 0x3150414Du                     /* "MAP1" */
+#define MM_MAX 48
+typedef struct { uint32_t magic; uint8_t n, pad[3]; uint8_t e[MM_MAX][3]; } mmap_t;
+static mmap_t mm;
+static uint32_t mm_b, mm_k;                      /* the buttons and keys held from the map */
+static int16_t mm_e[NE];                         /* the knobs' clicks from the map, not yet read */
+static uint8_t mm_last[MM_MAX], mm_acc[MM_MAX];  /* a place-sending knob: its last value (+1; 0 none yet) and its half click */
+static int mm_ok(const uint8_t *b, uint32_t len)   /* a map as the Install page sends it, every entry a control there is (bytes: a restore's may be unaligned) */
+{
+    uint32_t i;
+    if (len != sizeof(mmap_t) || (uint32_t)(b[0] | b[1] << 8 | b[2] << 16 | (uint32_t)b[3] << 24) != MM_MAGIC || b[4] > MM_MAX)
+        return 0;
+    for (i = 0; i < b[4]; i++) {
+        const uint8_t *e = b + 8u + 3u * i;
+        const uint32_t t = e[2];
+        if (!(t < NB || (t >= 32u && t < 32u + NKEYS) || (t >= 64u && t < 64u + NE)) || e[1] > 127u || (e[0] >> 5 & 3u) == 3u)
+            return 0;
+    }
+    return 1;
+}
+static void mm_load(void)
+{
+    if (plat_store_load(OBJ_MMAP, &mm, sizeof mm) != (int)sizeof mm || !mm_ok((const uint8_t *)&mm, sizeof mm))
+        mm.n = 0;
+}
+static int mm_apply(uint32_t st, uint32_t n, uint32_t v)   /* a learned message: acted on (1) */
+{
+    const uint32_t ty = st & 0xF0u, cc = ty == 0xB0u;
+    uint32_t i;
+    if (!mm.n || (ty != 0x90u && ty != 0x80u && !cc))
+        return 0;
+    for (i = 0; i < mm.n; i++) {
+        const uint8_t *e = mm.e[i];
+        const uint32_t t = e[2];
+        if ((e[0] & 15u) != (st & 15u) || (uint32_t)((e[0] >> 4) & 1u) != cc || e[1] != n)
+            continue;
+        if (t < 64u) {                           /* a button or a key: held while down */
+            const int down = cc ? v >= 64u : ty == 0x90u && v;
+            uint32_t *h = t < NB ? &mm_b : &mm_k;
+            const uint32_t bit = 1u << (t < NB ? t : t - 32u);
+            *h = down ? *h | bit : *h & ~bit;
+        } else if (cc) {                         /* a knob: clicks */
+            const uint32_t mode = e[0] >> 5 & 3u;
+            int d;
+            if (mode == 1u)
+                d = (int)v - 64;
+            else if (mode == 2u)
+                d = v < 64u ? (int)v : (int)v - 128;
+            else {
+                d = mm_last[i] ? (int)v - (int)(mm_last[i] - 1u) + (int8_t)mm_acc[i] : 0;
+                mm_last[i] = (uint8_t)(v + 1u);
+                mm_acc[i] = (uint8_t)(int8_t)(d % 2);
+                d /= 2;
+            }
+            mm_e[t - 64u] = (int16_t)(mm_e[t - 64u] + d);
+        }
+        return 1;
+    }
+    return 0;
+}
+static uint32_t in_buttons(void) { return plat_buttons() | mm_b; }
+static uint32_t in_keys(void) { return plat_keys() | mm_k; }
+static int32_t in_enc(int role)
+{
+    int32_t d = plat_enc(role);
+    if ((unsigned)role < NE) {
+        d += mm_e[role];
+        mm_e[role] = 0;
+    }
+    return d;
+}
+#define plat_buttons in_buttons                  /* (the panel, from here on: the hardware and the map) */
+#define plat_keys in_keys
+#define plat_enc in_enc
+
 /* MIDI in (USB and the TRS jack): on the channel chosen (MIDI IN page; all by default), notes add or remove their note from the scale
  * (channel 1 only, as before), or with PADS play PERF (pads_in); clock and start / stop drive the grid */
 static void midi_in(void)
@@ -3062,6 +3143,8 @@ static void midi_in(void)
             ui.min_last = pkt;
             ui.min_n++;
         }
+        if (st < 0xF0u && mm_apply(st, n, v))   /* the player's map first (0.16.11) */
+            continue;
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
             en_clock(st == 0xF8u ? EN_CLK_TICK : st == 0xFAu ? EN_CLK_START : st == 0xFBu ? EN_CLK_CONTINUE : EN_CLK_STOP);
         else if ((st & 0xF0u) == 0xB0u && n == 64u && ch_ok) {   /* CC 64 (a sustain pedal, an editor's button): REC's Freeze while it is down, in any mode (0.16.6) */
@@ -6909,6 +6992,8 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
         return (len == sizeof(glob_t) || len == GLOB_OLD) && rd32(b) == GLOB_MAGIC;
     if (obj == OBJ_KINDS)                        /* the slots' chord types (0.16.6): this build's, or an older one's with fewer genres */
         return len >= 4u && len <= sizeof(knd_t) && (len - 4u) % (NPIECES * EN_PRK_LEN) == 0u && rd32(b) == KND_MAGIC;   /* (0.15.21: the set list after the old record) */
+    if (obj == OBJ_MMAP)                         /* the player's MIDI map (0.16.11) */
+        return mm_ok(b, len);
     if (obj == OBJ_VOICES)
         return len == sizeof(vox_t) && rd32(b) == VOX_MAGIC && rd32(b + 4) <= EN_NUSER;
     if (obj == OBJ_SET) {                        /* as settings_load takes it: this build's record, or an older one with fewer effect settings (0.15.20: only the
@@ -7262,6 +7347,7 @@ void ui_init(void)
     }
     settings_load();                             /* the effects' and performing settings as you left them */
     voices_load();                               /* and the player's DX7 voices */
+    mm_load();                                   /* and their MIDI map (0.16.11) */
     ui.sl_pos = (uint8_t)sl_find();              /* the set list: the slot of the piece playing (0xFF none) */
     ui.touched = -1;
     ui.boot_t = plat_ms();

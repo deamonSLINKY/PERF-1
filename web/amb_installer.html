@@ -108,6 +108,14 @@
   <p><button id="vsend" disabled data-t="vsend"></button> <button id="vclear" class="alt" data-t="vclear"></button></p>
   <p id="vstatus" class="small"></p>
   </div>
+  <h2 data-t="mmh" id="midimap"></h2>
+  <div class="card">
+  <p class="small" data-t="mminfo"></p>
+  <ul id="mmlist" class="small"></ul>
+  <p><button id="mmsend" disabled data-t="mmsend"></button> <button id="mmread" class="alt" data-t="mmread"></button> <button id="mmclear" class="alt" data-t="mmclear"></button></p>
+  <p><button id="mmdl" class="alt" disabled data-t="mmdl"></button> <span class="small" data-t="mmor"></span> <input type="file" id="mmfile" accept=".perfmap,.json"></p>
+  <p id="mmstatus" class="small"></p>
+  </div>
   <h2 data-t="bkh"></h2>
   <div class="card">
   <p class="small" data-t="bkinfo"></p>
@@ -182,6 +190,10 @@ const TEXT = {
     vnone: "音色が見つかりません。", vfound: " 個の音色。16 個まで選べます。", vsel: " 個選択中",
     vsending: "送信中: ", vdone: "FM-1 に送りました: ", vnoans: "FM-1 から返事がありません（古いファームウェアかもしれません）。", vcleared: "消しました。",
     vbad: "FM-1 が受け取りませんでした。",
+    mmh: "MIDI マップ", mminfo: "ほかの MIDI コントローラーのノートや CC を FM-1 のボタン・鍵盤・ノブとして使えます。エミュレーターの MIDI learn で覚えさせると、このブラウザーではここに表示されます。FM-1 に送ると保存され、再起動します。",
+    mmsend: "FM-1 に送る", mmread: "FM-1 から読む", mmclear: "FM-1 のマップを消す", mmdl: ".perfmap を保存", mmor: "または読み込む:",
+    mmnone: "まだありません。エミュレーターで MIDI learn を使ってください。", mmsent: "送りました。FM-1 が再起動します。", mmcleared: "消しました。FM-1 が再起動します。",
+    mmbadfile: "MIDI マップのファイルではありません。", mmmaster: "MASTER は FM-1 では本体のノブだけです（送りません）。", mmread0: "FM-1 にマップはありません。", mmreadok: "FM-1 のマップを読みました。",
     bkh: "ピースと設定のバックアップ",
     bkinfo: "FM-1 に保存されているもの（全ジャンルで保存したピース、設定、DX7 の音色、テーマとチューニング）をファイルに保存し、あとで戻せます。別のファームウェアを試して、戻ってきても失われません。このファイルを読めるのは PERF-1 だけです。復元すると今の内容は置き換わり、FM-1 が再起動します。（保存していないピースの変更と、パネルの調整値は含まれません。）",
     bksave: "バックアップを保存", bkrestore: "選んだバックアップを復元",
@@ -234,6 +246,11 @@ const TEXT = {
     vnone: "No voices found in that file.", vfound: " voices. Choose up to 16.", vsel: " chosen",
     vsending: "Sending: ", vdone: "Sent to the FM-1: ", vnoans: "The FM-1 did not answer (an older firmware?).", vcleared: "Cleared.",
     vbad: "The FM-1 did not take it.",
+    mmh: "Your MIDI map",
+    mminfo: "Play PERF-1 from any MIDI controller: its pads, keys, buttons and knobs as the FM-1's own buttons, keys and knobs. Make the map in the emulator (Connect MIDI, then MIDI learn: click a control there, then move yours); in this browser it shows here. Send it to the FM-1 and it is kept there (the FM-1 restarts). A learned control works in every mode, before anything else the FM-1 does with MIDI. A knob takes a CC: a fader or knob (a place), or an endless encoder (64 \u00b1 n, or 1 up and 127 down).",
+    mmsend: "Send to my FM-1", mmread: "Read it from my FM-1", mmclear: "Clear the FM-1's map", mmdl: "Download .perfmap", mmor: "or load one:",
+    mmnone: "Nothing learned yet. Use MIDI learn in the emulator, or load a .perfmap file.", mmsent: "Sent. The FM-1 restarts now.", mmcleared: "Cleared. The FM-1 restarts now.",
+    mmbadfile: "That is not a MIDI map file.", mmmaster: "MASTER is the FM-1's own knob: a learned MASTER is not sent.", mmread0: "The FM-1 has no map.", mmreadok: "Read the FM-1's map: it is the list now (the emulator's too).",
     bkh: "Back up and restore your pieces",
     bkinfo: "Saves everything the FM-1 has stored (the pieces you saved in every genre, your settings, your DX7 voices, the theme and tuning) to a file, and puts it back, so you can try another firmware and come back without losing them. Only PERF-1 reads these files. A restore replaces what is stored now, then the FM-1 restarts. (Unsaved changes to a piece and the panel's calibration are not included.)",
     bksave: "Save a backup", bkrestore: "Restore the chosen backup",
@@ -257,6 +274,7 @@ function applyLang() {
   $("lang").textContent = t("other");
   if (typeof stTimer !== "undefined") $("stgo").textContent = stTimer ? t("ststop") : t("stgo");
   if (lastKey) $("status").textContent = t(lastKey) + lastArg;
+  if (window.mmReady) mmRender();         /* (after the map's code has run: applyLang runs first at load) */
 }
 $("lang").addEventListener("click", () => { lang = lang === "ja" ? "en" : "ja"; applyLang(); });
 applyLang();
@@ -311,6 +329,77 @@ function waitAck(ms) {
     const tm = setTimeout(() => { const i = port.waiters.indexOf(w); if (i >= 0) port.waiters.splice(i, 1); res(null); }, ms);
   });
 }
+
+/* ---- the player's MIDI map (0.16.11): the emulator's learned list (this browser's localStorage, the same site) or a .perfmap file, sent as OBJ_MMAP */
+const MM_KEY = "hyp1-emu-midimap", MM_BTN = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"];
+const MM_ENC = ["SELECT", "ALGORITHM", "PRESETS", "Knob 1", "Knob 2", "Knob 3", "Knob 4"], MM_NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const mmNote = (n) => MM_NOTE[n % 12] + (Math.floor(n / 12) - 1);
+const mmTarget = (x) => x === "m" ? "MASTER (the emulator only)" : x[0] === "b" ? MM_BTN[+x.slice(1)] || x : x[0] === "e" ? MM_ENC[+x.slice(1)] || x : "Key " + mmNote(53 + +x.slice(1));
+const mmSrc = (id) => { const [ty, ch, n] = id.split(":"); return (ty === "n" ? "Note " + mmNote(+n) : "CC " + n) + " ch " + (+ch + 1); };
+const mmModes = { abs: "a fader or knob", rel64: "an encoder (64 \u00b1 n)", rel2c: "an encoder (1 up, 127 down)" };
+function mmGet() { try { return JSON.parse(localStorage.getItem(MM_KEY) || "{}") || {}; } catch (_) { return {}; } }
+function mmPut(maps) { try { localStorage.setItem(MM_KEY, JSON.stringify(maps)); } catch (_) { /* a private window */ } mmRender(); }
+function mmRender() {
+  const maps = mmGet(), ul = $("mmlist"), ids = Object.keys(maps);
+  ul.textContent = "";
+  for (const id of ids) { const li = document.createElement("li"), m = maps[id]; li.textContent = mmSrc(id) + " \u2192 " + mmTarget(m.t) + (m.mode && m.t[0] === "e" ? " (" + mmModes[m.mode] + ")" : ""); ul.append(li); }
+  if (!ids.length) { const li = document.createElement("li"); li.textContent = t("mmnone"); ul.append(li); }
+  $("mmsend").disabled = $("mmdl").disabled = !ids.length;
+}
+async function writeObj(p, id, data) {                  /* an object in chunks, then its write: the FM-1 answers each */
+  for (let idx = 0; idx * BK_CHUNK < data.length; idx++) {
+    p.out.send(bkChunkMsg(id, idx, data.length, data.subarray(idx * BK_CHUNK, Math.min(data.length, (idx + 1) * BK_CHUNK))));
+    const a = await waitBk(3000);
+    if (!a) throw new Error(t("bknoans"));
+    if (a.status !== 0) throw new Error(t("bkbad") + bkName(id));
+  }
+  p.out.send(bkCommitMsg(id, data.length));
+  const a = await waitBk(10000);                        /* (a store while playing fades the music out first) */
+  if (!a) throw new Error(t("bknoans"));
+  if (a.status !== 0) throw new Error(t("bkbad") + bkName(id));
+}
+async function mmWrite(maps, done) {
+  const r = mmEncode(maps), say = (x) => { $("mmstatus").textContent = x; };
+  try {
+    const p = await openPort();
+    $("mmsend").disabled = $("mmclear").disabled = true;
+    writing = true;
+    await writeObj(p, MM_OBJ, r.bytes);
+    p.out.send(bkRestartMsg());
+    writing = false;
+    releasePort();
+    say(t(done) + (Object.values(maps).some((m) => m.t === "m") ? " " + t("mmmaster") : ""));
+  } catch (err) { writing = false; say(err.message); }
+  $("mmclear").disabled = false;
+  mmRender();
+}
+$("mmsend").addEventListener("click", () => mmWrite(mmGet(), "mmsent"));
+$("mmclear").addEventListener("click", () => { if (confirm(t("mmclear") + "?")) mmWrite({}, "mmcleared"); });
+$("mmread").addEventListener("click", async () => {
+  try {
+    const p = await openPort(), d = await bkReadObject(p, MM_OBJ);
+    if (d === undefined) throw new Error(t("bknoans"));
+    const maps = d.length ? mmDecode(d) : null;
+    if (!maps || !Object.keys(maps).length) { $("mmstatus").textContent = t("mmread0"); return; }
+    mmPut(maps);
+    $("mmstatus").textContent = t("mmreadok");
+  } catch (err) { $("mmstatus").textContent = err.message; }
+});
+$("mmdl").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ perfmap: 1, maps: mmGet() }, null, 1)], { type: "application/json" }));
+  a.download = "perf1-midi-map.perfmap";
+  a.click();
+});
+$("mmfile").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (!j || j.perfmap !== 1 || typeof j.maps !== "object") throw 0; mmPut(j.maps); $("mmstatus").textContent = f.name; }
+  catch (_) { $("mmstatus").textContent = t("mmbadfile"); }
+});
+window.addEventListener("storage", (e) => { if (e.key === MM_KEY) mmRender(); });   /* learned in the emulator, in another tab */
+mmRender();
+window.mmReady = 1;
 
 /* ---- the DX7 voices: .syx files -> a list -> up to 16 sent as the firmware takes them (F0 7D 50 56 slot, 128 bytes, a checksum, F7; 7F alone clears) */
 const nameOf = (a, off) => String.fromCharCode(...Array.from(a.slice(off, off + 10)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd() || "(no name)";

@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "web", "fm1backup.js"), "utf8").replace(/^export /gm, "");
-const M = new Function(src + "; return { BK_CHUNK, BK_FRAME, BK_MAX, BK_OBJECTS, bkName, bkSum, bkChunkMsg, bkReadMsg, bkCommitMsg, bkRestartMsg, bkParseFrame, bkParseAck, bkCrc32, bkEncode, bkDecode };")();
+const M = new Function(src + "; return { BK_CHUNK, BK_FRAME, BK_MAX, BK_OBJECTS, bkName, bkSum, bkChunkMsg, bkReadMsg, bkCommitMsg, bkRestartMsg, bkParseFrame, bkParseAck, bkCrc32, bkEncode, bkDecode, MM_OBJ, MM_LEN, mmEncode, mmDecode };")();
 let bad = 0;
 const check = (name, ok) => { console.log((ok ? "  ok   " : "  FAIL ") + name); if (!ok) bad++; };
 const eq = (a, b) => JSON.stringify(Array.from(a)) === JSON.stringify(Array.from(b));
@@ -37,8 +37,8 @@ check("an answer", ack && ack.obj === 7 && ack.idx === 0x7F && ack.status === 0 
 
 // the objects: the panel's calibration (1) is never among them, every other store is, each once
 const ids = M.BK_OBJECTS.map((o) => o.id);
-check("the objects: 23, no panel, none twice", ids.length === 23 && !ids.includes(1) && new Set(ids).size === 23 && ids.every((i) => i >= 0 && i <= 23));
-check("their names", M.bkName(0) === "HYPNO" && M.bkName(5) === "LOFI" && M.bkName(19) === "TRIPHOP" && M.bkName(20) === "INDUS" && M.bkName(21) === "PSY" && M.bkName(22) === "FOREST" && M.bkName(23) === "chord types");
+check("the objects: 24, no panel, none twice", ids.length === 24 && !ids.includes(1) && new Set(ids).size === 24 && ids.every((i) => i >= 0 && i <= 24));
+check("their names", M.bkName(0) === "HYPNO" && M.bkName(5) === "LOFI" && M.bkName(19) === "TRIPHOP" && M.bkName(20) === "INDUS" && M.bkName(21) === "PSY" && M.bkName(22) === "FOREST" && M.bkName(23) === "chord types" && M.bkName(24) === "MIDI map" && M.MM_OBJ === 24);
 
 // the file
 const objs = [{ id: 0, data: new Uint8Array(3776).map((_, i) => i & 255) }, { id: 4, data: new Uint8Array(12).fill(7) }, { id: 12, data: new Uint8Array(0) }];
@@ -50,5 +50,17 @@ let threw = false; try { M.bkDecode(rot); } catch (_) { threw = true; }
 check("a damaged file is refused", threw);
 threw = false; try { M.bkDecode(new TextEncoder().encode("hello, not a backup, really")); } catch (_) { threw = true; }
 check("a file that is not a backup is refused", threw);
+// the player's MIDI map (0.16.11): the emulator's learned list to the firmware's bytes (ui.c mm_ok) and back; MASTER left out
+{
+  const learned = { "c:0:20": { t: "e3", mode: "abs" }, "c:1:21": { t: "e0", mode: "rel64" }, "c:0:22": { t: "e6", mode: "rel2c" }, "n:9:36": { t: "b10" }, "c:0:64": { t: "b11" }, "n:0:60": { t: "k26" }, "c:0:7": { t: "m", mode: "abs" } };
+  const r = M.mmEncode(learned), b = r.bytes;
+  check("a map is " + M.MM_LEN + " bytes, MAP1, its count", b.length === 152 && String.fromCharCode(...b.slice(0, 4)) === "MAP1" && b[4] === 6 && r.n === 6 && r.left === 1);
+  check("an entry: channel, CC, how it counts; the number; the control", eq(b.slice(8, 11), [0x10, 20, 67]) && eq(b.slice(11, 14), [0x31, 21, 64]) && eq(b.slice(14, 17), [0x50, 22, 70]) && eq(b.slice(17, 20), [9, 36, 10]) && eq(b.slice(23, 26), [0, 60, 58]));
+  const back = M.mmDecode(b);
+  check("it comes back as it went (MASTER aside)", JSON.stringify(back) === JSON.stringify(Object.fromEntries(Object.entries(learned).filter(([, m]) => m.t !== "m").map(([k, m]) => [k, m.t[0] === "e" ? { t: m.t, mode: m.mode } : { t: m.t }]))));
+  const many = {}; for (let i = 0; i < 60; i++) many["c:0:" + i] = { t: "k" + (i % 27) };
+  check("48 at most", M.mmEncode(many).n === 48 && M.mmEncode(many).left === 12);
+  check("not a map: null", M.mmDecode(new Uint8Array(152)) === null && M.mmDecode(b.slice(0, 100)) === null);
+}
 console.log(bad ? "web backup: FAILED" : "web backup: ok");
 process.exit(bad ? 1 : 0);

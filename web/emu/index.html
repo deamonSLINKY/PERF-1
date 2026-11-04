@@ -58,6 +58,8 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
 .bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .8em; cursor: pointer; }
 .bar button:hover { border-color: var(--accent); color: var(--accent); }
+.bar .btnlike { color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .8em; cursor: pointer; }
+.bar .btnlike:hover { border-color: var(--accent); color: var(--accent); }
 .bar .cpu { font-variant-numeric: tabular-nums; }
 .help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
 .help { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
@@ -164,11 +166,15 @@ body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-wid
   <h2 id="midi-h">Play it from your FM-1, or any MIDI controller</h2>
   <p>Plug the FM-1 in by USB and press Connect MIDI (Chrome, Edge or Firefox; Safari has no Web MIDI). <b>With PERF-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel then plays this emulator exactly (buttons, the 27 keys, every knob and MASTER), its own sound goes quiet, its screen says REMOTE, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back, stopped. (It speaks MIDI channel 16: keys are notes 48 up, buttons CC 102 up, knobs CC 85 up, MASTER CC 7; the lights come back through the FM-1's own MIDI output, which the browser has to see under the same name.)</p>
   <p><b>With M-VAVE's firmware, or any other keyboard or controller</b>, its notes play the keys here straight away (any channel, folded into F3 to G5). For the rest use MIDI learn: press MIDI learn, click a knob, button or key on the panel, then move or press the control you want on your controller. A knob needs a knob or slider (a CC); a button or key takes a note or a CC (64 and over is down). A learned knob can be absolute or relative (64 &plusmn; n, or 1 up and 127 down): pick it in the list below, which also lets you forget one. What you learn is kept in this browser. MIDI clock, SysEx and program changes are ignored.</p>
+  <p><b>Your map on the FM-1 itself</b>: what you learn here can play the real PERF-1 too. Press <b>Send it to your FM-1</b> (the Install page's MIDI map section, in this browser) and your controller plays the FM-1's buttons, keys and knobs with no computer in between. <b>Download map</b> saves it as a .perfmap file to share or keep; <b>Load map</b> reads one.</p>
   <div class="bar">
     <button id="midiOn" type="button">Connect MIDI</button>
     <span id="midiStatus">Not connected.</span>
     <button id="learn" type="button" aria-pressed="false" hidden>MIDI learn</button>
     <button id="unlearn" type="button" hidden>Forget learned</button>
+    <button id="mapsave" type="button" hidden>Download map</button>
+    <label class="btnlike"><input type="file" id="mapload" accept=".perfmap,.json" hidden>Load map</label>
+    <a id="mapsend" href="../install/#midimap" hidden>Send it to your FM-1 &rarr;</a>
   </div>
   <ul id="maps" aria-label="Learned controls"></ul>
 </section>
@@ -766,6 +772,7 @@ function drawMaps() {
     midiUI.maps.append(li);
   }
   midiUI.unlearn.hidden = !midi || !Object.keys(maps).length;
+  document.getElementById("mapsave").hidden = document.getElementById("mapsend").hidden = !Object.keys(maps).length;
 }
 
 function hold(id, t, down) {               // a button or key, held from MIDI (id: who holds it)
@@ -910,6 +917,20 @@ midiUI.learn.addEventListener("click", () => {
   midiStatusText();
 });
 midiUI.unlearn.addEventListener("click", () => { maps = {}; releaseFrom("m"); saveMaps(); });
+document.getElementById("mapsave").addEventListener("click", () => {   // the learned list as a .perfmap file (0.16.11; the Install page reads the same)
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ perfmap: 1, maps: Object.fromEntries(Object.entries(maps).map(([k, m]) => [k, { t: m.t, mode: m.mode }])) }, null, 1)], { type: "application/json" }));
+  a.download = "perf1-midi-map.perfmap";
+  a.click();
+});
+document.getElementById("mapload").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (!j || j.perfmap !== 1 || typeof j.maps !== "object") throw 0; releaseFrom("m"); maps = j.maps; saveMaps(); midiUI.status.textContent = "Loaded " + f.name + "."; }
+  catch { midiUI.status.textContent = "That is not a MIDI map file."; }
+  e.target.value = "";
+});
+window.addEventListener("storage", (e) => { if (e.key === MAP_KEY) { try { maps = JSON.parse(e.newValue || "{}") || {}; } catch { maps = {}; } drawMaps(); } });   // (read back from the FM-1 on the Install page)
 document.getElementById("device").addEventListener("pointerdown", (e) => {    // learning: a click picks, nothing pressed
   if (!learning) return;
   const h = e.target.closest && e.target.closest(".hit");

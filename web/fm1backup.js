@@ -9,7 +9,37 @@ const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", 
 export const BK_OBJECTS = [
   { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
   ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })), { id: 5 + BK_GENRES.length - 1, name: "chord types" },   // (0.16.6: the progression slots' types, plat.h OBJ_KINDS)
+  { id: 5 + BK_GENRES.length, name: "MIDI map" },                // (0.16.11: the player's MIDI map, plat.h OBJ_MMAP)
 ];
+
+// the player's MIDI map (0.16.11, ui.c mm_*): the emulator's learned controls ({"c:ch:cc" | "n:ch:note": {t: "b<button>" | "k<key>" | "e<knob>" | "m", mode}})
+// as the firmware keeps them: "MAP1", the count, 3 pad bytes, then 48 entries of 3 bytes (the channel | 0x10 a CC | how a knob counts << 5, the number,
+// the control: a button 0-13, 32 + a key, 64 + a knob). MASTER is the hardware's alone: not sent. The .perfmap file is the learned list as JSON.
+export const MM_OBJ = 5 + BK_GENRES.length, MM_MAX = 48, MM_LEN = 8 + 3 * MM_MAX;
+const MM_MODE = { abs: 0, rel64: 1, rel2c: 2 };
+export function mmEncode(maps) {                                     // the bytes, and how many controls went in (and how many were left out)
+  const out = new Uint8Array(MM_LEN);
+  out.set([0x4D, 0x41, 0x50, 0x31], 0);
+  let n = 0, left = 0;
+  for (const [id, m] of Object.entries(maps || {})) {
+    const [ty, ch, num] = id.split(":"), t = String((m && m.t) || "");
+    const ctl = t[0] === "b" ? +t.slice(1) : t[0] === "k" ? 32 + +t.slice(1) : t[0] === "e" ? 64 + +t.slice(1) : -1;
+    if (ctl < 0 || !(ty === "c" || ty === "n") || n >= MM_MAX) { left++; continue; }
+    out.set([(+ch & 15) | (ty === "c" ? 0x10 : 0) | ((MM_MODE[m.mode] || 0) << 5), +num & 127, ctl], 8 + 3 * n++);
+  }
+  out[4] = n;
+  return { bytes: out, n, left };
+}
+export function mmDecode(b) {                                        // the learned list back, or null when it is not a map
+  if (!b || b.length !== MM_LEN || b[0] !== 0x4D || b[1] !== 0x41 || b[2] !== 0x50 || b[3] !== 0x31 || b[4] > MM_MAX) return null;
+  const maps = {}, modes = ["abs", "rel64", "rel2c"];
+  for (let i = 0; i < b[4]; i++) {
+    const [a, num, ctl] = b.subarray(8 + 3 * i, 11 + 3 * i), cc = a & 0x10;
+    const t = ctl < 32 ? "b" + ctl : ctl < 64 ? "k" + (ctl - 32) : "e" + (ctl - 64);
+    maps[(cc ? "c" : "n") + ":" + (a & 15) + ":" + num] = cc && ctl >= 64 ? { t, mode: modes[(a >> 5) & 3] || "abs" } : { t };
+  }
+  return maps;
+}
 export const bkName = (id) => (BK_OBJECTS.find((o) => o.id === id) || { name: "object " + id }).name;
 
 // the checksum: 128 minus the sum of the data bytes, modulo 128

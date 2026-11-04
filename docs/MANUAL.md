@@ -2019,6 +2019,8 @@ The keys play over the song from any page. On the Jam page the voice is all your
 
 **Freeze from MIDI:** CC 64, the sustain pedal's number, works like holding **REC**: the chord freezes while the pedal is down (or the CC is 64 or more) and thaws when it's let up. It works in every Notes mode, on the listened channel, so a pedal on a keyboard or a button in an editor can freeze PERF-1. Start, Continue and Stop always start and stop the music.
 
+**Any controller as the panel:** a map you make with MIDI learn in the emulator turns any controller's pads, keys, buttons and knobs into the FM-1's own (section 17, "Your MIDI map on the FM-1"). It takes its messages before everything above.
+
 What the FM-1 can't do here: its TRS jack is an input, so nothing goes back to the Model:Samples over TRS. PERF-1's notes and knob CCs reach it only over USB, through a computer, a USB MIDI host box, or the FM-1's own USB host (above; not yet tried with a Model:Samples). Clock works both ways: PERF-1 follows the Model:Samples' clock over TRS, or sends its own over USB.
 
 **USB audio:** the FM-1 also shows up on a computer as a stereo USB audio input (16-bit, 44.1 kHz). It carries the master output, so you can record the FM-1 over the same cable. On the USB & MIDI settings page, the level can follow the **MASTER** knob (KNOB) or stay at a fixed level (FIXED, about the same as the knob at three quarters). With FIXED you can turn your speakers down without changing the recording.
@@ -2191,6 +2193,19 @@ To use the controller's other buttons and knobs:
 4. Repeat for as many as you like, then press **Done learning**.
 
 Buttons and keys can take a note or a CC. Knobs take a CC, either absolute (a normal knob or fader) or relative (an endless encoder that turns forever; pick which in the list). The list is kept in that browser. **Forget learned** clears it.
+
+### Your MIDI map on the FM-1
+
+What you learn in the emulator can play the real PERF-1 too, with no computer in between: your controller's pads, keys, buttons and knobs become the FM-1's own buttons, keys and knobs.
+
+1. Learn the controls in the emulator, as above.
+2. Press **Send it to your FM-1**. It opens the Install page's **Your MIDI map** section, which lists what you learned.
+3. Plug the FM-1 in and press **Send to my FM-1**. The FM-1 keeps the map and restarts.
+4. Plug your controller into the FM-1 (USB host, or the TRS MIDI jack), or play it through the computer.
+
+A learned control works in every mode, before anything else PERF-1 does with MIDI: a pad you learned as **PLAY** starts and stops, a fader you learned on **SELECT** walks the pages, an encoder on a page knob turns it. A button or key is held while its note (or its CC at 64 and over) is down, so holds work too (**SEQ** held opens the sequencer, **SEL** held is a shift). Anything you did not learn does what it did before. **MASTER** stays the FM-1's own knob: a learned MASTER works in the emulator only. Up to 48 controls.
+
+**Download .perfmap** saves the map as a file to keep or share, and **load one** reads it back (into the emulator too). **Read it from my FM-1** brings the FM-1's map back into the list to change it. **Clear the FM-1's map** removes it. The map is also in your backups.
 
 ---
 
