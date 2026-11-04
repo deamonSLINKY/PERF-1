@@ -2205,6 +2205,8 @@ What you learn in the emulator can play the real PERF-1 too, with no computer in
 
 A learned control works in every mode, before anything else PERF-1 does with MIDI: a pad you learned as **PLAY** starts and stops, a fader you learned on **SELECT** walks the pages, an encoder on a page knob turns it. A button or key is held while its note (or its CC at 64 and over) is down, so holds work too (**SEQ** held opens the sequencer, **SEL** held is a shift). Anything you did not learn does what it did before. **MASTER** stays the FM-1's own knob: a learned MASTER works in the emulator only. Up to 48 controls.
 
+Nothing learns? Some controllers keep their pads off MIDI until you turn it on. On an **MPC Sample**: SHIFT + pad 8 (MIDI Config), **MIDI Port** USB (the TRS jacks are External), **Pad MIDI Out** Always. While learning, the emulator shows anything it hears, so you can tell whether the controller is sending at all.
+
 **Download .perfmap** saves the map as a file to keep or share, and **load one** reads it back (into the emulator too). **Read it from my FM-1** brings the FM-1's map back into the list to change it. **Clear the FM-1's map** removes it. The map is also in your backups.
 
 ---
