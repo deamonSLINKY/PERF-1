@@ -2194,7 +2194,9 @@ To use the controller's other buttons and knobs:
 
 Buttons and keys can take a note or a CC. Knobs take a CC, either absolute (a normal knob or fader) or relative (an endless encoder that turns forever; pick which in the list). The list is kept in that browser. **Forget learned** clears it.
 
-### Your MIDI map on the FM-1
+### Your MIDI map on the FM-1 (experimental)
+
+*Experimental: it works in the tests, and is still being tried on more controllers. Tell us what yours does.*
 
 What you learn in the emulator can play the real PERF-1 too, with no computer in between: your controller's pads, keys, buttons and knobs become the FM-1's own buttons, keys and knobs.
 
