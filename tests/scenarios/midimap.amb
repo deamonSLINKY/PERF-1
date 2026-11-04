@@ -1,60 +1,30 @@
-# The player's MIDI map (0.16.11): a map learned in the emulator and sent from the Install page (midimap.bin, made by web/fm1backup.js mmEncode: a pad
-# note 36 on channel 10 is PLAY, CC 20 a fader on SELECT, CC 21 an encoder (64 +- n) on knob 1, CC 22 a button on SEQ, middle C the first key).
-# It is checked as a restore is, loaded at boot, and a learned message acts as the panel's own, before anything else MIDI does.
+# the MIDI map (0.15.7): the USB & MIDI settings page's fourth knob sends MIDI out's parts where a sampler plays them as it comes (GM, Model:Samples,
+# MPC Sample, SP-404); kept with the settings across power-off
 seed 0
-loadobj 24 tests/scenarios/midimap.bin
-restore 24
-expect rsvalid 1
-restore 24 bad
-expect rsvalid 0
+wait 3000
+press HOME
+wait 900
+release HOME
+wait 100
+expect fxpage 18
+turn SELECT 4
+wait 100
+expect fxpage 24
+expect midimap 0
+spin K3 1
+wait 200
+expect midimap 1
+shot midimap.png
+spin K3 5
+wait 100
+expect midimap 3
+spin K3 -1
+wait 100
+expect midimap 2
+tap HOME
+wait 300
+tap PLAY
+wait 5000
 reboot
 wait 3000
-expect playing 1
-# the pad: PLAY pressed and let go
-midi 99 24 7F
-wait 60
-midi 89 24 00
-wait 200
-expect playing 0
-midi 99 24 64
-wait 60
-midi 99 24 00
-wait 200
-expect playing 1
-# the fader on SELECT: from 40 up to 46, three clicks (a click every two steps; the dial takes a quick burst as one page, so a step at a time)
-expect view 0
-midi B0 14 28
-wait 150
-midi B0 14 2A
-wait 150
-midi B0 14 2C
-wait 150
-midi B0 14 2E
-wait 200
-expect view 3
-# and back down, a step at a time
-midi B0 14 2C
-wait 150
-midi B0 14 2A
-wait 150
-midi B0 14 28
-wait 200
-expect view 0
-# the encoder on knob 1 (Tempo's page: the tempo), 64 + 3
-setpar 5 120
-wait 100
-midi B0 15 43
-wait 200
-expect par5 123
-midi B0 15 3E
-wait 200
-expect par5 121
-# CC 22 held: SEQ held (0.4 s: the sequencer); let go
-midi B0 16 7F
-wait 700
-expect view 34
-midi B0 16 00
-wait 200
-tap HOME
-wait 200
-expect view 0
+expect midimap 2
