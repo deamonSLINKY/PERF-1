@@ -2785,6 +2785,7 @@ static void pads_in(int on, int n, int v)
     case 6:
         undo_save();
         ui.trk_m = (ui.trk_m & 15u) == 15u ? (uint8_t)(ui.trk_m & ~15u) : (uint8_t)(ui.trk_m | 15u);
+        en_trk(ui.trk_m, ui.trk_s);              /* (0.16.12: it was only shown, the engine never heard it) */
         say((ui.trk_m & 15u) ? "MUTE" : "UNMUTE", "ALL DRUMS");
         break;
     case 8: en_section(EN_CMD_BREAK); say("BREAKDOWN", "NEXT BAR"); break;

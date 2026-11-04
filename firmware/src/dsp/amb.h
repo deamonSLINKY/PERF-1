@@ -230,6 +230,7 @@ enum { EN_TR_KICK, EN_TR_HATS, EN_TR_SNARE, EN_TR_PERC, EN_TR_DRONE, EN_TR_ACID,
 extern const char *const EN_FX_NAME[EN_NFX];   /* short names, for the screen */
 void en_fx(uint64_t mask);
 void en_trk(uint32_t mute, uint32_t solo);     /* the tracks' mutes and solos, a bit a track (EN_TR_*), latched */
+uint32_t en_trk_heard(void);                    /* the mutes the engine has taken (en_trk, after the next block) */
 void en_gate_pat(uint32_t steps);              /* the pattern gate (FX_GATEX): bit s, step s of its loop open */
 /* the effects'' settings (the player''s, not a piece''s; not stored): en_fxs(i, v). Gate: the loop''s length in
  * sixteenths (2..16; the pattern, en_gate_pat, repeats every that many: 12 or 10 against a bar of 16 is a

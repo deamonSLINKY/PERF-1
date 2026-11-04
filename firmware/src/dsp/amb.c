@@ -4575,6 +4575,7 @@ static float tg_inv = 1.0f / 256.0f;             /* 1 / the chunk: the tracks' g
 #define TR_PAD EN_TR_PAD                         /* pad and vinyl */
 #define TR_CM EN_TR_PLUCK                        /* the counter-melody */
 static uint8_t trk_mute, trk_solo;               /* latched (en_trk), a bit a track */
+uint32_t en_trk_heard(void) { return trk_mute; }        /* the mutes the engine has (a test reads it: 0.16.12) */
 static uint16_t gx_pat = 0x5249;                 /* the pattern gate: steps 0 3 6 9 12 14 open (3+3+3+3+2+2) */
 const int16_t EN_FXS_DEF[EN_NFXS] = EN_FXS_DEFAULTS;
 static volatile int16_t fxs_v[EN_NFXS] = EN_FXS_DEFAULTS;   /* the effects' settings (en_fxs) */

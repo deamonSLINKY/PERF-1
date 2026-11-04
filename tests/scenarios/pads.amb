@@ -53,6 +53,14 @@ expect padnote18 0
 midi 90 2C 64
 wait 2500
 expect sec 1
+# bank A pad 7 (note 42): all the drums muted, in the engine too (0.16.12: it only showed), then back
+midi 90 2A 64
+wait 200
+expect trkmute 15
+expect entrkmute 15
+midi 90 2A 64
+wait 200
+expect entrkmute 0
 # the channel: 2 only, so a pad on channel 1 does nothing
 press HOME
 wait 900
