@@ -1,15 +1,20 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only
-     PERF-1's pieces page: share a piece saved on the FM-1, or the whole set list, as a file, a code or a link (and a card to post with it), and add the
-     pieces and sets others share (with the DX7 voices they use). The site scripts (tools/make_pages_site.py, scripts/make_vis_site.py) put fm1backup.js,
-     fm1piece.js, fm1card.js and fm1share.js in at /*LIB*/ and the firmware's own parameter data (tools/make_params.py -> build/params.json) at /*PARAMS*/.
-     It talks to the FM-1 over WebMIDI SysEx: the backup messages (firmware/src/backup_proto.h). -->
+     PERF-1's pieces and library, one page (0.16.10; the Library page before it was its own, web/library now sends here). Three tabs:
+       Library   the pieces and sets people made: the maker's picks (web/library/library.json, /*LIBRARY*/) and what players submitted (the relay,
+                 web/relay, its address at /*RELAY*/); hear one in the emulator or add it to an FM-1
+       My FM-1   the pieces saved on the FM-1 and the set list, ticked one or many: download (a .piece, a .perfset, or a .zip of several), copy
+                 their links, a card, or submit them to the Library (through the relay at once; without one, a pre-filled GitHub issue)
+       Add       a code, a link or a file someone shared, added to the FM-1
+     The site scripts (tools/make_pages_site.py, scripts/make_vis_site.py) put fm1backup.js, fm1piece.js, fm1card.js and fm1share.js in at /*LIB*/
+     and the firmware's own parameter data (tools/make_params.py -> build/params.json) at /*PARAMS*/. It talks to the FM-1 over WebMIDI SysEx:
+     the backup messages (firmware/src/backup_proto.h). -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PERF-1 pieces</title>
-<meta name="description" content="Share a PERF-1 piece or set as a file, a code or a link, and add the pieces other people share to your FM-1.">
+<meta name="description" content="The PERF-1 library: pieces and sets made by players, to hear in the browser and add to your M-VAVE FM-1. Share and submit your own.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
@@ -19,45 +24,64 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--ground); color: var(--ink);
          font: 400 17px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
-  main { max-width: 820px; margin: 0 auto; padding: 28px 16px 56px; }
-  h1, h2, .site .home, button, .tag { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
-  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1.2rem;
+  main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 56px; }
+  .narrow { max-width: 820px; }
+  h1, h2, .site .home, button, a.btn, .tag, .tabs a { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1rem;
        display: flex; align-items: center; gap: .7rem; }
   h1::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 38%, var(--purple) 38%); }
-  h2 { font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin: 2.4rem 0 .8rem;
-       padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--purple-2); }
   p { margin: 0 0 14px; }
   a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   a:hover { color: var(--purple-2); }
-  button { font-size: 1rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--purple); color: #fff;
-           border: 1px solid var(--purple-2); border-radius: 8px; padding: .55em 1.4em; cursor: pointer; margin: 0 .4em .4em 0; }
-  button:hover:not(:disabled) { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
+  button, a.btn { font-size: .95rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--purple); color: #fff; text-decoration: none;
+           border: 1px solid var(--purple-2); border-radius: 8px; padding: .5em 1.2em; cursor: pointer; margin: 0 .4em .4em 0; display: inline-block; }
+  button:hover:not(:disabled), a.btn:hover { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
   button.alt { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
   button.alt:hover:not(:disabled) { background: var(--rust); border-color: var(--purple); color: #fff; }
+  button.sm { font-size: .82rem; padding: .4em .9em; }
   button:disabled { opacity: .35; cursor: default; }
   .small { color: var(--muted); font-size: 15px; }
   .say { min-height: 1.6em; color: var(--purple-2); }
   progress { width: 100%; height: 6px; accent-color: var(--orange); }
   progress[value="0"] { visibility: hidden; }
   input[type=file] { font: inherit; font-size: 14px; color: var(--muted); max-width: 100%; }
-  input[type=text], textarea, select { font: inherit; font-size: 16px; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 6px;
+  input[type=text], input[type=search], textarea, select { font: inherit; font-size: 16px; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 6px;
            padding: .35em .6em; width: 100%; }
   textarea { font: 13px/1.4 ui-monospace, Consolas, monospace; min-height: 4.5em; resize: vertical; word-break: break-all; }
   select { width: auto; }
   label.f { display: block; font-size: 14px; color: var(--muted); margin: 0 0 10px; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
   @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
-  .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
-  .site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+  .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.4rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
+  .site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
   .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: 1rem; }
   .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 1.2rem; border-bottom: 1px solid var(--rule); }
+  .tabs a { font-weight: 700; letter-spacing: .07em; text-transform: uppercase; text-decoration: none; padding: .55em 1.1em; border: 1px solid transparent;
+            border-bottom: none; border-radius: 8px 8px 0 0; color: var(--muted); margin-bottom: -1px; }
+  .tabs a[aria-selected="true"] { color: var(--orange); background: var(--card); border-color: var(--rule); }
+  .tabs a .n { color: var(--purple-2); font-size: .85em; margin-left: .3em; }
   .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin: 0 0 1rem; }
   .card.hot { border-color: var(--orange); }
-  #mine { max-height: 340px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 1rem; }
+  .bar input { flex: 1; min-width: 180px; width: auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .item { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; }
+  .item.mine { border-color: var(--orange); }
+  .item canvas { width: 100%; height: auto; border-radius: 6px; margin: 0 0 10px; }
+  .item .tag { font-weight: 700; color: var(--horn); letter-spacing: .03em; }
+  .pick { font: 700 .72rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: #1a0c03; background: var(--orange); border-radius: 4px; padding: .05em .45em; margin-left: .5em; vertical-align: 2px; }
+  .item .title { color: var(--orange); }
+  .item .sub { color: var(--muted); font-size: 14px; }
+  .item .note { font-size: 15px; white-space: pre-wrap; margin: .3em 0 .6em; }
+  .item .acts { margin-top: auto; padding-top: .4em; }
+  .empty { text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--rule); border-radius: 10px; grid-column: 1 / -1; }
+  #mine { max-height: 380px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
   #mine:empty { display: none; }
   #mine label { display: flex; gap: .7em; align-items: baseline; padding: 4px 12px; cursor: pointer; }
   #mine label:nth-child(odd) { background: rgba(255,255,255,.03); }
   #mine label.set { border-bottom: 1px solid var(--rule); }
+  #mine label.all { border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 15px; }
   #mine input { accent-color: var(--purple); }
   #mine .sub, .info .sub { color: var(--muted); font-size: 14px; }
   .info { margin: 0 0 14px; }
@@ -70,66 +94,109 @@
   dialog::backdrop { background: rgba(10, 4, 6, .7); }
   dialog h3 { font: 700 1.1rem "Chakra Petch", sans-serif; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 .6rem; color: var(--orange); }
   #dlgp { white-space: pre-wrap; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <main>
   <p class="kofi" style="margin:0 0 .5rem;text-align:right;font-size:.88rem"><a href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
-  <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Pieces</a><a href="../library/">Library</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
-  <h1>Pieces</h1>
-  <div class="card">
-    <p>Share a piece you saved on your FM-1, or your whole set list, as a file, a code or a link, and add what other people share. Everything in a piece goes with it: its settings, its drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice its pluck plays if it is one you loaded yourself. Find pieces to try in the <a href="../library/">Library</a>.</p>
-    <p class="small">Plug the FM-1 in by USB and use Chrome or Edge. Adding needs PERF-1 0.16.3 or later; sharing works from any version that has Backup.</p>
-  </div>
+  <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Library &amp; pieces</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
+  <h1>Library &amp; pieces</h1>
+  <nav class="tabs" role="tablist">
+    <a href="#library" id="t-library" role="tab">Library<span class="n" id="libn"></span></a>
+    <a href="#mine" id="t-mine" role="tab">My FM-1</a>
+    <a href="#add" id="t-add" role="tab">Add a code</a>
+  </nav>
 
-  <h2 id="addh">Add a shared piece or set</h2>
-  <div class="card" id="addcard">
-    <label class="f">Paste a code or link
-      <textarea id="code" placeholder="P1.…  or  https://…/pieces/#p=P1.…" spellcheck="false"></textarea></label>
-    <p><button id="read" class="alt">Read it</button> <span class="small">or choose a file:</span> <input type="file" id="pfile" accept=".piece,.perfset"></p>
-    <div id="incoming" hidden>
-      <div class="info" id="ininfo"></div>
-      <p id="slotrow"><label class="small" for="slot">Put it in </label><span id="ingenre" class="small"></span> <select id="slot"></select></p>
-      <p><button id="add">Add to my FM-1</button> <button id="hear" class="alt">Hear it in the emulator</button> <button id="incard" class="alt">Card</button></p>
-      <p class="small">Adding writes into the FM-1 and restarts it (a few seconds). Save what you are playing first: changes you have not saved are lost in the restart.</p>
-    </div>
-    <progress id="addbar" max="100" value="0"></progress>
-    <p class="say" id="addsay"></p>
-  </div>
+  <!-- ============================================================ the library -->
+  <section id="s-library" hidden>
+    <p class="small">Pieces and sets made by PERF-1 players. <b>Hear</b> one in the browser emulator or <b>add</b> it to your FM-1 (it asks before it replaces anything of yours); a piece brings its own DX7 voice. <span class="pick">PICKED</span> ones are the maker's choice. Share yours from <a href="#mine">My FM-1</a>: tick them and press <b>Submit</b>.</p>
+    <div class="bar"><select id="genre"><option value="">Every genre</option></select><select id="which"><option value="">Everything</option><option value="pick">Picked</option><option value="new">Newest first</option><option value="mine">Mine</option></select><input type="search" id="find" placeholder="Search titles, makers, notes"></div>
+    <div class="grid" id="grid"></div>
+    <p style="text-align:center;margin-top:1rem"><button id="more" class="alt" hidden>Show more</button></p>
+    <p class="say" id="libsay"></p>
+  </section>
 
-  <h2>Share from your FM-1</h2>
-  <div class="card">
-    <p class="small">Save the piece on the FM-1 first (<b>GLO</b>, then <b>SAVE</b>): only saved pieces can be shared. The first row shares your set list: every piece in it (stored or factory), their voices, Play and the Mix.</p>
-    <p><button id="scan">Read my pieces and set list</button></p>
-    <div id="mine"></div>
-    <div id="sharebox" hidden>
-      <p class="small" id="basedrow" hidden></p>
-      <div class="row2">
-        <label class="f">Title (optional)<input type="text" id="mtitle" maxlength="60"></label>
-        <label class="f">Your name (optional)<input type="text" id="mby" maxlength="40"></label>
+  <!-- ============================================================ my FM-1 -->
+  <section id="s-mine" class="narrow" hidden>
+    <div class="card">
+      <p class="small">Plug the FM-1 in by USB (Chrome or Edge). Only <b>saved</b> pieces are here: save one on the FM-1 with <b>GLO</b>, then <b>SAVE</b>. The first row is your set list: every piece in it, their voices, Play and the Mix.</p>
+      <p><button id="scan">Read my pieces and set list</button></p>
+      <div id="mine"></div>
+      <div id="sharebox" hidden>
+        <p class="small" id="basedrow" hidden></p>
+        <div class="row2">
+          <label class="f" id="titlef">Title (optional)<input type="text" id="mtitle" maxlength="60"></label>
+          <label class="f">Your name (optional)<input type="text" id="mby" maxlength="40"></label>
+        </div>
+        <label class="f" id="notef">A note: how to play it, what to try (optional)<textarea id="mnote" maxlength="400" style="font: inherit; font-size: 16px"></textarea></label>
+        <p class="small" id="manyhint" hidden>Several ticked: each goes with its own name (its genre and number) and your name. Tick one to give it a title and a note.</p>
+        <p><button id="submit">Submit to the Library</button> <button id="dl" class="alt">Download</button> <button id="cplink" class="alt">Copy link</button> <button id="cpcode" class="alt">Copy code</button> <button id="mycard" class="alt">Card</button></p>
+        <textarea id="outcode" readonly hidden></textarea>
       </div>
-      <label class="f">A note: how to play it, what to try (optional)<textarea id="mnote" maxlength="400" style="font: inherit; font-size: 16px"></textarea></label>
-      <p><button id="dl">Download file</button> <button id="cplink" class="alt">Copy link</button> <button id="cpcode" class="alt">Copy code</button> <button id="mycard" class="alt">Card</button></p>
-      <textarea id="outcode" readonly hidden></textarea>
+      <canvas id="cardview" class="card-img" hidden></canvas>
+      <p id="cardsave" hidden><button id="cardpng" class="alt">Save the card (PNG)</button> <span class="small">Post it with the link: the picture shows what it is, the link adds it.</span></p>
+      <progress id="scanbar" max="100" value="0"></progress>
+      <p class="say" id="scansay"></p>
     </div>
-    <canvas id="cardview" class="card-img" hidden></canvas>
-    <p id="cardsave" hidden><button id="cardpng" class="alt">Save the card (PNG)</button> <span class="small">Post it with the link: the picture shows what it is, the link adds it.</span></p>
-    <progress id="scanbar" max="100" value="0"></progress>
-    <p class="say" id="scansay"></p>
-  </div>
-  <p class="small">Post your pieces on Reddit, under a video, or <a id="suggest" href="https://github.com/deamonSLINKY/PERF-1/issues/new" target="_blank" rel="noopener">suggest one for the Library</a>: a link is enough.</p>
-  <p class="small">PERF-1 by deamonSLINKY, GPL-3.0, no warranty. <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a>.</p>
+    <p class="small">Submitting puts them in the Library for everyone at once, with your name if you give one. You can take back what you submitted from this browser (Remove, on its card). Anything else, a link is enough: post it on Reddit or under a video.</p>
+  </section>
+
+  <!-- ============================================================ adding -->
+  <section id="s-add" class="narrow" hidden>
+    <div class="card" id="addcard">
+      <label class="f">Paste a code or link
+        <textarea id="code" placeholder="P1.…  or  https://…/pieces/#p=P1.…" spellcheck="false"></textarea></label>
+      <p><button id="read" class="alt">Read it</button> <span class="small">or choose a file:</span> <input type="file" id="pfile" accept=".piece,.perfset"></p>
+      <div id="incoming" hidden>
+        <div class="info" id="ininfo"></div>
+        <p id="slotrow"><label class="small" for="slot">Put it in </label><span id="ingenre" class="small"></span> <select id="slot"></select></p>
+        <p><button id="add">Add to my FM-1</button> <button id="hear" class="alt">Hear it in the emulator</button> <button id="incard" class="alt">Card</button></p>
+        <p class="small">Adding writes into the FM-1 and restarts it (a few seconds). Save what you are playing first: changes you have not saved are lost in the restart. Adding needs PERF-1 0.16.3 or later.</p>
+      </div>
+      <canvas id="incardview" class="card-img" hidden></canvas>
+      <progress id="addbar" max="100" value="0"></progress>
+      <p class="say" id="addsay"></p>
+    </div>
+  </section>
+
+  <p class="small" style="margin-top:1.6rem">PERF-1 by deamonSLINKY, GPL-3.0, no warranty. The pieces are their makers'. <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a>.</p>
 </main>
 
 <dialog id="dlg"><h3 id="dlgh"></h3><p id="dlgp"></p><div id="dlgb"></div></dialog>
 
 <script type="application/json" id="pdata">/*PARAMS*/</script>
+<script type="application/json" id="ldata">/*LIBRARY*/</script>
+<script type="application/json" id="rdata">/*RELAY*/</script>
 <script type="module">
 /*LIB*/
 const $ = (id) => document.getElementById(id);
 const D = JSON.parse($("pdata").textContent), S = shareNames(D), { P, E, N } = S;
 const PAGE_URL = new URL("./", location.href).href;
 const SITE_TEXT = PAGE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
+const jsonOr = (id, d) => { try { return JSON.parse($(id).textContent) || d; } catch (_) { return d; } };
+const PICKS = jsonOr("ldata", []), RELAY = String((jsonOr("rdata", {}) || {}).url || "").replace(/\/+$/, "");
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) { /* private window */ } } };
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+
+// ---------------------------------------------------------------- the tabs (the address's #: library, mine, add; #p=… a shared piece, #admin=… the maker)
+function tab(name) {
+  for (const t of ["library", "mine", "add"]) { $("s-" + t).hidden = t !== name; $("t-" + t).setAttribute("aria-selected", t === name); }
+}
+function route() {
+  const h = location.hash;
+  const adm = /[#&]admin=([^&]*)/.exec(h);
+  if (adm) { store.set("perf1-admin", decodeURIComponent(adm[1]) || null); history.replaceState(null, "", "#library"); render(); }
+  if (/[#&]p=P1\./.test(h)) {
+    tab("add");
+    $("code").value = decodeURIComponent(h.replace(/^#/, ""));
+    readCode($("code").value);
+    $("addcard").classList.add("hot");
+    return;
+  }
+  tab(h === "#mine" ? "mine" : h === "#add" ? "add" : "library");
+}
 
 // ---------------------------------------------------------------- the FM-1's MIDI port
 let port = null;
@@ -223,18 +290,103 @@ function ask(head, text, buttons) {
   });
 }
 
-// the card: drawn into the page's canvas, saved as a PNG
-async function showCard(x) {
-  const cv = $("cardview");
+// the cards: drawn into a canvas, saved as a PNG
+const cardName = (x) => (x.kind === "set" ? "set" : S.tagOf(x).replace(/\s+/g, "-")) + (x.meta && x.meta.t ? "-" + x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") : "");
+function savePng(cv, name) { const a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = "perf1-" + name + ".png"; a.click(); }
+async function showCard(cv, x) {
   await drawCard(cv, S.cardOf(x, SITE_TEXT + " · add it to your FM-1"));
-  cv.hidden = false; $("cardsave").hidden = false;
-  cv.dataset.name = (x.kind === "set" ? "set" : S.tagOf(x).replace(/\s+/g, "-")) + (x.meta && x.meta.t ? "-" + x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") : "");
+  cv.hidden = false; cv.dataset.name = cardName(x);
   cv.scrollIntoView({ block: "nearest" });
 }
-$("cardpng").addEventListener("click", () => {
-  const cv = $("cardview"), a = document.createElement("a");
-  a.href = cv.toDataURL("image/png"); a.download = "perf1-" + (cv.dataset.name || "card") + ".png"; a.click();
-});
+$("cardpng").addEventListener("click", () => savePng($("cardview"), $("cardview").dataset.name || "card"));
+$("incardview").addEventListener("click", () => savePng($("incardview"), $("incardview").dataset.name || "card"));
+
+// ---------------------------------------------------------------- the library: the maker's picks, then what players submitted (the relay)
+const items = [];                                                 // {code, x, genres, text, pick, id, added}
+let shownN = 24;
+const myKeys = () => store.get("perf1-subs", {});                 // the entries this browser submitted: id -> its key to remove it
+async function libItem(code, extra) {
+  const x = await pcFromCode(code), m = x.meta || {};
+  if (x.kind === "set") x.list.filter((v) => v).forEach(S.placeName); else S.describe(x);   // (one this page cannot describe is left out here, not in the middle of the grid)
+  const genres =x.kind === "set" ? [...new Set(x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre))] : [x.genre];
+  return { code, x, genres, text: [m.t, m.a, m.n, x.kind === "set" ? "set" : S.tagOf(x)].join(" ").toLowerCase(), ...extra };
+}
+async function addItems(list, extra) {
+  for (const it of list) {
+    if (!it || !it.code || items.some((i) => i.code === it.code)) continue;
+    try { items.push(await libItem(it.code, { ...extra(it) })); } catch (_) { /* a code this page cannot read (a newer PERF-1's): left out */ }
+  }
+}
+async function loadLibrary() {
+  await addItems(PICKS, (it) => ({ pick: true, added: it.added || "" }));
+  if (RELAY) {
+    $("libsay").textContent = "Loading what players submitted…";
+    try {
+      const r = await fetch(RELAY + "/list", { cache: "no-cache" });
+      const j = await r.json();
+      await addItems(j.items || [], (it) => ({ id: it.id, added: it.added || "" }));
+      $("libsay").textContent = "";
+    } catch (_) { $("libsay").textContent = "The submitted pieces could not be loaded just now (the picks are all here). Try again later."; }
+  }
+  const used = [...new Set(items.flatMap((i) => i.genres))].sort((a, b) => a - b);
+  for (const g of used) { const o = el("option", "", S.genreName(g)); o.value = g; $("genre").append(o); }
+  render();
+}
+function render() {
+  const g = $("genre").value, q = $("find").value.trim().toLowerCase(), w = $("which").value, keys = myKeys(), admin = store.get("perf1-admin", null), grid = $("grid");
+  grid.textContent = "";
+  $("libn").textContent = items.length ? String(items.length) : "";
+  let shown = items.filter((i) => (g === "" || i.genres.includes(+g)) && (!q || i.text.includes(q)) && (w !== "pick" || i.pick) && (w !== "mine" || (i.id && keys[i.id])));
+  shown = shown.slice().sort(w === "new" ? (a, b) => String(b.added).localeCompare(String(a.added)) : (a, b) => (b.pick ? 1 : 0) - (a.pick ? 1 : 0) || String(b.added).localeCompare(String(a.added)));
+  if (!shown.length) {
+    grid.append(el("div", "empty", items.length ? "Nothing matches." : "The library is just opening. Share a piece from My FM-1 and submit it: it will be the first one here."));
+    $("more").hidden = true;
+    return;
+  }
+  for (const i of shown.slice(0, shownN)) {
+    const x = i.x, m = x.meta || {}, card = el("div", "item" + (i.id && keys[i.id] ? " mine" : "")), cv = el("canvas");
+    card.append(cv);
+    const tag = el("div", "tag", x.kind === "set" ? "SET · " + plural(x.list.filter((v) => v).length, "piece") : S.tagOf(x));
+    if (i.pick) tag.append(el("span", "pick", "PICKED"));
+    card.append(tag);
+    if (m.t || m.a) card.append(el("div", "title", (m.t || "") + (m.a ? (m.t ? "  by " : "by ") + m.a : "")));
+    if (m.b) card.append(el("div", "sub", "based on " + S.basedText(m)));
+    card.append(el("div", "sub", x.kind === "set" ? x.list.filter((v) => v).slice(0, 4).map(S.placeName).join(", ") : S.describe(x)));
+    if (m.n) card.append(el("div", "note", m.n));
+    const acts = el("div", "acts"), link = PAGE_URL + "#p=" + i.code;
+    const add = el("button", "sm", "Hear or add");
+    add.addEventListener("click", () => { location.hash = "p=" + i.code; });
+    const cp = el("button", "alt sm", "Copy link");
+    cp.addEventListener("click", async () => { try { await navigator.clipboard.writeText(link); cp.textContent = "Copied"; } catch (_) { prompt("The link:", link); } });
+    const png = el("button", "alt sm", "Card");
+    png.addEventListener("click", () => savePng(cv, cardName(x)));
+    acts.append(add, cp, png);
+    if (i.id && RELAY && (keys[i.id] || admin)) {
+      const rm = el("button", "alt sm", "Remove");
+      rm.addEventListener("click", () => removeItem(i, keys[i.id] || admin));
+      acts.append(rm);
+    }
+    card.append(acts);
+    grid.append(card);
+    drawCard(cv, S.cardOf(x, SITE_TEXT + " · add it to your FM-1"));
+  }
+  $("more").hidden = shown.length <= shownN;
+}
+async function removeItem(i, del) {
+  if (!(await ask("Remove it from the Library?", "This takes " + ((i.x.meta && i.x.meta.t) || (i.x.kind === "set" ? "the set" : S.tagOf(i.x))) + " out of the Library for everyone. Links to it keep working.", [["Remove", 1], ["Cancel", 0, true]]))) return;
+  try {
+    const r = await fetch(RELAY + "/remove", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: i.id, del }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "it did not go");
+    items.splice(items.indexOf(i), 1);
+    const k = myKeys(); delete k[i.id]; store.set("perf1-subs", k);
+    render();
+  } catch (err) { $("libsay").textContent = "Not removed: " + err.message; }
+}
+$("genre").addEventListener("change", () => { shownN = 24; render(); });
+$("which").addEventListener("change", () => { shownN = 24; render(); });
+$("find").addEventListener("input", () => { shownN = 24; render(); });
+$("more").addEventListener("click", () => { shownN += 24; render(); });
 
 // ---------------------------------------------------------------- adding
 let incoming = null;
@@ -242,12 +394,13 @@ function showIncoming(x) {
   incoming = x;
   const m = x.meta || {}, info = $("ininfo");
   info.textContent = "";
+  $("incardview").hidden = true;
   const add = (cls, txt) => { if (!txt) return null; const e = document.createElement("div"); e.className = cls; e.textContent = txt; info.append(e); return e; };
   if (x.kind === "set") {
     const used = x.list.filter((v) => v);
-    add("tag", "A set of " + used.length + " piece" + (used.length === 1 ? "" : "s"));
+    add("tag", "A set of " + plural(used.length, "piece"));
     add("title", m.t ? m.t + (m.a ? "  by " + m.a : "") : m.a ? "by " + m.a : "");
-    add("sub", (x.on ? "Play on" : "Play off") + " · Mix: " + (["cut", "4 bars", "8 bars", "16 bars", "32 bars"][x.mix % 5]) + (x.voices.length ? " · " + x.voices.length + " DX7 voice" + (x.voices.length > 1 ? "s" : "") : ""));
+    add("sub", (x.on ? "Play on" : "Play off") + " · Mix: " + (["cut", "4 bars", "8 bars", "16 bars", "32 bars"][x.mix % 5]) + (x.voices.length ? " · " + plural(x.voices.length, "DX7 voice") : ""));
     const ol = document.createElement("ol");
     for (const v of x.list) if (v) { const li = document.createElement("li"); const q = pcSetPlaces([v])[0], pc = x.pieces.find((p) => p.genre === q.genre && p.slot === q.slot); li.textContent = S.placeName(v) + (pc ? " (shared: " + S.describe(pc) + ")" : " (factory)"); ol.append(li); }
     info.append(ol);
@@ -281,7 +434,7 @@ $("pfile").addEventListener("change", async (e) => {
   if (!f) return;
   try { showIncoming(pcDecodeAny(new Uint8Array(await f.arrayBuffer()))); } catch (err) { $("incoming").hidden = true; $("addsay").textContent = err.message; }
 });
-$("incard").addEventListener("click", () => { if (incoming) showCard(incoming); });
+$("incard").addEventListener("click", () => { if (incoming) showCard($("incardview"), incoming); });
 
 // a piece's own voice: where it goes (asking when its slot holds another); the slot, or a thrown "Not added."
 async function placeVoice(cur, voice, want) {
@@ -365,20 +518,19 @@ $("hear").addEventListener("click", () => {
   catch (err) { $("addsay").textContent = "Could not put it in the emulator: " + err.message; }
 });
 
-// ---------------------------------------------------------------- sharing
+// ---------------------------------------------------------------- my FM-1: read, tick one or many, then download, copy, card or submit
 let mine = [], mySet = null;
+const ticked = () => [...document.querySelectorAll("#mine input.one:checked")].map((r) => r.value);
 $("scan").addEventListener("click", async () => {
   const say = (t) => { $("scansay").textContent = t; };
   $("scan").disabled = true;
   mine = []; mySet = null; $("mine").textContent = ""; $("sharebox").hidden = true;
   try {
     const p = await openPort();
-    const banks = {};
     for (let g = 0; g < N.genres.length; g++) {
       say("Reading " + S.genreName(g) + "…"); $("scanbar").value = Math.round((100 * g) / N.genres.length);
       const bank = await readObject(p, S.objOf(g));
       if (bank === undefined) { if (g === 0) throw new Error("The FM-1 did not answer (a PERF-1 without Backup?). Replug it and try again."); continue; }
-      banks[g] = bank;
       const saved = pcSaved(bank);
       for (let i = 0; i < 10; i++) if ((saved >> i) & 1) mine.push(pcFromBank(bank, g, i));
     }
@@ -399,93 +551,163 @@ $("scan").addEventListener("click", async () => {
       mySet = { kind: "set", list: gl.list, on: gl.on, mix: gl.mix, pieces, voices, meta: {} };
     }
     $("scanbar").value = 100;
-    const row = (cls, i, name, sub) => {
-      const l = document.createElement("label"), r = document.createElement("input"), n = document.createElement("b"), s = document.createElement("span");
-      if (cls) l.className = cls;
-      r.type = "radio"; r.name = "mine"; r.value = i;
-      r.addEventListener("change", picked);
-      n.textContent = name; s.className = "sub"; s.textContent = sub;
-      l.append(r, n, s); $("mine").append(l);
-    };
-    if (mySet) { const n = mySet.list.filter((v) => v).length; row("set", "set", "My set list", n + " piece" + (n === 1 ? "" : "s") + ", " + mySet.pieces.length + " stored · " + mySet.list.filter((v) => v).slice(0, 3).map(S.placeName).join(", ") + (n > 3 ? " …" : "")); }
-    mine.forEach((pc, i) => row("", i, S.tagOf(pc), S.describe(pc)));
-    if (!mine.length && !mySet) { say("No saved pieces and no set list on the FM-1 yet. Save one (GLO, then SAVE) and read again."); }
-    else say((mine.length ? mine.length + " saved piece" + (mine.length > 1 ? "s" : "") : "No saved pieces") + (mySet ? " and your set list" : "") + ". Choose what to share.");
+    showMine();
+    if (!mine.length && !mySet) say("No saved pieces and no set list on the FM-1 yet. Save one (GLO, then SAVE) and read again.");
+    else say((mine.length ? plural(mine.length, "saved piece") : "No saved pieces") + (mySet ? " and your set list" : "") + ". Tick what to share.");
   } catch (err) { say(err.message); }
   $("scanbar").value = 0;
   $("scan").disabled = false;
 });
-function picked() {                                               // a row chosen: what it came from, when it came from a share
-  const r = document.querySelector("#mine input:checked");
-  $("sharebox").hidden = !r; $("outcode").hidden = true;
-  $("cardview").hidden = true; $("cardsave").hidden = true;
-  $("dl").textContent = r && r.value === "set" ? "Download .perfset" : "Download .piece";
+function showMine() {
+  const box = $("mine");
+  box.textContent = "";
+  const row = (cls, value, name, sub) => {
+    const l = el("label", cls), r = el("input", value === "all" ? "" : "one"), n = el("b", "", name), s = el("span", "sub", sub);
+    r.type = "checkbox"; r.value = value;
+    r.addEventListener("change", value === "all" ? () => { for (const c of box.querySelectorAll("input.one")) c.checked = r.checked; picked(); } : picked);
+    l.append(r, n, s); box.append(l);
+    return r;
+  };
+  if (mine.length + (mySet ? 1 : 0) > 1) row("all", "all", "Tick all", "");
+  if (mySet) { const n = mySet.list.filter((v) => v).length; row("set", "set", "My set list", plural(n, "piece") + ", " + mySet.pieces.length + " stored · " + mySet.list.filter((v) => v).slice(0, 3).map(S.placeName).join(", ") + (n > 3 ? " …" : "")); }
+  mine.forEach((pc, i) => row("", String(i), S.tagOf(pc), S.describe(pc)));
+}
+function picked() {
+  const t = ticked(), one = t.length === 1;
+  $("sharebox").hidden = !t.length; $("outcode").hidden = true; $("cardview").hidden = true; $("cardsave").hidden = true;
+  const all = document.querySelector("#mine label.all input");
+  if (all) all.checked = t.length === document.querySelectorAll("#mine input.one").length;
+  $("titlef").hidden = $("notef").hidden = !one; $("manyhint").hidden = one;
+  $("mycard").disabled = !one; $("cpcode").disabled = !one;
+  $("submit").textContent = one ? "Submit to the Library" : "Submit " + t.length + " to the Library";
+  $("dl").textContent = one ? (t[0] === "set" ? "Download .perfset" : "Download .piece") : "Download " + t.length + " (.zip)";
+  $("cplink").textContent = one ? "Copy link" : "Copy " + t.length + " links";
   const row = $("basedrow");
   row.hidden = true;
-  if (!r || r.value === "set") return;
-  const o = originOf(mine[+r.value]);
+  if (!one || t[0] === "set") return;
+  const o = originOf(mine[+t[0]]);
   if (!o) return;
   if (o.same) { row.textContent = "You added this piece from a share (" + o.t + (o.a ? " by " + o.a : "") + ") and have not changed it."; if (!$("mtitle").value) $("mtitle").value = o.t; if (!$("mby").value) $("mby").value = o.a; }
   else row.textContent = "Changed from a piece you added (" + o.b.t + (o.b.a ? " by " + o.b.a : "") + "): it is shared as based on that one.";
   row.hidden = false;
 }
-function chosen() {
-  const r = document.querySelector("#mine input:checked");
-  if (!r) return null;
-  const m = {};
-  if ($("mtitle").value.trim()) m.t = $("mtitle").value.trim();
-  if ($("mby").value.trim()) m.a = $("mby").value.trim();
-  if ($("mnote").value.trim()) m.n = $("mnote").value.trim();
-  m.d = new Date().toISOString().slice(0, 10);
-  if (r.value === "set") return { ...mySet, meta: m };
-  const pc = mine[+r.value], o = originOf(pc);
-  m.g = S.genreName(pc.genre); m.p = S.pieceName(pc.genre, pc.slot);
-  if (o && !o.same) m.b = o.b;
-  return { ...pc, meta: m };
+function chosen() {                                               // what is ticked, each with its words (a title and a note only when one is ticked)
+  const t = ticked(), one = t.length === 1, date = new Date().toISOString().slice(0, 10);
+  return t.map((v) => {
+    const m = { d: date };
+    if (one && $("mtitle").value.trim()) m.t = $("mtitle").value.trim();
+    if ($("mby").value.trim()) m.a = $("mby").value.trim();
+    if (one && $("mnote").value.trim()) m.n = $("mnote").value.trim();
+    if (v === "set") return { ...mySet, meta: m };
+    const pc = mine[+v], o = originOf(pc);
+    m.g = S.genreName(pc.genre); m.p = S.pieceName(pc.genre, pc.slot);
+    if (o && !o.same) m.b = o.b;
+    return { ...pc, meta: m };
+  });
 }
 const fileName = (x) => (x.meta.t ? x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") + "-" : "") + (x.kind === "set" ? "set.perfset" : x.meta.g + "-" + x.meta.p + ".piece");
-const voiceNote = (x) => (x.kind === "set" ? (x.voices.length ? " (with " + x.voices.length + " DX7 voice" + (x.voices.length > 1 ? "s" : "") + ")" : "") : x.voice && S.userSlot(x) >= 0 ? " (with its DX7 voice " + pcVoiceName(x.voice) + ")" : "");
+const voiceNote = (x) => (x.kind === "set" ? (x.voices.length ? " (with " + plural(x.voices.length, "DX7 voice") + ")" : "") : x.voice && S.userSlot(x) >= 0 ? " (with its DX7 voice " + pcVoiceName(x.voice) + ")" : "");
+const fileOf = (x) => (x.kind === "set" ? pcSetEncode(x) : pcEncode(x));
+
+// a .zip of several files, stored (the pieces are small and already packed): the local headers, the central directory, its end
+function zipOf(files) {
+  const enc = new TextEncoder(), parts = [], dir = [];
+  let off = 0;
+  const crcT = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = (u8) => { let c = 0xFFFFFFFF; for (const b of u8) c = crcT[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const hdr = (n) => { const b = new Uint8Array(n); return [b, new DataView(b.buffer)]; };
+  const seen = new Set();
+  for (const f of files) {
+    let name = f.name, k = 2;
+    while (seen.has(name)) name = f.name.replace(/(\.\w+)$/, "-" + k++ + "$1");
+    seen.add(name);
+    const nm = enc.encode(name), c = crc(f.data), [lh, l] = hdr(30);
+    l.setUint32(0, 0x04034b50, true); l.setUint16(4, 20, true); l.setUint16(6, 0x0800, true); l.setUint32(14, c, true);
+    l.setUint32(18, f.data.length, true); l.setUint32(22, f.data.length, true); l.setUint16(26, nm.length, true);
+    parts.push(lh, nm, f.data);
+    const [ch, d] = hdr(46);
+    d.setUint32(0, 0x02014b50, true); d.setUint16(4, 20, true); d.setUint16(6, 20, true); d.setUint16(8, 0x0800, true); d.setUint32(16, c, true);
+    d.setUint32(20, f.data.length, true); d.setUint32(24, f.data.length, true); d.setUint16(28, nm.length, true); d.setUint32(42, off, true);
+    dir.push(ch, nm);
+    off += 30 + nm.length + f.data.length;
+  }
+  const size = dir.reduce((s, p) => s + p.length, 0), [eh, e] = hdr(22);
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...dir, eh], { type: "application/zip" });
+}
 $("dl").addEventListener("click", () => {
-  const x = chosen();
-  if (!x) return;
+  const xs = chosen();
+  if (!xs.length) return;
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([x.kind === "set" ? pcSetEncode(x) : pcEncode(x)], { type: "application/octet-stream" }));
-  a.download = fileName(x);
+  if (xs.length === 1) {
+    a.href = URL.createObjectURL(new Blob([fileOf(xs[0])], { type: "application/octet-stream" }));
+    a.download = fileName(xs[0]);
+    $("scansay").textContent = "Saved " + a.download + voiceNote(xs[0]) + ".";
+  } else {
+    a.href = URL.createObjectURL(zipOf(xs.map((x) => ({ name: fileName(x), data: fileOf(x) }))));
+    a.download = "perf1-pieces-" + new Date().toISOString().slice(0, 10) + ".zip";
+    $("scansay").textContent = "Saved " + a.download + ": " + plural(xs.length, "file") + ".";
+  }
   a.click();
-  $("scansay").textContent = "Saved " + a.download + voiceNote(x) + ".";
 });
 async function copy(link) {
-  const x = chosen();
-  if (!x) return;
-  const code = await pcToCode(x), text = link ? PAGE_URL + "#p=" + code : code;
+  const xs = chosen();
+  if (!xs.length) return;
+  const lines = [];
+  for (const x of xs) { const code = await pcToCode(x); lines.push(link ? (xs.length > 1 ? ((x.kind === "set" ? "Set" : S.tagOf(x)) + ": ") : "") + PAGE_URL + "#p=" + code : code); }
+  const text = lines.join("\n");
   $("outcode").value = text; $("outcode").hidden = false;
   const long = text.length > 1900 ? " It is " + text.length + " characters: too long for a Discord message, so share the file there." : "";
-  try { await navigator.clipboard.writeText(text); $("scansay").textContent = (link ? "Link" : "Code") + " copied" + voiceNote(x) + "." + long; }
+  try { await navigator.clipboard.writeText(text); $("scansay").textContent = (link ? (xs.length > 1 ? plural(xs.length, "link") : "Link") : "Code") + " copied" + (xs.length === 1 ? voiceNote(xs[0]) : "") + "." + long; }
   catch (_) { $("outcode").select(); $("scansay").textContent = "Copy it from the box below." + long; }
 }
 $("cplink").addEventListener("click", () => copy(true));
 $("cpcode").addEventListener("click", () => copy(false));
-$("mycard").addEventListener("click", () => { const x = chosen(); if (x) showCard(x); });
+$("mycard").addEventListener("click", async () => { const xs = chosen(); if (xs.length === 1) { await showCard($("cardview"), xs[0]); $("cardsave").hidden = false; } });
 
-// the Library's "suggest" link: an issue with the piece's link in it (when one is open here)
-$("suggest").addEventListener("click", async (e) => {
-  const x = chosen() || incoming;
-  if (!x) return;
-  e.preventDefault();
-  const link = PAGE_URL + "#p=" + (await pcToCode(x));
-  const t = (x.kind === "set" ? "Set: " : "Piece: ") + ((x.meta && x.meta.t) || (x.kind === "set" ? "my set" : S.tagOf(x)));
-  window.open("https://github.com/deamonSLINKY/PERF-1/issues/new?title=" + encodeURIComponent("Library: " + t) + "&body=" + encodeURIComponent("For the Library:\n\n" + link + "\n"), "_blank", "noopener");
+// submitting: straight into the Library through the relay; without one, a pre-filled GitHub issue
+$("submit").addEventListener("click", async () => {
+  const xs = chosen(), say = (t) => { $("scansay").textContent = t; };
+  if (!xs.length) return;
+  const names = xs.map((x) => (x.meta.t ? x.meta.t + " (" + (x.kind === "set" ? "set" : S.tagOf(x)) + ")" : x.kind === "set" ? "your set list" : S.tagOf(x)));
+  if (!(await ask(xs.length > 1 ? "Submit " + xs.length + " to the Library?" : "Submit it to the Library?",
+    names.join("\n") + "\n\n" + (RELAY ? "Everyone can hear and add " + (xs.length > 1 ? "them" : "it") + " at once" : "This opens a GitHub issue with " + (xs.length > 1 ? "their links" : "its link") + " for the maker to add") +
+    ($("mby").value.trim() ? ", shown as by " + $("mby").value.trim() + "." : ", without a name (add yours above if you like).") +
+    (RELAY ? " You can remove " + (xs.length > 1 ? "them" : "it") + " later from this browser." : ""), [["Submit", 1], ["Cancel", 0, true]]))) return;
+  $("submit").disabled = true;
+  try {
+    const codes = [];
+    for (const x of xs) codes.push(await pcToCode(x));
+    if (!RELAY) {
+      const body = "For the Library:\n\n" + codes.map((c, k) => names[k] + "\n" + PAGE_URL + "#p=" + c).join("\n\n") + "\n";
+      const t = "Library: " + (xs.length > 1 ? xs.length + " pieces" : names[0]);
+      window.open("https://github.com/deamonSLINKY/PERF-1/issues/new?title=" + encodeURIComponent(t) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+      say("The issue is open in a new tab: press Submit new issue there.");
+    } else {
+      say("Submitting…");
+      const r = await fetch(RELAY + "/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ codes }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "the Library did not answer (" + r.status + ")");
+      const keys = myKeys(), bad = [];
+      let n = 0;
+      for (let k = 0; k < j.done.length; k++) {
+        const d = j.done[k];
+        if (d.error) { bad.push(names[k] + ": " + d.error); continue; }
+        keys[d.id] = d.del; n++;
+        if (!items.some((i) => i.code === codes[k])) { try { items.unshift(await libItem(codes[k], { id: d.id, added: new Date().toISOString() })); } catch (_) { /* (read above: it reads) */ } }
+      }
+      store.set("perf1-subs", keys);
+      render();
+      say((n ? (n > 1 ? n + " are" : "It is") + " in the Library." : "Nothing went in.") + (bad.length ? " Not taken: " + bad.join("; ") : ""));
+      if (n) { $("which").value = "mine"; shownN = 24; render(); location.hash = "library"; }
+    }
+  } catch (err) { say("Not submitted: " + err.message); }
+  $("submit").disabled = false;
 });
 
-// a link that came with a piece or set (#p=P1.…): read it at once (and when another link is opened in this tab)
-function fromHash() {
-  if (!/[#&]p=P1\./.test(location.hash)) return;
-  $("code").value = decodeURIComponent(location.hash.replace(/^#/, ""));
-  readCode($("code").value).then(() => $("addh").scrollIntoView());
-  $("addcard").classList.add("hot");
-}
-fromHash();
-window.addEventListener("hashchange", fromHash);
+window.addEventListener("hashchange", route);
+route();
+loadLibrary();
 </script>
 </body>
 </html>

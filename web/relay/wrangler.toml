@@ -1,0 +1,14 @@
+# PERF-1's library relay (web/relay/README.md). Fill in the KV namespace id that `wrangler kv namespace create LIB` prints.
+name = "perf1-library"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+[[kv_namespaces]]
+binding = "LIB"
+id = "PUT-THE-ID-HERE"
+
+[vars]
+# the sites allowed to call it (localhost is always allowed, for the dev site)
+ORIGINS = "https://deamonslinky.github.io"
+
+# the ADMIN secret is not here: `wrangler secret put ADMIN`

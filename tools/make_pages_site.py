@@ -55,10 +55,12 @@ if params.exists():
     (OUT / "editor" / "index.html").write_text(ed, encoding="utf-8", newline="\n")
     plib = "\n".join(strip_module((SRC / "web" / f).read_text(encoding="utf-8")) for f in ("fm1backup.js", "fm1piece.js", "fm1card.js", "fm1share.js"))
     lib_json = (SRC / "web" / "library" / "library.json").read_text(encoding="utf-8")
+    relay = SRC / "web" / "relay" / "relay.json"           # the library relay's address (web/relay/README.md), or none
+    relay_json = relay.read_text(encoding="utf-8").strip() if relay.exists() else "{}"
     for d in ("pieces", "library") if SHARING else ():   # sharing pieces and sets, and the library of them: the modules, the parameters' names, the library's codes
         (OUT / d).mkdir(exist_ok=True)
         pg = (SRC / "web" / d / "index.html").read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8")).replace("/*LIB*/", plib)
-        (OUT / d / "index.html").write_text(pg.replace("/*LIBRARY*/", lib_json), encoding="utf-8", newline="\n")
+        (OUT / d / "index.html").write_text(pg.replace("/*LIBRARY*/", lib_json).replace("/*RELAY*/", relay_json), encoding="utf-8", newline="\n")
 shutil.copy(SRC / "docs" / "manual.html", OUT / "manual" / "index.html")
 quick_card = ""
 if (SRC / "build" / "quick-manual.pdf").exists():   # the printable quick manual (tools/make_quick_manual.py, made on Windows with Edge)
@@ -97,8 +99,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <a class="card" href="install/"><b>Install</b><span>Install it from this website in Chrome or Edge, with the FM-1 plugged in. You can go back to the original firmware the same way.</span></a>
 <a class="card" href="emu/"><b>Try it in your browser</b><span>Play with PERF-1 on screen, with sound, before you install anything.</span></a>
 <a class="card" href="editor/"><b>Editor</b><span>Change any setting from your computer, and make your own DX7 sounds and hear them on the FM-1.</span></a>
-<a class="card" href="pieces/"><b>Pieces</b><span>Share a piece you made as a link, and add the pieces other people share, with their own DX7 voices.</span></a>
-<a class="card" href="library/"><b>Library</b><span>Pieces and sets made by other players: hear them in your browser and add them to your FM-1.</span></a>
+<a class="card" href="pieces/"><b>Library &amp; pieces</b><span>Pieces and sets made by players: hear them in your browser and add them to your FM-1. Submit your own, one or many at once.</span></a>
 <a class="card" href="manual/"><b>Manual</b><span>Starts with a beginner's guide, then explains every button and page.</span></a>
 {quick_card}
 <a class="card" href="firmware/{name}"><b>Download the firmware file</b><span>{name} ({len(raw) // 1024} KB). You only need this if you install another way than the page above.</span></a>

@@ -1868,9 +1868,9 @@ The **Pieces** page on the PERF-1 website shares one piece at a time: you send a
 **To share a piece:**
 
 1. Store it on the FM-1 (**GLO**, then **SAVE**). Only stored pieces can be shared.
-2. On the Pieces page, press **Read my saved pieces** and choose the piece.
-3. Add a title, your name and a note if you like (what to play, what to try).
-4. **Download .piece** saves a small file. **Copy link** copies a link that opens the Pieces page with your piece in it, ready to add. **Copy code** copies the same thing as text, starting `P1.`, for places where links don't work.
+2. On the website's **Library & pieces** page, open **My FM-1**, press **Read my pieces and set list** and tick the piece (or several: **Tick all** ticks every one).
+3. Add a title, your name and a note if you like (what to play, what to try). With several ticked, your name goes with each, and each keeps its own genre and number as its name.
+4. **Submit to the Library** puts it in the Library for everyone at once. **Download .piece** saves a small file (several download as one `.zip`). **Copy link** copies a link that opens the page with your piece in it, ready to add (several: one link a line). **Copy code** copies the same thing as text, starting `P1.`, for places where links don't work.
 
 **To add a shared piece:**
 
@@ -1893,7 +1893,7 @@ The **Pieces** page on the PERF-1 website shares one piece at a time: you send a
 
 **Based on.** When you add a piece from a share, this browser remembers where it came from. If you change it, store it and share it again, it goes out as "based on" the original (its title and maker), and the card says so. If you share it unchanged, the page fills in its original title and maker for you.
 
-**The Library.** The **Library** page on the website collects pieces and sets people made: each with its card, title, maker and note, to hear in the emulator or add to your FM-1. To suggest one, share it from the Pieces page and press **suggest one for the Library**: it opens a GitHub issue with the link in it.
+**The Library.** The **Library** tab of the **Library & pieces** page collects pieces and sets people made: each with its card, title, maker and note, to hear in the emulator or add to your FM-1 (**Hear or add**). Filter it by genre, search it, or show only the maker's **picked** ones, the newest, or yours. To put yours in, tick them on **My FM-1** and press **Submit**: they are there at once, for everyone, with no account. A submission is checked first (it has to be a real PERF-1 piece or set; the title, name and note short and plain). What you submitted from a browser can be taken back from the same browser: its card there has **Remove**.
 
 **Versions.** Both of you need PERF-1 0.16.3 or later to add a piece. A piece made on an older PERF-1 loads into a newer one: anything it doesn't have yet plays as the piece's genre sets it. A piece made on a newer PERF-1 loads into an older one without the newer settings, and the page tells you so.
 

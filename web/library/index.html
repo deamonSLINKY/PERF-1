@@ -1,124 +1,17 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only
-     PERF-1's library: pieces and sets people made, chosen by the maker, to hear in the emulator and add to an FM-1. The pieces are their codes in
-     web/library/library.json (tools/library_add.py adds one), put in at /*LIBRARY*/ by the site scripts, with fm1piece.js, fm1card.js and fm1share.js at
-     /*LIB*/ and the firmware's parameter data at /*PARAMS*/. Adding and hearing go by way of the pieces page (../pieces/#p=CODE). -->
+     The Library is a tab of the pieces page since 0.16.10 (web/pieces): this address sends there. The maker's picks stay in library.json beside it. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PERF-1 library</title>
-<meta name="description" content="Pieces and sets for PERF-1 on the M-VAVE FM-1, made by its players: hear them in the browser and add them to your FM-1.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
-<style>
-  :root { --ground: #130a0e; --card: #211219; --card-2: #2e1822; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
-          --purple: #e0344f; --purple-2: #ff8f8f; --orange: #ffd447; --rust: #9c1d3a; --horn: #f2e6c4; color-scheme: dark; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 17px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
-  main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 56px; }
-  h1, .site .home, button, .tag { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
-  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1.2rem; display: flex; align-items: center; gap: .7rem; }
-  h1::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 38%, var(--purple) 38%); }
-  p { margin: 0 0 14px; }
-  a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thickness: 2px; text-underline-offset: 3px; }
-  a:hover { color: var(--purple-2); }
-  button, a.btn { font-size: .9rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--purple); color: #fff; text-decoration: none;
-           border: 1px solid var(--purple-2); border-radius: 8px; padding: .45em 1.1em; cursor: pointer; margin: 0 .35em .35em 0; display: inline-block; font-family: "Chakra Petch", sans-serif; }
-  button:hover, a.btn:hover { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
-  button.alt { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
-  button.alt:hover { background: var(--rust); border-color: var(--purple); color: #fff; }
-  .small { color: var(--muted); font-size: 15px; }
-  .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.6rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
-  .site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
-  .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: 1rem; }
-  .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
-  .intro { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin: 0 0 1.2rem; }
-  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 1rem; }
-  .bar select, .bar input { font: inherit; font-size: 16px; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .6em; }
-  .bar input { flex: 1; min-width: 180px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-  .item { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; }
-  .item canvas { width: 100%; height: auto; border-radius: 6px; margin: 0 0 10px; }
-  .item .tag { font-weight: 700; color: var(--horn); letter-spacing: .03em; }
-  .item .title { color: var(--orange); }
-  .item .sub { color: var(--muted); font-size: 14px; }
-  .item .note { font-size: 15px; white-space: pre-wrap; margin: .3em 0 .6em; }
-  .item .acts { margin-top: auto; }
-  .empty { text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--rule); border-radius: 10px; }
-</style>
+<meta http-equiv="refresh" content="0; url=../pieces/#library">
+<link rel="canonical" href="../pieces/#library">
+<style>body { background: #130a0e; color: #f6ece0; font: 17px/1.6 sans-serif; padding: 2rem; } a { color: #ffd447; }</style>
 </head>
 <body>
-<main>
-  <p class="kofi" style="margin:0 0 .5rem;text-align:right;font-size:.88rem"><a href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
-  <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="../pieces/">Pieces</a><a href="./" aria-current="page">Library</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
-  <h1>Library</h1>
-  <div class="intro">
-    <p>Pieces and sets made by PERF-1 players. <b>Hear</b> one in the browser emulator, or <b>add</b> it to your FM-1 (it opens on the Pieces page, which asks before it replaces anything of yours). A piece brings its own DX7 voice with it.</p>
-    <p class="small">Made something good? Share it from the <a href="../pieces/">Pieces page</a> and press <b>suggest one for the Library</b> there, or <a href="https://github.com/deamonSLINKY/PERF-1/issues/new?title=Library%3A%20" target="_blank" rel="noopener">open an issue</a> with its link.</p>
-  </div>
-  <div class="bar"><select id="genre"><option value="">Every genre</option></select><input type="search" id="find" placeholder="Search titles, makers, notes"></div>
-  <div class="grid" id="grid"></div>
-  <p class="small" style="margin-top: 1.4rem">PERF-1 by deamonSLINKY, GPL-3.0, no warranty. The pieces are their makers'.</p>
-</main>
-<script type="application/json" id="pdata">/*PARAMS*/</script>
-<script type="application/json" id="ldata">/*LIBRARY*/</script>
-<script type="module">
-/*LIB*/
-const $ = (id) => document.getElementById(id);
-const D = JSON.parse($("pdata").textContent), S = shareNames(D);
-let LIB = [];
-try { LIB = JSON.parse($("ldata").textContent) || []; } catch (_) { LIB = []; }
-const PIECES = new URL("../pieces/", location.href).href, SITE_TEXT = PIECES.replace(/^https?:\/\//, "").replace(/\/$/, "");
-const items = [];
-
-function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; }
-async function build() {
-  for (const it of LIB) {
-    try {
-      const x = await pcFromCode(it.code), m = x.meta || {};
-      const genres = x.kind === "set" ? [...new Set(x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre))] : [x.genre];
-      items.push({ it, x, genres, text: [m.t, m.a, m.n, x.kind === "set" ? "set" : S.tagOf(x)].join(" ").toLowerCase() });
-    } catch (_) { /* a code this page cannot read: left out */ }
-  }
-  items.sort((a, b) => String(b.it.added || "").localeCompare(String(a.it.added || "")));
-  const used = [...new Set(items.flatMap((i) => i.genres))].sort((a, b) => a - b);
-  for (const g of used) { const o = el("option", "", S.genreName(g)); o.value = g; $("genre").append(o); }
-  render();
-}
-async function render() {
-  const g = $("genre").value, q = $("find").value.trim().toLowerCase(), grid = $("grid");
-  grid.textContent = "";
-  const shown = items.filter((i) => (g === "" || i.genres.includes(+g)) && (!q || i.text.includes(q)));
-  if (!shown.length) {
-    grid.append(el("div", "empty", items.length ? "Nothing matches." : "The library is just opening. Share a piece from the Pieces page and suggest it: the first ones will be here soon."));
-    grid.firstChild.style.gridColumn = "1 / -1";
-    return;
-  }
-  for (const i of shown) {
-    const x = i.x, m = x.meta || {}, card = el("div", "item"), cv = el("canvas");
-    card.append(cv);
-    card.append(el("div", "tag", x.kind === "set" ? "SET · " + x.list.filter((v) => v).length + " pieces" : S.tagOf(x)));
-    if (m.t || m.a) card.append(el("div", "title", (m.t || "") + (m.a ? (m.t ? "  by " : "by ") + m.a : "")));
-    if (m.b) card.append(el("div", "sub", "based on " + S.basedText(m)));
-    card.append(el("div", "sub", x.kind === "set" ? x.list.filter((v) => v).slice(0, 4).map(S.placeName).join(", ") : S.describe(x)));
-    if (m.n) card.append(el("div", "note", m.n));
-    const acts = el("div", "acts"), link = PIECES + "#p=" + i.it.code;
-    const add = el("a", "btn", "Hear or add"); add.href = link;
-    const cp = el("button", "alt", "Copy link");
-    cp.addEventListener("click", async () => { try { await navigator.clipboard.writeText(link); cp.textContent = "Copied"; } catch (_) { prompt("The link:", link); } });
-    const png = el("button", "alt", "Card");
-    png.addEventListener("click", () => { const a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = "perf1-" + (m.t || (x.kind === "set" ? "set" : S.tagOf(x))).replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") + ".png"; a.click(); });
-    acts.append(add, cp, png);
-    card.append(acts);
-    $("grid").append(card);
-    drawCard(cv, S.cardOf(x, SITE_TEXT + " · add it to your FM-1"));
-  }
-}
-$("genre").addEventListener("change", render);
-$("find").addEventListener("input", render);
-build();
-</script>
+<p>The Library has moved: <a href="../pieces/#library">Library &amp; pieces</a>.</p>
+<script>location.replace("../pieces/#library" + (location.hash && location.hash !== "#library" ? location.hash.replace(/^#/, "&") : ""));</script>
 </body>
 </html>
