@@ -851,6 +851,7 @@ int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs)
         {0, 2, 6, 1, 4, 3, 5},                  /* ninths: 1 3 7 9 (the fifth left out) */
         {0, 3, 4, 6, 1, 2, 5},                  /* sus: 1 4 5 b7 */
         {0, 6, 1, 3, 2, 4, 5},                  /* elevenths: 1 b7 9 11 (the third and fifth left out, as it is usually voiced) */
+        {0, 1, 4, 6, 2, 3, 5},                  /* sus2: 1 2 5 7 (Sus where the fourth is sharp, as on Ionian's IV: 0.16.9) */
     };
     static const uint8_t SHAPE[2][4] = {{0, 3, 10, 14}, {0, 5, 10, 15}};   /* dub: m9 (no fifth); fourths */
     int st[12], m = en_scale(pool, st), want, n = 0, i, j;
@@ -865,7 +866,7 @@ int en_chord_kind(uint32_t pool, int root, int deg, int kind, int *pcs)
     if (kind == EN_CH_9TH)
         off = OFF[1];
     else if (kind == EN_CH_SUS)
-        off = OFF[2];
+        off = m == 7 && (st[(deg + 3) % m] - st[deg] + 12) % 12 == 6 ? OFF[4] : OFF[2];
     else if (kind == EN_CH_11TH)
         off = OFF[3];
     for (i = 0; i < 7 && n < want; i++) {
@@ -926,6 +927,10 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
     const char *q = "", *r = EN_NOTE_NAME[pcs[0] % 12];
     for (i = 1; i < n; i++)
         iv |= 1u << ((pcs[i] - pcs[0] + 12) % 12);
+    if (n == 4 && iv == (1u << 5 | 1u << 10 | 1u << 3)) {   /* stacked fourths (the Fourths type): named as such, not "m11" (0.16.9) */
+        q = "4ths";
+        goto out;
+    }
     third = iv >> 4 & 1u ? 4 : iv >> 3 & 1u ? 3 : 0;
     fifth = iv >> 7 & 1u ? 7 : iv >> 6 & 1u ? 6 : iv >> 8 & 1u ? 8 : 0;
     if (third == 4) {
@@ -940,8 +945,16 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
         else
             q = iv >> 11 & 1u ? "mM7" : iv >> 9 & 1u ? "m6" : iv >> 2 & 1u ? "madd9" : "m";
     } else {
-        q = iv >> 5 & 1u ? (iv >> 10 & 1u ? (iv >> 2 & 1u ? "11" : "7sus4") : "sus4") : iv >> 2 & 1u ? "sus2" : "5";   /* (1 b7 9 11, no third: the 11ths' "A11") */
+        /* no third: sus4 or sus2, with its seventh (0.16.9: the major seventh too; 1 b7 9 11 is the 11ths' "A11", 1 7 9 11 their "CM11") */
+        const int sev = iv >> 10 & 1u ? 1 : iv >> 11 & 1u ? 2 : 0;
+        if (iv >> 5 & 1u)
+            q = iv >> 2 & 1u && sev ? (sev == 1 ? "11" : "M11") : sev == 1 ? "7sus4" : sev == 2 ? "M7sus4" : "sus4";
+        else if (iv >> 2 & 1u)
+            q = sev == 1 ? "7sus2" : sev == 2 ? "M7sus2" : "sus2";
+        else
+            q = "5";
     }
+out:
     while (*r)
         buf[k++] = *r++;
     while (*q)

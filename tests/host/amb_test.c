@@ -179,7 +179,8 @@ int main(void)
         static const struct { int kind, deg; const char *name; } K[] = {
             {EN_CH_AUTO, 0, "Am7"}, {EN_CH_TRIAD, 0, "Am"}, {EN_CH_7TH, 3, "Dm7"}, {EN_CH_9TH, 0, "Am9"},
             {EN_CH_9TH, 3, "Dm9"}, {EN_CH_9TH, 2, "CM9"}, {EN_CH_SUS, 0, "A7sus4"}, {EN_CH_DUB, 0, "Am9"},
-            {EN_CH_DUB, 2, "Cm9"}, {EN_CH_4THS, 0, "Am11"}, {EN_CH_11TH, 0, "A11"}, {EN_CH_11TH, 3, "D11"}};   /* (11ths: 0.16.6, 1 b7 9 11) */
+            {EN_CH_DUB, 2, "Cm9"}, {EN_CH_4THS, 0, "A4ths"}, {EN_CH_11TH, 0, "A11"}, {EN_CH_11TH, 3, "D11"},
+            {EN_CH_11TH, 2, "CM11"}, {EN_CH_SUS, 2, "CM7sus4"}, {EN_CH_SUS, 5, "FM7sus2"}, {EN_CH_SUS, 1, "B7sus4"}};   /* (11ths: 0.16.6, 1 b7 9 11; 0.16.9: a major seventh named, Sus on VI (F, its fourth B sharp) a sus2, Fourths "4ths") */
         int k;
         for (k = 0; k < (int)(sizeof K / sizeof K[0]); k++) {
             n = en_chord_kind(EN_MODE_POOL[MODE_AEOLIAN], 9, K[k].deg, K[k].kind, pcs);

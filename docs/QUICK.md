@@ -96,7 +96,7 @@
 
 **Octaves.** **OCT-** / **OCT+** move the voice whose page you're on (the Pad, Bass or Acid pages and their env and LFO pages; the Pluck pages move the pluck). On any other page they move the whole song. You'll see `OCT+2` or `SONG-1` above the knobs. It's stored with the piece.
 
-**Chords** (ENV x4) are built from the scale's notes. **Auto**: 7ths on a 7-note scale, triads on a pentatonic. **Triads**: Am, C, G. **7ths**: Am7, Dm7, CM7. **9ths**: root, 3rd, 7th, 9th. **Sus**: root, 4th, 5th, 7th. **Dub**: one m9 shape on every chord, the dub techno stab. **Fourths**: stacked fourths, a hollow m11.
+**Chords** (ENV x4) are built from the scale's notes. **Auto**: 7ths on a 7-note scale, triads on a pentatonic. **Triads**: Am, C, G. **7ths**: Am7, Dm7, CM7. **9ths**: root, 3rd, 7th, 9th. **Sus**: root, 4th, 5th, 7th. **Dub**: one m9 shape on every chord, the dub techno stab. **Fourths**: stacked fourths (A4ths), a hollow m11.
 
 **Voicing**: Open drops the second note from the top an octave. **Chorus** thickens the pad. **Loop** repeats the last 2, 4 or 8 chords (with a ~, one is swapped now and then); many genres bring one. **Progression** (hold EDIT): your own chords, eight slots (white keys) of the scale's chords, each its own type and bars (Hold: the chord before rings on). Turning one starts the loop next bar; Walk hands back to the genre.
 

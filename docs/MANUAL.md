@@ -544,9 +544,9 @@ and Drift, or **EDIT**). The **Chords** page (**ENV** four times) sets what kind
 | Triads | Three notes: Am, C, G |
 | 7ths | Four notes: Am7, Dm7, CM7. On a pentatonic scale too. |
 | 9ths | The 1st, 3rd, 7th and 9th, with the fifth left out (four notes): Am9, CM9, G9 |
-| Sus | The 1st, 4th, 5th and 7th: A7sus4. Open and unresolved. |
+| Sus | The 1st, 4th, 5th and 7th: A7sus4 (CM7sus4 where the seventh is major; a sus2 where the fourth would be sharp, as on F in A minor). Open and unresolved. |
 | Dub | The same minor 9 shape on every chord, whatever the scale says. These are the parallel chord stabs of dub techno. |
-| Fourths | Notes stacked in fourths, an m11 sound. Deep, hollow and modal. |
+| Fourths | Notes stacked in fourths (shown as A4ths), an m11 sound. Deep, hollow and modal. |
 
 **Filter types.** The pad's saw sounds, the bass and the acid each run through a resonant filter, low-pass as
 standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** past MIDI IN) changes each one's type:
