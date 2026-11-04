@@ -11,6 +11,8 @@
  *   DISCO   the mascot dancing on a floor that lights with the drum pattern
  *   LIFE    a cellular automaton that the drums feed (the kick a cluster, the snare a spray, a hat a spark)
  *   ORBIT   a harmonograph drawn from the chord's notes: it morphs with every chord
+ *   TRIP    a kaleidoscope you fall through: the kick throws you forward, the snare turns it, a build winds it tighter
+ *   THEORY  the harmony: the circle of fifths, the chord's degree, name and notes, what comes next, the progression (not in AUTO)
  *   AUTO    one of them, a new one on every section change and every 32 bars */
 #define VZ_W 240
 #define VZ_H 144
@@ -101,6 +103,61 @@ static void vz_plasma(void)
             float v = fm_sinf(x * 0.31f + t * 1.1f) + fm_sinf(y * 0.43f - t * 0.9f) + fm_sinf((x + y) * 0.21f + t * 0.7f) +
                       fm_sinf(fm_sqrtf(dx * dx + dy * dy) * 0.45f - t * 1.6f);
             cv_rect(cx * 6, cy * 6, 6, 6, vpal(v * 0.125f + 0.5f + vz.ph + vz.kick * 0.18f));
+        }
+    }
+}
+
+/* TRIP (0.16.10): a kaleidoscope you fall through. Each 4-pixel cell is turned into a tunnel's coordinates (depth from its distance to the
+ * middle, angle folded into mirrored slices: six, or eight when the chord has four notes), and two interfering waves over them are coloured
+ * from the theme. The kick throws you forward and the picture breathes in; the snare turns the twist the other way; a build winds it tighter
+ * bar by bar; the hats strike sparks; a breakdown drifts slowly. */
+static float vz_atan2(float y, float x)          /* atan2 to about 0.005 rad: enough for a picture */
+{
+    const float ax = x < 0.0f ? -x : x, ay = y < 0.0f ? -y : y, mx = ax > ay ? ax : ay, mn = ax > ay ? ay : ax;
+    const float t = mx > 1e-6f ? mn / mx : 0.0f, s = t * t;
+    float a = ((-0.0464964749f * s + 0.15931422f) * s - 0.327622764f) * s * t + t;
+    if (ay > ax)
+        a = 1.5707963f - a;
+    if (x < 0.0f)
+        a = 3.14159265f - a;
+    return y < 0.0f ? -a : a;
+}
+static float trip_z, trip_tw, trip_dir = 1.0f;   /* how far fallen; the twist; its way round */
+static uint8_t trip_sn;
+static void vz_trip(void)
+{
+    const int rows = (int)vz.h / 4, br = en_sec == EN_SEC_BREAK, bu = en_sec == EN_SEC_BUILD;
+    const float k = en_chord_n >= 4 ? 8.0f : 6.0f, t = vz.tt, breathe = 1.0f - 0.22f * vz.kick;
+    int cx, cy;
+    if (!vz.pass) {
+        const int sn = vz.snare > 0.6f;
+        if (sn && !trip_sn)
+            trip_dir = -trip_dir;
+        trip_sn = (uint8_t)sn;
+        trip_z += vz.dt * ((br ? 0.25f : 0.9f) + 3.5f * vz.kick) * (0.6f + (float)proj.par[P_TEMPO] * 0.004f);
+        trip_tw += vz.dt * trip_dir * (0.3f + (bu ? 1.6f / (1.0f + (float)en_sec_bars) : 0.0f) + 0.5f * vz.en);
+        if (trip_z > 1000.0f)
+            trip_z -= 1000.0f;
+        if (trip_tw > 1000.0f || trip_tw < -1000.0f)
+            trip_tw = 0.0f;
+    }
+    for (cy = 0; cy < rows; cy++) {
+        if (!vz_vis(cy * 4, 4))
+            continue;
+        for (cx = 0; cx < 60; cx++) {
+            const float dx = (float)cx - 29.5f, dy = ((float)cy - (float)rows * 0.5f + 0.5f), r = fm_sqrtf(dx * dx + dy * dy) * breathe + 0.6f;
+            const float depth = 18.0f / r + trip_z, a = vz_atan2(dy, dx) * (1.0f / 6.2831853f) + trip_tw * 0.08f + r * 0.012f * trip_dir;
+            float f = a * k, v, w;
+            f -= fm_floorf(f);
+            f = f < 0.5f ? f : 1.0f - f;                /* the mirror: each slice the last one turned over */
+            v = fm_sinf(depth * 2.1f + fm_sinf(f * 9.0f + t * 0.7f) * 1.6f) + fm_sinf(f * 14.0f - depth * 0.9f + t * 0.5f);
+            w = v * 0.17f + depth * 0.045f + vz.ph + vz.kick * 0.12f;
+            if (r < 3.0f + 4.0f * vz.kick)               /* the light at the end */
+                cv_rect(cx * 4, cy * 4, 4, 4, mix(vpal(w), K_TEXT, (int)(16.0f - r * 3.0f) < 0 ? 0 : (int)(16.0f - r * 3.0f) > 16 ? 16 : (int)(16.0f - r * 3.0f)));
+            else if (vz.hat > 0.5f && (vz_rnd() & 255u) < (uint32_t)(vz.hat * 10.0f))
+                cv_rect(cx * 4, cy * 4, 4, 4, K_TEXT);  /* sparks on the hats */
+            else
+                cv_rect(cx * 4, cy * 4, 4, 4, mix(K_BG, vpal(w), 6 + (int)(10.0f * fm_clampf(1.4f - 9.0f / (r + 6.0f), 0.0f, 1.0f))));
         }
     }
 }
@@ -680,6 +737,174 @@ static void vz_orbit(void)
         }
     }
 }
+/* THEORY (0.16.10, for the musicians): the harmony as it plays. Left, the circle of fifths turned so the key is at the top: the scale's
+ * notes lit, the others dim; the chord's tones joined (in the order round the circle), its root ringed; a line to the next chord's root when
+ * the Progression page's loop is playing. In the middle the key and the mode. Right: the chord's degree (Roman, lower case when minor,
+ * "o" diminished, "+" augmented), its name and notes, the degree's name (tonic .. leading tone), what comes next, and the progression's
+ * eight slots (the one playing lit; the genre's walk as it was heard when the loop is off). */
+static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c);   /* (ui.c, below) */
+static int th_degree(int pc, int m)              /* the scale degree (0 ..) whose chord has this root, or -1 */
+{
+    int d, pcs[4];
+    for (d = 0; d < m; d++)
+        if (en_prog_chord(d, EN_CH_TRIAD, pcs) > 0 && pcs[0] == pc)
+            return d;
+    return -1;
+}
+static const char *th_roman(int d, char *b)       /* the degree in Roman, its case and mark from its triad */
+{
+    static const char *const R[7] = {"I", "II", "III", "IV", "V", "VI", "VII"};
+    int pcs[4], k = 0;
+    const int n = en_prog_chord(d, EN_CH_TRIAD, pcs), t = n > 2 ? (pcs[1] - pcs[0] + 12) % 12 : 4, f = n > 2 ? (pcs[2] - pcs[0] + 12) % 12 : 7;
+    const char *r = R[d % 7];
+    while (*r) {
+        b[k++] = (char)(t == 3 ? *r - 'A' + 'a' : *r);
+        r++;
+    }
+    if (f == 6)
+        b[k++] = 'o';
+    else if (f == 8)
+        b[k++] = '+';
+    b[k] = 0;
+    return b;
+}
+static void vz_theory(void)
+{
+    static const char *const FN[7] = {"TONIC", "SUPERTONIC", "MEDIANT", "SUBDOMINANT", "DOMINANT", "SUBMEDIANT", "LEADING TONE"};
+    const int key = sound_root() % 12, m = pg_scale(), root = en_chord_root % 12;
+    const uint32_t scale = pool_abs();
+    const int32_t cx = 70, cy = 74;
+    uint32_t chord = 0;
+    int32_t px[12], py[12], lx[12], ly[12];
+    int i, d, nd = -1, ns = 0;
+    char tx[32];
+    uint8_t tmp[EN_PRG_LEN];
+    const uint8_t *pb = pg_view(tmp);
+    const int loop = pb == proj.prg && en_prg_get(pb, EN_PRG_PLAY, 1) && en_prog_pos >= 0;
+    for (i = 0; i < EN_NPAD; i++)
+        chord |= 1u << (en_chord[i] % 12u);
+    for (i = 0; i < 12; i++) {                   /* position i: the key, then a fifth further each step, clockwise */
+        const float a = (float)i * (FM_TWO_PI / 12.0f), s = fm_sinf(a), c = fm_cosf(a);
+        px[i] = cx + (int32_t)(s * 44.0f + (s < 0.0f ? -0.5f : 0.5f));
+        py[i] = cy - (int32_t)(c * 44.0f + (c < 0.0f ? -0.5f : 0.5f));
+        lx[i] = cx + (int32_t)(s * 60.0f + (s < 0.0f ? -0.5f : 0.5f));
+        ly[i] = cy - (int32_t)(c * 60.0f + (c < 0.0f ? -0.5f : 0.5f));
+    }
+#define TH_PC(i) ((key + 7 * (i)) % 12)
+#define TH_POS(pc) ((((pc) - key + 12) % 12) * 7 % 12)   /* (7 is its own inverse mod 12) */
+    for (i = 0; i < 12; i++)                     /* the ring */
+        cv_line(px[i], py[i], px[(i + 1) % 12], py[(i + 1) % 12], mix(K_BG, K_LINE, 10));
+    d = th_degree(root, m);
+    if (loop) {                                  /* the next slot that holds a chord, round to the first */
+        for (i = 1; i <= EN_PRG_N; i++) {
+            const int s = (en_prog_pos + i) % EN_PRG_N, v = en_prg_get(pb, 3 * s, 3);
+            if (v) {
+                nd = v - 1;
+                ns = s;
+                break;
+            }
+        }
+        if (nd >= 0) {
+            int pcs[4];
+            if (en_prog_chord(nd, EN_CH_TRIAD, pcs) > 0 && pcs[0] != root)
+                cv_line(px[TH_POS(root)], py[TH_POS(root)], px[TH_POS(pcs[0])], py[TH_POS(pcs[0])], mix(K_BG, K_ACC, 9));
+        }
+    }
+    {   /* the chord: its tones joined round the circle */
+        const uint16_t fc = en_frozen ? K_FROST : mix(K_PAD_T, K_PAD, 8 + q16(en_pad_level) * 8 / 16);
+        int first = -1, prev = -1, n = 0;
+        for (i = 0; i < 12; i++)
+            if (chord >> TH_PC(i) & 1u) {
+                if (prev >= 0)
+                    sg_line2(px[prev], py[prev], px[i], py[i], fc);
+                else
+                    first = i;
+                prev = i;
+                n++;
+            }
+        if (n > 2)
+            sg_line2(px[prev], py[prev], px[first], py[first], fc);
+    }
+    for (i = 0; i < 12; i++) {                   /* the notes: in the scale lit, the chord's bright, its root ringed */
+        const int pc = TH_PC(i), in = (int)(scale >> pc & 1u), ch = (int)(chord >> pc & 1u);
+        if (pc == root && en_playing)
+            cv_disc(px[i], py[i], 6, K_TEXT);
+        if (ch)
+            cv_disc(px[i], py[i], 4, mix(K_PAD_T, K_PAD, 10 + q16(en_pad_level) * 6 / 16));
+        else if (in)
+            cv_disc(px[i], py[i], 2, mix(K_PAD_T, K_PAD, 7));
+        else
+            cv_rect(px[i], py[i], 1, 1, K_LINE);
+        text_c(lx[i], ly[i] - 3, &FONT_XS, EN_NOTE_NAME[pc], ch ? K_TEXT : in ? K_DIM : mix(K_BG, K_LINE, 12));
+    }
+    text_c(cx, cy - 10, &FONT_B, EN_NOTE_NAME[key], K_TEXT);   /* the key and the mode */
+    for (i = 0; mode_name()[i] && i < 15; i++)
+        tx[i] = (char)(mode_name()[i] >= 'a' && mode_name()[i] <= 'z' ? mode_name()[i] - 'a' + 'A' : mode_name()[i]);
+    tx[i] = 0;
+    text_c(cx, cy + 6, &FONT_XS, tx, K_DIM);
+    {   /* the panel */
+        const int32_t x = 142;
+        {   /* the degree, and the chord's name from the notes sounding (the slot's own type, the dominant's raised third and all) */
+            int pcs[EN_NPAD + 1], k;
+            pcs[0] = root;
+            for (k = 0; k < EN_NPAD; k++)
+                pcs[k + 1] = en_chord[k] % 12;
+            cv_text2(x, 0, &FONT_B, d >= 0 ? th_roman(d, tx) : "--", d >= 0 ? K_ACC : K_DIM);
+            cv_text(x, 30, &FONT_B, en_chord_name(pcs, EN_NPAD + 1, tx), K_TEXT);
+            cv_text(x, 46, &FONT_XS, d < 0 ? "OUTSIDE THE SCALE" : m == 7 ? (d == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[d]) : "PENTATONIC", K_DIM);
+        }
+        {   /* its notes, from the root up the circle's order of the chord */
+            int k = 0, j;
+            for (j = 0; j < 12 && k < 26; j++) {
+                const int pc = (root + j) % 12;
+                const char *nm = EN_NOTE_NAME[pc];
+                if (!(chord >> pc & 1u))
+                    continue;
+                if (k)
+                    tx[k++] = ' ';
+                while (*nm)
+                    tx[k++] = *nm++;
+            }
+            tx[k] = 0;
+            cv_text(x, 57, &FONT_XS, tx, K_TEXT);
+        }
+        if (nd >= 0) {                           /* what comes next */
+            char r[8];
+            cv_text(x, 71, &FONT_XS, "NEXT", K_DIM);
+            const int32_t xn = x + text_w(&FONT_XS, "NEXT") + 5;
+            cv_text(xn, 71, &FONT_XS, th_roman(nd, r), K_ACC);
+            cv_text(xn + text_w(&FONT_XS, r) + 5, 71, &FONT_XS, pg_name(nd + 1, pk_get(ns), tx), K_TEXT);
+        } else if (en_playing && en_drift_bars < 98.5f) {
+            const int b = (int)(en_drift_bars + 0.99f);
+            int k = 0;
+            const char *s = "NEXT IN ";
+            while (*s)
+                tx[k++] = *s++;
+            if (b >= 10)
+                tx[k++] = (char)('0' + b / 10 % 10);
+            tx[k++] = (char)('0' + b % 10);
+            s = b == 1 ? " BAR" : " BARS";
+            while (*s)
+                tx[k++] = *s++;
+            tx[k] = 0;
+            cv_text(x, 71, &FONT_XS, tx, K_DIM);
+        } else {
+            cv_text(x, 71, &FONT_XS, en_frozen ? "FROZEN" : "HELD", K_DIM);
+        }
+        cv_text(x, 86, &FONT_XS, loop ? "PROGRESSION" : "THE WALK", K_DIM);
+        for (i = 0; i < EN_PRG_N; i++) {         /* the eight slots */
+            const int v = en_prg_get(pb, 3 * i, 3);
+            const int32_t sx = x + (i & 3) * 23, sy = 96 + (i >> 2) * 13;
+            const int now = loop ? i == en_prog_pos : v && v - 1 == d;
+            cv_rect(sx, sy, 21, 12, now ? mix(K_BG, K_PAD, 6) : K_PANEL);
+            if (v)
+                text_c(sx + 10, sy + 2, &FONT_XS, th_roman(v - 1, tx), now ? K_ACC : loop ? K_TEXT : K_DIM);
+        }
+    }
+#undef TH_PC
+#undef TH_POS
+}
+
 static void draw_viz(void)
 {
     int mode = ui.viz % VZ_N;
@@ -711,7 +936,7 @@ static void draw_viz(void)
         if (en_sec != vz.sec_seen || en_bars - vz.auto_bar >= 512u) {
             vz.sec_seen = en_sec;
             vz.auto_bar = en_bars;
-            vz.auto_cur = (uint8_t)((vz.auto_cur + 1u) % (VZ_N - 1));
+            vz.auto_cur = (uint8_t)((vz.auto_cur + 1u) % (VZ_N - 2));   /* (THEORY is not a light show: not in the turn) */
         }
         mode = vz.auto_cur;
     }
@@ -739,6 +964,8 @@ static void draw_viz(void)
         case VZ_FLUX: vz_flux(); break;
         case VZ_DISCO: vz_disco(); break;
         case VZ_LIFE: vz_life(); break;
+        case VZ_TRIP: vz_trip(); break;
+        case VZ_THEORY: vz_theory(); break;
         default: vz_orbit(); break;
         }
         cv_blit(0, full ? (uint32_t)vz.y0 : MAIN_Y);

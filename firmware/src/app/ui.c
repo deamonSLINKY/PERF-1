@@ -42,8 +42,8 @@ enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Progression", "Bass", "Bass env",
                                               "Bass LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Set list", "Jam",
                                               "Sequencer", "Perform", "Visual"};
-enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_AUTO, VZ_N };   /* the visualizers (viz.c) */
-static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "AUTO"};
+enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_TRIP, VZ_THEORY, VZ_AUTO, VZ_N };   /* the visualizers (viz.c; TRIP and THEORY 0.16.10, THEORY not in AUTO's turn) */
+static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "TRIP", "THEORY", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
 enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
@@ -6970,13 +6970,13 @@ static void settings_save(void)
             s.fxs[GENRE_FXS[i]] = set_disk.fxs[GENRE_FXS[i]];
     for (i = 0; i < 11; i++)
         s.uiv[i] = *uiv(i);
-    s.uiv[11] = ui.min_ch;                       /* (the spare byte: 0 in an older record, all channels) */
+    s.uiv[11] = (uint8_t)(ui.min_ch | (ui.viz == VZ_THEORY ? 1u : ui.viz == VZ_TRIP ? 2u : 0u) << 5);   /* (the spare byte: 0 in an older record, all channels; bits 5-6, 0.16.10: THEORY 1, TRIP 2, whose 7 in set_t.viz reads as AUTO in older builds) */
     s.gx_preset = ui.gx_preset;
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
     s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1) << 15);
-    s.viz = (uint8_t)(ui.viz | (ui.min_pads == 2) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
+    s.viz = (uint8_t)((ui.viz >= VZ_TRIP ? 7u : ui.viz) | (ui.min_pads == 2) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
         set_have = 1;
@@ -7040,7 +7040,7 @@ static void settings_load(void)
                 else if (FXP[p].c[c].idx == 18)
                     fxp_set(k, s.usb >> 12 & 7);
                 else if (FXP[p].c[c].idx == 19)
-                    fxp_set(k, s.uiv[11] <= 16u ? s.uiv[11] : 0);
+                    fxp_set(k, (s.uiv[11] & 0x1Fu) <= 16u ? s.uiv[11] & 0x1Fu : 0);
                 else if (FXP[p].c[c].idx == 20)
                     fxp_set(k, (s.viz >> 6 & 1u) ? 3 : (s.viz >> 3 & 1u) ? 2 : s.usb >> 15 & 1);   /* (M:S in set_t.viz's bit 3, 0.15.22; MPK bit 6, 0.15.23) */
                 else if (FXP[p].c[c].idx == 22)
@@ -7058,7 +7058,7 @@ static void settings_load(void)
         ui.gx_pat = s.gx_pat;
         en_gate_pat(ui.gx_pat);
     }
-    ui.viz = (uint8_t)((s.viz & 7u) % VZ_N);
+    ui.viz = (uint8_t)((s.viz & 7u) == 7u ? ((s.uiv[11] >> 5 & 3u) == 1u ? VZ_THEORY : (s.uiv[11] >> 5 & 3u) == 2u ? VZ_TRIP : VZ_AUTO) : s.viz & 7u);
     ui.centre_imp = (uint8_t)(s.viz >> 7);
     ui.set_dirty = 0;
 }

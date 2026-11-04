@@ -1831,7 +1831,9 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 | DISCO | The mascot dancing in a room with a disco ball, light beams and a floor that lights up along with the drum pattern. He jumps on the kicks and changes moves every couple of bars (sway, twirl, wave, headbang, stomp). He sleeps in a breakdown, shakes in a build, and jumps with confetti on the drop. |
 | LIFE | A Game of Life style pattern of cells that the drums feed: the kick drops a cluster, the snare a spray, a hat a spark. |
 | ORBIT | A looping line drawing (a harmonograph) made from the notes of the chord. It changes shape with every chord. |
-| AUTO | Picks one of the others, and switches to a new one at each section change and every 32 bars. |
+| TRIP | A kaleidoscope you fall through: mirrored slices (six, or eight when the chord has four notes) rushing towards you. The kick throws you forward and the picture breathes in, the snare turns the twist the other way, a build winds it tighter bar by bar, the hats strike sparks, and a breakdown drifts. |
+| THEORY | The harmony as it plays. Left: the circle of fifths with the key at the top, the scale's notes lit and the others dim, the chord's notes joined into a shape with its root ringed, and a line to the next chord's root when your progression is playing. Right: the chord's degree in Roman numerals (lower case for minor, o for diminished), its name and notes, the degree's name (tonic, subdominant, dominant ..), what comes next (the next chord of your progression, or the bars to the next change), and the progression's eight slots with the one playing lit. With your progression off, the slots show the genre's walk as it was heard. |
+| AUTO | Picks one of the light shows (not THEORY), and switches to a new one at each section change and every 32 bars. |
 
 ![The screensaver has the whole screen](img/perf-screen-saver.png)
 

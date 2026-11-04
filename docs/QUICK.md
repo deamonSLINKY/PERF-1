@@ -401,7 +401,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### Visualizers
 
-**HOME twice quickly**; HOME again leaves. **SELECT** chooses (remembered): PLASMA, KALEIDO, BARS (a 24-band spectrum), FLUX, DISCO (the mascot dancing to the drums), LIFE, ORBIT (the chord drawn as a pendulum pattern), AUTO. The knobs stay the FX knobs, ALGORITHM the mood, the keys the track mix; FX opens its menu over them.
+**HOME twice quickly**; HOME again leaves. **SELECT** chooses (remembered): PLASMA, KALEIDO, BARS (a 24-band spectrum), FLUX, DISCO (the mascot dancing to the drums), LIFE, ORBIT (the chord drawn as a pendulum pattern), TRIP (a kaleidoscope tunnel), THEORY (circle of fifths, degree, chord, next chord), AUTO. The knobs stay the FX knobs, ALGORITHM the mood, the keys the track mix; FX opens its menu over them.
 
 ### What is remembered across power-off
 

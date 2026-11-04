@@ -114,3 +114,15 @@ expect prgslot0 1
 expect prgslot2 4
 expect prgplay 1
 expect prgtype0 7
+# THEORY (0.16.10) with the loop playing: the slot lit, NEXT the next slot's chord, a line to its root
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 36
+spin SELECT -1
+wait 300
+spin SELECT -1
+wait 1500
+expect viz 8
+shot theory_loop.png

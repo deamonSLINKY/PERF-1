@@ -38,9 +38,22 @@ spin SELECT 1
 wait 1500
 expect view 36
 shot viz_orbit.png
+# TRIP (0.16.10): the kaleidoscope tunnel
 spin SELECT 1
 wait 1500
 expect view 36
+expect viz 7
+shot viz_trip.png
+# THEORY (0.16.10): the circle of fifths, the chord's degree, name and notes, the progression
+spin SELECT 1
+wait 1500
+expect view 36
+expect viz 8
+shot viz_theory.png
+spin SELECT 1
+wait 1500
+expect view 36
+expect viz 9
 shot viz_auto.png
 spin SELECT 1
 wait 300
@@ -49,3 +62,33 @@ expect view 36
 tap HOME
 wait 100
 expect view 35
+# THEORY is remembered through a power cycle (its 7 in the settings plus a bit in the spare byte; AUTO stays AUTO)
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 36
+spin SELECT -1
+wait 300
+spin SELECT -1
+wait 300
+expect viz 8
+tap PLAY
+wait 4000
+reboot
+wait 3000
+expect viz 8
+# and TRIP
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 36
+spin SELECT -1
+wait 300
+expect viz 7
+tap PLAY
+wait 4000
+reboot
+wait 3000
+expect viz 7

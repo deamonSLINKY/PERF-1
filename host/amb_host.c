@@ -466,6 +466,8 @@ static int expect(const char *what, const char *val)
         got = en_frozen;
     else if (!strcmp(what, "view"))
         got = ui.view;
+    else if (!strcmp(what, "viz"))                  /* the visualizer chosen (VZ_*) */
+        got = ui.viz;
     else if (!strcmp(what, "dd_changes"))          /* drum drift: patterns changed, mutations, bars left */
         got = (int)en_dd_changes;
     else if (!strcmp(what, "dd_mutations"))
