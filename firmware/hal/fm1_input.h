@@ -35,6 +35,12 @@
 #include "fm1_time.h"
 #include "fm1_gpio.h"
 
+/* the tick and what it calls are inlined into their caller (PERF-1 0.16.22: the timer ISR runs from RAM, .ram_hot, and
+ * RAM code cannot call into the flash; fm1_input_scan, in the flash, gets its own copy of the frame) */
+#ifndef FM1_IN_TICK
+#define FM1_IN_TICK static inline __attribute__((always_inline))
+#endif
+
 #ifndef FM1_INPUT_IDLE
 #define FM1_INPUT_IDLE() ((void)0)
 #endif
@@ -93,7 +99,7 @@ static uint8_t fm1_led_dim2[FM1_NCOL];
 static volatile uint8_t fm1_led_dim2_div;
 static uint8_t fm1__dim2_frame;
 
-static void fm1__led_lines(uint32_t rowmask)
+FM1_IN_TICK void fm1__led_lines(uint32_t rowmask)
 {
     uint32_t r;
     for (r = 1; r < 5u; r++) {
@@ -104,7 +110,7 @@ static void fm1__led_lines(uint32_t rowmask)
     }
 }
 
-static void fm1__sr_word(uint32_t w)
+FM1_IN_TICK void fm1__sr_word(uint32_t w)
 {
     uint32_t i;
     for (i = 0; i < 16u; i++) {
@@ -119,7 +125,7 @@ static void fm1__sr_word(uint32_t w)
     FM1_PR(FM1_PA, FM1_OUT) &= ~(1u << 1);
 }
 
-static uint32_t fm1__rows(void)
+FM1_IN_TICK uint32_t fm1__rows(void)
 {
     uint32_t a = FM1_PR(FM1_PA, FM1_IN), b = FM1_PR(FM1_PB, FM1_IN);
     return (~((a & 1u) | ((a >> 4) & 0x1Eu) | ((b >> 2) & 0x20u))) & 0x3Fu;
@@ -164,7 +170,7 @@ static void fm1_input_init(void)
         fm1_in.enc_prev[i] = fm1_in.enc_last[i] = 0xFF;   /* seeded by the first frame */
 }
 
-static void fm1__key(uint32_t id, uint32_t closed)
+FM1_IN_TICK void fm1__key(uint32_t id, uint32_t closed)
 {
     volatile uint8_t *c = &fm1_in.cnt[id];
     uint32_t on;
@@ -197,7 +203,7 @@ static void fm1__key(uint32_t id, uint32_t closed)
     }
 }
 
-static void fm1__frame(void);
+FM1_IN_TICK void fm1__frame(void);
 
 static void fm1_input_scan(void)
 {
@@ -214,7 +220,7 @@ static void fm1_input_scan(void)
     fm1__frame();
 }
 
-static void fm1__frame(void)
+FM1_IN_TICK void fm1__frame(void)
 {
     uint32_t p, r, e;
     for (p = 0; p < FM1_NCOL; p++)
@@ -268,7 +274,7 @@ static void fm1__frame(void)
 
 /* one column per call, from a timer ISR (see top) */
 static uint8_t fm1__tick_col;
-static void fm1_input_tick(void)
+FM1_IN_TICK void fm1_input_tick(void)
 {
     uint32_t p = fm1__tick_col, n = p + 1u == FM1_NCOL ? 0u : p + 1u;
     fm1__led_lines(0);

@@ -162,7 +162,21 @@ static void audio_silence(void)                     /* IRQs off (flash erase): t
 
 /* ------------------------------------------------------------ timer --- */
 static uint8_t usb_due;
-void fm1_timer5_irq(void)
+/* 0.16.22: the timer ISR runs from RAM (.ram_hot, copied at boot). It fires 10,000 times a second and nests into the
+ * render, so from the flash each tick fetched its code cold and pushed the render's out of the cache (the 0.16.21 logs:
+ * the same ISR 69 -> 77 ms a second once the code moved). RAM code cannot call into the flash directly (out of reach):
+ * the USB and TRS polls, which run outside the render, are called through these pointers. */
+static void (*volatile tm_usb_poll)(void) = usb_poll;
+#if FELUCCA_UAC
+static void (*volatile tm_uac_service)(void) = uac_service;
+#define uac_service() tm_uac_service()
+#endif
+#if EN_TRS
+static void (*volatile tm_uart_poll)(void) = uart_midi_poll;
+#define uart_midi_poll() tm_uart_poll()
+#endif
+#define usb_poll() tm_usb_poll()
+__attribute__((section(".ram_hot.timer5"), noinline, used)) void fm1_timer5_irq(void)
 {
     static uint32_t sub;
     const uint32_t tel_t0 = fm1_ticks(), tel_nest = en_dbg.in_audio;
@@ -208,6 +222,9 @@ void fm1_timer5_irq(void)
         }
     }
 }
+#undef usb_poll
+#undef uac_service
+#undef uart_midi_poll
 extern void isr_timer5(void);
 
 /* ------------------------------------------------------------- boot --- */
