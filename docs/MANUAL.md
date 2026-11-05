@@ -195,7 +195,9 @@ When it's finished, the FM-1 restarts into PERF-1 and the page checks that it re
 the unit.
 
 1. Download the file the page links to, `FM-1.fwsc`. It's also on
-   [m-vave.com/download](https://www.m-vave.com/download).
+   [m-vave.com/download](https://www.m-vave.com/download). M-VAVE's link now gives V16. For V15, the page also
+   links the copy of M-VAVE's original file the Internet Archive kept
+   ([V15](https://web.archive.org/web/20261009203224id_/https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc)); the page checks either file's fingerprint before it writes anything.
 2. Choose that file on the page. The page checks the file's SHA-256 fingerprint and refuses any other file.
 3. Connect the FM-1 and press **Install the stock firmware**.
 
