@@ -201,17 +201,19 @@ function route() {
 // ---------------------------------------------------------------- the FM-1's MIDI port
 let port = null;
 const NOANS = "The FM-1 did not answer. Replug it and try again.";
+idleRelease(() => false, () => { port = null; });   // the FM-1's port let go after 4 s quiet (web/fm1idle.js)
 async function openPort() {
   if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
   if (!navigator.requestMIDIAccess) throw new Error("This browser cannot talk to the FM-1. Open the page in Chrome or Edge.");
   let midi;
-  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { throw new Error("MIDI (SysEx) was not allowed. Allow MIDI in the site settings (address bar) and try again."); }
+  try { midi = await midiAccess(); } catch (e) { throw new Error("MIDI (SysEx) was not allowed. Allow MIDI in the site settings (address bar) and try again."); }
   const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
   const inp = pick(midi.inputs), out = pick(midi.outputs);
   if (!inp || !out) throw new Error("FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and try again.");
   port = { inp, out, bkwait: [], onframe: null, onabout: null };
   inp.onmidimessage = (ev) => {
     const d = ev.data;
+    idleTouch();
     if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
     if (d[3] === 0x43 && port.onframe) port.onframe(d);
     else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }

@@ -43,7 +43,7 @@ shutil.copy(SRC / "web" / "img" / "slinky.png", OUT / "img" / "slinky.png")
 shutil.copy(SRC / "web" / "img" / "favicon.png", OUT / "img" / "favicon.png")
 
 page = (SRC / "web" / "amb_installer.html").read_text(encoding="utf-8")
-lib = strip_module((SRC / "web" / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1backup.js").read_text(encoding="utf-8"))
+lib = strip_module((SRC / "web" / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1backup.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1idle.js").read_text(encoding="utf-8"))
 meta = json.dumps({"version": ver, "product": product, "pkg": "../firmware/" + name})
 page = page.replace("/*LIB*/", lib).replace("/*META*/", meta).replace("<h1>Install PERF-1</h1>", f"<h1>Install PERF-1 {ver}</h1>")
 (OUT / "install" / "index.html").write_text(page, encoding="utf-8", newline="\n")
@@ -53,7 +53,7 @@ if params.exists():
     (OUT / "editor").mkdir(exist_ok=True)
     ed = (SRC / "web" / "editor" / "index.html").read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8"))
     (OUT / "editor" / "index.html").write_text(ed, encoding="utf-8", newline="\n")
-    plib = "\n".join(strip_module((SRC / "web" / f).read_text(encoding="utf-8")) for f in ("fm1backup.js", "fm1piece.js", "fm1card.js", "fm1share.js"))
+    plib = "\n".join(strip_module((SRC / "web" / f).read_text(encoding="utf-8")) for f in ("fm1backup.js", "fm1piece.js", "fm1card.js", "fm1share.js", "fm1idle.js"))
     lib_json = (SRC / "web" / "library" / "library.json").read_text(encoding="utf-8")
     relay = SRC / "web" / "relay" / "relay.json"           # the library relay's address (web/relay/README.md), or none
     relay_json = relay.read_text(encoding="utf-8").strip() if relay.exists() else "{}"

@@ -162,7 +162,7 @@ const TEXT = {
     beta: "このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
     back: "公式ファームウェアに戻すには、このページ下の「純正ファームウェアに戻す」か、M-VAVE 公式のアップデーター M-UPGRADE（Downloads → PC Software → M-UPGRADE）を使います。",
     stockh: "純正ファームウェアに戻す",
-    stockwhy: "M-VAVE の FM-1 V15 を、PERF-1（またはそのセーフモード、ほかの Felucca 系ファームウェア）から同じ USB ケーブルで書き込みます。PERF-1 で保存した曲は消えることがあるので、先にバックアップしてください。",
+    stockwhy: "M-VAVE の FM-1 純正ファームウェア（V15、または M-UPGRADE の V16）を、PERF-1（またはそのセーフモード、ほかの Felucca 系ファームウェア）から同じ USB ケーブルで書き込みます。PERF-1 で保存した曲は消えることがあるので、先にバックアップしてください。",
     stock1: "M-VAVE の FM-1 V15 をダウンロード:",
     stock2: "ダウンロードしたファイルを選ぶ:",
     stock3: "FM-1 を USB で接続し、下のボタンを押す。",
@@ -218,7 +218,7 @@ const TEXT = {
     beta: "The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
     back: "To go back to the official firmware, use \"Back to the stock firmware\" below, or M-VAVE's own updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE).",
     stockh: "Back to the stock firmware",
-    stockwhy: "This writes M-VAVE's own FM-1 V15 back, from PERF-1 (or its safe mode, or another Felucca-based firmware such as HYP-1 or X0X) over the same USB cable. The pieces saved in PERF-1 may be lost, so make a backup first (Back up and restore your pieces, on this page).",
+    stockwhy: "This writes M-VAVE's own FM-1 firmware (V15, or V16 from M-UPGRADE) back, from PERF-1 (or its safe mode, or another Felucca-based firmware such as HYP-1 or X0X) over the same USB cable. The pieces saved in PERF-1 may be lost, so make a backup first (Back up and restore your pieces, on this page).",
     stock1: "Download M-VAVE's FM-1 V15:",
     stock2: "Choose the file you downloaded:",
     stock3: "Connect the FM-1 by USB and press the button below.",
@@ -302,13 +302,14 @@ async function openPort() {
   if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
   if (!navigator.requestMIDIAccess) throw new Error(t("nomidi"));
   let midi;
-  try { midi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { throw new Error(t("denied")); }
+  try { midi = await midiAccess(); } catch (e) { throw new Error(t("denied")); }
   const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
   const inp = pick(midi.inputs), out = pick(midi.outputs);
   if (!inp || !out) throw new Error(t("notfound"));
   port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, ondiag: null, onframe: null };
   inp.onmidimessage = (ev) => {
     const d = ev.data;
+    idleTouch();
     if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
     if (d[3] === 0x57) { const w = port.waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }       /* the answer to a voice message */
     else if (d[3] === 0x46 && port.onstatus) port.onstatus(d);                                      /* a status frame */
@@ -660,6 +661,8 @@ $("stsave").addEventListener("click", () => {
 
 let writing = false;
 window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
+/* the FM-1's port is let go after 4 s quiet (web/fm1idle.js: M-UPGRADE or music software can then open it with the page left open) */
+idleRelease(() => writing || !!stTimer, () => { port = null; log("MIDI port released"); });
 
 (async () => {
   if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
@@ -696,7 +699,7 @@ $("stockfile").addEventListener("change", async (e) => {
 
 async function run(img, product, isStock) {
   let midi;
-  try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
+  try { midi = await midiAccess(); }
   catch (e) { sayK("denied"); return; }
   await stStop();
   releasePort();
@@ -728,6 +731,7 @@ async function run(img, product, isStock) {
     log(String(e && e.stack || e));
   }
   writing = false;
+  idleTouch();
   $("go").disabled = !image;
   $("stockgo").disabled = !stock;
 }

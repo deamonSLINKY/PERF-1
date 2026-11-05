@@ -203,11 +203,16 @@ It works from PERF-1, from safe mode and from update mode. M-VAVE's own updater,
 PC Software), works too from PERF-1 0.16.13 on. M-UPGRADE 3.11 doesn't find older PERF-1 builds ("A USB MIDI device is
 present but did not answer"): use this page's button for those.
 
-M-UPGRADE now offers M-VAVE's **V16** (`FM-1_016`), and from PERF-1 0.16.15 on it goes straight to it (V16 changes the
-FM-1's boot head, the first 16 KB of its memory; PERF-1 lets that happen only between M-VAVE's own V15 and V16). An older
-PERF-1 shows `UPDATE FAILED` and M-UPGRADE times out (error 258): there, press **Select firmware** in M-UPGRADE and choose
-V15's `FM-1.fwsc` (the file this page links to), or use this page's button, then update the stock V15 to V16 with M-UPGRADE.
-This page's button takes V15's or V16's file.
+**V16.** M-UPGRADE now offers M-VAVE's newer firmware, V16 (`FM-1_016`). From PERF-1 0.16.15 on you can go either way:
+M-UPGRADE takes PERF-1 straight to V16, and this page installs PERF-1 on an FM-1 that runs V16. This page's button takes V15's
+or V16's file. (V16 changes the FM-1's boot head, the first 16 KB of its memory. PERF-1 lets that change happen only between
+M-VAVE's own V15 and V16 heads.) An older PERF-1 shows `UPDATE FAILED` and M-UPGRADE times out (error 258). There, choose V15's
+`FM-1.fwsc` with M-UPGRADE's **Select firmware**, or use this page's button, then update the stock V15 to V16 with M-UPGRADE.
+
+**One program at a time.** On Windows only one program can use the FM-1's MIDI port. This page and the Pieces page let go of it
+4 seconds after they last talked to the FM-1 (Live status keeps it while it runs), so M-UPGRADE or your music software can open
+it with the page still open. If a program says the FM-1 is busy or "present but did not answer", close the other programs and
+pages that use it, then unplug the FM-1 and plug it back in.
 
 ### Update mode
 
