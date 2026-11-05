@@ -1,0 +1,75 @@
+# THEORY redrawn (0.16.19, issue #2): the circle of fifths as printed (C at the top), the key signatures on the inner ring, the scale's
+# arc with its numerals, the notes spelled as the key wants them (theory.h; tests/host/theory_test.c checks the spelling itself).
+# A minor with the loop i iv V i: on V the raised seventh, G#, is a borrowed note (red); then E major (4 sharps) and Eb minor (6 flats).
+seed 0
+wait 3000
+press EDIT
+wait 600
+release EDIT
+wait 100
+expect view 5
+expect pool 0x5AD
+turn K1 -8
+turn K1 1
+turn K3 4
+tapkey w1
+turn K1 -8
+turn K1 4
+turn K3 4
+tapkey w2
+turn K1 -8
+turn K1 5
+turn K3 4
+tapkey w3
+turn K1 -8
+turn K1 1
+turn K3 4
+expect prgslot0 1
+expect prgslot1 4
+expect prgslot2 5
+expect prgslot3 1
+wait 3000
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 36
+spin SELECT -1
+wait 300
+spin SELECT -1
+wait 1500
+expect viz 8
+expect progpos 0
+shot theory_a_minor_i.png
+tap EDIT
+wait 1200
+expect progpos 1
+shot theory_a_minor_iv.png
+wait 1300
+tap EDIT
+wait 2500
+expect progpos 2
+expect chordroot 4
+shot theory_a_minor_V.png
+# E minor (the scale moved with the root): one sharp, as G major
+setpar 71 4
+wait 2500
+shot theory_e_minor.png
+# E major (Mode to Ionian, as the ALGORITHM dial or the editor sets it: the scale with it): four sharps, G# not Ab
+setpar 72 0
+wait 2500
+expect pool 0xAB5
+shot theory_e_major.png
+# Eb minor (lofi 07's key): six flats, Cb in the scale
+setpar 71 3
+setpar 72 5
+wait 300
+expect pool 0x5AD
+wait 2500
+shot theory_eb_minor.png
+# the Synth look, back in A minor on V: the swoop to i
+setpar 71 9
+wait 300
+setpar 75 1
+wait 2500
+shot theory_synth.png

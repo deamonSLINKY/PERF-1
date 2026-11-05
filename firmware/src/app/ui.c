@@ -7053,7 +7053,11 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
 void ui_param_set(int p, int v)               /* the editor (main_fm1.c px_service): a parameter as its knob sets it */
 {
     if ((unsigned)p < (unsigned)P_NPARAMS) {
-        knob_set(p, v);
+        if (p == P_MODE)                         /* (0.16.19: the scale's notes too, as the ALGORITHM dial sets it; the editor changed the
+                                                  * mode's number and left the scale as it was) */
+            set_mode(v);
+        else
+            knob_set(p, v);
         ui.act_t = plat_ms();
     }
 }

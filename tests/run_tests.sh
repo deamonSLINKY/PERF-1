@@ -69,6 +69,7 @@ if [ -f build/amb.fwsc ]; then
         build/host/boot-fixtures/other-legacy.fwsc build/host/boot-fixtures/old-stub.fwsc"
     fi
     run boot-stub sh -c "$CC -O2 -o $OUT/boot_stub_test tests/boot_stub_test.c && $OUT/boot_stub_test"
+    run theory sh -c "$CC -std=c99 -Wno-unused-function -o $OUT/theory_test tests/host/theory_test.c && $OUT/theory_test"
     run installer python3 tests/install_test.py
 else
     echo "  skip update-path tests (no build/amb.fwsc: run ./build.sh)"

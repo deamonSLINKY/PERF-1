@@ -737,12 +737,17 @@ static void vz_orbit(void)
         }
     }
 }
-/* THEORY (0.16.10, for the musicians): the harmony as it plays. Left, the circle of fifths turned so the key is at the top: the scale's
- * notes lit, the others dim; the chord's tones joined (in the order round the circle), its root ringed; a line to the next chord's root when
- * the Progression page's loop is playing. In the middle the key and the mode. Right: the chord's degree (Roman, lower case when minor,
- * "o" diminished, "+" augmented), its name and notes, the degree's name (tonic .. leading tone), what comes next, and the progression's
- * eight slots (the one playing lit; the genre's walk as it was heard when the loop is off). */
+/* THEORY (0.16.10, redrawn 0.16.19 for issue #2: a player learning to read music, after the THEORY mockup): the harmony as it plays.
+ * Left, the circle of fifths as it is printed: C at the top, clockwise in fifths. Inner ring: every key's signature (0, 1# .. 6#,
+ * 5b .. 1b), the key's own lit, so "E = 4 sharps" reads straight off it. The scale lies on the circle as one arc (seven neighbours
+ * for a mode), its Roman numerals on it: the chord playing filled, the next one ringed, an arrow from one to the other while the
+ * Progression page's loop plays. Outer ring: the notes, each named as the key spells it (G# in E major, Cb in Eb minor; theory.h),
+ * the chord's tones marked, a borrowed one (minor's raised seventh on V) in red. Right: the chord's numeral, name, function and
+ * notes (spelled), what comes next and how the root moves (a fifth down, a step up ..), the eight slots, the key and its signature.
+ * The engine's names elsewhere stay as they were (EN_NOTE_NAME); only this screen spells by key. */
+#include "theory.h"
 static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c);   /* (ui.c, below) */
+#define TH_RED 0xE8E4u                           /* a borrowed note: red on every theme */
 static int th_degree(int pc, int m)              /* the scale degree (0 ..) whose chord has this root, or -1 */
 {
     int d, pcs[4];
@@ -751,12 +756,14 @@ static int th_degree(int pc, int m)              /* the scale degree (0 ..) whos
             return d;
     return -1;
 }
-static const char *th_roman(int d, char *b)       /* the degree in Roman, its case and mark from its triad */
+/* a numeral: num the degree by letter (0 I .. 6 VII, from the key's spelling, so a pentatonic's degrees count right), its case and
+ * mark from the triad on pool degree d */
+static const char *th_roman(int num, int d, char *b)
 {
     static const char *const R[7] = {"I", "II", "III", "IV", "V", "VI", "VII"};
     int pcs[4], k = 0;
     const int n = en_prog_chord(d, EN_CH_TRIAD, pcs), t = n > 2 ? (pcs[1] - pcs[0] + 12) % 12 : 4, f = n > 2 ? (pcs[2] - pcs[0] + 12) % 12 : 7;
-    const char *r = R[d % 7];
+    const char *r = R[((num % 7) + 7) % 7];
     while (*r) {
         b[k++] = (char)(t == 3 ? *r - 'A' + 'a' : *r);
         r++;
@@ -768,141 +775,287 @@ static const char *th_roman(int d, char *b)       /* the degree in Roman, its ca
     b[k] = 0;
     return b;
 }
+static const char *th_respell(const th_key_t *k, int root, const char *name, char *b)   /* "AbM7" -> "G#M7": the key's root name */
+{
+    const char *suf = name + (EN_NOTE_NAME[root][1] ? 2 : 1);
+    char *o = b;
+    th_spell(k, root, o);
+    o += th_len(o);
+    while (*suf && o < b + 30)
+        *o++ = *suf++;
+    *o = 0;
+    return b;
+}
+static const char *th_motion(int a, int b, int key)   /* how the root moves to the next chord's (home: down a fifth to the tonic) */
+{
+    switch ((b - a + 12) % 12) {
+    case 0: return "SAME ROOT";
+    case 5: return b == key ? "5TH DOWN: HOME" : "5TH DOWN";
+    case 7: return "5TH UP";
+    case 2: return "STEP UP";
+    case 10: return "STEP DOWN";
+    case 1: return "HALF STEP UP";
+    case 11: return "HALF STEP DOWN";
+    case 3: case 4: return "3RD UP";
+    case 8: case 9: return "3RD DOWN";
+    default: return "TRITONE";
+    }
+}
+/* a swoop from (x0, y0) to (x1, y1), bowed in toward (cx, cy) as a printed circle's arrows are (a quadratic curve, its control
+ * point between the chord's middle and the circle's centre); thick: two pixels; head: an arrowhead along the curve's end */
+static void th_swoop(int32_t cx, int32_t cy, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c, int thick, int head)
+{
+    const float qx = 0.45f * (float)cx + 0.55f * 0.5f * (float)(x0 + x1), qy = 0.45f * (float)cy + 0.55f * 0.5f * (float)(y0 + y1);
+    int32_t px = x0, py = y0;
+    int j;
+    for (j = 1; j <= 16; j++) {
+        const float t = (float)j * (1.0f / 16.0f), u = 1.0f - t;
+        const int32_t x = (int32_t)(u * u * (float)x0 + 2.0f * u * t * qx + t * t * (float)x1 + 0.5f),
+                      y = (int32_t)(u * u * (float)y0 + 2.0f * u * t * qy + t * t * (float)y1 + 0.5f);
+        if (thick)
+            sg_line2(px, py, x, y, c);
+        else
+            cv_line(px, py, x, y, c);
+        px = x, py = y;
+    }
+    if (head) {                                  /* along the curve's last direction: from the control point to the end */
+        const float dx = (float)x1 - qx, dy = (float)y1 - qy, l = fm_sqrtf(dx * dx + dy * dy) + 0.001f, ux = dx / l, uy = dy / l;
+        cv_line(x1, y1, x1 - (int32_t)(ux * 7.0f - uy * 4.0f), y1 - (int32_t)(uy * 7.0f + ux * 4.0f), c);
+        cv_line(x1, y1, x1 - (int32_t)(ux * 7.0f + uy * 4.0f), y1 - (int32_t)(uy * 7.0f - ux * 4.0f), c);
+        cv_line(x1 - (int32_t)(ux * 7.0f - uy * 4.0f), y1 - (int32_t)(uy * 7.0f + ux * 4.0f),
+                x1 - (int32_t)(ux * 7.0f + uy * 4.0f), y1 - (int32_t)(uy * 7.0f - ux * 4.0f), c);
+    }
+}
 static void vz_theory(void)
 {
     static const char *const FN[7] = {"TONIC", "SUPERTONIC", "MEDIANT", "SUBDOMINANT", "DOMINANT", "SUBMEDIANT", "LEADING TONE"};
     const int key = sound_root() % 12, m = pg_scale(), root = en_chord_root % 12;
     const uint32_t scale = pool_abs();
-    const int32_t cx = 70, cy = 74;
+    const int32_t cx = 73, cy = 72;
+    th_key_t k;
     uint32_t chord = 0;
-    int32_t px[12], py[12], lx[12], ly[12];
-    int i, d, nd = -1, ns = 0;
-    char tx[32];
+    float sn[12], cs[12];
+    int i, d, nd = -1, ns = 0, nroot = -1, tl, num;
+    char tx[40];
     uint8_t tmp[EN_PRG_LEN];
     const uint8_t *pb = pg_view(tmp);
     const int loop = pb == proj.prg && en_prg_get(pb, EN_PRG_PLAY, 1) && en_prog_pos >= 0;
+    const uint16_t band = mix(K_BG, K_PAD, 4), pad = mix(K_PAD_T, K_PAD, 10 + q16(en_pad_level) * 6 / 16);
+    th_key(scale, key, EN_NOTE_NAME[key][1] == 'b', &k);
+    tl = th_letter(&k, key);
     for (i = 0; i < EN_NPAD; i++)
         chord |= 1u << (en_chord[i] % 12u);
-    for (i = 0; i < 12; i++) {                   /* position i: the key, then a fifth further each step, clockwise */
-        const float a = (float)i * (FM_TWO_PI / 12.0f), s = fm_sinf(a), c = fm_cosf(a);
-        px[i] = cx + (int32_t)(s * 44.0f + (s < 0.0f ? -0.5f : 0.5f));
-        py[i] = cy - (int32_t)(c * 44.0f + (c < 0.0f ? -0.5f : 0.5f));
-        lx[i] = cx + (int32_t)(s * 60.0f + (s < 0.0f ? -0.5f : 0.5f));
-        ly[i] = cy - (int32_t)(c * 60.0f + (c < 0.0f ? -0.5f : 0.5f));
+    for (i = 0; i < 12; i++) {                   /* position i (C at the top, a fifth further each step clockwise) */
+        const float a = (float)i * (FM_TWO_PI / 12.0f);
+        sn[i] = fm_sinf(a);
+        cs[i] = fm_cosf(a);
     }
-#define TH_PC(i) ((key + 7 * (i)) % 12)
-#define TH_POS(pc) ((((pc) - key + 12) % 12) * 7 % 12)   /* (7 is its own inverse mod 12) */
-    for (i = 0; i < 12; i++)                     /* the ring */
-        cv_line(px[i], py[i], px[(i + 1) % 12], py[(i + 1) % 12], mix(K_BG, K_LINE, 10));
+#define TH_POS(pc) ((pc) * 7 % 12)
+#define TH_PC(p) ((p) * 7 % 12)                  /* (7 is its own inverse mod 12) */
+#define TH_X(p, r) (cx + (int32_t)(sn[p] * (float)(r) + (sn[p] < 0.0f ? -0.5f : 0.5f)))
+#define TH_Y(p, r) (cy - (int32_t)(cs[p] * (float)(r) + (cs[p] < 0.0f ? -0.5f : 0.5f)))
+    {   /* the scale's arc on the band (seven neighbours for a mode, five for a pentatonic); a scale that is not one run: its notes alone */
+        int run = -1, n = 0, p, s;
+        for (p = 0; p < 12; p++)
+            n += (int)(scale >> TH_PC(p) & 1u);
+        for (s = 0; s < 12 && run < 0; s++) {    /* the run's first position: in the scale, the one before it not */
+            int j, ok = (scale >> TH_PC(s) & 1u) && !(scale >> TH_PC((s + 11) % 12) & 1u);
+            for (j = 0; ok && j < n; j++)
+                ok = (int)(scale >> TH_PC((s + j) % 12) & 1u);
+            if (ok)
+                run = s;
+        }
+        if (run >= 0 && n < 12) {
+            const float a0 = (float)run * (FM_TWO_PI / 12.0f), a1 = (float)(run + n - 1) * (FM_TWO_PI / 12.0f);
+            float a;
+            for (a = a0; a <= a1 + 0.01f; a += 0.07f)
+                cv_disc(cx + (int32_t)(fm_sinf(a) * 44.0f), cy - (int32_t)(fm_cosf(a) * 44.0f), 7, band);
+        } else {
+            for (p = 0; p < 12; p++)
+                if (scale >> TH_PC(p) & 1u)
+                    cv_disc(TH_X(p, 44), TH_Y(p, 44), 7, band);
+        }
+    }
+    for (i = 0; i < 12; i++) {                   /* the inner ring: each major key's signature, this key's lit */
+        const int pc = TH_PC(i);
+        th_sig_text(th_sig_of(pc, k.sig < 0), tx);
+        text_c(TH_X(i, 27), TH_Y(i, 27) - 5, &FONT_XS, tx, pc == k.parent ? K_ACC : mix(K_BG, K_DIM, 9));
+    }
+    {   /* the move just made (the progression jumping round the circle): the last root to this one, fading over three seconds */
+        static int8_t cur = -1, prev = -1;
+        static float t0;
+        if (root != cur) {
+            prev = cur;
+            cur = (int8_t)root;
+            t0 = vz.tt;
+        }
+        if (prev >= 0 && prev != root && vz.tt - t0 < 3.0f && vz.tt >= t0) {
+            const int f = 10 - (int)((vz.tt - t0) * 3.0f);
+            if (f > 0)
+                th_swoop(cx, cy, TH_X(TH_POS(prev), 36), TH_Y(TH_POS(prev), 36), TH_X(TH_POS(root), 36), TH_Y(TH_POS(root), 36), mix(K_BG, K_PAD, f), 0, 0);
+        }
+    }
     d = th_degree(root, m);
     if (loop) {                                  /* the next slot that holds a chord, round to the first */
         for (i = 1; i <= EN_PRG_N; i++) {
             const int s = (en_prog_pos + i) % EN_PRG_N, v = en_prg_get(pb, 3 * s, 3);
             if (v) {
+                int pcs[4];
                 nd = v - 1;
                 ns = s;
+                if (en_prog_chord(nd, EN_CH_TRIAD, pcs) > 0)
+                    nroot = pcs[0];
                 break;
             }
         }
-        if (nd >= 0) {
-            int pcs[4];
-            if (en_prog_chord(nd, EN_CH_TRIAD, pcs) > 0 && pcs[0] != root)
-                cv_line(px[TH_POS(root)], py[TH_POS(root)], px[TH_POS(pcs[0])], py[TH_POS(pcs[0])], mix(K_BG, K_ACC, 9));
+        if (nroot >= 0 && nroot != root) {       /* the move: an arrow inside the band, from this chord's root to the next one's */
+            th_swoop(cx, cy, TH_X(TH_POS(root), 36), TH_Y(TH_POS(root), 36), TH_X(TH_POS(nroot), 36), TH_Y(TH_POS(nroot), 36),
+                     mix(K_BG, K_ACC, 14), 1, 1);
         }
     }
-    {   /* the chord: its tones joined round the circle */
-        const uint16_t fc = en_frozen ? K_FROST : mix(K_PAD_T, K_PAD, 8 + q16(en_pad_level) * 8 / 16);
-        int first = -1, prev = -1, n = 0;
-        for (i = 0; i < 12; i++)
-            if (chord >> TH_PC(i) & 1u) {
-                if (prev >= 0)
-                    sg_line2(px[prev], py[prev], px[i], py[i], fc);
-                else
-                    first = i;
-                prev = i;
-                n++;
+    for (i = 0; i < 12; i++) {                   /* the band's numerals; the chord playing filled, the next one ringed */
+        const int pc = TH_PC(i), dd = th_degree(pc, m);
+        if (!(scale >> pc & 1u) || dd < 0)
+            continue;
+        {
+            int L;
+            char mk;
+            uint16_t c;
+            int32_t w, x0, y0;
+            th_roman((th_letter(&k, pc) - tl + 7) % 7, dd, tx);
+            L = th_len(tx);
+            mk = L > 1 && (tx[L - 1] == 'o' || tx[L - 1] == '+') ? tx[L - 1] : 0;
+            if (mk)                              /* on the band the mark is drawn small, raised, as printed (vii°, III+): the numeral fits */
+                tx[L - 1] = 0;
+            if (pc == root && en_playing) {
+                cv_disc(TH_X(i, 44), TH_Y(i, 44), 8, K_ACC);
+                c = K_BG;
+            } else {
+                if (pc == nroot) {
+                    cv_disc(TH_X(i, 44), TH_Y(i, 44), 8, K_ACC);
+                    cv_disc(TH_X(i, 44), TH_Y(i, 44), 6, band);
+                }
+                c = pc == nroot ? K_ACC : mix(K_DIM, K_TEXT, 6);
             }
-        if (n > 2)
-            sg_line2(px[prev], py[prev], px[first], py[first], fc);
+            w = text_w(&FONT_XS, tx);
+            x0 = TH_X(i, 44) - (w + (mk ? 4 : 0)) / 2;
+            y0 = TH_Y(i, 44) - 5;
+            cv_text(x0, y0, &FONT_XS, tx, c);
+            if (mk == 'o') {                     /* a ring of three by three */
+                cv_rect(x0 + w + 1, y0 + 1, 3, 1, c);
+                cv_rect(x0 + w + 1, y0 + 3, 3, 1, c);
+                cv_rect(x0 + w + 1, y0 + 2, 1, 1, c);
+                cv_rect(x0 + w + 3, y0 + 2, 1, 1, c);
+            } else if (mk == '+') {
+                cv_rect(x0 + w + 1, y0 + 2, 3, 1, c);
+                cv_rect(x0 + w + 2, y0 + 1, 1, 3, c);
+            }
+        }
     }
-    for (i = 0; i < 12; i++) {                   /* the notes: in the scale lit, the chord's bright, its root ringed */
+    for (i = 0; i < 12; i++) {                   /* the outer ring: the notes as the key names them; the chord's marked, a borrowed one red */
         const int pc = TH_PC(i), in = (int)(scale >> pc & 1u), ch = (int)(chord >> pc & 1u);
-        if (pc == root && en_playing)
-            cv_disc(px[i], py[i], 6, K_TEXT);
-        if (ch)
-            cv_disc(px[i], py[i], 4, mix(K_PAD_T, K_PAD, 10 + q16(en_pad_level) * 6 / 16));
-        else if (in)
-            cv_disc(px[i], py[i], 2, mix(K_PAD_T, K_PAD, 7));
+        const int borrowed = ch && !in;
+        if (borrowed)
+            th_spell(&k, pc, tx);
         else
-            cv_rect(px[i], py[i], 1, 1, K_LINE);
-        text_c(lx[i], ly[i] - 3, &FONT_XS, EN_NOTE_NAME[pc], ch ? K_TEXT : in ? K_DIM : mix(K_BG, K_LINE, 12));
+            th_label(&k, pc, tx);
+        if (ch)
+            cv_disc(TH_X(i, 55), TH_Y(i, 55), pc == root ? 3 : 2, borrowed ? TH_RED : pad);
+        text_c(TH_X(i, 64), TH_Y(i, 64) - 5, &FONT_XS, tx, borrowed ? TH_RED : ch ? K_TEXT : in ? mix(K_DIM, K_TEXT, 8) : mix(K_BG, K_LINE, 12));
     }
-    text_c(cx, cy - 10, &FONT_B, EN_NOTE_NAME[key], K_TEXT);   /* the key and the mode */
-    for (i = 0; mode_name()[i] && i < 15; i++)
-        tx[i] = (char)(mode_name()[i] >= 'a' && mode_name()[i] <= 'z' ? mode_name()[i] - 'a' + 'A' : mode_name()[i]);
-    tx[i] = 0;
-    text_c(cx, cy + 6, &FONT_XS, tx, K_DIM);
+    th_spell(&k, key, tx);                       /* the middle: the key's tonic */
+    text_c(cx, cy - 9, &FONT_B, tx, K_TEXT);
     {   /* the panel */
         const int32_t x = 142;
-        {   /* the degree, and the chord's name from the notes sounding (the slot's own type, the dominant's raised third and all) */
-            int pcs[EN_NPAD + 1], k;
-            pcs[0] = root;
-            for (k = 0; k < EN_NPAD; k++)
-                pcs[k + 1] = en_chord[k] % 12;
-            cv_text2(x, 0, &FONT_B, d >= 0 ? th_roman(d, tx) : "--", d >= 0 ? K_ACC : K_DIM);
-            cv_text(x, 30, &FONT_B, en_chord_name(pcs, EN_NPAD + 1, tx), K_TEXT);
-            cv_text(x, 46, &FONT_XS, d < 0 ? "OUTSIDE THE SCALE" : m == 7 ? (d == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[d]) : "PENTATONIC", K_DIM);
+        int pcs[EN_NPAD + 1], j;
+        num = (th_letter(&k, root) - tl + 7) % 7;
+        pcs[0] = root;
+        for (j = 0; j < EN_NPAD; j++)
+            pcs[j + 1] = en_chord[j] % 12;
+        {   /* the numeral, the chord's name from the notes sounding (the slot's own type, the dominant's raised third and all), spelled */
+            char nm[32];
+            cv_text2(x, 0, &FONT_B, d >= 0 ? th_roman(num, d, tx) : "--", d >= 0 ? K_ACC : K_DIM);
+            en_chord_name(pcs, EN_NPAD + 1, nm);
+            cv_text(x, 30, &FONT_B, th_respell(&k, root, nm, tx), K_TEXT);
         }
-        {   /* its notes, from the root up the circle's order of the chord */
-            int k = 0, j;
-            for (j = 0; j < 12 && k < 26; j++) {
+        cv_text(x, 46, &FONT_XS, d < 0 ? "OUTSIDE THE SCALE" : num == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[num], K_DIM);
+        {   /* its notes, from the root up, spelled; a borrowed one red */
+            int32_t xx = x;
+            for (j = 0; j < 12; j++) {
                 const int pc = (root + j) % 12;
-                const char *nm = EN_NOTE_NAME[pc];
                 if (!(chord >> pc & 1u))
                     continue;
-                if (k)
-                    tx[k++] = ' ';
-                while (*nm)
-                    tx[k++] = *nm++;
+                th_spell(&k, pc, tx);
+                xx = cv_text(xx, 57, &FONT_XS, tx, (scale >> pc & 1u) ? K_TEXT : TH_RED) + 5;
             }
-            tx[k] = 0;
-            cv_text(x, 57, &FONT_XS, tx, K_TEXT);
         }
-        if (nd >= 0) {                           /* what comes next */
-            char r[8];
-            cv_text(x, 71, &FONT_XS, "NEXT", K_DIM);
-            const int32_t xn = x + text_w(&FONT_XS, "NEXT") + 5;
-            cv_text(xn, 71, &FONT_XS, th_roman(nd, r), K_ACC);
-            cv_text(xn + text_w(&FONT_XS, r) + 5, 71, &FONT_XS, pg_name(nd + 1, pk_get(ns), tx), K_TEXT);
+        if (nd >= 0) {                           /* what comes next, and how the root gets there */
+            char r[8], nm[32];
+            int32_t xn;
+            cv_text(x, 70, &FONT_XS, "NEXT", K_DIM);
+            xn = x + text_w(&FONT_XS, "NEXT") + 5;
+            xn = cv_text(xn, 70, &FONT_XS, th_roman((th_letter(&k, nroot >= 0 ? nroot : key) - tl + 7) % 7, nd, r), K_ACC) + 5;
+            cv_text(xn, 70, &FONT_XS, nroot >= 0 ? th_respell(&k, nroot, pg_name(nd + 1, pk_get(ns), nm), tx) : pg_name(nd + 1, pk_get(ns), tx), K_TEXT);
+            if (nroot >= 0)
+                cv_text(x, 81, &FONT_XS, th_motion(root, nroot, key), mix(K_DIM, K_ACC, 10));
         } else if (en_playing && en_drift_bars < 98.5f) {
             const int b = (int)(en_drift_bars + 0.99f);
-            int k = 0;
+            int q = 0;
             const char *s = "NEXT IN ";
             while (*s)
-                tx[k++] = *s++;
+                tx[q++] = *s++;
             if (b >= 10)
-                tx[k++] = (char)('0' + b / 10 % 10);
-            tx[k++] = (char)('0' + b % 10);
+                tx[q++] = (char)('0' + b / 10 % 10);
+            tx[q++] = (char)('0' + b % 10);
             s = b == 1 ? " BAR" : " BARS";
             while (*s)
-                tx[k++] = *s++;
-            tx[k] = 0;
-            cv_text(x, 71, &FONT_XS, tx, K_DIM);
+                tx[q++] = *s++;
+            tx[q] = 0;
+            cv_text(x, 70, &FONT_XS, tx, K_DIM);
         } else {
-            cv_text(x, 71, &FONT_XS, en_frozen ? "FROZEN" : "HELD", K_DIM);
+            cv_text(x, 70, &FONT_XS, en_frozen ? "FROZEN" : "HELD", K_DIM);
         }
-        cv_text(x, 86, &FONT_XS, loop ? "PROGRESSION" : "THE WALK", K_DIM);
-        for (i = 0; i < EN_PRG_N; i++) {         /* the eight slots */
+        for (i = 0; i < EN_PRG_N; i++) {         /* the eight slots: the progression as a chord chart (the walk as heard, loop off) */
             const int v = en_prg_get(pb, 3 * i, 3);
-            const int32_t sx = x + (i & 3) * 23, sy = 96 + (i >> 2) * 13;
+            const int32_t sx = x + (i & 3) * 24, sy = 93 + (i >> 2) * 12;
             const int now = loop ? i == en_prog_pos : v && v - 1 == d;
-            cv_rect(sx, sy, 21, 12, now ? mix(K_BG, K_PAD, 6) : K_PANEL);
-            if (v)
-                text_c(sx + 10, sy + 2, &FONT_XS, th_roman(v - 1, tx), now ? K_ACC : loop ? K_TEXT : K_DIM);
+            cv_rect(sx, sy, 22, 11, now ? mix(K_BG, K_PAD, 6) : K_PANEL);
+            if (v) {
+                int p2[4];
+                const int rp = en_prog_chord(v - 1, EN_CH_TRIAD, p2) > 0 ? p2[0] : key;
+                text_c(sx + 11, sy + 1, &FONT_XS, th_roman((th_letter(&k, rp) - tl + 7) % 7, v - 1, tx), now ? K_ACC : loop ? K_TEXT : K_DIM);
+            }
+        }
+        {   /* the key, and its signature with the major key it is written in */
+            char *o = tx;
+            const char *mn = mode_name();
+            th_spell(&k, key, o);
+            o += th_len(o);
+            *o++ = ' ';
+            while (*mn && o < tx + 20) {
+                *o++ = (char)(*mn >= 'a' && *mn <= 'z' ? *mn - 'a' + 'A' : *mn);
+                mn++;
+            }
+            *o = 0;
+            cv_text(x, 118, &FONT_XS, tx, K_TEXT);
+            o = th_sig_text(k.sig, tx);
+            *o++ = ':';
+            *o++ = ' ';
+            th_spell(&k, k.parent, o);
+            o += th_len(o);
+            {
+                const char *s = " MAJOR";
+                while (*s)
+                    *o++ = *s++;
+                *o = 0;
+            }
+            cv_text(x, 129, &FONT_XS, tx, K_DIM);
         }
     }
-#undef TH_PC
 #undef TH_POS
+#undef TH_PC
+#undef TH_X
+#undef TH_Y
 }
 
 static void draw_viz(void)
