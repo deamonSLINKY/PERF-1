@@ -242,6 +242,13 @@ and a `PC` address for two and a half seconds. If you report the crash, note tha
 
 ### Recovering an FM-1 that won't start
 
+**An install that was cut off (PERF-1 0.16.17 on).** If the power or the cable goes while PERF-1 is being installed, switch the FM-1 on
+again. The key lights flash three times and the screen stays dark: it is waiting for the installer. Plug it in, open the Install page and
+press **Install** again; it finishes the job. To get there on purpose, hold **OCT-** alone while you switch the FM-1 on. One long flash
+instead means that rescue was not possible; the FM-1 is then in the chip's own USB mode (below). This comes from ChoralRoot's boot stub,
+as Melodee uses it. The first install of 0.16.17 over an older PERF-1 has a moment, early on, that isn't protected yet: keep the cable
+in and the power on until it's done. Installing the stock firmware or another firmware removes it.
+
 - **Covered:** a bad PERF-1 install. The installer checks the package before sending it, checks each packet
   it writes, and reads the FM-1's version back after the restart. On the FM-1 there's safe mode, update mode
   after four failed starts, the **OCT-** + **OCT+** hold, and a USB command that enters update mode. The

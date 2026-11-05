@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-only
 # Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments
+# Boot stub layout, commit marker and CRC compensation (0.16.17): Copyright (C) 2026 ChoralRoot FM-1 contributors
+# (v0.16), with modifications Copyright (C) 2026 Kerem Kilic (Ellic Studio), from Melodee 1.3.5; GPL-3.0-only.
 """Build an FM-1 update package (.fwsc) from the Felucca app and update loader.
 
   flash.bin  head [0, 0x4000): flash header (JieLi SDK default values), JLFS
@@ -19,11 +21,20 @@ All integrity checks in the format are CRC16 (poly 0x1021, init 0).
 import argparse
 import os
 import struct
+import zlib
 from pathlib import Path
 
 APP_SLOT = 0x8DFBC
 FLASH_SIZE = 0x93000
 KEY = 0x980F
+# the boot stub's layout (firmware/stub/stub_core.h), as app.bin offsets (app.bin offset 0 = flash 0x4120)
+STUB_LEN = 0xEE0                    # the stub; the body (the app proper) follows: flash 0x5000, XIP 0x02001000
+STUB_SIG = b"CRSTUB"                # at app.bin + 8 (crt0_stub.S), then the stub's version (u16)
+BODY_MAX = 0x8C000                  # the body ends below the marker's sector (flash 0x91000)
+MARK_OFF = 0x91FE0 - 0x4120         # the marker: the last 32 bytes of flash sector 0x91000
+MARK_MAGIC, MARK_FORMAT = 0x4D425243, 1     # "CRBM"
+COMP_OFF = MARK_OFF + 20            # the four compensation bytes
+APP_CRC_FIXED = 0x4352              # app.bin's CRC-16 in every stub package ("CR")
 # flash header: JieLi SDK defaults (burner_size 544, VID "0.01", flash_size 0xFF000,
 # fs_ver 0x10, PID "AC791N_STORY"), plain, without its CRC
 FLASH_HDR = bytes.fromhex("20022f104cc900f00f001010a4ff4e5d0b41e0cd781dc856417fb367cf9f")
@@ -98,7 +109,75 @@ def sdk_file(rel):
         raise SystemExit(f"fm1pkg_make: {path}: {e.strerror}. Set AC79_SDK to a JieLi AC79 SDK checkout.")
 
 
-def flash_image(app, key):
+def has_stub(app):
+    return len(app) >= STUB_LEN and app[8:8 + len(STUB_SIG)] == STUB_SIG
+
+
+def stub_version(app):
+    return struct.unpack_from("<H", app, 8 + len(STUB_SIG))[0] if has_stub(app) else None
+
+
+def marker(body):
+    """the 20-byte commit marker of a body (app.bin from STUB_LEN, padded to words)"""
+    m = struct.pack("<IIII", MARK_MAGIC, MARK_FORMAT, len(body), zlib.crc32(body))
+    return m + struct.pack("<I", zlib.crc32(m))
+
+
+def compensate(app, off, want):
+    """4 bytes for app[off:off + 4] (zero on entry) that make crc16(app) == want.
+
+    The CRC-16 (init 0, no final xor) is linear over GF(2): crc(a ^ b) = crc(a) ^ crc(b) for equal lengths. So
+    crc(app with bytes v at off) = crc(app) ^ E(v), E(v) = crc(v + zeros to the end): 16 equations in 32 unknown
+    bits, solved by elimination over the 32 basis vectors (the free bits stay 0)."""
+    tail = bytes(len(app) - off - 4)
+    need = crc16(app) ^ want
+    rows = []                                           # (E(bit k), 1 << k), reduced as they come
+    for k in range(32):
+        e, m = crc16((1 << k).to_bytes(4, "little") + tail), 1 << k
+        for pe, pm in rows:
+            if e ^ pe < e:                              # pe's top bit is set in e
+                e, m = e ^ pe, m ^ pm
+        if e:
+            rows.append((e, m))
+            rows.sort(reverse=True)
+    v = 0
+    for pe, pm in rows:
+        if need ^ pe < need:
+            need, v = need ^ pe, v ^ pm
+    if need:
+        raise SystemExit("fm1pkg_make: no compensation bytes give the fixed CRC-16")
+    return v.to_bytes(4, "little")
+
+
+def crc16_slow(data):
+    """bit by bit, no table: the check of compensate() and of both directory CRCs"""
+    c = 0
+    for b in data:
+        c ^= b << 8
+        for _ in range(8):
+            c = ((c << 1) ^ 0x1021) & 0xFFFF if c & 0x8000 else c << 1
+    return c
+
+
+def commit(app, marker_of=marker):
+    """a stub app padded to the slot, with its marker and compensation bytes (marker_of allows
+    host tests to supply a deliberately wrong marker)"""
+    body = app[STUB_LEN:]
+    body += b"\xFF" * (-len(body) % 4)
+    if len(body) > BODY_MAX:
+        raise SystemExit(f"the app body is {len(body)} B, the room below the marker's sector is {BODY_MAX} B")
+    if not body:
+        raise SystemExit("the app has a stub and no body")
+    a = bytearray(app[:STUB_LEN] + body + b"\xFF" * (APP_SLOT - STUB_LEN - len(body)))
+    a[MARK_OFF:MARK_OFF + 20] = marker_of(body)
+    a[COMP_OFF:COMP_OFF + 4] = bytes(4)
+    a[COMP_OFF:COMP_OFF + 4] = compensate(bytes(a), COMP_OFF, APP_CRC_FIXED)
+    if crc16_slow(a) != APP_CRC_FIXED:
+        raise SystemExit("fm1pkg_make: the compensated app.bin CRC-16 is wrong")
+    return bytes(a)
+
+
+def flash_image(app, key, marker_of=marker):
     spl = sdk_file("uboot.boot")                         # SDK SPL, BANKCB-encoded as in the SDK
     cfg_tool = sdk_file("cfg_tool.bin")
     eq = sdk_file("cfg/eq_cfg_hw.bin")
@@ -122,8 +201,8 @@ def flash_image(app, key):
     # ---- app area (plain first, then SFC)
     if len(app) > APP_SLOT:
         raise SystemExit(f"app is {len(app)} B, the slot is {APP_SLOT} B")
-    app = app + b"\xFF" * (APP_SLOT - len(app))
-    blk = 0x120 + APP_SLOT + len(cfg_tool)              # app_area_head block size
+    app = commit(app, marker_of) if has_stub(app) else app + b"\xFF" * (APP_SLOT - len(app))
+    blk =0x120 + APP_SLOT + len(cfg_tool)              # app_area_head block size
     area = bytearray(b"\xFF" * blk)
     area[0x120:0x120 + APP_SLOT] = app
     area[0x120 + APP_SLOT:blk] = cfg_tool

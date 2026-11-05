@@ -61,7 +61,14 @@ if [ -f build/amb.fwsc ]; then
     run update-loader sh -c "head -c 100000 build/amb.bin > $OUT/old_app.bin && \
         python3 tools/fm1pkg_make.py $OUT/old_app.bin build/loader/ota.bin $OUT/old.fwsc >/dev/null && \
         $CC -o $OUT/ldr_test tests/ldr_test.c && $OUT/ldr_test $OUT/old.fwsc build/amb.fwsc"
+    # the boot stub (0.16.17, ChoralRoot's as Melodee ships it): the package side, then a power cut after every erase
+    # and programmed page of an install, each state given to the stub's own decision (tests from Melodee 1.3.5)
+    run boot-pkg python3 tests/boot_stub_pkg_test.py
+    run powercut sh -c "python3 tests/boot_fixtures.py >/dev/null && $CC -O2 -o $OUT/loader_powercut_test tests/loader_powercut_test.c && \
+        $OUT/loader_powercut_test build/host/boot-fixtures/legacy.fwsc build/amb.fwsc build/host/boot-fixtures/same-stub.fwsc \
+        build/host/boot-fixtures/other-legacy.fwsc build/host/boot-fixtures/old-stub.fwsc"
     fi
+    run boot-stub sh -c "$CC -O2 -o $OUT/boot_stub_test tests/boot_stub_test.c && $OUT/boot_stub_test"
     run installer python3 tests/install_test.py
 else
     echo "  skip update-path tests (no build/amb.fwsc: run ./build.sh)"

@@ -251,9 +251,34 @@ int main(int argc, char **argv)
                      (p[6] | p[7] << 8) == 0x5441 && ota_rd32(p + 72) == 0xE0000);
         bad += check("nothing written outside 0xE0000..0xE4FFF", bad_erase == 0);
     }
-    /* boot cleanup erases it */
-    bad += check("boot cleanup erases the area", ota_boot_cleanup() == 1 && area_erased());
-    bad += check("second boot: nothing to do", ota_boot_cleanup() == 0);
+    /* boot cleanup (0.16.17): our whole loader stays for the boot stub, only the record's sector goes */
+    {
+        uint32_t i, rec_blank = 1, staged = ota_staged();
+        bad += check("the staged loader is whole (ota_staged)", staged != 0 && staged <= OTA_AREA_LEN - 0x1000u);
+        bad += check("boot cleanup: the record's sector cleared (2)", ota_boot_cleanup() == 2);
+        for (i = OTA_AREA + OTA_AREA_LEN - 0x1000u; i < OTA_AREA + OTA_AREA_LEN; i++)
+            rec_blank &= nor[i] == 0xFF;
+        bad += check("... the record is gone, the loader kept", rec_blank && ota_staged() == staged);
+        bad += check("second boot: nothing to do", ota_boot_cleanup() == 0 && ota_staged() == staged);
+        nor[OTA_AREA + 0x40] ^= 0x01;                       /* a damaged staged loader (its first block) */
+        bad += check("a damaged staged loader is erased whole (1)", ota_staged() == 0 && ota_boot_cleanup() == 1 && area_erased());
+    }
+
+    /* refused before staging (here: a host that serves another package's header): the staged loader stays */
+    reset_dev();
+    rc = ota_session();
+    ota_boot_cleanup();                                     /* (a staged loader, its record cleared) */
+    {
+        uint32_t staged = ota_staged();
+        uint8_t keep = logical[0x10];
+        logical[0x10] ^= 0xFF;                              /* the UFW header's CRC fails: -2 before any erase */
+        committed = 0;
+        rc = ota_session();
+        printf("  refused session: rc %d\n", rc);
+        logical[0x10] = keep;
+        bad += check("refused before staging: the rescue loader stays", rc == -2 && !committed && staged && ota_staged() == staged);
+    }
+    reset_dev();
 
     /* host disappears in the middle */
     reset_dev();

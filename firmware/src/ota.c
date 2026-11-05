@@ -305,6 +305,7 @@ static uint32_t ota_crc32(const uint8_t *p, uint32_t n, uint32_t c)
 static int ota_known_head(uint32_t crc) { return crc == 0x3A04AD23u || crc == 0x08316064u; }
 #endif
 
+static uint32_t ota_touched;                     /* ota_stage began erasing the staging area */
 static int ota_stage(void)                       /* steps 1..6; 0 = host said success */
 {
     static uint8_t hdr[0x400], b[512], mine[512];
@@ -360,6 +361,7 @@ static int ota_stage(void)                       /* steps 1..6; 0 = host said su
     if (ota_read(ota_off, b, 512))
         return -6;
     c = ota_rd16(b + 2);                                    /* outer dcrc of the body */
+    ota_touched = 1;                                        /* from here a failure erases the area (ota_session) */
     for (i = 0; i < OTA_AREA_LEN; i += 0x1000u)
         if (ota_erase(OTA_AREA + i))
             return -8;
@@ -409,9 +411,12 @@ static int ota_session(void)
     uint32_t i;
     int rc;
     ota_deadline = ota_now_ms() + 120000u;          /* step 1 normally takes ~5 s; a stalled host gives up after 2 min */
+    ota_touched = 0;
     rc = ota_stage();
     if (rc) {
-        ota_unstage();
+        if (ota_touched)                            /* refused before staging (a head, a package, the host): the
+                                                     * staged rescue loader stays (0.16.17) */
+            ota_unstage();
         ota_show(9, rc);
         return rc;
     }
@@ -445,18 +450,71 @@ static int ota_session(void)
     return 0;
 }
 
-/* boot: a staging area left over (we are running, so the update finished or
- * never started): erase it so the SPL does not re-enter the loader */
+/* The staged loader is Felucca's own and whole: the boot stub's check (firmware/stub/stub_core.h stub_loader_check,
+ * which reads the area through XIP; here through ota_fread in small pieces). Returns the staged length from OTA_AREA
+ * (the head, the inner head, the blocks), 0 if the stub would refuse it. (0.16.17, from Melodee 1.3.5's ota.c,
+ * Kerem Kilic; the check is ChoralRoot FM-1's, GPL-3.0-only.) */
+static uint32_t ota_staged(void)
+{
+    uint8_t h[0x88], q[8];
+    uint32_t len, isize, p, end, total = 0, i, own = 0;
+    if (ota_fread(OTA_AREA, h, sizeof h))
+        return 0;
+    if (ota_crc16(h + 2, 30, 0) != ota_rd16(h) || ota_rd32(h + 4) != OTA_AREA || h[12] != 0x41u ||
+        !ota_memeq(h + 16, (const uint8_t *)"LOADER.BIN", 11))
+        return 0;
+    len = ota_rd32(h + 8) - 32u;
+    if (len < 32u + 8u || len > OTA_AREA_LEN - 0x200u)
+        return 0;
+    isize = ota_rd32(h + 0x20 + 4);
+    if (ota_crc16(h + 0x22, 30, 0) != ota_rd16(h + 0x20) || ota_rd32(h + 0x20 + 8) != 0x01C0A800u ||
+        !isize || isize > 0x14000u)
+        return 0;
+    for (i = 0x48; i + 16u <= 0x48u + 64u && !own; i++)
+        own = (uint32_t)ota_memeq(h + i, (const uint8_t *)"FELUCCA-LOADER-1", 16);
+    if (!own)
+        return 0;
+    for (p = 0x40, end = 0x20u + len; p + 8u <= end;) {
+        uint32_t clen, dlen;
+        if (ota_fread(OTA_AREA + p, q, 8))
+            return 0;
+        clen = ota_rd32(q);
+        dlen = ota_rd32(q + 4);
+        if (!clen || clen > 4096u || !dlen || dlen > 4096u || clen > end - p - 8u)
+            return 0;
+        p += 8u + clen;
+        total += dlen;
+        if (dlen != 4096u && p != end)
+            return 0;
+    }
+    return p == end && total == isize ? end : 0;
+}
+
+/* boot (we are running, so an update finished or never started). 0.16.17: a whole staged loader of our own STAYS, for
+ * the boot stub to hand an interrupted install to on the next power-on; only the record's sector (the last of the
+ * area, OTA_RES) is cleared, so the SPL does not re-enter the loader. Anything else staged (the official loader, a
+ * damaged or half-erased area) is erased whole, as before. 0 nothing to do, 1 erased, 2 the record cleared, -1 error */
 static int ota_boot_cleanup(void)
 {
-    uint8_t a[4], r[8];
-    uint32_t i, used = 0;
-    if (ota_fread(OTA_AREA, a, 4) || ota_fread(OTA_RES, r, 8))
-        return -1;
-    for (i = 0; i < 4u; i++)
-        used |= a[i] != 0xFFu;
-    for (i = 0; i < 8u; i++)
-        used |= r[i] != 0xFFu;
+    uint8_t b[128];
+    uint32_t i, off, used = 0, end = ota_staged();
+    if (end && end <= OTA_AREA_LEN - 0x1000u) {
+        for (off = OTA_AREA_LEN - 0x1000u; off < OTA_AREA_LEN; off += sizeof b) {
+            if (ota_fread(OTA_AREA + off, b, sizeof b))
+                return -1;
+            for (i = 0; i < sizeof b; i++)
+                used |= b[i] != 0xFFu;
+        }
+        if (!used)
+            return 0;
+        return ota_erase(OTA_AREA + OTA_AREA_LEN - 0x1000u) ? -1 : 2;
+    }
+    for (off = 0; off < OTA_AREA_LEN && !used; off += sizeof b) {
+        if (ota_fread(OTA_AREA + off, b, sizeof b))
+            return -1;
+        for (i = 0; i < sizeof b; i++)
+            used |= b[i] != 0xFFu;
+    }
     if (used)
         ota_unstage();
     return (int)used;

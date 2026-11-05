@@ -27,11 +27,17 @@ FW = SRC / "firmware"
 OUT = SRC / "build"
 GEN = OUT / "gen"
 LDR = OUT / "loader"
+STB = OUT / "stub"
 sys.path.insert(0, str(SRC / "tools"))
 import fm1pkg_make  # noqa: E402
 import lz4blk  # noqa: E402
 
-APP_XIP = 0x02000120                # app.bin offset 0 in the XIP map; the SPL jumps here
+STUB_XIP = 0x02000120               # app.bin offset 0 in the XIP map, where the SPL jumps: the boot stub
+STUB_LEN = fm1pkg_make.STUB_LEN
+APP_XIP = 0x02001000                # the body (the app proper), after the stub: its _start (app.ld)
+# the stub's own flags, exactly Melodee 1.3.5's (tools/build.py CFLAGS), so the same sources give the bytes its stub.lock pins
+STUB_CFLAGS = ["-mcpu=r3", "-mfprev1", "-ffp-contract=off", "-Werror=double-promotion", "-Os", "-ffunction-sections",
+               "-fdata-sections", "-fno-builtin", "-Wall", "-Wno-unused-function"]
 APP_SLOT = fm1pkg_make.APP_SLOT
 LOADER_LOAD = 0x01C0A800
 LOADER_NAME = b"usb_hid_ota.bin"    # the file name the SPL looks for
@@ -195,9 +201,71 @@ def build_loader():
     return ota
 
 
+# ---- boot stub (0.16.17): ChoralRoot FM-1 v0.16's, as Melodee 1.3.5 ships it (version 3), unchanged
+
+def build_stub():
+    """firmware/stub -> app.bin's first STUB_LEN bytes (0xFF padded). Code and constants only, built from its own
+    sources alone, so it is the same bytes in every build: the loader rewrites sector 0x4000 only when it changes
+    (firmware/stub/stub_core.h). firmware/stub/stub.lock records the version and hash of the stub that is meant to ship.
+    (Adapted from Melodee's tools/build.py, Kerem Kilic / ChoralRoot FM-1 contributors, GPL-3.0-only.)"""
+    STB.mkdir(parents=True, exist_ok=True)
+    src = FW / "stub"
+    tc_all(("cc", "-Ifirmware/stub", "-c", src / "crt0_stub.S", "-o", STB / "crt0_stub.o"),
+           ("cc", *STUB_CFLAGS, "-Ifirmware/stub", "-c", src / "stub.c", "-o", STB / "stub.o"))
+    elf = STB / "stub.elf"
+    tc("pi32v2/bin/ld", "--gc-sections", "-e", "_start", "-T", src / "stub.ld",
+       STB / "crt0_stub.o", STB / "stub.o", "-o", elf)
+    (STB / "stub.bin").unlink(missing_ok=True)
+    _, dis, hdr, syms = tc_all(("common/bin/objcopy", "-O", "binary", "-j", ".text", elf, STB / "stub.bin"),
+                               ("common/bin/objdump", "-d", elf),
+                               ("common/bin/objdump", "-h", elf),
+                               ("common/bin/objdump", "-t", elf))
+    (STB / "stub.dis").write_text(dis)
+    img = (STB / "stub.bin").read_bytes()
+    for ln in hdr.splitlines():     # no .data, no .bss: nothing but .text may have a size
+        p = ln.split()
+        if len(p) > 3 and p[0].isdigit() and p[1].startswith(".") and int(p[2], 16) and \
+                p[1] not in (".text", ".shstrtab", ".symtab", ".strtab"):
+            raise SystemExit(f"stub: section {p[1]} holds {int(p[2], 16)} B; the stub is code and constants only")
+    m = re.search(r"^([0-9a-f]+) .*\s_start$", syms, re.M)
+    if not m or int(m.group(1), 16) != STUB_XIP:
+        raise SystemExit(f"stub: _start is not at {STUB_XIP:#x}")
+    if img[:4] != bytes.fromhex("04818000"):
+        raise SystemExit(f"stub: starts with {img[:4].hex()}, not the entry the SPL expects (goto +4; rts)")
+    if not fm1pkg_make.has_stub(img + bytes(STUB_LEN)):
+        raise SystemExit("stub: no CRSTUB signature at offset 8")
+    if not img or len(img) > STUB_LEN - 256:     # keep a margin: a stub that grows to the brim cannot be fixed
+        raise SystemExit(f"stub: {len(img)} B does not fit {STUB_LEN} B with 256 B to spare")
+    for ln in dis.splitlines():     # nothing may call or load an address in the chip ROM (as the app's check)
+        mm = LINE.match(ln)
+        for v in (re.findall(r"= (-?\d+) <|call -?\d+ <[^:>]*: ([0-9a-f]+) >", mm.group(3)) if mm else ()):
+            val = (int(v[0]) & 0xFFFFFFFF) if v[0] else int(v[1], 16) & 0xFFFFFFFF
+            if 0xFFC00000 <= val < 0xFFD00000:
+                raise SystemExit(f"stub: reference to ROM address {val:#010x}")
+    used = len(img)
+    img += b"\xff" * (STUB_LEN - len(img))
+    ver, sha = fm1pkg_make.stub_version(img), hashlib.sha256(img).hexdigest()
+    print(f"stub: {used} B of {STUB_LEN} ({100 * used / STUB_LEN:.1f}%), version {ver}, sha256 {sha[:16]}")
+    lock = src / "stub.lock"
+    want = lock.read_text().split() if lock.exists() else []
+    if want != [str(ver), sha]:
+        if os.environ.get("FM1_STUB_LOCK") == "update":
+            lock.write_text(f"{ver} {sha}\n")
+            print(f"stub: {lock.relative_to(SRC)} updated")
+        else:
+            msg = (f"the boot stub differs from {lock.relative_to(SRC)} ({' '.join(want)[:20] or 'none'}..): installing "
+                   "this build rewrites sector 0x4000, the one window an interruption is not rescued in. If the "
+                   "change is meant: bump STUB_VERSION (firmware/stub/stub_core.h), rebuild with "
+                   "FM1_STUB_LOCK=update, and say so in the release notes")
+            if VERSION:
+                raise SystemExit("build: " + msg)
+            print("WARNING: " + msg)
+    return img
+
+
 # ---- app
 
-def build_app():
+def build_app(stub):
     os.environ.setdefault("EN_CORE2", "1")      # the reverb on the second core (fallback to one core built in); EN_CORE2=0 for single core
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
     for flag in ("EN_CDC", "EN_CORE2", "EN_DIAG"):
@@ -251,6 +319,7 @@ def build_app():
             img += b"\xff" * (load - APP_XIP - len(img))
             img += blob
     img += b"\xff" * (-len(img) % 4)
+    img = bytearray(stub) + img                 # app.bin: the stub (flash 0x4120..0x4FFF), then the body (0x5000 on)
     (OUT / "amb.bin").write_bytes(img)
     return bytes(img), syms, dis, rt
 
@@ -277,6 +346,10 @@ def check(img, syms, dis, rt):
                 errors.append(f"reference to ROM address {val:#010x}")
     if len(img) > APP_SLOT:
         errors.append(f"image {len(img)} B exceeds the app slot")
+    if len(img) - STUB_LEN > fm1pkg_make.BODY_MAX:
+        errors.append(f"app body {len(img) - STUB_LEN} B overlaps the commit-marker sector (at most {fm1pkg_make.BODY_MAX} B)")
+    else:
+        notes.append(f"body {len(img) - STUB_LEN} B of {fm1pkg_make.BODY_MAX} below the commit marker's sector")
     # the FPU is single precision; a soft-double routine in the image means a double crept in
     soft = sorted(set(re.findall(r"\s(__(?:add|sub|mul|div|neg|cmp|eq|ne|lt|le|gt|ge|un|extendsf|truncdf|fixdf|fixunsdf|floatsidf|floatunsidf|floatdidf)\w*df\w*)$", syms, re.M)))
     if soft:
@@ -368,7 +441,8 @@ def main():
         gen, ldr = ex.submit(generate), ex.submit(build_loader)
         gen.result()
         ota = ldr.result()
-    img, syms, dis, rt = build_app()
+    stub = build_stub()
+    img, syms, dis, rt = build_app(stub)
     errors, notes = check(img, syms, dis, rt)
     hal_err = mmio_check()
     errors += hal_err
