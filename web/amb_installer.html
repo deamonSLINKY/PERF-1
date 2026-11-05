@@ -134,7 +134,8 @@
   <h2 data-t="stockh"></h2>
   <p class="small" data-t="stockwhy"></p>
   <ol class="small">
-    <li><span data-t="stock1"></span> <a id="stocklink" href="https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc" style="color:inherit">FM-1.fwsc</a></li>
+    <li><span data-t="stock1"></span> <a id="stocklink" href="https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc" style="color:inherit">FM-1.fwsc</a> <span data-t="stock1v16"></span><br>
+      <span class="small"><span data-t="stock1v15"></span> <a id="stocklink15" href="https://web.archive.org/web/20261009203224id_/https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc" style="color:inherit">FM-1.fwsc (V15)</a></span></li>
     <li><span data-t="stock2"></span><br><input type="file" id="stockfile" accept=".fwsc"></li>
     <li data-t="stock3"></li>
   </ol>
@@ -163,7 +164,8 @@ const TEXT = {
     back: "公式ファームウェアに戻すには、このページ下の「純正ファームウェアに戻す」か、M-VAVE 公式のアップデーター M-UPGRADE（Downloads → PC Software → M-UPGRADE）を使います。",
     stockh: "純正ファームウェアに戻す",
     stockwhy: "M-VAVE の FM-1 純正ファームウェア（V15、または M-UPGRADE の V16）を、PERF-1（またはそのセーフモード、ほかの Felucca 系ファームウェア）から同じ USB ケーブルで書き込みます。PERF-1 で保存した曲は消えることがあるので、先にバックアップしてください。",
-    stock1: "M-VAVE の FM-1 V15 をダウンロード:",
+    stock1: "M-VAVE の純正ファームウェアをダウンロード:", stock1v16: "（現在は V16）",
+    stock1v15: "V15 が必要なら、M-VAVE の元のファイルを Internet Archive が保存しています:",
     stock2: "ダウンロードしたファイルを選ぶ:",
     stock3: "FM-1 を USB で接続し、下のボタンを押す。",
     stockinstall: "純正ファームウェアを書き込む",
@@ -219,7 +221,8 @@ const TEXT = {
     back: "To go back to the official firmware, use \"Back to the stock firmware\" below, or M-VAVE's own updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE).",
     stockh: "Back to the stock firmware",
     stockwhy: "This writes M-VAVE's own FM-1 firmware (V15, or V16 from M-UPGRADE) back, from PERF-1 (or its safe mode, or another Felucca-based firmware such as HYP-1 or X0X) over the same USB cable. The pieces saved in PERF-1 may be lost, so make a backup first (Back up and restore your pieces, on this page).",
-    stock1: "Download M-VAVE's FM-1 V15:",
+    stock1: "Download M-VAVE's FM-1 firmware:", stock1v16: "(V16 now)",
+    stock1v15: "Need V15? The Internet Archive kept M-VAVE's original file (the page checks it is the real one):",
     stock2: "Choose the file you downloaded:",
     stock3: "Connect the FM-1 by USB and press the button below.",
     stockinstall: "Install the stock firmware",
