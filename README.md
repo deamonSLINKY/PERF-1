@@ -61,6 +61,17 @@ The screen is drawn in one look (warm black, one colour per voice: the pad bone,
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
 
+## What's new in 0.16.2
+
+- **Fix: back to the stock firmware with M-UPGRADE.** M-VAVE's new M-UPGRADE (3.11) said "A USB MIDI device is present but did not answer" to every PERF-1 until now. It finds PERF-1 again, and can take it straight to M-VAVE's new **V16** as well as V15. The Install page's **Back to the stock firmware** takes V15's or V16's file.
+- **The pages let go of the FM-1** a few seconds after they last talked to it, so M-UPGRADE or your music software can use it with the page still open.
+- **A chord type for each slot** on the Progression page (hold EDIT): Triad, 7th, 9th, Sus, Dub, Fourths or the new **11th**, per chord. Chord names are right now (Sus, 11ths and Fourths showed the wrong name).
+- **THEORY visualizer:** the circle of fifths with the scale lit, the chord playing, its Roman numeral and function, and the next chord. Plus **TRIP**, a kaleidoscope tunnel. Double-click HOME for the visualizers.
+- **Auto FX:** the effects play themselves, timed to end on a phrase line, picked for the section (Settings, after Auto DJ).
+- **Your MIDI map on the FM-1 (experimental):** learn your controller in the emulator, send the map from the Install page, and it plays the FM-1's buttons, keys and knobs with no computer in between.
+- **Music theory:** Phrygian pieces reach the flat II, synthwave's major pieces play I-vi-IV-V, the walking bass leans into the root from a semitone below.
+- **Freeze from a sustain pedal** (CC 64), and **fixes:** a drum hitting itself no longer clicks; the MIDI pads' mute-all-drums now mutes.
+
 ## What's new in 0.16.1
 
 - **A new settings menu:** hold HOME, then turn SELECT through Settings, Auto DJ, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN and SAMPLE. SEL + FX now walks only the effects.
