@@ -137,6 +137,47 @@ static int check(const char *what, int ok)
     return ok ? 0 : 1;
 }
 
+static uint8_t *load_logical(const char *path, size_t *len)   /* a .fwsc without its marker bytes */
+{
+    FILE *f = fopen(path, "rb");
+    uint8_t *raw, *l;
+    size_t n, i;
+    if (!f) { perror(path); exit(2); }
+    raw = malloc(0x200000);
+    n = fread(raw, 1, 0x200000, f);
+    fclose(f);
+    l = malloc(n);
+    for (i = 0; i < 20; i++) memcpy(l + i * 47, raw + i * 48, 47);
+    memcpy(l + 20 * 47, raw + 20 * 48, n - 20 * 48);
+    *len = n - 20;
+    free(raw);
+    return l;
+}
+
+/* M-VAVE's packages (not in the repository: run by hand), ota_test PKG DEVICE: PKG served to a device whose boot head is
+ * DEVICE's; then the same with one byte of the device's head changed, which must be refused (-5) */
+static int heads(const char *pkg, const char *dev)
+{
+    size_t dl;
+    uint8_t *d = load_logical(dev, &dl);
+    int rc, bad = 0;
+    logical = load_logical(pkg, &logical_len);
+    memset(nor, 0xFF, sizeof nor);
+    memcpy(nor, d + 0x400, 0x4000);
+    now_ms = requests = 0; committed = 0; last_code = 0; mute_after = 0xFFFFFFFFu; corrupt_at = NULL; bad_erase = 0;
+    rc = ota_session();
+    printf("  %s on a device with %s's head: rc %d, %u requests\n", pkg, dev, rc, requests);
+    bad += check("stages and commits", rc == 0 && committed);
+    memset(nor, 0xFF, sizeof nor);
+    memcpy(nor, d + 0x400, 0x4000);
+    nor[0x100] ^= 0x01;
+    now_ms = requests = 0; committed = 0; last_code = 0;
+    rc = ota_session();
+    printf("  ... with one byte of that head changed: rc %d\n", rc);
+    bad += check("an unknown head is refused (-5), nothing committed", rc == -5 && !committed);
+    return bad;
+}
+
 static int area_erased(void)
 {
     uint32_t i;
@@ -158,7 +199,9 @@ int main(int argc, char **argv)
     uint8_t *raw;
     size_t n, i;
     int bad = 0, rc;
-    if (argc < 2) { printf("usage: ota_test FILE.fwsc\n"); return 2; }
+    if (argc < 2) { printf("usage: ota_test FILE.fwsc [DEVICE.fwsc]\n"); return 2; }
+    if (argc >= 3)
+        return heads(argv[1], argv[2]);
     f = fopen(argv[1], "rb");
     if (!f) { perror(argv[1]); return 2; }
     raw = malloc(0x200000);

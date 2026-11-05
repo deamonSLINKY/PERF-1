@@ -167,8 +167,8 @@ const TEXT = {
     stock2: "ダウンロードしたファイルを選ぶ:",
     stock3: "FM-1 を USB で接続し、下のボタンを押す。",
     stockinstall: "純正ファームウェアを書き込む",
-    stockok: "M-VAVE の FM-1 V15 です。ボタンを押してください。",
-    stockbad: "これは M-VAVE の FM-1 V15 のファイルではありません。上のリンクのファイルを選んでください。",
+    stockok: "M-VAVE の FM-1 純正ファームウェア（V15 または V16）です。ボタンを押してください。",
+    stockbad: "これは M-VAVE の FM-1 V15 / V16 のファイルではありません。上のリンクのファイルを選んでください。",
     stockdone: "完了。FM-1 は純正ファームウェアで起動しました。",
     nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
     start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
@@ -223,8 +223,8 @@ const TEXT = {
     stock2: "Choose the file you downloaded:",
     stock3: "Connect the FM-1 by USB and press the button below.",
     stockinstall: "Install the stock firmware",
-    stockok: "That is M-VAVE's FM-1 V15. Press the button to install it.",
-    stockbad: "That is not M-VAVE's FM-1 V15 file. Choose the file from the link above.",
+    stockok: "That is M-VAVE's FM-1 stock firmware (V15 or V16). Press the button to install it.",
+    stockbad: "That is not M-VAVE's FM-1 V15 or V16 file. Choose the file from the link above.",
     stockdone: "Done. The FM-1 has restarted with its original firmware.",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
     start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
@@ -676,7 +676,8 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
 
 /* stock firmware: M-VAVE's FM-1 V15, chosen by the user (M-VAVE's server allows no cross-site
    download) and checked against its SHA-256 before anything is written */
-const STOCK_SHA256 = "db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a";
+const STOCK_SHA256 = ["db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a",    /* V15 (FM-1_015) */
+                      "d017fb65e70aca97ee29d944470c3515a74581df5c0576bf70de917c7b2b61d5"];   /* V16 (FM-1_016, 0.16.15: M-UPGRADE 3.11's) */
 let stock = null;
 $("stockfile").addEventListener("change", async (e) => {
   stock = null;
@@ -686,7 +687,7 @@ $("stockfile").addEventListener("change", async (e) => {
   try {
     const raw = new Uint8Array(await f.arrayBuffer());
     const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    if (hex !== STOCK_SHA256) { sayK("stockbad"); return; }
+    if (!STOCK_SHA256.includes(hex)) { sayK("stockbad"); return; }
     stock = { image: logicalImage(raw), product: productOf(raw) };
     $("stockgo").disabled = writing;
     sayK("stockok");

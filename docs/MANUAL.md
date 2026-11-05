@@ -203,6 +203,12 @@ It works from PERF-1, from safe mode and from update mode. M-VAVE's own updater,
 PC Software), works too from PERF-1 0.16.13 on. M-UPGRADE 3.11 doesn't find older PERF-1 builds ("A USB MIDI device is
 present but did not answer"): use this page's button for those.
 
+M-UPGRADE now offers M-VAVE's **V16** (`FM-1_016`), and from PERF-1 0.16.15 on it goes straight to it (V16 changes the
+FM-1's boot head, the first 16 KB of its memory; PERF-1 lets that happen only between M-VAVE's own V15 and V16). An older
+PERF-1 shows `UPDATE FAILED` and M-UPGRADE times out (error 258): there, press **Select firmware** in M-UPGRADE and choose
+V15's `FM-1.fwsc` (the file this page links to), or use this page's button, then update the stock V15 to V16 with M-UPGRADE.
+This page's button takes V15's or V16's file.
+
 ### Update mode
 
 In update mode the installer can write to the FM-1. To enter it yourself, hold **OCT-** and **OCT+**

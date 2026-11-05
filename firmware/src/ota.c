@@ -287,6 +287,24 @@ static int ota_ufw(uint8_t *hdr, uint32_t *fl_off, uint32_t *fl_len, uint32_t *o
     return 0;
 }
 
+#ifndef FELUCCA_LOADER
+/* M-VAVE's own boot heads (flash.bin's first 16 KiB, CRC-32 as zlib's): V15 (FM-1_015) and V16 (FM-1_016, offered by
+ * M-UPGRADE 3.11). The official loader may rewrite the head only from one of these to the other, as M-VAVE's own
+ * V15 -> V16 update does; any other head that differs is refused (-5), as before (0.16.15) */
+static uint32_t ota_crc32(const uint8_t *p, uint32_t n, uint32_t c)
+{
+    uint32_t k;
+    c = ~c;
+    while (n--) {
+        c ^= *p++;
+        for (k = 0; k < 8u; k++)
+            c = (c >> 1) ^ (0xEDB88320u & (0u - (c & 1u)));
+    }
+    return ~c;
+}
+static int ota_known_head(uint32_t crc) { return crc == 0x3A04AD23u || crc == 0x08316064u; }
+#endif
+
 static int ota_stage(void)                       /* steps 1..6; 0 = host said success */
 {
     static uint8_t hdr[0x400], b[512], mine[512];
@@ -312,6 +330,7 @@ static int ota_stage(void)                       /* steps 1..6; 0 = host said su
         own = ota_memeq(b + i, (const uint8_t *)"FELUCCA-LOADER-1", 16) && ota_rd32(b + 0x20 + 4) <= 0x14000u;
     if (!official && !own)
         return -7;
+#ifdef FELUCCA_LOADER
     if (official) {                    /* the official loader writes the head: it must equal ours */
         ota_show(2, 0);
         for (i = 0; i < 0x4000u; i += 512u) {
@@ -321,6 +340,21 @@ static int ota_stage(void)                       /* steps 1..6; 0 = host said su
                 return -5;
         }
     }
+#else
+    if (official) {                    /* the official loader writes the head: it must equal ours, or both be M-VAVE's (V15, V16) */
+        uint32_t cp = 0, cm = 0, same = 1;
+        ota_show(2, 0);
+        for (i = 0; i < 0x4000u; i += 512u) {
+            if (ota_read(fl_off + i, b, 512) || ota_fread(i, mine, 512))
+                return -4;
+            same &= (uint32_t)ota_memeq(b, mine, 512);
+            cp = ota_crc32(b, 512, cp);
+            cm = ota_crc32(mine, 512, cm);
+        }
+        if (!same && !(ota_known_head(cp) && ota_known_head(cm)))
+            return -5;
+    }
+#endif
     /* 4. stage the package's loader: erase, body, verify, head last */
     ota_show(3, 0);
     if (ota_read(ota_off, b, 512))

@@ -140,6 +140,17 @@ static void ota_show(uint32_t step, int32_t code)
         return;
     }
     draw_text_box(0, 124, 240, &FONT_S, code == 1 ? "DRY RUN OK" : "FAILED", C_HI, 1);
+    if (code == -5) {                                   /* an official package with a boot head that is not M-VAVE's V15 or V16 (ota.c
+                                                         * ota_known_head): never rewritten from here */
+        draw_text_box(0, 150, 240, &FONT_S, "UNKNOWN BOOT HEAD.", C_WHITE, 1);
+        draw_text_box(0, 170, 240, &FONT_S, "INSTALL STOCK V15 FIRST,", C_WHITE, 1);
+        draw_text_box(0, 190, 240, &FONT_S, "THEN UPDATE FROM STOCK.", C_WHITE, 1);
+        uint32_t t;
+        for (t = 0; t < 60u; t++) {                     /* 6 s to read it, the watchdog fed */
+            fm1_wdt_feed();
+            fm1_delay_ms(100);
+        }
+    }
     fm1_delay_ms(1500);
 }
 static void ota_commit(const uint8_t *parm)
