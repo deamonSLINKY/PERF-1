@@ -622,6 +622,25 @@ Turning Chord, Type or Bars switches Play to Loop. Your progression starts on th
 ends at the last slot that has a chord, so a four-chord progression only needs slots 1 to 4. **EDIT** jumps
 to the next slot, and the drop of a build goes back to slot 1.
 
+**Circle of fifths fills.** The first five **black keys** write a whole progression into the slots in one press,
+one that moves round the circle of fifths: each chord a fifth below the one before, as the scale allows. That
+fall by a fifth is the strongest pull in harmony, the one that makes a progression sound like it's going home.
+
+| Black key | Writes | In C major | In A minor |
+|---|---|---|---|
+| 1 (F#) | ii V I I | Dm G C C | Bdim Em Am Am |
+| 2 (G#) | vi ii V I | Am Dm G C | F Bdim Em Am |
+| 3 (A#) | iii vi ii V I I | Em Am Dm G C C | C F Bdim Em Am Am |
+| 4 (C#) | I vi ii V (the turnaround) | C Am Dm G | Am F Bdim Em |
+| 5 (D#) | The whole circle: I IV vii iii vi ii V I | C F Bdim Em Am Dm G C | Am Dm G C F Bdim Em Am |
+
+Each chord gets the bars of the slot you had chosen, so choose a slot and set its Bars first; the slots after the
+fill are emptied, and Play goes to Loop. The types you gave the slots stay. The chords stay in the scale, so in a
+minor key the V is minor (v), unless the genre raises it for the cadence (the THEORY screen shows that G# in red).
+It's stored with the piece like any progression. A pentatonic scale has no circle to walk, so the fills are off
+there. The black keys blink faintly on this page to show they do something; watch the THEORY screen while it
+plays and you see the progression walk round the circle.
+
 The chords are steps of the scale, not fixed notes, so they follow the key. Change the root or the mode and
 the progression moves with it. The chord kind, the voicing and the rest of the Chords page still apply. In
 the genres with a cadence, the V chord in a minor key gets its raised seventh, as it does in the walk.
@@ -1851,7 +1870,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 | LIFE | A Game of Life style pattern of cells that the drums feed: the kick drops a cluster, the snare a spray, a hat a spark. |
 | ORBIT | A looping line drawing (a harmonograph) made from the notes of the chord. It changes shape with every chord. |
 | TRIP | A kaleidoscope you fall through: mirrored slices (six, or eight when the chord has four notes) rushing towards you. The kick throws you forward and the picture breathes in, the snare turns the twist the other way, a build winds it tighter bar by bar, the hats strike sparks, and a breakdown drifts. |
-| THEORY | The harmony as it plays, drawn like the circle of fifths in a theory book. **The circle:** C at the top, then clockwise a fifth further each step. The inner ring is every key's **key signature** (0, 1#, 2# .. 6#, 5b .. 1b): the one for your key is lit, so you can read "E major has 4 sharps" straight off it. The scale lies on the circle as **one arc** (a mode's seven notes are always neighbours on the circle of fifths), with each chord's **Roman numeral** on it (upper case major, lower case minor, ° diminished): the chord playing is filled, the next one ringed, an arrow points from one to the other while your progression plays, and the last move fades out behind it, so you see the progression jump around the circle. The outer ring names every note **the way the key spells it**: G# in E major (not Ab), Cb in Eb minor, E# in F# major. The chord's notes are marked; a note borrowed from outside the scale, like the G# in A minor's E7, is **red**. **The right side:** the chord's numeral, its name and its notes (spelled the same way), what the chord does (tonic, subdominant, dominant ..), the next chord and how the root gets there (a fifth down, a step up; "home" when it falls a fifth to the tonic), your progression's eight slots as a chord chart, and at the bottom the key and its signature with the major key it's written in ("0: C MAJOR" for A minor). With your progression off, the slots show the genre's walk as it was heard. |
+| THEORY | The harmony as it plays, drawn like the circle of fifths in a theory book. **The circle:** C at the top, then clockwise a fifth further each step. The inner ring is every key's **key signature** (0, 1#, 2# .. 6#, 5b .. 1b): the one for your key is lit, so you can read "E major has 4 sharps" straight off it. The scale lies on the circle as **one arc** (a mode's seven notes are always neighbours on the circle of fifths), with each chord's **Roman numeral** on it (upper case major, lower case minor, ° diminished), coloured by its job as theory books group them: the tonic's family (I, iii, vi) in the pad's colour, the subdominant's (ii, IV) in the bass's, the dominant's (V, vii) in the acid's, and the function's name on the right in the same colour: the chord playing is filled, the next one ringed, a curved arrow swoops from one to the other while your progression plays, and the last move stays behind it for half the chord before it fades, so you see the progression jump around the circle. The outer ring names every note **the way the key spells it**: G# in E major (not Ab), Cb in Eb minor, E# in F# major. The chord's notes are marked; a note borrowed from outside the scale, like the G# in A minor's E7, is **red**. **The right side:** the chord's numeral, its name and its notes (spelled the same way), what the chord does (tonic, subdominant, dominant ..), the next chord and how the root gets there (a fifth down, a step up; "home" when it falls a fifth to the tonic), your progression's eight slots as a chord chart, and at the bottom the key and its signature with the major key it's written in ("0: C MAJOR" for A minor). With your progression off, the slots show the genre's walk as it was heard. |
 | AUTO | Picks one of the light shows (not THEORY), and switches to a new one at each section change and every 32 bars. |
 
 ![The screensaver has the whole screen](img/perf-screen-saver.png)

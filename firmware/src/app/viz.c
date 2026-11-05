@@ -803,28 +803,56 @@ static const char *th_motion(int a, int b, int key)   /* how the root moves to t
 }
 /* a swoop from (x0, y0) to (x1, y1), bowed in toward (cx, cy) as a printed circle's arrows are (a quadratic curve, its control
  * point between the chord's middle and the circle's centre); thick: two pixels; head: an arrowhead along the curve's end */
-static void th_swoop(int32_t cx, int32_t cy, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c, int thick, int head)
+static void th_swoop_q(int32_t x0, int32_t y0, int32_t x1, int32_t y1, float qx, float qy, uint16_t c, int thick, float head);
+static void th_swoop(int32_t cx, int32_t cy, int pa, int pb, float r, uint16_t c, int thick, int head)
 {
-    const float qx = 0.45f * (float)cx + 0.55f * 0.5f * (float)(x0 + x1), qy = 0.45f * (float)cy + 0.55f * 0.5f * (float)(y0 + y1);
+    int d = (pb - pa + 12) % 12;
+    if (d > 6)
+        d -= 12;                                 /* the shorter way round (a tritone: clockwise) */
+    {
+        const float a0 = (float)pa * (FM_TWO_PI / 12.0f), a1 = (float)pb * (FM_TWO_PI / 12.0f), am = a0 + (float)d * (FM_TWO_PI / 24.0f);
+        const float h = (float)(d < 0 ? -d : d) * (FM_TWO_PI / 48.0f), rc = r * (0.55f * fm_cosf(h) + 0.4f * fm_sinf(h));
+        const int32_t x0 = cx + (int32_t)(fm_sinf(a0) * r), y0 = cy - (int32_t)(fm_cosf(a0) * r),
+                      x1 = cx + (int32_t)(fm_sinf(a1) * r), y1 = cy - (int32_t)(fm_cosf(a1) * r);
+        const float qx = (float)cx + fm_sinf(am) * rc, qy = (float)cy - fm_cosf(am) * rc;
+        const float span = fm_sqrtf((float)((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)));
+        th_swoop_q(x0, y0, x1, y1, qx, qy, c, thick, head ? (span * 0.4f < 9.0f ? span * 0.4f : 9.0f) : 0.0f);
+    }
+}
+static void th_swoop_q(int32_t x0, int32_t y0, int32_t x1, int32_t y1, float qx, float qy, uint16_t c, int thick, float head)
+{
     int32_t px = x0, py = y0;
     int j;
     for (j = 1; j <= 16; j++) {
         const float t = (float)j * (1.0f / 16.0f), u = 1.0f - t;
         const int32_t x = (int32_t)(u * u * (float)x0 + 2.0f * u * t * qx + t * t * (float)x1 + 0.5f),
                       y = (int32_t)(u * u * (float)y0 + 2.0f * u * t * qy + t * t * (float)y1 + 0.5f);
-        if (thick)
+        if (thick) {                             /* three pixels across (0.16.20: two were hard to see) */
             sg_line2(px, py, x, y, c);
-        else
+            sg_line2(px + 1, py + 1, x + 1, y + 1, c);
+        } else {
             cv_line(px, py, x, y, c);
+        }
         px = x, py = y;
     }
-    if (head) {                                  /* along the curve's last direction: from the control point to the end */
-        const float dx = (float)x1 - qx, dy = (float)y1 - qy, l = fm_sqrtf(dx * dx + dy * dy) + 0.001f, ux = dx / l, uy = dy / l;
-        cv_line(x1, y1, x1 - (int32_t)(ux * 7.0f - uy * 4.0f), y1 - (int32_t)(uy * 7.0f + ux * 4.0f), c);
-        cv_line(x1, y1, x1 - (int32_t)(ux * 7.0f + uy * 4.0f), y1 - (int32_t)(uy * 7.0f - ux * 4.0f), c);
-        cv_line(x1 - (int32_t)(ux * 7.0f - uy * 4.0f), y1 - (int32_t)(uy * 7.0f + ux * 4.0f),
-                x1 - (int32_t)(ux * 7.0f + uy * 4.0f), y1 - (int32_t)(uy * 7.0f - ux * 4.0f), c);
+    if (head > 2.0f) {                           /* along the curve's last direction (the control point to the end): a filled head, its size
+                                                 * from the move's (a short move, a small head) */
+        const float dx = (float)x1 - qx, dy = (float)y1 - qy, l = fm_sqrtf(dx * dx + dy * dy) + 0.001f, ux = dx / l, uy = dy / l,
+                    w = head * 0.55f;
+        const float ax = (float)x1 - ux * head - uy * w, ay = (float)y1 - uy * head + ux * w,
+                    bx = (float)x1 - ux * head + uy * w, by = (float)y1 - uy * head - ux * w;
+        int q;
+        for (q = 0; q <= 8; q++) {               /* lines from the tip across the base */
+            const float t = (float)q * 0.125f;
+            cv_line(x1, y1, (int32_t)(ax + (bx - ax) * t + 0.5f), (int32_t)(ay + (by - ay) * t + 0.5f), c);
+        }
     }
+}
+static uint16_t th_fcol(int num)                 /* a degree's job as a colour: the tonic's (I iii vi) the pad's, the subdominant's (ii IV) the
+                                                 * bass's, the dominant's (V vii) the acid's, as theory books group them */
+{
+    num = ((num % 7) + 7) % 7;
+    return num == 1 || num == 3 ? K_BASS : num == 4 || num == 6 ? K_ACID : K_PAD;
 }
 static void vz_theory(void)
 {
@@ -840,7 +868,7 @@ static void vz_theory(void)
     uint8_t tmp[EN_PRG_LEN];
     const uint8_t *pb = pg_view(tmp);
     const int loop = pb == proj.prg && en_prg_get(pb, EN_PRG_PLAY, 1) && en_prog_pos >= 0;
-    const uint16_t band = mix(K_BG, K_PAD, 4), pad = mix(K_PAD_T, K_PAD, 10 + q16(en_pad_level) * 6 / 16);
+    const uint16_t band = mix(K_BG, K_PAD, 5), pad = mix(K_PAD_T, K_PAD, 10 + q16(en_pad_level) * 6 / 16);
     th_key(scale, key, EN_NOTE_NAME[key][1] == 'b', &k);
     tl = th_letter(&k, key);
     for (i = 0; i < EN_NPAD; i++)
@@ -883,16 +911,24 @@ static void vz_theory(void)
     }
     {   /* the move just made (the progression jumping round the circle): the last root to this one, fading over three seconds */
         static int8_t cur = -1, prev = -1;
-        static float t0;
+        static uint32_t t0;
+        const uint32_t now = plat_ms();
+        uint32_t life;
         if (root != cur) {
             prev = cur;
             cur = (int8_t)root;
-            t0 = vz.tt;
+            t0 = now;
         }
-        if (prev >= 0 && prev != root && vz.tt - t0 < 3.0f && vz.tt >= t0) {
-            const int f = 10 - (int)((vz.tt - t0) * 3.0f);
+        {   /* half the chord's length: its slot's bars while the loop plays, else four bars (0.16.20: it faded before the next came) */
+            const int bars = loop ? 1 << en_prg_get(pb, 24 + 2 * (en_prog_pos & 7), 2) : 4;
+            life = (uint32_t)bars * 120000u / (uint32_t)(proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120);
+            if (life < 2000u)
+                life = 2000u;
+        }
+        if (prev >= 0 && prev != root && now - t0 < life) {
+            const int f = 13 - (int)((now - t0) * 13u / life);
             if (f > 0)
-                th_swoop(cx, cy, TH_X(TH_POS(prev), 36), TH_Y(TH_POS(prev), 36), TH_X(TH_POS(root), 36), TH_Y(TH_POS(root), 36), mix(K_BG, K_PAD, f), 0, 0);
+                th_swoop(cx, cy, TH_POS(prev), TH_POS(root), 36.0f, mix(K_BG, th_fcol((th_letter(&k, prev) - tl + 7) % 7), f), 1, 0);
         }
     }
     d = th_degree(root, m);
@@ -909,8 +945,7 @@ static void vz_theory(void)
             }
         }
         if (nroot >= 0 && nroot != root) {       /* the move: an arrow inside the band, from this chord's root to the next one's */
-            th_swoop(cx, cy, TH_X(TH_POS(root), 36), TH_Y(TH_POS(root), 36), TH_X(TH_POS(nroot), 36), TH_Y(TH_POS(nroot), 36),
-                     mix(K_BG, K_ACC, 14), 1, 1);
+            th_swoop(cx, cy, TH_POS(root), TH_POS(nroot), 36.0f, K_ACC, 1, 1);
         }
     }
     for (i = 0; i < 12; i++) {                   /* the band's numerals; the chord playing filled, the next one ringed */
@@ -927,15 +962,18 @@ static void vz_theory(void)
             mk = L > 1 && (tx[L - 1] == 'o' || tx[L - 1] == '+') ? tx[L - 1] : 0;
             if (mk)                              /* on the band the mark is drawn small, raised, as printed (vii°, III+): the numeral fits */
                 tx[L - 1] = 0;
-            if (pc == root && en_playing) {
-                cv_disc(TH_X(i, 44), TH_Y(i, 44), 8, K_ACC);
-                c = K_BG;
-            } else {
-                if (pc == nroot) {
-                    cv_disc(TH_X(i, 44), TH_Y(i, 44), 8, K_ACC);
-                    cv_disc(TH_X(i, 44), TH_Y(i, 44), 6, band);
+            {
+                const uint16_t fc = th_fcol((th_letter(&k, pc) - tl + 7) % 7);
+                if (pc == root && en_playing) {
+                    cv_disc(TH_X(i, 44), TH_Y(i, 44), 9, fc);
+                    c = K_BG;
+                } else {
+                    if (pc == nroot) {
+                        cv_disc(TH_X(i, 44), TH_Y(i, 44), 9, fc);
+                        cv_disc(TH_X(i, 44), TH_Y(i, 44), 7, band);
+                    }
+                    c = pc == nroot ? fc : mix(band, fc, 12);
                 }
-                c = pc == nroot ? K_ACC : mix(K_DIM, K_TEXT, 6);
             }
             w = text_w(&FONT_XS, tx);
             x0 = TH_X(i, 44) - (w + (mk ? 4 : 0)) / 2;
@@ -974,11 +1012,12 @@ static void vz_theory(void)
             pcs[j + 1] = en_chord[j] % 12;
         {   /* the numeral, the chord's name from the notes sounding (the slot's own type, the dominant's raised third and all), spelled */
             char nm[32];
-            cv_text2(x, 0, &FONT_B, d >= 0 ? th_roman(num, d, tx) : "--", d >= 0 ? K_ACC : K_DIM);
+            cv_text2(x, 0, &FONT_B, d >= 0 ? th_roman(num, d, tx) : "--", d >= 0 ? th_fcol(num) : K_DIM);
             en_chord_name(pcs, EN_NPAD + 1, nm);
             cv_text(x, 30, &FONT_B, th_respell(&k, root, nm, tx), K_TEXT);
         }
-        cv_text(x, 46, &FONT_XS, d < 0 ? "OUTSIDE THE SCALE" : num == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[num], K_DIM);
+        cv_text(x, 46, &FONT_XS, d < 0 ? "OUTSIDE THE SCALE" : num == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[num],
+                d < 0 ? K_DIM : th_fcol(num));
         {   /* its notes, from the root up, spelled; a borrowed one red */
             int32_t xx = x;
             for (j = 0; j < 12; j++) {

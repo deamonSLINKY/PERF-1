@@ -1,0 +1,82 @@
+# The Circle fills (0.16.20, issues #2 and #3): on the Progression page the first five black keys write a progression that moves round the
+# circle of fifths, in the scale, saved with the piece like any: ii V I I, vi ii V I, iii vi ii V I I, I vi ii V, the whole circle
+# I IV vii iii vi ii V I. Each chord takes the chosen slot's bars; the slots after the fill are emptied; Play goes to Loop. A pentatonic
+# scale has no circle to walk: refused.
+seed 0
+wait 3000
+press EDIT
+wait 600
+release EDIT
+wait 100
+expect view 5
+expect pool 0x5AD
+shot circle_page.png
+# the chosen slot's bars (slot 1: 4 bars heard, one step up: 8) go to every chord of the fill
+turn K3 1
+tapkey b0
+wait 200
+expect prgplay 1
+expect prgslot0 2
+expect prgslot1 5
+expect prgslot2 1
+expect prgslot3 1
+expect prgslot4 0
+expect prgbars0 8
+expect prgbars3 8
+tapkey b4
+wait 200
+expect prgslot0 1
+expect prgslot1 4
+expect prgslot2 7
+expect prgslot3 3
+expect prgslot4 6
+expect prgslot5 2
+expect prgslot6 5
+expect prgslot7 1
+shot circle_whole.png
+# it plays round: slot 1 is I (A), slot 2 IV (D), slot 3 vii (G)
+tap PLAY
+wait 3000
+expect progpos 0
+expect chordroot 9
+tap EDIT
+wait 1500
+expect progpos 1
+expect chordroot 2
+tap EDIT
+wait 1500
+expect progpos 2
+expect chordroot 7
+# THEORY on it: the arrow on to iii (C)
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 36
+spin SELECT -1
+wait 300
+spin SELECT -1
+wait 1200
+expect viz 8
+shot circle_theory.png
+# stored with the piece: SAVE, power off and on
+tap HOME
+wait 300
+tap GLO
+tap SAVE
+wait 400
+reboot
+wait 3000
+expect prgslot2 7
+expect prgslot7 1
+# a pentatonic (the mode on ALGORITHM, Pent min): no circle, nothing changed
+setpar 72 7
+wait 200
+press EDIT
+wait 600
+release EDIT
+wait 100
+tapkey b0
+wait 200
+expect prgslot0 1
+expect prgslot2 7

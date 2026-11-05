@@ -1072,6 +1072,36 @@ static const uint8_t *pg_view(uint8_t *tmp)
     en_prog_capture(tmp);
     return tmp;
 }
+/* the Circle fills (0.16.20, after issues #2 and #3: progressions that move round the circle of fifths, saved like any): the first five
+ * black keys on the Progression page write one into the slots, each chord a fifth down from the one before as the scale allows (its
+ * degrees: in minor ii is ii o and V v, or V where the genre cadences): ii V I I, vi ii V I, iii vi ii V I I, the turnaround I vi ii V,
+ * and the whole diatonic circle I IV vii iii vi ii V I. Each chord takes the bars of the slot chosen; the slots after it are emptied, so the
+ * loop is the fill; the types stay as they were. A seven-note scale only (a pentatonic has no circle to walk). */
+#define PGF_N 5
+static const uint8_t PGF[PGF_N][EN_PRG_N] = {{2, 5, 1, 1}, {6, 2, 5, 1}, {3, 6, 2, 5, 1, 1}, {1, 6, 2, 5}, {1, 4, 7, 3, 6, 2, 5, 1}};
+static const char *const PGF_NAME[PGF_N] = {"ii V I", "vi ii V I", "iii vi ii V I", "I vi ii V", "THE WHOLE CIRCLE"};
+static int pg_scale(void);
+static void pg_fill(int n)
+{
+    int s, br;
+    if (pg_scale() != 7) {
+        say("CIRCLE", "NEEDS 7 NOTES");
+        return;
+    }
+    if (!pg_any(proj.prg))
+        en_prog_capture(proj.prg);               /* (as an edit does: the chords heard last become the piece's first) */
+    br = en_prg_get(proj.prg, 24 + 2 * (ui.pgsl & 7), 2);
+    for (s = 0; s < EN_PRG_N; s++) {
+        en_prg_put(proj.prg, 3 * s, 3, PGF[n][s]);
+        if (PGF[n][s])
+            en_prg_put(proj.prg, 24 + 2 * s, 2, br);
+    }
+    en_prg_put(proj.prg, EN_PRG_PLAY, 1, 1);
+    en_prog(proj.prg);
+    edited();
+    ui.pgsl = 0;
+    say("CIRCLE", PGF_NAME[n]);
+}
 static int pg_scale(void)                       /* the degrees there are: the scale's notes (seven at most) */
 {
     int st[12];
@@ -3720,11 +3750,15 @@ static void input(void)
                     for (s = 0; s < SL_N; s++)
                         if (WHITE_KEY[s] == i)
                             ui.slsl = (uint8_t)s;
-                } else if (ui.view == V_PROG) {   /* the Progression page: the first eight white keys choose the slot */
+                } else if (ui.view == V_PROG) {   /* the Progression page: the first eight white keys choose the slot, the first five black keys
+                                                   * write a Circle fill (0.16.20) */
                     int s;
                     for (s = 0; s < EN_PRG_N; s++)
                         if (WHITE_KEY[s] == i)
                             ui.pgsl = (uint8_t)s;
+                    for (s = 0; s < PGF_N; s++)
+                        if (BLACK_KEY[s] == i)
+                            pg_fill(s);
                 } else if (ui.view == V_CMSTEP) { /* the Pluck steps page: likewise */
                     int s;
                     for (s = 0; s < 16; s++)
@@ -5729,6 +5763,8 @@ static void draw_scope(int kind)
             }
         }
         cv_text(4, 112, &FONT_XS, !mine ? "TURN A CHORD: THEY ARE YOURS" : loop ? "EDIT: NEXT SLOT  HOLD: HERE" : "PLAY: LOOP TO HEAR THEM", K_DIM);
+        if (pg_scale() == 7)
+            cv_text(4, 124, &FONT_XS, "BLACK KEYS 1-5: CIRCLE OF FIFTHS", mix(K_DIM, K_PAD, 8));
         return;
     }
     if (kind == SCOPE_CMSTEP) {                  /* the pluck steps: the line, a bar a step (its height the rung), the accent bright, a soft one dim; the step chosen framed */
@@ -6660,6 +6696,9 @@ static void leds(void)
         for (i = 0; i < EN_PRG_N; i++)
             if ((uint32_t)i == (uint32_t)(ui.pgsl & 7u) || (uint32_t)(en_prg_get(proj.prg, 3 * (int)i, 3) != 0) ^ (uint32_t)(en_playing && (int)i == en_prog_pos))
                 k |= 1u << WHITE_KEY[i];
+        if (pg_scale() == 7 && (ui.frame / 8u) % 6u == 0u)   /* the Circle fills on the black keys: lit a frame in six, faint beside the slots */
+            for (i = 0; i < PGF_N; i++)
+                k |= 1u << BLACK_KEY[i];
     } else if (ui.view == V_CMSTEP) {            /* the pluck steps: likewise */
         for (i = 0; i < 16; i++)
             if ((uint32_t)i == (uint32_t)(ui.pstp & 15u) || (uint32_t)(en_cm_lvl[i] != 0) ^ (uint32_t)(en_playing && i == en_cm_pos))
