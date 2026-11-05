@@ -49,10 +49,20 @@
   .pages button { text-align: left; background: var(--card); border-color: var(--rule); color: var(--ink); text-transform: none; letter-spacing: .02em; font-weight: 600; }
   .pages button[aria-current=true] { background: var(--rust); border-color: var(--purple); }
   @media (max-width: 720px) { .pages { flex-direction: row; flex-wrap: wrap; } }
-  .row { display: grid; grid-template-columns: 150px 1fr 90px 28px; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .row { display: grid; grid-template-columns: 150px 1fr 90px 28px 58px; gap: 10px; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
   .row label { color: var(--horn); }
   .row .val { text-align: right; font: 600 .95rem "Chakra Petch", sans-serif; color: var(--orange); }
   .row button.small { padding: .1em .4em; }
+  .row .cc { font: 600 .75rem "Chakra Petch", sans-serif; color: var(--muted); text-align: center; border: 1px dashed transparent; border-radius: 6px; padding: .15em 0; }
+  .row .cc.on { color: var(--orange); border-color: var(--rule); }
+  .learning .row { cursor: pointer; }
+  .learning .row:hover { background: rgba(255,255,255,.04); }
+  .row.picked { outline: 2px solid var(--orange); outline-offset: 2px; border-radius: 6px; }
+  #ctllist { margin: .4rem 0 0; padding-left: 1.2rem; font-size: 15px; }
+  #ctllist li { margin: 2px 0; }
+  #ctllist select { font-size: 13px; padding: .1em .3em; margin-left: .4em; }
+  #ctllist button { margin-left: .4em; }
+  @media (max-width: 720px) { .row { grid-template-columns: 1fr 1fr 60px 28px 50px; } }
   input[type=range] { width: 100%; accent-color: var(--purple); }
   select, input[type=text], input[type=number] { background: var(--ground); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .5em; font: inherit; max-width: 100%; }
   .muted { color: var(--muted); font-size: 14px; }
@@ -97,6 +107,18 @@
 
   <section class="panel" id="p-sound">
     <p class="muted">Every parameter, grouped by voice: all of the pad together, all of the drums together, and so on. Moving a control changes the piece that is playing right now; to keep it, store the piece on the unit (GLO page, SAVE). The pluck's Sound lists the built-in DX voices and the ones you have loaded.</p>
+    <div class="card" id="ctl">
+      <h2>Your controller: a knob on each setting</h2>
+      <p class="muted">Turn any setting below from a MIDI controller's knob or fader (a CC), on any page of the FM-1, with no computer in between once it is sent. Plug the controller into this computer, press <b>Learn</b>, click a setting, move the control. Learned settings show their CC here and work at once while the FM-1 is connected to this page. Then <b>Send to my FM-1</b> (the Install page's MIDI map, in this browser) and plug the controller into the FM-1 (USB host, or the TRS MIDI jack). Up to 48 controls, with the panel controls learned in the emulator. Needs PERF-1 0.16.18 or later.</p>
+      <div class="bar">
+        <button id="ctlon" class="alt">Connect a controller</button>
+        <button id="ctllearn" aria-pressed="false" disabled>Learn</button>
+        <button id="ctllcxl" class="alt">Use the Launch Control XL 3 map</button>
+        <a id="ctlsend" href="../install/#midimap">Send to my FM-1 &rarr;</a>
+      </div>
+      <p id="ctlstat" class="muted" style="margin:0"></p>
+      <details id="ctlbox" hidden><summary id="ctlsum" class="muted" style="cursor:pointer;margin-top:.4rem"></summary><ul id="ctllist"></ul></details>
+    </div>
     <div class="cols">
       <div class="pages" id="pages"></div>
       <div class="card"><h2 id="pagetitle"></h2><div id="rows"></div></div>
@@ -231,8 +253,12 @@ function renderPages() {
     box.append(b);
   });
 }
+let g_name = "";
+const rowOf = new Map();                          /* the setting's row on screen: its control, to follow a controller */
 function renderRows() {
   const g = PAGES[page];
+  g_name = g.name;
+  rowOf.clear();
   $("pagetitle").textContent = g.name;
   const box = $("rows");
   box.textContent = "";
@@ -267,9 +293,133 @@ function paramRow(k) {
   const rst = document.createElement("button");
   rst.className = "alt small"; rst.textContent = "↺"; rst.title = "Back to the default (" + text(q.def) + ")";
   rst.addEventListener("click", () => { ctl.value = q.def; out.textContent = q.t && ctl.tagName === "SELECT" ? "" : text(q.def); setParam(k.p, q.def); });
-  row.append(lab, ctl, out, rst);
+  const cc = document.createElement("span");
+  const src = ctlSrcOf(k.p);
+  cc.className = "cc" + (src ? " on" : "");
+  cc.textContent = src ? ctlShort(src) : "";
+  cc.title = src ? ctlSrcName(src) + " (learned)" : "";
+  row.append(lab, ctl, out, rst, cc);
+  row.addEventListener("pointerdown", (e) => {       /* learning: a click picks the setting (its controls do nothing meanwhile) */
+    if (!ctlLearning) return;
+    e.preventDefault(); e.stopPropagation();
+    ctlPick = { p: k.p, name: g_name + ": " + k.label };
+    document.querySelectorAll(".row.picked").forEach((r) => r.classList.remove("picked"));
+    row.classList.add("picked");
+    ctlStat(ctlPick.name + ": now move a knob or fader on your controller.");
+  }, true);
+  rowOf.set(k.p, { ctl, out, text });
   return row;
 }
+
+/* ===================================================================== your controller: CC -> a setting (0.16.18)
+ * The learned list is the emulator's (localStorage hyp1-emu-midimap, the same site): {"c:<ch>:<cc>": {t: "p<parameter>", mode, name}} beside its panel
+ * controls ({t: "b.." | "k.." | "e.." | "m"}). The Install page sends it all to the FM-1 (web/fm1backup.js mmEncode, firmware ui.c mm_set). */
+const MM_KEY = "hyp1-emu-midimap", MM_MAX = 48;
+const CTL_MODES = [["abs", "a knob or fader (0-127)"], ["rel64", "an encoder (64 ± n)"], ["rel2c", "an encoder (1 up, 127 down)"]];
+/* the Launch Control XL 3's factory custom mode (channel 1; faders CC 5-12, the three rows of knobs CC 13-20, 21-28, 29-36): docs/maps/launch-control-xl-3.perfmap */
+const LCXL3 = [[5, 0, "Mixer: Pad"], [6, 2, "Mixer: Bass"], [7, 1, "Mixer: Acid"], [8, 98, "Mixer: Pluck"], [9, 3, "Mixer: Drums"], [10, 4, "Mixer: Vinyl"], [11, 67, "Space: Echo"], [12, 69, "Space: Reverb"],
+  [13, 9, "Pad: Bright"], [14, 11, "Pad: Detune"], [15, 12, "Pad: Attack"], [16, 14, "Pad: Release"], [17, 127, "Pad: Chorus"], [18, 24, "Bass: Cutoff"], [19, 25, "Bass: Reso"], [20, 154, "Bass: Move"],
+  [21, 34, "Acid: Cutoff"], [22, 35, "Acid: Reso"], [23, 36, "Acid: Env mod"], [24, 37, "Acid: Decay"], [25, 38, "Acid: Accent"], [26, 39, "Acid: Slide"], [27, 41, "Acid: Density"], [28, 44, "Acid: Mutate"],
+  [29, 46, "Drums: Drive"], [30, 47, "Drums: Swing"], [31, 163, "Drums: Humanize"], [32, 161, "Drums: Ghosts"], [33, 100, "Pluck: Density"], [34, 102, "Pluck: Decay"], [35, 68, "Space: Echo time"], [36, 70, "Space: Size"]];
+let ctlMidi = null, ctlLearning = false, ctlPick = null, ctlMaps = {};
+const ctlStat = (t) => { $("ctlstat").textContent = t || ""; };
+function ctlLoad() { try { ctlMaps = JSON.parse(localStorage.getItem(MM_KEY) || "{}") || {}; } catch (_) { ctlMaps = {}; } }
+function ctlSave() { try { localStorage.setItem(MM_KEY, JSON.stringify(ctlMaps)); } catch (_) { /* a private window: kept for this page only */ } ctlRender(); renderRows(); }
+const ctlSrcOf = (p) => Object.keys(ctlMaps).find((id) => ctlMaps[id] && ctlMaps[id].t === "p" + p);
+const ctlShort = (id) => { const [, ch, n] = id.split(":"); return "CC " + n + (+ch ? " ·" + (+ch + 1) : ""); };
+const ctlSrcName = (id) => { const [, ch, n] = id.split(":"); return "CC " + n + " ch " + (+ch + 1); };
+const ctlName = (m) => m.name || (P[+m.t.slice(1)] ? P[+m.t.slice(1)].n : "Setting " + m.t.slice(1));
+function ctlRender() {
+  const ul = $("ctllist"), ids = Object.keys(ctlMaps), sets = ids.filter((id) => String(ctlMaps[id].t)[0] === "p");
+  ul.textContent = "";
+  for (const id of sets) {
+    const m = ctlMaps[id], li = document.createElement("li"), sel = document.createElement("select"), x = document.createElement("button");
+    li.textContent = ctlSrcName(id) + " → " + ctlName(m);
+    for (const [v, l] of CTL_MODES) sel.add(new Option(l, v, false, (m.mode || "abs") === v));
+    sel.setAttribute("aria-label", "How the controller sends " + ctlSrcName(id));
+    sel.addEventListener("change", () => { m.mode = sel.value; ctlSave(); });
+    x.className = "alt small"; x.textContent = "✕"; x.title = "Forget this one";
+    x.addEventListener("click", () => { delete ctlMaps[id]; ctlSave(); });
+    li.append(sel, x);
+    ul.append(li);
+  }
+  const other = ids.length - sets.length;
+  if (other) { const li = document.createElement("li"); li.className = "muted"; li.textContent = "and " + other + " panel control" + (other > 1 ? "s" : "") + " learned in the emulator."; ul.append(li); }
+  if (ids.length > MM_MAX) { const li = document.createElement("li"); li.textContent = ids.length + " learned: the FM-1 keeps the first " + MM_MAX + "."; ul.append(li); }
+  $("ctlsend").hidden = $("ctlbox").hidden = !sets.length;
+  $("ctlsum").textContent = sets.length + " setting" + (sets.length > 1 ? "s" : "") + " learned (" + ids.length + " of " + MM_MAX + " in the map): show, change how each counts, forget";
+}
+function ctlValue(p, mode, v) {                     /* as the firmware's mm_set: a place over the range, or steps */
+  const q = P[p], lo = q.min, hi = q.max;
+  let x;
+  if (!mode || mode === "abs") x = lo + Math.floor((v * (hi - lo) + 63) / 127);
+  else x = val[p] + (mode === "rel64" ? v - 64 : v < 64 ? v : v - 128) * Math.max(1, Math.floor((hi - lo) / 100));
+  return Math.max(lo, Math.min(hi, x));
+}
+function ctlMidiIn(e, input) {
+  const [st, d1 = 0, d2 = 0] = e.data;
+  if ((st & 0xF0) !== 0xB0 && (st & 0xF0) !== 0x90) return;
+  const id = "c:" + (st & 15) + ":" + d1;
+  if (ctlLearning) {
+    if ((st & 0xF0) === 0x90) { if (d2) ctlStat("Heard a note: a setting needs a knob or fader (a CC)."); return; }
+    if (d1 >= 120) return;                          /* all notes off and the like: not a control */
+    if (!ctlPick) { ctlStat("Heard " + ctlSrcName(id) + " from " + input.name + ". Click a setting first, then move it."); return; }
+    for (const [k, m] of Object.entries(ctlMaps)) if (m.t === "p" + ctlPick.p) delete ctlMaps[k];   /* one control a setting */
+    ctlMaps[id] = { t: "p" + ctlPick.p, mode: d2 === 63 || d2 === 65 ? "rel64" : "abs", name: ctlPick.name };
+    ctlStat(ctlSrcName(id) + " → " + ctlPick.name + ". Click another setting, or Done.");
+    ctlPick = null;
+    ctlSave();
+    return;
+  }
+  const m = ctlMaps[id];
+  if ((st & 0xF0) !== 0xB0 || !m || String(m.t)[0] !== "p") return;
+  const p = +m.t.slice(1);
+  if (!P[p]) return;
+  const x = ctlValue(p, m.mode, d2);
+  if (x === val[p]) return;
+  setParam(p, x);                                    /* (to the FM-1 when it is connected here) */
+  const r = rowOf.get(p);
+  if (r) { r.ctl.value = x; if (r.ctl.tagName !== "SELECT") r.out.textContent = r.text(x); }
+}
+async function ctlConnect() {
+  if (!navigator.requestMIDIAccess) { ctlStat("This browser cannot do MIDI. Use Chrome or Edge."); return; }
+  try { ctlMidi = await navigator.requestMIDIAccess({ sysex: true }); } catch (e) { ctlStat("MIDI access was not allowed: allow it in the site settings."); return; }
+  const attach = () => {
+    const ins = [];
+    for (const inp of ctlMidi.inputs.values()) {
+      if (/fm-?1/i.test(inp.name) || inp.state === "disconnected") continue;   /* (the FM-1's own port is the editor's) */
+      if (!inp._perf) { inp._perf = true; inp.addEventListener("midimessage", (e) => ctlMidiIn(e, inp)); }
+      ins.push(inp.name);
+    }
+    if (!ctlLearning) ctlStat(ins.length ? "Listening to " + ins.join(", ") + "." : "No controller found. Plug one into this computer.");
+  };
+  ctlMidi.onstatechange = attach;
+  attach();
+  $("ctlon").hidden = true;
+  $("ctllearn").disabled = false;
+}
+$("ctlon").addEventListener("click", ctlConnect);
+$("ctllearn").addEventListener("click", () => {
+  ctlLearning = !ctlLearning;
+  ctlPick = null;
+  $("ctllearn").setAttribute("aria-pressed", ctlLearning);
+  $("ctllearn").textContent = ctlLearning ? "Done" : "Learn";
+  $("p-sound").classList.toggle("learning", ctlLearning);
+  document.querySelectorAll(".row.picked").forEach((r) => r.classList.remove("picked"));
+  ctlStat(ctlLearning ? "Click a setting, then move a knob or fader on your controller." : "");
+});
+$("ctllcxl").addEventListener("click", () => {
+  if (Object.keys(ctlMaps).length && !confirm("Put the Launch Control XL 3 map in? Its CCs 5-36 on channel 1 replace what they were learned to; the rest stays.")) return;
+  for (const [cc, p, name] of LCXL3) {
+    for (const [k, m] of Object.entries(ctlMaps)) if (m.t === "p" + p) delete ctlMaps[k];
+    ctlMaps["c:0:" + cc] = { t: "p" + p, mode: "abs", name };
+  }
+  ctlSave();
+  ctlStat("The Launch Control XL 3 map: faders on the levels, echo and reverb; the top knobs on the pad and bass, the middle on the acid, the bottom on drums, pluck and space. Change any of it with Learn.");
+});
+window.addEventListener("storage", (e) => { if (e.key === MM_KEY) { ctlLoad(); ctlRender(); renderRows(); } });
+ctlLoad();
+ctlRender();
 
 /* ===================================================================== DX7 voices: the two formats */
 /* the 155-byte voice: six operators of 21 bytes (OP6 first), then the voice; the 128-byte packed record is what a bank holds (firmware/src/dsp/fm6.inc) */

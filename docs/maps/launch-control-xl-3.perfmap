@@ -1,0 +1,165 @@
+{
+ "perfmap": 1,
+ "maps": {
+  "c:0:5": {
+   "t": "p0",
+   "mode": "abs",
+   "name": "Mixer: Pad"
+  },
+  "c:0:6": {
+   "t": "p2",
+   "mode": "abs",
+   "name": "Mixer: Bass"
+  },
+  "c:0:7": {
+   "t": "p1",
+   "mode": "abs",
+   "name": "Mixer: Acid"
+  },
+  "c:0:8": {
+   "t": "p98",
+   "mode": "abs",
+   "name": "Mixer: Pluck"
+  },
+  "c:0:9": {
+   "t": "p3",
+   "mode": "abs",
+   "name": "Mixer: Drums"
+  },
+  "c:0:10": {
+   "t": "p4",
+   "mode": "abs",
+   "name": "Mixer: Vinyl"
+  },
+  "c:0:11": {
+   "t": "p67",
+   "mode": "abs",
+   "name": "Space: Echo"
+  },
+  "c:0:12": {
+   "t": "p69",
+   "mode": "abs",
+   "name": "Space: Reverb"
+  },
+  "c:0:13": {
+   "t": "p9",
+   "mode": "abs",
+   "name": "Pad: Bright"
+  },
+  "c:0:14": {
+   "t": "p11",
+   "mode": "abs",
+   "name": "Pad: Detune"
+  },
+  "c:0:15": {
+   "t": "p12",
+   "mode": "abs",
+   "name": "Pad: Attack"
+  },
+  "c:0:16": {
+   "t": "p14",
+   "mode": "abs",
+   "name": "Pad: Release"
+  },
+  "c:0:17": {
+   "t": "p127",
+   "mode": "abs",
+   "name": "Pad: Chorus"
+  },
+  "c:0:18": {
+   "t": "p24",
+   "mode": "abs",
+   "name": "Bass: Cutoff"
+  },
+  "c:0:19": {
+   "t": "p25",
+   "mode": "abs",
+   "name": "Bass: Reso"
+  },
+  "c:0:20": {
+   "t": "p154",
+   "mode": "abs",
+   "name": "Bass: Move"
+  },
+  "c:0:21": {
+   "t": "p34",
+   "mode": "abs",
+   "name": "Acid: Cutoff"
+  },
+  "c:0:22": {
+   "t": "p35",
+   "mode": "abs",
+   "name": "Acid: Reso"
+  },
+  "c:0:23": {
+   "t": "p36",
+   "mode": "abs",
+   "name": "Acid: Env mod"
+  },
+  "c:0:24": {
+   "t": "p37",
+   "mode": "abs",
+   "name": "Acid: Decay"
+  },
+  "c:0:25": {
+   "t": "p38",
+   "mode": "abs",
+   "name": "Acid: Accent"
+  },
+  "c:0:26": {
+   "t": "p39",
+   "mode": "abs",
+   "name": "Acid: Slide"
+  },
+  "c:0:27": {
+   "t": "p41",
+   "mode": "abs",
+   "name": "Acid: Density"
+  },
+  "c:0:28": {
+   "t": "p44",
+   "mode": "abs",
+   "name": "Acid: Mutate"
+  },
+  "c:0:29": {
+   "t": "p46",
+   "mode": "abs",
+   "name": "Drums: Drive"
+  },
+  "c:0:30": {
+   "t": "p47",
+   "mode": "abs",
+   "name": "Drums: Swing"
+  },
+  "c:0:31": {
+   "t": "p163",
+   "mode": "abs",
+   "name": "Drums: Humanize"
+  },
+  "c:0:32": {
+   "t": "p161",
+   "mode": "abs",
+   "name": "Drums: Ghosts"
+  },
+  "c:0:33": {
+   "t": "p100",
+   "mode": "abs",
+   "name": "Pluck: Density"
+  },
+  "c:0:34": {
+   "t": "p102",
+   "mode": "abs",
+   "name": "Pluck: Decay"
+  },
+  "c:0:35": {
+   "t": "p68",
+   "mode": "abs",
+   "name": "Space: Echo time"
+  },
+  "c:0:36": {
+   "t": "p70",
+   "mode": "abs",
+   "name": "Space: Size"
+  }
+ }
+}

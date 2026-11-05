@@ -61,6 +61,26 @@ check("a file that is not a backup is refused", threw);
   const many = {}; for (let i = 0; i < 60; i++) many["c:0:" + i] = { t: "k" + (i % 27) };
   check("48 at most", M.mmEncode(many).n === 48 && M.mmEncode(many).left === 12);
   check("not a map: null", M.mmDecode(new Uint8Array(152)) === null && M.mmDecode(b.slice(0, 100)) === null);
+  // a setting (0.16.18): 0x80 in the first byte, the parameter as the control, "MAP2"; a note or a parameter past the last is left out
+  const ws = { "c:0:13": { t: "p34", mode: "abs", name: "Acid: Cutoff" }, "c:15:5": { t: "p175", mode: "rel64" }, "n:0:40": { t: "p3" }, "c:0:9": { t: "p176" }, "n:9:36": { t: "b10" } };
+  const s = M.mmEncode(ws), sb = s.bytes;
+  check("a map with settings is MAP2", String.fromCharCode(...sb.slice(0, 4)) === "MAP2" && s.n === 3 && s.left === 2);
+  check("a setting entry", eq(sb.slice(8, 11), [0x90, 13, 34]) && eq(sb.slice(11, 14), [0xBF, 5, 175]));
+  check("settings come back (without their names)", JSON.stringify(M.mmDecode(sb)) === JSON.stringify({ "c:0:13": { t: "p34", mode: "abs" }, "c:15:5": { t: "p175", mode: "rel64" }, "n:9:36": { t: "b10" } }));
+  // the Launch Control XL 3's map (docs/maps): the editor's own table, 32 settings on channel 1's CC 5-36, every one sent, each name the setting's
+  const fs = require("fs"), path = require("path"), root = path.join(__dirname, "..");
+  const lc = JSON.parse(fs.readFileSync(path.join(root, "docs/maps/launch-control-xl-3.perfmap"), "utf8"));
+  const tab = JSON.parse(fs.readFileSync(path.join(root, "web/editor/index.html"), "utf8").match(/const LCXL3 = (\[[\s\S]*?\]\]);/)[1]);
+  const amb = fs.readFileSync(path.join(root, "firmware/src/dsp/amb.c"), "utf8"), hdr = fs.readFileSync(path.join(root, "firmware/src/dsp/amb.h"), "utf8");
+  const enumNames = hdr.slice(hdr.indexOf("P_PAD, P_ACID"), hdr.indexOf("P_NPARAMS")).replace(/\/\*[\s\S]*?\*\//g, "").split(",").map((x) => x.trim().split(/\s*=/)[0]).filter(Boolean);
+  const lane = enumNames.indexOf("P_LANE"), idx = (n) => { const i = enumNames.indexOf(n); return i <= lane || lane < 0 ? i : i + 3 * 6 - 1; };   // (P_LANE holds 3 * EN_NLANE)
+  const nameOf = (p) => { const n = enumNames.find((e) => idx(e) === p), mm = n && amb.match(new RegExp("\\[" + n + "\\] = \\{\"([^\"]*)\"")); return mm ? mm[1] : null; };
+  const lr = M.mmEncode(lc.maps);
+  check("the LCXL 3 map: 32 settings, all sent, MAP2", lc.perfmap === 1 && lr.n === 32 && lr.left === 0 && lr.bytes[3] === 0x32);
+  check("the LCXL 3 map is the editor's table", tab.length === 32 && tab.every(([cc, p, name]) => { const m = lc.maps["c:0:" + cc]; return m && m.t === "p" + p && m.mode === "abs" && m.name === name; }) &&
+    tab.map(([cc]) => cc).join() === Array.from({ length: 32 }, (_, i) => i + 5).join());
+  const wrong = tab.filter(([, p, name]) => nameOf(p) !== name.split(": ")[1]);
+  check("each LCXL 3 setting is the one its name says (amb.c PARAMS)" + (wrong.length ? ": " + JSON.stringify(wrong) : ""), !wrong.length);
 }
 console.log(bad ? "web backup: FAILED" : "web backup: ok");
 process.exit(bad ? 1 : 0);

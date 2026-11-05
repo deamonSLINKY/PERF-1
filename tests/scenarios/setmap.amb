@@ -1,0 +1,67 @@
+# Settings from a MIDI controller (0.16.18): a map learned on the editor page (setmap.bin, made by web/fm1backup.js mmEncode: CC 13 on channel 1
+# a fader on the acid's Cutoff, CC 14 an encoder (64 +- n) on the Tempo, CC 15 a fader on the Mode (the scale), CC 16 an encoder (1 up, 127 down)
+# on the pad's level, and a pad note 36 on channel 10 as PLAY, the panel's own as before). A map with settings is MAP2. A learned CC sets its
+# setting straight, on any page: lit on the page that shows it, its name and value a moment elsewhere.
+seed 0
+loadobj 24 tests/scenarios/setmap.bin
+restore 24
+expect rsvalid 1
+reboot
+wait 3000
+expect playing 1
+expect view 0
+# the fader on the acid's Cutoff (0 .. 100) from the Tempo page: the ends and the middle; not on this page, so a message
+midi B0 0D 7F
+wait 100
+expect par34 100
+expect msgon 1
+expect touched -1
+midi B0 0D 00
+wait 100
+expect par34 0
+midi B0 0D 40
+wait 100
+expect par34 50
+# another channel: not this map's
+midi B1 0D 7F
+wait 100
+expect par34 50
+# the encoder on the Tempo (70 .. 190): steps, and on this page its knob is lit
+setpar 5 120
+wait 100
+midi B0 0E 45
+wait 100
+expect par5 125
+expect touched 0
+midi B0 0E 3D
+wait 100
+expect par5 122
+# the Mode, as the ALGORITHM dial sets it: the scale's notes too (0 Ionian)
+midi B0 0F 00
+wait 100
+expect par72 0
+expect pool 0xAB5
+# the pad's level, 1 up / 127 down, from the FX menu
+setpar 0 50
+tap FX
+wait 300
+midi B0 10 03
+wait 100
+expect par0 53
+midi B0 10 7E
+wait 100
+expect par0 51
+midi B0 0D 7F
+wait 100
+expect par34 100
+tap FX
+wait 300
+# the panel's own entries still work beside the settings: the pad as PLAY
+midi 99 24 7F
+wait 60
+midi 89 24 00
+wait 200
+expect playing 0
+# a damaged map is refused whole
+restore 24 bad
+expect rsvalid 0

@@ -745,8 +745,9 @@ const midiUI = { on: document.getElementById("midiOn"), status: document.getElem
 let midi = null, learning = false, picked = null, remote = null, sentB = 0, sentK = 0, ackTimer = 0, maps = {};
 try { maps = JSON.parse(localStorage.getItem(MAP_KEY) || "{}") || {}; } catch { maps = {}; }
 const knobByRole = (r) => Object.values(knobs).find((k) => k.role === r);
-function targetName(t) {
+function targetName(t, m) {
   if (t === "m") return "MASTER";
+  if (t[0] === "p") return `${(m && m.name) || "Setting " + t.slice(1)} (a setting, on the FM-1)`;   // (0.16.18: learned on the editor page)
   if (t[0] === "e") return knobByRole(+t.slice(1)).name.replace("KNOB", "KNOB ");
   if (t[0] === "b") return Object.values(buttons).find((b) => b.bit === +t.slice(1)).name;
   const k = +t.slice(1), n = 53 + k;
@@ -758,8 +759,9 @@ function drawMaps() {
   midiUI.maps.textContent = "";
   for (const [id, m] of Object.entries(maps)) {
     const li = document.createElement("li");
-    li.innerHTML = `<span>${srcName(id)}</span> → <b>${targetName(m.t)}</b>`;
-    if (id[0] === "c" && (m.t[0] === "e" || m.t === "m")) {
+    li.innerHTML = `<span>${srcName(id)}</span> → <b></b>`;
+    li.querySelector("b").textContent = targetName(m.t, m);
+    if (id[0] === "c" && (m.t[0] === "e" || m.t[0] === "p" || m.t === "m")) {
       const sel = document.createElement("select");
       for (const [v, l] of [["abs", "absolute"], ["rel64", "relative (64 ± n)"], ["rel2c", "relative (1 up, 127 down)"]]) sel.add(new Option(l, v, false, m.mode === v));
       sel.addEventListener("change", () => { m.mode = sel.value; saveMaps(); });
@@ -854,6 +856,7 @@ function onMidi(e, input) {
   }
   // learned controls
   const id = (type === 0xB0 ? "c" : "n") + ":" + ch + ":" + d1, m = maps[id];
+  if (m && m.t[0] === "p") return;          // a setting (the editor's): the FM-1 and the editor page play it, not this panel
   if (m) {
     if (type === 0xB0) {
       if (m.t[0] === "b" || m.t[0] === "k") { hold("m" + id, m.t, d2 >= 64); return; }
@@ -922,7 +925,7 @@ midiUI.learn.addEventListener("click", () => {
 midiUI.unlearn.addEventListener("click", () => { maps = {}; releaseFrom("m"); saveMaps(); });
 document.getElementById("mapsave").addEventListener("click", () => {   // the learned list as a .perfmap file (0.16.11; the Install page reads the same)
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([JSON.stringify({ perfmap: 1, maps: Object.fromEntries(Object.entries(maps).map(([k, m]) => [k, { t: m.t, mode: m.mode }])) }, null, 1)], { type: "application/json" }));
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ perfmap: 1, maps: Object.fromEntries(Object.entries(maps).map(([k, m]) => [k, { t: m.t, mode: m.mode, name: m.name }])) }, null, 1)], { type: "application/json" }));
   a.download = "perf1-midi-map.perfmap";
   a.click();
 });

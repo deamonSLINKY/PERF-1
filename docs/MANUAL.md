@@ -2230,6 +2230,54 @@ Nothing learns? Some controllers keep their pads off MIDI until you turn it on. 
 
 **Download .perfmap** saves the map as a file to keep or share, and **load one** reads it back (into the emulator too). **Read it from my FM-1** brings the FM-1's map back into the list to change it. **Clear the FM-1's map** removes it. The map is also in your backups.
 
+### A knob on each setting (MIDI CC to settings)
+
+*New in 0.16.18, experimental. Tell us how it goes with your controller.*
+
+A learned panel knob turns whatever the page on screen shows. A learned **setting** is different: a knob or fader on your controller is tied to one setting (the acid's Cutoff, the reverb, the swing) and sets it on any page, even while the screen shows something else. A controller with 32 knobs and faders can hold 32 settings at once, with no computer in between.
+
+1. Open the **Editor** page in Chrome or Edge and plug your controller into the computer. Connecting the FM-1 too lets you hear each setting while you learn, but it isn't needed.
+2. Under **Your controller**, press **Connect a controller**, then **Learn**.
+3. Click a setting in the list (for example Acid, Cutoff). It gets an outline.
+4. Move the knob or fader you want for it. The setting now shows its CC, for example `CC 21`.
+5. Repeat for as many as you like, then press **Done**.
+6. Press **Send to my FM-1**. That opens the Install page's **Your MIDI map** section, where the settings are listed with your panel controls. Plug the FM-1 in and press **Send to my FM-1** there. The FM-1 keeps the map and restarts.
+7. Plug the controller into the FM-1 (USB host, or the TRS MIDI jack).
+
+How it behaves:
+- A fader or knob sets the value straight: the bottom of its travel is the setting's lowest value, the top its highest. It jumps to where the knob is. The FM-1 has no pick-up mode.
+- An endless encoder (pick **64 ± n** or **1 up, 127 down** in the list) steps the setting from where it is, one step a click.
+- If the page on screen shows that setting, its knob lights up (and zooms, with ZOOM on). On any other page the screen shows the setting's name and value for a moment.
+- The change is the same as turning the FM-1's own knob: it belongs to the piece that is playing until you store it (the player's own settings, such as Tune, are kept at once, as always).
+- Only CCs, on the channel they were learned on. A setting has one control; learning a new one replaces the old.
+- Panel controls (learned in the emulator) and settings share the map: 48 in all.
+- An FM-1 with an older PERF-1 refuses a map that has settings. Install 0.16.18 or later first.
+
+#### Novation Launch Control XL 3: a ready map
+
+Press **Use the Launch Control XL 3 map** on the Editor page (or load [launch-control-xl-3.perfmap](maps/launch-control-xl-3.perfmap) on the Install page) and send it. It uses the controller's factory custom mode, channel 1: faders CC 5-12, the knobs CC 13-20 (top row), 21-28 (middle) and 29-36 (bottom). If you changed the custom mode in Novation Components, learn your own instead. The buttons are free: learn them as panel buttons in the emulator if you want (PLAY, SEQ and so on).
+
+| Control | CC | Setting | | Control | CC | Setting |
+|---|---|---|---|---|---|---|
+| Fader 1 | 5 | Pad level | | Middle knob 1 | 21 | Acid Cutoff |
+| Fader 2 | 6 | Bass level | | Middle knob 2 | 22 | Acid Reso |
+| Fader 3 | 7 | Acid level | | Middle knob 3 | 23 | Acid Env mod |
+| Fader 4 | 8 | Pluck level | | Middle knob 4 | 24 | Acid Decay |
+| Fader 5 | 9 | Drums level | | Middle knob 5 | 25 | Acid Accent |
+| Fader 6 | 10 | Vinyl level | | Middle knob 6 | 26 | Acid Slide |
+| Fader 7 | 11 | Echo | | Middle knob 7 | 27 | Acid Density |
+| Fader 8 | 12 | Reverb | | Middle knob 8 | 28 | Acid Mutate |
+| Top knob 1 | 13 | Pad Bright | | Bottom knob 1 | 29 | Drums Drive |
+| Top knob 2 | 14 | Pad Detune | | Bottom knob 2 | 30 | Drums Swing |
+| Top knob 3 | 15 | Pad Attack | | Bottom knob 3 | 31 | Humanize |
+| Top knob 4 | 16 | Pad Release | | Bottom knob 4 | 32 | Ghost notes |
+| Top knob 5 | 17 | Pad Chorus | | Bottom knob 5 | 33 | Pluck Density |
+| Top knob 6 | 18 | Bass Cutoff | | Bottom knob 6 | 34 | Pluck Decay |
+| Top knob 7 | 19 | Bass Reso | | Bottom knob 7 | 35 | Echo time |
+| Top knob 8 | 20 | Bass line Move | | Bottom knob 8 | 36 | Reverb Size |
+
+Every setting can be learned: the Editor page lists all 176, grouped by voice.
+
 ---
 
 ## 18. Troubleshooting

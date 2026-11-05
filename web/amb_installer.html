@@ -247,7 +247,8 @@ const TEXT = {
     vsending: "Sending: ", vdone: "Sent to the FM-1: ", vnoans: "The FM-1 did not answer (an older firmware?).", vcleared: "Cleared.",
     vbad: "The FM-1 did not take it.",
     mmh: "Your MIDI map (experimental)",
-    mminfo: "Play PERF-1 from any MIDI controller: its pads, keys, buttons and knobs as the FM-1's own buttons, keys and knobs. Make the map in the emulator (Connect MIDI, then MIDI learn: click a control there, then move yours); in this browser it shows here. Send it to the FM-1 and it is kept there (the FM-1 restarts). A learned control works in every mode, before anything else the FM-1 does with MIDI. A knob takes a CC: a fader or knob (a place), or an endless encoder (64 \u00b1 n, or 1 up and 127 down).",
+    mmold: "(A map with settings needs PERF-1 0.16.18 or later on the FM-1.)",
+    mminfo: "Play PERF-1 from any MIDI controller: its pads, keys, buttons and knobs as the FM-1's own buttons, keys and knobs. Make the map in the emulator (Connect MIDI, then MIDI learn: click a control there, then move yours); in this browser it shows here. Send it to the FM-1 and it is kept there (the FM-1 restarts). A learned control works in every mode, before anything else the FM-1 does with MIDI. A knob takes a CC: a fader or knob (a place), or an endless encoder (64 \u00b1 n, or 1 up and 127 down). A setting (learned on the Editor page: a knob or fader straight on one setting, on any page) is listed here too.",
     mmsend: "Send to my FM-1", mmread: "Read it from my FM-1", mmclear: "Clear the FM-1's map", mmdl: "Download .perfmap", mmor: "or load one:",
     mmnone: "Nothing learned yet. Use MIDI learn in the emulator, or load a .perfmap file.", mmsent: "Sent. The FM-1 restarts now.", mmcleared: "Cleared. The FM-1 restarts now.",
     mmbadfile: "That is not a MIDI map file.", mmmaster: "MASTER is the FM-1's own knob: a learned MASTER is not sent.", mmread0: "The FM-1 has no map.", mmreadok: "Read the FM-1's map: it is the list now (the emulator's too).",
@@ -335,7 +336,7 @@ function waitAck(ms) {
 const MM_KEY = "hyp1-emu-midimap", MM_BTN = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"];
 const MM_ENC = ["SELECT", "ALGORITHM", "PRESETS", "Knob 1", "Knob 2", "Knob 3", "Knob 4"], MM_NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const mmNote = (n) => MM_NOTE[n % 12] + (Math.floor(n / 12) - 1);
-const mmTarget = (x) => x === "m" ? "MASTER (the emulator only)" : x[0] === "b" ? MM_BTN[+x.slice(1)] || x : x[0] === "e" ? MM_ENC[+x.slice(1)] || x : "Key " + mmNote(53 + +x.slice(1));
+const mmTarget = (x, m) => x === "m" ? "MASTER (the emulator only)" : x[0] === "p" ? "Setting: " + ((m && m.name) || "number " + x.slice(1)) : x[0] === "b" ? MM_BTN[+x.slice(1)] || x : x[0] === "e" ? MM_ENC[+x.slice(1)] || x : "Key " + mmNote(53 + +x.slice(1));
 const mmSrc = (id) => { const [ty, ch, n] = id.split(":"); return (ty === "n" ? "Note " + mmNote(+n) : "CC " + n) + " ch " + (+ch + 1); };
 const mmModes = { abs: "a fader or knob", rel64: "an encoder (64 \u00b1 n)", rel2c: "an encoder (1 up, 127 down)" };
 function mmGet() { try { return JSON.parse(localStorage.getItem(MM_KEY) || "{}") || {}; } catch (_) { return {}; } }
@@ -343,7 +344,7 @@ function mmPut(maps) { try { localStorage.setItem(MM_KEY, JSON.stringify(maps));
 function mmRender() {
   const maps = mmGet(), ul = $("mmlist"), ids = Object.keys(maps);
   ul.textContent = "";
-  for (const id of ids) { const li = document.createElement("li"), m = maps[id]; li.textContent = mmSrc(id) + " \u2192 " + mmTarget(m.t) + (m.mode && m.t[0] === "e" ? " (" + mmModes[m.mode] + ")" : ""); ul.append(li); }
+  for (const id of ids) { const li = document.createElement("li"), m = maps[id]; li.textContent = mmSrc(id) + " \u2192 " + mmTarget(m.t, m) + (m.mode && (m.t[0] === "e" || m.t[0] === "p") ? " (" + mmModes[m.mode] + ")" : ""); ul.append(li); }
   if (!ids.length) { const li = document.createElement("li"); li.textContent = t("mmnone"); ul.append(li); }
   $("mmsend").disabled = $("mmdl").disabled = !ids.length;
 }
@@ -370,7 +371,7 @@ async function mmWrite(maps, done) {
     writing = false;
     releasePort();
     say(t(done) + (Object.values(maps).some((m) => m.t === "m") ? " " + t("mmmaster") : ""));
-  } catch (err) { writing = false; say(err.message); }
+  } catch (err) { writing = false; say(err.message + (r.bytes[3] === 0x32 ? " " + t("mmold") : "")); }
   $("mmclear").disabled = false;
   mmRender();
 }
@@ -382,6 +383,8 @@ $("mmread").addEventListener("click", async () => {
     if (d === undefined) throw new Error(t("bknoans"));
     const maps = d.length ? mmDecode(d) : null;
     if (!maps || !Object.keys(maps).length) { $("mmstatus").textContent = t("mmread0"); return; }
+    const had = Object.values(mmGet());                 /* (the FM-1 keeps no names: a setting keeps the one it has here) */
+    for (const m of Object.values(maps)) { const o = m.t[0] === "p" && had.find((x) => x && x.t === m.t && x.name); if (o) m.name = o.name; }
     mmPut(maps);
     $("mmstatus").textContent = t("mmreadok");
   } catch (err) { $("mmstatus").textContent = err.message; }

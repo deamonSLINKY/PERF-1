@@ -494,6 +494,10 @@ static int expect(const char *what, const char *val)
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
         got = proj.pool;
+    else if (!strcmp(what, "touched"))            /* (0.16.18) the page's knob lit by the last turn (or a learned setting), -1 none; a message on screen */
+        got = (int32_t)(ui.touch_until - plat_ms()) > 0 ? ui.touched : -1;
+    else if (!strcmp(what, "msgon"))
+        got = (int32_t)(ui.msg_until - plat_ms()) > 0;
     else if (!strcmp(what, "acidgate"))           /* the acid line's steps that play (a 16-bit mask) */
         got = en_acid_gate;
     else if (!strncmp(what, "acidoff", 7))        /* the acid line's step N: scale steps above the chord */

@@ -3056,8 +3056,12 @@ static void mpk_cc(int cc, int v)               /* the knobs: CC 24-31 (the MK4'
  * 1 64 +- clicks, 2 1 up / 127 down) | the note or CC | the control (0-13 a button B_*, 32 + k a key, 64 + e a knob EN_*). A learned message is
  * taken before anything else MIDI does, and acts as the panel's own: a button or key held while its note or CC (64 and over) is down, a knob
  * turned (a place: a click every two steps, as the emulator counts). The panel reads the hardware and the map together (in_buttons and the rest,
- * standing in for plat_buttons in this file). MASTER is the hardware's alone (the emulator's learned MASTER is not sent). */
+ * standing in for plat_buttons in this file). MASTER is the hardware's alone (the emulator's learned MASTER is not sent).
+ * A SETTING (0.16.18): bit 7 of the first byte set, a CC, the control byte a parameter (0 .. P_NPARAMS - 1): the CC sets that setting straight, on any
+ * page, as its knob would (a place: 0 .. 127 over its range; 64 +- n or 1 up / 127 down: steps), learned on the editor page. A map with settings is
+ * "MAP2", so a firmware before them refuses it whole instead of taking a setting for a button. */
 #define MM_MAGIC 0x3150414Du                     /* "MAP1" */
+#define MM_MAGIC2 0x3250414Du                    /* "MAP2": with settings */
 #define MM_MAX 48
 typedef struct { uint32_t magic; uint8_t n, pad[3]; uint8_t e[MM_MAX][3]; } mmap_t;
 static mmap_t mm;
@@ -3067,12 +3071,16 @@ static uint8_t mm_last[MM_MAX], mm_acc[MM_MAX];  /* a place-sending knob: its la
 static int mm_ok(const uint8_t *b, uint32_t len)   /* a map as the Install page sends it, every entry a control there is (bytes: a restore's may be unaligned) */
 {
     uint32_t i;
-    if (len != sizeof(mmap_t) || (uint32_t)(b[0] | b[1] << 8 | b[2] << 16 | (uint32_t)b[3] << 24) != MM_MAGIC || b[4] > MM_MAX)
+    const uint32_t mg = len >= 4u ? (uint32_t)(b[0] | b[1] << 8 | b[2] << 16 | (uint32_t)b[3] << 24) : 0u;
+    if (len != sizeof(mmap_t) || (mg != MM_MAGIC && mg != MM_MAGIC2) || b[4] > MM_MAX)
         return 0;
     for (i = 0; i < b[4]; i++) {
         const uint8_t *e = b + 8u + 3u * i;
         const uint32_t t = e[2];
-        if (!(t < NB || (t >= 32u && t < 32u + NKEYS) || (t >= 64u && t < 64u + NE)) || e[1] > 127u || (e[0] >> 5 & 3u) == 3u)
+        if ((e[0] & 0x80u) ? !(e[0] & 0x10u) || t >= (uint32_t)P_NPARAMS   /* a setting: a CC, a parameter there is */
+                         : !(t < NB || (t >= 32u && t < 32u + NKEYS) || (t >= 64u && t < 64u + NE)))
+            return 0;
+        if (e[1] > 127u || (e[0] >> 5 & 3u) == 3u)
             return 0;
     }
     return 1;
@@ -3081,6 +3089,37 @@ static void mm_load(void)
 {
     if (plat_store_load(OBJ_MMAP, &mm, sizeof mm) != (int)sizeof mm || !mm_ok((const uint8_t *)&mm, sizeof mm))
         mm.n = 0;
+}
+static void set_mode(int m);
+static void mm_set(int p, uint32_t mode, uint32_t v)   /* a learned setting (0.16.18): as its knob sets it, wherever the panel is */
+{
+    int lo, hi, x, i;
+    char t[12];
+    knob_range(p, &lo, &hi);
+    if (mode == 0u)                              /* a place: the CC's 0 .. 127 over the setting's range */
+        x = lo + ((int)v * (hi - lo) + 63) / 127;
+    else {                                       /* steps: one a click (a long range: about a hundred clicks end to end) */
+        const int d = mode == 1u ? (int)v - 64 : v < 64u ? (int)v : (int)v - 128;
+        x = knob_get(p) + d * ((hi - lo) / 100 > 1 ? (hi - lo) / 100 : 1);
+    }
+    x = x < lo ? lo : x > hi ? hi : x;
+    if (x == proj.par[p])
+        return;
+    if (p == P_MODE)                             /* (the scale: its notes too, as the ALGORITHM dial sets it) */
+        set_mode(x);
+    else
+        knob_set(p, x);
+    ui.act_t = plat_ms();
+    for (i = 0; i < 4; i++)                      /* on the page: that knob lit (and zoomed, with ZOOM on) */
+        if (view_knob(i) != K_NONE && knob_par(view_knob(i)) == p) {
+            ui.touched = (int8_t)i;
+            ui.touch_until = plat_ms() + 1200u;
+            return;
+        }
+    if (p != P_MODE) {                           /* elsewhere: its name and value a moment */
+        en_param_text(p, proj.par[p], t);
+        say(en_param_info(p)->name, t);
+    }
 }
 static int mm_apply(uint32_t st, uint32_t n, uint32_t v)   /* a learned message: acted on (1) */
 {
@@ -3093,7 +3132,9 @@ static int mm_apply(uint32_t st, uint32_t n, uint32_t v)   /* a learned message:
         const uint32_t t = e[2];
         if ((e[0] & 15u) != (st & 15u) || (uint32_t)((e[0] >> 4) & 1u) != cc || e[1] != n)
             continue;
-        if (t < 64u) {                           /* a button or a key: held while down */
+        if (e[0] & 0x80u)                        /* a setting (0.16.18) */
+            mm_set((int)t, e[0] >> 5 & 3u, v);
+        else if (t < 64u) {                           /* a button or a key: held while down */
             const int down = cc ? v >= 64u : ty == 0x90u && v;
             uint32_t *h = t < NB ? &mm_b : &mm_k;
             const uint32_t bit = 1u << (t < NB ? t : t - 32u);
