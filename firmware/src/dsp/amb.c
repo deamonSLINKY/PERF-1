@@ -964,7 +964,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1003,6 +1003,7 @@ void en_fx(uint64_t mask)                       /* in four quarters: the queue c
 }
 void en_fxk(int k, int v) { post(C_FXK, k, v); }
 void en_trk(uint32_t mute, uint32_t solo) { post(C_TRK, 0, (int)((mute & 0xFFu) | (solo & 0xFFu) << 8)); }
+void en_pedal(int bits) { post(C_PEDAL, bits & 3, 0); }
 void en_gate_pat(uint32_t steps) { post(C_GATEPAT, 0, (int)(steps & 0xFFFFu)); }
 void en_fxs(int i, int v) { post(C_FXS, i, v); }
 void en_fill_next(void) { post(C_FILLQ, 0, 0); }
@@ -1860,6 +1861,12 @@ int en_acid_preview(int st, int v)
     return acid_note(acid_src(n, len, v / 5), v);
 }
 
+/* PEDAL (0.16.21, Steven's "harmonic drone followers", issue #3): a voice either follows the chords (as always) or holds the key's root
+ * under them: bit 0 the bass (its held note and its line's root; a walk walks the key's own triad), bit 1 the pad (its voices hold the
+ * key's chord, I, while the harmony moves on; en_chord still shows the harmony). A player's switch, not the piece's (the UI keeps it in
+ * the global record). */
+static uint8_t pedal;
+static int bass_pc(void) { return pedal & 1u ? par[P_ROOT] % 12 : chord_pcs[0]; }
 static void pad_retarget(void)                  /* the chord's tones to the four voices */
 {
     int from[4], to[4], i;
@@ -1891,10 +1898,21 @@ static void pad_retarget(void)                  /* the chord's tones to the four
                 to[b] -= 12;
         }
     }
-    for (i = 0; i < EN_NPAD; i++) {             /* each voice takes its note at its next breath */
-        pad[i].target = (float)to[i];
+    for (i = 0; i < EN_NPAD; i++)               /* the harmony as it is, for the screens and the keys' lights */
         en_chord[i] = (uint8_t)to[i];
+    if (pedal & 2u) {                            /* the pad on pedal: the key's chord (I, of the piece's or the slot's type) held under the harmony */
+        int pcs[4], n, sh = 12 * (par[P_PAD_OCT] + par[P_OCT]), lo = 48 + sh, hi = 77 + sh, from2[EN_NPAD];
+        while (lo < 24)
+            lo += 12, hi += 12;
+        while (hi > 108)
+            lo -= 12, hi -= 12;
+        n = en_chord_kind(pool, par[P_ROOT], 0, pg_on && pg_kind[pg_i] ? pg_kind[pg_i] : par[P_CHORD], pcs);
+        for (i = 0; i < EN_NPAD; i++)
+            from2[i] = (int)(pad[i].target + 0.5f);
+        en_voice_lead(from2, pcs, n, to, lo, hi);
     }
+    for (i = 0; i < EN_NPAD; i++)               /* each voice takes its note at its next breath */
+        pad[i].target = (float)to[i];
     en_chord_root = (uint8_t)chord_pcs[0];
     en_chord_n = (uint8_t)chord_nt;
 }
@@ -2156,7 +2174,7 @@ static void chord_to(int i)                     /* the chord moves to degree i *
     dom_apply();
     pad_retarget();
     pad_leave();
-    bass_to(chord_pcs[0]);
+    bass_to(bass_pc());
     if (par[P_DE_TRIG] == 0)
         bass.env_up = 1;                        /* the drone's envelope: on each chord */
     drift_reset();
@@ -3232,10 +3250,11 @@ static void bl_step(int st, int32_t w)
         hit = 1;
     if (!hit)
         return;
-    root = bl_fit(36 + chord_pcs[0] % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
-    if (mode == 5) {                            /* the walk */
-        const int beat = st >> 2, three = chord_nt > 1 ? root + (chord_pcs[1] - chord_pcs[0] + 12) % 12 : root + 3,
-                  five = root + bl_fifth();
+    root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
+    if (mode == 5) {                            /* the walk (on pedal: the key's own triad, the scale's third and fifth) */
+        const int beat = st >> 2,
+                  three = pedal & 1u ? root + deg_nat(2) : chord_nt > 1 ? root + (chord_pcs[1] - chord_pcs[0] + 12) % 12 : root + 3,
+                  five = pedal & 1u ? root + deg_nat(4) : root + bl_fifth();
         int n = root;
         if (beat == 1)
             n = frand() < 0.5f ? three : five;
@@ -4122,7 +4141,7 @@ static void apply(int p, int v)
         bl_env = 0.0f;
         bl_gate = 0.0f;
         if (nsteps)
-            bass_to(chord_pcs[0]);
+            bass_to(bass_pc());
         break;
     case P_DR_RES: reso_k = 1.5f - 0.0138f * (float)v; break;   /* none .. near singing (k 1.5 .. 0.12) */
     case P_AC_LEN:
@@ -4182,7 +4201,7 @@ static void apply(int p, int v)
         break;
     case P_DR_MAN:                               /* the drone back: to the chord's root */
         if (!v && !bass.play)
-            bass_to(chord_pcs[0]);
+            bass_to(bass_pc());
         break;
     case P_KIT_KICK: KK = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;   /* the kit: at each drum's next hit */
     case P_KIT_SNARE: KS = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;
@@ -4202,7 +4221,7 @@ static void apply(int p, int v)
         if (nsteps) {
             pad_retarget();
             pad_handoff();
-            bass_to(chord_pcs[0]);
+            bass_to(bass_pc());
         }
         break;
     case P_MIDI:
@@ -4222,7 +4241,7 @@ static void pool_set(uint32_t p)
     dom_apply();
     pad_retarget();
     pad_handoff();
-    bass_to(chord_pcs[0]);
+    bass_to(bass_pc());
 }
 
 static void regrow(void)                        /* a new piece: a fresh acid line, the home chord (or the progression's first), an empty progression loop */
@@ -4234,7 +4253,7 @@ static void regrow(void)                        /* a new piece: a fresh acid lin
     dom_apply();
     pad_retarget();
     pad_handoff();
-    bass_to(chord_pcs[0]);
+    bass_to(bass_pc());
     bass.rest = 0;
     if (!par[P_AC_LOCK])                        /* a frozen line is the piece's own (project_apply loaded it) */
         ac_regrow();
@@ -4575,7 +4594,9 @@ static float tg_inv = 1.0f / 256.0f;             /* 1 / the chunk: the tracks' g
 #define TR_PAD EN_TR_PAD                         /* pad and vinyl */
 #define TR_CM EN_TR_PLUCK                        /* the counter-melody */
 static uint8_t trk_mute, trk_solo;               /* latched (en_trk), a bit a track */
-uint32_t en_trk_heard(void) { return trk_mute; }        /* the mutes the engine has (a test reads it: 0.16.12) */
+uint32_t en_trk_heard(void) { return trk_mute; }
+int en_bass_held(void) { return (int)(bass.gtarget + 0.5f); }         /* the bass's held note, and a pad voice's: for the tests (0.16.21) */
+int en_pad_held(int i) { return (int)(pad[i % EN_NPAD].target + 0.5f); }        /* the mutes the engine has (a test reads it: 0.16.12) */
 static uint16_t gx_pat = 0x5249;                 /* the pattern gate: steps 0 3 6 9 12 14 open (3+3+3+3+2+2) */
 const int16_t EN_FXS_DEF[EN_NFXS] = EN_FXS_DEFAULTS;
 static volatile int16_t fxs_v[EN_NFXS] = EN_FXS_DEFAULTS;   /* the effects' settings (en_fxs) */
@@ -6066,6 +6087,13 @@ static void drain(void)
         case C_FXK:
             if (a < EN_NFXK)
                 fxk_v[a] = (int16_t)b;
+            break;
+        case C_PEDAL:                            /* follow or hold: at once (the pad's voices and the bass's note retargeted) */
+            if (pedal != (uint8_t)(a & 3)) {
+                pedal = (uint8_t)(a & 3);
+                pad_retarget();
+                bass_to(bass_pc());
+            }
             break;
         case C_TRK:
             trk_mute = (uint8_t)(b & 0xFF);

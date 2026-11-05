@@ -624,9 +624,10 @@ Turning Chord, Type or Bars switches Play to Loop. Your progression starts on th
 ends at the last slot that has a chord, so a four-chord progression only needs slots 1 to 4. **EDIT** jumps
 to the next slot, and the drop of a build goes back to slot 1.
 
-**Circle of fifths fills.** The first five **black keys** write a whole progression into the slots in one press,
+**Fills.** The **black keys** write a whole progression into the slots in one press. The first five are circle of fifths fills,
 one that moves round the circle of fifths: each chord a fifth below the one before, as the scale allows. That
-fall by a fifth is the strongest pull in harmony, the one that makes a progression sound like it's going home.
+fall by a fifth is the strongest pull in harmony, the one that makes a progression sound like it's going home. The
+other six are progressions that are everywhere in songs (from Steven's chord chart in the PERF-1 issues).
 
 | Black key | Writes | In C major | In A minor |
 |---|---|---|---|
@@ -635,6 +636,12 @@ fall by a fifth is the strongest pull in harmony, the one that makes a progressi
 | 3 (A#) | iii vi ii V I I | Em Am Dm G C C | C F Bdim Em Am Am |
 | 4 (C#) | I vi ii V (the turnaround) | C Am Dm G | Am F Bdim Em |
 | 5 (D#) | The whole circle: I IV vii iii vi ii V I | C F Bdim Em Am Dm G C | Am Dm G C F Bdim Em Am |
+| 6 (F#) | I IV V V | C F G G | Am Dm Em Em |
+| 7 (G#) | I I IV vi | C C F Am | Am Am Dm F |
+| 8 (A#) | I IV I V | C F C G | Am Dm Am Em |
+| 9 (C#) | I iii IV vi | C Em F Am | Am C Dm F |
+| 10 (D#) | I vi IV | C Am F | Am F Dm |
+| 11 (F#) | IV V IV I | F G F C | Dm Em Dm Am |
 
 Each chord gets the bars of the slot you had chosen, so choose a slot and set its Bars first; the slots after the
 fill are emptied, and Play goes to Loop. The types you gave the slots stay. The chords stay in the scale, so in a
@@ -642,6 +649,13 @@ minor key the V is minor (v), unless the genre raises it for the cadence (the TH
 It's stored with the piece like any progression. A pentatonic scale has no circle to walk, so the fills are off
 there. The black keys blink faintly on this page to show they do something; watch the THEORY screen while it
 plays and you see the progression walk round the circle.
+
+**Pedal: follow the chords, or hold the key.** **White key 9** switches the **bass** and **white key 10** the **pad** between two ways of playing:
+
+- **Follows** (as always): the voice moves with each chord.
+- **Pedal**: the voice stays on the key while the chords move above it. The bass holds the key's root (a walking bass walks the key's own chord), and the pad holds the key's chord (Am7 in A minor) as the progression goes round. This is a pedal point, the oldest drone trick there is: the music gets tension as the chords pull away from the held note, and it all comes home when they return to I. Good for playing a guitar or a synth over it.
+
+The keys are lit while a voice is on Pedal, and the bottom of the page says which. It's your setting, not the piece's: it stays as you leave it, across pieces and power-off. The THEORY screen still shows the chords as they move.
 
 The chords are steps of the scale, not fixed notes, so they follow the key. Change the root or the mode and
 the progression moves with it. The chord kind, the voicing and the rest of the Chords page still apply. In

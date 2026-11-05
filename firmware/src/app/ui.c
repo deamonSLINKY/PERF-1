@@ -1075,17 +1075,20 @@ static const uint8_t *pg_view(uint8_t *tmp)
 /* the Circle fills (0.16.20, after issues #2 and #3: progressions that move round the circle of fifths, saved like any): the first five
  * black keys on the Progression page write one into the slots, each chord a fifth down from the one before as the scale allows (its
  * degrees: in minor ii is ii o and V v, or V where the genre cadences): ii V I I, vi ii V I, iii vi ii V I I, the turnaround I vi ii V,
- * and the whole diatonic circle I IV vii iii vi ii V I. Each chord takes the bars of the slot chosen; the slots after it are emptied, so the
- * loop is the fill; the types stay as they were. A seven-note scale only (a pentatonic has no circle to walk). */
-#define PGF_N 5
-static const uint8_t PGF[PGF_N][EN_PRG_N] = {{2, 5, 1, 1}, {6, 2, 5, 1}, {3, 6, 2, 5, 1, 1}, {1, 6, 2, 5}, {1, 4, 7, 3, 6, 2, 5, 1}};
-static const char *const PGF_NAME[PGF_N] = {"ii V I", "vi ii V I", "iii vi ii V I", "I vi ii V", "THE WHOLE CIRCLE"};
+ * and the whole diatonic circle I IV vii iii vi ii V I. Black keys 6-11 (0.16.21, from Steven's chord chart, issue #3): the common
+ * progressions I IV V V, I I IV vi, I IV I V, I iii IV vi, I vi IV, IV V IV I. Each chord takes the bars of the slot chosen; the slots
+ * after it are emptied, so the loop is the fill; the types stay as they were. A seven-note scale only (a pentatonic has no circle to walk). */
+#define PGF_N 11
+static const uint8_t PGF[PGF_N][EN_PRG_N] = {{2, 5, 1, 1}, {6, 2, 5, 1}, {3, 6, 2, 5, 1, 1}, {1, 6, 2, 5}, {1, 4, 7, 3, 6, 2, 5, 1},
+                                            {1, 4, 5, 5}, {1, 1, 4, 6}, {1, 4, 1, 5}, {1, 3, 4, 6}, {1, 6, 4}, {4, 5, 4, 1}};
+static const char *const PGF_NAME[PGF_N] = {"ii V I", "vi ii V I", "iii vi ii V I", "I vi ii V", "THE WHOLE CIRCLE",
+                                            "I IV V V", "I I IV vi", "I IV I V", "I iii IV vi", "I vi IV", "IV V IV I"};
 static int pg_scale(void);
 static void pg_fill(int n)
 {
     int s, br;
     if (pg_scale() != 7) {
-        say("CIRCLE", "NEEDS 7 NOTES");
+        say("FILL", "NEEDS 7 NOTES");
         return;
     }
     if (!pg_any(proj.prg))
@@ -1100,7 +1103,7 @@ static void pg_fill(int n)
     en_prog(proj.prg);
     edited();
     ui.pgsl = 0;
-    say("CIRCLE", PGF_NAME[n]);
+    say(n < 5 ? "CIRCLE" : "PROGRESSION", PGF_NAME[n]);
 }
 static int pg_scale(void)                       /* the degrees there are: the scale's notes (seven at most) */
 {
@@ -3759,6 +3762,13 @@ static void input(void)
                     for (s = 0; s < PGF_N; s++)
                         if (BLACK_KEY[s] == i)
                             pg_fill(s);
+                    for (s = 0; s < 2; s++)       /* white keys 9 and 10: the bass, the pad, follow the chords or hold the key (PEDAL, 0.16.21) */
+                        if (WHITE_KEY[8 + s] == i) {
+                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 3u);
+                            en_pedal(glob.sl_rsv[2]);
+                            project_globals();
+                            say(s ? "PAD" : "BASS", glob.sl_rsv[2] >> s & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
+                        }
                 } else if (ui.view == V_CMSTEP) { /* the Pluck steps page: likewise */
                     int s;
                     for (s = 0; s < 16; s++)
@@ -5762,9 +5772,14 @@ static void draw_scope(int kind)
                 cv_text(x0 + 3, y0 + 17, &FONT_XS, "HOLDS", K_LINE);
             }
         }
-        cv_text(4, 112, &FONT_XS, !mine ? "TURN A CHORD: THEY ARE YOURS" : loop ? "EDIT: NEXT SLOT  HOLD: HERE" : "PLAY: LOOP TO HEAR THEM", K_DIM);
+        cv_text(4, 107, &FONT_XS, !mine ? "TURN A CHORD: THEY ARE YOURS" : loop ? "EDIT: NEXT SLOT  HOLD: HERE" : "PLAY: LOOP TO HEAR THEM", K_DIM);
         if (pg_scale() == 7)
-            cv_text(4, 124, &FONT_XS, "BLACK KEYS 1-5: CIRCLE OF FIFTHS", mix(K_DIM, K_PAD, 8));
+            cv_text(4, 118, &FONT_XS, "BLACK KEYS: 1-5 CIRCLE, 6-11 CLASSICS", mix(K_DIM, K_PAD, 8));
+        {   /* PEDAL: white keys 9 and 10 */
+            const int pd = glob.sl_rsv[2] & 3;
+            cv_text(4, 129, &FONT_XS, pd & 1 ? "W9 BASS: PEDAL" : "W9 BASS: FOLLOWS", pd & 1 ? K_ACC : K_DIM);
+            cv_text(124, 129, &FONT_XS, pd & 2 ? "W10 PAD: PEDAL" : "W10 PAD: FOLLOWS", pd & 2 ? K_ACC : K_DIM);
+        }
         return;
     }
     if (kind == SCOPE_CMSTEP) {                  /* the pluck steps: the line, a bar a step (its height the rung), the accent bright, a soft one dim; the step chosen framed */
@@ -6696,7 +6711,10 @@ static void leds(void)
         for (i = 0; i < EN_PRG_N; i++)
             if ((uint32_t)i == (uint32_t)(ui.pgsl & 7u) || (uint32_t)(en_prg_get(proj.prg, 3 * (int)i, 3) != 0) ^ (uint32_t)(en_playing && (int)i == en_prog_pos))
                 k |= 1u << WHITE_KEY[i];
-        if (pg_scale() == 7 && (ui.frame / 8u) % 6u == 0u)   /* the Circle fills on the black keys: lit a frame in six, faint beside the slots */
+        for (i = 0; i < 2; i++)                  /* PEDAL: white keys 9 and 10 lit while the bass, the pad, hold the key */
+            if (glob.sl_rsv[2] >> i & 1u)
+                k |= 1u << WHITE_KEY[8 + i];
+        if (pg_scale() == 7 && (ui.frame / 8u) % 6u == 0u)   /* the fills on the black keys: lit a frame in six, faint beside the slots */
             for (i = 0; i < PGF_N; i++)
                 k |= 1u << BLACK_KEY[i];
     } else if (ui.view == V_CMSTEP) {            /* the pluck steps: likewise */
@@ -7433,6 +7451,7 @@ void ui_init(void)
     settings_load();                             /* the effects' and performing settings as you left them */
     voices_load();                               /* and the player's DX7 voices */
     mm_load();                                   /* and their MIDI map (0.16.11) */
+    en_pedal(glob.sl_rsv[2] & 3);                /* and the pedal (0.16.21: the global record's last spare byte) */
     ui.sl_pos = (uint8_t)sl_find();              /* the set list: the slot of the piece playing (0xFF none) */
     ui.touched = -1;
     ui.boot_t = plat_ms();

@@ -1,0 +1,76 @@
+# PEDAL (0.16.21, issue #3: "harmonic drone followers"): on the Progression page white key 9 switches the bass, white key 10 the pad,
+# between following the chords and holding the key (a pedal: the bass on the key's root, the pad on the key's chord) while the harmony
+# moves on above. Kept with the player's settings (the global record), through a reboot. And the six new fills on black keys 6-11.
+seed 0
+wait 3000
+press EDIT
+wait 600
+release EDIT
+wait 100
+expect view 5
+expect pool 0x5AD
+# one bar a chord, the whole circle (A minor: Am Dm G C F Bdim Em Am)
+turn K3 -2
+tapkey b4
+wait 200
+expect prgslot1 4
+tap PLAY
+wait 2500
+expect progpos 0
+expect chordroot 9
+expect bassheld 9
+tap EDIT
+wait 2200
+expect progpos 1
+expect chordroot 2
+expect bassheld 2
+# the bass on pedal: A under Dm
+tapkey w8
+wait 300
+expect bassheld 9
+expect chordroot 2
+shot pedal_page.png
+tap EDIT
+wait 2200
+expect progpos 2
+expect chordroot 7
+expect bassheld 9
+# the pad on pedal too: its voices hold Am7 (A C E G) under G7
+tapkey w9
+wait 300
+expect chordroot 7
+expect padheld0 7
+expect padheld1 9
+expect padheld2 0
+expect padheld3 4
+shot pedal_pad.png
+# back to following: the bass on G
+tapkey w8
+wait 300
+expect bassheld 7
+# kept through power-off: the pad still on pedal, the bass following
+reboot
+wait 3000
+press EDIT
+wait 600
+release EDIT
+wait 100
+shot pedal_after_reboot.png
+# the new fills (black keys 6-11): I IV V V, I iii IV vi, IV V IV I
+tapkey b5
+wait 200
+expect prgslot0 1
+expect prgslot1 4
+expect prgslot2 5
+expect prgslot3 5
+expect prgslot4 0
+tapkey b8
+wait 200
+expect prgslot1 3
+expect prgslot3 6
+tapkey b10
+wait 200
+expect prgslot0 4
+expect prgslot1 5
+expect prgslot2 4
+expect prgslot3 1

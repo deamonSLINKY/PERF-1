@@ -604,6 +604,10 @@ static int expect(const char *what, const char *val)
         got = (int)(uint32_t)ui.fx_mask;
     else if (!strncmp(what, "fxbit", 5))          /* fxbitN: effect N (FX_*) held (the mask's upper half too) */
         got = (int)(ui.fx_mask >> (atoi(what + 5) & 63) & 1u);
+    else if (!strcmp(what, "bassheld"))           /* the bass's held note, its pitch class (0.16.21: PEDAL) */
+        got = en_bass_held() % 12;
+    else if (!strncmp(what, "padheld", 7))        /* padheldN: pad voice N's note, its pitch class */
+        got = en_pad_held(atoi(what + 7)) % 12;
     else if (!strcmp(what, "entrkmute"))          /* the mutes the engine has (0.16.12: a MIDI pad changed the screen only) */
         got = (int)en_trk_heard();
     else if (!strcmp(what, "trkmute"))            /* the tracks muted (GLO held, the keys): a bit a track */
