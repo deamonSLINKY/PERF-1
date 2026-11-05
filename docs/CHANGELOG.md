@@ -16,11 +16,15 @@
 
 **0.16.1 is the fifth release.** Its firmware is identical to development build 0.16.4; the builds 0.16.1 to 0.16.4 in the git history are its steps (the public number reuses the first of them). The Pieces and Library pages (0.16.3 and 0.16.4) are in the source but not on the website yet: they come with 0.17.
 
+**0.16.2 is the sixth release.** Its firmware is identical to development build 0.16.16; the builds 0.16.5 to 0.16.16 in the git history are its steps. Its first reason is a fix: M-VAVE's new M-UPGRADE (3.11) could not find PERF-1, so there was no way back to the stock firmware with it. The Library & pieces page is in the source but not on the website yet: it comes with 0.17, with the boot stub (0.16.17) and a MIDI CC for every setting (0.16.18), which are on `vis`.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Unreleased (the builds 0.16.5 .. are its steps)
+## 0.16.2 (the builds 0.16.5 .. 0.16.16 are its steps)
+
+**In short.** M-UPGRADE 3.11 finds PERF-1 again, and goes from PERF-1 straight to M-VAVE's V16 as well as V15; the Install page's Back to the stock firmware takes V16's file too; the pages let go of the FM-1's MIDI port when they're done, so M-UPGRADE and music software can open it. Each chord slot of the Progression page can have its own type, with a new 11th chord, and chords are named right. Two visualizers: THEORY (the circle of fifths, the chord, its Roman numeral and what comes next) and TRIP. Auto FX plays the effects by itself, timed to the phrase. Your MIDI map on the FM-1 (experimental): what you learn in the emulator plays the FM-1 directly. Phrygian pieces reach the flat II, synthwave's major pieces play I-vi-IV-V, the walking bass leans in chromatically. Freeze from a sustain pedal. Fixes: a drum hitting itself no longer clicks; MIDI's all-drums mute mutes.
 
 - **The pages let go of the FM-1's MIDI port** (0.16.16, the maker's M-UPGRADE runs). On Windows a USB MIDI port is one program's at a time, and the Install page kept the FM-1's from its first use until the tab was closed: M-UPGRADE said "A USB MIDI device is present but did not answer" (KsCreatePin error 1450) and music software could not open it. web/fm1idle.js (new): every MIDIAccess the page asks for is kept, and their open ports are closed after 4 s without FM-1 traffic, unless an install or write is running (writing) or the live status is on; the next button opens them again. The Install page and the Pieces page use it (the editor keeps its port while open: it sends every knob as it turns). Test: web_idle_test.mjs (kept while traffic flows or busy, closed when quiet, told once, opened again).
 - **V16 both ways, on hardware** (2026-11-04, the maker's FM-1): 0.16.15 to M-VAVE's V16 with M-UPGRADE 3.11, and PERF-1 back on from V16 with the Install page.

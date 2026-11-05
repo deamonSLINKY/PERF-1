@@ -209,7 +209,7 @@ or V16's file. (V16 changes the FM-1's boot head, the first 16 KB of its memory.
 M-VAVE's own V15 and V16 heads.) An older PERF-1 shows `UPDATE FAILED` and M-UPGRADE times out (error 258). There, choose V15's
 `FM-1.fwsc` with M-UPGRADE's **Select firmware**, or use this page's button, then update the stock V15 to V16 with M-UPGRADE.
 
-**One program at a time.** On Windows only one program can use the FM-1's MIDI port. This page and the Pieces page let go of it
+**One program at a time.** On Windows only one program can use the FM-1's MIDI port. This page lets go of it
 4 seconds after they last talked to the FM-1 (Live status keeps it while it runs), so M-UPGRADE or your music software can open
 it with the page still open. If a program says the FM-1 is busy or "present but did not answer", close the other programs and
 pages that use it, then unplug the FM-1 and plug it back in.
@@ -1870,44 +1870,6 @@ Installing another firmware, or reinstalling, can wipe what PERF-1 has stored. T
 - **Save a backup** reads everything the FM-1 has stored and saves it as a `.p1bak` file: the pieces you saved in every genre, the settings, the DX7 voices, the theme, Tune and MIDI out. Do this *before* you install anything else. Changes to a piece that you haven't stored aren't included (store them first, section 6). The panel calibration isn't included either, because it belongs to that particular unit.
 - **Restore the chosen backup** (choose the file first) writes everything in the file back, one item at a time, then the FM-1 restarts. It replaces what is stored now. The music fades out for each write, and nothing else is saved until the restart. A backup from an older PERF-1 loads into a newer one. Anything in the file the firmware doesn't recognise is refused and never written.
 - Only PERF-1 reads these files, and the FM-1 must be running PERF-1 0.14 or later. An older version doesn't answer, and the page tells you so.
-
-### Sharing pieces
-
-The **Pieces** page on the PERF-1 website shares one piece at a time: you send a piece you made to someone else, and you add the pieces other people share. Plug the FM-1 in by USB and open the page in Chrome or Edge.
-
-**What goes with a piece:** all of its settings, its six drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice its pluck plays if that voice is one you loaded yourself (section 15). Your effects settings, the theme and the set list stay yours.
-
-**To share a piece:**
-
-1. Store it on the FM-1 (**GLO**, then **SAVE**). Only stored pieces can be shared.
-2. On the website's **Library & pieces** page, open **My FM-1**, press **Read my pieces and set list** and tick the piece (or several: **Tick all** ticks every one).
-3. Add a title, your name and a note if you like (what to play, what to try). With several ticked, your name goes with each, and each keeps its own genre and number as its name.
-4. **Submit to the Library** puts it in the Library for everyone at once. **Download .piece** saves a small file (several download as one `.zip`). **Copy link** copies a link that opens the page with your piece in it, ready to add (several: one link a line). **Copy code** copies the same thing as text, starting `P1.`, for places where links don't work.
-
-**To add a shared piece:**
-
-1. Open the link, or paste the code into the box, or choose the `.piece` file. The page shows the piece's genre and number, tempo, key and pluck sound, and the title and note if it has them.
-2. Choose where it goes. It always goes into its own genre; you pick which of the ten pieces it replaces. It starts on the number it had.
-3. Press **Add to my FM-1**. If you already stored a piece there, the page asks before it replaces it.
-4. The FM-1 restarts to load it. Then go to the genre (**GLO** + **PRESETS**) and the piece (**PRESETS**). Store what you were playing before you add a piece, because the restart loses changes you haven't stored.
-
-**Its DX7 voice.** If the piece's pluck plays its own DX7 voice, the voice comes with it:
-
-- If you already have that voice loaded, nothing changes and the piece uses yours.
-- If the voice's slot on your FM-1 is empty, the voice goes there.
-- If the slot holds a different voice of yours, the page asks: put the new voice in your next empty slot (nothing of yours changes), or replace your voice in that slot. Replacing it changes the sound of any of your pieces that use the old voice.
-
-**Hear it in the emulator** puts the piece into the browser emulator (section 17) instead, with its voice, so you can listen before you add it to your FM-1.
-
-**Sharing a whole set.** The first row after **Read my pieces and set list** is **My set list**: your set list (section 10) with every piece in it, their DX7 voices, Play and the SET page's Mix. Pieces you stored go with it; a factory piece is the same on every FM-1, so only its place is sent. It downloads as a `.perfset` file, or copies as a link or code (a long one: for a set with many stored pieces, share the file where links are cut short, as in a Discord message). Adding a set puts each stored piece back at its own number in its genre, its voices in your empty voice slots (a voice you already have is used as it is), and replaces your set list with it. The page lists the stored pieces of yours it would replace and asks first.
-
-**The card.** **Card** draws a picture of the piece or set to post with its link: its name, title, maker, tempo and key, and its drum pattern as rings (one ring a drum, the kick inside, sixteen steps round), or a set's places as a ring. **Save the card (PNG)** downloads it.
-
-**Based on.** When you add a piece from a share, this browser remembers where it came from. If you change it, store it and share it again, it goes out as "based on" the original (its title and maker), and the card says so. If you share it unchanged, the page fills in its original title and maker for you.
-
-**The Library.** The **Library** tab of the **Library & pieces** page collects pieces and sets people made: each with its card, title, maker and note, to hear in the emulator or add to your FM-1 (**Hear or add**). Filter it by genre, search it, or show only the maker's **picked** ones, the newest, or yours. To put yours in, tick them on **My FM-1** and press **Submit**: they are there at once, for everyone, with no account. A submission is checked first (it has to be a real PERF-1 piece or set; the title, name and note short and plain). What you submitted from a browser can be taken back from the same browser: its card there has **Remove**.
-
-**Versions.** Both of you need PERF-1 0.16.3 or later to add a piece. A piece made on an older PERF-1 loads into a newer one: anything it doesn't have yet plays as the piece's genre sets it. A piece made on a newer PERF-1 loads into an older one without the newer settings, and the page tells you so.
 
 ---
 

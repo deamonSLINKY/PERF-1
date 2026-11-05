@@ -32,7 +32,6 @@ PERF-1 is a custom firmware for the M-VAVE FM-1: a 5 track generative groovebox 
 - **The bass can be a line, the pluck can remember.** The bass plays held, on the genre's rhythm, on the kick, in eighths, off the beat, walking or in a riff, and the pluck can keep its last few notes and bring them round again (deja vu), morphing them a note at a time.
 - **Real FM voices, and yours.** A built-in six-operator FM engine plays 30 DX7-style voices as the pluck, and you can load up to 16 of your own DX7 voices from a `.syx` file over USB and play them from the pluck page. A browser **editor** shows every parameter and edits DX7 voices with a live preview on the unit.
 - **You keep what you make.** Any piece, in any genre, can be stored (one button); the unit remembers your theme, tuning, effect settings and DX7 voices across power-off, and the installer page can back all of it up to a file and restore it (so trying another firmware costs you nothing).
-- **Share what you make.** The **Pieces** page turns a stored piece into a link, a code or a small file, with its own DX7 voice if it plays one, and adds the pieces other people share to your FM-1 (asking before it replaces your piece or your voice), or lets you hear them first in the browser emulator.
 - **A screen that tells you what is going on.** The middle of the home screen is the **sigil**: a circle that turns so the chord's root is always at the top, draws the chord as a shape (a triad is a triangle, a seventh a four-sided figure), fills round with the four-bar phrase, shows the sixteen steps of the bar and flares a rune for each plucked note. Its eye is half open in a groove, shut in a breakdown, wide and shaking in a build, and flashes on the drop. The header counts down to the drop or the next break.
 - **Five tracks at once, with a safety net.** Pad, bass, acid, pluck and drums all play together (a generative firmware often runs four), which asks a lot of a chip with a 5.8 ms deadline. So the engine is built around not breaking: a second core takes the reverb, and under load more of the work; each piece is checked for level and load; a master bus with a compressor and a look-ahead limiter keeps the sum from clipping; and if a piece still gets too heavy, the engine sheds the least important work before it would drop a sample.
 - **Honest about its limits.** It runs two cores and watches its own load: a status line shows CPU, dropouts and which core is doing what, USB telemetry logs it, and when a piece gets too heavy the engine sheds the least important work before it would drop audio.
@@ -60,6 +59,17 @@ The manual ([docs/MANUAL.md](docs/MANUAL.md), or the page on the site with scree
 The screen is drawn in one look (warm black, one colour per voice: the pad bone, the bass crimson, the acid lime, the pluck ice-teal, the drums pink) in six palettes, chosen on the Global page.
 
 <p align="center"><img src="docs/img/readme-palettes.png" width="760" alt="The home screen in the six palettes: Imp, Synth, Acid, Ice, Ember and Phosphor."></p>
+
+## What's new in 0.16.2
+
+- **Fix: back to the stock firmware with M-UPGRADE.** M-VAVE's new M-UPGRADE (3.11) said "A USB MIDI device is present but did not answer" to every PERF-1 until now. It finds PERF-1 again, and can take it straight to M-VAVE's new **V16** as well as V15. The Install page's **Back to the stock firmware** takes V15's or V16's file.
+- **The pages let go of the FM-1** a few seconds after they last talked to it, so M-UPGRADE or your music software can use it with the page still open.
+- **A chord type for each slot** on the Progression page (hold EDIT): Triad, 7th, 9th, Sus, Dub, Fourths or the new **11th**, per chord. Chord names are right now (Sus, 11ths and Fourths showed the wrong name).
+- **THEORY visualizer:** the circle of fifths with the scale lit, the chord playing, its Roman numeral and function, and the next chord. Plus **TRIP**, a kaleidoscope tunnel. Double-click HOME for the visualizers.
+- **Auto FX:** the effects play themselves, timed to end on a phrase line, picked for the section (Settings, after Auto DJ).
+- **Your MIDI map on the FM-1 (experimental):** learn your controller in the emulator, send the map from the Install page, and it plays the FM-1's buttons, keys and knobs with no computer in between.
+- **Music theory:** Phrygian pieces reach the flat II, synthwave's major pieces play I-vi-IV-V, the walking bass leans into the root from a semitone below.
+- **Freeze from a sustain pedal** (CC 64), and **fixes:** a drum hitting itself no longer clicks; the MIDI pads' mute-all-drums now mutes.
 
 ## What's new in 0.16.1
 
