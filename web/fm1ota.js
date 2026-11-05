@@ -7,6 +7,9 @@
 // the device sends cmd 0x30 read requests on the logical image and we answer.
 
 const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
+// PERF-1 from 0.16.13 answers the plain query with its model and family only ("FM-1_700": M-UPGRADE 3.11 refuses more
+// than three digits), and the whole identity ("FM-1_7001613") to this one, the handshake with the one-byte body 01
+let HS_FULL = null;
 const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
 const MAXDATA = 512;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -92,17 +95,26 @@ class Link {
   close() { this.input.onmidimessage = null; }
 }
 
+async function ask(link, query, ms) {
+  if (!link.send(query)) return null;
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    const p = await link.read(end - Date.now());
+    if (!p) break;
+    const id = parseIdentity(p);
+    if (id) return id;
+  }
+  return null;
+}
 async function handshake(link, tries = 3) {
   link.drain();
+  if (!HS_FULL) HS_FULL = [0xF0, ...pack7([0, 0x59, 0x11, 1, 0, 0, 1, 0xFE]), 0xF7];
   for (let t = 0; t < tries; t++) {
-    if (!link.send(HS_QUERY)) return null;
-    const end = Date.now() + 1000;
-    while (Date.now() < end) {
-      const p = await link.read(end - Date.now());
-      if (!p) break;
-      const id = parseIdentity(p);
-      if (id) return id;
-    }
+    const id = await ask(link, HS_QUERY, 1000);
+    if (id === null) continue;
+    if (!/^\d{3}$/.test(id.text.split("_")[1] || "") || id.text.split("_")[1][0] !== "7") return id;   /* stock, the loader, an older PERF-1 */
+    const full = await ask(link, HS_FULL, 600);   /* "FM-1_700": PERF-1 0.16.13 and later tell their version this way (AMB-1 and HYP-1 don't answer) */
+    return full && full.model === id.model ? full : id;
   }
   return null;
 }

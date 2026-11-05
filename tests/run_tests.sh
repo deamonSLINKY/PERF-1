@@ -45,6 +45,7 @@ run core2 sh -c "$CC -O2 -ffp-contract=off -std=c11 -Wall -Wextra -DEN_HOST -Ifi
 run storage sh -c "$CC -O2 -o $OUT/storage_test tests/storage_test.c && $OUT/storage_test"
 if command -v node >/dev/null 2>&1; then run websyx node tests/web_syx_test.js; fi
 if command -v node >/dev/null 2>&1; then run webbackup node tests/web_backup_test.js; fi
+if command -v node >/dev/null 2>&1; then run webota node tests/web_ota_test.mjs; fi
 run dxproto sh -c "$CC -O2 -Wall -Wextra -Werror -o $OUT/dxproto_test tests/host/dxproto_test.c && $OUT/dxproto_test"
 run params sh -c "python3 tools/make_params.py"
 if command -v node >/dev/null 2>&1; then

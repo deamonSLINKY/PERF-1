@@ -26,6 +26,9 @@ import sys
 import time
 
 HS_QUERY = bytes([0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7])
+# PERF-1 from 0.16.13 answers HS_QUERY with its model and family only ("FM-1_700": M-UPGRADE 3.11 refuses more than three
+# digits) and the whole identity to HS_FULL, the handshake with the one-byte body 01 (built below, after pack7)
+HS_FULL = None
 UPGRADE = bytes([0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7])
 FINISH_CHECK, FINISH_WRITE = 0xE0000000, 0xF0000000
 MAXDATA = 512
@@ -217,19 +220,36 @@ class Device:
         self.link, self.id, self.name = link, ident, name
 
 
+def ask(link, query, secs):
+    if not link.send(query):
+        return False
+    end = time.monotonic() + secs
+    while (left := end - time.monotonic()) > 0:
+        p = link.read(left)
+        if p is None:
+            break
+        ident = parse_identity(p)
+        if ident:
+            return ident
+    return None
+
+
 def handshake(link, tries=3):
+    global HS_FULL
+    if HS_FULL is None:
+        HS_FULL = b"\xF0" + pack7(bytes([0, 0x59, 0x11, 1, 0, 0, 1, 0xFE])) + b"\xF7"
     link.drain()
     for _ in range(tries):
-        if not link.send(HS_QUERY):
+        ident = ask(link, HS_QUERY, DELAY["hs"])
+        if ident is False:
             return None
-        end = time.monotonic() + DELAY["hs"]
-        while (left := end - time.monotonic()) > 0:
-            p = link.read(left)
-            if p is None:
-                break
-            ident = parse_identity(p)
-            if ident:
-                return ident
+        if ident is None:
+            continue
+        num = ident.text.split("_", 1)[1]
+        if len(num) != 3 or num[0] != "7":       # stock, the loader, an older PERF-1: as it answered
+            return ident
+        full = ask(link, HS_FULL, 0.6)          # "FM-1_700": PERF-1 0.16.13 and later tell their version this way
+        return full if full and full.model == ident.model else ident
     return None
 
 

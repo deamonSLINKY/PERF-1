@@ -3,7 +3,10 @@
 /* M-UPGRADE update entry.
  *
  * The updater talks SysEx (F0 pack7(00 59 cmd len24 body chk) F7):
- *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID)
+ *   cmd 0x11  handshake -> we answer our package identity (FELUCCA_ID): to the plain query its model and
+ *             family only ("FM-1_700"), because M-UPGRADE 3.11 takes NAME_ and 1-3 digits and refuses
+ *             the rest ("FM-1_7001608": Invalid device identity); to a query with the one-byte body 01
+ *             (PERF-1's installers) the whole identity, version included
  *   F0 22 24 35 7F F7  upgrade -> ota_session(): pull parts of the package
  *     with cmd 0x30 read requests, check them, stage the package's update
  *     loader at 0xE0000 (outside Felucca's store), ask 0xE0000000 ("success"),
@@ -125,6 +128,7 @@ static int ota_send_msg(uint32_t cmd, const uint8_t *body, uint32_t n)   /* n <=
     return ota_wire_send(ota_wire, w);
 }
 
+#ifdef FELUCCA_LOADER                            /* the update loader, exactly as before ("ota-FM-1_900" passes M-UPGRADE 3.11) */
 static void ota_reply_identity(void)
 {
     static const char ID[] = FELUCCA_ID;         /* == the package marker string */
@@ -134,6 +138,35 @@ static void ota_reply_identity(void)
         id[i] = i < sizeof ID - 1u ? (uint8_t)ID[i] : 0;
     ota_send_msg(0x11, id, sizeof id);
 }
+#define OTA_HS(d) ((d) == 7u && ota_dec[2] == 0x11)
+#define OTA_HS_REPLY(d) ota_reply_identity()
+#else
+static void ota_reply_identity(int full)
+{
+    static const char ID[] = FELUCCA_ID;         /* == the package marker string */
+    uint8_t id[27];
+    uint32_t i, n = sizeof ID - 1u;
+    if (!full) {                                 /* the model, '_' and three digits: "FM-1_7001612" -> "FM-1_700" */
+        for (i = 0; i < n && ID[i] != '_'; i++)
+            ;
+        if (i + 4u < n)
+            n = i + 4u;
+    }
+    for (i = 0; i < sizeof id; i++)
+        id[i] = i < n ? (uint8_t)ID[i] : 0;
+    ota_send_msg(0x11, id, sizeof id);
+}
+
+/* a decoded handshake: 1 the plain query (M-UPGRADE's), 2 the one asking for the whole identity, 0 neither */
+static int ota_is_hs(uint32_t d)
+{
+    if (ota_dec[2] != 0x11)
+        return 0;
+    return d == 7u ? 1 : d == 8u && ota_dec[6] == 1 ? 2 : 0;
+}
+#define OTA_HS(d) ota_is_hs(d)
+#define OTA_HS_REPLY(d) ota_reply_identity(ota_is_hs(d) == 2)
+#endif
 
 /* decode the pending frame; returns its decoded length (0 = not ours) */
 static uint32_t ota_take(void)
@@ -157,8 +190,8 @@ static uint32_t ota_take(void)
 static void ota_service(void)
 {
     uint32_t d = ota_take();
-    if (d == 7u && ota_dec[2] == 0x11)
-        ota_reply_identity();
+    if (OTA_HS(d))
+        OTA_HS_REPLY(d);
 }
 
 /* one read request (3 tries x 5 s); data -> dst */
@@ -183,8 +216,8 @@ static int ota_read(uint32_t addr, uint8_t *dst, uint32_t len)
             d = ota_take();
             if (!d)
                 continue;
-            if (d == 7u && ota_dec[2] == 0x11) {
-                ota_reply_identity();
+            if (OTA_HS(d)) {
+                OTA_HS_REPLY(d);
                 continue;
             }
             if (d == len + 15u && ota_dec[2] == 0x30 && ota_rd24(ota_dec + 3) == len + 8u &&

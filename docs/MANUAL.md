@@ -200,7 +200,8 @@ the unit.
 3. Connect the FM-1 and press **Install the stock firmware**.
 
 It works from PERF-1, from safe mode and from update mode. M-VAVE's own updater, M-UPGRADE (Downloads,
-PC Software), works too.
+PC Software), works too from PERF-1 0.16.13 on. M-UPGRADE 3.11 doesn't find older PERF-1 builds ("A USB MIDI device is
+present but did not answer"): use this page's button for those.
 
 ### Update mode
 

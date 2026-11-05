@@ -97,10 +97,17 @@ class FakeFM1:
             if link.gen == self.gen and not link.closed:
                 link.q.put(bytes(pkt))
 
+    def ident(self, t):
+        t = t.encode()
+        self.tx(b"\xF0" + I.pack7(bytes([0, 0x59, 0x11, 0, 0, 0]) + t + bytes(28 - len(t))) + b"\xF7")
+
     def rx(self, d):
+        perf = self.identity.startswith("FM-1_7") and len(self.identity) > 8   # PERF-1 0.16.13 on: short to the plain query
         if d == I.HS_QUERY:
-            t = self.identity.encode()
-            self.tx(b"\xF0" + I.pack7(bytes([0, 0x59, 0x11, 0, 0, 0]) + t + bytes(28 - len(t))) + b"\xF7")
+            self.ident(self.identity[:8] if perf else self.identity)
+        elif I.HS_FULL is not None and d == I.HS_FULL:
+            if perf:
+                self.ident(self.identity)
         elif d == I.UPGRADE:
             self.upgrades += 1
             first = self.bad_addr if self.bad_addr is not None else 0
@@ -191,6 +198,12 @@ def installs():
     rc, out, err = cli([p, "--yes"], dev)
     ok(rc == 0 and dev.bad == 0 and dev.upgrades == 2 and dev.served == 11 and "done: the FM-1 runs FM-1_900" in out
        and "100%" in out, f"install: running -> loader -> Felucca ({dev.served} reads)")
+
+    rawp = package("FM-1_7001613")
+    dev = FakeFM1(I.logical_image(rawp), identity="FM-1_7001612", after_write="FM-1_7001613")
+    rc, out, err = cli([pkgfile("perf.fwsc", rawp), "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and "done: the FM-1 runs FM-1_7001613" in out,
+       "install: PERF-1 answers FM-1_700 to the plain query (M-UPGRADE 3.11), its whole identity to HS_FULL")
 
     raw10 = package("FM-1_9001000")
     dev = FakeFM1(I.logical_image(raw10), identity="FM-1_909", after_write="FM-1_9001000")
