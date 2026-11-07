@@ -5,7 +5,7 @@ compatibility_date = "2025-06-01"
 
 [[kv_namespaces]]
 binding = "LIB"
-id = "PUT-THE-ID-HERE"
+id = "7ff8b1576b2c4d858ca5f2a51e795891"
 
 [vars]
 # the sites allowed to call it (localhost is always allowed, for the dev site)
