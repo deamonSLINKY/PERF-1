@@ -2335,6 +2335,9 @@ It was stored while playing and the power went off before the save finished. Sto
 **Everything I saved is gone after switching off, or an install stops at once.**
 Newer FM-1s (sold since autumn 2026) have a different memory chip. PERF-1 before 0.16.23, and many other firmwares, don't recognise it: they keep your saves only until power-off and can't take an update (the installer says "nothing was written"). Nothing is broken. Install 0.16.23 or newer. If the installer can't reach the FM-1, use a recovery tool such as FM-SWITCH, or the Firmware Hub's rescue page, to put the stock firmware back first. The Install page's Live status shows which chip yours has (P25Q80 or UC25HQ80).
 
+**PERF-1 got heavier after I tried M-VAVE's V16 (CPU higher, easing off sooner).**
+V16 also changes the FM-1's startup code, and with it the whole FM-1 runs about 12% slower. Installing PERF-1 again doesn't change that. On the Install page, **Full speed** checks your FM-1 and can put V15's startup code back (it installs M-VAVE's V15, then PERF-1). FM-1s with the newer memory chip stay on V16 for now.
+
 **My changes vanished.**
 Only a piece you stored (Global, **SAVE**) is kept. Changes you didn't store are lost when you change genre or switch off. See "What is remembered" in section 13.
 

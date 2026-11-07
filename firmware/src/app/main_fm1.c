@@ -698,7 +698,8 @@ static void tel_service(void)
         w[8] = en_dbg.last_us;
         w[9] = en_dbg.nested;
         w[10] = (uint32_t)en_shed_level | (uint32_t)en_chorus_c0 << 8 | (uint32_t)en_bass_c1 << 9 |   /* (bit 8: the chorus on the first core) */
-                (uint32_t)flash_chip << 12 | (uint32_t)susp_bad << 14;   /* bits 12-13 the flash part (1 P25Q80, 2 UC25HQ80), 14 its erase didn't suspend (0.16.23) */
+                (uint32_t)flash_chip << 12 | (uint32_t)susp_bad << 14 |   /* bits 12-13 the flash part (1 P25Q80, 2 UC25HQ80), 14 its erase didn't suspend (0.16.23) */
+                (uint32_t)boot_head << 15;          /* bits 15-16 the startup code: 1 V15, 2 V16, 3 another (0.16.25) */
         w[11] = (uint32_t)en_playing;
         w[12] = tel_stores;
         w[13] = tel_store_us;
@@ -774,6 +775,15 @@ static void fm1_main(void)
         irq_restore(f);
         if (flash_ok)
             ota_boot_cleanup();
+    }
+    if (flash_ok) {                                       /* which startup code the unit has (0.16.25): flash.bin's first 16 KiB, as ota.c's check reads it.
+                                                           * M-VAVE's V16 runs the whole chip 12.5% slower than V15 (the bench, 2026-11-06); PERF's installs
+                                                           * keep whatever is there, so the status log and the Install page say which */
+        uint8_t b[256];
+        uint32_t i, c = 0;
+        for (i = 0; i < 0x4000u && !st_read(i, b, sizeof b); i += sizeof b)
+            c = ota_crc32(b, sizeof b, c);
+        boot_head = i < 0x4000u ? 0u : c == 0x3A04AD23u ? 1u : c == 0x08316064u ? 2u : 3u;
     }
     lcd_init();
     palette_set(1);

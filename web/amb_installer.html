@@ -131,6 +131,17 @@
   <p id="ststatus" class="small"></p>
   <div id="stgrid" class="grid"></div>
   </div>
+  <h2 data-t="fsh"></h2>
+  <div class="card">
+  <p class="small" data-t="fsinfo"></p>
+  <p><button id="fscheck" data-t="fscheck"></button></p>
+  <p id="fsstatus" class="small"></p>
+  <div id="fsfix" hidden>
+  <p class="small"><span data-t="fs1"></span> <a href="https://web.archive.org/web/20261009203224id_/https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc" style="color:inherit">FM-1.fwsc (V15)</a></p>
+  <p class="small"><span data-t="fs2"></span><br><input type="file" id="fsfile" accept=".fwsc"></p>
+  <p><button id="fsgo" disabled data-t="fsgo"></button></p>
+  </div>
+  </div>
   <h2 data-t="stockh"></h2>
   <p class="small" data-t="stockwhy"></p>
   <ol class="small">
@@ -162,6 +173,25 @@ const TEXT = {
     bricklink: "起動しない FM-1 の復旧（英語）",
     beta: "このカスタムファームウェアを使ったことで FM-1 が壊れたり不具合が起きたりしても、作者は一切の責任を負いません。自己責任でお使いください。",
     back: "公式ファームウェアに戻すには、このページ下の「純正ファームウェアに戻す」か、M-VAVE 公式のアップデーター M-UPGRADE（Downloads → PC Software → M-UPGRADE）を使います。",
+    fsh: "フルスピード（起動コード）",
+    fsinfo: "M-VAVE の V16 は FM-1 の起動コードも書き換え、チップ全体が約 12% 遅くなります（PERF-1 の CPU が上がり、負荷調整が早く入ります）。PERF-1 のインストールは起動コードをそのまま残すので、一度 V16 を入れた FM-1 は遅いままです。ここで確認し、V15 の起動コードに戻せます。",
+    fscheck: "起動コードを確認",
+    fsask: "確認中…",
+    fsnone: "この PERF-1 は起動コードを報告しません。上の「インストール」で最新の PERF-1 を入れてから、もう一度確認してください。",
+    fs15: "起動コード: M-VAVE の V15。フルスピードです。",
+    fs16: "起動コード: M-VAVE の V16。チップが約 12% 遅く動いています。V15 の起動コードに戻すと元に戻ります: V15 を書き込み、続けて PERF-1 を書き込みます。",
+    fs16new: "起動コード: M-VAVE の V16。この FM-1 は新しいフラッシュチップ（UC25HQ80）なので、約 12% 遅くても V16 のままにします。V15 の起動コードがこのチップで動くかはまだ確かめられていません。",
+    fsother: "起動コード: M-VAVE の V15 / V16 以外。変更しません。",
+    fs1: "M-VAVE の V15 ファイルをダウンロード（Internet Archive が保存した元のファイル）:",
+    fs2: "そのファイルを選ぶ:",
+    fsgo: "V15 の起動コードに戻す（V15 → PERF-1）",
+    fsbad: "これは M-VAVE の V15 ファイルではありません。上のリンクのファイルを選んでください。",
+    fsok: "V15 です。ボタンを押してください。",
+    fsconfirm: "M-VAVE の V15 を書き込み（起動コードも V15 に戻ります）、続けて PERF-1 を書き込みます。PERF-1 に保存した曲が消えることがあるので、先にバックアップしてください。続けますか？",
+    fsstep1: "1/2: V15 を書き込み中…",
+    fsstep2: "2/2: PERF-1 を書き込み中…",
+    fsdone: "完了。もう一度「起動コードを確認」を押してください。",
+    fsfail: "途中で止まりました。下の状態を見て、もう一度ボタンを押してください（FM-1 は今のファームウェアのまま、または V15 です）。",
     stockh: "純正ファームウェアに戻す",
     stockwhy: "M-VAVE の FM-1 純正ファームウェア（V15、または M-UPGRADE の V16）を、PERF-1（またはそのセーフモード、ほかの Felucca 系ファームウェア）から同じ USB ケーブルで書き込みます。PERF-1 で保存した曲は消えることがあるので、先にバックアップしてください。",
     stock1: "M-VAVE の純正ファームウェアをダウンロード:", stock1v16: "（現在は V16）",
@@ -219,6 +249,25 @@ const TEXT = {
     bricklink: "recovering an FM-1 that won't start",
     beta: "The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Use it at your own risk.",
     back: "To go back to the official firmware, use \"Back to the stock firmware\" below, or M-VAVE's own updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE).",
+    fsh: "Full speed (the startup code)",
+    fsinfo: "M-VAVE's V16 also rewrites the FM-1's startup code, and with it the whole chip runs about 12% slower (PERF-1's CPU goes up and it eases off sooner). PERF-1's installs leave the startup code as it is, so an FM-1 that once had V16 stays slow. Check yours here, and put V15's startup code back.",
+    fscheck: "Check the startup code",
+    fsask: "Asking the FM-1…",
+    fsnone: "This PERF-1 doesn't tell: install the latest PERF-1 (Install, at the top), then check again.",
+    fs15: "Startup code: M-VAVE's V15. Full speed.",
+    fs16: "Startup code: M-VAVE's V16. The chip runs about 12% slower. To fix it, this puts V15 on (which brings its startup code back), then PERF-1 again.",
+    fs16new: "Startup code: M-VAVE's V16. This FM-1 has the newer flash chip (UC25HQ80), so it stays on V16 for now, about 12% slower: V15's startup code hasn't been tried on that chip yet.",
+    fsother: "Startup code: not M-VAVE's V15 or V16. Left as it is.",
+    fs1: "Download M-VAVE's V15 (the Internet Archive kept the original file):",
+    fs2: "Choose that file:",
+    fsgo: "Put V15's startup code back (V15, then PERF-1)",
+    fsbad: "That is not M-VAVE's V15 file. Choose the file from the link above.",
+    fsok: "That is V15. Press the button.",
+    fsconfirm: "This installs M-VAVE's V15 (its startup code comes back with it), then PERF-1 again. Pieces saved in PERF-1 may be lost: back them up first. Go on?",
+    fsstep1: "1 of 2: installing V15…",
+    fsstep2: "2 of 2: installing PERF-1…",
+    fsdone: "Done. Press Check the startup code again to see.",
+    fsfail: "It stopped part way. Read the status below and press the button again (the FM-1 is on the firmware it had, or on V15).",
     stockh: "Back to the stock firmware",
     stockwhy: "This writes M-VAVE's own FM-1 firmware (V15, or V16 from M-UPGRADE) back, from PERF-1 (or its safe mode, or another Felucca-based firmware such as HYP-1 or X0X) over the same USB cable. The pieces saved in PERF-1 may be lost, so make a backup first (Back up and restore your pieces, on this page).",
     stock1: "Download M-VAVE's FM-1 firmware:", stock1v16: "(V16 now)",
@@ -598,8 +647,9 @@ function stRender(w) {
     [((w.shed & 255) ? "S" + (w.shed & 255) + " " : "") + ((w.shed >> 8) & 1 ? "chorus -> core 1 " : "") + ((w.shed >> 9) & 1 ? "bass -> core 2" : "") || "-", (w.shed & 255) ? "hot" : "", 0],
     [(GENRES[w.genre] || w.genre) + " " + (w.piece + 1), "", 0],   // (the FM-1 counts its pieces from 1)
     /* the flash part (0.16.23, bits 12-13 of the shed word): 1 P25Q80, 2 UC25HQ80, 3 another (saves stay in RAM); bit 14: its erase did not suspend */
-    [String(w.stores) + ["", " · P25Q80", " · UC25HQ80", " · flash off"][(w.shed >> 12) & 3] + ((w.shed >> 14) & 1 ? " · no suspend" : ""),
-     ((w.shed >> 12) & 3) === 3 ? "bad" : (w.shed >> 14) & 1 ? "hot" : "", 0],
+    [String(w.stores) + ["", " · P25Q80", " · UC25HQ80", " · flash off"][(w.shed >> 12) & 3] + ((w.shed >> 14) & 1 ? " · no suspend" : "") +
+       ["", " · V15", " · V16 (12% slower)", " · other boot"][(w.shed >>> 15) & 3],   /* bits 15-16 the startup code (0.16.25) */
+     ((w.shed >> 12) & 3) === 3 ? "bad" : (w.shed >> 14) & 1 || ((w.shed >>> 15) & 3) === 2 ? "hot" : "", 0],
     [String(w.ui_frames), "", 0],
   ];
   const g = $("stgrid");
@@ -705,10 +755,10 @@ $("stockfile").addEventListener("change", async (e) => {
   } catch (err) { sayK("error", err && err.message); }
 });
 
-async function run(img, product, isStock) {
-  let midi;
+async function run(img, product, isStock) {   /* true when it finished */
+  let midi, ok = false;
   try { midi = await midiAccess(); }
-  catch (e) { sayK("denied"); return; }
+  catch (e) { sayK("denied"); return false; }
   await stStop();
   releasePort();
   writing = true;
@@ -728,12 +778,14 @@ async function run(img, product, isStock) {
     const ota = await up.find((id) => /^ota-/i.test(id.model));
     if (ota) {
       ota.link.close();
-      sayK((await up.resume(img, step)) ? (isStock ? "stockdone" : "done") : "stopped");
+      ok = await up.resume(img, step);
+      sayK(ok ? (isStock ? "stockdone" : "done") : "stopped");
     } else {
       await up.install(img, product, step);
+      ok = true;
     }
   } catch (e) {
-    if (isStock && e && e.code === "mismatch") { $("bar").value = 100; sayK("stockdone"); }   /* stock names itself its own way */
+    if (isStock && e && e.code === "mismatch") { $("bar").value = 100; sayK("stockdone"); ok = true; }   /* stock names itself its own way */
     else if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
     else sayK("error", e && e.message);
     log(String(e && e.stack || e));
@@ -742,10 +794,74 @@ async function run(img, product, isStock) {
   idleTouch();
   $("go").disabled = !image;
   $("stockgo").disabled = !stock;
+  return ok;
 }
 
 $("go").addEventListener("click", () => run(image, meta.product, false));
 $("stockgo").addEventListener("click", () => { if (stock) run(stock.image, stock.product, true); });
+
+/* FULL SPEED (0.16.25): the status word's bits 15-16 say which startup code the FM-1 has (1 V15, 2 V16, 3 another; 0 an older
+   PERF-1), bits 12-13 its flash chip (1 P25Q80, 2 UC25HQ80). V16's runs the whole chip 12.5% slower (the bench, 2026-11-06), and
+   PERF-1's own installs keep it. The fix is two installs that already work: M-VAVE's V15 (the official loader writes its startup
+   code), then PERF-1. Offered only on the first chip (P25Q80): V15's startup code is untried on the UC25HQ80. */
+const sayF = (k) => { $("fsstatus").textContent = t(k); };
+function readHead() {                                             /* one status frame: { head, chip }, or null */
+  return new Promise(async (res) => {
+    let p, tm;
+    const done = (r) => { clearTimeout(tm); if (p) { try { p.out.send([0xF0, 0x7D, 0x50, 0x46, 0x00, 0xF7]); } catch (_) {} p.onstatus = null; } res(r); };
+    try { p = await openPort(); } catch (e) { $("fsstatus").textContent = e.message; res(undefined); return; }
+    tm = setTimeout(() => done(null), 3000);
+    p.onstatus = (d) => {
+      const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
+      if (raw.length < 4 * 11) return;
+      const w = new DataView(new Uint8Array(raw).buffer).getUint32(40, true);   /* word 10: the shed word */
+      done({ head: (w >>> 15) & 3, chip: (w >>> 12) & 3 });
+    };
+    p.out.send([0xF0, 0x7D, 0x50, 0x46, 0x01, 0xF7]);
+  });
+}
+let fsV15 = null;
+$("fscheck").addEventListener("click", async () => {
+  if (writing) return;
+  await stStop();
+  $("fsfix").hidden = true;
+  sayF("fsask");
+  const r = await readHead();
+  if (r === undefined) return;
+  if (!r || !r.head) { sayF("fsnone"); return; }
+  if (r.head === 1) sayF("fs15");
+  else if (r.head === 2 && r.chip === 1) { sayF("fs16"); $("fsfix").hidden = false; }
+  else if (r.head === 2) sayF("fs16new");
+  else sayF("fsother");
+});
+$("fsfile").addEventListener("change", async (e) => {
+  fsV15 = null;
+  $("fsgo").disabled = true;
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const raw = new Uint8Array(await f.arrayBuffer());
+  const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (hex !== STOCK_SHA256[0]) { sayF("fsbad"); return; }
+  fsV15 = { image: logicalImage(raw), product: productOf(raw) };
+  $("fsgo").disabled = writing || !image;
+  sayF("fsok");
+});
+$("fsgo").addEventListener("click", async () => {
+  if (!fsV15 || !image || writing || !confirm(t("fsconfirm"))) return;
+  $("fsgo").disabled = true;
+  sayF("fsstep1");
+  let ok = await run(fsV15.image, fsV15.product, true);
+  if (ok) {                                                       /* V15 starts up: wait for it before PERF-1 goes on */
+    let midi = null;
+    try { midi = await midiAccess(); } catch (_) {}
+    const back = midi ? await new Updater(midi, log).waitFor((id) => !/^ota-/i.test(id.model), 30000) : null;
+    if (back) back.link.close();
+    sayF("fsstep2");
+    ok = await run(image, meta.product, false);
+  }
+  sayF(ok ? "fsdone" : "fsfail");
+  $("fsgo").disabled = !fsV15;
+});
 </script>
 </body>
 </html>
