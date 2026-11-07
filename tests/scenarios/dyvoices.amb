@@ -29,7 +29,7 @@ tap ARP
 tap ARP
 tap ARP
 wait 300
-expect view 15
+expect view 16
 shot dyvoices_pluck.png
 press HOME
 wait 900

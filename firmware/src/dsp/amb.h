@@ -358,6 +358,20 @@ extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 #define EN_NPROF 10                            /* the first core's stages (amb.c render_chunk PT): ticks summed since cleared, and the chunk count last */
 extern volatile uint8_t en_bass_c1;            /* 1: the drone and the acid are rendered by the other core */
+/* THE BASS STEPS (0.16.29, GitHub issue #6): the bass line's mode EN_BL_STEPS plays sixteen steps, a byte each: EN_BS_KIND 0 rest, 1 note,
+ * 2 accent, 3 glide (into it, legato), 4 accent + glide; EN_BS_NOTE 0 .. 7 steps of the scale above the chord's root; EN_BS_OCT 0 .. 2 (down, as
+ * written, up). A piece's sixteen are its own (project.c OBJ_BSTEP); all rests: Steps starts from the bar the line played last. */
+#define EN_BL_STEPS 16
+#define EN_BS_KIND(v) ((v) & 7)
+#define EN_BS_NOTE(v) ((v) >> 3 & 7)
+#define EN_BS_OCT(v) ((v) >> 6 & 3)
+#define EN_BS_MAKE(kind, note, oct) ((uint8_t)((kind) | (note) << 3 | (oct) << 6))
+void en_bass_step(int s, int v);                /* a step, from the page */
+void en_bass_capture(void);                     /* none set: the bar the line played last (the page opened) */
+void en_bass_steps_set(const uint8_t *b16);     /* a piece's sixteen */
+void en_bass_steps_get(uint8_t *b16);           /* as they are */
+extern volatile uint8_t en_bs[16];
+extern volatile int8_t en_bs_pos;               /* the step playing while the bass plays its steps (-1 otherwise) */
 extern volatile int8_t en_walk_next;           /* THE CIRCLE MOVES (0.16.27): the walk's next degree, chosen a chord ahead (-1 not known: a progression set by hand, a new scale) */
 extern volatile uint8_t en_walk_next_root;      /* its root (pitch class; borrowed: the parallel minor's) */
 extern volatile uint8_t en_chord_alt;           /* the chord playing: 0 as the scale has it, 1 a secondary dominant (V of the next), 2 borrowed from the parallel minor */

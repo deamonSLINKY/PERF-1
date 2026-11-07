@@ -83,8 +83,8 @@ int main(void)
         n = bk_build_ack(fr, 3, 0x7F, 2);
         framed(fr, n, 0x44, "an answer");
         CHECK(n == 8u && fr[4] == 3 && fr[5] == 0x7F && fr[6] == 2, "an answer");
-        {   /* the answer to "about" (0.16.3): the vector web_piece_test.js parses (F0 7D 50 45 02 01 30 13 05 F7: version 2, 0.16.28; 176 settings, 19 genres, 5 voices) */
-            static const uint8_t vec[10] = {0xF0, 0x7D, 0x50, 0x45, 0x02, 0x01, 0x30, 0x13, 0x05, 0xF7};
+        {   /* the answer to "about" (0.16.3): the vector web_piece_test.js parses (F0 7D 50 45 03 01 30 13 05 F7: version 3, 0.16.29; 176 settings, 19 genres, 5 voices) */
+            static const uint8_t vec[10] = {0xF0, 0x7D, 0x50, 0x45, 0x03, 0x01, 0x30, 0x13, 0x05, 0xF7};
             n = bk_build_about(fr, 176, 19, 5);
             framed(fr, n, 0x45, "about");
             CHECK(n == BK_ABOUT_LEN && n <= BK_FRAME_MAX && !memcmp(fr, vec, sizeof vec), "about");

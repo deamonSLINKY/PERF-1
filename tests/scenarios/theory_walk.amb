@@ -13,7 +13,7 @@ tap HOME
 wait 100
 tap HOME
 wait 100
-expect view 36
+expect view 37
 spin SELECT -1
 wait 300
 spin SELECT -1

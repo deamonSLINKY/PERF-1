@@ -1,0 +1,72 @@
+# BASS STEPS (0.16.29, GitHub issue #6): the LFO button's fifth page, after Bass line. Opened with none set, it holds the bar the line played last;
+# a white key picks a step, the knobs set its kind (rest, note, accent, glide, accent + glide), its note (scale steps above the chord's root) and its
+# octave, and an edit turns the bass line's mode (P_BL_MODE, 152) to Steps (16). Saved with the piece; another piece has its own (none: a rest).
+seed 0
+seamless 1
+wait 3000
+expect playing 1
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+wait 100
+expect view 9
+# the line in eighths for a couple of bars, so there is a bar to capture
+spin K1 -20
+spin K1 3
+wait 4000
+expect par152 3
+tap LFO
+wait 300
+expect view 10
+expect bsany 1
+expect bskind0 1
+expect bskind1 0
+expect bskind2 1
+shot basssteps.png
+# step 3 (the third white key, key 4): an accent on the fifth (four scale steps up), an octave up
+tapkey 4
+spin K1 -10
+spin K1 2
+wait 100
+expect bskind2 2
+spin K2 -10
+spin K2 4
+wait 100
+expect bsnote2 4
+spin K3 -5
+spin K3 2
+wait 100
+expect bsoct2 2
+expect par152 16
+wait 2000
+expect bspos >-1
+# step 5: a glide
+tapkey 7
+spin K1 -10
+spin K1 3
+wait 100
+expect bskind4 3
+# saved with the piece, back after a power-on
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+tap PLAY
+wait 5000
+reboot
+wait 3000
+expect piece 0
+expect par152 16
+expect bskind2 2
+expect bsnote2 4
+expect bsoct2 2
+expect bskind4 3
+# another piece: its own (none set)
+turn PRESET 1
+wait 1500
+expect piece 1
+expect bsany 0
+turn PRESET -1
+wait 1500
+expect bskind2 2

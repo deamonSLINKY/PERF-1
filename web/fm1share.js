@@ -39,7 +39,7 @@ export function shareNames(D) {
     return { tag: tagOf(x), title: m.t, by: m.a, based: basedText(m), line: describe(x), lanes, center: tempo !== undefined ? tempo + " BPM" : "", url };
   }
   return { P, E, N, genreName, pieceName, describe, tagOf, placeName, basedText, cardOf, userSlot,
-           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23,   // (plat.h's enum; OBJ_KINDS from 0.16.6)
+           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23, OBJ_BSTEP: 25,   // (plat.h's enum; OBJ_KINDS from 0.16.6)
            globDefs: { tune: P[E.P_TUNE].def, midi: P[E.P_MIDI].def, theme: P[E.P_THEME].def } };
 }
 
@@ -67,6 +67,9 @@ export function emuPut(S, x, slot) {
   let knd = get(S.OBJ_KINDS);                                    // the pieces' extras: each piece's chord types, FILTERS and SCREAM (cleared when it has none)
   for (const pc of pieces) knd = pcExtrasWith(knd, pc.genre, pc.slot, pc.kinds || null, pc.fx || null, S.N.genres.length);
   put(S.OBJ_KINDS, knd);
+  let bst = get(S.OBJ_BSTEP);                                    // and their bass steps (0.16.29)
+  for (const pc of pieces) bst = pcBassWith(bst, pc.genre, pc.slot, pc.bass || null, S.N.genres.length);
+  put(S.OBJ_BSTEP, bst);
   if (x.kind === "set") put(S.OBJ_GLOB, pcGlobWith(get(S.OBJ_GLOB), x, S.globDefs));
   localStorage.setItem(KEY, JSON.stringify(raw));
   if (x.kind === "set") return "The set is in the emulator: switch it on, then GLO twice for the set list (Play on).";

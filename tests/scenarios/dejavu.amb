@@ -3,8 +3,8 @@
 # on the Acid line page since 0.14.7 (it was this page's fourth knob).
 seed 0
 wait 3000
-turn SELECT 17 100
-expect view 17
+turn SELECT 18 100
+expect view 18
 expect par156 0
 expect par157 2
 spin K1 50
@@ -26,7 +26,7 @@ expect par157 3
 expect par174 50
 # the acid's Mutates: SEL + the Acid line page's fourth knob
 turn SELECT -5 100
-expect view 12
+expect view 13
 expect par159 0
 press SEL
 spin K4 2

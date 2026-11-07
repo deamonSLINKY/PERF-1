@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const src = fs.readFileSync(path.join(__dirname, "..", "web", "fm1piece.js"), "utf8").replace(/^export /gm, "");
-const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash, pcKindsOf, pcKindsWith, PC_KND_MAGIC, pcFxOf, pcExtrasWith };")();
+const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash, pcKindsOf, pcKindsWith, PC_KND_MAGIC, pcFxOf, pcExtrasWith, pcBassOf, pcBassWith };")();
 let bad = 0;
 const check = (name, ok) => { console.log((ok ? "  ok   " : "  FAIL ") + name); if (!ok) bad++; };
 const eq = (a, b) => a.length === b.length && Array.from(a).every((x, i) => x === b[i]);
@@ -149,6 +149,16 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
   const fset = M.pcSetDecode(M.pcSetEncode({ ...set, pieces: [{ ...pa, fx: FX }, pb] }));
   check("a set's pieces keep theirs", eq(fset.pieces[0].fx, FX) && fset.pieces[1].fx === null && fset.meta.x === undefined);
 
+  // the bass steps (0.16.29, BSQ1): sixteen bytes a piece ("s" in the note)
+  const BS = Uint8Array.from([0x41, 0, 0x62, 0, 0x59, 0, 0x43, 0, 0x41, 0, 0, 0x4C, 0x41, 0, 0x60, 0]);
+  const bs0 = M.pcBassWith(new Uint8Array(0), 18, 4, BS, 19);
+  check("the bass steps' object: BSQ1, 16 bytes a piece", bs0.length === 8 + 19 * 160 && bs0[0] === 0x42 && bs0[3] === 0x31 && bs0[4] === 16 &&
+    eq(M.pcBassOf(bs0, 18, 4), BS) && M.pcBassOf(bs0, 18, 3) === null && M.pcBassOf(M.pcBassWith(bs0, 18, 4, null, 19), 18, 4) === null);
+  const bp = M.pcDecode(M.pcEncode({ ...pc, bass: BS }));
+  check("a piece's bass steps go with it, out of its note", eq(bp.bass, BS) && bp.meta.s === undefined && M.pcDecode(M.pcEncode({ ...pc, bass: null })).bass === null);
+  const bset = M.pcSetDecode(M.pcSetEncode({ ...set, pieces: [pa, { ...pb, bass: BS }] }));
+  check("a set's pieces keep theirs", bset.pieces[0].bass === null && eq(bset.pieces[1].bass, BS) && bset.meta.s === undefined);
+
   // the about answer (tests/host/dxproto_test.c: bk_build_about(f, 176, 19, 5))
   const ab = M.pcParseAbout([0xF0, 0x7D, 0x50, 0x45, 0x01, 0x01, 0x30, 0x13, 0x05, 0xF7]);
   check("the firmware's about answer", ab && ab.ver === 1 && ab.npar === 176 && ab.genres === 19 && ab.voices === 5);
@@ -183,6 +193,11 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
       "expect prgtype0 2", "expect prgtype1 5", "expect prgtype2 0"]));
     // the same piece with its extras as 0.16.28 keeps them (PCX1): its types, FILTERS and SCREAM; a piece without any plays the defaults
     fs.writeFileSync(path.join(dir, "px_new.bin"), M.pcExtrasWith(new Uint8Array(0), 0, 3, Uint8Array.from([0x2A, 0x00, 0x00]), Uint8Array.from([2, 1, 3, 70, 40, 20, 1]), 19));
+    fs.writeFileSync(path.join(dir, "bs_new.bin"), M.pcBassWith(new Uint8Array(0), 0, 3, Uint8Array.from([0x41, 0, 0x62, 0, 0x59, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]), 19));
+    check("the simulator takes a piece's bass steps (BSQ1)", run("loadbs", [
+      "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "loadobj 25 " + path.join(dir, "bs_new.bin"), "seed 0", "reboot", "wait 2000",
+      "expect bsany 0", "turn PRESET 3", "wait 1500", "expect piece 3", "expect bskind0 1", "expect bskind2 2", "expect bsnote2 4", "expect bsoct2 1", "expect bskind4 1", "expect bsnote4 3",
+      "turn PRESET -3", "wait 1500", "expect bsany 0"]));
     check("the simulator plays a piece's FILTERS and SCREAM from the extras (PCX1)", run("loadpx", [
       "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "loadobj 23 " + path.join(dir, "px_new.bin"), "seed 0", "reboot", "wait 2000",
       "expect fxs74 0", "expect fxs88 0",

@@ -52,7 +52,7 @@ expect par5 121
 # CC 22 held: SEQ held (0.4 s: the sequencer); let go
 midi B0 16 7F
 wait 700
-expect view 34
+expect view 35
 midi B0 16 00
 wait 200
 tap HOME

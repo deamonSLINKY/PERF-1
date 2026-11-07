@@ -16,10 +16,10 @@ wait 100
 expect par154 40
 expect par155 10
 shot bassline.png
-# the mode names to the end (Riff, then the nine figures by name: Gallop last) and back
+# the mode names to the end (Riff, the nine figures by name, then Steps last: 0.16.29) and back
 spin K1 20
 wait 100
-expect par152 15
+expect par152 16
 spin K1 -30
 wait 100
 expect par152 0

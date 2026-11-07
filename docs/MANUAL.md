@@ -314,7 +314,7 @@ short version.
 | **FX** | Opens and closes the effects menu. Press it twice quickly for the settings of the effect you used last. |
 | **SEL** | Shift: hold it while you use another control (section 12). |
 | **ENV** | The Pad page. Again: Pad env, Pad LFO, Chords, Progression. With **SEL** held: takes the voice on screen off its automatic part so you play it by hand (again: hands it back). |
-| **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line. |
+| **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line, Bass steps. |
 | **ARP** | The Acid page. Again: Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. |
 | **EDIT** | The next chord, on the next bar. Held: the Progression page, your own chords. |
 | **GLO** | The Global page: root, theme, tune, genre. Here **SAVE** stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter. Held with **PRESETS**: the genre. With **SEL** held: remote (section 17). |
@@ -438,7 +438,8 @@ columns are **KNOB1** to **KNOB4**.
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | **LFO** x3 | Rate (a 1/4 note to 32 bars, then 1/8, 1/8T, 1/16, 1/16T for a fast wobble) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
-| Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, and nine named figures) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
+| Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, nine named figures, and Steps) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
+| Bass steps | **LFO** x5 | Step (pick one with a white key: rest, note, accent, glide, accent + glide) | Note (root, 2nd .. 7th, octave: scale steps above the chord's root) | Octave (down, mid, up) | Mode (Steps plays them) |
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | **ARP** x3 | Density | Length (1-16) | Range (1-3 octaves) | Mutate (hold **SEL** and turn to choose what a mutation changes: all, notes, rhythm or accents) |
@@ -863,6 +864,7 @@ sixteenths either side of the "and". So "and-of-2" is halfway between beats 2 an
 | Big beat | 1, e-of-2, 3, 4 |
 | Dub | 1, 3, and-of-3 |
 | Gallop | Three sixteenths a beat |
+| Steps | Your own sixteen steps, from the **Bass steps** page (below) |
 
 The named figures work in any genre. Each is a rhythm with up to four notes, so it sounds the same every bar.
 "The fifth" is the fifth above the root when the chord has one. A 9th, Dub or
@@ -890,6 +892,24 @@ New pieces start with these bass lines:
 | Electro, synthwave | Eighths |
 | Disco, funk, reggae, amapiano, breaks, garage | Riff |
 | HYPNO, dub | Hold (the plain held bass) |
+
+### Bass steps: write the bass line yourself
+
+Want a bass line of your own? The **Bass steps** page (press **LFO** five times, after Bass line) gives the bass
+sixteen steps, one bar, like the Acid steps and Pluck steps pages. Open it and it already holds the bar the bass just
+played, so you can start from something that works and change what you like.
+
+- Press a **white key** to pick a step (the sixteen white keys are the sixteen steps; the one you picked is lit).
+- **Step** (KNOB1): rest, note, accent (louder), glide (slides into the note from the one before, without a new attack),
+  or accent and glide.
+- **Note** (KNOB2): the root, 2nd, 3rd, 4th, 5th, 6th, 7th or octave, counted in the scale above the chord's root. The
+  notes follow the chords: a 5th is always the fifth of the chord playing.
+- **Octave** (KNOB3): down, mid or up.
+- **Mode** (KNOB4): the bass line's mode. **Steps** plays your steps; any edit switches to it. Turn it back to try the
+  other modes: your steps stay.
+
+The steps belong to the piece: save it (**GLO**, then **SAVE**) to keep them, and a shared piece carries them. A piece
+without steps plays its own bass line.
 
 ### The acid: 31 sounds
 

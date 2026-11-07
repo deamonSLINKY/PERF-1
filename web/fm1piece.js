@@ -40,7 +40,7 @@ export function pcFromBank(bank, genre, slot) {
   const rec = bank.slice(PC_HDR + slot * PC_REC, PC_HDR + (slot + 1) * PC_REC);
   const tail = bank[14] === 1 && bank.length >= PC_LEN;
   const prg = tail ? bank.slice(PC_TAIL + slot * PC_PRG, PC_TAIL + (slot + 1) * PC_PRG) : new Uint8Array(PC_PRG);
-  return { genre, slot, npar: rd16(bank, 6), rec, prg, voice: null, kinds: null, fx: null, meta: {} };
+  return { genre, slot, npar: rd16(bank, 6), rec, prg, voice: null, kinds: null, fx: null, bass: null, meta: {} };
 }
 
 // a setting of the piece (index p; lo: its lowest, params.json's min), or undefined when the piece predates it
@@ -60,6 +60,26 @@ const kndAt = (genre, slot) => 4 + (genre * PC_NPIECES + slot) * PC_KND_LEN;
 export const PC_PX_MAGIC = 0x31584350, PC_PX_HDR = 8, PC_PX_LEN = 16, PC_PX_NFX = 7;
 const pxAt = (genre, slot) => PC_PX_HDR + (genre * PC_NPIECES + slot) * PC_PX_LEN;
 const isPx = (o) => o && o.length >= PC_PX_HDR && rd32(o, 0) === PC_PX_MAGIC && o[4] === PC_PX_LEN;
+// 0.16.29: the pieces' bass steps, their own object ("BSQ1", project.c OBJ_BSTEP): magic, 16, the genres, 2 spare; then 16 bytes a piece (amb.h EN_BS_*)
+export const PC_BS_MAGIC = 0x31515342, PC_BS_HDR = 8, PC_BS_LEN = 16;
+const bsAt = (genre, slot) => PC_BS_HDR + (genre * PC_NPIECES + slot) * PC_BS_LEN;
+const isBs = (o) => o && o.length >= PC_BS_HDR && rd32(o, 0) === PC_BS_MAGIC && o[4] === PC_BS_LEN;
+// a piece's bass steps (null: none set)
+export function pcBassOf(bs, genre, slot) {
+  if (!isBs(bs) || bs.length < bsAt(genre, slot) + PC_BS_LEN) return null;
+  const s = bs.slice(bsAt(genre, slot), bsAt(genre, slot) + PC_BS_LEN);
+  return s.some((v) => v) ? s : null;
+}
+// the object with a piece's steps put in (null clears them), for a firmware with `ngenres` genres
+export function pcBassWith(bs, genre, slot, steps, ngenres) {
+  const n = Math.max(PC_BS_HDR + ngenres * PC_NPIECES * PC_BS_LEN, bsAt(genre, slot) + PC_BS_LEN);
+  const out = new Uint8Array(n);
+  if (isBs(bs)) out.set(bs.subarray(0, Math.min(bs.length, n)));
+  wr32(out, 0, PC_BS_MAGIC); out[4] = PC_BS_LEN; out[5] = ngenres; out[6] = out[7] = 0;
+  out.fill(0, bsAt(genre, slot), bsAt(genre, slot) + PC_BS_LEN);
+  if (steps) out.set(steps.subarray(0, PC_BS_LEN), bsAt(genre, slot));
+  return out;
+}
 // a piece's types out of the object, either form (null: the piece's own in every slot, or no object)
 export function pcKindsOf(knd, genre, slot) {
   let k = null;
@@ -99,21 +119,23 @@ export function pcKindsWith(knd, genre, slot, kinds, ngenres) {
 }
 const bytesOk = (a, n) => Array.isArray(a) && a.length === n && a.every((v) => Number.isInteger(v) && v >= 0 && v < 256);
 const kindsOk = (k) => bytesOk(k, PC_KND_LEN);
-const kindsIn = (meta, kinds, fx) => {
+const kindsIn = (meta, kinds, fx, bass) => {
   const m = { ...meta };
   if (kinds && kinds.some((v) => v)) m.k = Array.from(kinds);
   if (fx) m.x = Array.from(fx);                                   // (0.16.28) its FILTERS and SCREAM
+  if (bass && bass.some((v) => v)) m.s = Array.from(bass);        // (0.16.29) its bass steps
   return m;
 };
-function kindsOut(meta) {                                         // the note without "k" and "x", and the types and settings it carried (or null)
-  const { k, x, ...rest } = meta || {};
-  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: bytesOk(x, PC_PX_NFX) ? Uint8Array.from(x) : null };
+function kindsOut(meta) {                                         // the note without "k", "x" and "s", and what they carried (or null)
+  const { k, x, s, ...rest } = meta || {};
+  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: bytesOk(x, PC_PX_NFX) ? Uint8Array.from(x) : null,
+           bass: bytesOk(s, PC_BS_LEN) && s.some((v) => v) ? Uint8Array.from(s) : null };
 }
 
 // ---- the file: "P1PC", 1, genre, slot, flags (1: a voice), the settings a record holds (2), the record's length (2), the note's length (2), then the record,
 // the progression, the voice (128 bytes, when flagged), a little JSON (title, by, note, names; "k" the chord types) and the CRC-32 of all before it
 export function pcEncode(piece) {
-  const meta = new TextEncoder().encode(JSON.stringify(kindsIn(piece.meta || {}, piece.kinds, piece.fx)));
+  const meta = new TextEncoder().encode(JSON.stringify(kindsIn(piece.meta || {}, piece.kinds, piece.fx, piece.bass)));
   const vlen = piece.voice ? 128 : 0;
   const out = new Uint8Array(14 + PC_REC + PC_PRG + vlen + meta.length + 4);
   out.set([0x50, 0x31, 0x50, 0x43, 1, piece.genre, piece.slot, piece.voice ? 1 : 0], 0);
@@ -139,7 +161,7 @@ export function pcDecode(buf) {
   let meta = {};
   try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
   const km = kindsOut(meta);
-  return { genre: buf[5], slot: buf[6], npar: rd16(buf, 8), rec, prg, voice, kinds: km.kinds, fx: km.fx, meta: km.meta };
+  return { genre: buf[5], slot: buf[6], npar: rd16(buf, 8), rec, prg, voice, kinds: km.kinds, fx: km.fx, bass: km.bass, meta: km.meta };
 }
 
 // ---- the code (and a link's #p=): the file, deflated, in base64url, after "P1."
@@ -166,15 +188,17 @@ export const pcHash = (rec) => crc32(rec);
 // empty), Play, Mix, the pieces, the voices, the note's length (2); each piece: genre, place, its voice (0xFF none), settings (2), record, progression; each
 // voice 128 bytes; the note (JSON; "k": each piece's chord types by its place in the pieces, {"0": [a, b, c]}); the CRC-32
 export function pcSetEncode(set) {
-  const k = {}, x = {};
+  const k = {}, x = {}, sb = {};
   set.pieces.forEach((pc, i) => {
     if (pc.kinds && pc.kinds.some((v) => v)) k[i] = Array.from(pc.kinds);
     if (pc.fx) x[i] = Array.from(pc.fx);
+    if (pc.bass && pc.bass.some((v) => v)) sb[i] = Array.from(pc.bass);
   });
-  const { k: _old, x: _oldx, ...m0 } = set.meta || {};
+  const { k: _old, x: _oldx, s: _olds, ...m0 } = set.meta || {};
   const m1 = { ...m0 };
   if (Object.keys(k).length) m1.k = k;
   if (Object.keys(x).length) m1.x = x;
+  if (Object.keys(sb).length) m1.s = sb;
   const meta = new TextEncoder().encode(JSON.stringify(m1));
   const ps = set.pieces, vs = set.voices;
   const out = new Uint8Array(4 + 1 + 16 + 2 + 2 + 2 + ps.length * (5 + PC_REC + PC_PRG) + vs.length * 128 + meta.length + 4);
@@ -214,10 +238,11 @@ export function pcSetDecode(buf) {
   let meta = {};
   try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
   for (const pc of pieces) if (pc.vidx >= 0 && pc.vidx < voices.length) pc.voice = voices[pc.vidx];
-  const { k, x, ...rest } = meta && typeof meta === "object" ? meta : {};
+  const { k, x, s, ...rest } = meta && typeof meta === "object" ? meta : {};
   pieces.forEach((pc, i) => {
     pc.kinds = k && kindsOk(k[i]) && k[i].some((v) => v) ? Uint8Array.from(k[i]) : null;
     pc.fx = x && bytesOk(x[i], PC_PX_NFX) ? Uint8Array.from(x[i]) : null;
+    pc.bass = s && bytesOk(s[i], PC_BS_LEN) && s[i].some((v) => v) ? Uint8Array.from(s[i]) : null;
   });
   return { kind: "set", list, on, mix, pieces, voices, meta: rest };
 }

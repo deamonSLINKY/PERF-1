@@ -22,7 +22,7 @@ wait 100
 expect view 7
 tap ARP
 wait 100
-expect view 10
+expect view 11
 tap LFO
 wait 100
 expect view 7

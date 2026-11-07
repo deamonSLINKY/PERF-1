@@ -90,7 +90,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
     [P_COND4] = {"Cond", 0, 7, 0},          [P_COND5] = {"Cond", 0, 7, 0},
     [P_AC_LOCK] = {"Frozen", 0, 1, 0},
-    [P_BL_MODE] = {"Mode", 0, 15, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
+    [P_BL_MODE] = {"Mode", 0, EN_BL_STEPS, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -687,7 +687,7 @@ void en_param_text(int i, int v, char *b)
     case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
     case P_AC_LOCK: s = v ? "Frozen" : "Free"; break;
     case P_CM_LOCK: s = v ? "Frozen" : "Free"; break;
-    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = (unsigned)v < 7u ? M[v] : (unsigned)v < 7u + EN_NBLFIG ? BL_FIG_NAME[v - 7] : M[0]; break; }
+    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = (unsigned)v < 7u ? M[v] : (unsigned)v < 7u + EN_NBLFIG ? BL_FIG_NAME[v - 7] : v == EN_BL_STEPS ? "Steps" : M[0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -964,7 +964,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -2469,8 +2469,9 @@ static void ac_mutate(void)                     /* the loop's end: Mutate (a dej
 static int32_t ac_wait;
 static int32_t bl_wait, stab_wait;               /* the bass line's note and the pad's stab, waiting the same way */
 static int bl_pn;
+static uint8_t bl_pfl, bl_slide;                 /* (0.16.29) the waiting note's accent and glide; a glide sounding */
 static float stab_pe;
-static void bl_note(int n);
+static void bl_note(int n, int fl);
 static void stab_fire(float envv);
 static struct { int n; uint8_t slid_ok, acc, hat, slide, beat; float dec; } ac_pend;
 static void acid_fire(void)
@@ -2972,7 +2973,7 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
     }
     if (bl_wait > 0 && (bl_wait -= k) <= 0) {
         bl_wait = 0;
-        bl_note(bl_pn);
+        bl_note(bl_pn, bl_pfl);
     }
     if (stab_wait > 0 && (stab_wait -= k) <= 0) {
         stab_wait = 0;
@@ -3329,6 +3330,49 @@ static const bl_fig_t BL_FIG[EN_NBLFIG] = {      /* the figures by name (the bas
     {0x0501, {0, 0, 7, 5}},                     /* Dub: 1, 3, and-of-3 */
     {0x7777, {0, 0, 0, 12}},                    /* Gallop: three sixteenths a beat, an octave moving through them */
 };
+/* THE BASS STEPS (0.16.29, GitHub issue #6): the bass line's mode 16 plays sixteen steps of the player's (the Bass steps page), a byte a step (amb.h
+ * EN_BS_*): a rest, a note, an accent (louder, the filter opened by it as a new note), a glide (into it from the note before, legato: no new
+ * attack), or both; its note a number of the scale's steps above the chord's root (so the line follows the chords as the acid's steps do) and
+ * an octave. The line the other modes play is kept as it is heard (bs_hist), and the first time Steps plays with no step set it starts from that
+ * bar. The steps are the piece's (project.c, OBJ_BSTEP). */
+static uint8_t bs[16], bs_hist[16], bs_set;
+volatile uint8_t en_bs[16];
+volatile int8_t en_bs_pos = -1;
+static void bs_publish(void)
+{
+    int s;
+    for (s = 0; s < 16; s++)
+        en_bs[s] = bs[s];
+}
+static int bs_semis(int k)                      /* k steps of the scale above the chord's root (the key's, on pedal), in semitones */
+{
+    const int m = nsteps > 0 ? nsteps : 7, d0 = pedal & 1u ? 0 : deg, d = d0 + k;
+    return steps[d % m] + 12 * (d / m) - (steps[d0 % m] + 12 * (d0 / m));
+}
+void en_bass_step(int s, int v) { post(C_BSSTEP, s & 15, v & 0xFF); }
+void en_bass_capture(void) { post(C_BSSTEP, 0x20, 0); }   /* none set: the bar the line played last (the page opened) */
+static void bs_capture(void)
+{
+    int k, v = 0;
+    for (k = 0; k < 16; k++)
+        v |= bs[k] = bs_hist[k];
+    if (!v)
+        bs[0] = 1 | 1 << 6;                     /* (it played none: a root on the one) */
+    bs_set = 1;
+    bs_publish();
+}
+void en_bass_steps_set(const uint8_t *b)       /* a piece's sixteen (all rests: none set, the next Steps starts from the line heard) */
+{
+    int s;
+    for (s = 0; s < 16; s++)
+        post(C_BSSTEP, s | (b[s] ? 0 : 0x10), b[s] | (s == 15 ? 0x100 : 0));   /* (bit 4 of a: a rest that is not the player's; bit 8 of b: the last) */
+}
+void en_bass_steps_get(uint8_t *b)
+{
+    int s;
+    for (s = 0; s < 16; s++)
+        b[s] = en_bs[s];
+}
 static int bl_fit(int n)
 {
     while (n < 24)
@@ -3345,32 +3389,53 @@ static int bl_below(int root)                   /* the scale note just below the
             return root - d;
     return root - 1;
 }
-static void bl_note(int n)
+static void bl_note(int n, int fl)              /* fl (the steps, 0.16.29): bit 0 an accent, bit 1 a glide into it */
 {
+    const int glide = (fl & 2) && bass.note >= 1.0f && bl_env > 0.05f;
     n = bl_fit(n);
     bass.target = (float)n;
-    if (!par[P_BL_GLIDE] || bass.note < 1.0f)
+    if (!glide && (!par[P_BL_GLIDE] || bass.note < 1.0f))
         bass.note = (float)n;
+    bl_slide = (uint8_t)glide;
     midi(0x82, bass.midi_note, 0);
-    midi(0x92, (uint32_t)n, 90);
+    midi(0x92, (uint32_t)n, fl & 1 ? 120u : 90u);
     bass.midi_note = (uint8_t)n;
-    bass.env_up = 1;
-    bl_up = 1;
+    bass.vd = fl & 1 ? 0.25f : 0.0f;
+    if (!glide) {                               /* (a glide is legato: the note before goes on into it) */
+        bass.env_up = 1;
+        bl_up = 1;
+    }
     bl_gate = (0.25f + 0.0475f * (float)par[P_BL_LEN]) * step_len;
 }
-static void bl_go(int n, int32_t w)
+static void bl_go_f(int n, int32_t w, int fl)
 {
     if (bl_wait > 0) {                          /* the last one is still waiting: it sounds now */
         bl_wait = 0;
-        bl_note(bl_pn);
+        bl_note(bl_pn, bl_pfl);
     }
     if (w > 0) {
         bl_pn = n;
+        bl_pfl = (uint8_t)fl;
         bl_wait = w;
     } else {
-        bl_note(n);
+        bl_note(n, fl);
     }
 }
+static void bl_rec(int st, int n, int root)     /* the line as heard, as steps: the note's scale steps above the root and its octave (the nearest) */
+{
+    int iv = n - root, o = 1, k, best = 0, bd = 99;
+    while (iv < 0 && o > 0)
+        iv += 12, o--;
+    while (iv >= 12 && o < 2)
+        iv -= 12, o++;
+    for (k = 0; k < 8; k++) {
+        const int d = bs_semis(k) - iv, ad = d < 0 ? -d : d;
+        if (ad < bd)
+            bd = ad, best = k;
+    }
+    bs_hist[st & 15] = (uint8_t)(1 | best << 3 | o << 6);
+}
+static void bl_go(int n, int32_t w) { bl_go_f(n, w, 0); }
 static int bl_fifth(void)                       /* the fifth above the root, semitones: the chord's altered fifth if it has one (diminished, augmented), else the perfect fifth (a 9th chord leaves it out of the voicing, not the harmony), or the scale's if that is not in the scale */
 {
     int k;
@@ -3393,6 +3458,20 @@ static void bl_step(int st, int32_t w)
         bl_beat = 0;
     if (sec == SEC_BREAK && !SECT[g].bass)
         return;
+    if (mode == EN_BL_STEPS) {                  /* the player's steps */
+        int v, k;
+        if (!bs_set)                            /* none set: from the bar the line played last (or a root on the one, if it played none) */
+            bs_capture();
+        en_bs_pos = (int8_t)st;
+        v = bs[st & 15];
+        k = v & 7;
+        if (!k || k > 4)
+            return;
+        root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
+        bl_go_f(root + bs_semis(v >> 3 & 7) + 12 * ((v >> 6 & 3) - 1), w, (k == 2 || k == 4 ? 1 : 0) | (k >= 3 ? 2 : 0));
+        return;
+    }
+    en_bs_pos = -1;
     switch (mode) {
     case 1: hit = BL_ROOT[g] >> st & 1; break;
     case 2: hit = bl_kick && sec != SEC_BUILD; break;
@@ -3404,8 +3483,10 @@ static void bl_step(int st, int32_t w)
     }
     if (drop_imp && st == 0)
         hit = 1;
-    if (!hit)
+    if (!hit) {
+        bs_hist[st & 15] = 0;
         return;
+    }
     root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
     if (mode == 5) {                            /* the walk (on pedal: the key's own triad, the scale's third and fifth) */
         const int beat = st >> 2,
@@ -3419,6 +3500,7 @@ static void bl_step(int st, int32_t w)
         else if (beat == 3 && frand() * 100.0f < (float)par[P_BL_MOVE] + 20.0f)
             n = frand() < 0.5f ? root - 1 : bl_below(root);   /* the lead-in to the bar's one: half the time the semitone below, a chromatic approach (0.16.7,
                                                  * the audit's; a passing note, the only one the engine plays outside the scale), else the scale's note below */
+        bl_rec(st, n, root);
         bl_go(n, w);
         bl_beat++;
         return;
@@ -3431,6 +3513,7 @@ static void bl_step(int st, int32_t w)
         const float r = frand();
         iv = r < 0.5f ? 12 : r < 0.8f ? bl_fifth() : bl_below(root) - root;
     }
+    bl_rec(st, root + iv, root);
     bl_go(root + iv, w);
     bl_beat++;
 }
@@ -6265,6 +6348,19 @@ static void drain(void)
         case C_ACCAP: ac_capture(a & 15, b & 127, a >> 4 & 1, a >> 5 & 1); break;
         case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
         case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
+        case C_BSSTEP:                          /* a bass step (the page), or a piece's (bit 4 of a: a rest of a piece's that set none); 0x20: capture */
+            if (a & 0x20) {
+                if (!bs_set)
+                    bs_capture();
+                break;
+            }
+            bs[a & 15] = (uint8_t)(b & 0xFF);
+            if (!(a & 0x10))
+                bs_set = 1;
+            else if ((b & 0x100) && !(bs[0] | bs[1] | bs[2] | bs[3] | bs[4] | bs[5] | bs[6] | bs[7] | bs[8] | bs[9] | bs[10] | bs[11] | bs[12] | bs[13] | bs[14] | bs[15]))
+                bs_set = 0;
+            bs_publish();
+            break;
         case C_PROG: pg_lo = (uint32_t)a | ((uint32_t)b & 0xFFFFu) << 8; break;
         case C_DTAP:
             if ((unsigned)a < (unsigned)EN_NDRUM)
@@ -6621,7 +6717,7 @@ static void render_bass(uint32_t n)
     {
         float gk = bass.play ? GLIDE_K * 12.0f : GLIDE_K;
         if (bl_on)                              /* a bass line: no glide is the note itself; else its time, 10 .. 410 ms */
-            gk = par[P_BL_GLIDE] ? 1.0f / ((0.01f + 0.004f * (float)par[P_BL_GLIDE]) * EN_SR) : 1.0f;
+            gk = par[P_BL_GLIDE] ? 1.0f / ((0.01f + 0.004f * (float)par[P_BL_GLIDE]) * EN_SR) : bl_slide ? 1.0f / (0.06f * EN_SR) : 1.0f;   /* (a step's glide: 60 ms) */
         bass.note += (bass.target - bass.note) * fm_minf((float)n * gk, 1.0f);
     }
     f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f) + (HB(EN_V_DRONE) ? hb_semi : 0.0f));   /* the LFO on the pitch: a semitone at most; a keyboard's bend */

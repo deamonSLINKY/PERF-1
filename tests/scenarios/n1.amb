@@ -3,8 +3,8 @@
 # the mood reaches the pluck. (Parameters: 94 drum drift Change, 122 the pluck's hand switch, 111 acid hand.)
 seed 0
 wait 3000
-turn SELECT 22 100
-expect view 22
+turn SELECT 23 100
+expect view 23
 spin K1 1
 wait 100
 expect par94 1
@@ -28,7 +28,7 @@ spin SELECT 1
 wait 100
 spin SELECT 1
 wait 100
-expect view 33
+expect view 34
 expect jamv 0
 wait 100
 expect enpar122 1

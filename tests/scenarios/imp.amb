@@ -23,7 +23,7 @@ tap ARP
 tap ARP
 tap ARP
 tap ARP
-expect view 15
+expect view 16
 wait 600
 shot imp_pluck.png
 tap SEQ
@@ -33,15 +33,15 @@ tap SEQ
 tap SEQ
 tap SEQ
 tap SEQ
-expect view 23
+expect view 24
 wait 600
 shot imp_groove.png
 turn SELECT 4 100
-expect view 27
+expect view 28
 wait 300
 shot imp_space.png
 turn SELECT 3 100
-expect view 30
+expect view 31
 wait 300
 shot imp_mixer.png
 tap FX

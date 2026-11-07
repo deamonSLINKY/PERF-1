@@ -558,6 +558,16 @@ static int expect(const char *what, const char *val)
         got = (int)(en_bass_level * 100.0f);
     else if (!strcmp(what, "chordroot"))
         got = en_chord_root;
+    else if (!strcmp(what, "bspos"))              /* the bass step playing (0.16.29; -1 not playing its steps) */
+        got = en_bs_pos;
+    else if (!strncmp(what, "bskind", 6))         /* bskindN, bsnoteN, bsoctN: bass step N (0.16.29) */
+        got = EN_BS_KIND(en_bs[atoi(what + 6) & 15]);
+    else if (!strncmp(what, "bsnote", 6))
+        got = EN_BS_NOTE(en_bs[atoi(what + 6) & 15]);
+    else if (!strncmp(what, "bsoct", 5))
+        got = EN_BS_OCT(en_bs[atoi(what + 5) & 15]);
+    else if (!strcmp(what, "bsany"))              /* any bass step set (not a rest) */
+        got = (en_bs[0] | en_bs[1] | en_bs[2] | en_bs[3] | en_bs[4] | en_bs[5] | en_bs[6] | en_bs[7] | en_bs[8] | en_bs[9] | en_bs[10] | en_bs[11] | en_bs[12] | en_bs[13] | en_bs[14] | en_bs[15]) != 0;
     else if (!strcmp(what, "walknext"))           /* the walk's next degree, a chord ahead (0.16.27; -1 none) */
         got = en_walk_next;
     else if (!strcmp(what, "chordalt"))           /* the chord playing: 0 plain, 1 a secondary dominant, 2 borrowed */

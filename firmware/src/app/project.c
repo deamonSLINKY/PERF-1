@@ -59,6 +59,15 @@ const uint8_t PX_FXS[PX_NFX] = {EN_FXS_FT_PAD, EN_FXS_FT_BASS, EN_FXS_FT_ACID, E
 static uint8_t px[NPIECES][PX_LEN];          /* the playing genre's pieces' extras, as saved */
 static uint8_t pxl[NPIECES][1 + PX_NFX];     /* and their FILTERS and SCREAM as left this time in the genre ([0] 1: set), as keep() does for the rest */
 static uint8_t pending_px;
+/* THE PIECES' BASS STEPS (0.16.29, GitHub issue #6): their own object (OBJ_BSTEP), "BSQ1": magic, BS_LEN, the genres, 2 spare; then BS_LEN bytes a
+ * piece, every genre's ten. A piece's are its slot's bs while the power is on; SAVE marks it, and the next write puts the marked pieces' in (the
+ * object read and written through the stack, as the extras are). */
+#define BS_MAGIC 0x31515342u                /* "BSQ1" */
+#define BS_HDR 8u
+#define BS_LEN 16u
+#define BS_SIZE (BS_HDR + EN_NGENRE * NPIECES * BS_LEN)
+typedef char bs_fits[BS_SIZE <= PLAT_STORE_MAX ? 1 : -1];
+static uint16_t bs_dirty;                    /* the playing genre's pieces whose steps go with the next write */
 
 #define BANK_MAGIC 0x32505948u               /* "HYP2": the old bank, one object, ten pieces of 16-bit settings */
 #define BANK_FORMAT 1u
@@ -82,6 +91,7 @@ static void recipe(int i, slot_t *s)
     memset(s->cml, 0, sizeof s->cml);
     memset(s->prg, 0, sizeof s->prg);
     memset(s->prk, 0, sizeof s->prk);
+    memset(s->bs, 0, sizeof s->bs);
 }
 
 static int16_t clamp_par(int p, int v)
@@ -116,6 +126,7 @@ static void take(int i)                      /* piece i's slot into play (its pa
     memcpy(proj.cml, s->cml, sizeof proj.cml);
     memcpy(proj.prg, s->prg, sizeof proj.prg);
     memcpy(proj.prk, s->prk, sizeof proj.prk);
+    memcpy(proj.bs, s->bs, sizeof proj.bs);
 }
 
 static void keep(void)                       /* the piece playing, into its slot */
@@ -139,6 +150,7 @@ static void keep(void)                       /* the piece playing, into its slot
         en_pluck_pack(s->cml);
     memcpy(s->prg, proj.prg, sizeof s->prg);
     memcpy(s->prk, proj.prk, sizeof s->prk);
+    en_bass_steps_get(s->bs);                /* (as the engine has them: the page's edits, a capture) */
 }
 
 static uint16_t rd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
@@ -299,6 +311,7 @@ static void old_bank_load(int n)
 /* genre g's pieces (proj.genre is g): each its recipe, or as saved. The original genre may still have the old form in flash: read it,
  * and make the image from it (flash is left as it is until the next save). */
 static void px_load(int g);
+static void bs_load(int g);
 static void image_load(int g)
 {
     int i, n;
@@ -340,6 +353,49 @@ static void image_load(int g)
         if (saved >> i & 1u)
             pack_slot(&proj.slot[i], i);
     image_header(g);
+    bs_load(g);
+}
+/* genre g's saved pieces' bass steps out of their object (none: all rests, the line's own) */
+static void bs_load(int g)
+{
+    uint8_t b[BS_SIZE];
+    const int n = plat_store_load(OBJ_BSTEP, b, sizeof b);
+    int i;
+    bs_dirty = 0;
+    if (n < (int)BS_HDR || rd32(b) != BS_MAGIC || b[4] != BS_LEN)
+        return;
+    for (i = 0; i < NPIECES; i++) {
+        const uint32_t at = BS_HDR + ((uint32_t)g * NPIECES + (uint32_t)i) * BS_LEN;
+        if ((saved >> i & 1u) && (uint32_t)n >= at + BS_LEN)
+            memcpy(proj.slot[i].bs, b + at, BS_LEN);
+    }
+}
+/* the marked pieces' steps into the object (written only if they changed it) */
+static int bs_save(void)
+{
+    uint8_t b[BS_SIZE];
+    int n = plat_store_load(OBJ_BSTEP, b, sizeof b), i, k, diff = 0;
+    if (!(n >= (int)BS_HDR && rd32(b) == BS_MAGIC && b[4] == BS_LEN)) {
+        memset(b, 0, sizeof b);                  /* (none yet: written only once a piece has steps) */
+    } else if (n < (int)BS_SIZE) {
+        memset(b + n, 0, BS_SIZE - (uint32_t)n);
+        diff = 1;
+    }
+    wr32(b, BS_MAGIC);
+    b[4] = BS_LEN;
+    b[5] = EN_NGENRE;
+    b[6] = b[7] = 0;
+    for (i = 0; i < NPIECES; i++)
+        if (bs_dirty >> i & 1u) {
+            uint8_t *e = b + BS_HDR + ((uint32_t)proj.genre * NPIECES + (uint32_t)i) * BS_LEN;
+            for (k = 0; k < (int)BS_LEN; k++) {
+                const uint8_t v = (saved >> i & 1u) ? proj.slot[i].bs[k] : 0u;
+                diff |= e[k] != v;
+                e[k] = v;
+            }
+        }
+    bs_dirty = 0;
+    return diff ? plat_store_save(OBJ_BSTEP, b, BS_SIZE) : 0;
 }
 
 /* genre g's extras out of the object (an older or shorter one: as far as it goes; none: every slot the piece's type, FILTERS and SCREAM the
@@ -502,6 +558,7 @@ void project_apply(void)
     }
     en_prog(proj.prg);
     en_prog_kinds(proj.prk);
+    en_bass_steps_set(proj.bs);
     en_trim(proj.genre, proj.piece);
     ui_fx_apply();                           /* its FILTERS and SCREAM (0.16.28) */
 }
@@ -522,7 +579,7 @@ void project_set_genre(int g)
     if (g == proj.genre)
         return;
     keep();
-    if (pending || pending_px)
+    if (pending || pending_px || bs_dirty)
         project_flush();                     /* (a piece saved but not yet written goes first) */
     proj.genre = (uint8_t)g;
     image_load(g);
@@ -545,6 +602,7 @@ void project_piece_save(void)
         }
     }
     saved |= (uint16_t)(1u << proj.piece);
+    bs_dirty |= (uint16_t)(1u << proj.piece);   /* (its bass steps: with the next write, if they changed) */
     proj.edited &= (uint16_t)~(1u << proj.piece);
     pending = 1;
 }
@@ -560,6 +618,7 @@ void project_piece_factory(void)
         memset(image + IMG_TAIL + (uint32_t)proj.piece * EN_PRG_LEN, 0, EN_PRG_LEN);
         memset(px[proj.piece], 0, PX_LEN);
         pending_px = 1;
+        bs_dirty |= (uint16_t)(1u << proj.piece);
         pending = 1;
     }
     proj.edited &= (uint16_t)~(1u << proj.piece);
@@ -572,12 +631,12 @@ void project_globals(void)
 }
 
 int project_saved(int i) { return (unsigned)i < NPIECES && (saved >> i & 1u); }
-int project_pending(void) { return pending || pending_glob || pending_px; }
+int project_pending(void) { return pending || pending_glob || pending_px || bs_dirty; }
 int project_pending_globals(void) { return pending_glob; }
 
 int project_flush(void)
 {
-    if (!pending && !pending_glob && !pending_px)
+    if (!pending && !pending_glob && !pending_px && !bs_dirty)
         return 0;
     if (pending) {
         image_header(proj.genre);
@@ -590,6 +649,8 @@ int project_flush(void)
             return -1;
         pending_px = 0;
     }
+    if (bs_dirty && bs_save() != 0)
+        return -1;
     return project_flush_globals();
 }
 

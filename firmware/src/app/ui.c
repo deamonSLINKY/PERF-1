@@ -37,15 +37,15 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_BLSTEP, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_PHRASE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_SETL, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Progression", "Bass", "Bass env",
-                                              "Bass LFO", "Bass line", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Set list", "Jam",
+                                              "Bass LFO", "Bass line", "Bass steps", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Set list", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_TRIP, VZ_THEORY, VZ_AUTO, VZ_N };   /* the visualizers (viz.c; TRIP and THEORY 0.16.10, THEORY not in AUTO's turn) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "TRIP", "THEORY", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_BSTY, K_BSNO, K_BSOC, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -229,6 +229,8 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_DE_TRIG, P_DE_ATK, P_DE_DEC, P_DE_AMT},
     {P_DL_RATE, P_DL_DEPTH, P_DL_SHAPE, P_DL_DEST},
     {P_BL_MODE, P_BL_LEN, P_BL_MOVE, P_BL_GLIDE},   /* the drone as a bass line: its mode, how long a note holds, how much it moves, its glide */
+    {K_BSTY, K_BSNO, K_BSOC, P_BL_MODE},           /* the bass steps (0.16.29, issue #6): the step chosen (a white key): its kind, its note (scale steps above the chord's root), its
+                                                    * octave; and the bass line's mode (Steps plays them; an edit turns it to Steps) */
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
@@ -269,6 +271,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Trigger", "Attack", "Decay", "Amount"},
     {"Rate", "Depth", "Shape", "Target"},
     {"Mode", "Length", "Move", "Glide"},
+    {"Step", "Note", "Octave", "Mode"},                 /* the bass steps (0.16.29) */
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
@@ -301,7 +304,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 5}, {B_LFO, V_DRONE, 4}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 2},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 5}, {B_LFO, V_DRONE, 5}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 2},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -550,6 +553,7 @@ static struct {
     uint8_t stp;                       /* the Steps page's step (a white key) */
     uint8_t astp;                      /* the Acid steps page's step (a white key) */
     uint8_t pstp;                      /* the Pluck steps page's */
+    uint8_t bstp;                      /* the Bass steps page's (0.16.29) */
     uint8_t pgsl;                      /* the Progression page's slot */
     uint8_t slsl, sl_pos, sl_q;        /* the set list: the slot chosen; the one playing (0xFF none); one waiting for the bar (+ 1) */
     uint8_t as_off[16], as_oct[16];    /* its working copy of the line while it is edited (the engine takes the edits a chunk later) */
@@ -1207,6 +1211,10 @@ static int knob_get(int k)
         const uint8_t *b = pg_view(tmp);
         return k == K_PGCH ? en_prg_get(b, 3 * (ui.pgsl & 7), 3) : k == K_PGBR ? en_prg_get(b, 24 + 2 * (ui.pgsl & 7), 2) : en_prg_get(proj.prg, EN_PRG_PLAY, 1);
     }
+    if (k == K_BSTY || k == K_BSNO || k == K_BSOC) {
+        const int v = en_bs[ui.bstp & 15];
+        return k == K_BSTY ? EN_BS_KIND(v) : k == K_BSNO ? EN_BS_NOTE(v) : EN_BS_OCT(v);
+    }
     if (k == K_PSNO)
         return en_cm_rung[ui.pstp & 15];
     if (k == K_PSLV)
@@ -1259,6 +1267,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_PSNO || k == K_PSLV) {
         *lo = 0;
         *hi = k == K_PSNO ? 11 : 3;
+        return;
+    }
+    if (k == K_BSTY || k == K_BSNO || k == K_BSOC) {
+        *lo = 0;
+        *hi = k == K_BSTY ? 4 : k == K_BSNO ? 7 : 2;
         return;
     }
     if (k == K_SLSL || k == K_SLGN || k == K_SLPC || k == K_SLON) {
@@ -1362,6 +1375,20 @@ static void knob_text(int k, char *b)
         }
         if (!s)
             s = pg_name(v, pk_get(ui.pgsl & 7), b);
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
+        return;
+    }
+    if (k == K_BSTY || k == K_BSNO || k == K_BSOC) {   /* the bass step: its kind, its note above the chord's root, its octave */
+        static const char *const BK[5] = {"Rest", "Note", "Accent", "Glide", "Acc+glide"};
+        static const char *const BN[8] = {"Root", "2nd", "3rd", "4th", "5th", "6th", "7th", "Octave"};
+        static const char *const BO[3] = {"Down", "Mid", "Up"};
+        const int v = knob_get(k);
+        const char *s = k == K_BSTY ? BK[v < 0 ? 0 : v > 4 ? 4 : v] : k == K_BSNO ? BN[v & 7] : BO[v < 0 ? 0 : v > 2 ? 2 : v];
+        int n = 0;
         while (s[n]) {
             b[n] = s[n];
             n++;
@@ -1520,6 +1547,24 @@ static void knob_set(int k, int v)
             en_prg_put(proj.prg, 24 + 2 * s, 2, v < 0 ? 0 : v > 3 ? 3 : v);
         en_prg_put(proj.prg, EN_PRG_PLAY, 1, k == K_PGPL ? v > 0 : 1);
         en_prog(proj.prg);
+        edited();
+        return;
+    }
+    if (k == K_BSTY || k == K_BSNO || k == K_BSOC) {   /* the bass step chosen; an edit plays the steps (the bass line's mode to Steps) */
+        const int s = ui.bstp & 15, o = en_bs[s];
+        int kind = EN_BS_KIND(o), note = EN_BS_NOTE(o), oct = EN_BS_OCT(o);
+        if (k == K_BSTY)
+            kind = v < 0 ? 0 : v > 4 ? 4 : v;
+        else if (k == K_BSNO)
+            note = v < 0 ? 0 : v > 7 ? 7 : v;
+        else
+            oct = v < 0 ? 0 : v > 2 ? 2 : v;
+        if (k != K_BSTY && !kind)
+            kind = 1;                            /* (a rest given a note is a note) */
+        en_bass_step(s, EN_BS_MAKE(kind, note, oct));
+        en_bs[s] = EN_BS_MAKE(kind, note, oct);  /* (the page shows it at once) */
+        if (proj.par[P_BL_MODE] != EN_BL_STEPS)
+            knob_set(P_BL_MODE, EN_BL_STEPS);
         edited();
         return;
     }
@@ -2561,11 +2606,13 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
 /* ------------------------------------------------------------ buttons --- */
 /* the tab chain along the bottom (imp_tabs), and the breadcrumb's names: a tab a voice or group, with its pages */
 static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 5}, {"BASS", 'B', V_DRONE, 4}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
+    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 5}, {"BASS", 'B', V_DRONE, 5}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
     {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 2}, {"JAM", 'J', V_JAM, 1}};
 static void set_view(int v)
 {
     int g;
+    if (v == V_BLSTEP)
+        en_bass_capture();                       /* (the Bass steps page: the line heard, if none are set) */
     for (g = 0; g < NGROUP; g++)                 /* remembered: the page last on in its group */
         if (v >= GROUP[g].first && v < GROUP[g].first + GROUP[g].n)
             ui.grp_last[g] = (uint8_t)v;
@@ -2597,7 +2644,7 @@ static int voice_of(int v)                      /* the voice page v belongs to (
 {
     if (v >= V_PAD && v <= V_CHORDS)
         return EN_V_PAD;
-    if (v >= V_DRONE && v <= V_DRBASS)
+    if (v >= V_DRONE && v <= V_BLSTEP)
         return EN_V_DRONE;
     if (v >= V_ACID && v <= V_ACLINE)
         return EN_V_ACID;
@@ -2642,7 +2689,7 @@ static int oct_par(int v)                       /* what OCT moves on page v */
 {
     if (v >= V_PAD && v <= V_CHORDS)
         return P_PAD_OCT;
-    if (v >= V_DRONE && v <= V_DRBASS)
+    if (v >= V_DRONE && v <= V_BLSTEP)
         return P_BASSOCT;
     if ((v >= V_ACID && v <= V_ACLINE) || v == V_ACSTEP)
         return P_AC_OCT;
@@ -3798,6 +3845,11 @@ static void input(void)
                             project_globals();
                             say(s ? "PAD" : "BASS", glob.sl_rsv[2] >> s & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
                         }
+                } else if (ui.view == V_BLSTEP) { /* the Bass steps page: likewise */
+                    int s;
+                    for (s = 0; s < 16; s++)
+                        if (WHITE_KEY[s] == i)
+                            ui.bstp = (uint8_t)s;
                 } else if (ui.view == V_CMSTEP) { /* the Pluck steps page: likewise */
                     int s;
                     for (s = 0; s < 16; s++)
@@ -5249,7 +5301,7 @@ static int runner_on(void) { return kr.on; }
 #define SC_W 216
 #define SC_Y 24
 #define SC_H 90
-enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS, SCOPE_ACSTEP, SCOPE_CMSTEP, SCOPE_PROG, SCOPE_SETL };
+enum { SCOPE_NONE, SCOPE_PENV, SCOPE_DENV, SCOPE_AENV, SCOPE_PLFO, SCOPE_DLFO, SCOPE_DFILT, SCOPE_AFILT, SCOPE_SPACE, SCOPE_CMEL, SCOPE_MASTER, SCOPE_MIX, SCOPE_REVERB, SCOPE_GROOVE, SCOPE_ACANS, SCOPE_STEPS, SCOPE_ACSTEP, SCOPE_CMSTEP, SCOPE_PROG, SCOPE_SETL, SCOPE_BLSTEP };
 static int scope_kind(int v)
 {
     switch (v) {
@@ -5268,6 +5320,7 @@ static int scope_kind(int v)
     case V_STEPS: return SCOPE_STEPS;
     case V_ACSTEP: return SCOPE_ACSTEP;
     case V_CMSTEP: return SCOPE_CMSTEP;
+    case V_BLSTEP: return SCOPE_BLSTEP;
     case V_PROG: return SCOPE_PROG;
     case V_SETL: return SCOPE_SETL;
     case V_ACANS: return SCOPE_ACANS;
@@ -5808,6 +5861,47 @@ static void draw_scope(int kind)
             const int pd = glob.sl_rsv[2] & 3;
             cv_text(4, 129, &FONT_XS, pd & 1 ? "W9 BASS: PEDAL" : "W9 BASS: FOLLOWS", pd & 1 ? K_ACC : K_DIM);
             cv_text(124, 129, &FONT_XS, pd & 2 ? "W10 PAD: PEDAL" : "W10 PAD: FOLLOWS", pd & 2 ? K_ACC : K_DIM);
+        }
+        return;
+    }
+    if (kind == SCOPE_BLSTEP) {                  /* the bass steps (0.16.29): a bar a step (its height the note and octave), an accent bright, a glide joined to the step
+                                                  * before; the step chosen framed */
+        int s;
+        char tx[24];
+        const int on = proj.par[P_BL_MODE] == EN_BL_STEPS;
+        cv_text(6, 2, &FONT_B, "BASS STEPS", K_BASS);
+        cv_text(6 + text_w(&FONT_B, "BASS STEPS") + 8, 6, &FONT_XS, on ? "PLAYING" : "OFF: AN EDIT PLAYS THEM", on ? K_ACC : K_DIM);
+        for (s = 0; s < 16; s++) {
+            const int v = en_bs[s], kd = EN_BS_KIND(v), cur = s == (int)(ui.bstp & 15u);
+            const int32_t x0 = 16 + s * 13, h = 8 + (int32_t)(EN_BS_NOTE(v) + 7 * EN_BS_OCT(v)) * 3;
+            if (cur)
+                cv_rect(x0 - 1, 24, 13, 84, K_PANEL);
+            if (s % 4 == 0)
+                cv_rect(x0 - 1, 23, 1, 86, K_LINE);
+            if (kd) {
+                cv_rect(x0, 100 - h, 9, h, kd == 2 || kd == 4 ? K_ACC : K_BASS);
+                if (kd >= 3 && s > 0)
+                    cv_rect(x0 - 4, 100 - h, 4, 2, K_TEXT);   /* (a glide: joined to the step before) */
+            } else {
+                cv_rect(x0 + 3, 99, 4, 1, K_LINE);
+            }
+            if (on && en_playing && s == (int)en_bs_pos)
+                cv_rect(x0, 104, 9, 2, K_TEXT);
+            if (cur)
+                cv_rect(x0 - 1, 107, 13, 1, K_ACC);
+        }
+        {
+            static const char *const KN[5] = {"REST", "NOTE", "ACCENT", "GLIDE", "ACC+GLIDE"};
+            static const char *const NN[8] = {"ROOT", "2ND", "3RD", "4TH", "5TH", "6TH", "7TH", "OCTAVE"};
+            const int v = en_bs[ui.bstp & 15];
+            int n = 0;
+            const char *q = "STEP ";
+            while (*q)
+                tx[n++] = *q++;
+            itoa_u((uint32_t)(ui.bstp & 15u) + 1u, tx + n);
+            cv_text(4, 112, &FONT_XS, tx, K_TEXT);
+            cv_text(48, 112, &FONT_XS, KN[EN_BS_KIND(v) > 4 ? 0 : EN_BS_KIND(v)], EN_BS_KIND(v) ? K_ACC : K_DIM);
+            cv_text(132, 112, &FONT_XS, EN_BS_KIND(v) ? NN[EN_BS_NOTE(v)] : "", K_DIM);
         }
         return;
     }
@@ -6358,6 +6452,12 @@ static void draw_main(void)
                 h = hash(h, proj.prg[s] | (uint32_t)(s < EN_PRK_LEN ? proj.prk[s] : 0) << 8);
             h = hash(h, (uint32_t)ui.pgsl | (uint32_t)(uint8_t)en_prog_pos << 8 | (uint32_t)en_chord_root << 16 | (uint32_t)en_playing << 24);
         }
+        if (ui.view == V_BLSTEP) {
+            int s;
+            for (s = 0; s < 16; s++)
+                h = hash(h, en_bs[s]);
+            h = hash(h, (uint32_t)ui.bstp | (uint32_t)proj.par[P_BL_MODE] << 8 | (uint32_t)(uint8_t)en_bs_pos << 16 | (uint32_t)en_playing << 24);
+        }
         if (ui.view == V_CMSTEP) {
             int s;
             for (s = 0; s < 16; s++)
@@ -6746,6 +6846,10 @@ static void leds(void)
         if (pg_scale() == 7 && (ui.frame / 8u) % 6u == 0u)   /* the fills on the black keys: lit a frame in six, faint beside the slots */
             for (i = 0; i < PGF_N; i++)
                 k |= 1u << BLACK_KEY[i];
+    } else if (ui.view == V_BLSTEP) {            /* the bass steps: likewise */
+        for (i = 0; i < 16; i++)
+            if ((uint32_t)i == (uint32_t)(ui.bstp & 15u) || (uint32_t)(EN_BS_KIND(en_bs[i]) != 0) ^ (uint32_t)(en_playing && (int)i == (int)en_bs_pos))
+                k |= 1u << WHITE_KEY[i];
     } else if (ui.view == V_CMSTEP) {            /* the pluck steps: likewise */
         for (i = 0; i < 16; i++)
             if ((uint32_t)i == (uint32_t)(ui.pstp & 15u) || (uint32_t)(en_cm_lvl[i] != 0) ^ (uint32_t)(en_playing && i == en_cm_pos))
@@ -7121,6 +7225,8 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
     if (obj == OBJ_KINDS)                        /* the pieces' extras (0.16.28: PCX1), or the chord types alone (KND1, 0.16.6 .. 0.16.27); fewer genres too */
         return (len >= 4u && len <= 4u + EN_NGENRE * NPIECES * EN_PRK_LEN && (len - 4u) % (NPIECES * EN_PRK_LEN) == 0u && rd32(b) == KND_MAGIC) ||
                (len >= PX_HDR && len <= PX_SIZE && b[4] == PX_LEN && (len - PX_HDR) % (NPIECES * PX_LEN) == 0u && rd32(b) == PX_MAGIC);   /* (0.15.21: the set list after the old record) */
+    if (obj == OBJ_BSTEP)                        /* the pieces' bass steps (0.16.29): this build's, or one of fewer genres */
+        return len >= BS_HDR && len <= BS_SIZE && b[4] == BS_LEN && (len - BS_HDR) % (NPIECES * BS_LEN) == 0u && rd32(b) == BS_MAGIC;
     if (obj == OBJ_MMAP)                         /* the player's MIDI map (0.16.11) */
         return mm_ok(b, len);
     if (obj == OBJ_VOICES)
