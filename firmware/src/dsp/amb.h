@@ -358,6 +358,9 @@ extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 #define EN_NPROF 10                            /* the first core's stages (amb.c render_chunk PT): ticks summed since cleared, and the chunk count last */
 extern volatile uint8_t en_bass_c1;            /* 1: the drone and the acid are rendered by the other core */
+extern volatile int8_t en_walk_next;           /* THE CIRCLE MOVES (0.16.27): the walk's next degree, chosen a chord ahead (-1 not known: a progression set by hand, a new scale) */
+extern volatile uint8_t en_walk_next_root;      /* its root (pitch class; borrowed: the parallel minor's) */
+extern volatile uint8_t en_chord_alt;           /* the chord playing: 0 as the scale has it, 1 a secondary dominant (V of the next), 2 borrowed from the parallel minor */
 extern volatile uint8_t en_song;               /* FORM (0.16.26): 1 Song, a piece moves through its own patterns while Drum Drift is off; 0 Loop */
 extern volatile uint8_t en_usb_fixed;          /* 1: the USB audio is rendered at unity gain (the master knob is the speakers' alone) */
 extern volatile uint8_t en_fm_dy;              /* 1: the DY voices (human-made DX7 voices) stand in for the thirty DX voices */

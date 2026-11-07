@@ -558,6 +558,10 @@ static int expect(const char *what, const char *val)
         got = (int)(en_bass_level * 100.0f);
     else if (!strcmp(what, "chordroot"))
         got = en_chord_root;
+    else if (!strcmp(what, "walknext"))           /* the walk's next degree, a chord ahead (0.16.27; -1 none) */
+        got = en_walk_next;
+    else if (!strcmp(what, "chordalt"))           /* the chord playing: 0 plain, 1 a secondary dominant, 2 borrowed */
+        got = en_chord_alt;
     else if (!strcmp(what, "midimap"))            /* the MIDI out map (USB & MIDI page): 0 GM, 1 Model:Samples, 2 MPC Sample, 3 SP-404 */
         got = ui.midi_map;
     else if (!strcmp(what, "minpads"))            /* MIDI in (MIDI IN page): pads on, the channel (0 all); a melodic pad's note sounding; a drum lit by a hit (its glow over half) */

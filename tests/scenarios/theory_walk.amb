@@ -1,0 +1,30 @@
+# THEORY with the genre's own walk (0.16.27): the next chord is known a chord ahead, so the yellow arrow and NEXT show without a progression set
+# by hand; DISCO's circle (its chords a fifth apart) brings secondary dominants, marked V OF THE NEXT
+seed 0
+wait 1000
+press GLO
+wait 100
+turn PRESET 10
+wait 200
+release GLO
+wait 300
+expect genre 10
+tap HOME
+wait 100
+tap HOME
+wait 100
+expect view 36
+spin SELECT -1
+wait 300
+spin SELECT -1
+wait 1500
+expect viz 8
+wait 6000
+expect walknext >-1
+shot theory_walk_a.png
+wait 4100
+shot theory_walk_b.png
+wait 4100
+shot theory_walk_c.png
+wait 4100
+shot theory_walk_d.png

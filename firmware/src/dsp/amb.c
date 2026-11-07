@@ -1074,7 +1074,12 @@ static int16_t par[P_NPARAMS];
 int en_par_now(int p) { return (unsigned)p < (unsigned)P_NPARAMS ? par[p] : 0; }
 static int links_on(void) { return par[P_LINKS] != 0; }
 static uint32_t pool = 0xAADu;                  /* Ionian until told */
-static int nsteps, steps[12];                   /* the scale */
+static int nsteps, steps[12];                   /* the scale (as it sounds: the dominant's raised seventh, a secondary dominant's or a borrowed chord's notes) */
+static int steps_nat[12];                       /* the scale as the piece has it (0.16.27) */
+static int8_t walk_next = -1;                   /* the walk's next degree, chosen a chord ahead (0.16.27; -1 none yet) */
+static uint8_t walk_bor;                        /* and whether it is borrowed */
+volatile int8_t en_walk_next = -1;
+volatile uint8_t en_walk_next_root, en_chord_alt;
 static int deg;                                 /* the chord's scale degree */
 static uint8_t dom_on;
 static uint8_t dh[8], dh_n, dh_i, dh_ln;        /* the progression loop: its chords, how many, the next, its length */
@@ -1775,8 +1780,13 @@ static float rev_in_gain = 1.0f;                /* falls to 0 while frozen */
 /* -------------------------------------------------------------- harmony --- */
 static void scale_set(void)
 {
+    int k;
     nsteps = en_scale(pool, steps);
+    for (k = 0; k < 12; k++)
+        steps_nat[k] = steps[k];
     dom_on = 0;                                 /* the natural scale (dom_apply raises the seventh again if the chord is V) */
+    en_chord_alt = 0;
+    walk_next = en_walk_next = -1;              /* (another scale: the next chord is chosen again) */
 }
 
 /* THE ANSWER. The acid line asks (the call) and now and then answers: a value type * 5 + dir (0 off; types 1 octave, 2 fifth, 3 third in the scale,
@@ -1885,11 +1895,15 @@ static void pad_retarget(void)                  /* the chord's tones to the four
 {
     int from[4], to[4], i;
     chord_nt = en_chord_kind(pool, par[P_ROOT], deg, pg_on && pg_kind[pg_i] ? pg_kind[pg_i] : par[P_CHORD], chord_pcs);   /* (the slot's own type, when it has one) */
-    if (dom_on) {                               /* the dominant's third (the scale's seventh): a semitone up, as the scale has it now */
-        const int nat = (par[P_ROOT] + steps[6] - 1) % 12;
+    {   /* the chord's tones as the scale sounds now: the dominant's raised seventh (its third), a secondary dominant's third and seventh, a borrowed
+         * chord's minor scale (0.16.27: was the dominant's alone) */
+        int j;
         for (i = 0; i < chord_nt; i++)
-            if (chord_pcs[i] == nat)
-                chord_pcs[i] = (nat + 1) % 12;
+            for (j = 0; j < nsteps; j++)
+                if (chord_pcs[i] == (par[P_ROOT] + steps_nat[j]) % 12) {
+                    chord_pcs[i] = (par[P_ROOT] + steps[j]) % 12;
+                    break;
+                }
     }
     for (i = 0; i < EN_NPAD; i++)
         from[i] = (int)(pad[i].target + 0.5f);
@@ -2096,27 +2110,65 @@ static void prog_take(uint32_t lo, uint32_t hi) /* the progression from the page
 }
 #ifdef EN_HOST
 int en_host_dimwalk;                            /* moves to a diminished chord other than home (the walk never: 0.16.26) */
+int en_host_alt[3];                             /* the walk's chords: as they are, secondary dominants, borrowed (0.16.27) */
 #endif
 static uint8_t deg_prev, cad_n;                 /* the chord before this one; the chords since the phrase began */
 static uint8_t drop_tonic;                       /* the drop takes the next chord home */
 static void chord_to(int i);
-static void chord_change(void)                  /* to another degree: the genre's own moves first */
+/* THE CIRCLE MOVES (0.16.27; the maker: "if following circle of fifths and that sounds good then we're good"). By genre, a chord a fifth above
+ * the next one (the walk knows it, a chord ahead) becomes that chord's dominant: its third major, its seventh minor (D7 to G, E7 A7 D7 G7 round the
+ * circle); in a major key IV, VI and VII can be borrowed from the parallel minor (iv, bVI, bVII: the scale is Aeolian on the root while the chord
+ * plays, so the pad, the bass, the acid and the pluck all follow). VII in a major key is then always bVII (its own chord, vii°, is never walked
+ * to). Percent of the chords that can: CH_SEC, CH_BOR. A progression set by hand plays its chords as they are. */
+static const uint8_t CH_SEC[EN_NGENRE] = {0, 45, 15, 0, 0, 30, 0, 35, 0, 0, 50, 25, 15, 10, 40, 15, 0, 0, 0};
+static const uint8_t CH_BOR[EN_NGENRE] = {0, 20, 20, 0, 0, 15, 0, 15, 0, 0, 15, 10, 0, 40, 15, 25, 0, 0, 0};
+static const uint8_t AEOLIAN[7] = {0, 2, 3, 5, 7, 8, 10};
+static int fixed_shape(void) { return par[P_CHORD] == EN_CH_DUB || par[P_CHORD] == EN_CH_4THS; }
+static int bor_key(void) { return nsteps == 7 && chord_genre && CH_BOR[chord_genre] && steps_nat[2] == 4 && !fixed_shape(); }   /* a major key, a genre that borrows */
+static int borrow_vii(int i) { return i == 6 && bor_key(); }
+static int bor_decide(int i) { return bor_key() && (i == 6 || ((i == 3 || i == 5) && frand() * 100.0f < (float)CH_BOR[chord_genre])); }
+static void alt_clear(void)                     /* the natural scale again (dom_apply and alt_apply set it as the next chord needs) */
+{
+    int k;
+    for (k = 0; k < nsteps; k++)
+        steps[k] = steps_nat[k];
+    dom_on = 0;
+    en_chord_alt = 0;
+}
+static void alt_apply(int i, int bor, int n)    /* the chord on degree i (just moved to): borrowed, or the dominant of the next (n) */
+{
+    int k, changed = 0;
+    if (nsteps != 7 || !chord_genre || fixed_shape())
+        return;
+    if (bor) {
+        for (k = 0; k < 7; k++)
+            steps[k] = AEOLIAN[k];
+        dom_on = 0;
+        en_chord_alt = 2;
+        changed = 1;
+    } else if (n >= 1 && n < 7 && n != i && CH_SEC[chord_genre] && (steps_nat[i] - steps_nat[n] + 12) % 12 == 7 &&
+               (steps_nat[(i + 4) % 7] - steps_nat[i] + 12) % 12 == 7 && frand() * 100.0f < (float)CH_SEC[chord_genre]) {
+        const int t = (i + 2) % 7, s = (i + 6) % 7;
+        if ((steps[t] - steps_nat[i] + 12) % 12 == 3)
+            steps[t]++, changed = 1;            /* its third, major */
+        if ((steps[s] - steps_nat[i] + 12) % 12 == 11)
+            steps[s]--, changed = 1;            /* its seventh, minor */
+        if (changed)
+            en_chord_alt = 1;
+    }
+    if (changed) {
+        pad_retarget();
+        bass_to(bass_pc());
+    }
+}
+static int walk_ok(int i) { return !(i && deg_dim(i)) || borrow_vii(i); }
+static int walk_pick(void)                      /* the walk's next degree from where it is (the natural scale): the genre's own moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
     float w[12], sum = 0.0f, r;
     int i, cad_to = 0;
     const int cg = chord_genre;
     const int rich = nsteps == 7 && cg;
-    if (pg_on) {                                /* the progression set by hand: its next slot (the drop: its first); an empty slot keeps the chord for its bars */
-        pg_i = (uint8_t)(drop_tonic || pg_start ? 0 : (pg_i + 1) % pg_len);
-        drop_tonic = pg_start = 0;
-        en_prog_pos = (int8_t)pg_i;
-        if (pg_deg[pg_i])
-            chord_to((pg_deg[pg_i] - 1) % nsteps);
-        else
-            drift_reset();
-        return;
-    }
     if (rich) {                                 /* the leading chord: the genre's, unless the mode makes it diminished (then V, or IV) */
         cad_to = CHT[cg].cad_to;
         if (deg_dim(cad_to))
@@ -2134,6 +2186,8 @@ static void chord_change(void)                  /* to another degree: the genre'
                     w[i] += (float)(e[k].w & ~EB2);
             if (!CHT[cg].back && i == deg_prev && deg_prev != deg && cad_n)   /* no A B A (a loop's own chord is the pull back) */
                 w[i] = 0.0f;
+            if (CH_SEC[cg] && i != 0 && (steps_nat[deg] - steps_nat[i] + 12) % 12 == 7)
+                w[i] += (float)CH_SEC[cg] * 0.1f;   /* a fifth down: the circle (0.16.27, as much as the genre likes its dominants) */
             if (cad_n + 1 >= CHT[cg].cad_every && i == cad_to && deg != 0)
                 w[i] += 10.0f;                  /* the chord before the phrase's end: its leading chord */
             if (cad_n >= CHT[cg].cad_every && i == 0)
@@ -2141,8 +2195,8 @@ static void chord_change(void)                  /* to another degree: the genre'
         } else {
             w[i] = nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
         }
-        if (i != 0 && deg_dim(i))
-            w[i] = 0.0f;                        /* a diminished chord: not walked to (hypno's walk too) */
+        if (i != 0 && deg_dim(i) && !borrow_vii(i))
+            w[i] = 0.0f;                        /* a diminished chord: not walked to (hypno's walk too); VII borrowed as bVII is (0.16.27) */
         sum += w[i];
     }
     r = frand() * sum;
@@ -2167,26 +2221,62 @@ static void chord_change(void)                  /* to another degree: the genre'
             dh_i = (uint8_t)(k + 1);
             if (dv && frand() * 100.0f < (float)dv)
                 dh[k] = (uint8_t)i;
-            else if (dh[k] < nsteps && !(dh[k] && deg_dim(dh[k])))   /* (a mode changed under the loop: its diminished chord drawn anew) */
+            else if (dh[k] < nsteps && walk_ok(dh[k]))   /* (a mode changed under the loop: its diminished chord drawn anew) */
                 i = dh[k];
         } else if (ln) {                         /* filling it */
             dh[dh_n++] = (uint8_t)i;
             dh_i = 0;
         }
     }
+    return i;
+}
+static void chord_change(void)                  /* to another degree: the progression set by hand, or the walk (its next chosen a chord ahead) */
+{
+    int i, bor;
+    alt_clear();
+    if (pg_on) {                                /* the progression set by hand: its next slot (the drop: its first); an empty slot keeps the chord for its bars */
+        pg_i = (uint8_t)(drop_tonic || pg_start ? 0 : (pg_i + 1) % pg_len);
+        drop_tonic = pg_start = 0;
+        en_prog_pos = (int8_t)pg_i;
+        walk_next = en_walk_next = -1;
+        if (pg_deg[pg_i]) {
+            i = (pg_deg[pg_i] - 1) % nsteps;
+#ifdef EN_HOST
+            if (i && deg_dim(i))
+                en_host_dimwalk++;              /* (tests/host/gharm.c: only a progression set by hand may) */
+#endif
+            chord_to(i);
+        } else
+            drift_reset();
+        return;
+    }
+    if (walk_next >= 0 && walk_next < nsteps && walk_ok(walk_next)) {
+        i = walk_next;
+        bor = walk_bor;
+    } else {
+        i = walk_pick();
+        bor = bor_decide(i);
+    }
     if (drop_tonic) {                           /* the drop: home */
         drop_tonic = 0;
         i = 0;
+        bor = 0;
     }
     chord_to(i);
+    walk_next = (int8_t)walk_pick();            /* the next, from here (the screens show it) */
+    walk_bor = (uint8_t)bor_decide(walk_next);
+    en_walk_next_root = (uint8_t)((par[P_ROOT] + (walk_bor ? AEOLIAN[walk_next % 7] : steps_nat[walk_next])) % 12);
+    en_walk_next = walk_next;
+    alt_apply(i, bor, walk_next);
+#ifdef EN_HOST
+    if (i && deg_dim(i))
+        en_host_dimwalk++;                      /* (with its alteration: bVII is not diminished) */
+    en_host_alt[en_chord_alt]++;
+#endif
 }
 static void chord_to(int i)                     /* the chord moves to degree i */
 {
     int k;
-#ifdef EN_HOST
-    if (i && deg_dim(i))
-        en_host_dimwalk++;                      /* (tests/host/gharm.c: only a progression set by hand may) */
-#endif
     deg_prev = (uint8_t)deg;
     cad_n =(uint8_t)(i == 0 && nsteps == 7 && chord_genre && cad_n >= CHT[chord_genre].cad_every ? 0 : cad_n + 1);
     deg = i;
@@ -2382,10 +2472,12 @@ static int bl_pn;
 static float stab_pe;
 static void bl_note(int n);
 static void stab_fire(float envv);
-static struct { int n; uint8_t slid_ok, acc, hat, slide; float dec; } ac_pend;
+static struct { int n; uint8_t slid_ok, acc, hat, slide, beat; float dec; } ac_pend;
 static void acid_fire(void)
 {
-    const int n = ac_pend.n, slid = ac_pend.slid_ok && acid.amp_t > 0.0f;
+    const int n = ac_pend.acc || ac_pend.slide || ac_pend.beat ? avoid_fix(ac_pend.n) : ac_pend.n;   /* accented, held into the next or on the beat: no clashing
+                                                                                                       * fourth over the chord as it is when the note sounds (0.16.26) */
+    const int slid = ac_pend.slid_ok && acid.amp_t > 0.0f;
     acid.inc_t = mtof((float)n) * (1.0f / EN_SR);
     if (!slid) {                                /* a new note: the envelope again */
         acid.inc = acid.inc_t;
@@ -2431,8 +2523,7 @@ static void acid_step(int32_t wait)             /* a sixteenth of the acid line 
             acid_fire();
         }
         ac_pend.n = acid_note(ss, v);
-        if ((ac_accent & m) || (ac_slide & m) || !(st & 3))   /* accented, held into the next or on the beat: no clashing fourth (0.16.26) */
-            ac_pend.n = avoid_fix(ac_pend.n);
+        ac_pend.beat = (uint8_t)!(st & 3);
         ac_pend.slid_ok = (uint8_t)((ac_slide >> prev & 1u) && (ac_gate >> prev & 1u));
         ac_pend.dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
         ac_pend.acc = (uint8_t)((ac_accent & m) != 0u);
@@ -6190,8 +6281,11 @@ static void drain(void)
                 hb_bend = (float)b * (2.0f / 8192.0f);
             break;
         case C_DEG:
-            if (a < nsteps && a != deg)
+            if (a < nsteps && a != deg) {
+                alt_clear();
                 chord_to(a);
+                walk_next = en_walk_next = -1;   /* (a chord from the pads: the walk's next is chosen at its change) */
+            }
             break;
         case C_MAP:                              /* another map: the old one's notes let go first */
             if (a != midi_map) {

@@ -944,10 +944,12 @@ static void vz_theory(void)
                 break;
             }
         }
-        if (nroot >= 0 && nroot != root) {       /* the move: an arrow inside the band, from this chord's root to the next one's */
-            th_swoop(cx, cy, TH_POS(root), TH_POS(nroot), 36.0f, K_ACC, 1, 1);
-        }
+    } else if (en_walk_next >= 0 && en_playing) {   /* the genre's walk: its next, chosen a chord ahead (0.16.27: the arrow showed only for a progression) */
+        nd = en_walk_next;
+        nroot = en_walk_next_root % 12;
     }
+    if (nroot >= 0 && nroot != root)             /* the move: an arrow inside the band, from this chord's root to the next one's */
+        th_swoop(cx, cy, TH_POS(root), TH_POS(nroot), 36.0f, K_ACC, 1, 1);
     for (i = 0; i < 12; i++) {                   /* the band's numerals; the chord playing filled, the next one ringed */
         const int pc = TH_PC(i), dd = th_degree(pc, m);
         if (!(scale >> pc & 1u) || dd < 0)
@@ -1016,8 +1018,8 @@ static void vz_theory(void)
             en_chord_name(pcs, EN_NPAD + 1, nm);
             cv_text(x, 30, &FONT_B, th_respell(&k, root, nm, tx), K_TEXT);
         }
-        cv_text(x, 46, &FONT_XS, d < 0 ? "OUTSIDE THE SCALE" : num == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[num],
-                d < 0 ? K_DIM : th_fcol(num));
+        cv_text(x, 46, &FONT_XS, en_chord_alt == 1 ? "V OF THE NEXT" : en_chord_alt == 2 ? "BORROWED" : d < 0 ? "OUTSIDE THE SCALE" :
+                num == 6 && (scale >> ((key + 10) % 12) & 1u) ? "SUBTONIC" : FN[num], en_chord_alt ? TH_RED : d < 0 ? K_DIM : th_fcol(num));
         {   /* its notes, from the root up, spelled; a borrowed one red */
             int32_t xx = x;
             for (j = 0; j < 12; j++) {
@@ -1034,7 +1036,7 @@ static void vz_theory(void)
             cv_text(x, 70, &FONT_XS, "NEXT", K_DIM);
             xn = x + text_w(&FONT_XS, "NEXT") + 5;
             xn = cv_text(xn, 70, &FONT_XS, th_roman((th_letter(&k, nroot >= 0 ? nroot : key) - tl + 7) % 7, nd, r), K_ACC) + 5;
-            cv_text(xn, 70, &FONT_XS, nroot >= 0 ? th_respell(&k, nroot, pg_name(nd + 1, pk_get(ns), nm), tx) : pg_name(nd + 1, pk_get(ns), tx), K_TEXT);
+            cv_text(xn, 70, &FONT_XS, nroot >= 0 ? th_respell(&k, nroot, pg_name(nd + 1, (loop ? pk_get(ns) : 0), nm), tx) : pg_name(nd + 1, (loop ? pk_get(ns) : 0), tx), K_TEXT);
             if (nroot >= 0)
                 cv_text(x, 81, &FONT_XS, th_motion(root, nroot, key), mix(K_DIM, K_ACC, 10));
         } else if (en_playing && en_drift_bars < 98.5f) {

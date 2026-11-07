@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "amb.h"
 
-extern int en_host_dimwalk;
+extern int en_host_dimwalk, en_host_alt[3];
 static int maj_root = -1, bad_acid, acid_acc;          /* the chord now: its root if it is major (else -1) */
 
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
@@ -40,7 +40,9 @@ int main(int argc, char **argv)
 {
     static int32_t buf[512];
     const int secs = argc > 1 ? atoi(argv[1]) : 40, npc = argc > 2 ? atoi(argv[2]) : 10;
-    int g, pc, b, fails = 0, walked = 0;
+    int g, pc, b, fails = 0, walked = 0, alt[EN_NGENRE][3] = {{0}};
+    /* the genres that never alter a chord (CH_SEC and CH_BOR 0: hypno, dubstep, dub, breaks, electro, trap, industrial, psy, forest) */
+    static const uint8_t PLAIN[EN_NGENRE] = {1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1};
     for (g = 0; g < EN_NGENRE; g++)
         for (pc = 0; pc < npc; pc++) {
             int16_t par[P_NPARAMS];
@@ -48,6 +50,7 @@ int main(int argc, char **argv)
             load(g, pc, par, &pool);
             en_play(1);
             en_host_dimwalk = 0;
+            en_host_alt[0] = en_host_alt[1] = en_host_alt[2] = 0;
             for (b = 0; b < secs * 44100 / 256; b++) {
                 int k, has3 = 0, has4 = 0;
                 const int r = en_chord_root % 12;
@@ -59,11 +62,25 @@ int main(int argc, char **argv)
                 }
                 maj_root = has4 && !has3 ? r : -1;
             }
+            for (b = 0; b < 3; b++)
+                alt[g][b] += en_host_alt[b];
             if (en_host_dimwalk && walked++ < 8)
                 printf("  %s %02d walked to a diminished chord %d times\n", en_genre_name(g), pc + 1, en_host_dimwalk);
         }
     printf("gharm: %d pieces walked to a diminished chord; %d accented acid notes, %d on a major chord's fourth\n", walked, acid_acc, bad_acid);
     fails += walked > 0 || bad_acid > 0 || acid_acc < 100;
+    {   /* the circle moves: none in the plain genres; secondary dominants in the jazzy ones (lofi, disco), borrowed chords somewhere */
+        int sec = 0, bor = 0, plain_alt = 0;
+        for (g = 0; g < EN_NGENRE; g++) {
+            printf("  %-9s %4d chords, %3d secondary dominants, %3d borrowed\n", en_genre_name(g), alt[g][0] + alt[g][1] + alt[g][2], alt[g][1], alt[g][2]);
+            sec += alt[g][1];
+            bor += alt[g][2];
+            if (PLAIN[g])
+                plain_alt += alt[g][1] + alt[g][2];
+        }
+        printf("gharm: %d secondary dominants, %d borrowed chords; %d in the plain genres\n", sec, bor, plain_alt);
+        fails += plain_alt > 0 || sec == 0 || bor == 0;   /* (a genre's own count depends on the walk before it: en_init keeps the chord loop) */
+    }
     {   /* the count's own check: HOUSE 01 (A Dorian's vi is F#-A-C) with a progression of i and vi set by hand, one bar each, must reach vi */
         int16_t par[P_NPARAMS];
         uint16_t pool;
