@@ -43,12 +43,22 @@ typedef struct {
 #define GLOB_OLD 12u                         /* the record before the set list (0.15.20 and older): read, the list empty */
 static glob_t glob;
 static int glob_from_old;                    /* the old bank's header had them */
-/* THE SLOTS' CHORD TYPES (0.16.6): every genre's pieces' in one object (OBJ_KINDS), as the banks have no byte left; a piece's are its slot's
- * prk while the power is on, and go into this with SAVE like the rest of it. An older object (fewer genres) is read as far as it goes. */
-#define KND_MAGIC 0x31444E4Bu               /* "KND1" */
-typedef struct { uint32_t magic; uint8_t k[EN_NGENRE][NPIECES][EN_PRK_LEN]; } knd_t;
-static knd_t knd;
-static uint8_t pending_knd;
+/* THE PIECES' EXTRAS (0.16.28; 0.16.6 had the chord types alone, "KND1"): one object (OBJ_KINDS) with every genre's pieces, as the banks have no
+ * byte left. A piece: its Progression slots' chord types (3 bytes: a slot's are its slot's prk while the power is on), its flags (bit 0: its FILTERS
+ * and SCREAM were saved with it), the FILTERS page's three types and SCREAM's four (PX_FXS), spare. Only the playing genre's ten are in RAM; the
+ * object passes through the stack when it is read or written. A KND1 object (0.16.6 .. 0.16.27) is read for its types, and written anew as PCX1. */
+#define KND_MAGIC 0x31444E4Bu               /* "KND1": magic, then 3 bytes a piece */
+#define PX_MAGIC 0x31584350u                /* "PCX1": magic, PX_LEN, the genres, 2 spare; then PX_LEN bytes a piece */
+#define PX_HDR 8u
+#define PX_LEN 16u
+#define PX_FLAGS 3
+#define PX_FXAT 4
+#define PX_SIZE (PX_HDR + EN_NGENRE * NPIECES * PX_LEN)
+typedef char px_fits[PX_SIZE <= PLAT_STORE_MAX ? 1 : -1];
+const uint8_t PX_FXS[PX_NFX] = {EN_FXS_FT_PAD, EN_FXS_FT_BASS, EN_FXS_FT_ACID, EN_FXS_SQ_DRIVE, EN_FXS_SQ_AMT, EN_FXS_SQ_WOW, EN_FXS_SQ_TGT};
+static uint8_t px[NPIECES][PX_LEN];          /* the playing genre's pieces' extras, as saved */
+static uint8_t pxl[NPIECES][1 + PX_NFX];     /* and their FILTERS and SCREAM as left this time in the genre ([0] 1: set), as keep() does for the rest */
+static uint8_t pending_px;
 
 #define BANK_MAGIC 0x32505948u               /* "HYP2": the old bank, one object, ten pieces of 16-bit settings */
 #define BANK_FORMAT 1u
@@ -112,6 +122,8 @@ static void keep(void)                       /* the piece playing, into its slot
 {
     slot_t *s = &proj.slot[proj.piece];
     int p, l;
+    ui_fx_snapshot(pxl[proj.piece] + 1);     /* (its FILTERS and SCREAM, 0.16.28) */
+    pxl[proj.piece][0] = 1;
     for (p = 0; p < P_NPARAMS; p++)
         s->par[p] = proj.par[p];
     s->pool = proj.pool;
@@ -149,9 +161,9 @@ static void pack_slot(const slot_t *s, int i)
     int p, l;
     memcpy(image + IMG_TAIL + (uint32_t)i * EN_PRG_LEN, s->prg, EN_PRG_LEN);
     for (p = 0; p < EN_PRK_LEN; p++)          /* (a changed type: the object goes with the next write; no memcmp in the emulator's libc) */
-        if (knd.k[proj.genre][i][p] != s->prk[p]) {
-            knd.k[proj.genre][i][p] = s->prk[p];
-            pending_knd = 1;
+        if (px[i][p] != s->prk[p]) {
+            px[i][p] = s->prk[p];
+            pending_px = 1;
         }
     memset(rec, 0, IMG_REC);
     wr16(rec, s->pool);
@@ -177,7 +189,7 @@ static int unpack_slot(int i, uint32_t npar, int tail, slot_t *s)   /* tail: the
         memcpy(s->prg, image + IMG_TAIL + (uint32_t)i * EN_PRG_LEN, EN_PRG_LEN);
     else
         memset(s->prg, 0, EN_PRG_LEN);
-    memcpy(s->prk, knd.k[proj.genre][i], EN_PRK_LEN);
+    memcpy(s->prk, px[i], EN_PRK_LEN);
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             s->pats[p][l] = rd16(rec + 2 + 2 * (p * EN_NLANE + l));
@@ -286,9 +298,11 @@ static void old_bank_load(int n)
 
 /* genre g's pieces (proj.genre is g): each its recipe, or as saved. The original genre may still have the old form in flash: read it,
  * and make the image from it (flash is left as it is until the next save). */
+static void px_load(int g);
 static void image_load(int g)
 {
     int i, n;
+    px_load(g);
     saved = 0;
     for (i = 0; i < NPIECES; i++)
         recipe(i, &proj.slot[i]);
@@ -303,6 +317,11 @@ static void image_load(int g)
             if (sv >> i & 1u) {
                 if (unpack_slot(i, npar, tail, &proj.slot[i])) {
                     saved |= (uint16_t)(1u << i);
+                    if (!(px[i][PX_FLAGS] & 1u)) {  /* saved before 0.16.28: the drum drift as a new piece's (it was the player's then) */
+                        int p;
+                        for (p = P_DD_CHANGE; p <= P_DD_MUTATE; p++)
+                            proj.slot[i].par[p] = en_param_info(p)->def;
+                    }
                     if (!enc)
                         ans_old(&proj.slot[i]);
                     if (!image[13])
@@ -323,14 +342,66 @@ static void image_load(int g)
     image_header(g);
 }
 
-static void knd_load(void)                   /* the slots' chord types: as far as the object goes (none: every slot the piece's) */
+/* genre g's extras out of the object (an older or shorter one: as far as it goes; none: every slot the piece's type, FILTERS and SCREAM the
+ * defaults), and this time's edits forgotten */
+static void px_load(int g)
 {
-    int n;
-    memset(&knd, 0, sizeof knd);
-    n = plat_store_load(OBJ_KINDS, &knd, sizeof knd);   /* (read in place: what an older, shorter object lacks stays 0) */
-    if (n < 4 || knd.magic != KND_MAGIC)
-        memset(&knd, 0, sizeof knd);
-    knd.magic = KND_MAGIC;
+    uint8_t b[PX_SIZE];
+    const int n = plat_store_load(OBJ_KINDS, b, sizeof b);
+    int i;
+    memset(px, 0, sizeof px);
+    memset(pxl, 0, sizeof pxl);
+    if (n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] == PX_LEN) {
+        const uint32_t at = PX_HDR + (uint32_t)g * NPIECES * PX_LEN;
+        if ((uint32_t)n >= at + NPIECES * PX_LEN)
+            memcpy(px, b + at, sizeof px);
+    } else if (n >= 4 && rd32(b) == KND_MAGIC) {
+        for (i = 0; i < NPIECES; i++) {
+            const uint32_t at = 4u + ((uint32_t)g * NPIECES + (uint32_t)i) * EN_PRK_LEN;
+            if ((uint32_t)n >= at + EN_PRK_LEN)
+                memcpy(px[i], b + at, EN_PRK_LEN);
+        }
+    }
+}
+/* the playing genre's extras into the object, the other genres' as they were (a KND1 object made PCX1 first, its types kept) */
+static int px_save(void)
+{
+    uint8_t b[PX_SIZE];
+    int n = plat_store_load(OBJ_KINDS, b, sizeof b);
+    if (!(n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] == PX_LEN)) {
+        const int kn = n >= 4 && rd32(b) == KND_MAGIC ? (n - 4) / (int)EN_PRK_LEN : 0;
+        int k;
+        for (k = EN_NGENRE * NPIECES - 1; k >= 0; k--) {   /* (from the end: a piece's new place is past every older one's old place) */
+            uint8_t t[EN_PRK_LEN] = {0};
+            if (k < kn)
+                memcpy(t, b + 4 + k * (int)EN_PRK_LEN, EN_PRK_LEN);
+            memset(b + PX_HDR + (uint32_t)k * PX_LEN, 0, PX_LEN);
+            memcpy(b + PX_HDR + (uint32_t)k * PX_LEN, t, EN_PRK_LEN);
+        }
+        n = (int)PX_SIZE;
+    } else if (n < (int)PX_SIZE) {
+        memset(b + n, 0, PX_SIZE - (uint32_t)n);   /* (an object of fewer genres) */
+    }
+    wr32(b, PX_MAGIC);
+    b[4] = PX_LEN;
+    b[5] = EN_NGENRE;
+    b[6] = b[7] = 0;
+    memcpy(b + PX_HDR + (uint32_t)proj.genre * NPIECES * PX_LEN, px, sizeof px);
+    return plat_store_save(OBJ_KINDS, b, PX_SIZE);
+}
+
+/* the playing piece's FILTERS and SCREAM (PX_FXS): as left this time in the genre, else as saved with it, else the defaults */
+void project_fx_get(uint8_t *v)
+{
+    const int i = proj.piece;
+    int k;
+    if (pxl[i][0])
+        memcpy(v, pxl[i] + 1, PX_NFX);
+    else if (px[i][PX_FLAGS] & 1u)
+        memcpy(v, px[i] + PX_FXAT, PX_NFX);
+    else
+        for (k = 0; k < PX_NFX; k++)
+            v[k] = (uint8_t)EN_FXS_DEF[PX_FXS[k]];
 }
 
 static void glob_load(void)                  /* the player's three: their object, else the old bank's header, else the defaults */
@@ -360,7 +431,6 @@ void project_start(uint32_t seed)
     uint32_t r = seed, i;
     int g0 = 0, p0 = -1;
     memset(&proj, 0, sizeof proj);
-    knd_load();
     glob_load();
     {   /* START (0.16.26, Steven's "boot back into the last state"): Last, the default, comes back to the piece last played, exactly as it is
          * stored (a saved piece as saved, else its recipe); Random, the old way. Seed 0 (the tests') is always the first piece. */
@@ -433,6 +503,7 @@ void project_apply(void)
     en_prog(proj.prg);
     en_prog_kinds(proj.prk);
     en_trim(proj.genre, proj.piece);
+    ui_fx_apply();                           /* its FILTERS and SCREAM (0.16.28) */
 }
 
 void project_piece(int i)
@@ -451,7 +522,7 @@ void project_set_genre(int g)
     if (g == proj.genre)
         return;
     keep();
-    if (pending)
+    if (pending || pending_px)
         project_flush();                     /* (a piece saved but not yet written goes first) */
     proj.genre = (uint8_t)g;
     image_load(g);
@@ -463,6 +534,16 @@ void project_piece_save(void)
 {
     keep();
     pack_slot(&proj.slot[proj.piece], proj.piece);
+    {   /* its FILTERS and SCREAM go with it (0.16.28); the extras' object is written only when they changed (no memcmp in the emulator's libc) */
+        int k, same = (px[proj.piece][PX_FLAGS] & 1u) != 0u;
+        for (k = 0; k < PX_NFX; k++)
+            same &= px[proj.piece][PX_FXAT + k] == pxl[proj.piece][1 + k];
+        if (!same) {
+            memcpy(px[proj.piece] + PX_FXAT, pxl[proj.piece] + 1, PX_NFX);
+            px[proj.piece][PX_FLAGS] |= 1u;
+            pending_px = 1;
+        }
+    }
     saved |= (uint16_t)(1u << proj.piece);
     proj.edited &= (uint16_t)~(1u << proj.piece);
     pending = 1;
@@ -470,14 +551,15 @@ void project_piece_save(void)
 
 void project_piece_factory(void)
 {
+    pxl[proj.piece][0] = 0;                  /* (its FILTERS and SCREAM: the defaults, unless it was saved with its own) */
     recipe(proj.piece, &proj.slot[proj.piece]);
     take(proj.piece);
     if (saved >> proj.piece & 1u) {
         saved &= (uint16_t)~(1u << proj.piece);
         memset(image + IMG_HDR + (uint32_t)proj.piece * IMG_REC, 0, IMG_REC);
         memset(image + IMG_TAIL + (uint32_t)proj.piece * EN_PRG_LEN, 0, EN_PRG_LEN);
-        memset(knd.k[proj.genre][proj.piece], 0, EN_PRK_LEN);
-        pending_knd = 1;
+        memset(px[proj.piece], 0, PX_LEN);
+        pending_px = 1;
         pending = 1;
     }
     proj.edited &= (uint16_t)~(1u << proj.piece);
@@ -490,12 +572,12 @@ void project_globals(void)
 }
 
 int project_saved(int i) { return (unsigned)i < NPIECES && (saved >> i & 1u); }
-int project_pending(void) { return pending || pending_glob || pending_knd; }
+int project_pending(void) { return pending || pending_glob || pending_px; }
 int project_pending_globals(void) { return pending_glob; }
 
 int project_flush(void)
 {
-    if (!pending && !pending_glob && !pending_knd)
+    if (!pending && !pending_glob && !pending_px)
         return 0;
     if (pending) {
         image_header(proj.genre);
@@ -503,11 +585,10 @@ int project_flush(void)
             return -1;
         pending = 0;
     }
-    if (pending_knd) {
-        knd.magic = KND_MAGIC;
-        if (plat_store_save(OBJ_KINDS, &knd, sizeof knd) != 0)
+    if (pending_px) {
+        if (px_save() != 0)
             return -1;
-        pending_knd = 0;
+        pending_px = 0;
     }
     return project_flush_globals();
 }

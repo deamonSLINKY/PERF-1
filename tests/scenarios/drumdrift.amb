@@ -28,6 +28,8 @@ press HOME
 wait 800
 release HOME
 wait 200
+turn SELECT 2
+wait 100
 spin K3 1
 wait 2500
 expect dd_left -1

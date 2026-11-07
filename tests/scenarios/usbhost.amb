@@ -6,7 +6,7 @@ press HOME
 wait 900
 release HOME
 wait 100
-turn SELECT 5
+turn SELECT 7
 wait 100
 expect fxpage 26
 expect usbhost 0

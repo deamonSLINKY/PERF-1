@@ -882,6 +882,24 @@ static void gx_step(int s)                     /* a step of the gate's pattern o
     ui.gx_preset = NGXP - 1;
     en_gate_pat(ui.gx_pat);
 }
+/* THE PIECE'S EFFECT SETTINGS (0.16.28): the FILTERS page's types and SCREAM's are the piece's, kept with it (project.c PX_FXS) */
+void ui_fx_snapshot(uint8_t *v)
+{
+    int k;
+    for (k = 0; k < PX_NFX; k++)
+        v[k] = ui.fxs[PX_FXS[k]];
+}
+void ui_fx_apply(void)
+{
+    uint8_t v[PX_NFX];
+    int k;
+    project_fx_get(v);
+    for (k = 0; k < PX_NFX; k++)
+        if (ui.fxs[PX_FXS[k]] != v[k]) {
+            ui.fxs[PX_FXS[k]] = v[k];
+            en_fxs(PX_FXS[k], v[k]);
+        }
+}
 static uint8_t *uiv(int i)                     /* the PERFORM page's settings (the UI's own) */
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
@@ -2439,7 +2457,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {18, 17, 34, 25, 24, 26, 27, 33, 31, 32};   /* SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, FILTERS, SCREAM, SCREEN, SAMPLE */
+static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
@@ -7100,8 +7118,9 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
     }
     if (obj == OBJ_GLOB)
         return (len == sizeof(glob_t) || len == GLOB_OLD) && rd32(b) == GLOB_MAGIC;
-    if (obj == OBJ_KINDS)                        /* the slots' chord types (0.16.6): this build's, or an older one's with fewer genres */
-        return len >= 4u && len <= sizeof(knd_t) && (len - 4u) % (NPIECES * EN_PRK_LEN) == 0u && rd32(b) == KND_MAGIC;   /* (0.15.21: the set list after the old record) */
+    if (obj == OBJ_KINDS)                        /* the pieces' extras (0.16.28: PCX1), or the chord types alone (KND1, 0.16.6 .. 0.16.27); fewer genres too */
+        return (len >= 4u && len <= 4u + EN_NGENRE * NPIECES * EN_PRK_LEN && (len - 4u) % (NPIECES * EN_PRK_LEN) == 0u && rd32(b) == KND_MAGIC) ||
+               (len >= PX_HDR && len <= PX_SIZE && b[4] == PX_LEN && (len - PX_HDR) % (NPIECES * PX_LEN) == 0u && rd32(b) == PX_MAGIC);   /* (0.15.21: the set list after the old record) */
     if (obj == OBJ_MMAP)                         /* the player's MIDI map (0.16.11) */
         return mm_ok(b, len);
     if (obj == OBJ_VOICES)
@@ -7474,6 +7493,7 @@ void ui_init(void)
     voices_load();                               /* and the player's DX7 voices */
     mm_load();                                   /* and their MIDI map (0.16.11) */
     en_pedal(glob.sl_rsv[2] & 3);                /* and the pedal (0.16.21: the global record's last spare byte) */
+    ui_fx_apply();                               /* the piece's FILTERS and SCREAM over the settings' (0.16.28) */
     ui.start_rand = (uint8_t)project_start_random();
     ui.form = (uint8_t)(glob.sl_rsv[2] >> 2 & 1u);   /* and Form (0.16.26: bit 2; 0, the records before it, is Song) */
     en_song = (uint8_t)!ui.form;

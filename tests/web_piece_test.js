@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const src = fs.readFileSync(path.join(__dirname, "..", "web", "fm1piece.js"), "utf8").replace(/^export /gm, "");
-const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash, pcKindsOf, pcKindsWith, PC_KND_MAGIC };")();
+const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash, pcKindsOf, pcKindsWith, PC_KND_MAGIC, pcFxOf, pcExtrasWith };")();
 let bad = 0;
 const check = (name, ok) => { console.log((ok ? "  ok   " : "  FAIL ") + name); if (!ok) bad++; };
 const eq = (a, b) => a.length === b.length && Array.from(a).every((x, i) => x === b[i]);
@@ -134,6 +134,21 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
   const junk = M.pcEncode({ ...pc, meta: { ...pc.meta, k: [999, "x", 1] } });
   check("a note's bad \"k\" is ignored", M.pcDecode(junk).kinds === null);
 
+  // the pieces' extras (0.16.28, PCX1): the types and the FILTERS / SCREAM settings ("x" in the note)
+  const FX = Uint8Array.from([2, 1, 3, 70, 40, 20, 1]);
+  const px0 = M.pcExtrasWith(new Uint8Array(0), 18, 4, Uint8Array.from([0x2A, 1, 0]), FX, 19);
+  check("the extras object: PCX1, 16 bytes a piece, its types and settings", px0.length === 8 + 19 * 160 && px0[0] === 0x50 && px0[3] === 0x31 && px0[4] === 16 &&
+    eq(M.pcKindsOf(px0, 18, 4), [0x2A, 1, 0]) && eq(M.pcFxOf(px0, 18, 4), FX) && M.pcFxOf(px0, 18, 3) === null && M.pcKindsOf(px0, 18, 3) === null);
+  const px1 = M.pcExtrasWith(knd1, 0, 0, null, null, 19);
+  check("a KND1 object's types carried into PCX1", eq(M.pcKindsOf(px1, 2, 0), [7, 0, 0]) && eq(M.pcKindsOf(px1, 18, 4), [0x2A, 1, 0]) && M.pcFxOf(px1, 2, 0) === null);
+  const px2 = M.pcExtrasWith(px0, 18, 4, null, null, 19);
+  check("null clears a piece's extras", M.pcKindsOf(px2, 18, 4) === null && M.pcFxOf(px2, 18, 4) === null);
+  const fp = M.pcDecode(M.pcEncode({ ...pc, kinds: Uint8Array.from([3, 0, 0]), fx: FX }));
+  check("a piece's FILTERS and SCREAM go with it, out of its note", eq(fp.fx, FX) && eq(fp.kinds, [3, 0, 0]) && fp.meta.x === undefined && fp.meta.t === "Night forest");
+  check("none: no \"x\"", M.pcDecode(M.pcEncode({ ...pc, fx: null })).fx === null);
+  const fset = M.pcSetDecode(M.pcSetEncode({ ...set, pieces: [{ ...pa, fx: FX }, pb] }));
+  check("a set's pieces keep theirs", eq(fset.pieces[0].fx, FX) && fset.pieces[1].fx === null && fset.meta.x === undefined);
+
   // the about answer (tests/host/dxproto_test.c: bk_build_about(f, 176, 19, 5))
   const ab = M.pcParseAbout([0xF0, 0x7D, 0x50, 0x45, 0x01, 0x01, 0x30, 0x13, 0x05, 0xF7]);
   check("the firmware's about answer", ab && ab.ver === 1 && ab.npar === 176 && ab.genres === 19 && ab.voices === 5);
@@ -166,6 +181,14 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
       "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "loadobj 23 " + path.join(dir, "knd_new.bin"), "seed 0", "reboot", "wait 2000", "expect saved 8", "expect uservoices 1",
       "turn PRESET 3", "wait 1500", "expect piece 3", "expect tempo 132", "expect par" + P_EVOLVE + " 43", "expect par" + P_CM_SND + " " + (NPLAIN + NFMFACT), "expect parsbad 0",
       "expect prgtype0 2", "expect prgtype1 5", "expect prgtype2 0"]));
+    // the same piece with its extras as 0.16.28 keeps them (PCX1): its types, FILTERS and SCREAM; a piece without any plays the defaults
+    fs.writeFileSync(path.join(dir, "px_new.bin"), M.pcExtrasWith(new Uint8Array(0), 0, 3, Uint8Array.from([0x2A, 0x00, 0x00]), Uint8Array.from([2, 1, 3, 70, 40, 20, 1]), 19));
+    check("the simulator plays a piece's FILTERS and SCREAM from the extras (PCX1)", run("loadpx", [
+      "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "loadobj 23 " + path.join(dir, "px_new.bin"), "seed 0", "reboot", "wait 2000",
+      "expect fxs74 0", "expect fxs88 0",
+      "turn PRESET 3", "wait 1500", "expect piece 3", "expect prgtype0 2", "expect prgtype1 5",
+      "expect fxs74 2", "expect fxs75 1", "expect fxs76 3", "expect fxs88 70", "expect fxs89 40", "expect fxs90 20", "expect fxs91 1",
+      "turn PRESET -3", "wait 1500", "expect piece 0", "expect fxs74 0", "expect fxs88 0"]));
     // a set: HYPNO 04 (as stored above) and two factory places, Play on, Mix 8 bars, as the player's record; the simulator reads the list and Mix back
     const sset = { kind: "set", list: [4, 23, 0, 182, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], on: true, mix: 2, pieces: [], voices: [], meta: {} };
     fs.writeFileSync(path.join(dir, "glob_new.bin"), M.pcGlobWith(new Uint8Array(0), sset, { tune: 0, midi: 1, theme: 0 }));

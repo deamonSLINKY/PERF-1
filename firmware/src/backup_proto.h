@@ -10,7 +10,8 @@
  *   FM-1 -> page  44 obj idx status                          the answer to a chunk (idx), or to the write (idx 7F); status 0 ok, 1 bad checksum, 2 bad, 3 not written
  *   page -> FM-1  42 05                                      restart (only after a write)
  *   page -> FM-1  42 06                                      about (0.16.3 on; older firmware does not answer)
- *   FM-1 -> page  45 ver npar(2) genres voices               what this firmware is: the answer's version (1), its settings a piece (P_NPARAMS),
+ *   FM-1 -> page  45 ver npar(2) genres voices               what this firmware is: the answer's version (1; 2 from 0.16.28: OBJ_KINDS is the pieces'
+ *                                                            extras, PCX1, chord types, FILTERS and SCREAM), its settings a piece (P_NPARAMS),
  *                                                            its genres, the DX7 voices loaded (the pieces page: web/pieces)
  * chk: the 7-bit data bytes after the kind (obj .. the last nibble), summed, then 128 minus the sum modulo 128. */
 #pragma once
@@ -58,7 +59,7 @@ static inline uint32_t bk_build_ack(uint8_t *f, uint32_t obj, uint32_t idx, uint
 #define BK_ABOUT_LEN 10u
 static inline uint32_t bk_build_about(uint8_t *f, uint32_t npar, uint32_t genres, uint32_t voices)
 {
-    f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x45, f[4] = 1;
+    f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x45, f[4] = 2;
     f[5] = (uint8_t)((npar >> 7) & 0x7Fu), f[6] = (uint8_t)(npar & 0x7Fu);
     f[7] = (uint8_t)(genres & 0x7Fu), f[8] = (uint8_t)(voices & 0x7Fu), f[9] = 0xF7;
     return BK_ABOUT_LEN;

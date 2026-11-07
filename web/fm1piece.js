@@ -40,7 +40,7 @@ export function pcFromBank(bank, genre, slot) {
   const rec = bank.slice(PC_HDR + slot * PC_REC, PC_HDR + (slot + 1) * PC_REC);
   const tail = bank[14] === 1 && bank.length >= PC_LEN;
   const prg = tail ? bank.slice(PC_TAIL + slot * PC_PRG, PC_TAIL + (slot + 1) * PC_PRG) : new Uint8Array(PC_PRG);
-  return { genre, slot, npar: rd16(bank, 6), rec, prg, voice: null, kinds: null, meta: {} };
+  return { genre, slot, npar: rd16(bank, 6), rec, prg, voice: null, kinds: null, fx: null, meta: {} };
 }
 
 // a setting of the piece (index p; lo: its lowest, params.json's min), or undefined when the piece predates it
@@ -55,11 +55,38 @@ export function pcSet(piece, p, lo, v) { piece.rec[PC_REC_PAR + p] = v - lo; }
 // a page from before them reads the piece as it always did (without the types) and nothing about the file's layout changes.
 export const PC_KND_LEN = 3, PC_KND_MAGIC = 0x31444E4B;          // EN_PRK_LEN, "KND1"
 const kndAt = (genre, slot) => 4 + (genre * PC_NPIECES + slot) * PC_KND_LEN;
-// a piece's types out of the object (null: the piece's own in every slot, or no object)
+// 0.16.28: the object is the pieces' extras ("PCX1", project.c): magic, 16, the genres, 2 spare; then 16 bytes a piece: its 3 types, flags (bit 0:
+// its FILTERS and SCREAM saved with it), those 7 settings (the FILTERS page's types: pad, bass, acid; SCREAM's drive, amount, wow, target), spare
+export const PC_PX_MAGIC = 0x31584350, PC_PX_HDR = 8, PC_PX_LEN = 16, PC_PX_NFX = 7;
+const pxAt = (genre, slot) => PC_PX_HDR + (genre * PC_NPIECES + slot) * PC_PX_LEN;
+const isPx = (o) => o && o.length >= PC_PX_HDR && rd32(o, 0) === PC_PX_MAGIC && o[4] === PC_PX_LEN;
+// a piece's types out of the object, either form (null: the piece's own in every slot, or no object)
 export function pcKindsOf(knd, genre, slot) {
-  if (!knd || knd.length < kndAt(genre, slot) + PC_KND_LEN || rd32(knd, 0) !== PC_KND_MAGIC) return null;
-  const k = knd.slice(kndAt(genre, slot), kndAt(genre, slot) + PC_KND_LEN);
-  return k.some((v) => v) ? k : null;
+  let k = null;
+  if (isPx(knd) && knd.length >= pxAt(genre, slot) + PC_PX_LEN) k = knd.slice(pxAt(genre, slot), pxAt(genre, slot) + PC_KND_LEN);
+  else if (knd && knd.length >= kndAt(genre, slot) + PC_KND_LEN && rd32(knd, 0) === PC_KND_MAGIC) k = knd.slice(kndAt(genre, slot), kndAt(genre, slot) + PC_KND_LEN);
+  return k && k.some((v) => v) ? k : null;
+}
+// its FILTERS and SCREAM, when they were saved with it (null: the defaults)
+export function pcFxOf(px, genre, slot) {
+  if (!isPx(px) || px.length < pxAt(genre, slot) + PC_PX_LEN || !(px[pxAt(genre, slot) + 3] & 1)) return null;
+  return px.slice(pxAt(genre, slot) + 4, pxAt(genre, slot) + 4 + PC_PX_NFX);
+}
+// the extras object (a firmware of 0.16.28 on: the about answer's version 2) with a piece's types and settings put in (null: none), for a firmware
+// with `ngenres` genres; what else it held stays (an older KND1 object's types carried over)
+export function pcExtrasWith(px, genre, slot, kinds, fx, ngenres) {
+  const n = Math.max(PC_PX_HDR + ngenres * PC_NPIECES * PC_PX_LEN, pxAt(genre, slot) + PC_PX_LEN);
+  const out = new Uint8Array(n);
+  if (isPx(px)) out.set(px.subarray(0, Math.min(px.length, n)));
+  else if (px && px.length >= 4 && rd32(px, 0) === PC_KND_MAGIC)
+    for (let k = 0; k * PC_KND_LEN + 4 + PC_KND_LEN <= px.length && PC_PX_HDR + (k + 1) * PC_PX_LEN <= n; k++)
+      out.set(px.subarray(4 + k * PC_KND_LEN, 4 + (k + 1) * PC_KND_LEN), PC_PX_HDR + k * PC_PX_LEN);
+  wr32(out, 0, PC_PX_MAGIC); out[4] = PC_PX_LEN; out[5] = ngenres; out[6] = out[7] = 0;
+  const at = pxAt(genre, slot);
+  out.fill(0, at, at + PC_PX_LEN);
+  if (kinds) out.set(kinds.subarray(0, PC_KND_LEN), at);
+  if (fx) { out[at + 3] = 1; out.set(fx.subarray(0, PC_PX_NFX), at + 4); }
+  return out;
 }
 // the object with a piece's types put in (null clears them), for a firmware with `ngenres` genres; what else it held stays
 export function pcKindsWith(knd, genre, slot, kinds, ngenres) {
@@ -70,17 +97,23 @@ export function pcKindsWith(knd, genre, slot, kinds, ngenres) {
   if (kinds) out.set(kinds.subarray(0, PC_KND_LEN), kndAt(genre, slot));
   return out;
 }
-const kindsOk = (k) => Array.isArray(k) && k.length === PC_KND_LEN && k.every((v) => Number.isInteger(v) && v >= 0 && v < 256);
-const kindsIn = (meta, kinds) => (kinds && kinds.some((v) => v) ? { ...meta, k: Array.from(kinds) } : meta);
-function kindsOut(meta) {                                         // the note without "k", and the types it carried (or null)
-  const { k, ...rest } = meta || {};
-  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null };
+const bytesOk = (a, n) => Array.isArray(a) && a.length === n && a.every((v) => Number.isInteger(v) && v >= 0 && v < 256);
+const kindsOk = (k) => bytesOk(k, PC_KND_LEN);
+const kindsIn = (meta, kinds, fx) => {
+  const m = { ...meta };
+  if (kinds && kinds.some((v) => v)) m.k = Array.from(kinds);
+  if (fx) m.x = Array.from(fx);                                   // (0.16.28) its FILTERS and SCREAM
+  return m;
+};
+function kindsOut(meta) {                                         // the note without "k" and "x", and the types and settings it carried (or null)
+  const { k, x, ...rest } = meta || {};
+  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: bytesOk(x, PC_PX_NFX) ? Uint8Array.from(x) : null };
 }
 
 // ---- the file: "P1PC", 1, genre, slot, flags (1: a voice), the settings a record holds (2), the record's length (2), the note's length (2), then the record,
 // the progression, the voice (128 bytes, when flagged), a little JSON (title, by, note, names; "k" the chord types) and the CRC-32 of all before it
 export function pcEncode(piece) {
-  const meta = new TextEncoder().encode(JSON.stringify(kindsIn(piece.meta || {}, piece.kinds)));
+  const meta = new TextEncoder().encode(JSON.stringify(kindsIn(piece.meta || {}, piece.kinds, piece.fx)));
   const vlen = piece.voice ? 128 : 0;
   const out = new Uint8Array(14 + PC_REC + PC_PRG + vlen + meta.length + 4);
   out.set([0x50, 0x31, 0x50, 0x43, 1, piece.genre, piece.slot, piece.voice ? 1 : 0], 0);
@@ -106,7 +139,7 @@ export function pcDecode(buf) {
   let meta = {};
   try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
   const km = kindsOut(meta);
-  return { genre: buf[5], slot: buf[6], npar: rd16(buf, 8), rec, prg, voice, kinds: km.kinds, meta: km.meta };
+  return { genre: buf[5], slot: buf[6], npar: rd16(buf, 8), rec, prg, voice, kinds: km.kinds, fx: km.fx, meta: km.meta };
 }
 
 // ---- the code (and a link's #p=): the file, deflated, in base64url, after "P1."
@@ -133,10 +166,16 @@ export const pcHash = (rec) => crc32(rec);
 // empty), Play, Mix, the pieces, the voices, the note's length (2); each piece: genre, place, its voice (0xFF none), settings (2), record, progression; each
 // voice 128 bytes; the note (JSON; "k": each piece's chord types by its place in the pieces, {"0": [a, b, c]}); the CRC-32
 export function pcSetEncode(set) {
-  const k = {};
-  set.pieces.forEach((pc, i) => { if (pc.kinds && pc.kinds.some((v) => v)) k[i] = Array.from(pc.kinds); });
-  const { k: _old, ...m0 } = set.meta || {};
-  const meta = new TextEncoder().encode(JSON.stringify(Object.keys(k).length ? { ...m0, k } : m0));
+  const k = {}, x = {};
+  set.pieces.forEach((pc, i) => {
+    if (pc.kinds && pc.kinds.some((v) => v)) k[i] = Array.from(pc.kinds);
+    if (pc.fx) x[i] = Array.from(pc.fx);
+  });
+  const { k: _old, x: _oldx, ...m0 } = set.meta || {};
+  const m1 = { ...m0 };
+  if (Object.keys(k).length) m1.k = k;
+  if (Object.keys(x).length) m1.x = x;
+  const meta = new TextEncoder().encode(JSON.stringify(m1));
   const ps = set.pieces, vs = set.voices;
   const out = new Uint8Array(4 + 1 + 16 + 2 + 2 + 2 + ps.length * (5 + PC_REC + PC_PRG) + vs.length * 128 + meta.length + 4);
   out.set([0x50, 0x31, 0x53, 0x54, 1], 0);
@@ -175,8 +214,11 @@ export function pcSetDecode(buf) {
   let meta = {};
   try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
   for (const pc of pieces) if (pc.vidx >= 0 && pc.vidx < voices.length) pc.voice = voices[pc.vidx];
-  const { k, ...rest } = meta && typeof meta === "object" ? meta : {};
-  pieces.forEach((pc, i) => { pc.kinds = k && kindsOk(k[i]) && k[i].some((v) => v) ? Uint8Array.from(k[i]) : null; });
+  const { k, x, ...rest } = meta && typeof meta === "object" ? meta : {};
+  pieces.forEach((pc, i) => {
+    pc.kinds = k && kindsOk(k[i]) && k[i].some((v) => v) ? Uint8Array.from(k[i]) : null;
+    pc.fx = x && bytesOk(x[i], PC_PX_NFX) ? Uint8Array.from(x[i]) : null;
+  });
   return { kind: "set", list, on, mix, pieces, voices, meta: rest };
 }
 // the set list's places as genre and piece (null: empty)

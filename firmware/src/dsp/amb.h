@@ -401,7 +401,7 @@ extern volatile float en_pad_amp[EN_NPAD];     /* and how loud */
 uint32_t en_euclid(int k, int n, int rot);     /* Bjorklund's pattern, as a bitmask (bit 0 = step 0) */
 int en_par_global(int p);                      /* the player's, not a piece's: Tune, MIDI, Theme */
 int en_par_now(int p);                         /* the engine's own value of a parameter (what the UI has sent it: the mood's, the JAM page's hand switch) */
-int en_par_sticky(int p);                      /* kept across pieces and genres: the player's, and the drum drift's settings */
+int en_par_sticky(int p);                      /* kept across pieces and genres: the player's (the drum drift's were too, until 0.16.28) */
 int en_scale(uint32_t pool, int *steps);       /* the pool's pitch classes (relative), ascending; count */
 /* the chord on scale degree deg: its tones (MIDI pitch classes, absolute), 3 or 4 of them; count */
 int en_chord_tones(uint32_t pool, int root, int deg, int *pcs);

@@ -7,6 +7,8 @@ press HOME
 wait 900
 release HOME
 wait 100
+turn SELECT 2
+wait 100
 expect fxpage 18
 turn SELECT 5
 wait 100
@@ -66,7 +68,7 @@ press HOME
 wait 900
 release HOME
 wait 100
-turn SELECT 5
+turn SELECT 7
 wait 100
 expect fxpage 26
 spin K2 2

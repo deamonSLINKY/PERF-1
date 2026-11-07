@@ -1832,7 +1832,7 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 ![The settings page](img/perf-screen-settings.png)
 
-To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **FILTERS**, **SCREAM**, **SCREEN** and **SAMPLE**. It stops at the ends. **FX** leaves.
+To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN** and **SAMPLE**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
 
 The Settings page:
 
@@ -1897,9 +1897,9 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 
 | Kept | When it's saved |
 |---|---|
-| The pieces you stored (Global, **SAVE**), in any genre | Straight away (section 6). |
+| The pieces you stored (Global, **SAVE**), in any genre, with their FILTERS and SCREAM settings, their drum drift and their chord types | Straight away (section 6). |
 | Theme, Tune, MIDI out, the set list, Zoom, the SET page's Mix | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, scanlines), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the FILTERS and SCREAM pages, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, scanlines), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 

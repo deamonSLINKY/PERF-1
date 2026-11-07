@@ -10,6 +10,8 @@ press HOME
 wait 900
 release HOME
 wait 100
+turn SELECT 2
+wait 100
 expect fxpage 18
 expect dyvoices 1
 spin K2 -1
@@ -32,6 +34,8 @@ shot dyvoices_pluck.png
 press HOME
 wait 900
 release HOME
+wait 100
+turn SELECT 2
 wait 100
 expect fxpage 18
 spin K2 1

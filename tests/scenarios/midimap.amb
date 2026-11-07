@@ -6,6 +6,8 @@ press HOME
 wait 900
 release HOME
 wait 100
+turn SELECT 2
+wait 100
 expect fxpage 18
 turn SELECT 4
 wait 100

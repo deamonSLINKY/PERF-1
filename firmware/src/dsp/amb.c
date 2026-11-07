@@ -94,7 +94,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
-int en_par_sticky(int p) { return en_par_global(p) || (p >= P_DD_CHANGE && p <= P_DD_MUTATE); }
+int en_par_sticky(int p) { return en_par_global(p); }   /* (0.16.28: the drum drift is the piece's, no longer the player's) */
 
 /* the pieces' factory drum patterns: six for each piece (tools/gen_pats.py writes them) */
 #include "pats.h"

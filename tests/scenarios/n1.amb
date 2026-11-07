@@ -1,4 +1,5 @@
-# The drum drift's settings stay when the piece or the genre changes; the JAM page takes the voice it plays off its line (and gives it back);
+# The drum drift's settings are the piece's (0.16.28; they stayed when the piece or the genre changed before): another piece has its own, the
+# one left keeps what was set while in the genre; the JAM page takes the voice it plays off its line (and gives it back);
 # the mood reaches the pluck. (Parameters: 94 drum drift Change, 122 the pluck's hand switch, 111 acid hand.)
 seed 0
 wait 3000
@@ -9,12 +10,15 @@ wait 100
 expect par94 1
 turn PRESET 1
 wait 300
+expect par94 0
+turn PRESET -1
+wait 300
 expect par94 1
 press GLO
 turn PRESET 1
 release GLO
 wait 300
-expect par94 1
+expect par94 0
 # JAM, the pluck: its line stops while the page is up, and is back when it is left
 tap HOME
 wait 100

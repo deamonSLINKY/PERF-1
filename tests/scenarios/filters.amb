@@ -1,12 +1,14 @@
-# the FILTERS page (0.15.15, after MIDI IN in the settings walk): the synths' filter types, low (as before), high, band, notch, peak, for the pad's
-# saw sounds, the bass and the acid; kept with the settings across power-off (EN_FXS_FT_PAD 74, _BASS 75, _ACID 76)
+# the FILTERS page (0.15.15): the synths' filter types, low (as before), high, band, notch, peak, for the pad's saw sounds, the bass and the acid
+# (EN_FXS_FT_PAD 74, _BASS 75, _ACID 76). 0.16.28: the first page of the settings walk, and the piece's own: saved with it (GLO, SAVE), back to the
+# defaults on a piece that has none (a factory piece, one saved before), kept while you stay in the genre
 seed 0
+seamless 1
 wait 3000
 press HOME
 wait 900
 release HOME
 wait 100
-turn SELECT 6
+turn SELECT 0
 wait 100
 expect fxpage 27
 expect fxs74 0
@@ -21,11 +23,52 @@ expect fxs75 1
 expect fxs76 2
 shot filters_page.png
 tap FX
-wait 2000
+wait 300
+# another piece: its own (the defaults); back: as left
+turn PRESET 1
+wait 1500
+expect piece 1
+expect fxs74 0
+expect fxs76 0
+turn PRESET -1
+wait 1500
+expect piece 0
+expect fxs74 4
+expect fxs75 1
+expect fxs76 2
+# not saved: a power-on is the defaults
 tap PLAY
 wait 5000
 reboot
 wait 3000
-expect fxs74 4
-expect fxs75 1
-expect fxs76 2
+expect piece 0
+expect fxs74 0
+expect fxs75 0
+expect fxs76 0
+# set again and saved with the piece: a power-on brings them back
+press HOME
+wait 900
+release HOME
+wait 100
+spin K1 2
+spin K3 3
+wait 300
+tap FX
+wait 300
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+tap PLAY
+wait 5000
+reboot
+wait 3000
+expect piece 0
+expect fxs74 2
+expect fxs75 0
+expect fxs76 3
+# another piece still the defaults
+turn PRESET 1
+wait 1500
+expect fxs74 0
+expect fxs76 0

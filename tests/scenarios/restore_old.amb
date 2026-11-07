@@ -6,6 +6,8 @@ press HOME
 wait 900
 release HOME
 wait 100
+turn SELECT 2
+wait 100
 spin K1 2
 wait 6000
 expect keyset 2

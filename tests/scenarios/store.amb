@@ -26,7 +26,7 @@ expect sec 0
 expect saved 1
 expect edited 0
 expect dirty 0
-expect store_writes 1
+expect store_writes 2
 expect playing 1
 shot global_stored.png
 peakreset
@@ -35,7 +35,7 @@ expect peak_db_min -40
 tap PLAY
 wait 4000
 expect dirty 0
-expect store_writes 1
+expect store_writes 2
 # a theme: the player's, written with the store
 spin K2 2
 expect theme 2

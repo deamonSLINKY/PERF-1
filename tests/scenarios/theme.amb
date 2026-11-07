@@ -21,12 +21,12 @@ tap GLO
 tap SAVE
 wait 300
 expect saved 1
-expect store_writes 2
+expect store_writes 3
 expect playing 1
 spin K2 1
 expect theme 3
 wait 5500
-expect store_writes 3
+expect store_writes 4
 expect dirty 0
 reboot
 wait 300

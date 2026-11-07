@@ -7,7 +7,7 @@ press HOME
 wait 800
 release HOME
 wait 100
-turn SELECT 3
+turn SELECT 5
 wait 100
 expect fxpage 25
 spin K4 1
@@ -28,8 +28,9 @@ release SEL
 wait 2500
 expect piece 1
 expect mixbars 4
-# (a bar in: 108 on its way to the piece's own 124)
-expect tempo 110
+# (a bar in: 108 on its way to the piece's own 124; 110 or 111 by where the bar line falls)
+expect tempo >109
+expect tempo <113
 wait 9000
 expect mixbars 0
 expect tempo 124

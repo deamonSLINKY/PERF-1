@@ -7,8 +7,10 @@ press HOME
 wait 800
 release HOME
 wait 100
+turn SELECT 2
+wait 100
 expect fxpage 18
-turn SELECT 8
+turn SELECT 6
 wait 100
 expect fxpage 31
 expect saver 0

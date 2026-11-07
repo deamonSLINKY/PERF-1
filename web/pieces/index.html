@@ -499,7 +499,10 @@ $("add").addEventListener("click", async () => {
     // the Progression page's chord types (0.16.6 on; an older PERF-1 does not answer for the object): each piece's, cleared when it has none
     let knd = null;
     const kcur = await readObject(p, S.OBJ_KINDS);
-    if (kcur !== undefined) { knd = kcur; for (const q of pieces) knd = pcKindsWith(knd, q.genre, q.slot, q.kinds || null, ab.genres); }
+    if (kcur !== undefined) {                                     // 0.16.28 on (about version 2): the pieces' extras, with FILTERS and SCREAM; before, the types alone
+      knd = kcur;
+      for (const q of pieces) knd = ab.ver >= 2 ? pcExtrasWith(knd, q.genre, q.slot, q.kinds || null, q.fx || null, ab.genres) : pcKindsWith(knd, q.genre, q.slot, q.kinds || null, ab.genres);
+    }
     else if (pieces.some((q) => q.kinds) && !(await ask("Its chord types", "This " + (x.kind === "set" ? "set" : "piece") + " sets chord types on the Progression page, which this PERF-1 is too old to keep: it will play each chord as the piece's own type. Update on the Install page to hear it as made.", [["Add it anyway", 1], ["Cancel", 0, true]])))
       throw new Error("Not added.");
     // the writes, then the restart
@@ -546,7 +549,7 @@ $("scan").addEventListener("click", async () => {
     const have = pcVoices((await readObject(p, S.OBJ_VOICES)) || new Uint8Array(0));
     for (const pc of mine) { const k = S.userSlot(pc); if (k >= 0 && k < have.length) pc.voice = have[k]; }   // a piece on your own voice takes it along
     const knd = mine.length ? await readObject(p, S.OBJ_KINDS) : undefined;   // and its chord types (0.16.6 on)
-    for (const pc of mine) pc.kinds = pcKindsOf(knd, pc.genre, pc.slot);
+    for (const pc of mine) { pc.kinds = pcKindsOf(knd, pc.genre, pc.slot); pc.fx = pcFxOf(knd, pc.genre, pc.slot); }
     const gl = pcGlobList((await readObject(p, S.OBJ_GLOB)) || new Uint8Array(0));
     if (gl.list.some((v) => v)) {                                  // the set list: its stored pieces (a factory one is the same everywhere) and their voices
       const voices = [], vslot = [], pieces = [];

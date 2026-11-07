@@ -397,7 +397,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default, DX7 voices made by people) or DX (the built-in set). Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **FILTERS**, **SCREAM**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time, to sample. **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six colour sets), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. First **FILTERS** and **SCREAM**: the piece's, saved with it. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default) or DX; **Form**, Song (a piece moves through its patterns) or Loop; **Start**, Last piece or Random. Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time, to sample. **Global** (GLO): Root, Theme (Imp, Synth, Acid, Ice, Ember, Phosphor: one look in six colour sets), Tune (+-50 cents), Genre.
 
 ### Visualizers
 

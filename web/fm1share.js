@@ -64,8 +64,8 @@ export function emuPut(S, x, slot) {
   }
   for (const pc of pieces) banks[pc.genre] = pcIntoBank(bank(pc.genre), pc.genre, pc.slot, pc, npar).bank;
   for (const g of Object.keys(banks)) put(S.objOf(+g), banks[g]);
-  let knd = get(S.OBJ_KINDS);                                    // the Progression page's chord types, each piece's (cleared when it has none)
-  for (const pc of pieces) knd = pcKindsWith(knd, pc.genre, pc.slot, pc.kinds || null, S.N.genres.length);
+  let knd = get(S.OBJ_KINDS);                                    // the pieces' extras: each piece's chord types, FILTERS and SCREAM (cleared when it has none)
+  for (const pc of pieces) knd = pcExtrasWith(knd, pc.genre, pc.slot, pc.kinds || null, pc.fx || null, S.N.genres.length);
   put(S.OBJ_KINDS, knd);
   if (x.kind === "set") put(S.OBJ_GLOB, pcGlobWith(get(S.OBJ_GLOB), x, S.globDefs));
   localStorage.setItem(KEY, JSON.stringify(raw));
