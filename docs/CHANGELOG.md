@@ -18,11 +18,15 @@
 
 **0.16.2 is the sixth release.** Its firmware is identical to development build 0.16.16; the builds 0.16.5 to 0.16.16 in the git history are its steps. Its first reason is a fix: M-VAVE's new M-UPGRADE (3.11) could not find PERF-1, so there was no way back to the stock firmware with it. The Library & pieces page is in the source but not on the website yet: it comes with 0.17, with the boot stub (0.16.17) and a MIDI CC for every setting (0.16.18), which are on `vis`.
 
+**0.17.0 is the seventh release.** Its firmware is development build 0.16.29's code (it reports `FM-1_7001700`); the builds 0.16.17 to 0.16.29 in the git history are its steps. The Pieces page and the Library are on the website from this release, with the Library's relay live. The next development builds count from 0.17.1.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Unreleased (the builds 0.16.17 .. are its steps)
+## 0.17.0 (the builds 0.16.17 .. 0.16.29 are its steps)
+
+Released 2026-11-07. Pieces that sound finished (Song or Loop, the circle moves, phrases that end at home), Bass steps, the Library, more saved with a piece (FILTERS, SCREAM, drum drift, chord types, bass steps), power on where you left off, THEORY drawn like a theory book, a MIDI CC for any setting, newer FM-1s (the UC25HQ80 chip) and full speed after V16, and the boot stub. Each build below, newest first.
 
 - **Bass steps** (0.16.29, GitHub issue #6). A new page after Bass line (**LFO** five times): sixteen steps of the bass, picked with the white keys as on Acid steps and Pluck steps. **Step**: rest, note, accent (louder, 120 on MIDI), glide (slides into it from the note before, legato, about 60 ms) or accent + glide. **Note**: root, 2nd .. 7th or octave, counted in the scale above the chord's root, so the line follows the chords (on Pedal, above the key's root). **Octave**: down, mid, up. The fourth knob is the bass line's **Mode**, whose new last value, **Steps**, plays them; any edit switches to it. Opened with none set, the page starts from the bar the bass line just played. The steps are the piece's: saved with it (their own flash object, OBJ_BSTEP at 0xC3000, "BSQ1", 16 bytes a piece; written only once a piece has some), in backups, and in shared pieces and sets ("s" in the note; the Pieces page writes them to a PERF-1 of this build or later, about version 3). A piece without any plays its own line. RAM +160 B for the slots. Tests: basssteps.amb (the capture, an edit, playing, kept through a power-on, another piece's own), web_piece (the object, files, sets, the simulator taking a piece's steps), web_backup (25 objects); the pages after Bass line moved one on, so 40 scenarios renumbered.
 

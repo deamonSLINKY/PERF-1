@@ -1,4 +1,4 @@
-<!-- footer: PERF-1 quick manual · 0.16, 1 November 2026 · full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
+<!-- footer: PERF-1 quick manual · 0.17, 7 November 2026 · full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
 
 # PERF-1 quick manual
 

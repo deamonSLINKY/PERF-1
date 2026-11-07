@@ -1,4 +1,4 @@
-<!-- footer: PERF-1 for beginners · 0.15.1 · the full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
+<!-- footer: PERF-1 for beginners · 0.17.0 · the full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
 # PERF-1 for beginners
 
 This guide is for your first hour. No music theory needed, nothing to set up. Every step is one thing to press, and what you will hear.
@@ -95,10 +95,15 @@ You don't need any of this to have fun, but it is there.
 
 - **Turn SELECT** to walk through the pages. Each page has four knobs underneath the screen. The page name tells you what they change: the pad, the bass, the acid, the drums, the reverb and much more.
 - **The Jam page** (turn SELECT past Global) turns the keys into a keyboard you can play along on. It only plays notes that fit, so you can play freely.
-- **Hold HOME** for the settings.
-- **The SET page** has an **Intro** that starts with just a pad and brings the band in one part at a time over a few minutes. Great for mixing in, or for playing over. You get there by holding **SEL** and pressing **FX**, then turning SELECT.
+- **Hold HOME** for the settings, then turn **SELECT** to go through them. The first two, **FILTERS** and **SCREAM**, change how the
+  bass, the acid and the pad sound (SCREAM pushes the acid until it howls). They belong to the piece: save the piece and they come back with it.
+- **The SET page** (one of the settings) has an **Intro** that starts with just a pad and brings the band in one part at a time over a few minutes. Great for mixing in, or for playing over.
 
 ![The SET page: Rounds, Ramp, Intro](img/perf-screen-set.png)
+- **Write your own bass line:** press **LFO** five times for **Bass steps**. It starts with the bar the bass just played; press a white key
+  to pick a step and turn the knobs to change it. It always follows the chords.
+- **Share a piece, or try other people's:** the [Pieces page](https://deamonslinky.github.io/PERF-1/pieces/) reads the pieces you saved, turns
+  them into a link or a file, and has a **Library** of pieces made by other players: hear one in the emulator first, then add it to your FM-1.
 - The [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) is eight pages to print and keep beside the FM-1.
 
 ## If something goes wrong
