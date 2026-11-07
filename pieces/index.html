@@ -1,0 +1,2094 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     PERF-1's pieces and library, one page (0.16.10; the Library page before it was its own, web/library now sends here). Three tabs:
+       Library   the pieces and sets people made: the maker's picks (web/library/library.json, []
+) and what players submitted (the relay,
+                 web/relay, its address at {"url": "https://perf1-library.deamonslinky.workers.dev"}); hear one in the emulator or add it to an FM-1
+       My FM-1   the pieces saved on the FM-1 and the set list, ticked one or many: download (a .piece, a .perfset, or a .zip of several), copy
+                 their links, a card, or submit them to the Library (through the relay at once; without one, a pre-filled GitHub issue)
+       Add       a code, a link or a file someone shared, added to the FM-1
+     The site scripts (tools/make_pages_site.py, scripts/make_vis_site.py) put fm1backup.js, fm1piece.js, fm1card.js and fm1share.js in at // SPDX-License-Identifier: GPL-3.0-only
+// Backup and restore of PERF-1's stored data over USB MIDI (the installer page): the messages, the file, and nothing that touches the browser, so a node test can check
+// them against the firmware's (firmware/src/backup_proto.h, which describes the protocol).
+
+const BK_CHUNK = 256, BK_FRAME = 64, BK_MAX = 3840;
+
+// the flash objects worth keeping (plat.h OBJ_*; the panel's calibration, 1, is the unit's own and is never saved), in the order they are read and written
+const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP", "INDUS", "PSY", "FOREST"];
+const BK_OBJECTS = [
+  { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
+  ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })), { id: 5 + BK_GENRES.length - 1, name: "piece extras" },   // (0.16.6: the progression slots' types; 0.16.28: with FILTERS and SCREAM, plat.h OBJ_KINDS)
+  { id: 5 + BK_GENRES.length, name: "MIDI map" },                // (0.16.11: the player's MIDI map, plat.h OBJ_MMAP)
+  { id: 5 + BK_GENRES.length + 1, name: "bass steps" },          // (0.16.29: the pieces' bass steps, plat.h OBJ_BSTEP)
+];
+
+// the player's MIDI map (0.16.11, ui.c mm_*): the emulator's learned controls ({"c:ch:cc" | "n:ch:note": {t: "b<button>" | "k<key>" | "e<knob>" | "m", mode}})
+// as the firmware keeps them: "MAP1", the count, 3 pad bytes, then 48 entries of 3 bytes (the channel | 0x10 a CC | how a knob counts << 5, the number,
+// the control: a button 0-13, 32 + a key, 64 + a knob). MASTER is the hardware's alone: not sent. The .perfmap file is the learned list as JSON.
+// A setting (0.16.18, learned on the editor page): {t: "p<parameter>", mode, name}, a CC only; its first byte has 0x80 set and the control is the parameter
+// (0 .. 175). A map with any setting is "MAP2" (a firmware before 0.16.18 refuses it whole); one without stays "MAP1", as before.
+const MM_OBJ = 5 + BK_GENRES.length, MM_MAX = 48, MM_LEN = 8 + 3 * MM_MAX, MM_NPAR = 176;
+const MM_MODE = { abs: 0, rel64: 1, rel2c: 2 };
+function mmEncode(maps) {                                     // the bytes, and how many controls went in (and how many were left out)
+  const out = new Uint8Array(MM_LEN);
+  out.set([0x4D, 0x41, 0x50, 0x31], 0);
+  let n = 0, left = 0, set = 0;
+  for (const [id, m] of Object.entries(maps || {})) {
+    const [ty, ch, num] = id.split(":"), t = String((m && m.t) || ""), par = t[0] === "p" ? +t.slice(1) : -1;
+    const ctl = t[0] === "b" ? +t.slice(1) : t[0] === "k" ? 32 + +t.slice(1) : t[0] === "e" ? 64 + +t.slice(1) : par >= 0 && par < MM_NPAR && ty === "c" ? par : -1;
+    if (!(ctl >= 0) || !(ty === "c" || ty === "n") || n >= MM_MAX) { left++; continue; }
+    out.set([(+ch & 15) | (ty === "c" ? 0x10 : 0) | ((MM_MODE[m.mode] || 0) << 5) | (par >= 0 ? 0x80 : 0), +num & 127, ctl], 8 + 3 * n++);
+    if (par >= 0) set++;
+  }
+  if (set) out[3] = 0x32;                                              // "MAP2"
+  out[4] = n;
+  return { bytes: out, n, left };
+}
+function mmDecode(b) {                                        // the learned list back, or null when it is not a map
+  if (!b || b.length !== MM_LEN || b[0] !== 0x4D || b[1] !== 0x41 || b[2] !== 0x50 || (b[3] !== 0x31 && b[3] !== 0x32) || b[4] > MM_MAX) return null;
+  const maps = {}, modes = ["abs", "rel64", "rel2c"];
+  for (let i = 0; i < b[4]; i++) {
+    const [a, num, ctl] = b.subarray(8 + 3 * i, 11 + 3 * i), cc = a & 0x10, set = a & 0x80;
+    const t = set ? "p" + ctl : ctl < 32 ? "b" + ctl : ctl < 64 ? "k" + (ctl - 32) : "e" + (ctl - 64);
+    maps[(cc ? "c" : "n") + ":" + (a & 15) + ":" + num] = cc && (set || ctl >= 64) ? { t, mode: modes[(a >> 5) & 3] || "abs" } : { t };
+  }
+  return maps;
+}
+const bkName = (id) => (BK_OBJECTS.find((o) => o.id === id) || { name: "object " + id }).name;
+
+// the checksum: 128 minus the sum of the data bytes, modulo 128
+function bkSum(a) {
+  let s = 0;
+  for (const b of a) s += b;
+  return (128 - (s & 0x7F)) & 0x7F;
+}
+
+// a chunk for the FM-1 to write: raw bytes idx * BK_CHUNK .. of an object len bytes long (7D 50 42 03 obj idx(2) len(2) n(2) [2n nibbles] chk)
+function bkChunkMsg(obj, idx, len, bytes) {
+  const n = bytes.length, body = [obj & 0x7F, (idx >> 7) & 0x7F, idx & 0x7F, (len >> 7) & 0x7F, len & 0x7F, (n >> 7) & 0x7F, n & 0x7F];
+  for (const b of bytes) body.push(b >> 4, b & 15);
+  return [0xF0, 0x7D, 0x50, 0x42, 0x03, ...body, bkSum(body), 0xF7];
+}
+const bkReadMsg = (obj) => [0xF0, 0x7D, 0x50, 0x42, 0x01, obj & 0x7F, 0xF7];
+const bkCommitMsg = (obj, len) => [0xF0, 0x7D, 0x50, 0x42, 0x04, obj & 0x7F, (len >> 7) & 0x7F, len & 0x7F, 0xF7];
+const bkRestartMsg = () => [0xF0, 0x7D, 0x50, 0x42, 0x05, 0xF7];
+
+// a frame from the FM-1 (F0 7D 50 43 obj idx(2) len(2) n(2) [2n nibbles] chk F7): its object, place, the object's length and its bytes; null when it is damaged
+function bkParseFrame(d) {
+  if (d.length < 13 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x43 || d[d.length - 1] !== 0xF7) return null;
+  const n = (d[9] << 7) | d[10];
+  if (d.length !== 13 + 2 * n) return null;
+  if (bkSum(Array.from(d.slice(4, 11 + 2 * n))) !== d[11 + 2 * n]) return null;
+  const data = new Uint8Array(n);
+  for (let k = 0; k < n; k++) {
+    const hi = d[11 + 2 * k], lo = d[12 + 2 * k];
+    if (hi > 15 || lo > 15) return null;
+    data[k] = (hi << 4) | lo;
+  }
+  return { obj: d[4], idx: (d[5] << 7) | d[6], len: (d[7] << 7) | d[8], data };
+}
+
+// an answer (F0 7D 50 44 obj idx status F7): the chunk's place, or 0x7F for the write; status 0 is well
+function bkParseAck(d) {
+  if (d.length !== 8 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x44) return null;
+  return { obj: d[4], idx: d[5], status: d[6] };
+}
+
+function bkCrc32(a) {
+  let c = ~0;
+  for (let i = 0; i < a.length; i++) {
+    c ^= a[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & -(c & 1));
+  }
+  return ~c >>> 0;
+}
+
+// the file: "P1BK", version 1, the number of objects, a little JSON about it, then each object (id, length, bytes), and the CRC-32 of all that comes before
+function bkEncode(objs, info) {
+  const meta = new TextEncoder().encode(JSON.stringify(info || {}));
+  let size = 4 + 1 + 1 + 2 + meta.length + 4;
+  for (const o of objs) size += 3 + o.data.length;
+  const out = new Uint8Array(size);
+  let p = 0;
+  out.set([0x50, 0x31, 0x42, 0x4B, 1, objs.length, meta.length & 255, meta.length >> 8], p); p += 8;
+  out.set(meta, p); p += meta.length;
+  for (const o of objs) {
+    out.set([o.id, o.data.length & 255, o.data.length >> 8], p); p += 3;
+    out.set(o.data, p); p += o.data.length;
+  }
+  const crc = bkCrc32(out.subarray(0, p));
+  out.set([crc & 255, (crc >>> 8) & 255, (crc >>> 16) & 255, crc >>> 24], p);
+  return out;
+}
+function bkDecode(buf) {
+  if (buf.length < 12 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x42 || buf[3] !== 0x4B) throw new Error("not a PERF-1 backup");
+  if (buf[4] !== 1) throw new Error("a backup of a newer kind");
+  const crc = (buf[buf.length - 4] | (buf[buf.length - 3] << 8) | (buf[buf.length - 2] << 16) | (buf[buf.length - 1] << 24)) >>> 0;
+  if (bkCrc32(buf.subarray(0, buf.length - 4)) !== crc) throw new Error("the backup is damaged");
+  const count = buf[5], ml = buf[6] | (buf[7] << 8);
+  let p = 8, info = {};
+  try { info = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))); } catch (_) { info = {}; }
+  p += ml;
+  const objs = [];
+  for (let i = 0; i < count; i++) {
+    if (p + 3 > buf.length - 4) throw new Error("the backup is damaged");
+    const id = buf[p], len = buf[p + 1] | (buf[p + 2] << 8);
+    p += 3;
+    if (len > BK_MAX || p + len > buf.length - 4) throw new Error("the backup is damaged");
+    objs.push({ id, data: buf.slice(p, p + len) });
+    p += len;
+  }
+  return { info, objs };
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Sharing a piece (the pieces page, web/pieces): a saved piece out of a genre's bank into a .piece file, a code or a link, and back into a bank, with its
+// own DX7 voice when it uses one. Nothing here touches the browser or the FM-1, so a node test (tests/web_piece_test.js) checks it, and checks a bank it
+// builds by loading it in the simulator. The bank's layout is firmware/src/app/project.c's; the voices' object is ui.c's vox_t.
+
+const PC_HDR = 16, PC_REC = 376, PC_NPIECES = 10, PC_PRG = 6, PC_REC_PAR = 2 + 2 * 6 * 6, PC_RECIPE = 0xFF;   // IMG_HDR, IMG_REC, NPIECES, EN_PRG_LEN, REC_PAR, REC_RECIPE
+const PC_TAIL = PC_HDR + PC_NPIECES * PC_REC, PC_LEN = PC_TAIL + PC_NPIECES * PC_PRG;
+const PC_NUSER = 16, PC_VOX_LEN = 8 + PC_NUSER * 128;
+const IMG_MAGIC = 0x33505948, VOX_MAGIC = 0x31584F56;            // "HYP3", "VOX1"
+
+const rd16 = (b, o) => b[o] | (b[o + 1] << 8);
+const rd32 = (b, o) => (rd16(b, o) | (rd16(b, o + 2) << 16)) >>> 0;
+const wr16 = (b, o, v) => { b[o] = v & 255; b[o + 1] = (v >> 8) & 255; };
+const wr32 = (b, o, v) => { wr16(b, o, v & 0xFFFF); wr16(b, o + 2, v >>> 16); };
+
+function crc32(a) {
+  let c = ~0;
+  for (let i = 0; i < a.length; i++) {
+    c ^= a[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & -(c & 1));
+  }
+  return ~c >>> 0;
+}
+
+// ---- a genre's bank (the flash object): its header, and a piece out of it
+// what is wrong with it for the pieces page (null: nothing), or "empty"
+function pcBankCheck(bank, genre) {
+  if (!bank || !bank.length) return "empty";
+  if (bank.length < PC_TAIL || rd32(bank, 0) !== IMG_MAGIC || bank[4] !== 2 || bank[5] !== genre || rd16(bank, 10) !== PC_REC) return "old";
+  if (bank[12] !== 1 || bank[13] !== 1) return "old";             // the acid answer and the pluck's numbering as they are now (an older bank: save once first)
+  return null;
+}
+const pcSaved = (bank) => (pcBankCheck(bank, bank && bank.length > 5 ? bank[5] : -1) ? 0 : rd16(bank, 8));
+
+// the piece in slot `slot` (0-9) of a genre's bank, as the file keeps it
+function pcFromBank(bank, genre, slot) {
+  const bad = pcBankCheck(bank, genre);
+  if (bad) throw new Error(bad === "empty" ? "nothing saved in this genre" : "this genre's bank is from an older PERF-1: save a piece in it once, then try again");
+  if (!((rd16(bank, 8) >> slot) & 1)) throw new Error("that piece is not saved");
+  const rec = bank.slice(PC_HDR + slot * PC_REC, PC_HDR + (slot + 1) * PC_REC);
+  const tail = bank[14] === 1 && bank.length >= PC_LEN;
+  const prg = tail ? bank.slice(PC_TAIL + slot * PC_PRG, PC_TAIL + (slot + 1) * PC_PRG) : new Uint8Array(PC_PRG);
+  return { genre, slot, npar: rd16(bank, 6), rec, prg, voice: null, kinds: null, fx: null, bass: null, meta: {} };
+}
+
+// a setting of the piece (index p; lo: its lowest, params.json's min), or undefined when the piece predates it
+function pcGet(piece, p, lo) {
+  if (p >= piece.npar || piece.rec[PC_REC_PAR + p] === PC_RECIPE) return undefined;
+  return lo + piece.rec[PC_REC_PAR + p];
+}
+function pcSet(piece, p, lo, v) { piece.rec[PC_REC_PAR + p] = v - lo; }
+
+// ---- the Progression page's chord types (0.16.6, project.c knd_t "KND1": magic, then 3 bytes for each genre's ten pieces; OBJ_KINDS, its own object as
+// the banks are full). A piece's three bytes (eight slots, three bits each; all 0: every slot the piece's own type) travel in the note's JSON as "k", so
+// a page from before them reads the piece as it always did (without the types) and nothing about the file's layout changes.
+const PC_KND_LEN = 3, PC_KND_MAGIC = 0x31444E4B;          // EN_PRK_LEN, "KND1"
+const kndAt = (genre, slot) => 4 + (genre * PC_NPIECES + slot) * PC_KND_LEN;
+// 0.16.28: the object is the pieces' extras ("PCX1", project.c): magic, 16, the genres, 2 spare; then 16 bytes a piece: its 3 types, flags (bit 0:
+// its FILTERS and SCREAM saved with it), those 7 settings (the FILTERS page's types: pad, bass, acid; SCREAM's drive, amount, wow, target), spare
+const PC_PX_MAGIC = 0x31584350, PC_PX_HDR = 8, PC_PX_LEN = 16, PC_PX_NFX = 7;
+const pxAt = (genre, slot) => PC_PX_HDR + (genre * PC_NPIECES + slot) * PC_PX_LEN;
+const isPx = (o) => o && o.length >= PC_PX_HDR && rd32(o, 0) === PC_PX_MAGIC && o[4] === PC_PX_LEN;
+// 0.16.29: the pieces' bass steps, their own object ("BSQ1", project.c OBJ_BSTEP): magic, 16, the genres, 2 spare; then 16 bytes a piece (amb.h EN_BS_*)
+const PC_BS_MAGIC = 0x31515342, PC_BS_HDR = 8, PC_BS_LEN = 16;
+const bsAt = (genre, slot) => PC_BS_HDR + (genre * PC_NPIECES + slot) * PC_BS_LEN;
+const isBs = (o) => o && o.length >= PC_BS_HDR && rd32(o, 0) === PC_BS_MAGIC && o[4] === PC_BS_LEN;
+// a piece's bass steps (null: none set)
+function pcBassOf(bs, genre, slot) {
+  if (!isBs(bs) || bs.length < bsAt(genre, slot) + PC_BS_LEN) return null;
+  const s = bs.slice(bsAt(genre, slot), bsAt(genre, slot) + PC_BS_LEN);
+  return s.some((v) => v) ? s : null;
+}
+// the object with a piece's steps put in (null clears them), for a firmware with `ngenres` genres
+function pcBassWith(bs, genre, slot, steps, ngenres) {
+  const n = Math.max(PC_BS_HDR + ngenres * PC_NPIECES * PC_BS_LEN, bsAt(genre, slot) + PC_BS_LEN);
+  const out = new Uint8Array(n);
+  if (isBs(bs)) out.set(bs.subarray(0, Math.min(bs.length, n)));
+  wr32(out, 0, PC_BS_MAGIC); out[4] = PC_BS_LEN; out[5] = ngenres; out[6] = out[7] = 0;
+  out.fill(0, bsAt(genre, slot), bsAt(genre, slot) + PC_BS_LEN);
+  if (steps) out.set(steps.subarray(0, PC_BS_LEN), bsAt(genre, slot));
+  return out;
+}
+// a piece's types out of the object, either form (null: the piece's own in every slot, or no object)
+function pcKindsOf(knd, genre, slot) {
+  let k = null;
+  if (isPx(knd) && knd.length >= pxAt(genre, slot) + PC_PX_LEN) k = knd.slice(pxAt(genre, slot), pxAt(genre, slot) + PC_KND_LEN);
+  else if (knd && knd.length >= kndAt(genre, slot) + PC_KND_LEN && rd32(knd, 0) === PC_KND_MAGIC) k = knd.slice(kndAt(genre, slot), kndAt(genre, slot) + PC_KND_LEN);
+  return k && k.some((v) => v) ? k : null;
+}
+// its FILTERS and SCREAM, when they were saved with it (null: the defaults)
+function pcFxOf(px, genre, slot) {
+  if (!isPx(px) || px.length < pxAt(genre, slot) + PC_PX_LEN || !(px[pxAt(genre, slot) + 3] & 1)) return null;
+  return px.slice(pxAt(genre, slot) + 4, pxAt(genre, slot) + 4 + PC_PX_NFX);
+}
+// the extras object (a firmware of 0.16.28 on: the about answer's version 2) with a piece's types and settings put in (null: none), for a firmware
+// with `ngenres` genres; what else it held stays (an older KND1 object's types carried over)
+function pcExtrasWith(px, genre, slot, kinds, fx, ngenres) {
+  const n = Math.max(PC_PX_HDR + ngenres * PC_NPIECES * PC_PX_LEN, pxAt(genre, slot) + PC_PX_LEN);
+  const out = new Uint8Array(n);
+  if (isPx(px)) out.set(px.subarray(0, Math.min(px.length, n)));
+  else if (px && px.length >= 4 && rd32(px, 0) === PC_KND_MAGIC)
+    for (let k = 0; k * PC_KND_LEN + 4 + PC_KND_LEN <= px.length && PC_PX_HDR + (k + 1) * PC_PX_LEN <= n; k++)
+      out.set(px.subarray(4 + k * PC_KND_LEN, 4 + (k + 1) * PC_KND_LEN), PC_PX_HDR + k * PC_PX_LEN);
+  wr32(out, 0, PC_PX_MAGIC); out[4] = PC_PX_LEN; out[5] = ngenres; out[6] = out[7] = 0;
+  const at = pxAt(genre, slot);
+  out.fill(0, at, at + PC_PX_LEN);
+  if (kinds) out.set(kinds.subarray(0, PC_KND_LEN), at);
+  if (fx) { out[at + 3] = 1; out.set(fx.subarray(0, PC_PX_NFX), at + 4); }
+  return out;
+}
+// the object with a piece's types put in (null clears them), for a firmware with `ngenres` genres; what else it held stays
+function pcKindsWith(knd, genre, slot, kinds, ngenres) {
+  const out = new Uint8Array(Math.max(4 + ngenres * PC_NPIECES * PC_KND_LEN, kndAt(genre, slot) + PC_KND_LEN));
+  if (knd && knd.length >= 4 && rd32(knd, 0) === PC_KND_MAGIC) out.set(knd.subarray(0, Math.min(knd.length, out.length)));
+  wr32(out, 0, PC_KND_MAGIC);
+  out.fill(0, kndAt(genre, slot), kndAt(genre, slot) + PC_KND_LEN);
+  if (kinds) out.set(kinds.subarray(0, PC_KND_LEN), kndAt(genre, slot));
+  return out;
+}
+const bytesOk = (a, n) => Array.isArray(a) && a.length === n && a.every((v) => Number.isInteger(v) && v >= 0 && v < 256);
+const kindsOk = (k) => bytesOk(k, PC_KND_LEN);
+const kindsIn = (meta, kinds, fx, bass) => {
+  const m = { ...meta };
+  if (kinds && kinds.some((v) => v)) m.k = Array.from(kinds);
+  if (fx) m.x = Array.from(fx);                                   // (0.16.28) its FILTERS and SCREAM
+  if (bass && bass.some((v) => v)) m.s = Array.from(bass);        // (0.16.29) its bass steps
+  return m;
+};
+function kindsOut(meta) {                                         // the note without "k", "x" and "s", and what they carried (or null)
+  const { k, x, s, ...rest } = meta || {};
+  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: bytesOk(x, PC_PX_NFX) ? Uint8Array.from(x) : null,
+           bass: bytesOk(s, PC_BS_LEN) && s.some((v) => v) ? Uint8Array.from(s) : null };
+}
+
+// ---- the file: "P1PC", 1, genre, slot, flags (1: a voice), the settings a record holds (2), the record's length (2), the note's length (2), then the record,
+// the progression, the voice (128 bytes, when flagged), a little JSON (title, by, note, names; "k" the chord types) and the CRC-32 of all before it
+function pcEncode(piece) {
+  const meta = new TextEncoder().encode(JSON.stringify(kindsIn(piece.meta || {}, piece.kinds, piece.fx, piece.bass)));
+  const vlen = piece.voice ? 128 : 0;
+  const out = new Uint8Array(14 + PC_REC + PC_PRG + vlen + meta.length + 4);
+  out.set([0x50, 0x31, 0x50, 0x43, 1, piece.genre, piece.slot, piece.voice ? 1 : 0], 0);
+  wr16(out, 8, piece.npar); wr16(out, 10, PC_REC); wr16(out, 12, meta.length);
+  let p = 14;
+  out.set(piece.rec, p); p += PC_REC;
+  out.set(piece.prg, p); p += PC_PRG;
+  if (piece.voice) { out.set(piece.voice, p); p += 128; }
+  out.set(meta, p); p += meta.length;
+  wr32(out, p, crc32(out.subarray(0, p)));
+  return out;
+}
+function pcDecode(buf) {
+  if (buf.length < 18 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x50 || buf[3] !== 0x43) throw new Error("not a PERF-1 piece");
+  if (buf[4] !== 1) throw new Error("a piece from a newer PERF-1 page: open the latest pieces page");
+  if (crc32(buf.subarray(0, buf.length - 4)) !== rd32(buf, buf.length - 4)) throw new Error("the piece is damaged");
+  const reclen = rd16(buf, 10), ml = rd16(buf, 12), vlen = buf[7] & 1 ? 128 : 0;
+  if (reclen !== PC_REC || 14 + reclen + PC_PRG + vlen + ml + 4 !== buf.length) throw new Error("the piece is damaged");
+  let p = 14;
+  const rec = buf.slice(p, p + reclen); p += reclen;
+  const prg = buf.slice(p, p + PC_PRG); p += PC_PRG;
+  const voice = vlen ? buf.slice(p, p + 128) : null; p += vlen;
+  let meta = {};
+  try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
+  const km = kindsOut(meta);
+  return { genre: buf[5], slot: buf[6], npar: rd16(buf, 8), rec, prg, voice, kinds: km.kinds, fx: km.fx, bass: km.bass, meta: km.meta };
+}
+
+// ---- the code (and a link's #p=): the file, deflated, in base64url, after "P1."
+const b64u = (u8) => { let s = ""; for (const c of u8) s += String.fromCharCode(c); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+async function pipe(u8, stream) {
+  const r = new Blob([u8]).stream().pipeThrough(stream);
+  return new Uint8Array(await new Response(r).arrayBuffer());
+}
+async function pcToCode(x) { return "P1." + b64u(await pipe(x.kind === "set" ? pcSetEncode(x) : pcEncode(x), new CompressionStream("deflate-raw"))); }
+// a piece, or a set (kind "set") when the code holds one
+async function pcFromCode(text) {
+  const m = /P1\.([A-Za-z0-9_-]+)/.exec(String(text || ""));
+  if (!m) throw new Error("no piece code there");
+  let raw;
+  try { raw = await pipe(unb64u(m[1]), new DecompressionStream("deflate-raw")); } catch (_) { throw new Error("the code is damaged (cut short?)"); }
+  return pcDecodeAny(raw);
+}
+const pcDecodeAny = (buf) => (buf.length > 4 && buf[3] === 0x54 ? pcSetDecode(buf) : pcDecode(buf));   // "P1ST" or "P1PC"
+const pcHash = (rec) => crc32(rec);
+
+// ---- a set: the set list (sixteen places, each a genre's piece or empty), whether Play goes through it, the SET page's Mix, the pieces in it that are
+// stored (a factory piece needs nothing: it is the same everywhere), and their DX7 voices once each. "P1ST", 1, then 16 places (genre * 10 + piece + 1, 0
+// empty), Play, Mix, the pieces, the voices, the note's length (2); each piece: genre, place, its voice (0xFF none), settings (2), record, progression; each
+// voice 128 bytes; the note (JSON; "k": each piece's chord types by its place in the pieces, {"0": [a, b, c]}); the CRC-32
+function pcSetEncode(set) {
+  const k = {}, x = {}, sb = {};
+  set.pieces.forEach((pc, i) => {
+    if (pc.kinds && pc.kinds.some((v) => v)) k[i] = Array.from(pc.kinds);
+    if (pc.fx) x[i] = Array.from(pc.fx);
+    if (pc.bass && pc.bass.some((v) => v)) sb[i] = Array.from(pc.bass);
+  });
+  const { k: _old, x: _oldx, s: _olds, ...m0 } = set.meta || {};
+  const m1 = { ...m0 };
+  if (Object.keys(k).length) m1.k = k;
+  if (Object.keys(x).length) m1.x = x;
+  if (Object.keys(sb).length) m1.s = sb;
+  const meta = new TextEncoder().encode(JSON.stringify(m1));
+  const ps = set.pieces, vs = set.voices;
+  const out = new Uint8Array(4 + 1 + 16 + 2 + 2 + 2 + ps.length * (5 + PC_REC + PC_PRG) + vs.length * 128 + meta.length + 4);
+  out.set([0x50, 0x31, 0x53, 0x54, 1], 0);
+  let p = 5;
+  for (let i = 0; i < 16; i++) out[p++] = set.list[i] || 0;
+  out[p++] = set.on ? 1 : 0; out[p++] = set.mix || 0;
+  out[p++] = ps.length; out[p++] = vs.length;
+  wr16(out, p, meta.length); p += 2;
+  for (const pc of ps) {
+    out.set([pc.genre, pc.slot, pc.vidx === undefined || pc.vidx < 0 ? 0xFF : pc.vidx], p); p += 3;
+    wr16(out, p, pc.npar); p += 2;
+    out.set(pc.rec, p); p += PC_REC;
+    out.set(pc.prg, p); p += PC_PRG;
+  }
+  for (const v of vs) { out.set(v, p); p += 128; }
+  out.set(meta, p); p += meta.length;
+  wr32(out, p, crc32(out.subarray(0, p)));
+  return out;
+}
+function pcSetDecode(buf) {
+  if (buf.length < 30 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x53 || buf[3] !== 0x54) throw new Error("not a PERF-1 set");
+  if (buf[4] !== 1) throw new Error("a set from a newer PERF-1 page: open the latest pieces page");
+  if (crc32(buf.subarray(0, buf.length - 4)) !== rd32(buf, buf.length - 4)) throw new Error("the set is damaged");
+  let p = 5;
+  const list = Array.from(buf.slice(p, p + 16)); p += 16;
+  const on = !!buf[p++], mix = buf[p++], np = buf[p++], nv = buf[p++], ml = rd16(buf, p); p += 2;
+  if (p + np * (5 + PC_REC + PC_PRG) + nv * 128 + ml + 4 !== buf.length) throw new Error("the set is damaged");
+  const pieces = [], voices = [];
+  for (let i = 0; i < np; i++) {
+    const genre = buf[p], slot = buf[p + 1], vi = buf[p + 2], npar = rd16(buf, p + 3);
+    p += 5;
+    pieces.push({ genre, slot, vidx: vi === 0xFF ? -1 : vi, npar, rec: buf.slice(p, p + PC_REC), prg: buf.slice(p + PC_REC, p + PC_REC + PC_PRG), voice: null, meta: {} });
+    p += PC_REC + PC_PRG;
+  }
+  for (let i = 0; i < nv; i++) { voices.push(buf.slice(p, p + 128)); p += 128; }
+  let meta = {};
+  try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
+  for (const pc of pieces) if (pc.vidx >= 0 && pc.vidx < voices.length) pc.voice = voices[pc.vidx];
+  const { k, x, s, ...rest } = meta && typeof meta === "object" ? meta : {};
+  pieces.forEach((pc, i) => {
+    pc.kinds = k && kindsOk(k[i]) && k[i].some((v) => v) ? Uint8Array.from(k[i]) : null;
+    pc.fx = x && bytesOk(x[i], PC_PX_NFX) ? Uint8Array.from(x[i]) : null;
+    pc.bass = s && bytesOk(s[i], PC_BS_LEN) && s[i].some((v) => v) ? Uint8Array.from(s[i]) : null;
+  });
+  return { kind: "set", list, on, mix, pieces, voices, meta: rest };
+}
+// the set list's places as genre and piece (null: empty)
+const pcSetPlaces = (list) => list.map((x) => (x ? { genre: Math.floor((x - 1) / 10), slot: (x - 1) % 10 } : null));
+
+// the player's record (OBJ_GLOB, project.c glob_t: magic, tune, midi, theme, rsv, sl[16], sl_on, sl_rsv[3] = zoom, mix, -) with a set's list, Play and Mix;
+// an empty one (or the old 12 bytes) takes the defaults given (tune, midi, theme)
+const PC_GLOB_LEN = 32;
+function pcGlobWith(glob, set, defs) {
+  const out = new Uint8Array(PC_GLOB_LEN);
+  if (glob && glob.length >= 12 && rd32(glob, 0) === 0x4C474D50) out.set(glob.subarray(0, Math.min(glob.length, PC_GLOB_LEN)));
+  else { wr32(out, 0, 0x4C474D50); wr16(out, 4, defs.tune & 0xFFFF); wr16(out, 6, defs.midi & 0xFFFF); wr16(out, 8, defs.theme & 0xFFFF); }
+  out.set(set.list.slice(0, 16), 12);
+  out[28] = set.on ? 1 : 0;
+  out[30] = set.mix || 0;
+  return out;
+}
+const pcGlobList = (glob) => (glob && glob.length === PC_GLOB_LEN && rd32(glob, 0) === 0x4C474D50 ? { list: Array.from(glob.slice(12, 28)), on: !!glob[28], mix: glob[30] } : { list: new Array(16).fill(0), on: false, mix: 0 });
+
+// a set's voices into the voices' object: each to a voice already loaded, else the next empty slot; the answer maps the set's voice i to a slot (-1: no room)
+function pcSetVoices(vox, voices) {
+  let cur = vox && vox.length ? vox : new Uint8Array(0);
+  const map = [];
+  let changed = false;
+  for (const v of voices) {
+    const plan = pcVoicePlan(cur, v, PC_NUSER);
+    if (plan.kind === "same") { map.push(plan.slot); continue; }
+    if (plan.slot >= PC_NUSER) { map.push(-1); continue; }
+    cur = pcVoicesWith(cur, v, plan.slot);
+    map.push(plan.slot);
+    changed = true;
+  }
+  return { vox: changed ? cur : null, map };
+}
+
+// ---- into a bank: the piece in slot `slot` of genre's bank (bank: what the FM-1 has, maybe empty), for a firmware with `npar` settings a piece
+// (the about answer). Settings the piece predates are written as "the recipe's" (0xFF); so are those of the bank's other pieces when the bank was saved by a
+// firmware with fewer. Settings the firmware does not know are dropped. The answer: the new bank, and what was lost or filled.
+function pcIntoBank(bank, genre, slot, piece, npar) {
+  const bad = pcBankCheck(bank, genre);
+  if (bad === "old") throw new Error("this genre's bank on the FM-1 is from an older PERF-1: save a piece in it once on the FM-1, then try again");
+  const out = new Uint8Array(PC_LEN);
+  let nb = npar;
+  if (bad === "empty") {
+    wr32(out, 0, IMG_MAGIC); out[4] = 2; out[5] = genre; wr16(out, 10, PC_REC);
+  } else {
+    out.set(bank.subarray(0, Math.min(bank.length, PC_LEN)));
+    if (!(bank[14] === 1 && bank.length >= PC_LEN)) out.fill(0, PC_TAIL);   // a bank from before the progressions: none, as it loads
+    nb = rd16(bank, 6);
+  }
+  const saved = rd16(out, 8);
+  if (nb < npar)                                                  // the others: what they predate is their recipe's, as the firmware would read them
+    for (let i = 0; i < PC_NPIECES; i++)
+      if (i !== slot && ((saved >> i) & 1)) out.fill(PC_RECIPE, PC_HDR + i * PC_REC + PC_REC_PAR + nb, PC_HDR + i * PC_REC + PC_REC_PAR + npar);
+  const rec = piece.rec.slice();
+  if (piece.npar < npar) rec.fill(PC_RECIPE, PC_REC_PAR + piece.npar, PC_REC_PAR + npar);
+  else if (piece.npar > npar) rec.fill(0, PC_REC_PAR + npar, PC_REC_PAR + piece.npar);
+  out.set(rec, PC_HDR + slot * PC_REC);
+  out.set(piece.prg, PC_TAIL + slot * PC_PRG);
+  wr16(out, 6, npar); wr16(out, 8, saved | (1 << slot));
+  out[12] = 1; out[13] = 1; out[14] = 1;
+  return { bank: out, dropped: Math.max(0, piece.npar - npar), filled: Math.max(0, npar - piece.npar), replaced: !!((saved >> slot) & 1) };
+}
+
+// ---- the DX7 voice: the pluck's sound (P_CM_SND) past the plain ones (nplain) and the built-in DX voices (nfmfact) is one of the player's 16 slots
+const pcVoiceName = (v) => String.fromCharCode(...Array.from(v.slice(118, 128)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd() || "(no name)";
+function pcUserSlot(piece, iSnd, nplain, nfmfact) {
+  const v = pcGet(piece, iSnd, 0);
+  return v === undefined ? -1 : v - nplain - nfmfact;
+}
+// the voices' object (OBJ_VOICES; maybe empty): how many are loaded, and each
+function pcVoices(vox) {
+  if (!vox || vox.length !== PC_VOX_LEN || rd32(vox, 0) !== VOX_MAGIC || rd32(vox, 4) > PC_NUSER) return [];
+  const n = rd32(vox, 4), out = [];
+  for (let k = 0; k < n; k++) out.push(vox.slice(8 + k * 128, 8 + (k + 1) * 128));
+  return out;
+}
+const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+// where the piece's voice goes: "same" (already loaded there: nothing to write), "free" (the next empty slot), or "conflict" (its own slot holds another
+// voice: overwrite it, or take `free` when there is room, -1 when all 16 are in use)
+function pcVoicePlan(vox, voice, want) {
+  const have = pcVoices(vox);
+  const k = have.findIndex((v) => same(v, voice));
+  if (k >= 0) return { kind: "same", slot: k };
+  if (want < have.length) return { kind: "conflict", slot: want, other: pcVoiceName(have[want]), free: have.length < PC_NUSER ? have.length : -1 };
+  return { kind: "free", slot: have.length };
+}
+// the voices' object with `voice` in `slot` (at most one past the loaded ones: slots fill in order)
+function pcVoicesWith(vox, voice, slot) {
+  const have = pcVoices(vox);
+  if (slot > have.length || slot >= PC_NUSER) throw new Error("no room for the voice");
+  have[slot] = voice;
+  const out = new Uint8Array(PC_VOX_LEN);
+  wr32(out, 0, VOX_MAGIC); wr32(out, 4, have.length);
+  have.forEach((v, i) => out.set(v, 8 + i * 128));
+  return out;
+}
+
+// the answer to "about" (F0 7D 50 45 ver npar(2) genres voices F7, firmware/src/backup_proto.h), or null
+function pcParseAbout(d) {
+  if (d.length !== 10 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x45 || d[9] !== 0xF7) return null;
+  return { ver: d[4], npar: (d[5] << 7) | d[6], genres: d[7], voices: d[8] };
+}
+const pcAboutMsg = () => [0xF0, 0x7D, 0x50, 0x42, 0x06, 0xF7];
+
+// SPDX-License-Identifier: GPL-3.0-only
+// The share card (the pieces and library pages): a 1200 x 630 picture of a piece or a set, to post with its link. The piece's drum pattern as rings (a lane
+// a ring, the kick inside, sixteen steps round), its name, title, maker, what it is based on, its tempo and key; a set's places as one ring. In the site's colours.
+
+const CARD_INK = "#f6ece0", CARD_MUTED = "#bba79a", CARD_RULE = "#4a2a35", CARD_GROUND = "#130a0e";
+const CARD_LANES = ["#e0344f", "#ff8f8f", "#ffd447", "#f2e6c4", "#c9a7ff", "#7fd1c4"];   // kick, snare, clap, hat, open hat, perc
+
+// c: {tag, title, by, based, line, lanes: [16-bit masks], url}
+async function drawCard(canvas, c) {
+  if (document.fonts && document.fonts.load)                       // the faces the card uses (a page only fetches those its text uses)
+    await Promise.all(['700 30px "Chakra Petch"', '600 30px "Chakra Petch"', '500 30px "Barlow Semi Condensed"'].map((f) => document.fonts.load(f).catch(() => null)));
+  canvas.width = 1200; canvas.height = 630;
+  const g = canvas.getContext("2d");
+  const head = (w, px) => `${w} ${px}px "Chakra Petch", "Helvetica Neue", Arial, sans-serif`, body = (px) => `500 ${px}px "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif`;
+  g.fillStyle = CARD_GROUND; g.fillRect(0, 0, 1200, 630);
+  g.strokeStyle = "rgba(224, 52, 79, 0.08)"; g.lineWidth = 1;           // a floor of lines, as the Synth look's
+  for (let y = 380; y < 630; y += 18 + (y - 380) * 0.18) { g.beginPath(); g.moveTo(0, y); g.lineTo(1200, y); g.stroke(); }
+  for (let x = -600; x <= 1800; x += 120) { g.beginPath(); g.moveTo(600, 380); g.lineTo(x, 630); g.stroke(); }
+  // the rings
+  const cx = 905, cy = 315, n = c.lanes.length || 1;
+  for (let l = 0; l < n; l++) {
+    const r = n === 1 ? 230 : 104 + l * (150 / (n - 1));
+    g.strokeStyle = CARD_RULE; g.lineWidth = 2;
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+    for (let s = 0; s < 16; s++) {
+      const a = -Math.PI / 2 + (s / 16) * Math.PI * 2, x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+      const on = (c.lanes[l] >> s) & 1;
+      g.beginPath(); g.arc(x, y, on ? 11 : 4, 0, Math.PI * 2);
+      g.fillStyle = on ? CARD_LANES[l % CARD_LANES.length] : CARD_RULE;
+      if (on) { g.shadowColor = g.fillStyle; g.shadowBlur = 16; }
+      g.fill(); g.shadowBlur = 0;
+    }
+  }
+  g.fillStyle = CARD_INK; g.font = head(700, n === 1 ? 64 : 30); g.textAlign = "center";
+  g.fillText(c.center || "", cx, cy + (n === 1 ? 22 : 11));
+  g.textAlign = "left";
+  // the words
+  g.fillStyle = "#ffd447"; g.fillRect(64, 72, 26, 5); g.fillStyle = "#e0344f"; g.fillRect(90, 72, 42, 5);
+  g.fillStyle = CARD_INK; g.font = head(700, 30); g.fillText("PERF-1", 146, 84);
+  const fit = (txt, font, max) => { g.font = font; let t = txt || ""; while (t && g.measureText(t).width > max) t = t.slice(0, -2) + "…"; return t; };
+  g.fillStyle = "#f2e6c4"; g.fillText(fit(c.tag, head(700, 76), 600), 64, 196);
+  let y = 196;
+  if (c.title) { y += 62; g.fillStyle = "#ffd447"; g.fillText(fit(c.title, head(600, 46), 610), 64, y); }
+  if (c.by) { y += 44; g.fillStyle = CARD_INK; g.fillText(fit("by " + c.by, body(32), 610), 64, y); }
+  if (c.based) { y += 36; g.fillStyle = CARD_MUTED; g.fillText(fit("based on " + c.based, body(26), 610), 64, y); }
+  y += 52; g.fillStyle = CARD_INK; g.fillText(fit(c.line, body(30), 610), 64, y);
+  g.fillStyle = CARD_MUTED; g.fillText(fit(c.url || "", body(24), 1080), 64, 586);
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// What the pieces and library pages share (on top of fm1piece.js): a piece's or a set's names and its line of text from the firmware's own parameter data
+// (params.json), the share card's contents, putting a piece or a set into the browser emulator's store, and the origins this browser remembers (the pieces
+// it added from a share, so a piece changed from one says what it is based on).
+
+function shareNames(D) {
+  const P = D.params, E = D.enum, N = D.names;
+  const NOTE = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+  const genreName = (g) => N.genres[g] || "genre " + g;
+  const pieceName = (g, i) => (N.pieces[g] && N.pieces[g][i]) || String(i + 1).padStart(2, "0");
+  const get = (pc, k) => pcGet(pc, E[k], P[E[k]].min);
+  const userSlot = (pc) => pcUserSlot(pc, E.P_CM_SND, N.nplain, N.nfmfact);
+  function describe(pc) {
+    const tempo = get(pc, "P_TEMPO"), root = get(pc, "P_ROOT"), mode = get(pc, "P_MODE"), snd = get(pc, "P_CM_SND");
+    const modeName = mode !== undefined && P[E.P_MODE].t ? P[E.P_MODE].t[mode - P[E.P_MODE].min] : "";
+    const bits = [];
+    if (tempo !== undefined) bits.push(tempo + " BPM");
+    if (root !== undefined) bits.push(NOTE[((root % 12) + 12) % 12] + " " + modeName.toLowerCase());
+    if (snd !== undefined) {
+      const k = userSlot(pc);
+      bits.push("pluck: " + (k >= 0 ? (pc.voice ? pcVoiceName(pc.voice) + " (its own DX7 voice)" : "your DX7 voice " + (k + 1)) : (P[E.P_CM_SND].t || [])[snd] || snd));
+    }
+    return bits.join(" · ");
+  }
+  const tagOf = (pc) => genreName(pc.genre) + " " + pieceName(pc.genre, pc.slot);
+  const placeName = (x) => { const q = pcSetPlaces([x])[0]; return q ? genreName(q.genre) + " " + pieceName(q.genre, q.slot) : "-"; };
+  const basedText = (m) => (m && m.b ? (m.b.t || "a shared piece") + (m.b.a ? " by " + m.b.a : "") : "");
+  // the card's contents: a piece's pattern (the one it plays: P_PATTERN), or a set's places
+  function cardOf(x, url) {
+    const m = x.meta || {};
+    if (x.kind === "set") {
+      const used = x.list.filter((v) => v), mask = x.list.reduce((a, v, i) => a | (v ? 1 << i : 0), 0);
+      const names = used.slice(0, 4).map(placeName).join(", ") + (used.length > 4 ? " …" : "");
+      return { tag: "SET · " + used.length + " PIECES", title: m.t, by: m.a, based: basedText(m), line: names, lanes: [mask], center: String(used.length), url };
+    }
+    const pat = Math.max(0, Math.min(5, get(x, "P_PATTERN") || 0)), lanes = [];
+    for (let l = 0; l < 6; l++) lanes.push(x.rec[2 + 2 * (pat * 6 + l)] | (x.rec[3 + 2 * (pat * 6 + l)] << 8));
+    const tempo = get(x, "P_TEMPO");
+    return { tag: tagOf(x), title: m.t, by: m.a, based: basedText(m), line: describe(x), lanes, center: tempo !== undefined ? tempo + " BPM" : "", url };
+  }
+  return { P, E, N, genreName, pieceName, describe, tagOf, placeName, basedText, cardOf, userSlot,
+           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23, OBJ_BSTEP: 25,   // (plat.h's enum; OBJ_KINDS from 0.16.6)
+           globDefs: { tune: P[E.P_TUNE].def, midi: P[E.P_MIDI].def, theme: P[E.P_THEME].def } };
+}
+
+// the emulator keeps its flash in this browser (web/emu: localStorage "hyp1-emu-store", an object's bytes in base64 by its number): a piece (at `slot`)
+// or a set goes in there, with its voices. The answer: what to do in the emulator.
+function emuPut(S, x, slot) {
+  const KEY = "hyp1-emu-store";
+  const raw = JSON.parse(localStorage.getItem(KEY) || "{}");
+  const get = (o) => (raw[o] ? Uint8Array.from(atob(raw[o]), (c) => c.charCodeAt(0)) : new Uint8Array(0));
+  const put = (o, u8) => { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); };
+  const npar = S.P.length, banks = {};
+  const bank = (g) => { if (!banks[g]) { banks[g] = get(S.objOf(g)); if (pcBankCheck(banks[g], g) === "old") banks[g] = new Uint8Array(0); } return banks[g]; };
+  const pieces = x.kind === "set" ? x.pieces.map((p) => ({ ...p, rec: p.rec.slice() })) : [{ ...x, rec: x.rec.slice(), slot }];
+  const voices = x.kind === "set" ? x.voices : pieces[0].voice && S.userSlot(pieces[0]) >= 0 ? [pieces[0].voice] : [];
+  if (voices.length) {
+    const r = pcSetVoices(get(S.OBJ_VOICES), voices);
+    if (r.vox) put(S.OBJ_VOICES, r.vox);
+    for (const pc of pieces) {
+      const vi = x.kind === "set" ? pc.vidx : 0;
+      if (vi >= 0 && r.map[vi] >= 0 && S.userSlot(pc) >= 0) pcSet(pc, S.E.P_CM_SND, S.P[S.E.P_CM_SND].min, S.N.nplain + S.N.nfmfact + r.map[vi]);
+    }
+  }
+  for (const pc of pieces) banks[pc.genre] = pcIntoBank(bank(pc.genre), pc.genre, pc.slot, pc, npar).bank;
+  for (const g of Object.keys(banks)) put(S.objOf(+g), banks[g]);
+  let knd = get(S.OBJ_KINDS);                                    // the pieces' extras: each piece's chord types, FILTERS and SCREAM (cleared when it has none)
+  for (const pc of pieces) knd = pcExtrasWith(knd, pc.genre, pc.slot, pc.kinds || null, pc.fx || null, S.N.genres.length);
+  put(S.OBJ_KINDS, knd);
+  let bst = get(S.OBJ_BSTEP);                                    // and their bass steps (0.16.29)
+  for (const pc of pieces) bst = pcBassWith(bst, pc.genre, pc.slot, pc.bass || null, S.N.genres.length);
+  put(S.OBJ_BSTEP, bst);
+  if (x.kind === "set") put(S.OBJ_GLOB, pcGlobWith(get(S.OBJ_GLOB), x, S.globDefs));
+  localStorage.setItem(KEY, JSON.stringify(raw));
+  if (x.kind === "set") return "The set is in the emulator: switch it on, then GLO twice for the set list (Play on).";
+  return "In the emulator as " + S.tagOf({ ...x, slot }) + ": switch it on, GLO + PRESETS to " + S.genreName(x.genre) + ", PRESETS to " + S.pieceName(x.genre, slot) + ".";
+}
+
+// the origins: the pieces this browser added from a share ("genre:place" -> title, maker, the record's CRC as it went in)
+const ORIGIN_KEY = "perf1-pieces-origin";
+function originsGet() { try { return JSON.parse(localStorage.getItem(ORIGIN_KEY) || "{}") || {}; } catch (_) { return {}; } }
+function originsSet(list) {                                 // list: [{genre, slot, t, a, rec}]
+  const o = originsGet();
+  for (const e of list) o[e.genre + ":" + e.slot] = { t: e.t || "", a: e.a || "", h: pcHash(e.rec) };
+  try { localStorage.setItem(ORIGIN_KEY, JSON.stringify(o)); } catch (_) {}
+}
+// what a piece about to be shared came from: {same: true, t, a} when it is as it was added, {b: {t, a}} when it was changed since, null when not from a share
+function originOf(pc) {
+  const o = originsGet()[pc.genre + ":" + pc.slot];
+  if (!o) return null;
+  return pcHash(pc.rec) === o.h ? { same: true, t: o.t, a: o.a } : { b: { t: o.t, a: o.a } };
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Let go of the FM-1's MIDI ports once a page has been quiet a while (0.16.16). On Windows a USB MIDI port belongs to one
+// program at a time, and a page that had talked to the FM-1 kept it until the tab was closed: M-UPGRADE then said "A USB
+// MIDI device is present but did not answer" (its log: KsCreatePin error 1450), and music software could not open it either.
+// Every MIDIAccess the page asks for goes through midiAccess(); idleRelease() closes their open ports after `ms` without
+// FM-1 traffic (idleTouch() on each message), unless busy() says an install, a write or the live status is running. The
+// next use opens them again (an input when its onmidimessage is set or open() is called, an output on send).
+// (The site inlines this file into the pages, so every name here carries "idle" or "IDLE".)
+
+const IDLE_ACC = new Set();
+let idleLast = Date.now(), idleTimer = 0;
+
+function idleTouch() { idleLast = Date.now(); }
+
+async function midiAccess() {
+  const m = await navigator.requestMIDIAccess({ sysex: true });
+  IDLE_ACC.add(m);
+  idleTouch();
+  return m;
+}
+
+function idleOpenPorts() {                 // how many ports the page holds open now (for the tests)
+  let n = 0;
+  for (const m of IDLE_ACC) for (const p of [...m.inputs.values(), ...m.outputs.values()]) if (p.connection === "open" || p.connection === "pending") n++;
+  return n;
+}
+
+function idleRelease(busy, onRelease, ms = 4000) {
+  clearInterval(idleTimer);
+  idleTimer = setInterval(() => {
+    if (busy() || Date.now() - idleLast < ms) return;
+    let closed = 0;
+    for (const m of IDLE_ACC) {
+      for (const p of [...m.inputs.values(), ...m.outputs.values()]) {
+        if (p.connection !== "open" && p.connection !== "pending") continue;
+        try { if (p.type === "input") p.onmidimessage = null; p.close(); closed++; } catch (_) { /* unplugged */ }
+      }
+    }
+    if (closed && onRelease) onRelease(closed);
+  }, 1000);
+}
+
+     and the firmware's own parameter data (tools/make_params.py -> build/params.json) at {"params":[{"i":0,"n":"Pad","min":0,"max":100,"def":45},{"i":1,"n":"Acid","min":0,"max":100,"def":55},{"i":2,"n":"Bass","min":0,"max":100,"def":65},{"i":3,"n":"Drums","min":0,"max":100,"def":75},{"i":4,"n":"Vinyl","min":0,"max":100,"def":20},{"i":5,"n":"Tempo","min":70,"max":190,"def":128},{"i":6,"n":"Evolve","min":0,"max":100,"def":40},{"i":7,"n":"Motion","min":0,"max":100,"def":60},{"i":8,"n":"Drift","min":0,"max":100,"def":60},{"i":9,"n":"Bright","min":0,"max":100,"def":35},{"i":10,"n":"Sound","min":0,"max":23,"def":1,"t":["Rhodes","Voices","Strings","Glass","Organ","Warm","Stabs","Dark","Dub","Trance","Poly","Hollow","Pings","Hits","Rave","Sine","Ooh","Wurli","Mallet","Brass","Fat","Pluck","Chapel","Air"]},{"i":11,"n":"Detune","min":0,"max":100,"def":30},{"i":12,"n":"Attack","min":0,"max":100,"def":45},{"i":13,"n":"Hold","min":0,"max":100,"def":35},{"i":14,"n":"Release","min":0,"max":100,"def":55},{"i":15,"n":"Rest","min":0,"max":100,"def":20},{"i":16,"n":"Rate","min":0,"max":11,"def":4,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars","1/8","1/8T","1/16","1/16T"]},{"i":17,"n":"Depth","min":0,"max":100,"def":25},{"i":18,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":19,"n":"Target","min":0,"max":7,"def":0,"t":["Filter","Level","Pan","Pitch","Acid cut","Acid reso","Echo time","Punch cut"]},{"i":20,"n":"Wear","min":0,"max":7,"def":1,"t":["Mint","Clean","Light","Used","Worn","Scratched","Dusty","Trashed"]},{"i":21,"n":"Every","min":0,"max":7,"def":0,"t":["2nd","3rd","4th","5th","6th","7th","8th","Drift"]},{"i":22,"n":"Pump","min":0,"max":100,"def":60},{"i":23,"n":"Octave","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":24,"n":"Cutoff","min":0,"max":100,"def":45},{"i":25,"n":"Reso","min":0,"max":100,"def":45},{"i":26,"n":"Trigger","min":0,"max":5,"def":0,"t":["Chord","1 bar","2 bars","4 bars","8 bars","Off"]},{"i":27,"n":"Attack","min":0,"max":100,"def":25},{"i":28,"n":"Decay","min":0,"max":100,"def":55},{"i":29,"n":"Amount","min":0,"max":100,"def":35},{"i":30,"n":"Rate","min":0,"max":11,"def":6,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars","1/8","1/8T","1/16","1/16T"]},{"i":31,"n":"Depth","min":0,"max":100,"def":55},{"i":32,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":33,"n":"Target","min":0,"max":7,"def":0,"t":["Cutoff","Pitch","Level","Drive","Reso","Acid cut","Acid reso","Echo time"]},{"i":34,"n":"Cutoff","min":0,"max":100,"def":35},{"i":35,"n":"Reso","min":0,"max":100,"def":70},{"i":36,"n":"Env mod","min":0,"max":100,"def":55},{"i":37,"n":"Decay","min":0,"max":100,"def":40},{"i":38,"n":"Accent","min":0,"max":100,"def":50},{"i":39,"n":"Slide","min":0,"max":100,"def":30},{"i":40,"n":"Sound","min":0,"max":30,"def":0,"t":["Saw","Square","Driven","Sync","Pluck","PWM","Chip","Sub","Trance","Bleep","Fifth","Bell","Organ","Laser","Fold","Soft","Marimba","E.Piano","Kalimba","Brass","Gong","Clav","Vibes","Digital","Super","CZ","Mini","Hyper","CZ Pulse","CZ Bell","Lead"]},{"i":41,"n":"Density","min":0,"max":100,"def":60},{"i":42,"n":"Length","min":1,"max":16,"def":16},{"i":43,"n":"Range","min":1,"max":3,"def":1,"t":["1 oct","2 oct","3 oct"]},{"i":44,"n":"Mutate","min":0,"max":100,"def":25},{"i":45,"n":"Acid oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":46,"n":"Drive","min":0,"max":100,"def":40},{"i":47,"n":"Swing","min":0,"max":100,"def":0},{"i":48,"n":"Pattern","min":0,"max":5,"def":0,"t":["1","2","3","4","5","6"]},{"i":49,"n":"Level","min":0,"max":100,"def":85},{"i":50,"n":"Tune","min":-50,"max":50,"def":0},{"i":51,"n":"Decay","min":0,"max":100,"def":50},{"i":52,"n":"Level","min":0,"max":100,"def":60},{"i":53,"n":"Tune","min":-50,"max":50,"def":0},{"i":54,"n":"Decay","min":0,"max":100,"def":45},{"i":55,"n":"Level","min":0,"max":100,"def":65},{"i":56,"n":"Tune","min":-50,"max":50,"def":0},{"i":57,"n":"Decay","min":0,"max":100,"def":45},{"i":58,"n":"Level","min":0,"max":100,"def":55},{"i":59,"n":"Tune","min":-50,"max":50,"def":0},{"i":60,"n":"Decay","min":0,"max":100,"def":35},{"i":61,"n":"Level","min":0,"max":100,"def":50},{"i":62,"n":"Tune","min":-50,"max":50,"def":0},{"i":63,"n":"Decay","min":0,"max":100,"def":50},{"i":64,"n":"Level","min":0,"max":100,"def":50},{"i":65,"n":"Tune","min":-50,"max":50,"def":0},{"i":66,"n":"Decay","min":0,"max":100,"def":40},{"i":67,"n":"Echo","min":0,"max":100,"def":45},{"i":68,"n":"Echo time","min":0,"max":5,"def":1,"t":["1/8","3/16","1/4","1/4.","1/2","1 bar"]},{"i":69,"n":"Reverb","min":0,"max":100,"def":40},{"i":70,"n":"Size","min":0,"max":100,"def":70},{"i":71,"n":"Root","min":0,"max":11,"def":9,"t":["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"]},{"i":72,"n":"Mode","min":0,"max":7,"def":5,"t":["Ionian","Dorian","Phrygian","Lydian","Mixolyd.","Aeolian","Pent maj","Pent min"]},{"i":73,"n":"Tune","min":-50,"max":50,"def":0},{"i":74,"n":"MIDI out","min":0,"max":1,"def":1,"t":["Off","On"]},{"i":75,"n":"Theme","min":0,"max":5,"def":0,"t":["Imp","Synth","Acid","Ice","Ember","Phosphor"]},{"i":76,"n":"Sync","min":0,"max":1,"def":0,"t":["Bar","Loop"]},{"i":77,"n":"Links","min":0,"max":1,"def":0,"t":["Off","On"]},{"i":78,"n":"Kick","min":0,"max":100,"def":50},{"i":79,"n":"Snare","min":0,"max":100,"def":40},{"i":80,"n":"Hats","min":0,"max":100,"def":50},{"i":81,"n":"Perc","min":0,"max":1,"def":0,"t":["Off","Clock"]},{"i":82,"n":"Song oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":83,"n":"Pad oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":84,"n":"Sound","min":0,"max":23,"def":0,"t":["Saws","Warm","Grit","Dirty","Reese","Pulse","FM","Organ","Rumble","Sub","Square","Hoover","Fifths","Metal","Sync","Bright","Wub","Bite","Tine","Clang","Gnarl","Wide","Power","Air"]},{"i":85,"n":"Kick","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":86,"n":"Snare","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":87,"n":"Hats","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":88,"n":"Perc","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":89,"n":"Pad hand","min":0,"max":1,"def":0},{"i":90,"n":"Bass hand","min":0,"max":1,"def":0},{"i":91,"n":"Acid hand","min":0,"max":1,"def":0},{"i":92,"n":"Chord","min":0,"max":7,"def":0,"t":["Auto","Triads","7ths","9ths","Sus","Dub","Fourths","11ths"]},{"i":93,"n":"Voicing","min":0,"max":1,"def":0,"t":["Close","Open"]},{"i":94,"n":"Change","min":0,"max":2,"def":0,"t":["Off","Next","Random"]},{"i":95,"n":"Every","min":0,"max":5,"def":2,"t":["Chord","4 bars","8 bars","16 bars","32 bars","64 bars"]},{"i":96,"n":"Pool","min":2,"max":6,"def":4,"t":["1-2","1-3","1-4","1-5","1-6"]},{"i":97,"n":"Mutate","min":0,"max":2,"def":0,"t":["Off","Shift","Morph"]},{"i":98,"n":"Pluck","min":0,"max":100,"def":50},{"i":99,"n":"Sound","min":0,"max":57,"def":1,"t":["Pluck","Marimba","E.Piano","Kalimba","Bell","Vibes","Gong","Clav","Digital","Brass","Bleep","Glass","DX Tine EP","DX Glass Bell","DX Round Bass","DX Brass Sect","DX Soft Pad","DX Wood Bars","DX Drawbars","DX Nylon Pick","DX Brass 2","DX Solid Bass","DX Bells","DX Marimba","DX Clavinet","DX Strings","DX Glass Pad","DX Sync Lead","DX Harp","DX Kalimba","DX Flute","DX Steel Drum","DX Saw Bass","DX Tubular","DX Steel Gtr","DX Clean Gtr","DX Muted Gtr","DX Drive Gtr","DX Slap Bass","DX Synth Brass","DX Sax","DX Mute Trumpet","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)"]},{"i":100,"n":"Density","min":0,"max":100,"def":45},{"i":101,"n":"Pluck oct","min":-2,"max":2,"def":0},{"i":102,"n":"Decay","min":0,"max":100,"def":45},{"i":103,"n":"Style","min":0,"max":5,"def":0,"t":["Up","Down","Up-down","Random","Skip","Thirds"]},{"i":104,"n":"Rate","min":0,"max":3,"def":2,"t":["1/4","3/16","1/8","1/16"]},{"i":105,"n":"Range","min":1,"max":3,"def":2},{"i":106,"n":"Prob","min":0,"max":100,"def":100},{"i":107,"n":"Prob","min":0,"max":100,"def":100},{"i":108,"n":"Prob","min":0,"max":100,"def":100},{"i":109,"n":"Prob","min":0,"max":100,"def":100},{"i":110,"n":"Prob","min":0,"max":100,"def":100},{"i":111,"n":"Prob","min":0,"max":100,"def":100},{"i":112,"n":"Pan","min":0,"max":100,"def":50},{"i":113,"n":"Pan","min":0,"max":100,"def":50},{"i":114,"n":"Pan","min":0,"max":100,"def":50},{"i":115,"n":"Pan","min":0,"max":100,"def":50},{"i":116,"n":"Pan","min":0,"max":100,"def":50},{"i":117,"n":"Send","min":0,"max":100,"def":50},{"i":118,"n":"Send","min":0,"max":100,"def":50},{"i":119,"n":"Send","min":0,"max":100,"def":50},{"i":120,"n":"Send","min":0,"max":100,"def":50},{"i":121,"n":"Send","min":0,"max":100,"def":50},{"i":122,"n":"Pluck hand","min":0,"max":1,"def":0},{"i":123,"n":"Type","min":0,"max":2,"def":0,"t":["Plate","Shimmer","Gated"]},{"i":124,"n":"Damping","min":0,"max":100,"def":47},{"i":125,"n":"Predelay","min":0,"max":100,"def":100},{"i":126,"n":"Amount","min":0,"max":100,"def":30},{"i":127,"n":"Chorus","min":0,"max":100,"def":0},{"i":128,"n":"Ratio","min":0,"max":6,"def":1,"t":["Off","1.5:1","2:1","3:1","4:1","6:1","10:1"]},{"i":129,"n":"Thresh","min":0,"max":100,"def":60},{"i":130,"n":"Make-up","min":0,"max":100,"def":10},{"i":131,"n":"Ceiling","min":0,"max":100,"def":100},{"i":132,"n":"Length","min":1,"max":16,"def":16},{"i":133,"n":"Length","min":1,"max":16,"def":16},{"i":134,"n":"Length","min":1,"max":16,"def":16},{"i":135,"n":"Length","min":1,"max":16,"def":16},{"i":136,"n":"Length","min":1,"max":16,"def":16},{"i":137,"n":"Length","min":1,"max":16,"def":16},{"i":138,"n":"Density","min":0,"max":100,"def":50},{"i":139,"n":"Density","min":0,"max":100,"def":50},{"i":140,"n":"Density","min":0,"max":100,"def":50},{"i":141,"n":"Density","min":0,"max":100,"def":50},{"i":142,"n":"Density","min":0,"max":100,"def":50},{"i":143,"n":"Density","min":0,"max":100,"def":50},{"i":144,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":145,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":146,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":147,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":148,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":149,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":150,"n":"Loop","min":0,"max":6,"def":0,"t":["Off","2","4","8","2 ~","4 ~","8 ~"]},{"i":151,"n":"Answer","min":0,"max":44,"def":0,"t":["Off","Off","Off","Off","Off","Oct -2","Oct -","Oct =","Oct +","Oct +2","5th -2","5th -","5th =","5th +","5th +2","3rd -2","3rd -","3rd =","3rd +","3rd +2","Mirr -2","Mirr -","Mirr =","Mirr +","Mirr +2","Rev -2","Rev -","Rev =","Rev +","Rev +2","Rot -2","Rot -","Rot =","Rot +","Rot +2","Spar -2","Spar -","Spar =","Spar +","Spar +2","Acc -2","Acc -","Acc =","Acc +","Acc +2"]},{"i":152,"n":"Mode","min":0,"max":16,"def":0,"t":["Hold","Root","Kick","Eighths","Off-beat","Walk","Riff","Octaves","Two-step","One-drop","Log drum","Skippy","Funk","Big beat","Dub","Gallop","Steps"]},{"i":153,"n":"Length","min":0,"max":100,"def":50},{"i":154,"n":"Move","min":0,"max":100,"def":30},{"i":155,"n":"Glide","min":0,"max":100,"def":0},{"i":156,"n":"Deja vu","min":0,"max":100,"def":0},{"i":157,"n":"Loop","min":0,"max":3,"def":2,"t":["4","8","16","32"]},{"i":158,"n":"Leaps","min":0,"max":100,"def":0},{"i":159,"n":"Mutates","min":0,"max":3,"def":0,"t":["All","Notes","Rhythm","Accents"]},{"i":160,"n":"Comp","min":0,"max":8,"def":0,"t":["Auto","Hold","Off-beat","On-beat","3-3-2","Charlesto","Syncop","Sparse","Eighths"]},{"i":161,"n":"Ghosts","min":0,"max":100,"def":0},{"i":162,"n":"Accents","min":0,"max":100,"def":50},{"i":163,"n":"Humanize","min":0,"max":100,"def":0},{"i":164,"n":"Chain","min":0,"max":9,"def":0,"t":["Off","12","1112","1123","1134","1213","1234","1232","1115","123456"]},{"i":165,"n":"Slice","min":0,"max":9,"def":0,"t":["Off","Halves","Stutter","Reverse","Delay","Beats","Mirror","Double","Swap","Auto"]},{"i":166,"n":"Time","min":0,"max":2,"def":0,"t":["Normal","Half","Double"]},{"i":167,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":168,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":169,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":170,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":171,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":172,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":173,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]},{"i":174,"n":"Motif","min":0,"max":100,"def":60},{"i":175,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]}],"tabs":[{"name":"Tempo & global","sections":[{"name":"Tempo","knobs":[{"p":5,"label":"Tempo"},{"p":6,"label":"Evolve"},{"p":7,"label":"Motion"},{"p":8,"label":"Drift"}]},{"name":"Global","knobs":[{"p":71,"label":"Root"},{"p":75,"label":"Theme"},{"p":73,"label":"Tune"},{"p":74,"label":"MIDI out (the USB & MIDI settings page)"}]},{"name":"Scale and octave","knobs":[{"p":72,"label":"Mode (scale)"},{"p":82,"label":"Song octave"}]}]},{"name":"Pad","sections":[{"name":"Pad","knobs":[{"p":0,"label":"Level"},{"p":9,"label":"Bright"},{"p":10,"label":"Sound"},{"p":11,"label":"Detune"}]},{"name":"Envelope (the breath)","knobs":[{"p":12,"label":"Attack"},{"p":13,"label":"Hold"},{"p":14,"label":"Release"},{"p":15,"label":"Rest"}]},{"name":"LFO","knobs":[{"p":16,"label":"Rate"},{"p":17,"label":"Depth"},{"p":18,"label":"Shape"},{"p":19,"label":"Target"}]},{"name":"Chords","knobs":[{"p":92,"label":"Chord"},{"p":93,"label":"Voicing"},{"p":127,"label":"Chorus"},{"p":150,"label":"Loop"}]},{"name":"Place","knobs":[{"p":83,"label":"Octave"},{"p":89,"label":"By hand"},{"p":112,"label":"Pan"},{"p":117,"label":"Send"}]}]},{"name":"Bass","sections":[{"name":"Bass","knobs":[{"p":2,"label":"Level"},{"p":84,"label":"Sound"},{"p":24,"label":"Cutoff"},{"p":25,"label":"Reso"}]},{"name":"Envelope","knobs":[{"p":26,"label":"Trigger"},{"p":27,"label":"Attack"},{"p":28,"label":"Decay"},{"p":29,"label":"Amount"}]},{"name":"LFO","knobs":[{"p":30,"label":"Rate"},{"p":31,"label":"Depth"},{"p":32,"label":"Shape"},{"p":33,"label":"Target"}]},{"name":"Bass line (the bass as notes)","knobs":[{"p":152,"label":"Mode"},{"p":153,"label":"Length"},{"p":154,"label":"Move"},{"p":155,"label":"Glide"}]},{"name":"Place","knobs":[{"p":23,"label":"Octave"},{"p":90,"label":"By hand"},{"p":113,"label":"Pan"},{"p":118,"label":"Send"}]}]},{"name":"Acid","sections":[{"name":"Acid","knobs":[{"p":1,"label":"Level"},{"p":34,"label":"Cutoff"},{"p":35,"label":"Reso"},{"p":36,"label":"Env mod"}]},{"name":"Envelope and sound","knobs":[{"p":37,"label":"Decay"},{"p":38,"label":"Accent"},{"p":39,"label":"Slide"},{"p":40,"label":"Sound"}]},{"name":"The line","knobs":[{"p":41,"label":"Density"},{"p":42,"label":"Length"},{"p":43,"label":"Range"},{"p":44,"label":"Mutate"},{"p":151,"label":"Answer"},{"p":21,"label":"Answer every (bars; or before a drum change)"},{"p":76,"label":"Answer sync (0 bar, 1 loop)"},{"p":173,"label":"Frozen (the line held and stored with the piece)"},{"p":159,"label":"Mutates (what Mutate changes: 0 all, 1 notes, 2 rhythm, 3 accents)"}]},{"name":"Place","knobs":[{"p":45,"label":"Octave"},{"p":91,"label":"By hand"},{"p":114,"label":"Pan"},{"p":119,"label":"Send"}]}]},{"name":"Pluck","sections":[{"name":"Pluck","knobs":[{"p":98,"label":"Level"},{"p":99,"label":"Sound"},{"p":100,"label":"Density"},{"p":101,"label":"Octave"}]},{"name":"Behaviour","knobs":[{"p":102,"label":"Decay"},{"p":103,"label":"Style"},{"p":104,"label":"Rate"},{"p":105,"label":"Range"}]},{"name":"Deja vu (and the acid's Mutates)","knobs":[{"p":156,"label":"Pluck vu"},{"p":157,"label":"Loop"},{"p":158,"label":"Leaps"},{"p":174,"label":"Motif"}]},{"name":"Place","knobs":[{"p":122,"label":"By hand"},{"p":115,"label":"Pan"},{"p":120,"label":"Send"}]}]},{"name":"Drums","sections":[{"name":"Drums","knobs":[{"p":3,"label":"Level"},{"p":46,"label":"Drive"},{"p":47,"label":"Swing"},{"p":48,"label":"Pattern"}]},{"name":"Kit","knobs":[{"p":85,"label":"Kick"},{"p":86,"label":"Snare"},{"p":87,"label":"Hats"},{"p":88,"label":"Perc"}]},{"name":"Links (drums into voices)","knobs":[{"p":77,"label":"Links on"},{"p":78,"label":"K>Bass"},{"p":79,"label":"S>Pad"},{"p":80,"label":"H>Acid"},{"p":81,"label":"P>Clock"}]},{"name":"Drum drift","knobs":[{"p":94,"label":"Change"},{"p":95,"label":"Every"},{"p":96,"label":"Pool"},{"p":97,"label":"Mutate"}]},{"name":"Feel (ghost notes, accents, the pad's comping)","knobs":[{"p":161,"label":"Ghosts"},{"p":162,"label":"Accents"},{"p":160,"label":"Pad comp"},{"p":163,"label":"Humanize"}]},{"name":"Phrase (chain, slice, time)","knobs":[{"p":164,"label":"Chain"},{"p":165,"label":"Slice"},{"p":166,"label":"Time"}]},{"name":"Place","knobs":[{"p":116,"label":"Pan"},{"p":121,"label":"Send"}]},{"name":"Kick lane","knobs":[{"p":49,"label":"Level"},{"p":50,"label":"Tune"},{"p":51,"label":"Decay"},{"p":106,"label":"Probability"},{"p":132,"label":"Length (steps)"},{"p":138,"label":"Density (50: as written)"},{"p":167,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":144,"label":"Source pattern"}]},{"name":"Snare lane","knobs":[{"p":52,"label":"Level"},{"p":53,"label":"Tune"},{"p":54,"label":"Decay"},{"p":107,"label":"Probability"},{"p":133,"label":"Length (steps)"},{"p":139,"label":"Density (50: as written)"},{"p":168,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":145,"label":"Source pattern"}]},{"name":"Clap lane","knobs":[{"p":55,"label":"Level"},{"p":56,"label":"Tune"},{"p":57,"label":"Decay"},{"p":108,"label":"Probability"},{"p":134,"label":"Length (steps)"},{"p":140,"label":"Density (50: as written)"},{"p":169,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":146,"label":"Source pattern"}]},{"name":"Hat lane","knobs":[{"p":58,"label":"Level"},{"p":59,"label":"Tune"},{"p":60,"label":"Decay"},{"p":109,"label":"Probability"},{"p":135,"label":"Length (steps)"},{"p":141,"label":"Density (50: as written)"},{"p":170,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":147,"label":"Source pattern"}]},{"name":"Open hat lane","knobs":[{"p":61,"label":"Level"},{"p":62,"label":"Tune"},{"p":63,"label":"Decay"},{"p":110,"label":"Probability"},{"p":136,"label":"Length (steps)"},{"p":142,"label":"Density (50: as written)"},{"p":171,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":148,"label":"Source pattern"}]},{"name":"Perc lane","knobs":[{"p":64,"label":"Level"},{"p":65,"label":"Tune"},{"p":66,"label":"Decay"},{"p":111,"label":"Probability"},{"p":137,"label":"Length (steps)"},{"p":143,"label":"Density (50: as written)"},{"p":172,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":149,"label":"Source pattern"}]}]},{"name":"Space & master","sections":[{"name":"Space","knobs":[{"p":67,"label":"Echo"},{"p":68,"label":"Echo time"},{"p":69,"label":"Reverb"},{"p":70,"label":"Size"}]},{"name":"Reverb","knobs":[{"p":123,"label":"Type"},{"p":124,"label":"Damping"},{"p":125,"label":"Predelay"},{"p":126,"label":"Amount"}]},{"name":"Master bus","knobs":[{"p":128,"label":"Ratio"},{"p":129,"label":"Thresh"},{"p":130,"label":"Make-up"},{"p":131,"label":"Ceiling"}]}]},{"name":"Mixer","sections":[{"name":"Levels","knobs":[{"p":0,"label":"Pad"},{"p":2,"label":"Bass"},{"p":1,"label":"Acid"},{"p":98,"label":"Pluck"},{"p":3,"label":"Drums"},{"p":4,"label":"Vinyl"}]},{"name":"Pan","knobs":[{"p":112,"label":"Pad"},{"p":113,"label":"Bass"},{"p":114,"label":"Acid"},{"p":115,"label":"Pluck"},{"p":116,"label":"Drums"}]},{"name":"Send (echo and reverb)","knobs":[{"p":117,"label":"Pad"},{"p":118,"label":"Bass"},{"p":119,"label":"Acid"},{"p":120,"label":"Pluck"},{"p":121,"label":"Drums"}]},{"name":"Vinyl","knobs":[{"p":20,"label":"Wear"},{"p":22,"label":"Pump (the kick ducks it)"}]},{"name":"More","knobs":[{"p":175,"label":"Frozen"}]}]}],"alg":[[193,17,17,20,1,20],[1,17,17,20,193,20],[193,17,20,1,17,20],[193,17,148,1,17,20],[193,20,1,20,1,20],[193,148,1,20,1,20],[193,17,5,20,1,20],[1,17,197,20,1,20],[1,17,5,20,193,20],[1,5,20,193,17,20],[193,5,20,1,17,20],[1,5,5,20,193,20],[193,5,5,20,1,20],[193,5,17,20,1,20],[1,5,17,20,193,20],[193,17,2,37,5,20],[1,17,2,37,197,20],[1,17,17,197,5,20],[193,20,20,1,17,20],[1,5,20,193,20,20],[1,20,20,193,20,20],[193,20,20,20,1,20],[193,20,20,1,20,4],[193,20,20,20,4,4],[193,20,20,4,4,4],[193,5,20,1,20,4],[1,5,20,193,20,4],[4,193,17,20,1,20],[193,20,1,20,4,4],[4,193,17,20,4,4],[193,20,4,4,4,4],[196,4,4,4,4,4]],"lanes":["Kick","Snare","Clap","Hat","Open hat","Perc"],"layers":["Pad","Bass","Acid","Pluck","Drums"],"enum":{"P_TEMPO":5,"P_PADTONE":10,"P_AC_WAVE":40,"P_PATTERN":48,"P_ROOT":71,"P_MODE":72,"P_TUNE":73,"P_MIDI":74,"P_THEME":75,"P_CM_LVL":98,"P_CM_SND":99,"P_NPARAMS":176},"names":{"genres":["HYPNO","LOFI","HOUSE","DUBSTEP","DUB","DNB","BREAKS","GARAGE","ELECTRO","TRAP","DISCO","FUNK","REGGAE","SYNTHWV","AMAPI","TRIPHOP","INDUS","PSY","FOREST"],"pieces":[["01","02","03","04","05","06","07","08","09","10"],["L01","L02","L03","L04","L05","L06","L07","L08","L09","L10"],["H01","H02","H03","H04","H05","H06","H07","H08","H09","H10"],["D01","D02","D03","D04","D05","D06","D07","D08","D09","D10"],["V01","V02","V03","V04","V05","V06","V07","V08","V09","V10"],["N01","N02","N03","N04","N05","N06","N07","N08","N09","N10"],["B01","B02","B03","B04","B05","B06","B07","B08","B09","B10"],["G01","G02","G03","G04","G05","G06","G07","G08","G09","G10"],["E01","E02","E03","E04","E05","E06","E07","E08","E09","E10"],["T01","T02","T03","T04","T05","T06","T07","T08","T09","T10"],["S01","S02","S03","S04","S05","S06","S07","S08","S09","S10"],["F01","F02","F03","F04","F05","F06","F07","F08","F09","F10"],["R01","R02","R03","R04","R05","R06","R07","R08","R09","R10"],["W01","W02","W03","W04","W05","W06","W07","W08","W09","W10"],["A01","A02","A03","A04","A05","A06","A07","A08","A09","A10"],["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"],["I01","I02","I03","I04","I05","I06","I07","I08","I09","I10"],["Y01","Y02","Y03","Y04","Y05","Y06","Y07","Y08","Y09","Y10"],["O01","O02","O03","O04","O05","O06","O07","O08","O09","O10"]],"nplain":12,"nfmfact":30,"nuser":16,"prglen":6,"npat":6,"nlane":6}}. It talks to the FM-1 over WebMIDI SysEx:
+     the backup messages (firmware/src/backup_proto.h). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PERF-1 pieces</title>
+<meta name="description" content="The PERF-1 library: pieces and sets made by players, to hear in the browser and add to your M-VAVE FM-1. Share and submit your own.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
+<style>
+  :root { --ground: #130a0e; --card: #211219; --card-2: #2e1822; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
+          --purple: #e0344f; --purple-2: #ff8f8f; --orange: #ffd447; --rust: #9c1d3a; --horn: #f2e6c4; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink);
+         font: 400 17px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 56px; }
+  .narrow { max-width: 820px; }
+  h1, h2, .site .home, button, a.btn, .tag, .tabs a { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1rem;
+       display: flex; align-items: center; gap: .7rem; }
+  h1::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 38%, var(--purple) 38%); }
+  p { margin: 0 0 14px; }
+  a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  a:hover { color: var(--purple-2); }
+  button, a.btn { font-size: .95rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--purple); color: #fff; text-decoration: none;
+           border: 1px solid var(--purple-2); border-radius: 8px; padding: .5em 1.2em; cursor: pointer; margin: 0 .4em .4em 0; display: inline-block; }
+  button:hover:not(:disabled), a.btn:hover { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
+  button.alt { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
+  button.alt:hover:not(:disabled) { background: var(--rust); border-color: var(--purple); color: #fff; }
+  button.sm { font-size: .82rem; padding: .4em .9em; }
+  button:disabled { opacity: .35; cursor: default; }
+  .small { color: var(--muted); font-size: 15px; }
+  .say { min-height: 1.6em; color: var(--purple-2); }
+  progress { width: 100%; height: 6px; accent-color: var(--orange); }
+  progress[value="0"] { visibility: hidden; }
+  input[type=file] { font: inherit; font-size: 14px; color: var(--muted); max-width: 100%; }
+  input[type=text], input[type=search], textarea, select { font: inherit; font-size: 16px; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 6px;
+           padding: .35em .6em; width: 100%; }
+  textarea { font: 13px/1.4 ui-monospace, Consolas, monospace; min-height: 4.5em; resize: vertical; word-break: break-all; }
+  select { width: auto; }
+  label.f { display: block; font-size: 14px; color: var(--muted); margin: 0 0 10px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
+  .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 1.4rem; padding-bottom: .8rem; border-bottom: 1px solid var(--rule); }
+  .site .home { font-size: 1.3rem; font-weight: 700; letter-spacing: .06em; color: var(--ink); text-decoration: none; }
+  .site nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: .2rem 1rem; font-size: 1rem; }
+  .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 1.2rem; border-bottom: 1px solid var(--rule); }
+  .tabs a { font-weight: 700; letter-spacing: .07em; text-transform: uppercase; text-decoration: none; padding: .55em 1.1em; border: 1px solid transparent;
+            border-bottom: none; border-radius: 8px 8px 0 0; color: var(--muted); margin-bottom: -1px; }
+  .tabs a[aria-selected="true"] { color: var(--orange); background: var(--card); border-color: var(--rule); }
+  .tabs a .n { color: var(--purple-2); font-size: .85em; margin-left: .3em; }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin: 0 0 1rem; }
+  .card.hot { border-color: var(--orange); }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 1rem; }
+  .bar input { flex: 1; min-width: 180px; width: auto; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .item { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; }
+  .item.mine { border-color: var(--orange); }
+  .item canvas { width: 100%; height: auto; border-radius: 6px; margin: 0 0 10px; }
+  .item .tag { font-weight: 700; color: var(--horn); letter-spacing: .03em; }
+  .pick { font: 700 .72rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: #1a0c03; background: var(--orange); border-radius: 4px; padding: .05em .45em; margin-left: .5em; vertical-align: 2px; }
+  .item .title { color: var(--orange); }
+  .item .sub { color: var(--muted); font-size: 14px; }
+  .item .note { font-size: 15px; white-space: pre-wrap; margin: .3em 0 .6em; }
+  .item .acts { margin-top: auto; padding-top: .4em; }
+  .empty { text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--rule); border-radius: 10px; grid-column: 1 / -1; }
+  #mine { max-height: 380px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
+  #mine:empty { display: none; }
+  #mine label { display: flex; gap: .7em; align-items: baseline; padding: 4px 12px; cursor: pointer; }
+  #mine label:nth-child(odd) { background: rgba(255,255,255,.03); }
+  #mine label.set { border-bottom: 1px solid var(--rule); }
+  #mine label.all { border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 15px; }
+  #mine input { accent-color: var(--purple); }
+  #mine .sub, .info .sub { color: var(--muted); font-size: 14px; }
+  .info { margin: 0 0 14px; }
+  .info .tag { font-size: 1.5rem; font-weight: 700; color: var(--horn); letter-spacing: .04em; }
+  .info .title { font-size: 1.15rem; color: var(--orange); }
+  .info .note { white-space: pre-wrap; }
+  .info ol { margin: .3em 0 0; padding-left: 1.6em; color: var(--muted); font-size: 15px; }
+  canvas.card-img { width: 100%; max-width: 600px; height: auto; border-radius: 8px; border: 1px solid var(--rule); display: block; margin: 0 0 12px; }
+  dialog { background: var(--card); color: var(--ink); border: 1px solid var(--orange); border-radius: 10px; max-width: 520px; padding: 18px 20px; }
+  dialog::backdrop { background: rgba(10, 4, 6, .7); }
+  dialog h3 { font: 700 1.1rem "Chakra Petch", sans-serif; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 .6rem; color: var(--orange); }
+  #dlgp { white-space: pre-wrap; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <p class="kofi" style="margin:0 0 .5rem;text-align:right;font-size:.88rem"><a href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
+  <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Library &amp; pieces</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
+  <h1>Library &amp; pieces</h1>
+  <nav class="tabs" role="tablist">
+    <a href="#library" id="t-library" role="tab">Library<span class="n" id="libn"></span></a>
+    <a href="#mine" id="t-mine" role="tab">My FM-1</a>
+    <a href="#add" id="t-add" role="tab">Add a code</a>
+  </nav>
+
+  <!-- ============================================================ the library -->
+  <section id="s-library" hidden>
+    <p class="small">Pieces and sets made by PERF-1 players. <b>Hear</b> one in the browser emulator or <b>add</b> it to your FM-1 (it asks before it replaces anything of yours); a piece brings its own DX7 voice. <span class="pick">PICKED</span> ones are the maker's choice. Share yours from <a href="#mine">My FM-1</a>: tick them and press <b>Submit</b>.</p>
+    <div class="bar"><select id="genre"><option value="">Every genre</option></select><select id="which"><option value="">Everything</option><option value="pick">Picked</option><option value="new">Newest first</option><option value="mine">Mine</option></select><input type="search" id="find" placeholder="Search titles, makers, notes"></div>
+    <div class="grid" id="grid"></div>
+    <p style="text-align:center;margin-top:1rem"><button id="more" class="alt" hidden>Show more</button></p>
+    <p class="say" id="libsay"></p>
+  </section>
+
+  <!-- ============================================================ my FM-1 -->
+  <section id="s-mine" class="narrow" hidden>
+    <div class="card">
+      <p class="small">Plug the FM-1 in by USB (Chrome or Edge). Only <b>saved</b> pieces are here: save one on the FM-1 with <b>GLO</b>, then <b>SAVE</b>. The first row is your set list: every piece in it, their voices, Play and the Mix.</p>
+      <p><button id="scan">Read my pieces and set list</button></p>
+      <div id="mine"></div>
+      <div id="sharebox" hidden>
+        <p class="small" id="basedrow" hidden></p>
+        <div class="row2">
+          <label class="f" id="titlef">Title (optional)<input type="text" id="mtitle" maxlength="60"></label>
+          <label class="f">Your name (optional)<input type="text" id="mby" maxlength="40"></label>
+        </div>
+        <div id="mtitles" hidden></div>
+        <label class="f" id="notef">A note: how to play it, what to try (optional)<textarea id="mnote" maxlength="400" style="font: inherit; font-size: 16px"></textarea></label>
+        <p class="small" id="manyhint" hidden>Several ticked: give each a title if you like (left empty, it goes by its genre and number); your name goes on all of them. Tick one alone to add a note.</p>
+        <p><button id="submit">Submit to the Library</button> <button id="dl" class="alt">Download</button> <button id="cplink" class="alt">Copy link</button> <button id="cpcode" class="alt">Copy code</button> <button id="mycard" class="alt">Card</button></p>
+        <textarea id="outcode" readonly hidden></textarea>
+      </div>
+      <canvas id="cardview" class="card-img" hidden></canvas>
+      <p id="cardsave" hidden><button id="cardpng" class="alt">Save the card (PNG)</button> <span class="small">Post it with the link: the picture shows what it is, the link adds it.</span></p>
+      <progress id="scanbar" max="100" value="0"></progress>
+      <p class="say" id="scansay"></p>
+    </div>
+    <p class="small">Submitting puts them in the Library for everyone at once, with your name if you give one. You can take back what you submitted from this browser (Remove, on its card). Anything else, a link is enough: post it on Reddit or under a video.</p>
+  </section>
+
+  <!-- ============================================================ adding -->
+  <section id="s-add" class="narrow" hidden>
+    <div class="card" id="addcard">
+      <label class="f">Paste a code or link
+        <textarea id="code" placeholder="P1.…  or  https://…/pieces/#p=P1.…" spellcheck="false"></textarea></label>
+      <p><button id="read" class="alt">Read it</button> <span class="small">or choose a file:</span> <input type="file" id="pfile" accept=".piece,.perfset"></p>
+      <div id="incoming" hidden>
+        <div class="info" id="ininfo"></div>
+        <p id="slotrow"><label class="small" for="slot">Put it in </label><span id="ingenre" class="small"></span> <select id="slot"></select></p>
+        <p><button id="add">Add to my FM-1</button> <button id="hear" class="alt">Hear it in the emulator</button> <button id="incard" class="alt">Card</button></p>
+        <p class="small">Adding writes into the FM-1 and restarts it (a few seconds). Save what you are playing first: changes you have not saved are lost in the restart. Adding needs PERF-1 0.16.3 or later.</p>
+      </div>
+      <canvas id="incardview" class="card-img" hidden></canvas>
+      <progress id="addbar" max="100" value="0"></progress>
+      <p class="say" id="addsay"></p>
+    </div>
+  </section>
+
+  <p class="small" style="margin-top:1.6rem">PERF-1 by deamonSLINKY, GPL-3.0, no warranty. The pieces are their makers'. <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a>.</p>
+</main>
+
+<dialog id="dlg"><h3 id="dlgh"></h3><p id="dlgp"></p><div id="dlgb"></div></dialog>
+
+<script type="application/json" id="pdata">{"params":[{"i":0,"n":"Pad","min":0,"max":100,"def":45},{"i":1,"n":"Acid","min":0,"max":100,"def":55},{"i":2,"n":"Bass","min":0,"max":100,"def":65},{"i":3,"n":"Drums","min":0,"max":100,"def":75},{"i":4,"n":"Vinyl","min":0,"max":100,"def":20},{"i":5,"n":"Tempo","min":70,"max":190,"def":128},{"i":6,"n":"Evolve","min":0,"max":100,"def":40},{"i":7,"n":"Motion","min":0,"max":100,"def":60},{"i":8,"n":"Drift","min":0,"max":100,"def":60},{"i":9,"n":"Bright","min":0,"max":100,"def":35},{"i":10,"n":"Sound","min":0,"max":23,"def":1,"t":["Rhodes","Voices","Strings","Glass","Organ","Warm","Stabs","Dark","Dub","Trance","Poly","Hollow","Pings","Hits","Rave","Sine","Ooh","Wurli","Mallet","Brass","Fat","Pluck","Chapel","Air"]},{"i":11,"n":"Detune","min":0,"max":100,"def":30},{"i":12,"n":"Attack","min":0,"max":100,"def":45},{"i":13,"n":"Hold","min":0,"max":100,"def":35},{"i":14,"n":"Release","min":0,"max":100,"def":55},{"i":15,"n":"Rest","min":0,"max":100,"def":20},{"i":16,"n":"Rate","min":0,"max":11,"def":4,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars","1/8","1/8T","1/16","1/16T"]},{"i":17,"n":"Depth","min":0,"max":100,"def":25},{"i":18,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":19,"n":"Target","min":0,"max":7,"def":0,"t":["Filter","Level","Pan","Pitch","Acid cut","Acid reso","Echo time","Punch cut"]},{"i":20,"n":"Wear","min":0,"max":7,"def":1,"t":["Mint","Clean","Light","Used","Worn","Scratched","Dusty","Trashed"]},{"i":21,"n":"Every","min":0,"max":7,"def":0,"t":["2nd","3rd","4th","5th","6th","7th","8th","Drift"]},{"i":22,"n":"Pump","min":0,"max":100,"def":60},{"i":23,"n":"Octave","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":24,"n":"Cutoff","min":0,"max":100,"def":45},{"i":25,"n":"Reso","min":0,"max":100,"def":45},{"i":26,"n":"Trigger","min":0,"max":5,"def":0,"t":["Chord","1 bar","2 bars","4 bars","8 bars","Off"]},{"i":27,"n":"Attack","min":0,"max":100,"def":25},{"i":28,"n":"Decay","min":0,"max":100,"def":55},{"i":29,"n":"Amount","min":0,"max":100,"def":35},{"i":30,"n":"Rate","min":0,"max":11,"def":6,"t":["1/4","1/2","1 bar","2 bars","4 bars","8 bars","16 bars","32 bars","1/8","1/8T","1/16","1/16T"]},{"i":31,"n":"Depth","min":0,"max":100,"def":55},{"i":32,"n":"Shape","min":0,"max":5,"def":0,"t":["Sine","Triangle","Saw","Square","S&H","Drift"]},{"i":33,"n":"Target","min":0,"max":7,"def":0,"t":["Cutoff","Pitch","Level","Drive","Reso","Acid cut","Acid reso","Echo time"]},{"i":34,"n":"Cutoff","min":0,"max":100,"def":35},{"i":35,"n":"Reso","min":0,"max":100,"def":70},{"i":36,"n":"Env mod","min":0,"max":100,"def":55},{"i":37,"n":"Decay","min":0,"max":100,"def":40},{"i":38,"n":"Accent","min":0,"max":100,"def":50},{"i":39,"n":"Slide","min":0,"max":100,"def":30},{"i":40,"n":"Sound","min":0,"max":30,"def":0,"t":["Saw","Square","Driven","Sync","Pluck","PWM","Chip","Sub","Trance","Bleep","Fifth","Bell","Organ","Laser","Fold","Soft","Marimba","E.Piano","Kalimba","Brass","Gong","Clav","Vibes","Digital","Super","CZ","Mini","Hyper","CZ Pulse","CZ Bell","Lead"]},{"i":41,"n":"Density","min":0,"max":100,"def":60},{"i":42,"n":"Length","min":1,"max":16,"def":16},{"i":43,"n":"Range","min":1,"max":3,"def":1,"t":["1 oct","2 oct","3 oct"]},{"i":44,"n":"Mutate","min":0,"max":100,"def":25},{"i":45,"n":"Acid oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":46,"n":"Drive","min":0,"max":100,"def":40},{"i":47,"n":"Swing","min":0,"max":100,"def":0},{"i":48,"n":"Pattern","min":0,"max":5,"def":0,"t":["1","2","3","4","5","6"]},{"i":49,"n":"Level","min":0,"max":100,"def":85},{"i":50,"n":"Tune","min":-50,"max":50,"def":0},{"i":51,"n":"Decay","min":0,"max":100,"def":50},{"i":52,"n":"Level","min":0,"max":100,"def":60},{"i":53,"n":"Tune","min":-50,"max":50,"def":0},{"i":54,"n":"Decay","min":0,"max":100,"def":45},{"i":55,"n":"Level","min":0,"max":100,"def":65},{"i":56,"n":"Tune","min":-50,"max":50,"def":0},{"i":57,"n":"Decay","min":0,"max":100,"def":45},{"i":58,"n":"Level","min":0,"max":100,"def":55},{"i":59,"n":"Tune","min":-50,"max":50,"def":0},{"i":60,"n":"Decay","min":0,"max":100,"def":35},{"i":61,"n":"Level","min":0,"max":100,"def":50},{"i":62,"n":"Tune","min":-50,"max":50,"def":0},{"i":63,"n":"Decay","min":0,"max":100,"def":50},{"i":64,"n":"Level","min":0,"max":100,"def":50},{"i":65,"n":"Tune","min":-50,"max":50,"def":0},{"i":66,"n":"Decay","min":0,"max":100,"def":40},{"i":67,"n":"Echo","min":0,"max":100,"def":45},{"i":68,"n":"Echo time","min":0,"max":5,"def":1,"t":["1/8","3/16","1/4","1/4.","1/2","1 bar"]},{"i":69,"n":"Reverb","min":0,"max":100,"def":40},{"i":70,"n":"Size","min":0,"max":100,"def":70},{"i":71,"n":"Root","min":0,"max":11,"def":9,"t":["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"]},{"i":72,"n":"Mode","min":0,"max":7,"def":5,"t":["Ionian","Dorian","Phrygian","Lydian","Mixolyd.","Aeolian","Pent maj","Pent min"]},{"i":73,"n":"Tune","min":-50,"max":50,"def":0},{"i":74,"n":"MIDI out","min":0,"max":1,"def":1,"t":["Off","On"]},{"i":75,"n":"Theme","min":0,"max":5,"def":0,"t":["Imp","Synth","Acid","Ice","Ember","Phosphor"]},{"i":76,"n":"Sync","min":0,"max":1,"def":0,"t":["Bar","Loop"]},{"i":77,"n":"Links","min":0,"max":1,"def":0,"t":["Off","On"]},{"i":78,"n":"Kick","min":0,"max":100,"def":50},{"i":79,"n":"Snare","min":0,"max":100,"def":40},{"i":80,"n":"Hats","min":0,"max":100,"def":50},{"i":81,"n":"Perc","min":0,"max":1,"def":0,"t":["Off","Clock"]},{"i":82,"n":"Song oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":83,"n":"Pad oct","min":-3,"max":3,"def":0,"t":["-3","-2","-1","0","+1","+2","+3"]},{"i":84,"n":"Sound","min":0,"max":23,"def":0,"t":["Saws","Warm","Grit","Dirty","Reese","Pulse","FM","Organ","Rumble","Sub","Square","Hoover","Fifths","Metal","Sync","Bright","Wub","Bite","Tine","Clang","Gnarl","Wide","Power","Air"]},{"i":85,"n":"Kick","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":86,"n":"Snare","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":87,"n":"Hats","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":88,"n":"Perc","min":0,"max":13,"def":0,"t":["Hypno","House","Techno","Acid","Break","Minimal","Hard","808","Dusty","Heavy","909","Electro","DnB","Trap"]},{"i":89,"n":"Pad hand","min":0,"max":1,"def":0},{"i":90,"n":"Bass hand","min":0,"max":1,"def":0},{"i":91,"n":"Acid hand","min":0,"max":1,"def":0},{"i":92,"n":"Chord","min":0,"max":7,"def":0,"t":["Auto","Triads","7ths","9ths","Sus","Dub","Fourths","11ths"]},{"i":93,"n":"Voicing","min":0,"max":1,"def":0,"t":["Close","Open"]},{"i":94,"n":"Change","min":0,"max":2,"def":0,"t":["Off","Next","Random"]},{"i":95,"n":"Every","min":0,"max":5,"def":2,"t":["Chord","4 bars","8 bars","16 bars","32 bars","64 bars"]},{"i":96,"n":"Pool","min":2,"max":6,"def":4,"t":["1-2","1-3","1-4","1-5","1-6"]},{"i":97,"n":"Mutate","min":0,"max":2,"def":0,"t":["Off","Shift","Morph"]},{"i":98,"n":"Pluck","min":0,"max":100,"def":50},{"i":99,"n":"Sound","min":0,"max":57,"def":1,"t":["Pluck","Marimba","E.Piano","Kalimba","Bell","Vibes","Gong","Clav","Digital","Brass","Bleep","Glass","DX Tine EP","DX Glass Bell","DX Round Bass","DX Brass Sect","DX Soft Pad","DX Wood Bars","DX Drawbars","DX Nylon Pick","DX Brass 2","DX Solid Bass","DX Bells","DX Marimba","DX Clavinet","DX Strings","DX Glass Pad","DX Sync Lead","DX Harp","DX Kalimba","DX Flute","DX Steel Drum","DX Saw Bass","DX Tubular","DX Steel Gtr","DX Clean Gtr","DX Muted Gtr","DX Drive Gtr","DX Slap Bass","DX Synth Brass","DX Sax","DX Mute Trumpet","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)","(empty)"]},{"i":100,"n":"Density","min":0,"max":100,"def":45},{"i":101,"n":"Pluck oct","min":-2,"max":2,"def":0},{"i":102,"n":"Decay","min":0,"max":100,"def":45},{"i":103,"n":"Style","min":0,"max":5,"def":0,"t":["Up","Down","Up-down","Random","Skip","Thirds"]},{"i":104,"n":"Rate","min":0,"max":3,"def":2,"t":["1/4","3/16","1/8","1/16"]},{"i":105,"n":"Range","min":1,"max":3,"def":2},{"i":106,"n":"Prob","min":0,"max":100,"def":100},{"i":107,"n":"Prob","min":0,"max":100,"def":100},{"i":108,"n":"Prob","min":0,"max":100,"def":100},{"i":109,"n":"Prob","min":0,"max":100,"def":100},{"i":110,"n":"Prob","min":0,"max":100,"def":100},{"i":111,"n":"Prob","min":0,"max":100,"def":100},{"i":112,"n":"Pan","min":0,"max":100,"def":50},{"i":113,"n":"Pan","min":0,"max":100,"def":50},{"i":114,"n":"Pan","min":0,"max":100,"def":50},{"i":115,"n":"Pan","min":0,"max":100,"def":50},{"i":116,"n":"Pan","min":0,"max":100,"def":50},{"i":117,"n":"Send","min":0,"max":100,"def":50},{"i":118,"n":"Send","min":0,"max":100,"def":50},{"i":119,"n":"Send","min":0,"max":100,"def":50},{"i":120,"n":"Send","min":0,"max":100,"def":50},{"i":121,"n":"Send","min":0,"max":100,"def":50},{"i":122,"n":"Pluck hand","min":0,"max":1,"def":0},{"i":123,"n":"Type","min":0,"max":2,"def":0,"t":["Plate","Shimmer","Gated"]},{"i":124,"n":"Damping","min":0,"max":100,"def":47},{"i":125,"n":"Predelay","min":0,"max":100,"def":100},{"i":126,"n":"Amount","min":0,"max":100,"def":30},{"i":127,"n":"Chorus","min":0,"max":100,"def":0},{"i":128,"n":"Ratio","min":0,"max":6,"def":1,"t":["Off","1.5:1","2:1","3:1","4:1","6:1","10:1"]},{"i":129,"n":"Thresh","min":0,"max":100,"def":60},{"i":130,"n":"Make-up","min":0,"max":100,"def":10},{"i":131,"n":"Ceiling","min":0,"max":100,"def":100},{"i":132,"n":"Length","min":1,"max":16,"def":16},{"i":133,"n":"Length","min":1,"max":16,"def":16},{"i":134,"n":"Length","min":1,"max":16,"def":16},{"i":135,"n":"Length","min":1,"max":16,"def":16},{"i":136,"n":"Length","min":1,"max":16,"def":16},{"i":137,"n":"Length","min":1,"max":16,"def":16},{"i":138,"n":"Density","min":0,"max":100,"def":50},{"i":139,"n":"Density","min":0,"max":100,"def":50},{"i":140,"n":"Density","min":0,"max":100,"def":50},{"i":141,"n":"Density","min":0,"max":100,"def":50},{"i":142,"n":"Density","min":0,"max":100,"def":50},{"i":143,"n":"Density","min":0,"max":100,"def":50},{"i":144,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":145,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":146,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":147,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":148,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":149,"n":"Source","min":0,"max":6,"def":0,"t":["Follow","Pat 1","Pat 2","Pat 3","Pat 4","Pat 5","Pat 6"]},{"i":150,"n":"Loop","min":0,"max":6,"def":0,"t":["Off","2","4","8","2 ~","4 ~","8 ~"]},{"i":151,"n":"Answer","min":0,"max":44,"def":0,"t":["Off","Off","Off","Off","Off","Oct -2","Oct -","Oct =","Oct +","Oct +2","5th -2","5th -","5th =","5th +","5th +2","3rd -2","3rd -","3rd =","3rd +","3rd +2","Mirr -2","Mirr -","Mirr =","Mirr +","Mirr +2","Rev -2","Rev -","Rev =","Rev +","Rev +2","Rot -2","Rot -","Rot =","Rot +","Rot +2","Spar -2","Spar -","Spar =","Spar +","Spar +2","Acc -2","Acc -","Acc =","Acc +","Acc +2"]},{"i":152,"n":"Mode","min":0,"max":16,"def":0,"t":["Hold","Root","Kick","Eighths","Off-beat","Walk","Riff","Octaves","Two-step","One-drop","Log drum","Skippy","Funk","Big beat","Dub","Gallop","Steps"]},{"i":153,"n":"Length","min":0,"max":100,"def":50},{"i":154,"n":"Move","min":0,"max":100,"def":30},{"i":155,"n":"Glide","min":0,"max":100,"def":0},{"i":156,"n":"Deja vu","min":0,"max":100,"def":0},{"i":157,"n":"Loop","min":0,"max":3,"def":2,"t":["4","8","16","32"]},{"i":158,"n":"Leaps","min":0,"max":100,"def":0},{"i":159,"n":"Mutates","min":0,"max":3,"def":0,"t":["All","Notes","Rhythm","Accents"]},{"i":160,"n":"Comp","min":0,"max":8,"def":0,"t":["Auto","Hold","Off-beat","On-beat","3-3-2","Charlesto","Syncop","Sparse","Eighths"]},{"i":161,"n":"Ghosts","min":0,"max":100,"def":0},{"i":162,"n":"Accents","min":0,"max":100,"def":50},{"i":163,"n":"Humanize","min":0,"max":100,"def":0},{"i":164,"n":"Chain","min":0,"max":9,"def":0,"t":["Off","12","1112","1123","1134","1213","1234","1232","1115","123456"]},{"i":165,"n":"Slice","min":0,"max":9,"def":0,"t":["Off","Halves","Stutter","Reverse","Delay","Beats","Mirror","Double","Swap","Auto"]},{"i":166,"n":"Time","min":0,"max":2,"def":0,"t":["Normal","Half","Double"]},{"i":167,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":168,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":169,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":170,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":171,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":172,"n":"Cond","min":0,"max":7,"def":0,"t":["Always","1:2","2:2","1:4","4:4","1:8","Fill","No fill"]},{"i":173,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]},{"i":174,"n":"Motif","min":0,"max":100,"def":60},{"i":175,"n":"Frozen","min":0,"max":1,"def":0,"t":["Free","Frozen"]}],"tabs":[{"name":"Tempo & global","sections":[{"name":"Tempo","knobs":[{"p":5,"label":"Tempo"},{"p":6,"label":"Evolve"},{"p":7,"label":"Motion"},{"p":8,"label":"Drift"}]},{"name":"Global","knobs":[{"p":71,"label":"Root"},{"p":75,"label":"Theme"},{"p":73,"label":"Tune"},{"p":74,"label":"MIDI out (the USB & MIDI settings page)"}]},{"name":"Scale and octave","knobs":[{"p":72,"label":"Mode (scale)"},{"p":82,"label":"Song octave"}]}]},{"name":"Pad","sections":[{"name":"Pad","knobs":[{"p":0,"label":"Level"},{"p":9,"label":"Bright"},{"p":10,"label":"Sound"},{"p":11,"label":"Detune"}]},{"name":"Envelope (the breath)","knobs":[{"p":12,"label":"Attack"},{"p":13,"label":"Hold"},{"p":14,"label":"Release"},{"p":15,"label":"Rest"}]},{"name":"LFO","knobs":[{"p":16,"label":"Rate"},{"p":17,"label":"Depth"},{"p":18,"label":"Shape"},{"p":19,"label":"Target"}]},{"name":"Chords","knobs":[{"p":92,"label":"Chord"},{"p":93,"label":"Voicing"},{"p":127,"label":"Chorus"},{"p":150,"label":"Loop"}]},{"name":"Place","knobs":[{"p":83,"label":"Octave"},{"p":89,"label":"By hand"},{"p":112,"label":"Pan"},{"p":117,"label":"Send"}]}]},{"name":"Bass","sections":[{"name":"Bass","knobs":[{"p":2,"label":"Level"},{"p":84,"label":"Sound"},{"p":24,"label":"Cutoff"},{"p":25,"label":"Reso"}]},{"name":"Envelope","knobs":[{"p":26,"label":"Trigger"},{"p":27,"label":"Attack"},{"p":28,"label":"Decay"},{"p":29,"label":"Amount"}]},{"name":"LFO","knobs":[{"p":30,"label":"Rate"},{"p":31,"label":"Depth"},{"p":32,"label":"Shape"},{"p":33,"label":"Target"}]},{"name":"Bass line (the bass as notes)","knobs":[{"p":152,"label":"Mode"},{"p":153,"label":"Length"},{"p":154,"label":"Move"},{"p":155,"label":"Glide"}]},{"name":"Place","knobs":[{"p":23,"label":"Octave"},{"p":90,"label":"By hand"},{"p":113,"label":"Pan"},{"p":118,"label":"Send"}]}]},{"name":"Acid","sections":[{"name":"Acid","knobs":[{"p":1,"label":"Level"},{"p":34,"label":"Cutoff"},{"p":35,"label":"Reso"},{"p":36,"label":"Env mod"}]},{"name":"Envelope and sound","knobs":[{"p":37,"label":"Decay"},{"p":38,"label":"Accent"},{"p":39,"label":"Slide"},{"p":40,"label":"Sound"}]},{"name":"The line","knobs":[{"p":41,"label":"Density"},{"p":42,"label":"Length"},{"p":43,"label":"Range"},{"p":44,"label":"Mutate"},{"p":151,"label":"Answer"},{"p":21,"label":"Answer every (bars; or before a drum change)"},{"p":76,"label":"Answer sync (0 bar, 1 loop)"},{"p":173,"label":"Frozen (the line held and stored with the piece)"},{"p":159,"label":"Mutates (what Mutate changes: 0 all, 1 notes, 2 rhythm, 3 accents)"}]},{"name":"Place","knobs":[{"p":45,"label":"Octave"},{"p":91,"label":"By hand"},{"p":114,"label":"Pan"},{"p":119,"label":"Send"}]}]},{"name":"Pluck","sections":[{"name":"Pluck","knobs":[{"p":98,"label":"Level"},{"p":99,"label":"Sound"},{"p":100,"label":"Density"},{"p":101,"label":"Octave"}]},{"name":"Behaviour","knobs":[{"p":102,"label":"Decay"},{"p":103,"label":"Style"},{"p":104,"label":"Rate"},{"p":105,"label":"Range"}]},{"name":"Deja vu (and the acid's Mutates)","knobs":[{"p":156,"label":"Pluck vu"},{"p":157,"label":"Loop"},{"p":158,"label":"Leaps"},{"p":174,"label":"Motif"}]},{"name":"Place","knobs":[{"p":122,"label":"By hand"},{"p":115,"label":"Pan"},{"p":120,"label":"Send"}]}]},{"name":"Drums","sections":[{"name":"Drums","knobs":[{"p":3,"label":"Level"},{"p":46,"label":"Drive"},{"p":47,"label":"Swing"},{"p":48,"label":"Pattern"}]},{"name":"Kit","knobs":[{"p":85,"label":"Kick"},{"p":86,"label":"Snare"},{"p":87,"label":"Hats"},{"p":88,"label":"Perc"}]},{"name":"Links (drums into voices)","knobs":[{"p":77,"label":"Links on"},{"p":78,"label":"K>Bass"},{"p":79,"label":"S>Pad"},{"p":80,"label":"H>Acid"},{"p":81,"label":"P>Clock"}]},{"name":"Drum drift","knobs":[{"p":94,"label":"Change"},{"p":95,"label":"Every"},{"p":96,"label":"Pool"},{"p":97,"label":"Mutate"}]},{"name":"Feel (ghost notes, accents, the pad's comping)","knobs":[{"p":161,"label":"Ghosts"},{"p":162,"label":"Accents"},{"p":160,"label":"Pad comp"},{"p":163,"label":"Humanize"}]},{"name":"Phrase (chain, slice, time)","knobs":[{"p":164,"label":"Chain"},{"p":165,"label":"Slice"},{"p":166,"label":"Time"}]},{"name":"Place","knobs":[{"p":116,"label":"Pan"},{"p":121,"label":"Send"}]},{"name":"Kick lane","knobs":[{"p":49,"label":"Level"},{"p":50,"label":"Tune"},{"p":51,"label":"Decay"},{"p":106,"label":"Probability"},{"p":132,"label":"Length (steps)"},{"p":138,"label":"Density (50: as written)"},{"p":167,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":144,"label":"Source pattern"}]},{"name":"Snare lane","knobs":[{"p":52,"label":"Level"},{"p":53,"label":"Tune"},{"p":54,"label":"Decay"},{"p":107,"label":"Probability"},{"p":133,"label":"Length (steps)"},{"p":139,"label":"Density (50: as written)"},{"p":168,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":145,"label":"Source pattern"}]},{"name":"Clap lane","knobs":[{"p":55,"label":"Level"},{"p":56,"label":"Tune"},{"p":57,"label":"Decay"},{"p":108,"label":"Probability"},{"p":134,"label":"Length (steps)"},{"p":140,"label":"Density (50: as written)"},{"p":169,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":146,"label":"Source pattern"}]},{"name":"Hat lane","knobs":[{"p":58,"label":"Level"},{"p":59,"label":"Tune"},{"p":60,"label":"Decay"},{"p":109,"label":"Probability"},{"p":135,"label":"Length (steps)"},{"p":141,"label":"Density (50: as written)"},{"p":170,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":147,"label":"Source pattern"}]},{"name":"Open hat lane","knobs":[{"p":61,"label":"Level"},{"p":62,"label":"Tune"},{"p":63,"label":"Decay"},{"p":110,"label":"Probability"},{"p":136,"label":"Length (steps)"},{"p":142,"label":"Density (50: as written)"},{"p":171,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":148,"label":"Source pattern"}]},{"name":"Perc lane","knobs":[{"p":64,"label":"Level"},{"p":65,"label":"Tune"},{"p":66,"label":"Decay"},{"p":111,"label":"Probability"},{"p":137,"label":"Length (steps)"},{"p":143,"label":"Density (50: as written)"},{"p":172,"label":"Condition (0 always, 1 odd bars, 2 even, 3 first of 4, 4 last of 4, 5 first of 8, 6 fills, 7 not fills)"},{"p":149,"label":"Source pattern"}]}]},{"name":"Space & master","sections":[{"name":"Space","knobs":[{"p":67,"label":"Echo"},{"p":68,"label":"Echo time"},{"p":69,"label":"Reverb"},{"p":70,"label":"Size"}]},{"name":"Reverb","knobs":[{"p":123,"label":"Type"},{"p":124,"label":"Damping"},{"p":125,"label":"Predelay"},{"p":126,"label":"Amount"}]},{"name":"Master bus","knobs":[{"p":128,"label":"Ratio"},{"p":129,"label":"Thresh"},{"p":130,"label":"Make-up"},{"p":131,"label":"Ceiling"}]}]},{"name":"Mixer","sections":[{"name":"Levels","knobs":[{"p":0,"label":"Pad"},{"p":2,"label":"Bass"},{"p":1,"label":"Acid"},{"p":98,"label":"Pluck"},{"p":3,"label":"Drums"},{"p":4,"label":"Vinyl"}]},{"name":"Pan","knobs":[{"p":112,"label":"Pad"},{"p":113,"label":"Bass"},{"p":114,"label":"Acid"},{"p":115,"label":"Pluck"},{"p":116,"label":"Drums"}]},{"name":"Send (echo and reverb)","knobs":[{"p":117,"label":"Pad"},{"p":118,"label":"Bass"},{"p":119,"label":"Acid"},{"p":120,"label":"Pluck"},{"p":121,"label":"Drums"}]},{"name":"Vinyl","knobs":[{"p":20,"label":"Wear"},{"p":22,"label":"Pump (the kick ducks it)"}]},{"name":"More","knobs":[{"p":175,"label":"Frozen"}]}]}],"alg":[[193,17,17,20,1,20],[1,17,17,20,193,20],[193,17,20,1,17,20],[193,17,148,1,17,20],[193,20,1,20,1,20],[193,148,1,20,1,20],[193,17,5,20,1,20],[1,17,197,20,1,20],[1,17,5,20,193,20],[1,5,20,193,17,20],[193,5,20,1,17,20],[1,5,5,20,193,20],[193,5,5,20,1,20],[193,5,17,20,1,20],[1,5,17,20,193,20],[193,17,2,37,5,20],[1,17,2,37,197,20],[1,17,17,197,5,20],[193,20,20,1,17,20],[1,5,20,193,20,20],[1,20,20,193,20,20],[193,20,20,20,1,20],[193,20,20,1,20,4],[193,20,20,20,4,4],[193,20,20,4,4,4],[193,5,20,1,20,4],[1,5,20,193,20,4],[4,193,17,20,1,20],[193,20,1,20,4,4],[4,193,17,20,4,4],[193,20,4,4,4,4],[196,4,4,4,4,4]],"lanes":["Kick","Snare","Clap","Hat","Open hat","Perc"],"layers":["Pad","Bass","Acid","Pluck","Drums"],"enum":{"P_TEMPO":5,"P_PADTONE":10,"P_AC_WAVE":40,"P_PATTERN":48,"P_ROOT":71,"P_MODE":72,"P_TUNE":73,"P_MIDI":74,"P_THEME":75,"P_CM_LVL":98,"P_CM_SND":99,"P_NPARAMS":176},"names":{"genres":["HYPNO","LOFI","HOUSE","DUBSTEP","DUB","DNB","BREAKS","GARAGE","ELECTRO","TRAP","DISCO","FUNK","REGGAE","SYNTHWV","AMAPI","TRIPHOP","INDUS","PSY","FOREST"],"pieces":[["01","02","03","04","05","06","07","08","09","10"],["L01","L02","L03","L04","L05","L06","L07","L08","L09","L10"],["H01","H02","H03","H04","H05","H06","H07","H08","H09","H10"],["D01","D02","D03","D04","D05","D06","D07","D08","D09","D10"],["V01","V02","V03","V04","V05","V06","V07","V08","V09","V10"],["N01","N02","N03","N04","N05","N06","N07","N08","N09","N10"],["B01","B02","B03","B04","B05","B06","B07","B08","B09","B10"],["G01","G02","G03","G04","G05","G06","G07","G08","G09","G10"],["E01","E02","E03","E04","E05","E06","E07","E08","E09","E10"],["T01","T02","T03","T04","T05","T06","T07","T08","T09","T10"],["S01","S02","S03","S04","S05","S06","S07","S08","S09","S10"],["F01","F02","F03","F04","F05","F06","F07","F08","F09","F10"],["R01","R02","R03","R04","R05","R06","R07","R08","R09","R10"],["W01","W02","W03","W04","W05","W06","W07","W08","W09","W10"],["A01","A02","A03","A04","A05","A06","A07","A08","A09","A10"],["P01","P02","P03","P04","P05","P06","P07","P08","P09","P10"],["I01","I02","I03","I04","I05","I06","I07","I08","I09","I10"],["Y01","Y02","Y03","Y04","Y05","Y06","Y07","Y08","Y09","Y10"],["O01","O02","O03","O04","O05","O06","O07","O08","O09","O10"]],"nplain":12,"nfmfact":30,"nuser":16,"prglen":6,"npat":6,"nlane":6}}</script>
+<script type="application/json" id="ldata">[]
+</script>
+<script type="application/json" id="rdata">{"url": "https://perf1-library.deamonslinky.workers.dev"}</script>
+<script type="module">
+// SPDX-License-Identifier: GPL-3.0-only
+// Backup and restore of PERF-1's stored data over USB MIDI (the installer page): the messages, the file, and nothing that touches the browser, so a node test can check
+// them against the firmware's (firmware/src/backup_proto.h, which describes the protocol).
+
+const BK_CHUNK = 256, BK_FRAME = 64, BK_MAX = 3840;
+
+// the flash objects worth keeping (plat.h OBJ_*; the panel's calibration, 1, is the unit's own and is never saved), in the order they are read and written
+const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP", "INDUS", "PSY", "FOREST"];
+const BK_OBJECTS = [
+  { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
+  ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })), { id: 5 + BK_GENRES.length - 1, name: "piece extras" },   // (0.16.6: the progression slots' types; 0.16.28: with FILTERS and SCREAM, plat.h OBJ_KINDS)
+  { id: 5 + BK_GENRES.length, name: "MIDI map" },                // (0.16.11: the player's MIDI map, plat.h OBJ_MMAP)
+  { id: 5 + BK_GENRES.length + 1, name: "bass steps" },          // (0.16.29: the pieces' bass steps, plat.h OBJ_BSTEP)
+];
+
+// the player's MIDI map (0.16.11, ui.c mm_*): the emulator's learned controls ({"c:ch:cc" | "n:ch:note": {t: "b<button>" | "k<key>" | "e<knob>" | "m", mode}})
+// as the firmware keeps them: "MAP1", the count, 3 pad bytes, then 48 entries of 3 bytes (the channel | 0x10 a CC | how a knob counts << 5, the number,
+// the control: a button 0-13, 32 + a key, 64 + a knob). MASTER is the hardware's alone: not sent. The .perfmap file is the learned list as JSON.
+// A setting (0.16.18, learned on the editor page): {t: "p<parameter>", mode, name}, a CC only; its first byte has 0x80 set and the control is the parameter
+// (0 .. 175). A map with any setting is "MAP2" (a firmware before 0.16.18 refuses it whole); one without stays "MAP1", as before.
+const MM_OBJ = 5 + BK_GENRES.length, MM_MAX = 48, MM_LEN = 8 + 3 * MM_MAX, MM_NPAR = 176;
+const MM_MODE = { abs: 0, rel64: 1, rel2c: 2 };
+function mmEncode(maps) {                                     // the bytes, and how many controls went in (and how many were left out)
+  const out = new Uint8Array(MM_LEN);
+  out.set([0x4D, 0x41, 0x50, 0x31], 0);
+  let n = 0, left = 0, set = 0;
+  for (const [id, m] of Object.entries(maps || {})) {
+    const [ty, ch, num] = id.split(":"), t = String((m && m.t) || ""), par = t[0] === "p" ? +t.slice(1) : -1;
+    const ctl = t[0] === "b" ? +t.slice(1) : t[0] === "k" ? 32 + +t.slice(1) : t[0] === "e" ? 64 + +t.slice(1) : par >= 0 && par < MM_NPAR && ty === "c" ? par : -1;
+    if (!(ctl >= 0) || !(ty === "c" || ty === "n") || n >= MM_MAX) { left++; continue; }
+    out.set([(+ch & 15) | (ty === "c" ? 0x10 : 0) | ((MM_MODE[m.mode] || 0) << 5) | (par >= 0 ? 0x80 : 0), +num & 127, ctl], 8 + 3 * n++);
+    if (par >= 0) set++;
+  }
+  if (set) out[3] = 0x32;                                              // "MAP2"
+  out[4] = n;
+  return { bytes: out, n, left };
+}
+function mmDecode(b) {                                        // the learned list back, or null when it is not a map
+  if (!b || b.length !== MM_LEN || b[0] !== 0x4D || b[1] !== 0x41 || b[2] !== 0x50 || (b[3] !== 0x31 && b[3] !== 0x32) || b[4] > MM_MAX) return null;
+  const maps = {}, modes = ["abs", "rel64", "rel2c"];
+  for (let i = 0; i < b[4]; i++) {
+    const [a, num, ctl] = b.subarray(8 + 3 * i, 11 + 3 * i), cc = a & 0x10, set = a & 0x80;
+    const t = set ? "p" + ctl : ctl < 32 ? "b" + ctl : ctl < 64 ? "k" + (ctl - 32) : "e" + (ctl - 64);
+    maps[(cc ? "c" : "n") + ":" + (a & 15) + ":" + num] = cc && (set || ctl >= 64) ? { t, mode: modes[(a >> 5) & 3] || "abs" } : { t };
+  }
+  return maps;
+}
+const bkName = (id) => (BK_OBJECTS.find((o) => o.id === id) || { name: "object " + id }).name;
+
+// the checksum: 128 minus the sum of the data bytes, modulo 128
+function bkSum(a) {
+  let s = 0;
+  for (const b of a) s += b;
+  return (128 - (s & 0x7F)) & 0x7F;
+}
+
+// a chunk for the FM-1 to write: raw bytes idx * BK_CHUNK .. of an object len bytes long (7D 50 42 03 obj idx(2) len(2) n(2) [2n nibbles] chk)
+function bkChunkMsg(obj, idx, len, bytes) {
+  const n = bytes.length, body = [obj & 0x7F, (idx >> 7) & 0x7F, idx & 0x7F, (len >> 7) & 0x7F, len & 0x7F, (n >> 7) & 0x7F, n & 0x7F];
+  for (const b of bytes) body.push(b >> 4, b & 15);
+  return [0xF0, 0x7D, 0x50, 0x42, 0x03, ...body, bkSum(body), 0xF7];
+}
+const bkReadMsg = (obj) => [0xF0, 0x7D, 0x50, 0x42, 0x01, obj & 0x7F, 0xF7];
+const bkCommitMsg = (obj, len) => [0xF0, 0x7D, 0x50, 0x42, 0x04, obj & 0x7F, (len >> 7) & 0x7F, len & 0x7F, 0xF7];
+const bkRestartMsg = () => [0xF0, 0x7D, 0x50, 0x42, 0x05, 0xF7];
+
+// a frame from the FM-1 (F0 7D 50 43 obj idx(2) len(2) n(2) [2n nibbles] chk F7): its object, place, the object's length and its bytes; null when it is damaged
+function bkParseFrame(d) {
+  if (d.length < 13 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x43 || d[d.length - 1] !== 0xF7) return null;
+  const n = (d[9] << 7) | d[10];
+  if (d.length !== 13 + 2 * n) return null;
+  if (bkSum(Array.from(d.slice(4, 11 + 2 * n))) !== d[11 + 2 * n]) return null;
+  const data = new Uint8Array(n);
+  for (let k = 0; k < n; k++) {
+    const hi = d[11 + 2 * k], lo = d[12 + 2 * k];
+    if (hi > 15 || lo > 15) return null;
+    data[k] = (hi << 4) | lo;
+  }
+  return { obj: d[4], idx: (d[5] << 7) | d[6], len: (d[7] << 7) | d[8], data };
+}
+
+// an answer (F0 7D 50 44 obj idx status F7): the chunk's place, or 0x7F for the write; status 0 is well
+function bkParseAck(d) {
+  if (d.length !== 8 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x44) return null;
+  return { obj: d[4], idx: d[5], status: d[6] };
+}
+
+function bkCrc32(a) {
+  let c = ~0;
+  for (let i = 0; i < a.length; i++) {
+    c ^= a[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & -(c & 1));
+  }
+  return ~c >>> 0;
+}
+
+// the file: "P1BK", version 1, the number of objects, a little JSON about it, then each object (id, length, bytes), and the CRC-32 of all that comes before
+function bkEncode(objs, info) {
+  const meta = new TextEncoder().encode(JSON.stringify(info || {}));
+  let size = 4 + 1 + 1 + 2 + meta.length + 4;
+  for (const o of objs) size += 3 + o.data.length;
+  const out = new Uint8Array(size);
+  let p = 0;
+  out.set([0x50, 0x31, 0x42, 0x4B, 1, objs.length, meta.length & 255, meta.length >> 8], p); p += 8;
+  out.set(meta, p); p += meta.length;
+  for (const o of objs) {
+    out.set([o.id, o.data.length & 255, o.data.length >> 8], p); p += 3;
+    out.set(o.data, p); p += o.data.length;
+  }
+  const crc = bkCrc32(out.subarray(0, p));
+  out.set([crc & 255, (crc >>> 8) & 255, (crc >>> 16) & 255, crc >>> 24], p);
+  return out;
+}
+function bkDecode(buf) {
+  if (buf.length < 12 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x42 || buf[3] !== 0x4B) throw new Error("not a PERF-1 backup");
+  if (buf[4] !== 1) throw new Error("a backup of a newer kind");
+  const crc = (buf[buf.length - 4] | (buf[buf.length - 3] << 8) | (buf[buf.length - 2] << 16) | (buf[buf.length - 1] << 24)) >>> 0;
+  if (bkCrc32(buf.subarray(0, buf.length - 4)) !== crc) throw new Error("the backup is damaged");
+  const count = buf[5], ml = buf[6] | (buf[7] << 8);
+  let p = 8, info = {};
+  try { info = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))); } catch (_) { info = {}; }
+  p += ml;
+  const objs = [];
+  for (let i = 0; i < count; i++) {
+    if (p + 3 > buf.length - 4) throw new Error("the backup is damaged");
+    const id = buf[p], len = buf[p + 1] | (buf[p + 2] << 8);
+    p += 3;
+    if (len > BK_MAX || p + len > buf.length - 4) throw new Error("the backup is damaged");
+    objs.push({ id, data: buf.slice(p, p + len) });
+    p += len;
+  }
+  return { info, objs };
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Sharing a piece (the pieces page, web/pieces): a saved piece out of a genre's bank into a .piece file, a code or a link, and back into a bank, with its
+// own DX7 voice when it uses one. Nothing here touches the browser or the FM-1, so a node test (tests/web_piece_test.js) checks it, and checks a bank it
+// builds by loading it in the simulator. The bank's layout is firmware/src/app/project.c's; the voices' object is ui.c's vox_t.
+
+const PC_HDR = 16, PC_REC = 376, PC_NPIECES = 10, PC_PRG = 6, PC_REC_PAR = 2 + 2 * 6 * 6, PC_RECIPE = 0xFF;   // IMG_HDR, IMG_REC, NPIECES, EN_PRG_LEN, REC_PAR, REC_RECIPE
+const PC_TAIL = PC_HDR + PC_NPIECES * PC_REC, PC_LEN = PC_TAIL + PC_NPIECES * PC_PRG;
+const PC_NUSER = 16, PC_VOX_LEN = 8 + PC_NUSER * 128;
+const IMG_MAGIC = 0x33505948, VOX_MAGIC = 0x31584F56;            // "HYP3", "VOX1"
+
+const rd16 = (b, o) => b[o] | (b[o + 1] << 8);
+const rd32 = (b, o) => (rd16(b, o) | (rd16(b, o + 2) << 16)) >>> 0;
+const wr16 = (b, o, v) => { b[o] = v & 255; b[o + 1] = (v >> 8) & 255; };
+const wr32 = (b, o, v) => { wr16(b, o, v & 0xFFFF); wr16(b, o + 2, v >>> 16); };
+
+function crc32(a) {
+  let c = ~0;
+  for (let i = 0; i < a.length; i++) {
+    c ^= a[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & -(c & 1));
+  }
+  return ~c >>> 0;
+}
+
+// ---- a genre's bank (the flash object): its header, and a piece out of it
+// what is wrong with it for the pieces page (null: nothing), or "empty"
+function pcBankCheck(bank, genre) {
+  if (!bank || !bank.length) return "empty";
+  if (bank.length < PC_TAIL || rd32(bank, 0) !== IMG_MAGIC || bank[4] !== 2 || bank[5] !== genre || rd16(bank, 10) !== PC_REC) return "old";
+  if (bank[12] !== 1 || bank[13] !== 1) return "old";             // the acid answer and the pluck's numbering as they are now (an older bank: save once first)
+  return null;
+}
+const pcSaved = (bank) => (pcBankCheck(bank, bank && bank.length > 5 ? bank[5] : -1) ? 0 : rd16(bank, 8));
+
+// the piece in slot `slot` (0-9) of a genre's bank, as the file keeps it
+function pcFromBank(bank, genre, slot) {
+  const bad = pcBankCheck(bank, genre);
+  if (bad) throw new Error(bad === "empty" ? "nothing saved in this genre" : "this genre's bank is from an older PERF-1: save a piece in it once, then try again");
+  if (!((rd16(bank, 8) >> slot) & 1)) throw new Error("that piece is not saved");
+  const rec = bank.slice(PC_HDR + slot * PC_REC, PC_HDR + (slot + 1) * PC_REC);
+  const tail = bank[14] === 1 && bank.length >= PC_LEN;
+  const prg = tail ? bank.slice(PC_TAIL + slot * PC_PRG, PC_TAIL + (slot + 1) * PC_PRG) : new Uint8Array(PC_PRG);
+  return { genre, slot, npar: rd16(bank, 6), rec, prg, voice: null, kinds: null, fx: null, bass: null, meta: {} };
+}
+
+// a setting of the piece (index p; lo: its lowest, params.json's min), or undefined when the piece predates it
+function pcGet(piece, p, lo) {
+  if (p >= piece.npar || piece.rec[PC_REC_PAR + p] === PC_RECIPE) return undefined;
+  return lo + piece.rec[PC_REC_PAR + p];
+}
+function pcSet(piece, p, lo, v) { piece.rec[PC_REC_PAR + p] = v - lo; }
+
+// ---- the Progression page's chord types (0.16.6, project.c knd_t "KND1": magic, then 3 bytes for each genre's ten pieces; OBJ_KINDS, its own object as
+// the banks are full). A piece's three bytes (eight slots, three bits each; all 0: every slot the piece's own type) travel in the note's JSON as "k", so
+// a page from before them reads the piece as it always did (without the types) and nothing about the file's layout changes.
+const PC_KND_LEN = 3, PC_KND_MAGIC = 0x31444E4B;          // EN_PRK_LEN, "KND1"
+const kndAt = (genre, slot) => 4 + (genre * PC_NPIECES + slot) * PC_KND_LEN;
+// 0.16.28: the object is the pieces' extras ("PCX1", project.c): magic, 16, the genres, 2 spare; then 16 bytes a piece: its 3 types, flags (bit 0:
+// its FILTERS and SCREAM saved with it), those 7 settings (the FILTERS page's types: pad, bass, acid; SCREAM's drive, amount, wow, target), spare
+const PC_PX_MAGIC = 0x31584350, PC_PX_HDR = 8, PC_PX_LEN = 16, PC_PX_NFX = 7;
+const pxAt = (genre, slot) => PC_PX_HDR + (genre * PC_NPIECES + slot) * PC_PX_LEN;
+const isPx = (o) => o && o.length >= PC_PX_HDR && rd32(o, 0) === PC_PX_MAGIC && o[4] === PC_PX_LEN;
+// 0.16.29: the pieces' bass steps, their own object ("BSQ1", project.c OBJ_BSTEP): magic, 16, the genres, 2 spare; then 16 bytes a piece (amb.h EN_BS_*)
+const PC_BS_MAGIC = 0x31515342, PC_BS_HDR = 8, PC_BS_LEN = 16;
+const bsAt = (genre, slot) => PC_BS_HDR + (genre * PC_NPIECES + slot) * PC_BS_LEN;
+const isBs = (o) => o && o.length >= PC_BS_HDR && rd32(o, 0) === PC_BS_MAGIC && o[4] === PC_BS_LEN;
+// a piece's bass steps (null: none set)
+function pcBassOf(bs, genre, slot) {
+  if (!isBs(bs) || bs.length < bsAt(genre, slot) + PC_BS_LEN) return null;
+  const s = bs.slice(bsAt(genre, slot), bsAt(genre, slot) + PC_BS_LEN);
+  return s.some((v) => v) ? s : null;
+}
+// the object with a piece's steps put in (null clears them), for a firmware with `ngenres` genres
+function pcBassWith(bs, genre, slot, steps, ngenres) {
+  const n = Math.max(PC_BS_HDR + ngenres * PC_NPIECES * PC_BS_LEN, bsAt(genre, slot) + PC_BS_LEN);
+  const out = new Uint8Array(n);
+  if (isBs(bs)) out.set(bs.subarray(0, Math.min(bs.length, n)));
+  wr32(out, 0, PC_BS_MAGIC); out[4] = PC_BS_LEN; out[5] = ngenres; out[6] = out[7] = 0;
+  out.fill(0, bsAt(genre, slot), bsAt(genre, slot) + PC_BS_LEN);
+  if (steps) out.set(steps.subarray(0, PC_BS_LEN), bsAt(genre, slot));
+  return out;
+}
+// a piece's types out of the object, either form (null: the piece's own in every slot, or no object)
+function pcKindsOf(knd, genre, slot) {
+  let k = null;
+  if (isPx(knd) && knd.length >= pxAt(genre, slot) + PC_PX_LEN) k = knd.slice(pxAt(genre, slot), pxAt(genre, slot) + PC_KND_LEN);
+  else if (knd && knd.length >= kndAt(genre, slot) + PC_KND_LEN && rd32(knd, 0) === PC_KND_MAGIC) k = knd.slice(kndAt(genre, slot), kndAt(genre, slot) + PC_KND_LEN);
+  return k && k.some((v) => v) ? k : null;
+}
+// its FILTERS and SCREAM, when they were saved with it (null: the defaults)
+function pcFxOf(px, genre, slot) {
+  if (!isPx(px) || px.length < pxAt(genre, slot) + PC_PX_LEN || !(px[pxAt(genre, slot) + 3] & 1)) return null;
+  return px.slice(pxAt(genre, slot) + 4, pxAt(genre, slot) + 4 + PC_PX_NFX);
+}
+// the extras object (a firmware of 0.16.28 on: the about answer's version 2) with a piece's types and settings put in (null: none), for a firmware
+// with `ngenres` genres; what else it held stays (an older KND1 object's types carried over)
+function pcExtrasWith(px, genre, slot, kinds, fx, ngenres) {
+  const n = Math.max(PC_PX_HDR + ngenres * PC_NPIECES * PC_PX_LEN, pxAt(genre, slot) + PC_PX_LEN);
+  const out = new Uint8Array(n);
+  if (isPx(px)) out.set(px.subarray(0, Math.min(px.length, n)));
+  else if (px && px.length >= 4 && rd32(px, 0) === PC_KND_MAGIC)
+    for (let k = 0; k * PC_KND_LEN + 4 + PC_KND_LEN <= px.length && PC_PX_HDR + (k + 1) * PC_PX_LEN <= n; k++)
+      out.set(px.subarray(4 + k * PC_KND_LEN, 4 + (k + 1) * PC_KND_LEN), PC_PX_HDR + k * PC_PX_LEN);
+  wr32(out, 0, PC_PX_MAGIC); out[4] = PC_PX_LEN; out[5] = ngenres; out[6] = out[7] = 0;
+  const at = pxAt(genre, slot);
+  out.fill(0, at, at + PC_PX_LEN);
+  if (kinds) out.set(kinds.subarray(0, PC_KND_LEN), at);
+  if (fx) { out[at + 3] = 1; out.set(fx.subarray(0, PC_PX_NFX), at + 4); }
+  return out;
+}
+// the object with a piece's types put in (null clears them), for a firmware with `ngenres` genres; what else it held stays
+function pcKindsWith(knd, genre, slot, kinds, ngenres) {
+  const out = new Uint8Array(Math.max(4 + ngenres * PC_NPIECES * PC_KND_LEN, kndAt(genre, slot) + PC_KND_LEN));
+  if (knd && knd.length >= 4 && rd32(knd, 0) === PC_KND_MAGIC) out.set(knd.subarray(0, Math.min(knd.length, out.length)));
+  wr32(out, 0, PC_KND_MAGIC);
+  out.fill(0, kndAt(genre, slot), kndAt(genre, slot) + PC_KND_LEN);
+  if (kinds) out.set(kinds.subarray(0, PC_KND_LEN), kndAt(genre, slot));
+  return out;
+}
+const bytesOk = (a, n) => Array.isArray(a) && a.length === n && a.every((v) => Number.isInteger(v) && v >= 0 && v < 256);
+const kindsOk = (k) => bytesOk(k, PC_KND_LEN);
+const kindsIn = (meta, kinds, fx, bass) => {
+  const m = { ...meta };
+  if (kinds && kinds.some((v) => v)) m.k = Array.from(kinds);
+  if (fx) m.x = Array.from(fx);                                   // (0.16.28) its FILTERS and SCREAM
+  if (bass && bass.some((v) => v)) m.s = Array.from(bass);        // (0.16.29) its bass steps
+  return m;
+};
+function kindsOut(meta) {                                         // the note without "k", "x" and "s", and what they carried (or null)
+  const { k, x, s, ...rest } = meta || {};
+  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: bytesOk(x, PC_PX_NFX) ? Uint8Array.from(x) : null,
+           bass: bytesOk(s, PC_BS_LEN) && s.some((v) => v) ? Uint8Array.from(s) : null };
+}
+
+// ---- the file: "P1PC", 1, genre, slot, flags (1: a voice), the settings a record holds (2), the record's length (2), the note's length (2), then the record,
+// the progression, the voice (128 bytes, when flagged), a little JSON (title, by, note, names; "k" the chord types) and the CRC-32 of all before it
+function pcEncode(piece) {
+  const meta = new TextEncoder().encode(JSON.stringify(kindsIn(piece.meta || {}, piece.kinds, piece.fx, piece.bass)));
+  const vlen = piece.voice ? 128 : 0;
+  const out = new Uint8Array(14 + PC_REC + PC_PRG + vlen + meta.length + 4);
+  out.set([0x50, 0x31, 0x50, 0x43, 1, piece.genre, piece.slot, piece.voice ? 1 : 0], 0);
+  wr16(out, 8, piece.npar); wr16(out, 10, PC_REC); wr16(out, 12, meta.length);
+  let p = 14;
+  out.set(piece.rec, p); p += PC_REC;
+  out.set(piece.prg, p); p += PC_PRG;
+  if (piece.voice) { out.set(piece.voice, p); p += 128; }
+  out.set(meta, p); p += meta.length;
+  wr32(out, p, crc32(out.subarray(0, p)));
+  return out;
+}
+function pcDecode(buf) {
+  if (buf.length < 18 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x50 || buf[3] !== 0x43) throw new Error("not a PERF-1 piece");
+  if (buf[4] !== 1) throw new Error("a piece from a newer PERF-1 page: open the latest pieces page");
+  if (crc32(buf.subarray(0, buf.length - 4)) !== rd32(buf, buf.length - 4)) throw new Error("the piece is damaged");
+  const reclen = rd16(buf, 10), ml = rd16(buf, 12), vlen = buf[7] & 1 ? 128 : 0;
+  if (reclen !== PC_REC || 14 + reclen + PC_PRG + vlen + ml + 4 !== buf.length) throw new Error("the piece is damaged");
+  let p = 14;
+  const rec = buf.slice(p, p + reclen); p += reclen;
+  const prg = buf.slice(p, p + PC_PRG); p += PC_PRG;
+  const voice = vlen ? buf.slice(p, p + 128) : null; p += vlen;
+  let meta = {};
+  try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
+  const km = kindsOut(meta);
+  return { genre: buf[5], slot: buf[6], npar: rd16(buf, 8), rec, prg, voice, kinds: km.kinds, fx: km.fx, bass: km.bass, meta: km.meta };
+}
+
+// ---- the code (and a link's #p=): the file, deflated, in base64url, after "P1."
+const b64u = (u8) => { let s = ""; for (const c of u8) s += String.fromCharCode(c); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
+async function pipe(u8, stream) {
+  const r = new Blob([u8]).stream().pipeThrough(stream);
+  return new Uint8Array(await new Response(r).arrayBuffer());
+}
+async function pcToCode(x) { return "P1." + b64u(await pipe(x.kind === "set" ? pcSetEncode(x) : pcEncode(x), new CompressionStream("deflate-raw"))); }
+// a piece, or a set (kind "set") when the code holds one
+async function pcFromCode(text) {
+  const m = /P1\.([A-Za-z0-9_-]+)/.exec(String(text || ""));
+  if (!m) throw new Error("no piece code there");
+  let raw;
+  try { raw = await pipe(unb64u(m[1]), new DecompressionStream("deflate-raw")); } catch (_) { throw new Error("the code is damaged (cut short?)"); }
+  return pcDecodeAny(raw);
+}
+const pcDecodeAny = (buf) => (buf.length > 4 && buf[3] === 0x54 ? pcSetDecode(buf) : pcDecode(buf));   // "P1ST" or "P1PC"
+const pcHash = (rec) => crc32(rec);
+
+// ---- a set: the set list (sixteen places, each a genre's piece or empty), whether Play goes through it, the SET page's Mix, the pieces in it that are
+// stored (a factory piece needs nothing: it is the same everywhere), and their DX7 voices once each. "P1ST", 1, then 16 places (genre * 10 + piece + 1, 0
+// empty), Play, Mix, the pieces, the voices, the note's length (2); each piece: genre, place, its voice (0xFF none), settings (2), record, progression; each
+// voice 128 bytes; the note (JSON; "k": each piece's chord types by its place in the pieces, {"0": [a, b, c]}); the CRC-32
+function pcSetEncode(set) {
+  const k = {}, x = {}, sb = {};
+  set.pieces.forEach((pc, i) => {
+    if (pc.kinds && pc.kinds.some((v) => v)) k[i] = Array.from(pc.kinds);
+    if (pc.fx) x[i] = Array.from(pc.fx);
+    if (pc.bass && pc.bass.some((v) => v)) sb[i] = Array.from(pc.bass);
+  });
+  const { k: _old, x: _oldx, s: _olds, ...m0 } = set.meta || {};
+  const m1 = { ...m0 };
+  if (Object.keys(k).length) m1.k = k;
+  if (Object.keys(x).length) m1.x = x;
+  if (Object.keys(sb).length) m1.s = sb;
+  const meta = new TextEncoder().encode(JSON.stringify(m1));
+  const ps = set.pieces, vs = set.voices;
+  const out = new Uint8Array(4 + 1 + 16 + 2 + 2 + 2 + ps.length * (5 + PC_REC + PC_PRG) + vs.length * 128 + meta.length + 4);
+  out.set([0x50, 0x31, 0x53, 0x54, 1], 0);
+  let p = 5;
+  for (let i = 0; i < 16; i++) out[p++] = set.list[i] || 0;
+  out[p++] = set.on ? 1 : 0; out[p++] = set.mix || 0;
+  out[p++] = ps.length; out[p++] = vs.length;
+  wr16(out, p, meta.length); p += 2;
+  for (const pc of ps) {
+    out.set([pc.genre, pc.slot, pc.vidx === undefined || pc.vidx < 0 ? 0xFF : pc.vidx], p); p += 3;
+    wr16(out, p, pc.npar); p += 2;
+    out.set(pc.rec, p); p += PC_REC;
+    out.set(pc.prg, p); p += PC_PRG;
+  }
+  for (const v of vs) { out.set(v, p); p += 128; }
+  out.set(meta, p); p += meta.length;
+  wr32(out, p, crc32(out.subarray(0, p)));
+  return out;
+}
+function pcSetDecode(buf) {
+  if (buf.length < 30 || buf[0] !== 0x50 || buf[1] !== 0x31 || buf[2] !== 0x53 || buf[3] !== 0x54) throw new Error("not a PERF-1 set");
+  if (buf[4] !== 1) throw new Error("a set from a newer PERF-1 page: open the latest pieces page");
+  if (crc32(buf.subarray(0, buf.length - 4)) !== rd32(buf, buf.length - 4)) throw new Error("the set is damaged");
+  let p = 5;
+  const list = Array.from(buf.slice(p, p + 16)); p += 16;
+  const on = !!buf[p++], mix = buf[p++], np = buf[p++], nv = buf[p++], ml = rd16(buf, p); p += 2;
+  if (p + np * (5 + PC_REC + PC_PRG) + nv * 128 + ml + 4 !== buf.length) throw new Error("the set is damaged");
+  const pieces = [], voices = [];
+  for (let i = 0; i < np; i++) {
+    const genre = buf[p], slot = buf[p + 1], vi = buf[p + 2], npar = rd16(buf, p + 3);
+    p += 5;
+    pieces.push({ genre, slot, vidx: vi === 0xFF ? -1 : vi, npar, rec: buf.slice(p, p + PC_REC), prg: buf.slice(p + PC_REC, p + PC_REC + PC_PRG), voice: null, meta: {} });
+    p += PC_REC + PC_PRG;
+  }
+  for (let i = 0; i < nv; i++) { voices.push(buf.slice(p, p + 128)); p += 128; }
+  let meta = {};
+  try { meta = JSON.parse(new TextDecoder().decode(buf.subarray(p, p + ml))) || {}; } catch (_) { meta = {}; }
+  for (const pc of pieces) if (pc.vidx >= 0 && pc.vidx < voices.length) pc.voice = voices[pc.vidx];
+  const { k, x, s, ...rest } = meta && typeof meta === "object" ? meta : {};
+  pieces.forEach((pc, i) => {
+    pc.kinds = k && kindsOk(k[i]) && k[i].some((v) => v) ? Uint8Array.from(k[i]) : null;
+    pc.fx = x && bytesOk(x[i], PC_PX_NFX) ? Uint8Array.from(x[i]) : null;
+    pc.bass = s && bytesOk(s[i], PC_BS_LEN) && s[i].some((v) => v) ? Uint8Array.from(s[i]) : null;
+  });
+  return { kind: "set", list, on, mix, pieces, voices, meta: rest };
+}
+// the set list's places as genre and piece (null: empty)
+const pcSetPlaces = (list) => list.map((x) => (x ? { genre: Math.floor((x - 1) / 10), slot: (x - 1) % 10 } : null));
+
+// the player's record (OBJ_GLOB, project.c glob_t: magic, tune, midi, theme, rsv, sl[16], sl_on, sl_rsv[3] = zoom, mix, -) with a set's list, Play and Mix;
+// an empty one (or the old 12 bytes) takes the defaults given (tune, midi, theme)
+const PC_GLOB_LEN = 32;
+function pcGlobWith(glob, set, defs) {
+  const out = new Uint8Array(PC_GLOB_LEN);
+  if (glob && glob.length >= 12 && rd32(glob, 0) === 0x4C474D50) out.set(glob.subarray(0, Math.min(glob.length, PC_GLOB_LEN)));
+  else { wr32(out, 0, 0x4C474D50); wr16(out, 4, defs.tune & 0xFFFF); wr16(out, 6, defs.midi & 0xFFFF); wr16(out, 8, defs.theme & 0xFFFF); }
+  out.set(set.list.slice(0, 16), 12);
+  out[28] = set.on ? 1 : 0;
+  out[30] = set.mix || 0;
+  return out;
+}
+const pcGlobList = (glob) => (glob && glob.length === PC_GLOB_LEN && rd32(glob, 0) === 0x4C474D50 ? { list: Array.from(glob.slice(12, 28)), on: !!glob[28], mix: glob[30] } : { list: new Array(16).fill(0), on: false, mix: 0 });
+
+// a set's voices into the voices' object: each to a voice already loaded, else the next empty slot; the answer maps the set's voice i to a slot (-1: no room)
+function pcSetVoices(vox, voices) {
+  let cur = vox && vox.length ? vox : new Uint8Array(0);
+  const map = [];
+  let changed = false;
+  for (const v of voices) {
+    const plan = pcVoicePlan(cur, v, PC_NUSER);
+    if (plan.kind === "same") { map.push(plan.slot); continue; }
+    if (plan.slot >= PC_NUSER) { map.push(-1); continue; }
+    cur = pcVoicesWith(cur, v, plan.slot);
+    map.push(plan.slot);
+    changed = true;
+  }
+  return { vox: changed ? cur : null, map };
+}
+
+// ---- into a bank: the piece in slot `slot` of genre's bank (bank: what the FM-1 has, maybe empty), for a firmware with `npar` settings a piece
+// (the about answer). Settings the piece predates are written as "the recipe's" (0xFF); so are those of the bank's other pieces when the bank was saved by a
+// firmware with fewer. Settings the firmware does not know are dropped. The answer: the new bank, and what was lost or filled.
+function pcIntoBank(bank, genre, slot, piece, npar) {
+  const bad = pcBankCheck(bank, genre);
+  if (bad === "old") throw new Error("this genre's bank on the FM-1 is from an older PERF-1: save a piece in it once on the FM-1, then try again");
+  const out = new Uint8Array(PC_LEN);
+  let nb = npar;
+  if (bad === "empty") {
+    wr32(out, 0, IMG_MAGIC); out[4] = 2; out[5] = genre; wr16(out, 10, PC_REC);
+  } else {
+    out.set(bank.subarray(0, Math.min(bank.length, PC_LEN)));
+    if (!(bank[14] === 1 && bank.length >= PC_LEN)) out.fill(0, PC_TAIL);   // a bank from before the progressions: none, as it loads
+    nb = rd16(bank, 6);
+  }
+  const saved = rd16(out, 8);
+  if (nb < npar)                                                  // the others: what they predate is their recipe's, as the firmware would read them
+    for (let i = 0; i < PC_NPIECES; i++)
+      if (i !== slot && ((saved >> i) & 1)) out.fill(PC_RECIPE, PC_HDR + i * PC_REC + PC_REC_PAR + nb, PC_HDR + i * PC_REC + PC_REC_PAR + npar);
+  const rec = piece.rec.slice();
+  if (piece.npar < npar) rec.fill(PC_RECIPE, PC_REC_PAR + piece.npar, PC_REC_PAR + npar);
+  else if (piece.npar > npar) rec.fill(0, PC_REC_PAR + npar, PC_REC_PAR + piece.npar);
+  out.set(rec, PC_HDR + slot * PC_REC);
+  out.set(piece.prg, PC_TAIL + slot * PC_PRG);
+  wr16(out, 6, npar); wr16(out, 8, saved | (1 << slot));
+  out[12] = 1; out[13] = 1; out[14] = 1;
+  return { bank: out, dropped: Math.max(0, piece.npar - npar), filled: Math.max(0, npar - piece.npar), replaced: !!((saved >> slot) & 1) };
+}
+
+// ---- the DX7 voice: the pluck's sound (P_CM_SND) past the plain ones (nplain) and the built-in DX voices (nfmfact) is one of the player's 16 slots
+const pcVoiceName = (v) => String.fromCharCode(...Array.from(v.slice(118, 128)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd() || "(no name)";
+function pcUserSlot(piece, iSnd, nplain, nfmfact) {
+  const v = pcGet(piece, iSnd, 0);
+  return v === undefined ? -1 : v - nplain - nfmfact;
+}
+// the voices' object (OBJ_VOICES; maybe empty): how many are loaded, and each
+function pcVoices(vox) {
+  if (!vox || vox.length !== PC_VOX_LEN || rd32(vox, 0) !== VOX_MAGIC || rd32(vox, 4) > PC_NUSER) return [];
+  const n = rd32(vox, 4), out = [];
+  for (let k = 0; k < n; k++) out.push(vox.slice(8 + k * 128, 8 + (k + 1) * 128));
+  return out;
+}
+const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+// where the piece's voice goes: "same" (already loaded there: nothing to write), "free" (the next empty slot), or "conflict" (its own slot holds another
+// voice: overwrite it, or take `free` when there is room, -1 when all 16 are in use)
+function pcVoicePlan(vox, voice, want) {
+  const have = pcVoices(vox);
+  const k = have.findIndex((v) => same(v, voice));
+  if (k >= 0) return { kind: "same", slot: k };
+  if (want < have.length) return { kind: "conflict", slot: want, other: pcVoiceName(have[want]), free: have.length < PC_NUSER ? have.length : -1 };
+  return { kind: "free", slot: have.length };
+}
+// the voices' object with `voice` in `slot` (at most one past the loaded ones: slots fill in order)
+function pcVoicesWith(vox, voice, slot) {
+  const have = pcVoices(vox);
+  if (slot > have.length || slot >= PC_NUSER) throw new Error("no room for the voice");
+  have[slot] = voice;
+  const out = new Uint8Array(PC_VOX_LEN);
+  wr32(out, 0, VOX_MAGIC); wr32(out, 4, have.length);
+  have.forEach((v, i) => out.set(v, 8 + i * 128));
+  return out;
+}
+
+// the answer to "about" (F0 7D 50 45 ver npar(2) genres voices F7, firmware/src/backup_proto.h), or null
+function pcParseAbout(d) {
+  if (d.length !== 10 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x45 || d[9] !== 0xF7) return null;
+  return { ver: d[4], npar: (d[5] << 7) | d[6], genres: d[7], voices: d[8] };
+}
+const pcAboutMsg = () => [0xF0, 0x7D, 0x50, 0x42, 0x06, 0xF7];
+
+// SPDX-License-Identifier: GPL-3.0-only
+// The share card (the pieces and library pages): a 1200 x 630 picture of a piece or a set, to post with its link. The piece's drum pattern as rings (a lane
+// a ring, the kick inside, sixteen steps round), its name, title, maker, what it is based on, its tempo and key; a set's places as one ring. In the site's colours.
+
+const CARD_INK = "#f6ece0", CARD_MUTED = "#bba79a", CARD_RULE = "#4a2a35", CARD_GROUND = "#130a0e";
+const CARD_LANES = ["#e0344f", "#ff8f8f", "#ffd447", "#f2e6c4", "#c9a7ff", "#7fd1c4"];   // kick, snare, clap, hat, open hat, perc
+
+// c: {tag, title, by, based, line, lanes: [16-bit masks], url}
+async function drawCard(canvas, c) {
+  if (document.fonts && document.fonts.load)                       // the faces the card uses (a page only fetches those its text uses)
+    await Promise.all(['700 30px "Chakra Petch"', '600 30px "Chakra Petch"', '500 30px "Barlow Semi Condensed"'].map((f) => document.fonts.load(f).catch(() => null)));
+  canvas.width = 1200; canvas.height = 630;
+  const g = canvas.getContext("2d");
+  const head = (w, px) => `${w} ${px}px "Chakra Petch", "Helvetica Neue", Arial, sans-serif`, body = (px) => `500 ${px}px "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif`;
+  g.fillStyle = CARD_GROUND; g.fillRect(0, 0, 1200, 630);
+  g.strokeStyle = "rgba(224, 52, 79, 0.08)"; g.lineWidth = 1;           // a floor of lines, as the Synth look's
+  for (let y = 380; y < 630; y += 18 + (y - 380) * 0.18) { g.beginPath(); g.moveTo(0, y); g.lineTo(1200, y); g.stroke(); }
+  for (let x = -600; x <= 1800; x += 120) { g.beginPath(); g.moveTo(600, 380); g.lineTo(x, 630); g.stroke(); }
+  // the rings
+  const cx = 905, cy = 315, n = c.lanes.length || 1;
+  for (let l = 0; l < n; l++) {
+    const r = n === 1 ? 230 : 104 + l * (150 / (n - 1));
+    g.strokeStyle = CARD_RULE; g.lineWidth = 2;
+    g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+    for (let s = 0; s < 16; s++) {
+      const a = -Math.PI / 2 + (s / 16) * Math.PI * 2, x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+      const on = (c.lanes[l] >> s) & 1;
+      g.beginPath(); g.arc(x, y, on ? 11 : 4, 0, Math.PI * 2);
+      g.fillStyle = on ? CARD_LANES[l % CARD_LANES.length] : CARD_RULE;
+      if (on) { g.shadowColor = g.fillStyle; g.shadowBlur = 16; }
+      g.fill(); g.shadowBlur = 0;
+    }
+  }
+  g.fillStyle = CARD_INK; g.font = head(700, n === 1 ? 64 : 30); g.textAlign = "center";
+  g.fillText(c.center || "", cx, cy + (n === 1 ? 22 : 11));
+  g.textAlign = "left";
+  // the words
+  g.fillStyle = "#ffd447"; g.fillRect(64, 72, 26, 5); g.fillStyle = "#e0344f"; g.fillRect(90, 72, 42, 5);
+  g.fillStyle = CARD_INK; g.font = head(700, 30); g.fillText("PERF-1", 146, 84);
+  const fit = (txt, font, max) => { g.font = font; let t = txt || ""; while (t && g.measureText(t).width > max) t = t.slice(0, -2) + "…"; return t; };
+  g.fillStyle = "#f2e6c4"; g.fillText(fit(c.tag, head(700, 76), 600), 64, 196);
+  let y = 196;
+  if (c.title) { y += 62; g.fillStyle = "#ffd447"; g.fillText(fit(c.title, head(600, 46), 610), 64, y); }
+  if (c.by) { y += 44; g.fillStyle = CARD_INK; g.fillText(fit("by " + c.by, body(32), 610), 64, y); }
+  if (c.based) { y += 36; g.fillStyle = CARD_MUTED; g.fillText(fit("based on " + c.based, body(26), 610), 64, y); }
+  y += 52; g.fillStyle = CARD_INK; g.fillText(fit(c.line, body(30), 610), 64, y);
+  g.fillStyle = CARD_MUTED; g.fillText(fit(c.url || "", body(24), 1080), 64, 586);
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// What the pieces and library pages share (on top of fm1piece.js): a piece's or a set's names and its line of text from the firmware's own parameter data
+// (params.json), the share card's contents, putting a piece or a set into the browser emulator's store, and the origins this browser remembers (the pieces
+// it added from a share, so a piece changed from one says what it is based on).
+
+function shareNames(D) {
+  const P = D.params, E = D.enum, N = D.names;
+  const NOTE = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+  const genreName = (g) => N.genres[g] || "genre " + g;
+  const pieceName = (g, i) => (N.pieces[g] && N.pieces[g][i]) || String(i + 1).padStart(2, "0");
+  const get = (pc, k) => pcGet(pc, E[k], P[E[k]].min);
+  const userSlot = (pc) => pcUserSlot(pc, E.P_CM_SND, N.nplain, N.nfmfact);
+  function describe(pc) {
+    const tempo = get(pc, "P_TEMPO"), root = get(pc, "P_ROOT"), mode = get(pc, "P_MODE"), snd = get(pc, "P_CM_SND");
+    const modeName = mode !== undefined && P[E.P_MODE].t ? P[E.P_MODE].t[mode - P[E.P_MODE].min] : "";
+    const bits = [];
+    if (tempo !== undefined) bits.push(tempo + " BPM");
+    if (root !== undefined) bits.push(NOTE[((root % 12) + 12) % 12] + " " + modeName.toLowerCase());
+    if (snd !== undefined) {
+      const k = userSlot(pc);
+      bits.push("pluck: " + (k >= 0 ? (pc.voice ? pcVoiceName(pc.voice) + " (its own DX7 voice)" : "your DX7 voice " + (k + 1)) : (P[E.P_CM_SND].t || [])[snd] || snd));
+    }
+    return bits.join(" · ");
+  }
+  const tagOf = (pc) => genreName(pc.genre) + " " + pieceName(pc.genre, pc.slot);
+  const placeName = (x) => { const q = pcSetPlaces([x])[0]; return q ? genreName(q.genre) + " " + pieceName(q.genre, q.slot) : "-"; };
+  const basedText = (m) => (m && m.b ? (m.b.t || "a shared piece") + (m.b.a ? " by " + m.b.a : "") : "");
+  // the card's contents: a piece's pattern (the one it plays: P_PATTERN), or a set's places
+  function cardOf(x, url) {
+    const m = x.meta || {};
+    if (x.kind === "set") {
+      const used = x.list.filter((v) => v), mask = x.list.reduce((a, v, i) => a | (v ? 1 << i : 0), 0);
+      const names = used.slice(0, 4).map(placeName).join(", ") + (used.length > 4 ? " …" : "");
+      return { tag: "SET · " + used.length + " PIECES", title: m.t, by: m.a, based: basedText(m), line: names, lanes: [mask], center: String(used.length), url };
+    }
+    const pat = Math.max(0, Math.min(5, get(x, "P_PATTERN") || 0)), lanes = [];
+    for (let l = 0; l < 6; l++) lanes.push(x.rec[2 + 2 * (pat * 6 + l)] | (x.rec[3 + 2 * (pat * 6 + l)] << 8));
+    const tempo = get(x, "P_TEMPO");
+    return { tag: tagOf(x), title: m.t, by: m.a, based: basedText(m), line: describe(x), lanes, center: tempo !== undefined ? tempo + " BPM" : "", url };
+  }
+  return { P, E, N, genreName, pieceName, describe, tagOf, placeName, basedText, cardOf, userSlot,
+           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23, OBJ_BSTEP: 25,   // (plat.h's enum; OBJ_KINDS from 0.16.6)
+           globDefs: { tune: P[E.P_TUNE].def, midi: P[E.P_MIDI].def, theme: P[E.P_THEME].def } };
+}
+
+// the emulator keeps its flash in this browser (web/emu: localStorage "hyp1-emu-store", an object's bytes in base64 by its number): a piece (at `slot`)
+// or a set goes in there, with its voices. The answer: what to do in the emulator.
+function emuPut(S, x, slot) {
+  const KEY = "hyp1-emu-store";
+  const raw = JSON.parse(localStorage.getItem(KEY) || "{}");
+  const get = (o) => (raw[o] ? Uint8Array.from(atob(raw[o]), (c) => c.charCodeAt(0)) : new Uint8Array(0));
+  const put = (o, u8) => { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); };
+  const npar = S.P.length, banks = {};
+  const bank = (g) => { if (!banks[g]) { banks[g] = get(S.objOf(g)); if (pcBankCheck(banks[g], g) === "old") banks[g] = new Uint8Array(0); } return banks[g]; };
+  const pieces = x.kind === "set" ? x.pieces.map((p) => ({ ...p, rec: p.rec.slice() })) : [{ ...x, rec: x.rec.slice(), slot }];
+  const voices = x.kind === "set" ? x.voices : pieces[0].voice && S.userSlot(pieces[0]) >= 0 ? [pieces[0].voice] : [];
+  if (voices.length) {
+    const r = pcSetVoices(get(S.OBJ_VOICES), voices);
+    if (r.vox) put(S.OBJ_VOICES, r.vox);
+    for (const pc of pieces) {
+      const vi = x.kind === "set" ? pc.vidx : 0;
+      if (vi >= 0 && r.map[vi] >= 0 && S.userSlot(pc) >= 0) pcSet(pc, S.E.P_CM_SND, S.P[S.E.P_CM_SND].min, S.N.nplain + S.N.nfmfact + r.map[vi]);
+    }
+  }
+  for (const pc of pieces) banks[pc.genre] = pcIntoBank(bank(pc.genre), pc.genre, pc.slot, pc, npar).bank;
+  for (const g of Object.keys(banks)) put(S.objOf(+g), banks[g]);
+  let knd = get(S.OBJ_KINDS);                                    // the pieces' extras: each piece's chord types, FILTERS and SCREAM (cleared when it has none)
+  for (const pc of pieces) knd = pcExtrasWith(knd, pc.genre, pc.slot, pc.kinds || null, pc.fx || null, S.N.genres.length);
+  put(S.OBJ_KINDS, knd);
+  let bst = get(S.OBJ_BSTEP);                                    // and their bass steps (0.16.29)
+  for (const pc of pieces) bst = pcBassWith(bst, pc.genre, pc.slot, pc.bass || null, S.N.genres.length);
+  put(S.OBJ_BSTEP, bst);
+  if (x.kind === "set") put(S.OBJ_GLOB, pcGlobWith(get(S.OBJ_GLOB), x, S.globDefs));
+  localStorage.setItem(KEY, JSON.stringify(raw));
+  if (x.kind === "set") return "The set is in the emulator: switch it on, then GLO twice for the set list (Play on).";
+  return "In the emulator as " + S.tagOf({ ...x, slot }) + ": switch it on, GLO + PRESETS to " + S.genreName(x.genre) + ", PRESETS to " + S.pieceName(x.genre, slot) + ".";
+}
+
+// the origins: the pieces this browser added from a share ("genre:place" -> title, maker, the record's CRC as it went in)
+const ORIGIN_KEY = "perf1-pieces-origin";
+function originsGet() { try { return JSON.parse(localStorage.getItem(ORIGIN_KEY) || "{}") || {}; } catch (_) { return {}; } }
+function originsSet(list) {                                 // list: [{genre, slot, t, a, rec}]
+  const o = originsGet();
+  for (const e of list) o[e.genre + ":" + e.slot] = { t: e.t || "", a: e.a || "", h: pcHash(e.rec) };
+  try { localStorage.setItem(ORIGIN_KEY, JSON.stringify(o)); } catch (_) {}
+}
+// what a piece about to be shared came from: {same: true, t, a} when it is as it was added, {b: {t, a}} when it was changed since, null when not from a share
+function originOf(pc) {
+  const o = originsGet()[pc.genre + ":" + pc.slot];
+  if (!o) return null;
+  return pcHash(pc.rec) === o.h ? { same: true, t: o.t, a: o.a } : { b: { t: o.t, a: o.a } };
+}
+
+// SPDX-License-Identifier: GPL-3.0-only
+// Let go of the FM-1's MIDI ports once a page has been quiet a while (0.16.16). On Windows a USB MIDI port belongs to one
+// program at a time, and a page that had talked to the FM-1 kept it until the tab was closed: M-UPGRADE then said "A USB
+// MIDI device is present but did not answer" (its log: KsCreatePin error 1450), and music software could not open it either.
+// Every MIDIAccess the page asks for goes through midiAccess(); idleRelease() closes their open ports after `ms` without
+// FM-1 traffic (idleTouch() on each message), unless busy() says an install, a write or the live status is running. The
+// next use opens them again (an input when its onmidimessage is set or open() is called, an output on send).
+// (The site inlines this file into the pages, so every name here carries "idle" or "IDLE".)
+
+const IDLE_ACC = new Set();
+let idleLast = Date.now(), idleTimer = 0;
+
+function idleTouch() { idleLast = Date.now(); }
+
+async function midiAccess() {
+  const m = await navigator.requestMIDIAccess({ sysex: true });
+  IDLE_ACC.add(m);
+  idleTouch();
+  return m;
+}
+
+function idleOpenPorts() {                 // how many ports the page holds open now (for the tests)
+  let n = 0;
+  for (const m of IDLE_ACC) for (const p of [...m.inputs.values(), ...m.outputs.values()]) if (p.connection === "open" || p.connection === "pending") n++;
+  return n;
+}
+
+function idleRelease(busy, onRelease, ms = 4000) {
+  clearInterval(idleTimer);
+  idleTimer = setInterval(() => {
+    if (busy() || Date.now() - idleLast < ms) return;
+    let closed = 0;
+    for (const m of IDLE_ACC) {
+      for (const p of [...m.inputs.values(), ...m.outputs.values()]) {
+        if (p.connection !== "open" && p.connection !== "pending") continue;
+        try { if (p.type === "input") p.onmidimessage = null; p.close(); closed++; } catch (_) { /* unplugged */ }
+      }
+    }
+    if (closed && onRelease) onRelease(closed);
+  }, 1000);
+}
+
+const $ = (id) => document.getElementById(id);
+const D = JSON.parse($("pdata").textContent), S = shareNames(D), { P, E, N } = S;
+const PAGE_URL = new URL("./", location.href).href;
+const SITE_TEXT = PAGE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
+const jsonOr = (id, d) => { try { return JSON.parse($(id).textContent) || d; } catch (_) { return d; } };
+const PICKS = jsonOr("ldata", []), RELAY = String((jsonOr("rdata", {}) || {}).url || "").replace(/\/+$/, "");
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) { /* private window */ } } };
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; };
+const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+
+// ---------------------------------------------------------------- the tabs (the address's #: library, mine, add; #p=… a shared piece, #admin=… the maker)
+function tab(name) {
+  for (const t of ["library", "mine", "add"]) { $("s-" + t).hidden = t !== name; $("t-" + t).setAttribute("aria-selected", t === name); }
+}
+function route() {
+  const h = location.hash;
+  const adm = /[#&]admin=([^&]*)/.exec(h);
+  if (adm) { store.set("perf1-admin", decodeURIComponent(adm[1]) || null); history.replaceState(null, "", "#library"); render(); }
+  if (/[#&]p=P1\./.test(h)) {
+    tab("add");
+    $("code").value = decodeURIComponent(h.replace(/^#/, ""));
+    readCode($("code").value);
+    $("addcard").classList.add("hot");
+    return;
+  }
+  tab(h === "#mine" ? "mine" : h === "#add" ? "add" : "library");
+}
+
+// ---------------------------------------------------------------- the FM-1's MIDI port
+let port = null;
+const NOANS = "The FM-1 did not answer. Replug it and try again.";
+idleRelease(() => false, () => { port = null; });   // the FM-1's port let go after 4 s quiet (web/fm1idle.js)
+async function openPort() {
+  if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
+  if (!navigator.requestMIDIAccess) throw new Error("This browser cannot talk to the FM-1. Open the page in Chrome or Edge.");
+  let midi;
+  try { midi = await midiAccess(); } catch (e) { throw new Error("MIDI (SysEx) was not allowed. Allow MIDI in the site settings (address bar) and try again."); }
+  const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
+  const inp = pick(midi.inputs), out = pick(midi.outputs);
+  if (!inp || !out) throw new Error("FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and try again.");
+  port = { inp, out, bkwait: [], onframe: null, onabout: null };
+  inp.onmidimessage = (ev) => {
+    const d = ev.data;
+    idleTouch();
+    if (d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50) return;
+    if (d[3] === 0x43 && port.onframe) port.onframe(d);
+    else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }
+    else if (d[3] === 0x45 && port.onabout) port.onabout(pcParseAbout(Array.from(d)));
+  };
+  return port;
+}
+function about(p) {                                               // what the firmware is, or null (older than 0.16.3: no answer)
+  return new Promise((res) => {
+    const tm = setTimeout(() => { p.onabout = null; res(null); }, 1500);
+    p.onabout = (a) => { clearTimeout(tm); p.onabout = null; res(a); };
+    p.out.send(pcAboutMsg());
+  });
+}
+function readObject(p, obj) {                                     // its bytes (an empty array: nothing stored), or undefined when the FM-1 goes quiet
+  return new Promise((resolve) => {
+    const got = new Map();
+    let tm;
+    const finish = (r) => { clearTimeout(tm); p.onframe = null; resolve(r); };
+    const arm = () => { clearTimeout(tm); tm = setTimeout(() => finish(undefined), 3000); };
+    p.onframe = (d) => {
+      const f = bkParseFrame(d);
+      if (!f || f.obj !== obj) return;
+      got.set(f.idx, f.data);
+      arm();
+      if (f.len === 0) return finish(new Uint8Array(0));
+      if (got.size === Math.ceil(f.len / BK_FRAME)) {
+        const out = new Uint8Array(f.len);
+        for (let i = 0; i < got.size; i++) {
+          const c = got.get(i);
+          if (!c || i * BK_FRAME + c.length > f.len) return finish(undefined);
+          out.set(c, i * BK_FRAME);
+        }
+        finish(out);
+      }
+    };
+    arm();
+    p.out.send(bkReadMsg(obj));
+  });
+}
+async function readMust(p, obj) { const d = await readObject(p, obj); if (d === undefined) throw new Error(NOANS); return d; }
+function waitBk(p, ms) {
+  return new Promise((res) => {
+    const w = (a) => { clearTimeout(tm); res(a); };
+    p.bkwait.push(w);
+    const tm = setTimeout(() => { const i = p.bkwait.indexOf(w); if (i >= 0) p.bkwait.splice(i, 1); res(null); }, ms);
+  });
+}
+async function writeObject(p, obj, data) {                        // in chunks, then the write; the FM-1 answers each
+  for (let idx = 0; idx * BK_CHUNK < data.length; idx++) {
+    p.out.send(bkChunkMsg(obj, idx, data.length, data.subarray(idx * BK_CHUNK, Math.min(data.length, (idx + 1) * BK_CHUNK))));
+    const a = await waitBk(p, 3000);
+    if (!a) throw new Error(NOANS);
+    if (a.status !== 0) throw new Error("The FM-1 did not take it (" + bkName(obj) + ").");
+  }
+  p.out.send(bkCommitMsg(obj, data.length));
+  const a = await waitBk(p, 10000);                               // (a store while playing fades the music out first)
+  if (!a) throw new Error(NOANS);
+  if (a.status !== 0) throw new Error("The FM-1 did not write it (" + bkName(obj) + ").");
+}
+
+// a question with buttons: resolves with the chosen button's value (null: closed)
+function ask(head, text, buttons) {
+  return new Promise((res) => {
+    const d = $("dlg");
+    $("dlgh").textContent = head; $("dlgp").textContent = text;
+    const box = $("dlgb"); box.textContent = "";
+    for (const [label, value, alt] of buttons) {
+      const b = document.createElement("button");
+      b.textContent = label; if (alt) b.className = "alt";
+      b.addEventListener("click", () => { d.close(); res(value); });
+      box.append(b);
+    }
+    d.onclose = () => res(null);
+    d.showModal();
+  });
+}
+
+// the cards: drawn into a canvas, saved as a PNG
+const cardName = (x) => (x.kind === "set" ? "set" : S.tagOf(x).replace(/\s+/g, "-")) + (x.meta && x.meta.t ? "-" + x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") : "");
+function savePng(cv, name) { const a = document.createElement("a"); a.href = cv.toDataURL("image/png"); a.download = "perf1-" + name + ".png"; a.click(); }
+async function showCard(cv, x) {
+  await drawCard(cv, S.cardOf(x, SITE_TEXT + " · add it to your FM-1"));
+  cv.hidden = false; cv.dataset.name = cardName(x);
+  cv.scrollIntoView({ block: "nearest" });
+}
+$("cardpng").addEventListener("click", () => savePng($("cardview"), $("cardview").dataset.name || "card"));
+$("incardview").addEventListener("click", () => savePng($("incardview"), $("incardview").dataset.name || "card"));
+
+// ---------------------------------------------------------------- the library: the maker's picks, then what players submitted (the relay)
+const items = [];                                                 // {code, x, genres, text, pick, id, added}
+let shownN = 24;
+const myKeys = () => store.get("perf1-subs", {});                 // the entries this browser submitted: id -> its key to remove it
+async function libItem(code, extra) {
+  const x = await pcFromCode(code), m = x.meta || {};
+  if (x.kind === "set") x.list.filter((v) => v).forEach(S.placeName); else S.describe(x);   // (one this page cannot describe is left out here, not in the middle of the grid)
+  const genres =x.kind === "set" ? [...new Set(x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre))] : [x.genre];
+  return { code, x, genres, text: [m.t, m.a, m.n, x.kind === "set" ? "set" : S.tagOf(x)].join(" ").toLowerCase(), ...extra };
+}
+async function addItems(list, extra) {
+  for (const it of list) {
+    if (!it || !it.code || items.some((i) => i.code === it.code)) continue;
+    try { items.push(await libItem(it.code, { ...extra(it) })); } catch (_) { /* a code this page cannot read (a newer PERF-1's): left out */ }
+  }
+}
+async function loadLibrary() {
+  await addItems(PICKS, (it) => ({ pick: true, added: it.added || "" }));
+  if (RELAY) {
+    $("libsay").textContent = "Loading what players submitted…";
+    try {
+      const r = await fetch(RELAY + "/list", { cache: "no-cache" });
+      const j = await r.json();
+      await addItems(j.items || [], (it) => ({ id: it.id, added: it.added || "" }));
+      $("libsay").textContent = "";
+    } catch (_) { $("libsay").textContent = "The submitted pieces could not be loaded just now (the picks are all here). Try again later."; }
+  }
+  const used = [...new Set(items.flatMap((i) => i.genres))].sort((a, b) => a - b);
+  for (const g of used) { const o = el("option", "", S.genreName(g)); o.value = g; $("genre").append(o); }
+  render();
+}
+function render() {
+  const g = $("genre").value, q = $("find").value.trim().toLowerCase(), w = $("which").value, keys = myKeys(), admin = store.get("perf1-admin", null), grid = $("grid");
+  grid.textContent = "";
+  $("libn").textContent = items.length ? String(items.length) : "";
+  let shown = items.filter((i) => (g === "" || i.genres.includes(+g)) && (!q || i.text.includes(q)) && (w !== "pick" || i.pick) && (w !== "mine" || (i.id && keys[i.id])));
+  shown = shown.slice().sort(w === "new" ? (a, b) => String(b.added).localeCompare(String(a.added)) : (a, b) => (b.pick ? 1 : 0) - (a.pick ? 1 : 0) || String(b.added).localeCompare(String(a.added)));
+  if (!shown.length) {
+    grid.append(el("div", "empty", items.length ? "Nothing matches." : "The library is just opening. Share a piece from My FM-1 and submit it: it will be the first one here."));
+    $("more").hidden = true;
+    return;
+  }
+  for (const i of shown.slice(0, shownN)) {
+    const x = i.x, m = x.meta || {}, card = el("div", "item" + (i.id && keys[i.id] ? " mine" : "")), cv = el("canvas");
+    card.append(cv);
+    const tag = el("div", "tag", x.kind === "set" ? "SET · " + plural(x.list.filter((v) => v).length, "piece") : S.tagOf(x));
+    if (i.pick) tag.append(el("span", "pick", "PICKED"));
+    card.append(tag);
+    if (m.t || m.a) card.append(el("div", "title", (m.t || "") + (m.a ? (m.t ? "  by " : "by ") + m.a : "")));
+    if (m.b) card.append(el("div", "sub", "based on " + S.basedText(m)));
+    card.append(el("div", "sub", x.kind === "set" ? x.list.filter((v) => v).slice(0, 4).map(S.placeName).join(", ") : S.describe(x)));
+    if (m.n) card.append(el("div", "note", m.n));
+    const acts = el("div", "acts"), link = PAGE_URL + "#p=" + i.code;
+    const add = el("button", "sm", "Hear or add");
+    add.addEventListener("click", () => { location.hash = "p=" + i.code; });
+    const cp = el("button", "alt sm", "Copy link");
+    cp.addEventListener("click", async () => { try { await navigator.clipboard.writeText(link); cp.textContent = "Copied"; } catch (_) { prompt("The link:", link); } });
+    const png = el("button", "alt sm", "Card");
+    png.addEventListener("click", () => savePng(cv, cardName(x)));
+    acts.append(add, cp, png);
+    if (i.id && RELAY && (keys[i.id] || admin)) {
+      const rm = el("button", "alt sm", "Remove");
+      rm.addEventListener("click", () => removeItem(i, keys[i.id] || admin));
+      acts.append(rm);
+    }
+    card.append(acts);
+    grid.append(card);
+    drawCard(cv, S.cardOf(x, SITE_TEXT + " · add it to your FM-1"));
+  }
+  $("more").hidden = shown.length <= shownN;
+}
+async function removeItem(i, del) {
+  if (!(await ask("Remove it from the Library?", "This takes " + ((i.x.meta && i.x.meta.t) || (i.x.kind === "set" ? "the set" : S.tagOf(i.x))) + " out of the Library for everyone. Links to it keep working.", [["Remove", 1], ["Cancel", 0, true]]))) return;
+  try {
+    const r = await fetch(RELAY + "/remove", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: i.id, del }) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || "it did not go");
+    items.splice(items.indexOf(i), 1);
+    const k = myKeys(); delete k[i.id]; store.set("perf1-subs", k);
+    render();
+  } catch (err) { $("libsay").textContent = "Not removed: " + err.message; }
+}
+$("genre").addEventListener("change", () => { shownN = 24; render(); });
+$("which").addEventListener("change", () => { shownN = 24; render(); });
+$("find").addEventListener("input", () => { shownN = 24; render(); });
+$("more").addEventListener("click", () => { shownN += 24; render(); });
+
+// ---------------------------------------------------------------- adding
+let incoming = null;
+function showIncoming(x) {
+  incoming = x;
+  const m = x.meta || {}, info = $("ininfo");
+  info.textContent = "";
+  $("incardview").hidden = true;
+  const add = (cls, txt) => { if (!txt) return null; const e = document.createElement("div"); e.className = cls; e.textContent = txt; info.append(e); return e; };
+  if (x.kind === "set") {
+    const used = x.list.filter((v) => v);
+    add("tag", "A set of " + plural(used.length, "piece"));
+    add("title", m.t ? m.t + (m.a ? "  by " + m.a : "") : m.a ? "by " + m.a : "");
+    add("sub", (x.on ? "Play on" : "Play off") + " · Mix: " + (["cut", "4 bars", "8 bars", "16 bars", "32 bars"][x.mix % 5]) + (x.voices.length ? " · " + plural(x.voices.length, "DX7 voice") : ""));
+    const ol = document.createElement("ol");
+    for (const v of x.list) if (v) { const li = document.createElement("li"); const q = pcSetPlaces([v])[0], pc = x.pieces.find((p) => p.genre === q.genre && p.slot === q.slot); li.textContent = S.placeName(v) + (pc ? " (shared: " + S.describe(pc) + ")" : " (factory)"); ol.append(li); }
+    info.append(ol);
+    add("note", m.n);
+    $("slotrow").hidden = true;
+  } else {
+    add("tag", S.tagOf(x));
+    add("title", m.t ? m.t + (m.a ? "  by " + m.a : "") : m.a ? "by " + m.a : "");
+    if (m.b) add("sub", "based on " + S.basedText(m));
+    add("sub", S.describe(x));
+    add("note", m.n);
+    $("ingenre").textContent = S.genreName(x.genre);
+    const s = $("slot"); s.textContent = "";
+    for (let i = 0; i < 10; i++) { const o = document.createElement("option"); o.value = i; o.textContent = S.pieceName(x.genre, i); s.append(o); }
+    s.value = x.slot;
+    $("slotrow").hidden = false;
+  }
+  const genres = x.kind === "set" ? x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre) : [x.genre];
+  const unknown = genres.some((g) => g >= N.genres.length);
+  if (unknown) add("sub", "This needs a genre this page does not know: a newer PERF-1.");
+  $("incoming").hidden = false;
+  $("add").disabled = $("hear").disabled = unknown;
+  $("addsay").textContent = "";
+}
+async function readCode(text) {
+  try { showIncoming(await pcFromCode(text)); } catch (err) { $("incoming").hidden = true; $("addsay").textContent = err.message; }
+}
+$("read").addEventListener("click", () => readCode($("code").value));
+$("pfile").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { showIncoming(pcDecodeAny(new Uint8Array(await f.arrayBuffer()))); } catch (err) { $("incoming").hidden = true; $("addsay").textContent = err.message; }
+});
+$("incard").addEventListener("click", () => { if (incoming) showCard($("incardview"), incoming); });
+
+// a piece's own voice: where it goes (asking when its slot holds another); the slot, or a thrown "Not added."
+async function placeVoice(cur, voice, want) {
+  const plan = pcVoicePlan(cur, voice, want), name = pcVoiceName(voice);
+  if (plan.kind !== "conflict") return plan.slot;
+  const opts = [["Replace " + plan.other, plan.slot]];
+  if (plan.free >= 0) opts.unshift(["Use empty slot " + (plan.free + 1), plan.free]);
+  opts.push(["Cancel", -1, true]);
+  const to = await ask("Its DX7 voice", "This piece plays its own DX7 voice, " + name + ", from voice slot " + (plan.slot + 1) + ". On your FM-1 that slot holds " + plan.other +
+    ". Replacing it changes the sound of any of your pieces that use " + plan.other + "." + (plan.free >= 0 ? " Or put " + name + " in your empty slot " + (plan.free + 1) + " instead: nothing of yours changes." : " All 16 of your slots are in use."), opts);
+  if (to === null || to < 0) throw new Error("Not added.");
+  return to;
+}
+$("add").addEventListener("click", async () => {
+  const x = incoming, say = (t) => { $("addsay").textContent = t; };
+  if (!x) return;
+  $("add").disabled = true;
+  try {
+    const p = await openPort();
+    const ab = await about(p);
+    if (!ab) throw new Error("This FM-1 has a PERF-1 older than 0.16.3: update it on the Install page first, then add it.");
+    const pieces = x.kind === "set" ? x.pieces.map((q) => ({ ...q, rec: q.rec.slice() })) : [{ ...x, rec: x.rec.slice(), slot: +$("slot").value }];
+    const genres = [...new Set((x.kind === "set" ? x.list.filter((v) => v).map((v) => pcSetPlaces([v])[0].genre) : []).concat(pieces.map((q) => q.genre)))];
+    const missing = genres.filter((g) => g >= ab.genres);
+    if (missing.length) throw new Error("This FM-1 does not have " + missing.map(S.genreName).join(", ") + " yet: update PERF-1 on the Install page first.");
+    // the voices
+    let vox = null;
+    const cur = await readMust(p, S.OBJ_VOICES);
+    if (x.kind === "set") {
+      if (x.voices.length) {
+        const r = pcSetVoices(cur, x.voices), lost = r.map.filter((k) => k < 0).length;
+        if (lost && !(await ask("Its DX7 voices", "Your 16 voice slots have no room for " + lost + " of this set's voices: the pieces on them will play whatever is in your slots.", [["Add it anyway", 1], ["Cancel", 0, true]])))
+          throw new Error("Not added.");
+        vox = r.vox;
+        for (const q of pieces) if (q.vidx >= 0 && r.map[q.vidx] >= 0 && S.userSlot(q) >= 0) pcSet(q, E.P_CM_SND, P[E.P_CM_SND].min, N.nplain + N.nfmfact + r.map[q.vidx]);
+      }
+    } else {
+      const q = pieces[0], want = S.userSlot(q);
+      if (want >= 0 && q.voice) {
+        const to = await placeVoice(cur, q.voice, want);
+        if (pcVoicePlan(cur, q.voice, want).kind !== "same" || to !== pcVoicePlan(cur, q.voice, want).slot) vox = pcVoicesWith(cur, q.voice, to);
+        pcSet(q, E.P_CM_SND, P[E.P_CM_SND].min, N.nplain + N.nfmfact + to);
+      } else if (want >= 0 && !(await ask("Its DX7 voice", "This piece plays a DX7 voice from slot " + (want + 1) + " that was not shared with it, so it will play whatever voice is in your slot " + (want + 1) + ".", [["Add it anyway", 1], ["Cancel", 0, true]])))
+        throw new Error("Not added.");
+    }
+    // the banks
+    say("Reading from the FM-1…"); $("addbar").value = 10;
+    const banks = {}, replaced = [];
+    for (const g of new Set(pieces.map((q) => q.genre))) banks[g] = await readMust(p, S.objOf(g));
+    for (const q of pieces) {
+      const r = pcIntoBank(banks[q.genre], q.genre, q.slot, q, ab.npar);
+      if (r.replaced) replaced.push(S.tagOf(q));
+      banks[q.genre] = r.bank;
+    }
+    if (replaced.length && !(await ask(replaced.length > 1 ? "Replace your pieces?" : "Replace your piece?", "You have " + (replaced.length > 1 ? "pieces" : "a piece") + " saved as " + replaced.join(", ") +
+      ". Adding replaces " + (replaced.length > 1 ? "them" : "it") + " (back up on the Install page first if you want to keep " + (replaced.length > 1 ? "them" : "it") + ").", [["Replace", 1], ["Cancel", 0, true]])))
+      throw new Error("Not added." + (x.kind === "set" ? "" : " Choose another place for it."));
+    let glob = null;
+    if (x.kind === "set") glob = pcGlobWith(await readMust(p, S.OBJ_GLOB), x, S.globDefs);
+    // the Progression page's chord types (0.16.6 on; an older PERF-1 does not answer for the object): each piece's, cleared when it has none
+    let knd = null;
+    const kcur = await readObject(p, S.OBJ_KINDS);
+    if (kcur !== undefined) {                                     // 0.16.28 on (about version 2): the pieces' extras, with FILTERS and SCREAM; before, the types alone
+      knd = kcur;
+      for (const q of pieces) knd = ab.ver >= 2 ? pcExtrasWith(knd, q.genre, q.slot, q.kinds || null, q.fx || null, ab.genres) : pcKindsWith(knd, q.genre, q.slot, q.kinds || null, ab.genres);
+    }
+    else if (pieces.some((q) => q.kinds) && !(await ask("Its chord types", "This " + (x.kind === "set" ? "set" : "piece") + " sets chord types on the Progression page, which this PERF-1 is too old to keep: it will play each chord as the piece's own type. Update on the Install page to hear it as made.", [["Add it anyway", 1], ["Cancel", 0, true]])))
+      throw new Error("Not added.");
+    // the writes, then the restart
+    // the pieces' bass steps (0.16.29 on: about version 3), each piece's (cleared when it has none)
+    let bst = null;
+    if (ab.ver >= 3) {
+      const bcur = await readObject(p, S.OBJ_BSTEP);
+      if (bcur !== undefined) { bst = bcur; for (const q of pieces) bst = pcBassWith(bst, q.genre, q.slot, q.bass || null, ab.genres); }
+    } else if (pieces.some((q) => q.bass) && !(await ask("Its bass steps", "This " + (x.kind === "set" ? "set" : "piece") + " has bass steps, which this PERF-1 is too old to keep: its bass plays its own line. Update on the Install page to hear it as made.", [["Add it anyway", 1], ["Cancel", 0, true]])))
+      throw new Error("Not added.");
+    const steps = (vox ? 1 : 0) + Object.keys(banks).length + (glob ? 1 : 0) + (knd ? 1 : 0) + (bst ? 1 : 0);
+    let done = 0;
+    const step = (t) => { say(t); $("addbar").value = 20 + Math.round((75 * done++) / steps); };
+    if (vox) { step("Writing the voices…"); await writeObject(p, S.OBJ_VOICES, vox); }
+    for (const g of Object.keys(banks)) { step("Writing " + S.genreName(+g) + "…"); await writeObject(p, S.objOf(+g), banks[g]); }
+    if (glob) { step("Writing the set list…"); await writeObject(p, S.OBJ_GLOB, glob); }
+    if (knd) { step("Writing the chord types…"); await writeObject(p, S.OBJ_KINDS, knd); }
+    if (bst) { step("Writing the bass steps…"); await writeObject(p, S.OBJ_BSTEP, bst); }
+    p.out.send(bkRestartMsg());
+    port = null;
+    $("addbar").value = 100;
+    const m = x.meta || {};
+    originsSet(pieces.map((q) => ({ genre: q.genre, slot: q.slot, t: m.t || (x.kind === "set" ? "a shared set" : S.tagOf(x)), a: m.a, rec: q.rec })));
+    say(x.kind === "set" ? "Added. The FM-1 restarts: GLO twice shows the set list." :
+      "Added as " + S.tagOf(pieces[0]) + ". The FM-1 restarts: then GLO + PRESETS to " + S.genreName(x.genre) + ", PRESETS to " + S.pieceName(x.genre, pieces[0].slot) + "." +
+      (x.npar > ab.npar ? " It was made with a newer PERF-1: update yours to hear all of it." : ""));
+  } catch (err) { say(err.message); $("addbar").value = 0; }
+  $("add").disabled = false;
+});
+$("hear").addEventListener("click", () => {
+  if (!incoming) return;
+  try { $("addsay").textContent = emuPut(S, incoming, +$("slot").value); window.open("../emu/", "_blank", "noopener"); }
+  catch (err) { $("addsay").textContent = "Could not put it in the emulator: " + err.message; }
+});
+
+// ---------------------------------------------------------------- my FM-1: read, tick one or many, then download, copy, card or submit
+let mine = [], mySet = null;
+const ticked = () => [...document.querySelectorAll("#mine input.one:checked")].map((r) => r.value);
+$("scan").addEventListener("click", async () => {
+  const say = (t) => { $("scansay").textContent = t; };
+  $("scan").disabled = true;
+  mine = []; mySet = null; $("mine").textContent = ""; $("sharebox").hidden = true;
+  try {
+    const p = await openPort();
+    for (let g = 0; g < N.genres.length; g++) {
+      say("Reading " + S.genreName(g) + "…"); $("scanbar").value = Math.round((100 * g) / N.genres.length);
+      const bank = await readObject(p, S.objOf(g));
+      if (bank === undefined) { if (g === 0) throw new Error("The FM-1 did not answer (a PERF-1 without Backup?). Replug it and try again."); continue; }
+      const saved = pcSaved(bank);
+      for (let i = 0; i < 10; i++) if ((saved >> i) & 1) mine.push(pcFromBank(bank, g, i));
+    }
+    const have = pcVoices((await readObject(p, S.OBJ_VOICES)) || new Uint8Array(0));
+    for (const pc of mine) { const k = S.userSlot(pc); if (k >= 0 && k < have.length) pc.voice = have[k]; }   // a piece on your own voice takes it along
+    const knd = mine.length ? await readObject(p, S.OBJ_KINDS) : undefined;   // and its chord types (0.16.6 on)
+    for (const pc of mine) { pc.kinds = pcKindsOf(knd, pc.genre, pc.slot); pc.fx = pcFxOf(knd, pc.genre, pc.slot); }
+    const bst = mine.length ? await readObject(p, S.OBJ_BSTEP) : undefined;   // and its bass steps (0.16.29 on)
+    for (const pc of mine) pc.bass = pcBassOf(bst, pc.genre, pc.slot);
+    const gl = pcGlobList((await readObject(p, S.OBJ_GLOB)) || new Uint8Array(0));
+    if (gl.list.some((v) => v)) {                                  // the set list: its stored pieces (a factory one is the same everywhere) and their voices
+      const voices = [], vslot = [], pieces = [];
+      for (const q of pcSetPlaces(gl.list)) {
+        if (!q || pieces.some((x) => x.genre === q.genre && x.slot === q.slot)) continue;
+        const pc = mine.find((x) => x.genre === q.genre && x.slot === q.slot);
+        if (!pc) continue;
+        const k = S.userSlot(pc);
+        let vidx = -1;
+        if (k >= 0 && pc.voice) { vidx = vslot.indexOf(k); if (vidx < 0) { vslot.push(k); voices.push(pc.voice); vidx = voices.length - 1; } }
+        pieces.push({ ...pc, vidx });
+      }
+      mySet = { kind: "set", list: gl.list, on: gl.on, mix: gl.mix, pieces, voices, meta: {} };
+    }
+    $("scanbar").value = 100;
+    showMine();
+    if (!mine.length && !mySet) say("No saved pieces and no set list on the FM-1 yet. Save one (GLO, then SAVE) and read again.");
+    else say((mine.length ? plural(mine.length, "saved piece") : "No saved pieces") + (mySet ? " and your set list" : "") + ". Tick what to share.");
+  } catch (err) { say(err.message); }
+  $("scanbar").value = 0;
+  $("scan").disabled = false;
+});
+function showMine() {
+  const box = $("mine");
+  box.textContent = "";
+  const row = (cls, value, name, sub) => {
+    const l = el("label", cls), r = el("input", value === "all" ? "" : "one"), n = el("b", "", name), s = el("span", "sub", sub);
+    r.type = "checkbox"; r.value = value;
+    r.addEventListener("change", value === "all" ? () => { for (const c of box.querySelectorAll("input.one")) c.checked = r.checked; picked(); } : picked);
+    l.append(r, n, s); box.append(l);
+    return r;
+  };
+  if (mine.length + (mySet ? 1 : 0) > 1) row("all", "all", "Tick all", "");
+  if (mySet) { const n = mySet.list.filter((v) => v).length; row("set", "set", "My set list", plural(n, "piece") + ", " + mySet.pieces.length + " stored · " + mySet.list.filter((v) => v).slice(0, 3).map(S.placeName).join(", ") + (n > 3 ? " …" : "")); }
+  mine.forEach((pc, i) => row("", String(i), S.tagOf(pc), S.describe(pc)));
+}
+const manyTitles = {};                                           // the titles typed for each ticked piece when several are ticked (kept while the page is open)
+function titleRows(t) {
+  const box = $("mtitles");
+  box.textContent = "";
+  box.hidden = t.length < 2;
+  if (t.length < 2) return;
+  for (const v of t) {
+    const lab = document.createElement("label"), inp = document.createElement("input");
+    lab.className = "f";
+    lab.append("Title for " + (v === "set" ? "my set list" : S.tagOf(mine[+v])) + " (optional)");
+    inp.type = "text"; inp.maxLength = 60; inp.value = manyTitles[v] || "";
+    inp.addEventListener("input", () => { manyTitles[v] = inp.value; });
+    lab.append(inp);
+    box.append(lab);
+  }
+}
+function picked() {
+  const t = ticked(), one = t.length === 1;
+  titleRows(t);
+  $("sharebox").hidden = !t.length; $("outcode").hidden = true; $("cardview").hidden = true; $("cardsave").hidden = true;
+  const all = document.querySelector("#mine label.all input");
+  if (all) all.checked = t.length === document.querySelectorAll("#mine input.one").length;
+  $("titlef").hidden = $("notef").hidden = !one; $("manyhint").hidden = one;
+  $("mycard").disabled = !one; $("cpcode").disabled = !one;
+  $("submit").textContent = one ? "Submit to the Library" : "Submit " + t.length + " to the Library";
+  $("dl").textContent = one ? (t[0] === "set" ? "Download .perfset" : "Download .piece") : "Download " + t.length + " (.zip)";
+  $("cplink").textContent = one ? "Copy link" : "Copy " + t.length + " links";
+  const row = $("basedrow");
+  row.hidden = true;
+  if (!one || t[0] === "set") return;
+  const o = originOf(mine[+t[0]]);
+  if (!o) return;
+  if (o.same) { row.textContent = "You added this piece from a share (" + o.t + (o.a ? " by " + o.a : "") + ") and have not changed it."; if (!$("mtitle").value) $("mtitle").value = o.t; if (!$("mby").value) $("mby").value = o.a; }
+  else row.textContent = "Changed from a piece you added (" + o.b.t + (o.b.a ? " by " + o.b.a : "") + "): it is shared as based on that one.";
+  row.hidden = false;
+}
+function chosen() {                                               // what is ticked, each with its words (its own title; a note only when one is ticked)
+  const t = ticked(), one = t.length === 1, date = new Date().toISOString().slice(0, 10);
+  return t.map((v) => {
+    const m = { d: date };
+    const tt = (one ? $("mtitle").value : manyTitles[v] || "").trim();
+    if (tt) m.t = tt;
+    if ($("mby").value.trim()) m.a = $("mby").value.trim();
+    if (one && $("mnote").value.trim()) m.n = $("mnote").value.trim();
+    if (v === "set") return { ...mySet, meta: m };
+    const pc = mine[+v], o = originOf(pc);
+    m.g = S.genreName(pc.genre); m.p = S.pieceName(pc.genre, pc.slot);
+    if (o && !o.same) m.b = o.b;
+    return { ...pc, meta: m };
+  });
+}
+const fileName = (x) => (x.meta.t ? x.meta.t.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-") + "-" : "") + (x.kind === "set" ? "set.perfset" : x.meta.g + "-" + x.meta.p + ".piece");
+const voiceNote = (x) => (x.kind === "set" ? (x.voices.length ? " (with " + plural(x.voices.length, "DX7 voice") + ")" : "") : x.voice && S.userSlot(x) >= 0 ? " (with its DX7 voice " + pcVoiceName(x.voice) + ")" : "");
+const fileOf = (x) => (x.kind === "set" ? pcSetEncode(x) : pcEncode(x));
+
+// a .zip of several files, stored (the pieces are small and already packed): the local headers, the central directory, its end
+function zipOf(files) {
+  const enc = new TextEncoder(), parts = [], dir = [];
+  let off = 0;
+  const crcT = new Uint32Array(256).map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc = (u8) => { let c = 0xFFFFFFFF; for (const b of u8) c = crcT[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  const hdr = (n) => { const b = new Uint8Array(n); return [b, new DataView(b.buffer)]; };
+  const seen = new Set();
+  for (const f of files) {
+    let name = f.name, k = 2;
+    while (seen.has(name)) name = f.name.replace(/(\.\w+)$/, "-" + k++ + "$1");
+    seen.add(name);
+    const nm = enc.encode(name), c = crc(f.data), [lh, l] = hdr(30);
+    l.setUint32(0, 0x04034b50, true); l.setUint16(4, 20, true); l.setUint16(6, 0x0800, true); l.setUint32(14, c, true);
+    l.setUint32(18, f.data.length, true); l.setUint32(22, f.data.length, true); l.setUint16(26, nm.length, true);
+    parts.push(lh, nm, f.data);
+    const [ch, d] = hdr(46);
+    d.setUint32(0, 0x02014b50, true); d.setUint16(4, 20, true); d.setUint16(6, 20, true); d.setUint16(8, 0x0800, true); d.setUint32(16, c, true);
+    d.setUint32(20, f.data.length, true); d.setUint32(24, f.data.length, true); d.setUint16(28, nm.length, true); d.setUint32(42, off, true);
+    dir.push(ch, nm);
+    off += 30 + nm.length + f.data.length;
+  }
+  const size = dir.reduce((s, p) => s + p.length, 0), [eh, e] = hdr(22);
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...dir, eh], { type: "application/zip" });
+}
+$("dl").addEventListener("click", () => {
+  const xs = chosen();
+  if (!xs.length) return;
+  const a = document.createElement("a");
+  if (xs.length === 1) {
+    a.href = URL.createObjectURL(new Blob([fileOf(xs[0])], { type: "application/octet-stream" }));
+    a.download = fileName(xs[0]);
+    $("scansay").textContent = "Saved " + a.download + voiceNote(xs[0]) + ".";
+  } else {
+    a.href = URL.createObjectURL(zipOf(xs.map((x) => ({ name: fileName(x), data: fileOf(x) }))));
+    a.download = "perf1-pieces-" + new Date().toISOString().slice(0, 10) + ".zip";
+    $("scansay").textContent = "Saved " + a.download + ": " + plural(xs.length, "file") + ".";
+  }
+  a.click();
+});
+async function copy(link) {
+  const xs = chosen();
+  if (!xs.length) return;
+  const lines = [];
+  for (const x of xs) { const code = await pcToCode(x); lines.push(link ? (xs.length > 1 ? ((x.kind === "set" ? "Set" : S.tagOf(x)) + ": ") : "") + PAGE_URL + "#p=" + code : code); }
+  const text = lines.join("\n");
+  $("outcode").value = text; $("outcode").hidden = false;
+  const long = text.length > 1900 ? " It is " + text.length + " characters: too long for a Discord message, so share the file there." : "";
+  try { await navigator.clipboard.writeText(text); $("scansay").textContent = (link ? (xs.length > 1 ? plural(xs.length, "link") : "Link") : "Code") + " copied" + (xs.length === 1 ? voiceNote(xs[0]) : "") + "." + long; }
+  catch (_) { $("outcode").select(); $("scansay").textContent = "Copy it from the box below." + long; }
+}
+$("cplink").addEventListener("click", () => copy(true));
+$("cpcode").addEventListener("click", () => copy(false));
+$("mycard").addEventListener("click", async () => { const xs = chosen(); if (xs.length === 1) { await showCard($("cardview"), xs[0]); $("cardsave").hidden = false; } });
+
+// submitting: straight into the Library through the relay; without one, a pre-filled GitHub issue
+$("submit").addEventListener("click", async () => {
+  const xs = chosen(), say = (t) => { $("scansay").textContent = t; };
+  if (!xs.length) return;
+  const names = xs.map((x) => (x.meta.t ? x.meta.t + " (" + (x.kind === "set" ? "set" : S.tagOf(x)) + ")" : x.kind === "set" ? "your set list" : S.tagOf(x)));
+  if (!(await ask(xs.length > 1 ? "Submit " + xs.length + " to the Library?" : "Submit it to the Library?",
+    names.join("\n") + "\n\n" + (RELAY ? "Everyone can hear and add " + (xs.length > 1 ? "them" : "it") + " at once" : "This opens a GitHub issue with " + (xs.length > 1 ? "their links" : "its link") + " for the maker to add") +
+    ($("mby").value.trim() ? ", shown as by " + $("mby").value.trim() + "." : ", without a name (add yours above if you like).") +
+    (RELAY ? " You can remove " + (xs.length > 1 ? "them" : "it") + " later from this browser." : ""), [["Submit", 1], ["Cancel", 0, true]]))) return;
+  $("submit").disabled = true;
+  try {
+    const codes = [];
+    for (const x of xs) codes.push(await pcToCode(x));
+    if (!RELAY) {
+      const body = "For the Library:\n\n" + codes.map((c, k) => names[k] + "\n" + PAGE_URL + "#p=" + c).join("\n\n") + "\n";
+      const t = "Library: " + (xs.length > 1 ? xs.length + " pieces" : names[0]);
+      window.open("https://github.com/deamonSLINKY/PERF-1/issues/new?title=" + encodeURIComponent(t) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+      say("The issue is open in a new tab: press Submit new issue there.");
+    } else {
+      say("Submitting…");
+      const r = await fetch(RELAY + "/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ codes }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "the Library did not answer (" + r.status + ")");
+      const keys = myKeys(), bad = [];
+      let n = 0;
+      for (let k = 0; k < j.done.length; k++) {
+        const d = j.done[k];
+        if (d.error) { bad.push(names[k] + ": " + d.error); continue; }
+        keys[d.id] = d.del; n++;
+        if (!items.some((i) => i.code === codes[k])) { try { items.unshift(await libItem(codes[k], { id: d.id, added: new Date().toISOString() })); } catch (_) { /* (read above: it reads) */ } }
+      }
+      store.set("perf1-subs", keys);
+      render();
+      say((n ? (n > 1 ? n + " are" : "It is") + " in the Library." : "Nothing went in.") + (bad.length ? " Not taken: " + bad.join("; ") : ""));
+      if (n) { $("which").value = "mine"; shownN = 24; render(); location.hash = "library"; }
+    }
+  } catch (err) { say("Not submitted: " + err.message); }
+  $("submit").disabled = false;
+});
+
+window.addEventListener("hashchange", route);
+route();
+loadLibrary();
+</script>
+</body>
+</html>
