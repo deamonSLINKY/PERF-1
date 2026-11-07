@@ -32,7 +32,7 @@
 **Fixes and the FM-1 itself**
 - **Newer FM-1s** (sold since autumn 2026, with a UCUN UC25HQ80 memory chip) can save and install now; before, saves were lost at power-off and installs stopped.
 - **Full speed after V16.** M-VAVE's V16 also changes the FM-1's startup code, and with it the whole unit runs about 12% slower. The Install page's **Full speed** section checks yours and can put V15's back.
-- **Safer installs:** a boot stub brings the unit back to the update loader if an install is cut off by a power cut or a pulled cable (OCT- held at power-on starts it by hand).
+- **Safer installs (experimental):** a boot stub brings the unit back to the update loader if an install is cut off by a power cut or a pulled cable (OCT- held at power-on starts it by hand). It's the method Melodee and ChoralRoot use, tested on their units; PERF-1's copy boots fine but hasn't been through a cut-off install yet (I have one FM-1 and couldn't risk it).
 
 Earlier updates, and every development build: [docs/CHANGELOG.md](docs/CHANGELOG.md) and the [releases](https://github.com/deamonSLINKY/PERF-1/releases).
 

@@ -248,7 +248,8 @@ and a `PC` address for two and a half seconds. If you report the crash, note tha
 again. The key lights flash three times and the screen stays dark: it is waiting for the installer. Plug it in, open the Install page and
 press **Install** again; it finishes the job. To get there on purpose, hold **OCT-** alone while you switch the FM-1 on. One long flash
 instead means that rescue was not possible; the FM-1 is then in the chip's own USB mode (below). This comes from ChoralRoot's boot stub,
-as Melodee uses it. The first install of 0.16.17 over an older PERF-1 has a moment, early on, that isn't protected yet: keep the cable
+as Melodee uses it. It is **experimental** in PERF-1: the method is tested in Melodee and ChoralRoot, and PERF-1 boots through it on every
+start, but its own copy hasn't been through a cut-off install yet, so don't rely on it on purpose. The first install of 0.16.17 over an older PERF-1 has a moment, early on, that isn't protected yet: keep the cable
 in and the power on until it's done. Installing the stock firmware or another firmware removes it.
 
 - **Covered:** a bad PERF-1 install. The installer checks the package before sending it, checks each packet
