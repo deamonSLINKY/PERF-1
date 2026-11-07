@@ -129,8 +129,9 @@
           <label class="f" id="titlef">Title (optional)<input type="text" id="mtitle" maxlength="60"></label>
           <label class="f">Your name (optional)<input type="text" id="mby" maxlength="40"></label>
         </div>
+        <div id="mtitles" hidden></div>
         <label class="f" id="notef">A note: how to play it, what to try (optional)<textarea id="mnote" maxlength="400" style="font: inherit; font-size: 16px"></textarea></label>
-        <p class="small" id="manyhint" hidden>Several ticked: each goes with its own name (its genre and number) and your name. Tick one to give it a title and a note.</p>
+        <p class="small" id="manyhint" hidden>Several ticked: give each a title if you like (left empty, it goes by its genre and number); your name goes on all of them. Tick one alone to add a note.</p>
         <p><button id="submit">Submit to the Library</button> <button id="dl" class="alt">Download</button> <button id="cplink" class="alt">Copy link</button> <button id="cpcode" class="alt">Copy code</button> <button id="mycard" class="alt">Card</button></p>
         <textarea id="outcode" readonly hidden></textarea>
       </div>
@@ -586,8 +587,25 @@ function showMine() {
   if (mySet) { const n = mySet.list.filter((v) => v).length; row("set", "set", "My set list", plural(n, "piece") + ", " + mySet.pieces.length + " stored · " + mySet.list.filter((v) => v).slice(0, 3).map(S.placeName).join(", ") + (n > 3 ? " …" : "")); }
   mine.forEach((pc, i) => row("", String(i), S.tagOf(pc), S.describe(pc)));
 }
+const manyTitles = {};                                           // the titles typed for each ticked piece when several are ticked (kept while the page is open)
+function titleRows(t) {
+  const box = $("mtitles");
+  box.textContent = "";
+  box.hidden = t.length < 2;
+  if (t.length < 2) return;
+  for (const v of t) {
+    const lab = document.createElement("label"), inp = document.createElement("input");
+    lab.className = "f";
+    lab.append("Title for " + (v === "set" ? "my set list" : S.tagOf(mine[+v])) + " (optional)");
+    inp.type = "text"; inp.maxLength = 60; inp.value = manyTitles[v] || "";
+    inp.addEventListener("input", () => { manyTitles[v] = inp.value; });
+    lab.append(inp);
+    box.append(lab);
+  }
+}
 function picked() {
   const t = ticked(), one = t.length === 1;
+  titleRows(t);
   $("sharebox").hidden = !t.length; $("outcode").hidden = true; $("cardview").hidden = true; $("cardsave").hidden = true;
   const all = document.querySelector("#mine label.all input");
   if (all) all.checked = t.length === document.querySelectorAll("#mine input.one").length;
@@ -605,11 +623,12 @@ function picked() {
   else row.textContent = "Changed from a piece you added (" + o.b.t + (o.b.a ? " by " + o.b.a : "") + "): it is shared as based on that one.";
   row.hidden = false;
 }
-function chosen() {                                               // what is ticked, each with its words (a title and a note only when one is ticked)
+function chosen() {                                               // what is ticked, each with its words (its own title; a note only when one is ticked)
   const t = ticked(), one = t.length === 1, date = new Date().toISOString().slice(0, 10);
   return t.map((v) => {
     const m = { d: date };
-    if (one && $("mtitle").value.trim()) m.t = $("mtitle").value.trim();
+    const tt = (one ? $("mtitle").value : manyTitles[v] || "").trim();
+    if (tt) m.t = tt;
     if ($("mby").value.trim()) m.a = $("mby").value.trim();
     if (one && $("mnote").value.trim()) m.n = $("mnote").value.trim();
     if (v === "set") return { ...mySet, meta: m };
