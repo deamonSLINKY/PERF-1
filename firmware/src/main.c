@@ -54,6 +54,7 @@ static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ?
 #endif
 
 static uint8_t flash_ok;          /* JEDEC id matched at boot */
+static uint8_t flash_chip;        /* which part (fm1_flash_id.h FL_CHIP): the status log says it */
 static void audio_silence(void);
 static int st_read(uint32_t off, void *dst, uint32_t n)   /* 256-byte IRQ-off windows: audio keeps up */
 {

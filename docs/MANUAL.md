@@ -2332,6 +2332,9 @@ That's normal. While the FM-1 saves, the music fades out and back in. Settings a
 **A stored piece came back the way it was before.**
 It was stored while playing and the power went off before the save finished. Stores happen straight away, with a short dip in the sound. Don't switch off during the dip.
 
+**Everything I saved is gone after switching off, or an install stops at once.**
+Newer FM-1s (sold since autumn 2026) have a different memory chip. PERF-1 before 0.16.23, and many other firmwares, don't recognise it: they keep your saves only until power-off and can't take an update (the installer says "nothing was written"). Nothing is broken. Install 0.16.23 or newer. If the installer can't reach the FM-1, use a recovery tool such as FM-SWITCH, or the Firmware Hub's rescue page, to put the stock firmware back first. The Install page's Live status shows which chip yours has (P25Q80 or UC25HQ80).
+
 **My changes vanished.**
 Only a piece you stored (Global, **SAVE**) is kept. Changes you didn't store are lost when you change genre or switch off. See "What is remembered" in section 13.
 

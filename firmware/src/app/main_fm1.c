@@ -697,7 +697,8 @@ static void tel_service(void)
         w[7] = tel_max_us;
         w[8] = en_dbg.last_us;
         w[9] = en_dbg.nested;
-        w[10] = (uint32_t)en_shed_level | (uint32_t)en_chorus_c0 << 8 | (uint32_t)en_bass_c1 << 9;   /* (bit 8: the chorus on the first core) */
+        w[10] = (uint32_t)en_shed_level | (uint32_t)en_chorus_c0 << 8 | (uint32_t)en_bass_c1 << 9 |   /* (bit 8: the chorus on the first core) */
+                (uint32_t)flash_chip << 12 | (uint32_t)susp_bad << 14;   /* bits 12-13 the flash part (1 P25Q80, 2 UC25HQ80), 14 its erase didn't suspend (0.16.23) */
         w[11] = (uint32_t)en_playing;
         w[12] = tel_stores;
         w[13] = tel_store_us;
@@ -765,7 +766,9 @@ static void fm1_main(void)
     uint32_t last_frame = 0;
     {
         uint32_t f = irq_save();
-        flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;
+        const uint32_t id = FL_FAR(fl_jedec_ram)();
+        flash_ok = FL_JEDEC_OK(id);                       /* the Puya of the first units or the UC25HQ80 of the newer ones (0.16.23) */
+        flash_chip = (uint8_t)FL_CHIP(id);
         if (flash_ok)
             FL_FAR(fl_resume_ram)();                      /* (an erase left suspended by a reset finishes) */   /* the expected 1 MiB part, else RAM only */
         irq_restore(f);

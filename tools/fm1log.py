@@ -67,6 +67,8 @@ def decode(msg):
         d[f] = 0
     d["chorus"] = d["shed"] >> 8 & 1              # the pad's chorus on the first core (the firmware balances it)
     d["bass"] = d["shed"] >> 9 & 1                # the drone and the acid on the other core
+    d["flash"] = d["shed"] >> 12 & 3              # the flash part (0.16.23): 1 P25Q80, 2 UC25HQ80, 3 another (flash off), 0 an older build
+    d["susp_bad"] = d["shed"] >> 14 & 1           # its erase didn't suspend: saves stop the audio
     d["shed"] &= 0xFF
     return d
 
@@ -212,7 +214,7 @@ def main():
     t0 = time.time()
     with open(out, "w", newline="") as f:
         cw = csv.writer(f)
-        cw.writerow(["t"] + FIELDS + ["chorus", "bass"] + EXTRA + DIAG + ["event"])
+        cw.writerow(["t"] + FIELDS + ["chorus", "bass", "flash", "susp_bad"] + EXTRA + DIAG + ["event"])
         diag = {}
         try:
             while True:
@@ -252,7 +254,7 @@ def main():
                     if d["gap_us"] > 20000:
                         ev.append("GAP%dms" % (d["gap_us"] // 1000))
                     prev = d
-                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"]] + [extra.get(k, 0) for k in EXTRA] +
+                    cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"], d["flash"], d["susp_bad"]] + [extra.get(k, 0) for k in EXTRA] +
                                 [diag.get(k, 0) for k in DIAG] + [" ".join(ev)])
                     extra = {}
                     diag = {}
