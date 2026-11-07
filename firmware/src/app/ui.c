@@ -85,7 +85,9 @@ static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
-static const char *const VOICES_NAME[2] = {"DX", "DY"};                                          /* the thirty built-in DX7 voices: Melodee's set, or the human-made one */
+static const char *const VOICES_NAME[2] = {"DX", "DY"};
+static const char *const FORM_NAME[2] = {"Song", "Loop"};
+static const char *const START_NAME[2] = {"Last", "Random"};                                       /* the Settings page's Start (0.16.26): power on to the piece last played, or one at random */                                          /* the Settings page's Form (0.16.26): a piece moves through its patterns, or loops its first */                                          /* the thirty built-in DX7 voices: Melodee's set, or the human-made one */
 static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0",
                                          "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "+11", "+12"};   /* the repeat's pitch, semitones reached over four beats held */
 static const char *const RPG_NAME[4] = {"FULL", "3/4", "HALF", "1/4"};                              /* the repeat's gate: the part of the slice that sounds */
@@ -162,8 +164,8 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Voices", KN_NAME, 13, VOICES_NAME, 2}, {"", KN_NONE, 0, 0, 0},
-                         {"", KN_NONE, 0, 0, 0}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set; Saver and Lights on SCREEN (0.16.1) */
+    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Voices", KN_NAME, 13, VOICES_NAME, 2}, {"Form", KN_NAME, 28, FORM_NAME, 2},
+                         {"Start", KN_NAME, 29, START_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set; Saver and Lights on SCREEN (0.16.1) */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SNIPS", 62, 0, {{"Pitch", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 3}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
@@ -491,6 +493,8 @@ static struct {
     uint8_t flex_cur;                  /* the pattern the engine was last told to play (en_flex_select) */
     uint8_t saver, lights, saver_on, saver_view, saver_viz;   /* the STAGE page: the screensaver (off, 1, 3, 10 minutes), the key lights (off, show); it is on; where it came from */
     uint8_t usb_fixed;                           /* the USB page: 1, the USB audio at a fixed level, not the master knob's */
+    uint8_t form;
+    uint8_t start_rand;                          /* the Settings page's Start: 0 Last, 1 Random (the global record's rsv, bit 8: 0.16.26) */                                /* the Settings page's Form: 0 Song, 1 Loop (kept in the global record's last byte, bit 2: 0.16.26) */
     uint8_t fm_dy;                               /* the Settings page's Voices: 1, the DY set stands in for the DX voices (kept in set_t.usb's bit 1) */
     uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
@@ -884,7 +888,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
            i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
            i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : i == 22 ? &ui.cc_mode :
-           i == 23 ? &glob.sl_rsv[0] : i == 24 ? &glob.sl_rsv[1] : i == 25 ? &ui.smp_mode : i == 26 ? &ui.smp_fx : i == 27 ? &ui.smp_gap : &proj.genre;   /* 23 zoom, 24 the mix (0.16.1: the global record's spare bytes) */   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
+           i == 23 ? &glob.sl_rsv[0] : i == 24 ? &glob.sl_rsv[1] : i == 25 ? &ui.smp_mode : i == 26 ? &ui.smp_fx : i == 27 ? &ui.smp_gap : i == 28 ? &ui.form : i == 29 ? &ui.start_rand : &proj.genre;   /* 23 zoom, 24 the mix (0.16.1: the global record's spare bytes) */   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
 }
 #define FXP_UI(k) (FXP[((k) - K_FXP) / 4].bit == 63)   /* the PERFORM page: no effect, the UI's own settings */
 static int fxp_get(int k)
@@ -952,6 +956,13 @@ static void fxp_set(int k, int v)
                 en_fm_set_dy(v);                 /* the DX or the DY voices: the names change at once, the patch at the next chunk */
             else if (FXP_CTL(k).idx == 23 || FXP_CTL(k).idx == 24)
                 project_globals();               /* (zoom and the mix: the global record, stored at once) */
+            else if (FXP_CTL(k).idx == 29)
+                project_start_random_set(v);
+            else if (FXP_CTL(k).idx == 28) {     /* Form: the engine at once, the global record's bit 2 */
+                en_song = (uint8_t)!v;
+                glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] & ~4u) | (v ? 4u : 0u));
+                project_globals();
+            }
             break;
         }
         if (v != ui.fxs[FXP_CTL(k).idx]) {
@@ -3764,8 +3775,8 @@ static void input(void)
                             pg_fill(s);
                     for (s = 0; s < 2; s++)       /* white keys 9 and 10: the bass, the pad, follow the chords or hold the key (PEDAL, 0.16.21) */
                         if (WHITE_KEY[8 + s] == i) {
-                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 3u);
-                            en_pedal(glob.sl_rsv[2]);
+                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 7u);   /* (bit 2 is Form's) */
+                            en_pedal(glob.sl_rsv[2] & 3);
                             project_globals();
                             say(s ? "PAD" : "BASS", glob.sl_rsv[2] >> s & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
                         }
@@ -7256,6 +7267,17 @@ static void settings_load(void)
 static void autosave(void)
 {
     uint32_t now = plat_ms();
+    {   /* START (0.16.26): the piece playing, kept for the next power-on once it has stayed 20 s (a write of the global record: only when it costs the
+         * music nothing, stopped or with the flash's seamless erase) */
+        static uint8_t pl_now;
+        static uint32_t pl_t;
+        const int pl = proj.genre * NPIECES + proj.piece + 1;
+        if (pl != pl_now) {
+            pl_now = (uint8_t)pl;
+            pl_t = now;
+        } else if (pl != project_place() && now - pl_t >= 20000u && (!en_playing || plat_store_seamless()))
+            project_place_set(pl);
+    }
     if (ui.vox_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {
         ui.vox_dirty = 0;
         quiet_write(3);                          /* the player's DX7 voices: kept (playing: faded) */
@@ -7452,6 +7474,9 @@ void ui_init(void)
     voices_load();                               /* and the player's DX7 voices */
     mm_load();                                   /* and their MIDI map (0.16.11) */
     en_pedal(glob.sl_rsv[2] & 3);                /* and the pedal (0.16.21: the global record's last spare byte) */
+    ui.start_rand = (uint8_t)project_start_random();
+    ui.form = (uint8_t)(glob.sl_rsv[2] >> 2 & 1u);   /* and Form (0.16.26: bit 2; 0, the records before it, is Song) */
+    en_song = (uint8_t)!ui.form;
     ui.sl_pos = (uint8_t)sl_find();              /* the set list: the slot of the piece playing (0xFF none) */
     ui.touched = -1;
     ui.boot_t = plat_ms();

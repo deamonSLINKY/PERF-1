@@ -1,0 +1,37 @@
+# START (0.16.26): the next power-on comes back to the piece last played (once it has played 20 s), exactly as stored; Random (the Settings page's Start)
+# is the old way. A test boot (seed 0) is always the first piece, so the other scenarios are unchanged.
+seed 0
+seamless 1
+wait 3000
+expect genre 0
+expect piece 0
+press GLO
+wait 100
+turn PRESET 2
+wait 200
+release GLO
+wait 300
+turn PRESET 3
+wait 300
+expect genre 2
+expect piece 3
+# not yet 20 s on it: a power-on now would not know it
+wait 21000
+# a real power-on (seed not 0): back to HOUSE 04
+seed 7
+reboot
+wait 2500
+expect genre 2
+expect piece 3
+expect saved 0
+# the settings walk: HOLD HOME opens SETTINGS (its first page); the fourth knob is Start: Random
+press HOME
+wait 800
+release HOME
+wait 200
+spin K4 1
+wait 6000
+seed 7
+reboot
+wait 2500
+expect genre 0

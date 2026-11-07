@@ -1812,6 +1812,20 @@ static int ac_centre(void)                      /* the middle of the line's note
         }
     return hi >= lo ? (lo + hi) / 2 : 60;
 }
+/* a major chord's avoid note (0.16.26, as SAMPERF's lines): the fourth, a semitone above the chord's third, clashes when it is held or stressed; the
+ * next note of the scale up, the fifth, takes its place. Minor chords keep their sixths and seconds (the acid's dark colours). */
+static int avoid_fix(int n)
+{
+    int k, maj = 0, mnr = 0;
+    if (chord_nt < 2)
+        return n;
+    for (k = 1; k < chord_nt; k++) {
+        const int d = (chord_pcs[k] - chord_pcs[0] + 12) % 12;
+        maj |= d == 4;
+        mnr |= d == 3;
+    }
+    return maj && !mnr && ((n - chord_pcs[0]) % 12 + 12) % 12 == 5 && n + 2 <= 96 ? n + 2 : n;
+}
 static int acid_note(int s, int v)              /* acid step s's note, as the call (v 0) or as answer v plays it */
 {
     const int type = v / 5, ds = v % 5 - 2;
@@ -1954,7 +1968,9 @@ static void drift_reset(void)
  * heard on the phrase boundary; back: the move straight back to the chord before (A B A) is allowed (a house loop wants it, a lofi turnaround does not).
  * hr: the genre's harmonic rhythm, bars a chord (0: Drift's clock in seconds, hypno); Drift then halves or doubles it (hr_bars_v). dom: a dominant
  * in minor: on V the scale's seventh degree is raised a semitone (the chord's third, the acid's and the bass's note) so the cadence is a real one.
- * A diminished degree (its fifth a tritone: vii in a major mode, ii in a minor one) is rare, and a leading chord that is one is replaced by V (or IV).
+ * A diminished degree (its fifth a tritone: vii in a major mode, ii in a minor one, vi in Dorian) is never walked to (0.16.26: it was rare, x0.15, and a
+ * genre's own move could still land on it, house's i-VI in Dorian), and a leading chord that is one is replaced by V (or IV). Home is home even when it is
+ * diminished (Locrian). A progression set by hand plays what it says.
  * An edge's weight with EB2 set counts only when the scale's second is a semitone above the root (0.16.7, the audit's "bII": a Phrygian piece's flat II,
  * the chord that makes Phrygian Phrygian; in Aeolian or Dorian the same degree is ii and the edge does nothing). */
 #define EB2 0x80u
@@ -2078,7 +2094,10 @@ static void prog_take(uint32_t lo, uint32_t hi) /* the progression from the page
         drift_reset();
     }
 }
-static uint8_t deg_prev, cad_n;                  /* the chord before this one; the chords since the phrase began */
+#ifdef EN_HOST
+int en_host_dimwalk;                            /* moves to a diminished chord other than home (the walk never: 0.16.26) */
+#endif
+static uint8_t deg_prev, cad_n;                 /* the chord before this one; the chords since the phrase began */
 static uint8_t drop_tonic;                       /* the drop takes the next chord home */
 static void chord_to(int i);
 static void chord_change(void)                  /* to another degree: the genre's own moves first */
@@ -2115,8 +2134,6 @@ static void chord_change(void)                  /* to another degree: the genre'
                     w[i] += (float)(e[k].w & ~EB2);
             if (!CHT[cg].back && i == deg_prev && deg_prev != deg && cad_n)   /* no A B A (a loop's own chord is the pull back) */
                 w[i] = 0.0f;
-            if (deg_dim(i))
-                w[i] *= 0.15f;                  /* a diminished chord: rare */
             if (cad_n + 1 >= CHT[cg].cad_every && i == cad_to && deg != 0)
                 w[i] += 10.0f;                  /* the chord before the phrase's end: its leading chord */
             if (cad_n >= CHT[cg].cad_every && i == 0)
@@ -2124,6 +2141,8 @@ static void chord_change(void)                  /* to another degree: the genre'
         } else {
             w[i] = nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
         }
+        if (i != 0 && deg_dim(i))
+            w[i] = 0.0f;                        /* a diminished chord: not walked to (hypno's walk too) */
         sum += w[i];
     }
     r = frand() * sum;
@@ -2148,7 +2167,7 @@ static void chord_change(void)                  /* to another degree: the genre'
             dh_i = (uint8_t)(k + 1);
             if (dv && frand() * 100.0f < (float)dv)
                 dh[k] = (uint8_t)i;
-            else if (dh[k] < nsteps)
+            else if (dh[k] < nsteps && !(dh[k] && deg_dim(dh[k])))   /* (a mode changed under the loop: its diminished chord drawn anew) */
                 i = dh[k];
         } else if (ln) {                         /* filling it */
             dh[dh_n++] = (uint8_t)i;
@@ -2164,8 +2183,12 @@ static void chord_change(void)                  /* to another degree: the genre'
 static void chord_to(int i)                     /* the chord moves to degree i */
 {
     int k;
+#ifdef EN_HOST
+    if (i && deg_dim(i))
+        en_host_dimwalk++;                      /* (tests/host/gharm.c: only a progression set by hand may) */
+#endif
     deg_prev = (uint8_t)deg;
-    cad_n = (uint8_t)(i == 0 && nsteps == 7 && chord_genre && cad_n >= CHT[chord_genre].cad_every ? 0 : cad_n + 1);
+    cad_n =(uint8_t)(i == 0 && nsteps == 7 && chord_genre && cad_n >= CHT[chord_genre].cad_every ? 0 : cad_n + 1);
     deg = i;
     if (hist_n >= 8)
         for (k = 0; k < 7; k++)
@@ -2408,6 +2431,8 @@ static void acid_step(int32_t wait)             /* a sixteenth of the acid line 
             acid_fire();
         }
         ac_pend.n = acid_note(ss, v);
+        if ((ac_accent & m) || (ac_slide & m) || !(st & 3))   /* accented, held into the next or on the beat: no clashing fourth (0.16.26) */
+            ac_pend.n = avoid_fix(ac_pend.n);
         ac_pend.slid_ok = (uint8_t)((ac_slide >> prev & 1u) && (ac_gate >> prev & 1u));
         ac_pend.dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);   /* 0.06 .. 1.9 s */
         ac_pend.acc = (uint8_t)((ac_accent & m) != 0u);
@@ -2497,8 +2522,34 @@ static uint8_t dd_fill;                          /* this bar ends in a fill */
 static uint32_t dd_bars;
 volatile int8_t en_dd_left = -1;
 volatile uint32_t en_dd_changes, en_dd_mutations;
-static int dd_len(void) { static const uint8_t L[6] = {0, 4, 8, 16, 32, 64}; return L[(unsigned)par[P_DD_EVERY] < 6u ? par[P_DD_EVERY] : 0]; }
 static int bits16(uint32_t b) { int n = 0; while (b) { n += (int)(b & 1u); b >>= 1; } return n; }
+/* FORM (0.16.26, the genre audit: every piece looped its first pattern for ever). Song (the default): while the player's Drum Drift is off, the piece
+ * moves through its own patterns, the next one every SONG_BARS of its genre with a fill in the bar before, as a track would; the patterns it has
+ * that differ, up to four. Loop: the first pattern for ever, as before. The player's Drum Drift, when set, is the one that plays. */
+volatile uint8_t en_song;
+static const uint8_t SONG_BARS[EN_NGENRE] = {16, 8, 8, 16, 16, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 16, 8, 16, 16};   /* hypno, dubstep, dub, trip-hop, psy, forest: 16 */
+static int song_pool(void)                      /* the piece's patterns that differ from the ones before them, from the first (2 .. 4; 1: nothing to move to) */
+{
+    int p, q, l, n = 1;
+    for (p = 1; p < 4 && p < EN_NPAT; p++) {
+        int same = 0;
+        for (q = 0; q < p && !same; q++) {
+            for (l = 0; l < EN_NLANE && en_pats[p][l] == en_pats[q][l]; l++)
+                ;
+            same = l == EN_NLANE;
+        }
+        if (same)
+            break;
+        n++;
+    }
+    return n;
+}
+static int song_on(void) { return en_song && !par[P_DD_CHANGE] && !par[P_DD_MUTATE] && song_pool() > 1; }
+static int dd_len(void)
+{
+    static const uint8_t L[6] = {0, 4, 8, 16, 32, 64};
+    return song_on() ? SONG_BARS[chord_genre] : L[(unsigned)par[P_DD_EVERY] < 6u ? par[P_DD_EVERY] : 0];
+}
 volatile uint8_t en_lane_src[EN_NLANE];
 static uint8_t lane_src[EN_NLANE];              /* the pattern each lane plays (P_LSRC, taken at the bar) */
 /* a lane of a pattern as it plays at a density: 50 as written; below, the hits of least importance go first (the off sixteenths, then the off
@@ -2567,7 +2618,8 @@ static void dd_mutate(int p)
 static void dd_bar(void)                        /* at each bar line, before the new pattern is taken */
 {
     int len = dd_len();
-    if (!par[P_DD_CHANGE] && !par[P_DD_MUTATE]) {
+    const int song = song_on(), chg = song ? 1 : par[P_DD_CHANGE];
+    if (!chg && !par[P_DD_MUTATE]) {
         dd_in = en_dd_left = -1;
         dd_fill = 0;
         dd_bars = 0;
@@ -2576,14 +2628,14 @@ static void dd_bar(void)                        /* at each bar line, before the 
     if (dd_in > 0)
         dd_in--;
     if (dd_in == 0) {
-        int pool = par[P_DD_POOL] < 2 ? 2 : par[P_DD_POOL] > EN_NPAT ? EN_NPAT : par[P_DD_POOL], nb = pat_now;
-        if (par[P_DD_CHANGE] == 1)
+        int pool = song ? song_pool() : par[P_DD_POOL] < 2 ? 2 : par[P_DD_POOL] > EN_NPAT ? EN_NPAT : par[P_DD_POOL], nb = pat_now;
+        if (chg == 1)
             nb = pat_now + 1 >= pool ? 0 : pat_now + 1;
-        else if (par[P_DD_CHANGE] == 2)
+        else if (chg == 2)
             do
                 nb = irand(pool);
             while (nb == pat_now);
-        if (par[P_DD_CHANGE]) {
+        if (chg) {
             pat_next = nb;
             par[P_PATTERN] = (int16_t)nb;
             en_dd_changes++;
@@ -2595,7 +2647,7 @@ static void dd_bar(void)                        /* at each bar line, before the 
     } else if (len && dd_in < 0 && ++dd_bars >= (uint32_t)len - 1u) {
         dd_in = 1;
     }
-    dd_fill = dd_in == 1 && par[P_DD_CHANGE];
+    dd_fill = dd_in == 1 && chg;
     en_dd_left = (int8_t)(dd_in >= 0 ? dd_in : len ? len - (int)dd_bars : -1);
 }
 
@@ -3129,6 +3181,19 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
             mo_idx0 = (uint8_t)idx;
         mo_play |= (uint16_t)(1u << st);
         mo_last = (int8_t)st;
+    }
+    if ((bars & 7u) == 7u && st >= 12 && !par[P_CM_LOCK]) {   /* the phrase's last beat (bar 8 of 8): the chord's root, the rung nearest (0.16.26, the audit) */
+        int k, best = idx, bd = 99;
+        for (k = 0; k < n; k++)
+            if (((arp[k] - chord_pcs[0]) % 12 + 12) % 12 == 0) {
+                const int d = k > idx ? k - idx : idx - k;
+                if (d < bd) {
+                    bd = d;
+                    best = k;
+                }
+            }
+        idx = best;
+        cm_ix[slot] = (uint8_t)((cm_ix[slot] & 0xF0u) | (uint8_t)idx);
     }
     mo_prev = (uint8_t)idx;
     note = arp[idx] + 12 * leap;

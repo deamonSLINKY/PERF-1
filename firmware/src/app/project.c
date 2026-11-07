@@ -35,7 +35,7 @@ static uint8_t pending, pending_glob;        /* the pieces; the player's three (
 #define SL_N 16                              /* the set list (0.15.21): sixteen pieces in order, kept with the player's three */
 typedef struct {
     uint32_t magic;
-    int16_t tune, midi, theme, rsv;
+    int16_t tune, midi, theme, rsv;          /* rsv (0.16.26, START): the low byte the last piece played (genre * NPIECES + piece + 1, 0 none), bit 8 Random */
     uint8_t sl[SL_N];                        /* a slot: genre * NPIECES + piece + 1; 0 empty */
     uint8_t sl_on, sl_rsv[3];                /* Play: the auto-DJ and PRESETS go through the list */
 } glob_t;
@@ -358,10 +358,20 @@ void project_start(uint32_t seed)
                                     P_DETUNE, P_DR_CUT, P_DR_RES, P_DE_AMT, P_DL_DEPTH, P_AC_CUT, P_AC_RES,
                                     P_AC_ENV, P_AC_DEC, P_AC_DENS, P_AC_MUT, P_ECHO, P_REVERB, P_SIZE, P_DRIVE};
     uint32_t r = seed, i;
+    int g0 = 0, p0 = -1;
     memset(&proj, 0, sizeof proj);
     knd_load();
-    image_load(0);
     glob_load();
+    {   /* START (0.16.26, Steven's "boot back into the last state"): Last, the default, comes back to the piece last played, exactly as it is
+         * stored (a saved piece as saved, else its recipe); Random, the old way. Seed 0 (the tests') is always the first piece. */
+        const int pl = glob.rsv & 0xFF;
+        if (seed && !(glob.rsv & 0x100) && pl >= 1 && pl <= EN_NGENRE * NPIECES) {
+            g0 = (pl - 1) / NPIECES;
+            p0 = (pl - 1) % NPIECES;
+        }
+    }
+    proj.genre = (uint8_t)g0;
+    image_load(g0);
     for (i = 0; i < P_NPARAMS; i++)
         proj.par[i] = en_param_info((int)i)->def;
     proj.par[P_TUNE] = clamp_par(P_TUNE, glob.tune);
@@ -369,9 +379,9 @@ void project_start(uint32_t seed)
     proj.par[P_THEME] = clamp_par(P_THEME, glob.theme);
     proj.leds = 1;
 #define NEXT() (r ^= r << 13, r ^= r >> 17, r ^= r << 5, r)
-    proj.piece = seed ? (uint8_t)(NEXT() % NPIECES) : 0u;
+    proj.piece = p0 >= 0 ? (uint8_t)p0 : seed ? (uint8_t)(NEXT() % NPIECES) : 0u;
     take(proj.piece);
-    if (seed && !(saved >> proj.piece & 1u)) {
+    if (seed && p0 < 0 && !(saved >> proj.piece & 1u)) {
         for (i = 0; i < sizeof NUDGE; i++) {
             int p = NUDGE[i], v = proj.par[p];
             if (v == 0 && p <= P_NOISE)
@@ -384,6 +394,20 @@ void project_start(uint32_t seed)
 #undef NEXT
     if (seed)
         en_seed(seed ^ seed >> 16);
+    en_genre(proj.genre);
+}
+
+int project_place(void) { return glob.rsv & 0xFF; }
+void project_place_set(int pl)
+{
+    glob.rsv = (int16_t)((glob.rsv & 0x100) | (pl & 0xFF));
+    project_globals();
+}
+int project_start_random(void) { return glob.rsv >> 8 & 1; }
+void project_start_random_set(int on)
+{
+    glob.rsv = (int16_t)((glob.rsv & 0xFF) | (on ? 0x100 : 0));
+    project_globals();
 }
 
 void project_apply(void)

@@ -1104,7 +1104,7 @@ int main(void)
             printf("  chords genre %d: %d changes, home %.2f, A-B-A %.2f\n", G[gi], n, (double)tonic[gi], (double)back[gi]);
         }
         CHECK(tonic[0] > 0.3f && tonic[1] > 0.3f, "trap / funk go home: %.2f / %.2f of the chords", (double)tonic[0], (double)tonic[1]);
-        CHECK(back[2] > 0.15f && back[3] < 0.08f, "A-B-A: house %.2f (a loop), lofi %.2f (never)", (double)back[2], (double)back[3]);
+        CHECK(back[2] > 0.15f && back[3] < 0.12f, "A-B-A: house %.2f (a loop), lofi %.2f (never)", (double)back[2], (double)back[3]);   /* (lofi: the cadence's own returns; 0.06-0.10 by the seed, 0.16.26 no diminished chord leaves fewer to go to) */
         en_genre(0);
         en_init();
         en_play(1);

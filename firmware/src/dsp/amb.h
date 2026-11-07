@@ -358,6 +358,7 @@ extern volatile float en_acid_glow;
 extern volatile uint8_t en_held;              /* keys held playing the voices (en_note) */
 #define EN_NPROF 10                            /* the first core's stages (amb.c render_chunk PT): ticks summed since cleared, and the chunk count last */
 extern volatile uint8_t en_bass_c1;            /* 1: the drone and the acid are rendered by the other core */
+extern volatile uint8_t en_song;               /* FORM (0.16.26): 1 Song, a piece moves through its own patterns while Drum Drift is off; 0 Loop */
 extern volatile uint8_t en_usb_fixed;          /* 1: the USB audio is rendered at unity gain (the master knob is the speakers' alone) */
 extern volatile uint8_t en_fm_dy;              /* 1: the DY voices (human-made DX7 voices) stand in for the thirty DX voices */
 void en_fm_set_dy(int on);                     /* sets it, and the sound names (the engine reloads the patch between chunks) */

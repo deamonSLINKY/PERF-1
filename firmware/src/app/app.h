@@ -48,6 +48,10 @@ void project_piece(int i);               /* the playing piece kept as it is, pie
 void project_set_genre(int g);           /* another bank: the pieces as they were left in it (or their recipes), the same number playing */
 void project_piece_save(void);           /* the playing piece, as it is, into the bank */
 void project_piece_factory(void);        /* the playing piece back to its recipe, and out of the bank */
+int project_place(void);                 /* START (0.16.26): the piece the next power-on comes back to (genre * NPIECES + piece + 1; 0 none) */
+void project_place_set(int pl);
+int project_start_random(void);          /* the Settings page's Start: 1 Random (a piece at random, as before 0.16.26), 0 Last */
+void project_start_random_set(int on);
 void project_globals(void);              /* the theme, Tune or MIDI out changed: into the bank */
 int project_saved(int i);                /* piece i is in the bank */
 int project_pending(void);               /* the bank has changes not yet in flash */

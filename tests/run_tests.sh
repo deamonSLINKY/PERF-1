@@ -29,6 +29,8 @@ run usbhost sh -c "$CC -O2 -Wall -Wextra -Werror -Ifirmware/src -o $OUT/usbhost_
 run amb sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -DEN_HOST -Ifirmware/src/dsp \
     -o $OUT/amb_test tests/host/amb_test.c firmware/src/dsp/amb.c -lm && $OUT/amb_test"
 # no two pieces of a genre too alike (0.16.7: the audit's twins; gtwin prints them and their count, 0 wanted)
+run harmony sh -c "$CC -O2 -ffp-contract=off -std=c99 -DEN_HOST -Ifirmware/src/dsp -o $OUT/gharm tests/host/gharm.c firmware/src/dsp/amb.c -lm && $OUT/gharm 20 10"
+run form sh -c "$CC -O2 -ffp-contract=off -std=c99 -DEN_HOST -Ifirmware/src/dsp -o $OUT/gsong tests/host/gsong.c firmware/src/dsp/amb.c -lm && $OUT/gsong"
 run twins sh -c "$CC -O2 -ffp-contract=off -std=c99 -DEN_HOST -Ifirmware/src/dsp -o $OUT/gtwin tests/host/gtwin.c firmware/src/dsp/amb.c -lm && \
     $OUT/gtwin 7 | tee /dev/stderr | tail -1 | grep -q '^0 pairs'"
 run core2 sh -c "$CC -O2 -ffp-contract=off -std=c11 -Wall -Wextra -DEN_HOST -Ifirmware/src/dsp -o $OUT/core2_test tests/host/core2_test.c firmware/src/dsp/amb.c -lm -pthread && \

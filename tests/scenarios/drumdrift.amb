@@ -18,8 +18,16 @@ expect dd_changes >2
 expect dd_mutations >2
 # the knob follows the pattern drift chose
 expect pattern_synced 1
-# off again: nothing more changes
+# off again: Form (the Settings page, Song by default, 0.16.26) takes the patterns over, its own countdown running
 spin K1 -1
 spin K4 -2
+wait 2500
+expect dd_left >0
+# Form: Loop (Settings, third knob): nothing more changes
+press HOME
+wait 800
+release HOME
+wait 200
+spin K3 1
 wait 2500
 expect dd_left -1
