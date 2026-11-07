@@ -85,6 +85,8 @@ export default {
         return new Response(hit.body, { headers: { "Content-Type": "application/json", ...cors(req, env) } });
       }
       if (req.method === "POST" && url.pathname === "/submit") {
+        if (!env.ADMIN)                                               // (2026-11-07: an empty secret made every submit fail after storing the piece, the list never rebuilt)
+          return json(req, env, { error: "the relay is not set up: its ADMIN secret is empty (wrangler secret put ADMIN)" }, 503);
         const body = await req.json().catch(() => ({}));
         const codes = Array.isArray(body.codes) ? body.codes.slice(0, 16) : [];
         if (!codes.length) return json(req, env, { error: "nothing to submit" }, 400);
