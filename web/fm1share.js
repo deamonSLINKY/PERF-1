@@ -39,7 +39,7 @@ export function shareNames(D) {
     return { tag: tagOf(x), title: m.t, by: m.a, based: basedText(m), line: describe(x), lanes, center: tempo !== undefined ? tempo + " BPM" : "", url };
   }
   return { P, E, N, genreName, pieceName, describe, tagOf, placeName, basedText, cardOf, userSlot,
-           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4,
+           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23,   // (plat.h's enum; OBJ_KINDS from 0.16.6)
            globDefs: { tune: P[E.P_TUNE].def, midi: P[E.P_MIDI].def, theme: P[E.P_THEME].def } };
 }
 
@@ -64,6 +64,9 @@ export function emuPut(S, x, slot) {
   }
   for (const pc of pieces) banks[pc.genre] = pcIntoBank(bank(pc.genre), pc.genre, pc.slot, pc, npar).bank;
   for (const g of Object.keys(banks)) put(S.objOf(+g), banks[g]);
+  let knd = get(S.OBJ_KINDS);                                    // the Progression page's chord types, each piece's (cleared when it has none)
+  for (const pc of pieces) knd = pcKindsWith(knd, pc.genre, pc.slot, pc.kinds || null, S.N.genres.length);
+  put(S.OBJ_KINDS, knd);
   if (x.kind === "set") put(S.OBJ_GLOB, pcGlobWith(get(S.OBJ_GLOB), x, S.globDefs));
   localStorage.setItem(KEY, JSON.stringify(raw));
   if (x.kind === "set") return "The set is in the emulator: switch it on, then GLO twice for the set list (Play on).";

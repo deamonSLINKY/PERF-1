@@ -496,13 +496,20 @@ $("add").addEventListener("click", async () => {
       throw new Error("Not added." + (x.kind === "set" ? "" : " Choose another place for it."));
     let glob = null;
     if (x.kind === "set") glob = pcGlobWith(await readMust(p, S.OBJ_GLOB), x, S.globDefs);
+    // the Progression page's chord types (0.16.6 on; an older PERF-1 does not answer for the object): each piece's, cleared when it has none
+    let knd = null;
+    const kcur = await readObject(p, S.OBJ_KINDS);
+    if (kcur !== undefined) { knd = kcur; for (const q of pieces) knd = pcKindsWith(knd, q.genre, q.slot, q.kinds || null, ab.genres); }
+    else if (pieces.some((q) => q.kinds) && !(await ask("Its chord types", "This " + (x.kind === "set" ? "set" : "piece") + " sets chord types on the Progression page, which this PERF-1 is too old to keep: it will play each chord as the piece's own type. Update on the Install page to hear it as made.", [["Add it anyway", 1], ["Cancel", 0, true]])))
+      throw new Error("Not added.");
     // the writes, then the restart
-    const steps = (vox ? 1 : 0) + Object.keys(banks).length + (glob ? 1 : 0);
+    const steps = (vox ? 1 : 0) + Object.keys(banks).length + (glob ? 1 : 0) + (knd ? 1 : 0);
     let done = 0;
     const step = (t) => { say(t); $("addbar").value = 20 + Math.round((75 * done++) / steps); };
     if (vox) { step("Writing the voices…"); await writeObject(p, S.OBJ_VOICES, vox); }
     for (const g of Object.keys(banks)) { step("Writing " + S.genreName(+g) + "…"); await writeObject(p, S.objOf(+g), banks[g]); }
     if (glob) { step("Writing the set list…"); await writeObject(p, S.OBJ_GLOB, glob); }
+    if (knd) { step("Writing the chord types…"); await writeObject(p, S.OBJ_KINDS, knd); }
     p.out.send(bkRestartMsg());
     port = null;
     $("addbar").value = 100;
@@ -538,6 +545,8 @@ $("scan").addEventListener("click", async () => {
     }
     const have = pcVoices((await readObject(p, S.OBJ_VOICES)) || new Uint8Array(0));
     for (const pc of mine) { const k = S.userSlot(pc); if (k >= 0 && k < have.length) pc.voice = have[k]; }   // a piece on your own voice takes it along
+    const knd = mine.length ? await readObject(p, S.OBJ_KINDS) : undefined;   // and its chord types (0.16.6 on)
+    for (const pc of mine) pc.kinds = pcKindsOf(knd, pc.genre, pc.slot);
     const gl = pcGlobList((await readObject(p, S.OBJ_GLOB)) || new Uint8Array(0));
     if (gl.list.some((v) => v)) {                                  // the set list: its stored pieces (a factory one is the same everywhere) and their voices
       const voices = [], vslot = [], pieces = [];

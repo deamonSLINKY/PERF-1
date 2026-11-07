@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const src = fs.readFileSync(path.join(__dirname, "..", "web", "fm1piece.js"), "utf8").replace(/^export /gm, "");
-const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash };")();
+const M = new Function(src + "; return { PC_HDR, PC_REC, PC_LEN, PC_PRG, PC_REC_PAR, PC_RECIPE, PC_VOX_LEN, PC_GLOB_LEN, pcBankCheck, pcSaved, pcFromBank, pcGet, pcSet, pcEncode, pcDecode, pcDecodeAny, pcToCode, pcFromCode, pcIntoBank, pcVoiceName, pcUserSlot, pcVoices, pcVoicePlan, pcVoicesWith, pcParseAbout, pcAboutMsg, pcSetEncode, pcSetDecode, pcSetPlaces, pcGlobWith, pcGlobList, pcSetVoices, pcHash, pcKindsOf, pcKindsWith, PC_KND_MAGIC };")();
 let bad = 0;
 const check = (name, ok) => { console.log((ok ? "  ok   " : "  FAIL ") + name); if (!ok) bad++; };
 const eq = (a, b) => a.length === b.length && Array.from(a).every((x, i) => x === b[i]);
@@ -119,6 +119,21 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
   const sfull = M.pcSetVoices(full, [pc.voice]);
   check("no room: said, nothing written", sfull.map[0] === -1 && sfull.vox === null);
 
+  // the Progression page's chord types (OBJ_KINDS "KND1": 3 bytes a piece), in the note's JSON as "k"
+  const knd0 = M.pcKindsWith(new Uint8Array(0), 18, 4, Uint8Array.from([0x2A, 0x01, 0x00]), 19);
+  check("the chord types' object: KND1, 19 genres of 10, this piece's 3 bytes", knd0.length === 4 + 19 * 30 && knd0[0] === 0x4B && knd0[3] === 0x31 &&
+    eq(M.pcKindsOf(knd0, 18, 4), [0x2A, 1, 0]) && M.pcKindsOf(knd0, 18, 3) === null && M.pcKindsOf(new Uint8Array(0), 18, 4) === null);
+  const knd1 = M.pcKindsWith(knd0, 2, 0, Uint8Array.from([7, 0, 0]), 19), knd2 = M.pcKindsWith(knd1, 18, 4, null, 19);
+  check("another piece's types kept; null clears", eq(M.pcKindsOf(knd1, 18, 4), [0x2A, 1, 0]) && eq(M.pcKindsOf(knd2, 2, 0), [7, 0, 0]) && M.pcKindsOf(knd2, 18, 4) === null);
+  check("an older firmware's shorter object grows to this one's genres", M.pcKindsWith(knd0.slice(0, 4 + 17 * 30), 0, 1, Uint8Array.from([1, 0, 0]), 19).length === 4 + 19 * 30);
+  const kp = { ...pc, kinds: Uint8Array.from([0x2A, 1, 0]) }, kb = M.pcDecode(M.pcEncode(kp));
+  check("a piece's types go with it, out of its note", eq(kb.kinds, [0x2A, 1, 0]) && kb.meta.k === undefined && kb.meta.t === "Night forest" && eq(kb.rec, pc.rec));
+  check("no types: no \"k\", and none back", M.pcDecode(M.pcEncode({ ...pc, kinds: Uint8Array.from([0, 0, 0]) })).kinds === null && !new TextDecoder().decode(M.pcEncode(pc)).includes('"k"'));
+  const ks = M.pcSetDecode(M.pcSetEncode({ ...set, pieces: [{ ...pa, kinds: Uint8Array.from([3, 0, 4]) }, pb], meta: { ...set.meta, k: { 9: [1, 1, 1] } } }));
+  check("a set's pieces keep their types (a stale \"k\" in its note replaced)", eq(ks.pieces[0].kinds, [3, 0, 4]) && ks.pieces[1].kinds === null && ks.meta.k === undefined && ks.meta.t === "Forest night");
+  const junk = M.pcEncode({ ...pc, meta: { ...pc.meta, k: [999, "x", 1] } });
+  check("a note's bad \"k\" is ignored", M.pcDecode(junk).kinds === null);
+
   // the about answer (tests/host/dxproto_test.c: bk_build_about(f, 176, 19, 5))
   const ab = M.pcParseAbout([0xF0, 0x7D, 0x50, 0x45, 0x01, 0x01, 0x30, 0x13, 0x05, 0xF7]);
   check("the firmware's about answer", ab && ab.ver === 1 && ab.npar === 176 && ab.genres === 19 && ab.voices === 5);
@@ -146,9 +161,11 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
     const newBank = M.pcIntoBank(new Uint8Array(0), 0, 3, shared, NPAR).bank;
     fs.writeFileSync(path.join(dir, "bank_new.bin"), newBank);
     fs.writeFileSync(path.join(dir, "vox_new.bin"), M.pcVoicesWith(new Uint8Array(0), shared.voice, vplan.slot));
+    fs.writeFileSync(path.join(dir, "knd_new.bin"), M.pcKindsWith(new Uint8Array(0), 0, 3, Uint8Array.from([0x2A, 0x00, 0x00]), 19));   // slot 1 type 2, slot 2 type 5
     check("the simulator plays it as 04, with its voice, the settings it predates its recipe's", vplan.kind === "free" && vplan.slot === 0 && run("load", [
-      "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "seed 0", "reboot", "wait 2000", "expect saved 8", "expect uservoices 1",
-      "turn PRESET 3", "wait 1500", "expect piece 3", "expect tempo 132", "expect par" + P_EVOLVE + " 43", "expect par" + P_CM_SND + " " + (NPLAIN + NFMFACT), "expect parsbad 0"]));
+      "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 3 " + path.join(dir, "vox_new.bin"), "loadobj 23 " + path.join(dir, "knd_new.bin"), "seed 0", "reboot", "wait 2000", "expect saved 8", "expect uservoices 1",
+      "turn PRESET 3", "wait 1500", "expect piece 3", "expect tempo 132", "expect par" + P_EVOLVE + " 43", "expect par" + P_CM_SND + " " + (NPLAIN + NFMFACT), "expect parsbad 0",
+      "expect prgtype0 2", "expect prgtype1 5", "expect prgtype2 0"]));
     // a set: HYPNO 04 (as stored above) and two factory places, Play on, Mix 8 bars, as the player's record; the simulator reads the list and Mix back
     const sset = { kind: "set", list: [4, 23, 0, 182, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], on: true, mix: 2, pieces: [], voices: [], meta: {} };
     fs.writeFileSync(path.join(dir, "glob_new.bin"), M.pcGlobWith(new Uint8Array(0), sset, { tune: 0, midi: 1, theme: 0 }));
