@@ -10,6 +10,7 @@ const kv = new Map(file && fs.existsSync(file) ? JSON.parse(fs.readFileSync(file
 const save = () => { if (file) fs.writeFileSync(file, JSON.stringify([...kv])); };
 const LIB = {
   async get(k) { const e = kv.get(k); return e && (!e.exp || e.exp > Date.now()) ? e.v : null; },
+  async getWithMetadata(k) { const e = kv.get(k); return e && (!e.exp || e.exp > Date.now()) ? { value: e.v, metadata: e.meta || null } : { value: null, metadata: null }; },
   async put(k, v, o = {}) { kv.set(k, { v, meta: o.metadata, exp: o.expirationTtl ? Date.now() + o.expirationTtl * 1000 : 0 }); save(); },
   async delete(k) { kv.delete(k); save(); },
   async list({ prefix = "" } = {}) { return { keys: [...kv].filter(([k]) => k.startsWith(prefix)).map(([name, e]) => ({ name, metadata: e.meta })), list_complete: true }; },

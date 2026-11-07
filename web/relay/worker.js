@@ -53,9 +53,15 @@ async function list(env) {
   return items.map((i, k) => ({ ...i, code: codes[k] })).filter((i) => i.code);
 }
 // the list the page reads is one key ("index"), rebuilt from the entries when one is added or removed: a read of the list costs one KV read.
-// (Two submissions at once may each miss the other in their rebuild; the entries stay, and the next rebuild has them.)
+// (Two submissions at once may each miss the other in their rebuild; the entries stay, and the next rebuild has them.) KV's list() is eventually
+// consistent (a key a few seconds old can be missing), so a rebuild starts from the index as it was too, and a resubmission puts back an entry the
+// index lost (2026-11-07: the first entry was stored, the index left empty by a read just before it).
 async function rebuild(env, add = [], drop = "") {
   const have = new Map((await list(env)).map((i) => [i.id, i]));
+  try {
+    const old = JSON.parse((await env.LIB.get("index")) || "[]");
+    for (const i of Array.isArray(old) ? old : []) if (i && i.id && i.code && !have.has(i.id)) have.set(i.id, i);
+  } catch (_) {}
   for (const i of add) have.set(i.id, i);
   if (drop) have.delete(drop);
   const items = [...have.values()].sort((a, b) => (a.added < b.added ? 1 : a.added > b.added ? -1 : 0));
@@ -91,10 +97,13 @@ export default {
           const why = await check(code);
           if (why) { done.push({ error: why }); continue; }
           const id = await sha(code);                                // the same code twice is one entry
-          if (!(await env.LIB.get("e:" + id))) {
+          const was = await env.LIB.getWithMetadata("e:" + id);
+          if (!was.value) {
             const added = new Date().toISOString();
             await env.LIB.put("e:" + id, code, { metadata: { added } });
             fresh.push({ id, added, code });
+          } else {
+            fresh.push({ id, added: (was.metadata && was.metadata.added) || new Date().toISOString(), code });   // (already in: the index gets it again)
           }
           done.push({ id, del: await hmac(env.ADMIN || "", id) });
         }
