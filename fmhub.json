@@ -1,0 +1,10 @@
+{
+  "what": "A groovebox that plays itself while you steer it: nineteen genres, FM pad, bass, acid and pluck voices, drums with a step sequencer, an auto-DJ, effects you play on the keys, scenes, and a Jam page to play along. Store your pieces, and share them through the online library.",
+  "author": "deamonSLINKY",
+  "kinds": ["groove"],
+  "play": "https://deamonslinky.github.io/PERF-1/emu/",
+  "editor": "https://deamonslinky.github.io/PERF-1/editor/",
+  "cheat": "https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf",
+  "image": "docs/card.png",
+  "color": "#FFB000"
+}
