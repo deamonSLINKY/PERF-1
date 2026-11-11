@@ -46,7 +46,7 @@ static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LF
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_TRIP, VZ_THEORY, VZ_AUTO, VZ_N };   /* the visualizers (viz.c; TRIP and THEORY 0.16.10, THEORY not in AUTO's turn) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "TRIP", "THEORY", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_BSTY, K_BSNO, K_BSOC, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_JSND, K_PLRT, K_DLRT, K_CDPOS, K_CDCHR, K_CDROLL, K_SLPT, K_SLEN, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_JSND: the sound of the voice JAM plays (0.17.4); K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_ACE, K_ACL, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_BSTY, K_BSNO, K_BSOC, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_JSND, K_PLRT, K_DLRT, K_CDPOS, K_CDCHR, K_CDROLL, K_SLPT, K_SLEN, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_JSND: the sound of the voice JAM plays (0.17.4); K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -235,7 +235,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
-    {K_ACT, P_AC_EVERY, K_ACD, P_AC_CHANCE},       /* the answer: its kind, how often (in bars, or before a drum change), which way (one value with the kind: P_AC_RESP), bar or loop */
+    {K_ACT, K_ACE, K_ACD, K_ACL},                 /* the answer: its kind, how often (bars or loops of the line: P_AC_EVERY and P_AC_CHANCE as one knob, 0.17.21), which way (one value with the kind: P_AC_RESP), its level (EN_FXS_AC_ANS, the unit's) */
     {K_ASTY, K_ASNO, K_ASOC, P_AC_LOCK},           /* the acid's steps: the step chosen (a white key): its kind, its note, its octave; and whether the line is frozen (held, and stored with the piece) */
     {P_CM_LVL, P_CM_SND, P_CM_DENS, P_CM_OCT},
     {P_CM_DEC, P_CM_STYLE, P_CM_RATE, P_CM_RANGE},
@@ -278,7 +278,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
-    {"Answer", "Every", "Direction", "Sync"},
+    {"Answer", "Every", "Direction", "Level"},
     {"Step", "Note", "Octave", "Frozen"},
     {"Level", "Sound", "Density", "Octave"},
     {"Decay", "Style", "Rate", "Range"},
@@ -1431,6 +1431,10 @@ static int knob_get(int k)
         return proj.par[P_AC_RESP] / 5;
     if (k == K_ACD)
         return proj.par[P_AC_RESP] >= 5 ? proj.par[P_AC_RESP] % 5 : 3;
+    if (k == K_ACE)                              /* every: 0 .. 7 counting bars, 8 .. 15 counting loops of the line */
+        return (proj.par[P_AC_EVERY] & 7) + (proj.par[P_AC_CHANCE] ? 8 : 0);
+    if (k == K_ACL)
+        return ui.fxs[EN_FXS_AC_ANS];
     if (k == K_GRT)
         return ui.lane;
     if (k == K_GRA)
@@ -1506,9 +1510,9 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = NLRT - 1;
         return;
     }
-    if (k == K_ACT || k == K_ACD) {
+    if (k == K_ACT || k == K_ACD || k == K_ACE || k == K_ACL) {
         *lo = 0;
-        *hi = k == K_ACT ? 8 : 4;
+        *hi = k == K_ACT ? 8 : k == K_ACD ? 4 : k == K_ACE ? 15 : 3;
         return;
     }
     if (k == K_GENRE) {
@@ -1593,6 +1597,18 @@ static void knob_text(int k, char *b)
             b[n] = s[n];
             n++;
         }
+        b[n] = 0;
+        return;
+    }
+    if (k == K_ACE || k == K_ACL) {              /* every: "4 bars", "4 loops", "Drift" (the bar before the drums change), "Drift lp"; the level */
+        static const char *const AL[4] = {"Same", "+2 dB", "+4 dB", "+6 dB"};
+        const int v = knob_get(k), e = v & 7;
+        int n = 0;
+        const char *s = k == K_ACL ? AL[v & 3] : e == 7 ? (v >= 8 ? "Drift lp" : "Drift") : v >= 8 ? " loops" : " bars";
+        if (k == K_ACE && e < 7)
+            b[n++] = (char)('2' + e);
+        while (*s)
+            b[n++] = *s++;
         b[n] = 0;
         return;
     }
@@ -1947,6 +1963,20 @@ static void knob_set(int k, int v)
         v = v < 0 ? 0 : v > EN_NGENRE - 1 ? EN_NGENRE - 1 : v;
         if (v != proj.genre)
             genre_step(v - proj.genre);
+        return;
+    }
+    if (k == K_ACE) {                            /* every and what it counts, as one knob */
+        v = v < 0 ? 0 : v > 15 ? 15 : v;
+        knob_set(P_AC_EVERY, v & 7);
+        knob_set(P_AC_CHANCE, v >= 8);
+        return;
+    }
+    if (k == K_ACL) {                            /* the answer's level: the unit's setting, kept with the effects' settings */
+        v = v < 0 ? 0 : v > 3 ? 3 : v;
+        if (v != ui.fxs[EN_FXS_AC_ANS])
+            ui.set_dirty = 1;                    /* (kept a moment after it is left alone, settings_save) */
+        ui.fxs[EN_FXS_AC_ANS] = (uint8_t)v;
+        en_fxs(EN_FXS_AC_ANS, v);
         return;
     }
     if (k == K_ACT || k == K_ACD) {              /* one value: 0 off, 1 octave up, 2 fifth up, 3 mirror, 4 sparse, 5 octave down, 6 fifth down */

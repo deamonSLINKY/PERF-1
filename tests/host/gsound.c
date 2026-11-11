@@ -75,6 +75,7 @@ int main(int argc, char **argv)
         en_set(p, par[p]);
     en_set(P_MIDI, 1);
     en_pool(pool);
+    en_trim(g, getenv("NOTRIM") ? -1 : pc);      /* the piece's output level, as the unit sets it (NOTRIM=1: the raw mix, to measure it) */
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             en_pats[p][l] = pats[p][l];

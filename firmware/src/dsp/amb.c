@@ -1037,34 +1037,37 @@ void en_modw(int voice, int depth) { post(C_BEND, (voice & 0x7F) | 0x80, depth <
 void en_midi_map(int m) { post(C_MAP, (unsigned)m < (unsigned)EN_NMAP ? m : 0, 0); }
 void en_intro(int secs) { post(C_INTRO, secs < 0 ? 0 : secs > 1800 ? 1800 : secs, 0); }
 volatile float en_intro_k = 1.0f;
-/* THE PIECES' LEVELS (0.16.6): each piece's whole mix measured on the host (tests/host/glevel.c: 20 s from a fresh start), and the ones
- * louder than the rest turned down at the output in half dB, so a change of piece never jumps up; the quieter ones stay as they are */
-static const uint8_t EN_TRIM[EN_NGENRE][10] = {   /* (median -15.3 dBFS; a piece louder than -14.3 turned down to it) */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* HYPNO */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* LOFI */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* HOUSE */
-    {0, 0, 4, 2, 0, 2, 0, 0, 1, 3},   /* DUBSTEP */
-    {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},   /* DUB */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* DNB */
-    {0, 2, 0, 0, 3, 0, 0, 1, 0, 0},   /* BREAKS */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* GARAGE */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* ELECTRO */
-    {0, 2, 0, 3, 0, 0, 0, 2, 0, 0},   /* TRAP */
-    {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},   /* DISCO */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* FUNK */
-    {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},   /* REGGAE */
-    {0, 0, 0, 0, 0, 0, 2, 0, 0, 2},   /* SYNTHWV */
-    {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},   /* AMAPI */
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   /* TRIPHOP */
-    {0, 5, 3, 0, 3, 3, 0, 5, 3, 0},   /* INDUS */
-    {0, 0, 0, 0, 1, 0, 0, 0, 0, 0},   /* PSY */
-    {4, 0, 0, 4, 0, 0, 4, 0, 0, 4},   /* FOREST */
+/* THE PIECES' LEVELS (0.16.6; 0.17.21 both ways): each piece's whole mix measured on the host (tests/host/gsound.c, 32 bars as the
+ * unit starts, integrated loudness, the perf-sound-check skill), then brought to the median of all (-15.3 LUFS) at the output, in half
+ * dB: a boost at most 4 dB and never past a -1 dBFS peak, a cut at most 6. The genres' medians had spread from -12.6 (PSY, FOREST) to
+ * -17.8 (DUB, TRIPHOP), so the auto-DJ's genre changes jumped 5 dB; now every genre's median is within 0.2 dB, every piece within
+ * -17.6 .. -15.0 */
+static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
+    {  4,   5,  -1,   5,   2,   6,   3,   2,  -2,  -2},   /* HYPNO */
+    {  1,   6,   5,   6,   4,   5,   2,   7,   0,   5},   /* LOFI */
+    { -2,  -2,  -1,  -3,  -1,  -3,  -3,  -1,  -1,  -2},   /* HOUSE */
+    {  1,  -2,  -8,  -3,  -2,  -7,  -6,  -2,  -4,  -6},   /* DUBSTEP */
+    {  2,   5,   6,   4,   5,   7,   5,   2,   6,   2},   /* DUB */
+    {  6,   4,   2,   5,   5,   5,   3,   2,   4,   4},   /* DNB */
+    { -3,  -2,  -1,  -3,  -4,  -1,  -3,  -7,   0,  -3},   /* BREAKS */
+    {  7,   2,   1,   4,   1,   3,   3,   3,   0,   4},   /* GARAGE */
+    { -3,  -1,   0,  -1,   1,   0,  -1,  -2,  -1,  -3},   /* ELECTRO */
+    { -4,   2,  -1,  -4,   0,  -3,  -1,  -2,   1,  -4},   /* TRAP */
+    { -1,   0,   0,  -4,  -3,   1,  -3,  -4,  -2,  -2},   /* DISCO */
+    {  2,   2,   0,   4,   1,   1,   2,   1,   1,   0},   /* FUNK */
+    {  2,   3,   6,   6,  -1,   3,   7,   5,  -1,   2},   /* REGGAE */
+    { -2,   3,  -1,  -1,   0,   3,  -3,   2,   2,  -5},   /* SYNTHWV */
+    { -1,   4,   4,  -2,   2,   2,   1,  -2,   1,   0},   /* AMAPI */
+    {  4,   8,   4,   5,   5,   5,   5,   8,   5,   2},   /* TRIPHOP */
+    {  1,  -5,  -7,  -1,  -6,  -3,  -3,  -7,  -5,  -1},   /* INDUS */
+    {  0,  -5,  -6,  -4,  -5,  -8,  -6,  -3,  -7,  -3},   /* PSY */
+    { -4,  -4,  -5,  -7,  -6,  -5,  -6,  -7,  -5,  -7},   /* FOREST */
 };
 static float trim_to = 1.0f, trim_k = 1.0f;
 void en_trim(int g, int piece)
 {
     const int h = (unsigned)g < (unsigned)EN_NGENRE && (unsigned)piece < 10u ? EN_TRIM[g][piece] : 0;
-    trim_to = fm_exp2f(-0.0830482f * (float)h);   /* (half dB: 2^(-h / 2 / 20 * log2 10)) */
+    trim_to = fm_exp2f(0.0830482f * (float)h);    /* (half dB: 2^(h / 2 / 20 * log2 10)) */
 }
 static int32_t intro_len, intro_t;              /* the intro's length and how far it is, samples (0 length: none) */
 volatile float en_drift_bars = 99.0f;
@@ -4860,6 +4863,10 @@ void en_init(void)
         mod[i].v = mod[i].tgt = 0.0f;
         mod[i].left = 0;
     }
+    bass.ph[0] = 0.0f;                           /* (0.17.21) the bass's phases from the same place each start, as the pad's: its low notes' sub now sits on */
+    bass.ph[1] = 0.37f;                          /* the note itself, so the saws beat against it, and a render must not depend on where the last one stopped */
+    bass.ph[2] = 0.61f;
+    bass.sph = bass.mph = 0.0f;
     for (i = 0; i < EN_NPAD; i++) {
         pad[i].note = pad[i].target = (float)(50 + 7 * i);
         pad[i].pan = PAD_PAN[i];
@@ -6898,12 +6905,12 @@ static void render_bass(uint32_t n)
                 k1 = reso_k * (1.0f - 0.93f * sqa) * (dest == 4 ? 1.0f - 0.85f * depth * (0.5f + 0.5f * drone_lfo.v) : 1.0f),   /* Scream; the LFO on Reso */
                 k2 = 1.4f * (1.0f - 0.75f * sqa), sqin = 1.0f + 2.0f * sqd,
                 g = bass_vol * 0.36f * lv * DS->g / fm_minf(1.0f + 0.15f * (DS->drive - 1.0f), 1.3f) * (1.0f + bass.vd) / (1.0f + 0.5f * sqd + 0.4f * sqa),
-                dsaw = DS->saw, dsub = DS->sub,
+                dsaw = DS->saw,
                 tgt = (en_playing && !par[P_DR_MAN]) || bass.play ? 1.0f : 0.0f,
                 rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),
                 fmi = 0.5f + 2.2f * bass.env + 0.3f * arcm, pw = 0.5f + 0.3f * mod[9].v;
     const int bl_on = par[P_BL_MODE] && !bass.play;    /* the drone as a bass line: its notes' envelope in the loop */
-    float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, mp = bass.mph, amp = bass.amp, f, i0, i1, i2, mi;
+    float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, mp = bass.mph, amp = bass.amp, f, i0, i1, i2, mi, dsub = DS->sub, dsubu;
     if (amp < 1e-5f && !en_playing && !bass.play) {
         bass.amp = 0.0f;
         en_bass_level = 0.0f;
@@ -6921,6 +6928,12 @@ static void render_bass(uint32_t n)
     i0 = f * (osc == DO_FIFTHS ? 1.49831f : osc == DO_REESE || osc == DO_HOOVER ? 0.9862f : 0.99481f) *
          (1.0f / EN_SR);                        /* -9, 0, +9 cents (Reese and Hoover: 24; Fifths: a fifth) */
     i1 = f * (1.0f / EN_SR);
+    {   /* the sub an octave down only where it can be heard: from 30 Hz, fading to nothing at 18 (D1's sub is 18 Hz: the sound check
+         * found a fifth of HYPNO's and DUB's energy under 20 Hz); what it leaves goes to the note itself, as a sine, at 0.7 */
+        const float sg = fm_clampf((0.5f * f - 18.0f) * (1.0f / 12.0f), 0.0f, 1.0f);
+        dsubu = dsub * (1.0f - sg) * 0.7f;
+        dsub *= sg;
+    }
     i2 = f * (osc == DO_REESE || osc == DO_HOOVER ? 1.0140f : 1.00521f) * (1.0f / EN_SR);
     mi = osc == DO_METAL ? i1 * 1.4142f : osc == DO_FMR ? i1 * DRONE_FR[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0] : i1 * (1.5f + 2.5f * bass.env);   /* Metal's and FMR's modulator; Sync's slave */
     for (j = 0; j < n; j++) {
@@ -6990,6 +7003,8 @@ static void render_bass(uint32_t n)
             break;
         }
         x += dsub * sine(sp);
+        if (dsubu > 1e-4f)                       /* (the sub's share below 30 Hz: on the note) */
+            x += dsubu * sine(p1);
         p0 += i0;
         p1 += i1;
         p2 += i2;
@@ -7159,6 +7174,12 @@ static void render_acid(uint32_t n)
                 k2 = 1.2f * (1.0f - 0.75f * sqa), sqin = 1.0f + 3.0f * sqd,   /* the second stage follows (it held the peak down); Drive: harder into the filter */
                 vel = 0.75f + 0.5f * accamt * acid.acc, glide = acid.sliding ? 0.0012f : 1.0f;
     float sqg = sqin;                            /* this block's drive: Wow, an accent opening the resonance and the drive further */
+    static float ans_k = 1.0f;                   /* the answer's level (EN_FXS_AC_ANS), gliding over about 20 ms as the answer comes and goes */
+    {
+        const int al = fxs_v[EN_FXS_AC_ANS];
+        const float to = en_acid_ans && al > 0 ? fm_exp2f(0.1107309f * (float)(al > 3 ? 3 : al)) : 1.0f;   /* (2 dB a step: 2^(2 / 20 * log2 10)) */
+        ans_k += (to - ans_k) * fm_minf((float)n * (1.0f / (0.02f * EN_SR)), 1.0f);
+    }
     float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, p4 = acid.p4, p5 = acid.p5, sratio = 1.0f, pw = 0.5f, lz = 1.0f;
     if (amp < 1e-5f && acid.amp_t <= 0.0f) {
         acid.amp = 0.0f;
@@ -7373,7 +7394,7 @@ static void render_acid(uint32_t n)
             y *= FT_G[2][FT_IX(ft_acid)];
         }
         amp += (acid.amp_t - amp) * 0.006f;     /* ~4 ms edges */
-        acid_o[j] = y * amp * vel * g * TG(TR_ACID, j);   /* (the sends: 0.15 and 0.35 of it) */
+        acid_o[j] = y * amp * vel * g * ans_k * TG(TR_ACID, j);   /* (the sends: 0.15 and 0.35 of it) */
         lvl = fm_maxf(lvl, amp);
     }
     for (j = 0; j < 4; j++)

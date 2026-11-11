@@ -445,7 +445,7 @@ columns are **KNOB1** to **KNOB4**.
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | **ARP** x3 | Density | Length (1-16) | Range (1-3 octaves) | Mutate (hold **SEL** and turn to choose what a mutation changes: all, notes, rhythm or accents) |
-| Acid answer | **ARP** x4 | Answer (off, octave, fifth, third, mirror, reverse, rotate, sparse, accents) | Every (the 2nd to the 8th time round the line, or Drift: the bar before the drums change) | Direction (down 2, down, same, up, up 2) | Sync (bar, or the whole loop) |
+| Acid answer | **ARP** x4 | Answer (off, octave, fifth, third, mirror, reverse, rotate, sparse, accents) | Every (2 to 8 bars or loops of the line, or Drift: the bar before the drums change) | Direction (down 2, down, same, up, up 2) | Level (same, +2, +4, +6 dB) |
 | Acid steps | **ARP** x5 | Step (pick one with a white key: rest, note, accent, slide, accent + slide) | Note (0-11 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
 | Pluck | **ARP** x6 | Level | Sound (12 + 30 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | **ARP** x7 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16, slow to fast) | Range (1-3 octaves) |
@@ -956,9 +956,9 @@ a changed version of itself. It's off by default, stored with the piece, and lis
 | Setting | Does |
 |---|---|
 | Answer | How the line is changed. **Octave**. **Fifth** (seven semitones). **Third** (two notes up or down the scale, so it stays in key). **Mirror** (the line turned upside down around its own middle note, so it stays in the same range). **Reverse** (the line backwards). **Rotate** (the line shifted by a beat). **Sparse** (only the even steps). **Accents** (only the accented notes). |
-| Every | How often the answer comes, from every 2nd to every 8th bar (or time round the line, see Sync). On 4th, you hear the call three times and the answer on the fourth. **Drift** brings the answer in the bar before the drums change pattern (Drum drift, section 10). If Drum drift isn't changing patterns, Drift falls back to every 8th. |
+| Every | How often the answer comes, and what it counts. **2 bars** to **8 bars**: the answer lasts one bar, so with a line of 12 or 10 steps it starts and ends partway through the line. On 4 bars you hear the call three times and the answer on the fourth. **Drift** brings the answer in the bar before the drums change pattern (Drum drift, section 10); if Drum drift isn't changing patterns, it falls back to every 8th bar. Turn on past Drift for **2 loops** to **8 loops** and **Drift lp**: the same, counting times round the line, and the answer is the whole line. Use loops for lines that aren't 16 steps long. (Until 0.17.21 bars or loops was a fourth knob, Sync.) |
 | Direction | Down 2, Down, Same, Up or Up 2. For Octave, Fifth and Third it moves the line by that interval once or twice. For the others it moves by octaves. If the answer would leave the acid's range (a low line answered downwards), it goes the other way instead, so it never lands back on the call. |
-| Sync | What Every counts. **Bar**: the answer lasts one bar, so with a line of 12 or 10 steps it starts and ends partway through the line. **Loop**: the answer is the whole line, and Every counts times round it. With Drift, the answer is the loop that starts in the bar before the drums change. Use Loop for lines that aren't 16 steps long. |
+| Level | How loud the answer is against the call: **Same**, **+2 dB**, **+4 dB** or **+6 dB**, so it stands out when you play with it. This one is the unit's setting, kept for every piece (like the effects' settings), not stored with a piece. |
 
 The page draws the call and its answer, one dot per step at the height of its note.
 

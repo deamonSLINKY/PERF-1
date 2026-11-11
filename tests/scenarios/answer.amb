@@ -1,4 +1,5 @@
-# The acid's answer (the fourth acid page, ARP x4): its kind (K1), how often (K2), which way (K3), whether it counts bars or loops (K4). The line asks, then answers.
+# The acid's answer (the fourth acid page, ARP x4): its kind (K1), how often in bars or loops of the line (K2, 0.17.21: Sync folded in), which way (K3), its level (K4,
+# 0.17.21: the unit's setting, fxs96). The line asks, then answers.
 seed 0
 wait 500
 tap GLO
@@ -37,7 +38,22 @@ expect par21 2
 spin K2 5
 wait 100
 expect par21 7
-spin K4 1
+# past Drift: the same counts in loops of the line (par76, the old Sync, 1)
+spin K2 1
 wait 100
+expect par21 0
 expect par76 1
+spin K2 -1
+wait 100
+expect par21 7
+expect par76 0
+spin K2 3
+wait 100
+expect par21 2
+expect par76 1
+# the answer's level: +4 dB
+expect fxs96 0
+spin K4 2
+wait 100
+expect fxs96 2
 wait 9000
