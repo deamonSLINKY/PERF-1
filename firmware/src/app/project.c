@@ -643,6 +643,21 @@ void project_piece_factory(void)
     proj.edited &= (uint16_t)~(1u << proj.piece);
 }
 
+int project_factory_genre(void)                /* (0.17.23) every piece stored in this genre back to its factory settings (written with the next flush); how many */
+{
+    const int p0 = proj.piece;
+    int i, n = 0;
+    for (i = 0; i < NPIECES; i++)
+        if (saved >> i & 1u) {
+            proj.piece = (uint8_t)i;
+            project_piece_factory();
+            n++;
+        }
+    proj.piece = (uint8_t)p0;
+    take(proj.piece);
+    return n;
+}
+
 void project_globals(void)
 {
     glob_sync();

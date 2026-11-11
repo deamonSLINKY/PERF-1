@@ -190,6 +190,7 @@ void en_hush(int on);                          /* a store while playing: fade ou
 extern volatile uint8_t en_hushed;             /* faded right out (the flash can be written) */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops, the home chord */
+void en_new_part(int p);                       /* (0.17.23) one part's line new: 0 the acid, 1 the pluck (not a frozen one) */
 
 /* the sections: a breakdown, a build, the drop, each taken on the next bar. A breakdown lasts until
  * a build (four bars, then the drop) or a drop is asked for; a build cut short by a drop drops. */

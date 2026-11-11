@@ -405,6 +405,7 @@ static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 #define KIT_QUIET 3000u                /* anything left unwritten: this long after a change, while stopped */
 #define GLOB_QUIET 2000u               /* the theme, Tune, MIDI out: written this long after a change */
 #define FACTORY_HOLD 1500u             /* SAVE held this long on Global: the piece to its factory settings */
+#define FACTORY_ALL_HOLD 6000u         /* (0.17.23) held on this long, stopped: every stored piece of every genre to factory */
 
 /* ---------------------------------------------------------------- themes --- */
 /* seven palettes for the screen (Global > Theme; the layout, Console since 0.17.3, is the same in all of them): a ground, its panel and lines, the text, an accent for what is
@@ -2893,6 +2894,33 @@ static void piece_store(void)                   /* Global, SAVE: the piece as it
     store_now(t);
 }
 
+static struct { uint8_t g, g0, p0; uint16_t n; } fall;   /* (0.17.23) the factory reset of everything: the next genre + 1 (0 idle), where it began, how many */
+static void factory_all_tick(void)
+{
+    const int g = fall.g - 1;
+    if (!fall.g || ui.store_wait)
+        return;
+    if (g < EN_NGENRE) {                         /* one genre a tick: loaded, its stored pieces cleared, written */
+        project_set_genre(g);
+        fall.n = (uint16_t)(fall.n + project_factory_genre());
+        project_flush();
+        fall.g++;
+        say("FACTORY: ALL PIECES", en_genre_name(g));
+        return;
+    }
+    fall.g = 0;                                  /* done: back where it began */
+    project_set_genre(fall.g0);
+    project_piece(fall.p0);
+    en_genre(fall.g0);
+    project_apply();
+    mood_apply();
+    en_regrow();
+    {
+        char t[20] = "ALL GENRES, ";
+        itoa_u(fall.n, t + 12);
+        say("FACTORY DONE", fall.n ? t : "NOTHING WAS STORED");
+    }
+}
 static void piece_factory(void)                 /* Global, SAVE held: back to the factory settings */
 {
     char t[12] = "FACTORY ";
@@ -3028,6 +3056,7 @@ static int fx_key_page(int key)                 /* the edit page of the effect a
     const int fx = KEY_FX[fx_bank][key];
     return fx_bank == 3 ? 20 : fx == FX_FLEX ? 19 : fx == FX_NONE ? 0 : fx_page_of(fx);
 }
+static int perf_like(void);
 static void shift_key(int key)                  /* a key pressed with SEL held */
 {
     char t[16];
@@ -3058,6 +3087,20 @@ static void shift_key(int key)                  /* a key pressed with SEL held *
             say(t, en_playing && en_pat_now != i ? "NEXT BAR" : 0);
             return;
         }
+    if (perf_like() && (key == 13 || key == 25 || key == 17)) {   /* (0.17.23, a Reddit player: move one part on from Perform) the part's solo key */
+        if (key == 17) {                         /* A#4 (the drums'): the next of the six patterns, from the next bar */
+            const int p = (proj.par[P_PATTERN] + 1) % EN_NPAT;
+            knob_set(P_PATTERN, p);
+            pat_name(p, t);
+            say(t, en_playing ? "NEXT BAR" : 0);
+        } else {
+            const int pl = key == 25, lk = proj.par[pl ? P_CM_LOCK : P_AC_LOCK];
+            if (!lk)
+                en_new_part(pl);
+            say(pl ? "PLUCK LINE" : "ACID LINE", lk ? "FROZEN: KEPT" : "NEW");
+        }
+        return;
+    }
     if (ui.view != V_SEQ)
         return;
     for (i = 0; i < EN_NPAT; i++)
@@ -4615,9 +4658,27 @@ static void input(void)
         if (held >= FACTORY_HOLD) {
             ui.factory_done = 1;
             piece_factory();
+            ui.msg_until = 0;
         } else if (held >= 400u && plat_ms() >= ui.msg_until) {
             say("KEEP HOLDING:", "FACTORY");   /* what holding on does */
             ui.msg_until = ui.down_t[B_SAVE] + FACTORY_HOLD;
+        }
+    }
+    if (ui.save_global && ui.save_fact && ui.factory_done == 1 && (btn >> B_SAVE & 1u)) {   /* (0.17.23) held on: every piece, every genre */
+        const uint32_t held = plat_ms() - ui.down_t[B_SAVE];
+        if (held >= FACTORY_ALL_HOLD) {
+            ui.factory_done = 2;
+            if (en_playing) {
+                say("ALL PIECES TO FACTORY", "STOP FIRST");
+            } else {
+                fall.g = 1;
+                fall.g0 = proj.genre;
+                fall.p0 = proj.piece;
+                fall.n = 0;
+            }
+        } else if (held >= FACTORY_HOLD + 1500u && plat_ms() >= ui.msg_until) {
+            say("KEEP HOLDING:", "EVERY PIECE, ALL GENRES");
+            ui.msg_until = ui.down_t[B_SAVE] + FACTORY_ALL_HOLD;
         }
     }
     if ((btn >> B_SAVE & 1u) && !ui.save_held && plat_ms() - ui.down_t[B_SAVE] >= DROP_HOLD) {
@@ -5582,7 +5643,7 @@ static void console_fx(void)
         const int32_t tx = 2 + (k / 9) * 79, ty = 16 + (k % 9) * 14;
         const int pc = (5 + k) % 12;
         const int black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10;
-        const uint16_t base = black ? mix(K_BG, K_PANEL, 7) : K_PANEL;
+        const uint16_t base = black ? mix(K_BG, K_PANEL, 3) : mix(K_PANEL, K_TEXT, 2);   /* (0.17.23) the black keys dark, the white ones lighter: told apart at a glance (a Reddit player hit Tape stop by mistake) */
         const char *lb, *t = EN_NOTE_NAME[pc];   /* (the note without its octave: the columns say where) */
         uint16_t kc;
         int on, locked = 0;
@@ -5949,7 +6010,10 @@ static void draw_shift(void)
     static const char *const SQ[8] = {"WHITE KEYS   PATTERN 1-6", "BLACK KEYS   COPY HERE TO 1-6", "OCT-         CLEAR THIS LANE",
                                       "OCT+         THE LANE'S OWN", "PRESETS      PIECE, NEXT BAR", "ALGO         KIT",
                                       "SEQ          LINKS ON / OFF", "FX           EDIT PAGES"};
-    const char *const *l = ui.view == V_SEQ ? SQ : ui.fx_menu && !ui.fx_page ? FXG : GEN;
+    static const char *const PF[8] = {"F3 - D4   DRUM PATTERN 1-6", "A#4       DRUMS: NEXT PATTERN", "F#4       NEW ACID LINE",
+                                      "F#5       NEW PLUCK LINE", "ARP       ANSWER NEXT BAR", "SEL TAP   THE SWELL",
+                                      "PRESETS   PIECE, NEXT BAR", "ENV       VOICE BY HAND"};   /* (0.17.23) Perform and the visualizers */
+    const char *const *l = ui.view == V_SEQ ? SQ : ui.fx_menu && !ui.fx_page ? FXG : perf_like() ? PF : GEN;
     int k;
     if (LOOK_CONSOLE) {                          /* (0.17.9) a tab; each line the key on a chip, what it does beside it */
         const int32_t x = con_chip(2, "SHIFT", 1);
@@ -6013,7 +6077,7 @@ static void con_tile(int k, const char *lb, uint16_t kc, int on, int locked)
     const int32_t tx = 2 + (k / 9) * 79, ty = 16 + (k % 9) * 14;
     const int pc = (5 + k) % 12;
     const int black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10;
-    const uint16_t base = black ? mix(K_BG, K_PANEL, 7) : K_PANEL;
+    const uint16_t base = black ? mix(K_BG, K_PANEL, 3) : mix(K_PANEL, K_TEXT, 2);   /* (0.17.23) the black keys dark, the white ones lighter: told apart at a glance (a Reddit player hit Tape stop by mistake) */
     cv_rect(tx, ty, 76, 13, on ? kc : base);
     if (!on)
         cv_rect(tx, ty, 2, 13, kc);
@@ -9322,6 +9386,7 @@ void ui_frame(void)
     key_tick();
     glide_tick();
     swell_tick();
+    factory_all_tick();
     saver_tick();
     {   /* the load: a half that was never rendered (a real dropout) or renders that keep running past their half (the margin is gone) make the engine drop the chorus and hold
          * the DX voices to four, then two, then give up the Echoplex and the vinyl; and it eases back a step after twenty seconds of neither. One step at a time (four seconds

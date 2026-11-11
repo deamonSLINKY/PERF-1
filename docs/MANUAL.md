@@ -338,6 +338,7 @@ back to the page you were last on in that group.
 | Hold **SEQ** | 0.4 s | Opens the sequencer. |
 | Hold **SAVE** | 0.5 s | The drop, straight away on the next bar. |
 | Hold **SEL** + **SAVE** on Global | 1.5 s | Puts the piece back to factory. From 0.4 s a card says `KEEP HOLDING: FACTORY`. A plain **SAVE** on Global only stores. |
+| Hold **SEL** + **SAVE** on Global, stopped | 6 s | Every piece you stored, in every genre, back to factory. From 3 s a card says `KEEP HOLDING: EVERY PIECE, ALL GENRES`. |
 | Hold **HOME** | 0.7 s | The settings pages (**SELECT** walks them). |
 | Hold **FX** | 0.5 s | The effects' settings, from the one you used last (**SELECT** walks them). |
 | Hold **GLO** | 0.4 s | The mix map. |
@@ -739,6 +740,11 @@ gone when you change genre or switch off, and the genre's pieces come back as th
 **Back to factory.** On Global, hold **SEL** and **SAVE** together for 1.5 seconds. The screen says
 `KEEP HOLDING: FACTORY` while you hold. The piece goes back to how it shipped, and its slot goes back to the
 factory piece. **SAVE** alone only stores.
+
+**Everything back to factory.** Not sure what you stored by accident? Stop the music, then on Global hold **SEL** and
+**SAVE** for 6 seconds: past the piece's own reset, the screen says `KEEP HOLDING: EVERY PIECE, ALL GENRES`, then
+it goes through the genres one by one and says how many pieces it put back. Your settings, voices and set list
+stay as they are. While the music plays it only resets the piece and says `STOP FIRST`.
 
 **When it's written.** Straight away. The FM-1 can't make sound while it writes to its memory. So if the music
 is playing, it fades out (the screen says `STORING`), writes, and fades back in exactly where it was. The

@@ -26,6 +26,10 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **More from the Reddit player (0.17.23).**
+  - **Everything back to factory.** Stopped, on Global, hold SEL + SAVE for 6 s (past the piece's own reset at 1.5 s): every stored piece in every genre goes back to factory, one genre at a time, and the screen says how many. Settings, voices and the set list stay.
+  - **One part on by itself, from Perform.** SEL + A#4: the drums' next pattern (from the next bar). SEL + F#4: a new acid line. SEL + F#5: a new pluck line. (SEL + white keys 1-6 already chose a drum pattern.) The SEL card on Perform lists them.
+  - **FX keys easier to tell apart.** The black keys' tiles are dark and the white keys' lighter, on the FX menu and the mix map, so a black key's effect is found by feel and sight (Tape stop was the one hit by mistake).
 - **From a Reddit player's ideas (0.17.22).**
   - **Freeze a part from Perform.** The hats', snare's and perc's solo keys (G#3, A#3, C#4) now freeze the bass (Pedal: it holds the key), the acid line and the pluck line. Labelled F:BASS, F:ACID, F:PLUCK on the mix map.
   - **The swell.** SEL tapped on Perform or a visualizer lifts the mood (+30), the throw and the wash (+45) over a bar, then lets them back over four. SEL again on the way: straight back.

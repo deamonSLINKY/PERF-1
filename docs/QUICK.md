@@ -197,7 +197,7 @@
 
 ### The Perform screen
 
-**HOME** on the Tempo page (elsewhere, twice). It shows the section (GROOVE, BREAK, BUILD) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (a line through a muted one, a soloed one filled), the four scenes, the effects on, and the mood. Keys: the track mix below. Knobs: the FX knobs. **ALGORITHM**: the mood. **SEL** tapped: the swell (mood, throw and wash up over a bar, back over four).
+**HOME** on the Tempo page (elsewhere, twice). It shows the section (GROOVE, BREAK, BUILD) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (a line through a muted one, a soloed one filled), the four scenes, the effects on, and the mood. Keys: the track mix below. Knobs: the FX knobs. **ALGORITHM**: the mood. **SEL** tapped: the swell (mood, throw and wash up over a bar, back over four). **SEL +** white 1-6: the drum pattern; **A#4**: the drums' next pattern; **F#4**: a new acid line; **F#5**: a new pluck line (not a frozen one).
 
 **The FX knobs.** **Filter**: left of centre cuts the highs (16 kHz down to about 250 Hz), right cuts the lows (20 Hz up to about 1.6 kHz), `OFF` in the middle. **Crush**: lo-fi grit (fewer bits, lower sample rate). **Throw**: more of the mix into the echo, for longer. **Wash**: the mix into the reverb. They go home at power-off, but a scene stores them. `KNOB` in the header: one is away from home.
 
@@ -393,7 +393,7 @@ Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through th
 
 ### Storing a piece
 
-Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every page, scale and mode, sounds and kit, patterns and drum sounds, the frozen acid line, the step settings) in the genre you're in, in place of its factory piece. The line above the knobs says `01 SAVE: STORE` while there are changes, then `01 STORED`. Unstored changes last while you stay in the genre and are lost when you change genre or switch off. **Back to factory:** on Global hold **SEL + SAVE** 1.5 s (KEEP HOLDING: FACTORY). A store is written at once; while playing, the music dips for a moment (`STORING`). Don't switch off during it.
+Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every page, scale and mode, sounds and kit, patterns and drum sounds, the frozen acid line, the step settings) in the genre you're in, in place of its factory piece. The line above the knobs says `01 SAVE: STORE` while there are changes, then `01 STORED`. Unstored changes last while you stay in the genre and are lost when you change genre or switch off. **Back to factory:** on Global hold **SEL + SAVE** 1.5 s (KEEP HOLDING: FACTORY). **Every stored piece of every genre:** stopped, hold on to 6 s. A store is written at once; while playing, the music dips for a moment (`STORING`). Don't switch off during it.
 
 ### The settings pages
 

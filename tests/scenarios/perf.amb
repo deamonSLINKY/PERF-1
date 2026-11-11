@@ -60,6 +60,19 @@ wait 1900
 expect mood 80
 wait 8000
 expect mood 50
+# (0.17.23) SEL + A#4 (key 17): the drums' next pattern; SEL + F#4 (key 13) a new acid line, F#5 (key 25) a new pluck line
+expect par48 0
+press SEL
+tapkey 17
+release SEL
+wait 100
+expect par48 1
+press SEL
+tapkey 13
+tapkey 25
+release SEL
+wait 2000
+expect playing 1
 # the knobs: the FX knobs (crush up)
 spin K2 25
 wait 100

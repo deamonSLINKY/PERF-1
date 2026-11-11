@@ -981,7 +981,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1012,6 +1012,7 @@ void en_note_v(int voice, int note, int vel) { post(C_NOTE, voice, (note & 0x7F)
 void en_note(int voice, int note, int on) { en_note_v(voice, note, on ? 100 : 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
+void en_new_part(int p) { post(C_NEWPART, p, 0); }
 void en_section(int cmd) { post(C_SECTION, cmd, 0); }
 void en_fx(uint64_t mask)                       /* in four quarters: the queue carries 16 bits */
 {
@@ -6524,6 +6525,18 @@ static void drain(void)
         case C_HUSH: hush = (uint8_t)(a != 0); break;
         case C_NOTE: note_cmd(a, b & 0x7F, b >> 8); break;
         case C_REGROW: regrow(); break;
+        case C_NEWPART:                          /* (0.17.23) one part's line new, the rest as they are: 0 the acid, 1 the pluck (a frozen one stays) */
+            if (a == 0 && !par[P_AC_LOCK]) {
+                ac_regrow();
+            } else if (a == 1 && !par[P_CM_LOCK]) {
+                int k;
+                for (k = 0; k < 32; k++)
+                    cm_f[k] = cm_g[k] = cm_ix[k] = cm_vl[k] = 0;
+                cm_k = 0;
+                cm_sync = 0;
+                mo_valid = mo_rec = mo_on = 0;
+            }
+            break;
         case C_INTRO:                            /* set while playing: no intro now, the next Play's (unless play has only just begun: the boot's) */
             intro_len = a * (int32_t)EN_SR;
             intro_t = en_playing && en_bars >= 16u ? intro_len : 0;

@@ -1,0 +1,71 @@
+# (0.17.23) Every stored piece of every genre back to factory: Global, SEL + SAVE held on past the piece's own reset (1.5 s) to 6 s, stopped.
+# A Reddit player: "Is there a 'restore ALL to factory settings' method?" Two pieces stored, in HYPNO and LOFI; playing it says STOP FIRST.
+seed 0
+wait 3000
+# HYPNO piece 1 stored
+tap GLO
+tap SAVE
+wait 500
+expect saved 1
+# LOFI piece 3 stored
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+turn PRESET 2
+wait 200
+tap ENV
+spin K1 -10
+wait 100
+tap GLO
+tap SAVE
+wait 500
+expect saved 4
+# playing: the piece's reset happens, the rest says STOP FIRST
+expect playing 1
+tap HOME
+wait 200
+tap GLO
+wait 200
+expect view 32
+press SEL
+press SAVE
+wait 6300
+release SAVE
+release SEL
+wait 300
+expect saved 0
+press GLO
+turn PRESET -1
+release GLO
+wait 300
+expect genre 0
+expect saved 1
+# stopped: everything
+tap PLAY
+wait 300
+expect playing 0
+tap HOME
+wait 200
+tap GLO
+wait 200
+expect view 32
+press SEL
+press SAVE
+wait 6300
+release SAVE
+release SEL
+wait 3000
+expect genre 0
+expect saved 0
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+expect saved 0
+# and after a power cycle
+reboot
+wait 500
+expect saved 0
