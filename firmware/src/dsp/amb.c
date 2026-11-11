@@ -1861,6 +1861,8 @@ static uint8_t ac_ans_bar, ac_ans_loop, ac_fill_bar;   /* this bar (Sync: Bar) o
 static uint32_t ac_loop;                        /* the times round the line */
 static uint32_t ac_bar0, ac_loop0;               /* the bar and the loop the answer's counting starts from (the beginning of the next bar, of the next loop, after its settings change) */
 static uint8_t ac_resync_bar, ac_resync_loop;
+static volatile uint8_t ac_now;                 /* (0.17.22, SEL + ARP) an answer asked for: the next bar (Sync Bar) or the next time round (Loop) answers */
+void en_acid_ans_now(void) { ac_now = 1; }
 volatile uint8_t en_acid_ans;                   /* the answer sounding now, for the screen */
 static int acid_raw(int s, int dd)              /* step s's note, the chord's degree moved dd degrees, in the register (no answer) */
 {
@@ -2596,6 +2598,10 @@ static void acid_step(int32_t wait)             /* a sixteenth of the acid line 
         int due = 0;
         if (par[P_AC_RESP] >= 5)
             due = ev >= 7 ? (ac_fill_bar ? 1 : (!par[P_DD_CHANGE] && (ac_loop - ac_loop0) % 8u == 7u)) : (ac_loop - ac_loop0) % (ev + 2u) == ev + 1u;
+        if (ac_now && par[P_AC_RESP] >= 5) {    /* asked for: this time round */
+            due = 1;
+            ac_now = 0;
+        }
         ac_ans_loop = en_acid_ans = (uint8_t)due;
     }
     v = (par[P_AC_CHANCE] ? ac_ans_loop : ac_ans_bar) ? par[P_AC_RESP] : 0;
@@ -3829,6 +3835,10 @@ static void tick(void)
                     else
                         due = (bars - ac_bar0) % ((uint32_t)ev + 2u) == (uint32_t)ev + 1u;
                 }
+                if (ac_now && rv >= 5) {        /* asked for (SEL + ARP): this bar */
+                    due = 1;
+                    ac_now = 0;
+                }
                 ac_ans_bar = en_acid_ans = (uint8_t)due;
             }
         }
@@ -4459,6 +4469,7 @@ static void apply(int p, int v)
         v = pi->lo;
     if (v > pi->hi)
         v = pi->hi;
+    const int was = par[p];
     par[p] = (int16_t)v;
     if (p >= P_LANE && p < P_ECHO) {             /* a drum lane's level, tune or decay */
         int l = (p - P_LANE) / 3, k = (p - P_LANE) % 3;
@@ -4496,8 +4507,14 @@ static void apply(int p, int v)
                 bass_to(bass.midi_note % 12);
         }
         break;
-    case P_AC_RESP: case P_AC_EVERY: case P_STYLE:   /* the answer's count starts again at the next bar and the next loop (it was out of step with them when the settings changed mid-way) */
-        ac_resync_bar = ac_resync_loop = 1;
+    case P_AC_RESP:                              /* (0.17.22) a new kind or direction keeps the count, so the answer still comes when it was due (a Reddit
+                                                  * player: changing it mid-way pushed the answer back); switched on, the count starts */
+        if (was == 0 && v > 0)
+            ac_resync_bar = ac_resync_loop = 1;
+        break;
+    case P_AC_EVERY: case P_STYLE:               /* the answer's count starts again at the next bar and the next loop (it was out of step with them when the settings changed mid-way) */
+        if (v != was)
+            ac_resync_bar = ac_resync_loop = 1;
         break;
     case P_CHAIN:                                /* the chain starts over at the next bar */
         chain_i = 0;

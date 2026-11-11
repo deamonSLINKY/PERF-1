@@ -197,21 +197,21 @@
 
 ### The Perform screen
 
-**HOME** on the Tempo page (elsewhere, twice). It shows the section (GROOVE, BREAK, BUILD) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (a line through a muted one, a soloed one filled), the four scenes, the effects on, and the mood. Keys: the track mix below. Knobs: the FX knobs. **ALGORITHM**: the mood.
+**HOME** on the Tempo page (elsewhere, twice). It shows the section (GROOVE, BREAK, BUILD) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (a line through a muted one, a soloed one filled), the four scenes, the effects on, and the mood. Keys: the track mix below. Knobs: the FX knobs. **ALGORITHM**: the mood. **SEL** tapped: the swell (mood, throw and wash up over a bar, back over four).
 
 **The FX knobs.** **Filter**: left of centre cuts the highs (16 kHz down to about 250 Hz), right cuts the lows (20 Hz up to about 1.6 kHz), `OFF` in the middle. **Crush**: lo-fi grit (fewer bits, lower sample rate). **Throw**: more of the mix into the echo, for longer. **Wash**: the mix into the reverb. They go home at power-off, but a scene stores them. `KNOB` in the header: one is away from home.
 
 ### The mix map (GLO held)
 
-Hold **GLO** (0.4 s), or use the keys on Perform or a visualizer with FX closed. A mute stays on until pressed again; the black key above a track solos it.
+Hold **GLO** (0.4 s), or use the keys on Perform or a visualizer with FX closed. A mute stays on until pressed again; the black key above a track solos it, but the hats', snare's and perc's freeze a part: the bass (Pedal), the acid line, the pluck line.
 
 | Key | Does | Key | Does |
 |---|---|---|---|
 | `F3` / `F#3` | Mute / solo the kick | `C5` `C#5` `D5` `D#5` | Scenes 1-4 |
-| `G3` / `G#3` | Hats | `E5` | Reset all |
-| `A3` / `A#3` | Snare (with the clap) | `F5` | Auto-DJ on / off |
+| `G3` / `G#3` | Hats / freeze the bass | `E5` | Reset all |
+| `A3` / `A#3` | Snare / freeze the acid | `F5` | Auto-DJ on / off |
 | `B3` | Undo (again: redo) | `F#5` | Solo the pluck |
-| `C4` / `C#4` | Perc | `G5` | DJ new pieces on / off |
+| `C4` / `C#4` | Perc / freeze the pluck | `G5` | DJ new pieces on / off |
 | `D4` / `D#4` | Bass | `E4` | Tap tempo |
 | `F4` / `F#4` | Acid | `A4` / `A#4` | Mute / solo all four drums |
 | `G4` / `G#4` | Pad | `B4` | Mute the pluck |
@@ -223,7 +223,7 @@ Hold **GLO** (0.4 s), or use the keys on Perform or a visualizer with FX closed.
 
 GLO + `F5` runs breakdowns and drops for you (`DJ` in the header). On the bar it plays (1) a **groove** of 8, 16, 32 or 64 bars (16 by default); (2) a **drum fill** as its last bar, if Fill is on; (3) a **breakdown**: short (4 bars), half the groove (at least 4; the default) or full; (4) a **build** of the genre's length, the riser rising and two sixteenths of silence at the end, then the **drop**; (5) the groove again. The header counts `BREAK IN 4`, then `BREAK 2`. Groove on **Sync** (its fifth setting) lasts until the chord changes (Drift sets when): the bar before is a fill, the breakdown starts with the new chord. **DJ new pieces** (GLO + `G5`) brings in the bank's next piece on the fill's bar, so the breakdown and drop are its own. SAVE by hand just moves the DJ on.
 
-The **SET** settings page (after USB & MIDI): **Rounds** a piece plays before the next (1, 2, 4, 8; `R2/4` in the header). **Ramp**: the tempo climbs +2 to +12 BPM over a piece's rounds. **Intro**: after PLAY the tracks come in one by one over 1, 2, 4 or 8 minutes, pad first, acid last; `INTRO 1:42` counts down and the DJ waits. The **Auto DJ** settings page: Scenes (at once, next bar), Groove (8, 16, 32, 64, sync), Break (short, half, full), Fill (off, on).
+The **SET** settings page (after USB & MIDI): **Rounds** a piece plays before the next (1, 2, 4, 8; `R2/4` in the header). **Ramp**: the tempo climbs +2 to +12 BPM over a piece's rounds. **Intro**: after PLAY the tracks come in one by one over 1, 2, 4 or 8 minutes, pad first, acid last; `INTRO 1:42` counts down and the DJ waits. **Break**: a piece you start or turn to begins in its breakdown (SAVE brings it in). The **Auto DJ** settings page: Scenes (at once, next bar), Groove (8, 16, 32, 64, sync), Break (short, half, full), Fill (off, on).
 
 ### Mood
 

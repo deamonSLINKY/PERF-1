@@ -314,7 +314,7 @@ short version.
 | **OCT-** | Down an octave, to -3. On a voice's pages it moves that voice (pad, bass or acid; the pluck goes down to -2). On any other page it moves the whole song. In the sequencer it picks the previous drum. In the FX menu it turns every effect off. |
 | **OCT+** | Up an octave, to +3, the same way. In the sequencer it picks the next drum. |
 | **FX** | Opens and closes the effects menu. Held: the settings of the effect you used last, from any page. |
-| **SEL** | Shift: hold it while you use another control (section 12). |
+| **SEL** | Shift: hold it while you use another control (section 12). Tapped alone on the Perform screen or a visualizer: the **swell**, the mood, the throw and the wash lifted over a bar and let back over four (tap again on the way: straight back; a knob turned ends it where it is). With **ARP**: the acid answers on the next bar. |
 | **ENV** | The Pad page. Again: Pad env, Pad LFO, Chords, Progression. With **SEL** held: takes the voice on screen off its automatic part so you play it by hand (again: hands it back). |
 | **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line, Bass steps. |
 | **ARP** | The Acid page. Again: Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. |
@@ -958,6 +958,7 @@ a changed version of itself. It's off by default, stored with the piece, and lis
 | Answer | How the line is changed. **Octave**. **Fifth** (seven semitones). **Third** (two notes up or down the scale, so it stays in key). **Mirror** (the line turned upside down around its own middle note, so it stays in the same range). **Reverse** (the line backwards). **Rotate** (the line shifted by a beat). **Sparse** (only the even steps). **Accents** (only the accented notes). |
 | Every | How often the answer comes, and what it counts. **2 bars** to **8 bars**: the answer lasts one bar, so with a line of 12 or 10 steps it starts and ends partway through the line. On 4 bars you hear the call three times and the answer on the fourth. **Drift** brings the answer in the bar before the drums change pattern (Drum drift, section 10); if Drum drift isn't changing patterns, it falls back to every 8th bar. Turn on past Drift for **2 loops** to **8 loops** and **Drift lp**: the same, counting times round the line, and the answer is the whole line. Use loops for lines that aren't 16 steps long. (Until 0.17.21 bars or loops was a fourth knob, Sync.) |
 | Direction | Down 2, Down, Same, Up or Up 2. For Octave, Fifth and Third it moves the line by that interval once or twice. For the others it moves by octaves. If the answer would leave the acid's range (a low line answered downwards), it goes the other way instead, so it never lands back on the call. |
+| (SEL + ARP) | The answer on the next bar (on loops: the next time round), whatever the count, for a call and response of your own. Changing the Answer or the Direction no longer starts the count again; Every does. |
 | Level | How loud the answer is against the call: **Same**, **+2 dB**, **+4 dB** or **+6 dB**, so it stands out when you play with it. This one is the unit's setting, kept for every piece (like the effects' settings), not stored with a piece. |
 
 The page draws the call and its answer, one dot per step at the height of its note.
@@ -1547,7 +1548,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Ring mod (a metallic clang) | Tone: 40-800 Hz | Mix | - | - |
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
 | Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any |
-| SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min | Mix: cut, 4, 8, 16, 32 bars |
+| SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
 | Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
@@ -1624,15 +1625,15 @@ On this screen the keys are the track mix (the mix map, below), the knobs are th
 
 The mix map lets you mute, solo and recall scenes while you play. Hold **GLO** and the screen shows what each key does. On the Perform screen or a visualizer you don't need to hold **GLO**: just press the keys, with FX closed. The load meter is at the top right.
 
-A mute stays on until you press the key again. The black key above a track solos it, so you hear only that track.
+A mute stays on until you press the key again. The black key above a track solos it, so you hear only that track. The hats', snare's and perc's black keys freeze a part instead (a drum on its own was little use): **F:BASS** puts the bass on Pedal (it holds the key while the chords move, as on the Progression page), **F:ACID** and **F:PLUCK** freeze that line as it is (as on its steps page, stored with the piece). Press again to let go.
 
 | Key | Does |
 |---|---|
 | F3 / F#3 | Mute / solo the kick |
-| G3 / G#3 | Mute / solo the hats |
-| A3 / A#3 | Mute / solo the snare (with the clap) |
+| G3 / G#3 | Mute the hats / freeze the bass (Pedal) |
+| A3 / A#3 | Mute the snare (with the clap) / freeze the acid line |
 | B3 | Undo (press again to redo) |
-| C4 / C#4 | Mute / solo the perc |
+| C4 / C#4 | Mute the perc / freeze the pluck line |
 | D4 / D#4 | Mute / solo the bass |
 | E4 | Tap tempo |
 | F4 / F#4 | Mute / solo the acid |
@@ -1692,7 +1693,7 @@ The **SET** settings page shapes a longer set. Hold **HOME** for the settings; i
 
 - **Rounds** gives each piece 1, 2, 4 or 8 rounds before DJ new pieces moves on. A round is one groove, breakdown, build and drop. The header and the Perform screen count them, like `R2/4`.
 - **Ramp** makes the tempo climb over a piece's rounds of groove, by +2, +4, +8 or +12 BPM, one BPM at a time. If you change the tempo by hand, the climb carries on from there. The next piece starts at its own tempo.
-- **Intro** builds the music up slowly from nothing. When you press Play, the tracks come in one at a time over 1, 2, 4 or 8 minutes. The pad starts in the first bar, then come the hats, the perc, the kick, the snare, the bass, the pluck and last the acid, each a seventh of the way further through. This is handy for mixing in from another deck, or for scratching or sampling over just a pad and a hat. The header counts down, like `INTRO 1:42`, and the auto-DJ stays in its groove until every track is in. Stop and Play again to restart the intro.
+- **Intro** builds the music up slowly from nothing. When you press Play, the tracks come in one at a time over 1, 2, 4 or 8 minutes. The pad starts in the first bar, then come the hats, the perc, the kick, the snare, the bass, the pluck and last the acid, each a seventh of the way further through. This is handy for mixing in from another deck, or for scratching or sampling over just a pad and a hat. The header counts down, like `INTRO 1:42`, and the auto-DJ stays in its groove until every track is in. Stop and Play again to restart the intro. **Break** is different: a piece you start with PLAY or turn to with PRESETS begins in its breakdown, so you can move from piece to piece through a breakdown and bring each one in with **SAVE** (the build, then the drop). The auto-DJ's own new pieces don't.
 - **Mix** changes pieces the way a DJ changes records. A piece that comes in on the bar (the auto-DJ's next piece, the set list's next slot, or **SEL** + **PRESETS**) starts at the tempo that was playing, then glides to its own tempo over 4, 8, 16 or 32 bars. **Cut** jumps straight to the new tempo, as before. With a set list that goes from a slow piece to a fast one, a long Mix carries the whole set up (or down) smoothly. Turning the tempo by hand stops the glide where it is.
 
 ### The set list

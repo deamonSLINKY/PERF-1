@@ -102,8 +102,9 @@ static const char *const ROUNDS_NAME[4] = {"1", "2", "4", "8"};                 
 static const uint8_t DJ_ROUNDS[4] = {1, 2, 4, 8};
 static const char *const RAMP_NAME[5] = {"OFF", "+2 BPM", "+4 BPM", "+8 BPM", "+12 BPM"};        /* the tempo's climb over a piece's rounds */
 static const uint8_t RAMP_BPM[5] = {0, 2, 4, 8, 12};
-static const char *const INTRO_NAME[5] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 MIN"};             /* the slow progression from Play */
-static const uint16_t INTRO_S[5] = {0, 60, 120, 240, 480};
+static const char *const INTRO_NAME[6] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 MIN", "BREAK"};    /* the slow progression from Play; BREAK (0.17.22, a Reddit
+                                                                                                    * player who moves between pieces through a breakdown): a piece begins in its breakdown */
+static const uint16_t INTRO_S[6] = {0, 60, 120, 240, 480, 0};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const char *const XMIX_NAME[5] = {"CUT", "4 BARS", "8 BARS", "16 BARS", "32 BARS"};       /* the SET page's Mix: how long the next piece glides to its tempo */
 static const uint8_t XMIX_BARS[5] = {0, 4, 8, 16, 32};
@@ -179,7 +180,7 @@ static const struct {
     {"REPEAT", FX_RPT2, 1, {{"Pitch", KN_NAME, EN_FXS_RP_PITCH, RPP_NAME, 25}, {"Decay", KN_PLAIN, EN_FXS_RP_DECAY, 0, 0},
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}, {"", KN_NONE, 0, 0, 0}}},   /* (Scanlines on SCREEN, 0.16.1) */   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
-    {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 5}, {"Mix", KN_NAME, 24, XMIX_NAME, 5}}},   /* the set: rounds a piece, the tempo's climb, the intro; the mix into the next piece (0.16.1) */
+    {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 6}, {"Mix", KN_NAME, 24, XMIX_NAME, 5}}},   /* the set: rounds a piece, the tempo's climb, the intro; the mix into the next piece (0.16.1) */
     {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 4}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"Knob CCs", KN_NAME, 22, CC_NAME, 4}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 6}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
     {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, FT_NAME, 5}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
@@ -388,8 +389,9 @@ static inline uint32_t h32(uint64_t x) { return (uint32_t)(x ^ x >> 32); }   /* 
  * 8..14 solo it, 16 / 17 mute / solo the four drums together, 18 mutes and solos back; 20..23 a scene (tap: recall,\n * hold: store), 24 everything back (effects, knobs, mutes), 25 the auto-DJ on / off, 26 its length, 27 its new pieces, 28 undo
  * (and again: redo) the last big change, 29 tap tempo; -1 nothing. */
 static const int8_t MIXK[NKEYS] = {
-    0, 8, 1, 9, 2, 10, 28,                 /* F3 .. B3: kick, hats, snare (mute, the black key above it solos); undo */
-    3, 11, 4, 12, 29,                      /* C4 .. E4: perc, drone; tap tempo */
+    0, 8, 1, 32, 2, 30, 28,                /* F3 .. B3: kick (mute, the black key above it solos), hats, snare (mutes; their black keys, 0.17.22: freeze the bass
+                                            * (Pedal) and the acid line, the maker's idea for a Reddit player: a drum's solo was little use); undo */
+    3, 31, 4, 12, 29,                      /* C4 .. E4: perc (mute; its black key freezes the pluck line), drone; tap tempo */
     5, 13, 6, 14, 16, 17, 7,               /* F4 .. B4: acid, pad, the drums, the pluck's mute */
     20, 21, 22, 23, 24, 25, 15, 27};       /* C5 .. G5: scenes 1-4, reset all, the auto-DJ (on, length, new pieces) */
 static const char *const MIX_NAME[8] = {"KICK", "HATS", "SNARE", "PERC", "BASS", "ACID", "PAD", "PLUCK"};
@@ -906,6 +908,10 @@ static int mix_state(int k)
         return ui.dj_on;
     if (c == 27)
         return ui.dj_piece;
+    if (c == 30 || c == 31)                    /* the acid's, the pluck's line frozen */
+        return proj.par[c == 30 ? P_AC_LOCK : P_CM_LOCK] != 0;
+    if (c == 32)                               /* the bass on Pedal */
+        return glob.sl_rsv[2] & 1u;
     return c == 16 ? (ui.trk_m & 15u) == 15u : c == 17 ? (ui.trk_s & 15u) == 15u : 0;
 }
 static void knob_set(int k, int v);
@@ -1040,6 +1046,15 @@ static void mix_key(int k)
     } else if (c == 27) {
         ui.dj_piece = (uint8_t)!ui.dj_piece;
         say("DJ NEW PIECES", ui.dj_piece ? "ON" : "OFF");
+    } else if (c == 30 || c == 31) {           /* the acid's or the pluck's line frozen as it is, or let go (as on its steps page; stored with the piece) */
+        const int p = c == 30 ? P_AC_LOCK : P_CM_LOCK, on = !proj.par[p];
+        knob_set(p, on);
+        say(c == 30 ? "ACID LINE" : "PLUCK LINE", on ? "FROZEN" : "FREE");
+    } else if (c == 32) {                      /* the bass held on the key while the chords move (Pedal, as on the Progression page) */
+        glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ 1u) & 7u);
+        en_pedal(glob.sl_rsv[2] & 3);
+        project_globals();
+        say("BASS", glob.sl_rsv[2] & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
     }
     en_trk(*m, *s);
 }
@@ -2292,7 +2307,7 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
         static uint8_t isent = 255, msent = 255, hsent;
         if (ui.intro != isent) {
             isent = ui.intro;
-            en_intro(INTRO_S[ui.intro % 5u]);
+            en_intro(INTRO_S[ui.intro % 6u]);
         }
         if (ui.midi_map != msent) {
             msent = ui.midi_map;
@@ -2552,6 +2567,8 @@ static void set_piece(int i)                    /* the piece playing kept as it 
     project_apply();
     mood_apply();
     track_fresh(1, 1);
+    if (ui.intro == 5 && en_playing && !ui.dj_on)   /* Intro BREAK: the new piece in its breakdown; SAVE builds and drops it */
+        en_section(EN_CMD_BREAK);
     {
         char t[12] = "PIECE ";
         caps(t + 6, piece_name(proj.piece), 4);
@@ -3210,9 +3227,70 @@ static int key_locked(int k)                    /* ... and latched */
     return (int)(ui.fx_lock >> KEY_FX[fx_bank][k] & 1u) && (fp < 0 || fp == ui.flex_lock);
 }
 
+/* THE SWELL (0.17.22, a Reddit player's "temporary mood and FX"): a SEL tap on Perform or a visualizer lifts the mood, the throw and the wash
+ * over a bar, then lets them back to where they were over four bars. SEL again on the way: straight into the way back. A turn of any knob
+ * ends it where it is (the turned one is yours). */
+static struct {
+    uint32_t t0;                                 /* when it began (ms), 0 none */
+    uint8_t mood, thr, wash;                     /* where they were */
+} sw;
+static uint32_t sw_bar(void) { return 240000u / (uint32_t)(proj.par[P_TEMPO] > 30 ? proj.par[P_TEMPO] : 30); }   /* a bar, ms */
+static void swell_apply(float e)
+{
+    const int m = (int)sw.mood + (int)(30.0f * e + 0.5f), t = (int)sw.thr + (int)(45.0f * e + 0.5f), w = (int)sw.wash + (int)(45.0f * e + 0.5f);
+    ui.mood = (uint8_t)(m > 100 ? 100 : m);
+    mood_apply();
+    ui.glide_busy = 1;                           /* (not a hand's turn: a glide stays) */
+    knob_set(K_FXF + 2, t > 100 ? 100 : t);
+    knob_set(K_FXF + 3, w > 100 ? 100 : w);
+    ui.glide_busy = 0;
+}
+static void swell_tap(void)
+{
+    const uint32_t now = plat_ms(), bar = sw_bar();
+    if (sw.t0) {                                 /* on its way: back from where it is */
+        const uint32_t t = now - sw.t0;
+        const float e = t < bar ? (float)t / (float)bar : 1.0f - (float)(t - bar) / (4.0f * (float)bar);
+        if (t < bar)
+            sw.t0 = now - bar - (uint32_t)((1.0f - e) * 4.0f * (float)bar);
+        say("SWELL", "BACK");
+        return;
+    }
+    sw.t0 = now ? now : 1u;
+    sw.mood = ui.mood;
+    sw.thr = (uint8_t)ui.fxk[2];
+    sw.wash = (uint8_t)ui.fxk[3];
+    say("SWELL", "UP A BAR, BACK OVER FOUR");
+}
+static void swell_tick(void)
+{
+    uint32_t t, bar;
+    float e;
+    if (!sw.t0)
+        return;
+    if ((int32_t)(ui.turn_t - sw.t0) > 0) {      /* a knob turned: it ends here */
+        sw.t0 = 0;
+        return;
+    }
+    t = plat_ms() - sw.t0;
+    bar = sw_bar();
+    e = t < bar ? (float)t / (float)bar : 1.0f - (float)(t - bar) / (4.0f * (float)bar);
+    if (e <= 0.0f) {
+        swell_apply(0.0f);                       /* back exactly where they were */
+        sw.t0 = 0;
+        return;
+    }
+    swell_apply(e);
+}
+
 static void button(int b)
 {
     int g;
+    if (b == B_SEL) {                            /* SEL tapped alone (0.17.22): on Perform or a visualizer, the swell */
+        if (perf_like() && !ui.fx_menu && plat_ms() - ui.down_t[B_SEL] < 400u)
+            swell_tap();
+        return;
+    }
     if (b == B_HOME) {                           /* HOME: the tempo page; again, the perform screen; and back; twice quickly, the visualizers */
         const uint32_t now = plat_ms();
         if (ui.fx_menu) {                        /* HOME leaves the FX menu too (0.14.7; latched effects play on), then does its usual */
@@ -3277,6 +3355,8 @@ static void button(int b)
             af_fresh = 1;
             sl_start();
             en_play(1);
+            if (ui.intro == 5 && !ui.dj_on)      /* Intro BREAK: from Play, the breakdown first */
+                en_section(EN_CMD_BREAK);
             code_now(g);
             code_text(g, t);
             say("PLAYING", t);
@@ -4109,6 +4189,15 @@ static void input(void)
                 jam_capture();
                 continue;
             }
+            if (i == B_ARP && (btn >> B_SEL & 1u)) {   /* shift (0.17.22): the acid answers on the next bar, whatever its count */
+                ui.btn_used |= m | 1u << B_SEL;
+                if (proj.par[P_AC_RESP] < 5) {
+                    say("NO ANSWER SET", "ACID ANSWER: ARP x4");
+                } else {
+                    en_acid_ans_now();
+                    say("ACID ANSWER", proj.par[P_AC_CHANCE] ? "NEXT TIME ROUND" : "NEXT BAR");
+                }
+            }
             if (i == B_ENV && (btn >> B_SEL & 1u)) {
                 /* shift: the voice whose page is on screen off the algorithm (silent but for the keys on its
                  * pages), or back on it */
@@ -4858,7 +4947,7 @@ static void draw_header(void)
             x -= 10;
         }
         if (en_playing && en_intro_k < 1.0f) {   /* the intro: how long until everything is in */
-            const int secs = (int)((1.0f - en_intro_k) * (float)INTRO_S[ui.intro % 5u] + 0.99f), m = secs / 60, s = secs % 60;
+            const int secs = (int)((1.0f - en_intro_k) * (float)INTRO_S[ui.intro % 6u] + 0.99f), m = secs / 60, s = secs % 60;
             t[0] = 'I', t[1] = 'N', t[2] = 'T', t[3] = 'R', t[4] = 'O', t[5] = ' ', t[6] = (char)('0' + m), t[7] = ':', t[8] = (char)('0' + s / 10), t[9] = (char)('0' + s % 10), t[10] = 0;
             x -= text_w(&FONT_XS, t);
             cv_text(x, 8, &FONT_XS, t, K_ACC);
@@ -5853,9 +5942,9 @@ static void draw_shift(void)
 {
     static const char *const FXG[8] = {"ANY KEY   ITS SETTINGS", "PRESETS   PIECE, NEXT BAR", "ALGO      SOUND / KIT",
                                        "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "FX        EDIT PAGES",
-                                       "GLO       REMOTE (BROWSER)", ""};
+                                       "GLO       REMOTE (BROWSER)", "ARP       ANSWER NEXT BAR"};
     static const char *const GEN[8] = {"F3 - D4   PATTERN 1-6", "PRESETS   PIECE, NEXT BAR", "ALGO      SOUND / KIT",
-                                       "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "FX        EDIT PAGES",
+                                       "ENV       VOICE BY HAND", "SEQ       LINKS ON / OFF", "ARP       ANSWER NEXT BAR",
                                        "GLO       REMOTE (BROWSER)", "REC       CAPTURE (JAM)"};
     static const char *const SQ[8] = {"WHITE KEYS   PATTERN 1-6", "BLACK KEYS   COPY HERE TO 1-6", "OCT-         CLEAR THIS LANE",
                                       "OCT+         THE LANE'S OWN", "PRESETS      PIECE, NEXT BAR", "ALGO         KIT",
@@ -6006,6 +6095,11 @@ static void draw_mix(void)
             while (*q)
                 lb[j++] = *q++;
             lb[j++] = (char)('1' + code - 20);
+            lb[j] = 0;
+        } else if (code >= 30 && code <= 32) {
+            const char *q = code == 30 ? "F:ACID" : code == 31 ? "F:PLUCK" : "F:BASS";
+            while (*q)
+                lb[j++] = *q++;
             lb[j] = 0;
         } else if (code == 24 || code == 25 || code == 27 || code == 28 || code == 29) {
             const char *q = code == 24 ? "RESET ALL" : code == 25 ? "AUTO DJ" : code == 27 ? "DJ PIECE" : code == 28 ? "UNDO" : "TAP TEMPO";
@@ -9227,6 +9321,7 @@ void ui_frame(void)
     smp_tick();
     key_tick();
     glide_tick();
+    swell_tick();
     saver_tick();
     {   /* the load: a half that was never rendered (a real dropout) or renders that keep running past their half (the margin is gone) make the engine drop the chorus and hold
          * the DX voices to four, then two, then give up the Echoplex and the vinyl; and it eases back a step after twenty seconds of neither. One step at a time (four seconds

@@ -11,10 +11,29 @@ tapkey 2
 wait 100
 expect trkmute 3
 expect pool 0x5AD
-# G#3 solo of the hats track (key 3), A#3... (key 5: solo snare), then reset all (E5, key 23)
+# F#3 solo of the kick (key 1), then reset all (E5, key 23)
+tapkey 1
+wait 100
+expect trksolo 1
+# (0.17.22) the hats', snare's and perc's black keys freeze a part: G#3 the bass (Pedal), A#3 the acid line, C#4 the pluck line; again lets go
+expect pedal 0
 tapkey 3
 wait 100
-expect trksolo 2
+expect pedal 1
+tapkey 5
+wait 100
+expect par173 1
+tapkey 8
+wait 100
+expect par175 1
+expect trksolo 1
+tapkey 3
+tapkey 5
+tapkey 8
+wait 100
+expect pedal 0
+expect par173 0
+expect par175 0
 tapkey 23
 wait 100
 expect trkmute 0
@@ -34,6 +53,13 @@ wait 100
 shot perf_queued.png
 wait 3000
 expect trkmute 1
+# (0.17.22) a SEL tap: the swell, the mood up over a bar and back over four (124 BPM: 1.9 s, 7.7 s)
+expect mood 50
+tap SEL
+wait 1900
+expect mood 80
+wait 8000
+expect mood 50
 # the knobs: the FX knobs (crush up)
 spin K2 25
 wait 100

@@ -400,6 +400,7 @@ extern volatile uint32_t en_diag[36];        /* the diagnostic frame: fourteen p
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
 extern volatile uint8_t en_acid_ans;           /* this bar the acid answers (UI) */
+void en_acid_ans_now(void);                     /* (0.17.22) the acid answers on the next bar, or the next time round on Sync Loop, whatever its count */
 int en_acid_preview(int step, int answer);     /* the acid line's note at a step as the call (answer 0) or an answer (P_AC_RESP's value) would play it, -1: a rest */
 uint16_t en_lane_mask(int lane, int pat, int dens);   /* a lane of pattern pat as it plays at density dens (50: as written; the screen's preview too) */
 extern volatile uint8_t en_lane_src[EN_NLANE]; /* the pattern each lane plays now */

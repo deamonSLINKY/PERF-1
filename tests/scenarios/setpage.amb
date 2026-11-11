@@ -37,3 +37,21 @@ wait 300
 shot intro_mix.png
 release GLO
 wait 200
+# (0.17.22) Intro's last value, BREAK: a piece started or turned to begins in its breakdown (the auto-DJ's own pieces don't)
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 5
+wait 100
+expect fxpage 25
+spin K3 4
+wait 100
+shot set_page_break.png
+tap HOME
+wait 300
+expect sec 0
+turn PRESET 1
+waitfor sec 1 3000
+tap SAVE
+waitfor sec 2 3000

@@ -713,6 +713,10 @@ static int expect(const char *what, const char *val)
         got = glob.sl_rsv[0];
     else if (!strcmp(what, "zoomknob"))
         got = zoom_knob();
+    else if (!strcmp(what, "acidans"))            /* (0.17.22) the acid answers this bar */
+        got = en_acid_ans;
+    else if (!strcmp(what, "pedal"))              /* (0.17.22) Pedal: bit 0 the bass, bit 1 the pad */
+        got = glob.sl_rsv[2] & 3u;
     else if (!strcmp(what, "mix"))                /* the SET page's Mix, and the glide's bars (0: none) */
         got = glob.sl_rsv[1];
     else if (!strcmp(what, "mixbars"))

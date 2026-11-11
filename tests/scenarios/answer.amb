@@ -56,4 +56,17 @@ expect fxs96 0
 spin K4 2
 wait 100
 expect fxs96 2
-wait 9000
+# (0.17.22) SEL + ARP: the answer on the next bar, though the count (8 bars) is far off; then the count goes on (the bar after: the call)
+spin K2 -4
+wait 100
+expect par21 6
+expect par76 0
+wait 2500
+press SEL
+tap ARP
+release SEL
+waitfor acidans 1 2600
+waitfor acidans 0 2600
+wait 2500
+expect acidans 0
+wait 2000
