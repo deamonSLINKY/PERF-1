@@ -2933,7 +2933,27 @@ static void piece_factory(void)                 /* Global, SAVE held: back to th
 }
 
 /* ------------------------------------------------------------ the kit --- */
-static int seq_pat(void) { return proj.par[P_PATTERN]; }   /* the pattern the sequencer edits: the one chosen */
+static int seq_pat(void) { return en_playing ? en_pat_now % EN_NPAT : proj.par[P_PATTERN]; }   /* the pattern the sequencer shows and edits: playing, the one
+                                                 * playing (0.17.24: the song's moves too, the maker's jam); stopped, the one chosen */
+static int seq_src(int l) { return en_playing ? en_lane_src[l] % EN_NPAT : seq_pat(); }   /* a lane's: playing, where it really plays from (its own pattern, the song's anchor) */
+static int play_src(int l) { return en_playing ? en_lane_src[l] % EN_NPAT : proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now % EN_NPAT; }
+static uint16_t lane_plan(int l)                /* a lane as it will play: its pattern at its density, within its length */
+{
+    const int ll = proj.par[P_LLEN + l];
+    const uint16_t m = en_lane_mask(l, play_src(l), proj.par[P_DENS + l]);
+    return ll >= 1 && ll < 16 ? (uint16_t)(m & ((1u << ll) - 1u)) : m;
+}
+/* what a lane really plays this bar (0.17.24, "at least on Home it should show what is actually playing"): the steps gone by as they sounded (fills,
+ * ghosts, the breakdown, the chances), the rest as they will (its pattern at its density; in a breakdown or a build, as they went a bar ago) */
+static uint16_t lane_now(int l)
+{
+    const uint16_t plan = lane_plan(l);
+    uint16_t past;
+    if (!en_playing)
+        return plan;
+    past = (uint16_t)((2u << (en_lane_pos[l] & 15u)) - 1u);
+    return (uint16_t)((en_played[l] & past) | ((en_sec == EN_SEC_GROOVE ? plan : en_played[l]) & ~past));
+}
 static void seq_trick(int k, int32_t e)         /* SEL + K1: the lane as a Euclidean pattern of n hits in 16; K2: turned round; K3: how likely a hit is to sound */
 {
     char t[20];
@@ -2973,7 +2993,7 @@ static void seq_trick(int k, int32_t e)         /* SEL + K1: the lane as a Eucli
         r = (r + (int)e + 16) & 15;
     ui.eu_n[l] = (uint8_t)n;
     ui.eu_r[l] = (uint8_t)r;
-    en_pats[seq_pat()][l] = (uint16_t)en_euclid(n, 16, r);
+    en_pats[seq_src(l)][l] = (uint16_t)en_euclid(n, 16, r);
     edited();
     code_pats_keep();
     {
@@ -2998,7 +3018,7 @@ static void seq_trick(int k, int32_t e)         /* SEL + K1: the lane as a Eucli
 
 static void step_toggle(int s)                  /* a hit on or off: the lane's step s (its white key) */
 {
-    volatile uint16_t *p = &en_pats[seq_pat()][ui.lane];
+    volatile uint16_t *p = &en_pats[seq_src(ui.lane)][ui.lane];
     *p = (uint16_t)(*p ^ (1u << s));
     edited();
     code_pats_keep();
@@ -3127,9 +3147,9 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
     uint16_t v = 0;
     if (restore) {
         en_piece_pats(proj.piece, f);
-        v = f[seq_pat()][ui.lane];
+        v = f[seq_src(ui.lane)][ui.lane];
     }
-    en_pats[seq_pat()][ui.lane] = v;
+    en_pats[seq_src(ui.lane)][ui.lane] = v;
     edited();
     code_pats_keep();
     caps(t, EN_LANE_NAME[ui.lane], sizeof t);
@@ -5371,8 +5391,8 @@ static void draw_meters(void)                    /* left: the five layers (pad, 
     uint16_t c[5], t[5];
     float lv[5], dm = 0.0f;
     int i;
-    c[0] = K_PAD, c[1] = K_BASS, c[2] = K_ACID, c[3] = KC_COLOR, c[4] = K_PULSE;
-    t[0] = K_PAD_T, t[1] = K_BASS_T, t[2] = K_ACID_T, t[3] = mix(K_BG, KC_COLOR, 4), t[4] = K_PULSE_T;
+    c[0] = K_PAD, c[1] = K_BASS, c[2] = K_ACID, c[3] = IMP_TEAL, c[4] = K_PULSE;
+    t[0] = K_PAD_T, t[1] = K_BASS_T, t[2] = K_ACID_T, t[3] = mix(K_BG, IMP_TEAL, 4), t[4] = K_PULSE_T;
     for (i = 0; i < EN_NDRUM; i++)
         dm = fm_maxf(dm, en_drum_glow[i]);
     lv[0] = en_pad_level * (float)proj.par[P_PAD] * 0.01f;
@@ -5402,7 +5422,7 @@ static void draw_kit(void)                       /* right: the pattern playing, 
     int l, s, pos = en_drum_pos, pat = en_pat_now;
     char t[12] = "PAT ";
     for (l = 0; l < EN_NLANE; l++) {
-        uint16_t bits = en_pats[pat][l];
+        uint16_t bits = lane_now(l);
         int g = q16(en_drum_glow[l]);
         for (s = 0; s < 16; s++) {
             int32_t x = 170 + s * 4, y = 26 + l * 9;
@@ -5445,10 +5465,14 @@ static void draw_seq(void)
     if (en_pat_now != pat || en_pat_next != pat) {
         char u[24] = "PLAYING ";
         itoa_u((uint32_t)en_pat_now + 1u, u + 8);
+        if (en_playing) {                        /* (the one playing is shown: the one coming) */
+            u[0] = 'N', u[1] = 'E', u[2] = 'X', u[3] = 'T', u[4] = ' ', u[5] = 0;
+            itoa_u((uint32_t)en_pat_next + 1u, u + 5);
+        }
         cv_text(120, 1, &FONT_XS, u, K_DIM);
     }
     for (l = 0; l < EN_NLANE; l++) {
-        uint16_t bits = en_pats[pat][l];
+        uint16_t bits = en_pats[seq_src(l)][l];
         int32_t y = 18 + l * 20, sel = l == ui.lane;
         if (sel)                                /* the keys' lane */
             cv_rect(0, y + 1, 240, 17, K_PANEL);
@@ -5482,7 +5506,7 @@ static void draw_seq(void)
         }
         for (s = 0; s < 16; s++) {
             int32_t x = 44 + s * 12;
-            int on = (int)(bits >> s & 1u), cur = en_playing && s == (int)en_lane_pos[l] && en_pat_now == pat;
+            int on = (int)(bits >> s & 1u), cur = en_playing && s == (int)en_lane_pos[l];
             if (s >= proj.par[P_LLEN + l])        /* past the lane's end: dimmed, not played */
                 on = on ? -1 : 0;
             if (cur)
@@ -5891,7 +5915,7 @@ static void draw_perf(void)
             const int muted = (ui.trk_m >> i & 1u) || (i < 4 && (ui.fx_mask >> (FX_MUTE_KICK + i) & 1u));
             const int soloed = ui.trk_s >> i & 1u, dim = muted || (ui.trk_s && !soloed);
             const uint16_t tc = i == 0 ? LANE_COL(0) : i == 1 ? LANE_COL(3) : i == 2 ? LANE_COL(1) : i == 3 ? LANE_COL(5) :
-                                i == 4 ? K_BASS : i == 5 ? K_ACID : i == 7 ? KC_COLOR : K_PAD;
+                                i == 4 ? K_BASS : i == 5 ? K_ACID : i == 7 ? IMP_TEAL : K_PAD;
             float lvl = i == EN_TR_DRONE ? en_bass_level : i == EN_TR_ACID ? en_acid_level : i == EN_TR_PAD ? en_pad_level :
                         i == EN_TR_PLUCK ? en_cm_level : en_drum_glow[LN[i]];
             const int n = dim ? 0 : (int)(fm_clampf(lvl, 0.0f, 1.0f) * 8.0f + 0.5f);
@@ -5950,7 +5974,7 @@ static void draw_perf(void)
         lvl = lvl > 1.0f ? 1.0f : lvl;
         h = (int32_t)(lvl * 24.0f);
         const uint16_t tc = i == 0 ? LANE_COL(0) : i == 1 ? LANE_COL(3) : i == 2 ? LANE_COL(1) : i == 3 ? LANE_COL(5) :
-                            i == 4 ? K_BASS : i == 5 ? K_ACID : i == 7 ? KC_COLOR : K_PAD;
+                            i == 4 ? K_BASS : i == 5 ? K_ACID : i == 7 ? IMP_TEAL : K_PAD;
         cv_round(x, 46, 27, 38, 3, soloed ? tc : K_PANEL);
         if (!dim && h > 0)
             cv_rect(x + 3, 78 - h, 21, h, soloed ? K_BG : tc);
@@ -6702,7 +6726,7 @@ static void draw_scope(int kind)
         if (LOOK_CONSOLE) {                      /* (0.17.12) a strip a lane: its name in its colour, the hits in beats of four (added: bright; taken out: a dash), the step
                                                   * playing lit; where it plays from as a chip (= the piece's pattern, P2 its own), its density as a meter (the tick: 50) */
             for (l = 0; l < EN_NLANE; l++) {
-                const int src = proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now, dens = proj.par[P_DENS + l];
+                const int src = play_src(l), dens = proj.par[P_DENS + l];
                 const uint16_t wr = en_pats[src][l], pl = en_lane_mask(l, src, dens), lc = LANE_COL(l);
                 const int32_t y = 20 + l * 18, sel = l == (int)ui.lane, own = proj.par[P_LSRC + l] != 0;
                 char tx[4];
@@ -6733,7 +6757,7 @@ static void draw_scope(int kind)
             return;
         }
         for (l = 0; l < EN_NLANE; l++) {
-            const int src = proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now, dens = proj.par[P_DENS + l];
+            const int src = play_src(l), dens = proj.par[P_DENS + l];
             const uint16_t wr = en_pats[src][l], pl = en_lane_mask(l, src, dens);
             const int32_t y = 22 + l * 17, sel = l == (int)ui.lane;
             char tx[6];
@@ -6766,7 +6790,7 @@ static void draw_scope(int kind)
         static const uint8_t RV[8][6] = {{9, 0, 0, 0, 0, 0}, {9, 7, 0, 0, 0, 0}, {9, 7, 5, 0, 0, 0}, {9, 7, 5, 4, 0, 0},
                                          {9, 8, 7, 6, 5, 4}, {3, 9, 0, 0, 0, 0}, {4, 6, 9, 0, 0, 0}, {3, 5, 7, 9, 0, 0}};   /* and their heights */
         static const uint8_t LH[4] = {36, 12, 22, 46};                                    /* a level's height */
-        const int l = ui.lane % EN_NLANE, src = proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now;
+        const int l = ui.lane % EN_NLANE, src = play_src(l);
         const uint16_t pl = en_lane_mask(l, src, proj.par[P_DENS + l]);
         int s;
         char tx[24];
@@ -7071,7 +7095,7 @@ static void draw_scope(int kind)
     if (kind == SCOPE_CMSTEP) {                  /* the pluck steps: the line, a bar a step (its height the rung), the accent bright, a soft one dim; the step chosen framed */
         int s;
         char tx[24];
-        sc_title("PLUCK STEPS", KC_COLOR);
+        sc_title("PLUCK STEPS", IMP_TEAL);
         sc_sub(proj.par[P_CM_LOCK] ? "FROZEN" : "FREE: DEJA VU'S LOOP", proj.par[P_CM_LOCK] ? K_ACC : K_DIM);
         {   /* the roll: a step's height its rung, an accent taller, a soft one dim (0.17.9) */
             int16_t pit[16];
@@ -7080,7 +7104,7 @@ static void draw_scope(int kind)
                 pit[s] = (int16_t)en_cm_rung[s];
                 lv[s] = (uint8_t)(en_cm_lvl[s] & 3);
             }
-            step_roll(22, 86, KC_COLOR, pit, lv, 0, 16, ui.pstp & 15, en_playing ? (int)en_cm_pos : -1, 0, 0);
+            step_roll(22, 86, IMP_TEAL, pit, lv, 0, 16, ui.pstp & 15, en_playing ? (int)en_cm_pos : -1, 0, 0);
         }
         {
             static const char *const LN[4] = {"REST", "SOFT", "NOTE", "ACCENT"};
@@ -7105,7 +7129,7 @@ static void draw_scope(int kind)
         static const uint8_t TRK[6] = {0x40, 0x10, 0x20, 0x80, 0x0F, 0};
         const uint8_t lv[5] = {(uint8_t)proj.par[P_PAD], (uint8_t)proj.par[P_BASS], (uint8_t)proj.par[P_ACID], (uint8_t)proj.par[P_CM_LVL], (uint8_t)proj.par[P_PULSE]};
         float live[6], dg = 0.0f;
-        const uint16_t C[6] = {K_PAD, K_BASS, K_ACID, KC_COLOR, RGB(255, 160, 60), K_ACC};
+        const uint16_t C[6] = {K_PAD, K_BASS, K_ACID, IMP_TEAL, RGB(255, 160, 60), K_ACC};
         int k, d;
         for (d = 0; d < EN_NLANE; d++)
             dg = fm_maxf(dg, en_drum_glow[d]);
@@ -7673,7 +7697,7 @@ static void console_home(void)
                 if (v == LK_DRUMS) {
                     int l;
                     for (l = 0; l < EN_NLANE && l < 6; l++)
-                        if (en_pats[en_pat_now % EN_NPAT][l] >> (((int)en_drum_pos + d) & 15) & 1u)
+                        if ((d == 0 && en_playing ? en_played[l] : lane_plan(l)) >> (((int)en_drum_pos + d) & 15) & 1u)
                             cv_rect(sx + 3 + l * 6, y, 4, 3, nc);
                 } else {
                     int acc, n = lk_note(v, d, &acc);
@@ -7898,16 +7922,16 @@ static void console_voice(int v)
                 cv_rect(8, 132, f, 3, col);
         }
     } else if (v == LK_DRUMS) {                  /* the drums: six lanes by sixteen steps, the lane's name lit by its hit */
-        const int p = en_pat_now % EN_NPAT;
         int l, s;
         for (l = 0; l < EN_NLANE && l < 6; l++) {
             const int32_t y = 42 + l * 16;
+            const uint16_t bits = lane_now(l);
             char ln[8];
             caps(ln, EN_LANE_NAME[l], 5);
             cv_text(6, y - 3, &FONT_XS, ln, mix(K_DIM, K_TEXT, q16(fm_clampf(en_drum_glow[l], 0.0f, 1.0f))));
             for (s = 0; s < 16; s++) {
                 const int32_t x = 36 + s * 9;
-                const int hit = (int)(en_pats[p][l] >> s & 1u), now = en_playing && s == (int)en_drum_pos;
+                const int hit = (int)(bits >> s & 1u), now = en_playing && s == (int)en_drum_pos;
                 const int lvl = en_mod[l][s] >> 6 & 3;
                 cv_rect(x, y, 8, 12, hit ? (now ? K_TEXT : lvl == 3 ? K_ACC : lvl == 1 ? mix(K_PANEL, col, 8) : col) : now ? K_LINE : mix(K_PANEL, K_LINE, s % 4 ? 6 : 12));
             }
@@ -7944,7 +7968,7 @@ static void console_seq(void)
         }
         for (l = 0; l < EN_NLANE && l < 6; l++) {
             const int32_t x = 20 + l * 36;
-            if (en_pats[p % EN_NPAT][l] >> s & 1u) {
+            if (en_pats[seq_src(l)][l] >> s & 1u) {
                 const uint8_t m = en_mod[l][s];
                 const int lvl = m >> 6 & 3, rat = m & 7;
                 const uint16_t c = lvl == 3 ? K_ACC : K_PULSE;
@@ -8173,7 +8197,7 @@ static void draw_main(void)
         return;
     }
     for (i = 0; i < EN_NLANE; i++)
-        h = hash(h, en_pats[ui.view == V_SEQ ? seq_pat() : en_pat_now][i] | (uint32_t)q16(en_drum_glow[i]) << 16);
+        h = hash(h, (ui.view == V_SEQ ? en_pats[seq_src(i)][i] : lane_now(i)) | (uint32_t)q16(en_drum_glow[i]) << 16);
     h = hash(h, en_drum_pos | (uint32_t)en_pat_now << 8 | (uint32_t)en_pat_next << 12 | (uint32_t)en_pulse_rest << 16 |
                     (uint32_t)ui.view << 20);
     if (ui.view == V_SEQ) {
@@ -8620,12 +8644,12 @@ static void leds(void)
                 k |= 1u << WHITE_KEY[i];
     } else if (ui.view == V_STEPS) {             /* the steps: the step chosen lit, the lane's hits dim among them (the playhead too) */
         const int l = ui.lane % EN_NLANE;
-        const uint16_t pl = en_lane_mask(l, proj.par[P_LSRC + l] ? proj.par[P_LSRC + l] - 1 : en_pat_now, proj.par[P_DENS + l]);
+        const uint16_t pl = en_lane_mask(l, play_src(l), proj.par[P_DENS + l]);
         for (i = 0; i < 16; i++)
             if ((i == (uint32_t)(ui.stp & 15u)) || ((pl >> i & 1u) ^ (uint32_t)(en_playing && i == en_lane_pos[l])))
                 k |= 1u << WHITE_KEY[i];
     } else if (ui.view == V_SEQ) {               /* the sequencer: the lane's hits on the white keys, the playhead */
-        uint16_t bits = en_pats[seq_pat()][ui.lane];
+        uint16_t bits = en_pats[seq_src(ui.lane)][ui.lane];
         for (i = 0; i < 16; i++)
             if ((bits >> i & 1u) ^ (uint32_t)(en_playing && i == en_drum_pos))
                 k |= 1u << WHITE_KEY[i];

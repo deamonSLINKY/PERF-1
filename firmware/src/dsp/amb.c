@@ -2730,6 +2730,26 @@ static int song_pool(void)                      /* the piece's patterns that dif
     return n;
 }
 static int song_on(void) { return en_song && !par[P_DD_CHANGE] && !par[P_DD_MUTATE] && song_pool() > 1; }
+/* THE SONG KEEPS ITS FEEL (0.17.24, the maker's jam on W02: the song walked from four on the floor into the genre's half-time pattern; 88 of the 190
+ * pieces had a pattern of another feel among the four). A pattern's feel: the kick on every beat or not, and the backbeat (the snare or the clap on
+ * 2 and 4, or on 3). When the song (not the player) has moved to a pattern whose feel is not pattern 0's, its kick, snare and clap lanes play
+ * pattern 0's, and only the hats, the open hat and the perc move on. */
+static uint8_t song_auto;                        /* the pattern is the song's move, not the player's choice */
+static int song_feel_ok(int p)
+{
+    const int f0 = bits16(en_pats[0][L_KICK] & 0x1111u) == 4, f = bits16(en_pats[p][L_KICK] & 0x1111u) == 4;
+    const uint32_t b0 = (en_pats[0][L_SNARE] | en_pats[0][L_CLAP]) & 0x1110u, b = (en_pats[p][L_SNARE] | en_pats[p][L_CLAP]) & 0x1110u;
+    return f == f0 && (b == b0 || !b || !b0);
+}
+static uint8_t lane_src_of(int l)               /* the pattern a lane plays from the bar: its own (P_LSRC), the song's anchor, or the one playing */
+{
+    if (par[P_LSRC + l])
+        return (uint8_t)(par[P_LSRC + l] - 1);
+    if (song_auto && l <= L_CLAP && pat_now != 0 && song_on() && !song_feel_ok(pat_now))
+        return 0;
+    return (uint8_t)pat_now;
+}
+volatile uint16_t en_played[EN_NLANE];          /* each lane's steps as they sounded, the last sixteen (fills, ghosts, breaks, chances: what the UI shows) */
 /* THE ARRANGEMENT (0.17.16, the song-length audit: pluck, bass, acid and drums all played in 97% of bars, nothing ever left and came back). With Song,
  * each phrase (the genre's SONG_BARS, from one pattern change to the next; never the first) may rest the pluck or the acid, or both, for its first or
  * second half (ARR_AMT: percent of phrases), and the bass may sit out the fill bar before a change and land on its one (ARR_BOUT). The pad always plays.
@@ -2871,6 +2891,7 @@ static void dd_bar(void)                        /* at each bar line, before the 
         if (chg) {
             pat_next = nb;
             par[P_PATTERN] = (int16_t)nb;
+            song_auto = (uint8_t)song;           /* (the song's move: its feel is kept) */
             en_dd_changes++;
         }
         if (par[P_DD_MUTATE])
@@ -3851,7 +3872,7 @@ static void tick(void)
         slice_perm = (uint8_t)(par[P_SLICE] == 9 ? (bars % 4u == 3u ? 1 + irand(8) : 0) : par[P_SLICE]);
         pat_now = pat_next;                     /* a new pattern: on the bar */
         for (l = 0; l < EN_NLANE; l++)          /* each lane's own source, from this bar */
-            en_lane_src[l] = lane_src[l] = (uint8_t)(par[P_LSRC + l] ? par[P_LSRC + l] - 1 : pat_now);
+            en_lane_src[l] = lane_src[l] = lane_src_of(l);
         if (tb && bars % (uint32_t)tb == 0u)
             bass.env_up = 1;                    /* the drone's envelope: every 1 .. 8 bars */
         bars++;
@@ -3979,6 +4000,7 @@ static void tick(void)
             vel *= 1.0f - 0.2f * hm * frand();
             push += (int32_t)(frand() * hm * 0.12f * step_len);
         }
+        en_played[l] = (uint16_t)(hit ? en_played[l] | 1u << (ls & 15) : en_played[l] & ~(1u << (ls & 15)));
         if (hit && (l == L_HAT || l == L_OHAT))
             lk_hat = 1;
         if (hit && l == L_PERC)
@@ -4553,6 +4575,7 @@ static void apply(int p, int v)
     case P_SWING: swing = (float)v * 0.005f; break;   /* the off sixteenths up to half a step late */
     case P_PATTERN:                              /* waits for the bar (now, while stopped) */
         pat_next = v;
+        song_auto = 0;                           /* (the player's choice: played as it is) */
         if (!en_playing)
             pat_now = v;
         drum_publish();
@@ -4944,8 +4967,11 @@ static void play_start(int from_top)
         chain_i = 0;
         slice_perm = 0;
         pat_now = pat_next;
-        for (i = 0; i < EN_NLANE; i++)
-            en_lane_src[i] = lane_src[i] = (uint8_t)(par[P_LSRC + i] ? par[P_LSRC + i] - 1 : pat_now);
+        song_auto = 0;
+        for (i = 0; i < EN_NLANE; i++) {
+            en_lane_src[i] = lane_src[i] = lane_src_of(i);
+            en_played[i] = 0;
+        }
         pad_lfo.ph = drone_lfo.ph = 0.0f;
     }
     pulse_left = 0.0f;
@@ -5330,8 +5356,12 @@ static void flx_tick(int st)                    /* on every sixteenth */
  * the sounds that go on (horns, sirens, the dub siren, the riser, the roll) sound as long as the key is down; the others play out. One shot: every one plays
  * out (the long ones for at most a second or so). Pitch: the page's octave, up or down. Echo: how much of them goes to the echo and the reverb. Level. */
 enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL, DJ_BLAST, DJ_RAVE, DJ_RSTAB };
+/* (0.17.24, the snips pass: each one measured alone; their levels were 25 dB apart, every pitched one a fixed B flat, all mono, the crash, the roll and the
+ * riser mostly hiss.) Now: the pitched ones take the chord playing (dj_note), each has its own trim (DJ_TRIM, from the measure: within 2 dB of each other),
+ * the horns, the sirens, the rave horn, the stabs, the crash, the riser and the roll have a side (left and right differ; in mono it cancels), and the air
+ * horns, the rave horn, the crash, the roll, the riser and the bell are remade. HORN MIN's key is a chord stab now (the chord playing, in saws). */
 static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] = {
-    {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 466.0f, 0.0f, "AIR BLAST"}, {DJ_HORN, 466.0f, 1.0f, "HORN MIN"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
+    {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 466.0f, 0.0f, "AIR BLAST"}, {DJ_STAB, 233.0f, 0.0f, "CHORD STAB"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
     {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_SIREN, 700.0f, 0.4f, "SIREN 3"},
     {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_LASER, 1400.0f, 0.1f, "LASER LO"},
     {DJ_ZAP, 3000.0f, 0.15f, "ZAP"}, {DJ_ZAP, 6000.0f, 0.08f, "ZAP HI"},
@@ -5339,13 +5369,50 @@ static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] =
     {DJ_WHOOP, 300.0f, 0.35f, "WHOOP"}, {DJ_WHOOP, 800.0f, 0.6f, "WHOOP 2"},
     {DJ_DUB, 1400.0f, 0.9f, "DUB SIREN"}, {DJ_DUB, 900.0f, 1.6f, "DUB LOW"},
     {DJ_DROP, 140.0f, 1.2f, "DROP"}, {DJ_DROP, 100.0f, 2.4f, "DROP LONG"},
-    {DJ_RISER, 0.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 0.9f, "CRASH"},
+    {DJ_RISER, 110.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 1.2f, "CRASH"},
     {DJ_RSTAB, 233.0f, 0.0f, "RAVE STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
+/* each snip's trim, half dB (+ louder), so that each sits at the same loudness (its loudest 400 ms, K-weighted): measured alone (0.17.24) */
+static const int8_t DJ_TRIM[27] = {-12, -11, 1, -14, -11, -11, -9, 3, 4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, 14, -4, -7, 6};
 const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
-typedef struct { uint8_t on, held, key, type, hold_mode; float hz, aux, t, ph, ph2, ph3, env, z, z2; uint32_t age; } dj_t;
+typedef struct { uint8_t on, held, key, type, hold_mode; float hz, aux, aux2, t, ph, ph2, ph3, ph4, env, z, z2, zs, zs2, g; uint32_t age; } dj_t;
 static dj_t djv[4];
 static uint32_t dj_age;
 volatile uint8_t en_smp_active;                 /* the snips sounding */
+
+/* a pitched snip in key: the nearest note (within a tritone) that is a tone of the chord playing (its root only, for the horns and the stabs), in the
+ * piece's tuning; and the chord's third and fifth above it as ratios (the horns' and the stab's other notes; a diminished fifth is played perfect) */
+static float dj_note(float hz, int root_only, float *third, float *fifth)
+{
+    const int n0 = 69 + (int)fm_floorf(12.0f * fm_log2f(hz * (1.0f / 440.0f)) + 0.5f);
+    const int nt = chord_nt > 0 ? chord_nt : 0, r = nt ? chord_pcs[0] % 12 : par[P_ROOT] % 12;
+    int d, k, best = 0, iv3 = 4, iv5 = 7;
+    for (d = 0; d <= 6; d++) {
+        int ok = 0, s;
+        for (s = -1; s <= 1 && !ok; s += 2) {
+            const int pc = ((n0 + s * d) % 12 + 12) % 12;
+            if (pc == r)
+                ok = 1;
+            for (k = 1; k < nt && !root_only && !ok; k++)
+                ok = pc == chord_pcs[k] % 12;
+            if (ok)
+                best = s * d;
+            if (!d)
+                break;
+        }
+        if (ok)
+            break;
+    }
+    if (nt >= 3) {
+        iv3 = (chord_pcs[1] - chord_pcs[0] + 24) % 12;
+        iv5 = (chord_pcs[2] - chord_pcs[0] + 24) % 12;
+        iv5 = iv5 == 6 || iv5 < 5 ? 7 : iv5;
+    }
+    if (third)
+        *third = fm_exp2f((float)iv3 * (1.0f / 12.0f));
+    if (fifth)
+        *fifth = fm_exp2f((float)iv5 * (1.0f / 12.0f));
+    return 440.0f * fm_exp2f(((float)(n0 + best - 69) + 0.01f * (float)par[P_TUNE]) * (1.0f / 12.0f));
+}
 
 static void smp_note(int key, int on)
 {
@@ -5371,40 +5438,54 @@ static void smp_note(int key, int on)
     }
     {
         dj_t *d = &djv[v];
-        const int oct = fxs_v[EN_FXS_SM_MODE];
+        const int oct = fxs_v[EN_FXS_SM_MODE], ty = DJS[key].type;
+        float hz = DJS[key].hz * (oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f), r3 = 1.26f, r5 = 1.498f;
         d->on = 1;
         d->held = 1;
         d->key = (uint8_t)key;
-        d->type = DJS[key].type;
+        d->type = (uint8_t)ty;
         d->hold_mode = fxs_v[EN_FXS_SM_LOOP] != 0;
-        d->hz = DJS[key].hz * (oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f);
         d->aux = DJS[key].aux;
-        d->t = d->ph = d->ph2 = d->ph3 = d->env = d->z = d->z2 = 0.0f;
+        if (ty == DJ_HORN || ty == DJ_BLAST || ty == DJ_STAB || ty == DJ_RAVE || ty == DJ_RSTAB || ty == DJ_RISER) {
+            hz = dj_note(hz, 1, &r3, &r5);
+            if (ty == DJ_HORN || ty == DJ_BLAST || ty == DJ_STAB)
+                d->aux = r3;
+        } else if (ty == DJ_SIREN || ty == DJ_BEEP || ty == DJ_DBL || ty == DJ_WHOOP || ty == DJ_DUB || ty == DJ_BELL) {
+            hz = dj_note(hz, 0, 0, 0);
+        }
+        d->hz = hz;
+        d->aux2 = r5;
+        d->g = fm_exp2f(0.0830482f * (float)DJ_TRIM[key]);   /* (half dB: 2^(h/12.04)) */
+        d->t = d->ph = d->ph2 = d->ph3 = d->ph4 = d->env = d->z = d->z2 = d->zs = d->zs2 = 0.0f;
         d->age = ++dj_age;
     }
 }
 
 static inline float dj_wrap(float p) { return p - (float)(int)p; }
-/* one sample of a voice: its signal and its own envelope; it ends itself (on = 0) when its sound is over */
-static float dj_voice(dj_t *v, float *amp)
+static inline float dj_pulse(float ph, float w, float inc) { return blep_saw(ph, inc) - blep_saw(dj_wrap(ph + w), inc); }
+/* one sample of a voice: its middle (returned), its side (*side: left gets + it, right - it), its own envelope (*amp); it ends itself (on = 0) */
+static float dj_voice(dj_t *v, float *amp, float *side)
 {
     const float t = v->t * (1.0f / EN_SR), inc = v->hz * (1.0f / EN_SR), n = frand() * 2.0f - 1.0f;
-    float y = 0.0f, a = 1.0f;
+    float y = 0.0f, a = 1.0f, s = 0.0f;
     switch (v->type) {
-    case DJ_HORN: case DJ_BLAST: {              /* AN AIR HORN (held, or a short blast): three reeds (a chord: the minor one for aux 1), each a pulse (two band-limited saws
-                                                 * offset 40%), a free octave on the root, the pitch scooping up into the note and running out of air, a noise blat at the
-                                                 * start, an asymmetric clip and a bright resonance (a state-variable filter near 2 kHz): the structure is from the research
-                                                 * (research/audit/horns.md), the numbers are first guesses to tune by ear */
+    case DJ_HORN: case DJ_BLAST: {              /* AN AIR HORN (held, or a short blast): three reeds on the chord playing (root, its third, its fifth), each a pulse
+                                                 * (two band-limited saws offset 40%), a free octave on the root, the pitch scooping up into the note and running out
+                                                 * of air, a noise blat at the start, an asymmetric clip and a resonance (research/audit/horns.md). 0.17.24: the
+                                                 * resonance lower and gentler (it put a quarter of the sound in the ear's sharpest band, 2-5 kHz), the reeds a
+                                                 * little further apart, the third to the left and the fifth to the right */
         const int bl = v->type == DJ_BLAST;
-        const float r2 = v->aux > 0.5f ? 1.189f : 1.26f, e1 = fm_expf(-t * 30.0f);
+        const float r2 = v->aux > 1.0f ? v->aux : 1.26f, r3 = v->aux2 > 1.0f ? v->aux2 : 1.498f, e1 = fm_expf(-t * 30.0f);
         const float tl = t > 0.30f ? (t - 0.30f) * 4.0f : 0.0f, tail = tl > 1.0f ? 1.0f : tl;   /* the blast's air dying */
         float sc = (1.0f - 0.06f * e1) * (1.0f + 0.0015f * sine(dj_wrap(t * 6.3f)));
-        float x, u, hp, f;
+        float x, u, hp, f, a2, a3;
         sc *= bl ? 1.0f - 0.05f * tail * tail : 1.0f - 0.012f * (1.0f - fm_expf(-t * 0.7f));
         {
-            const float i1 = inc * sc * 0.9965f, i2 = inc * r2 * sc, i3 = inc * 1.498f * sc * 1.0035f;
-            x = (blep_saw(v->ph, i1) - blep_saw(dj_wrap(v->ph + 0.4f), i1)) + (blep_saw(v->ph2, i2) - blep_saw(dj_wrap(v->ph2 + 0.4f), i2)) * 0.9f +
-                (blep_saw(v->ph3, i3) - blep_saw(dj_wrap(v->ph3 + 0.4f), i3)) * 0.85f + blep_saw(dj_wrap(v->ph * 2.0f), 2.0f * i1) * 0.25f;
+            const float i1 = inc * sc * 0.9955f, i2 = inc * r2 * sc * 1.0025f, i3 = inc * r3 * sc * 1.0045f;
+            const float p1 = dj_pulse(v->ph, 0.4f, i1);
+            a2 = dj_pulse(v->ph2, 0.4f, i2);
+            a3 = dj_pulse(v->ph3, 0.4f, i3);
+            x = p1 + a2 * 0.9f + a3 * 0.85f + blep_saw(dj_wrap(v->ph * 2.0f), 2.0f * i1) * 0.25f;
             v->ph = dj_wrap(v->ph + i1);
             v->ph2 = dj_wrap(v->ph2 + i2);
             v->ph3 = dj_wrap(v->ph3 + i3);
@@ -5413,11 +5494,13 @@ static float dj_voice(dj_t *v, float *amp)
         x *= 0.33f;
         u = 2.4f * x + 0.25f;
         x = u / (1.0f + fm_fabsf(u)) - 0.2f;
-        f = 0.26f + 0.06f * (1.0f - e1) - (bl ? 0.14f * tail : 0.0f);
+        f = 0.20f + 0.05f * (1.0f - e1) - (bl ? 0.10f * tail : 0.0f);   /* (~1.4 .. 1.8 kHz; it was ~1.8 .. 2.2) */
         v->z += f * v->z2;
-        hp = x - v->z - 0.45f * v->z2;
+        hp = x - v->z - 0.7f * v->z2;
         v->z2 += f * hp;
-        y = 0.35f * x + 0.45f * v->z + 1.1f * v->z2;
+        y = 0.55f * x + 0.5f * v->z + 0.75f * v->z2;
+        v->zs += 0.25f * ((a2 - a3) * 0.33f - v->zs);   /* the side: the third against the fifth, softened */
+        s = 0.5f * v->zs;
         if (bl) {
             a = (t < 0.006f ? t * 166.0f : 1.0f) * (t < 0.32f ? 1.0f : fm_expf(-(t - 0.32f) * 12.0f));
             if (t > 0.9f)
@@ -5427,38 +5510,72 @@ static float dj_voice(dj_t *v, float *amp)
         }
         break;
     }
-    case DJ_RAVE: case DJ_RSTAB: {              /* THE RAVE HORN (the hoover, held, or a stab): two pulse-width-modulated pulses detuned either way, a square sub-octave,
-                                                 * the pitch diving from above into the note, a low-pass whose cutoff falls fast, and grit */
+    case DJ_RAVE: case DJ_RSTAB: {              /* THE RAVE HORN (the hoover, held, or a stab). 0.17.24, remade (it was two voices under a filter that closed to a
+                                                 * muffle): three saws (two of them pulse-width-modulated, out to the left and the right, the third in the middle)
+                                                 * and a square sub-octave; the pitch swoops in from a fourth above, dips under the note and comes back up (the
+                                                 * hoover's bend); a low-pass that stays open, and grit */
         const int st = v->type == DJ_RSTAB;
-        const float e1 = fm_expf(-t * (st ? 28.0f : 14.0f)), sc = 1.0f + (st ? 0.35f : 0.50f) * e1, lr = st ? 7.0f : 4.6f;
-        const float i1 = inc * sc * 1.0105f, i2 = inc * sc * 0.9895f;
-        const float w1 = 0.50f + 0.28f * sine(dj_wrap(t * lr)), w2 = 0.50f - 0.28f * sine(dj_wrap(t * lr + 0.25f));
-        float x, hp, u;
-        const float f = st ? 0.08f + 0.45f * fm_expf(-t * 18.0f) : 0.10f + 0.40f * fm_expf(-t * 9.0f);
-        x = (blep_saw(v->ph, i1) - blep_saw(dj_wrap(v->ph + w1), i1)) + (blep_saw(v->ph2, i2) - blep_saw(dj_wrap(v->ph2 + w2), i2)) +
-            0.7f * (blep_saw(v->ph3, i1 * 0.5f) - blep_saw(dj_wrap(v->ph3 + 0.5f), i1 * 0.5f));
+        const float tt = st ? t * 2.0f : t, e1 = fm_expf(-t * (st ? 18.0f : 7.0f)), lr = st ? 7.0f : 4.6f;
+        float sem, sc, i1, i2, i3, w1, w2, p1, p2, x, hp, u, f;
+        if (tt < 0.12f) {
+            const float q = tt * (1.0f / 0.12f);
+            sem = 5.0f - 6.0f * q * (2.0f - q);
+        } else if (tt < 0.32f) {
+            const float q = (tt - 0.12f) * 5.0f;
+            sem = -1.0f + q * q * (3.0f - 2.0f * q);
+        } else {
+            sem = 0.0f;
+        }
+        sc = fm_exp2f(sem * (1.0f / 12.0f));
+        i1 = inc * sc * 1.012f, i2 = inc * sc * 0.988f, i3 = inc * sc;
+        w1 = 0.50f + 0.28f * sine(dj_wrap(t * lr)), w2 = 0.50f - 0.28f * sine(dj_wrap(t * lr + 0.25f));
+        p1 = dj_pulse(v->ph, w1, i1);
+        p2 = dj_pulse(v->ph2, w2, i2);
+        x = 0.8f * (p1 + p2) + 0.9f * blep_saw(v->ph3, i3) + 0.6f * dj_pulse(v->ph4, 0.5f, i3 * 0.5f);
         v->ph = dj_wrap(v->ph + i1);
         v->ph2 = dj_wrap(v->ph2 + i2);
-        v->ph3 = dj_wrap(v->ph3 + i1 * 0.5f);
-        x *= 0.4f;
+        v->ph3 = dj_wrap(v->ph3 + i3);
+        v->ph4 = dj_wrap(v->ph4 + i3 * 0.5f);
+        x *= 0.35f;
+        f = st ? 0.22f + 0.40f * e1 : 0.34f + 0.22f * e1;   /* (open: ~2.4 kHz held; it fell to ~0.7 kHz) */
         v->z += f * v->z2;
-        hp = x - v->z - 0.5f * v->z2;
+        hp = x - v->z - 0.6f * v->z2;
         v->z2 += f * hp;
-        u = 3.0f * v->z;
-        y = u / (1.0f + fm_fabsf(u)) * 1.4f;
+        u = 2.2f * v->z;
+        y = u / (1.0f + fm_fabsf(u)) * 1.3f;
+        v->zs += f * 0.6f * ((p1 - p2) * 0.35f - v->zs);
+        s = 0.9f * v->zs;
         if (st) {
-            a = (t < 0.003f ? t * 333.0f : 1.0f) * fm_expf(-t * 9.0f);
-            if (t > 0.45f)
+            a = (t < 0.003f ? t * 333.0f : 1.0f) * fm_expf(-t * 7.0f);
+            if (t > 0.55f)
                 v->on = 0;
         } else {
             a = t * 200.0f < 1.0f ? t * 200.0f : 1.0f;
         }
         break;
     }
-    case DJ_SIREN: {                            /* a sine swept up and down */
+    case DJ_STAB: {                             /* THE CHORD STAB (0.17.24, back on a key): three saws on the chord playing, a filter closing, the third left, the fifth right */
+        const float k = 0.5f * fm_expf(-t * 6.0f) + 0.04f, r2 = v->aux > 1.0f ? v->aux : 1.189f, r3 = v->aux2 > 1.0f ? v->aux2 : 1.498f;
+        const float s1 = blep_saw(v->ph, inc), s2 = blep_saw(v->ph2, inc * r2), s3 = blep_saw(v->ph3, inc * r3);
+        y = (s1 + s2 + s3 + 0.5f * blep_saw(v->ph4, inc * 0.5f)) * 0.4f;
+        v->ph = dj_wrap(v->ph + inc);
+        v->ph2 = dj_wrap(v->ph2 + inc * r2);
+        v->ph3 = dj_wrap(v->ph3 + inc * r3);
+        v->ph4 = dj_wrap(v->ph4 + inc * 0.5f);
+        v->z += k * (y - v->z);
+        y = v->z;
+        v->zs += k * ((s2 - s3) * 0.25f - v->zs);
+        s = v->zs;
+        a = fm_expf(-t * 7.0f);
+        if (t > 0.7f)
+            v->on = 0;
+        break;
+    }
+    case DJ_SIREN: {                            /* a sine swept up and down; the side a quarter turn on (left and right apart, nothing lost in mono) */
         const float lf = dj_wrap(t * v->aux), tri = lf < 0.5f ? lf * 4.0f - 1.0f : 3.0f - lf * 4.0f;
         v->ph = dj_wrap(v->ph + inc * (1.0f + 0.5f * tri));
         y = 0.6f * sine(v->ph) + 0.25f * sine(dj_wrap(v->ph * 2.0f));
+        s = 0.3f * sine(dj_wrap(v->ph + 0.25f));
         break;
     }
     case DJ_LASER:                              /* a fast fall in pitch, hard-edged */
@@ -5478,11 +5595,12 @@ static float dj_voice(dj_t *v, float *amp)
             v->on = 0;
         break;
     }
-    case DJ_BEEP: case DJ_DBL: {
+    case DJ_BEEP: case DJ_DBL: {                /* (0.17.24: the gate eased over half a millisecond, not a step) */
         const float ln = v->aux, g1 = t < ln ? 1.0f : 0.0f, g2 = v->type == DJ_DBL && t > ln * 1.9f && t < ln * 2.9f ? 1.0f : 0.0f;
         v->ph = dj_wrap(v->ph + inc);
         y = sine(v->ph) * 0.7f;
-        a = g1 + g2;
+        v->z += 0.05f * (g1 + g2 - v->z);
+        a = v->z;
         if (t > ln * 3.2f)
             v->on = 0;
         break;
@@ -5511,11 +5629,18 @@ static float dj_voice(dj_t *v, float *amp)
         if (t > v->aux * 2.0f)
             v->on = 0;
         break;
-    case DJ_RISER: {                            /* noise, brighter and louder over its time */
-        const float u = fm_minf(t / v->aux, 1.0f);
-        v->z += (0.03f + 0.9f * u * u) * (n - v->z);
-        y = v->z * 3.0f;
-        a = 0.08f + 0.9f * u * u;
+    case DJ_RISER: {                            /* THE RISER (0.17.24: louder, and a tone under the noise): noise through a low-pass that opens over its time, and two
+                                                 * saws a hair apart (one each side) rising two octaves from the chord's root, the whole growing */
+        const float u = fm_minf(t / v->aux, 1.0f), fi = inc * fm_exp2f(2.0f * u), k = 0.03f + 0.9f * u * u;
+        const float n2 = frand() * 2.0f - 1.0f, s1 = blep_saw(v->ph, fi), s2 = blep_saw(v->ph2, fi * 1.006f);
+        v->ph = dj_wrap(v->ph + fi);
+        v->ph2 = dj_wrap(v->ph2 + fi * 1.006f);
+        v->z += k * (n - v->z);
+        v->zs += k * (n2 - v->zs);
+        v->z2 += (0.05f + 0.5f * u) * ((s1 + s2) - v->z2);   /* the tone's own low-pass, opening */
+        y = v->z * 2.4f + 0.45f * v->z2;
+        s = v->zs * 1.4f + 0.25f * (s1 - s2);
+        a = 0.15f + 0.85f * u * u;
         break;
     }
     case DJ_REWIND: {                           /* a saw falling away, as a record pulled back */
@@ -5529,49 +5654,63 @@ static float dj_voice(dj_t *v, float *amp)
             v->on = 0;
         break;
     }
-    case DJ_CRASH:
-        v->z += 0.7f * (n - v->z);
-        y = (n - v->z) * 0.9f;                  /* the highs of noise */
-        a = fm_expf(-t / (v->aux * 0.35f));
+    case DJ_CRASH: {                            /* THE CRASH (0.17.24, remade: it was hiss): six square tones at the 808 cymbal's odd ratios and noise, high-passed near
+                                                 * 3 kHz and rounded off above 8: a metal that shimmers and rings; the side is its own noise */
+        static const float CF[6] = {205.3f * 1.7f, 304.4f * 1.7f, 369.6f * 1.7f, 522.7f * 1.7f, 540.0f * 1.7f, 800.0f * 1.7f};
+        float m = 0.0f, hp;
+        int i;
+        for (i = 0; i < 6; i++)
+            m += dj_wrap(v->t * CF[i] * (1.0f / EN_SR)) < 0.5f ? 0.16f : -0.16f;
+        m = m * (0.35f + 0.65f * fm_expf(-t * 2.5f)) + 0.38f * n;
+        v->z += 0.348f * (m - v->z);            /* high-pass ~3 kHz */
+        hp = m - v->z;
+        v->z2 += 0.68f * (hp - v->z2);          /* low-pass ~8 kHz */
+        y = v->z2;
+        {
+            const float n2 = frand() * 2.0f - 1.0f;
+            v->zs += 0.348f * (n2 - v->zs);
+            v->zs2 += 0.68f * ((n2 - v->zs) - v->zs2);
+            s = 0.45f * v->zs2;
+        }
+        a = 0.6f * fm_expf(-t * (1.0f / 0.55f)) + 0.4f * fm_expf(-t * 20.0f);
         if (t > v->aux * 2.0f)
             v->on = 0;
         break;
-    case DJ_STAB: {                             /* three saws a minor chord, a filter closing */
-        const float k = 0.5f * fm_expf(-t * 6.0f) + 0.04f;
-        y = (blep_saw(v->ph, inc) + blep_saw(v->ph2, inc * 1.189f) + blep_saw(v->ph3, inc * 1.498f)) * 0.4f;
-        v->ph = dj_wrap(v->ph + inc);
-        v->ph2 = dj_wrap(v->ph2 + inc * 1.189f);
-        v->ph3 = dj_wrap(v->ph3 + inc * 1.498f);
-        v->z += k * (y - v->z);
-        y = v->z;
-        a = fm_expf(-t * 7.0f);
-        if (t > 0.7f)
-            v->on = 0;
-        break;
     }
-    case DJ_BELL: {
+    case DJ_BELL: {                             /* THE BELL (0.17.24: in tune; its overtones were off the note, a clang): two operators 1:3, the index falling, and a glass partial two octaves up */
         v->ph = dj_wrap(v->ph + inc);
-        v->ph2 = dj_wrap(v->ph2 + inc * 1.4f);
-        y = 0.7f * sine_any(v->ph + 2.0f * fm_expf(-t * 3.0f) * sine(v->ph2));
+        v->ph2 = dj_wrap(v->ph2 + inc * 3.0f);
+        v->ph3 = dj_wrap(v->ph3 + inc * 4.0f);
+        y = 0.65f * sine_any(v->ph + 1.1f * fm_expf(-t * 4.0f) * sine(v->ph2)) + 0.12f * fm_expf(-t * 6.0f) * sine(v->ph3);
         a = fm_expf(-t * 2.2f);
         if (t > 3.0f)
             v->on = 0;
         break;
     }
-    default: {                                  /* a snare roll that speeds up */
-        const float rate = 7.0f + 18.0f * fm_minf(t / v->aux, 1.0f);
-        float bt;
+    default: {                                  /* THE SNARE ROLL (0.17.24, remade: it was hiss and a hum): hits that speed up, each a body (a sine falling from about 330 to
+                                                 * 180 Hz) and a band of noise near 3.5 kHz, the roll getting louder; the side is the noise's own copy */
+        const float u = fm_minf(t / v->aux, 1.0f), rate = 7.0f + 18.0f * u;
+        float bt, ht, ne, hp, n2 = frand() * 2.0f - 1.0f;
         v->ph3 = dj_wrap(v->ph3 + rate * (1.0f / EN_SR));
         bt = v->ph3;
-        v->z += 0.25f * (n - v->z);
-        y = (n - v->z) * 0.9f + 0.3f * sine(dj_wrap(v->ph + 0.0f));
-        v->ph = dj_wrap(v->ph + 190.0f * (1.0f / EN_SR));
-        a = fm_expf(-bt * 7.0f);
+        ht = bt / rate;                         /* seconds into this hit */
+        v->ph = dj_wrap(v->ph + (180.0f + 150.0f * fm_expf(-ht * 40.0f)) * (1.0f / EN_SR));
+        v->z += 0.49f * v->z2;                  /* the noise's band: a state-variable filter at ~3.5 kHz */
+        hp = n - v->z - v->z2;
+        v->z2 += 0.49f * hp;
+        v->zs += 0.49f * v->zs2;
+        hp = n2 - v->zs - v->zs2;
+        v->zs2 += 0.49f * hp;
+        ne = fm_expf(-ht * 22.0f);
+        y = 0.6f * sine(v->ph) * fm_expf(-ht * 30.0f) + 1.1f * v->z2 * ne;
+        s = 0.45f * v->zs2 * ne;
+        a = 0.35f + 0.65f * u;
         break;
     }
     }
     v->t += 1.0f;
-    *amp = a;
+    *amp = a * v->g;
+    *side = s;
     return y;
 }
 
@@ -7097,20 +7236,24 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
         if (!d->on)
             continue;
         for (j = 0; j < n && d->on; j++) {
-            float a, y = dj_voice(d, &a);
+            float a, sd, y = dj_voice(d, &a, &sd);
             const int sustained = d->type == DJ_HORN || d->type == DJ_RAVE || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
             /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
             const int gate = !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
             d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : 0.00025f);
-            y = y * a * d->env * gain * TG(TR_ACID, j);
-            mixl[j] += y;
-            mixr[j] += y;
+            const float k = a * d->env * gain * TG(TR_ACID, j);
+            y *= k;
+            sd *= k;
+            mixl[j] += y + sd;                  /* (the side: left and right apart, nothing of it in mono) */
+            mixr[j] += y - sd;
             rsend[j] += y * ES[ec][0];
             esend[j] += y * ES[ec][1];
             if (sustained && !gate && d->env < 0.003f)
                 d->on = 0;
             d->z = fm_flush(d->z);
             d->z2 = fm_flush(d->z2);
+            d->zs = fm_flush(d->zs);
+            d->zs2 = fm_flush(d->zs2);
         }
         live += d->on;
     }

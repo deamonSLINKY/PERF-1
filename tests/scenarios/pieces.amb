@@ -34,7 +34,9 @@ expect pad_level >5
 turn PRESET -2
 expect piece 0
 expect par0 35
-# a pattern edited in 01 stays 01's: 02's is untouched
+# a pattern edited in 01 stays 01's: 02's is untouched (stopped, so the sequencer edits the pattern chosen; playing, it edits the one playing: 0.17.24)
+tap PLAY
+wait 200
 press SEQ
 wait 500
 release SEQ

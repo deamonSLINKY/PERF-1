@@ -56,6 +56,40 @@ static int run(int g, int pc, int song, int chg, int every, int bars, int *seen)
     return (int)(en_dd_changes - c0);
 }
 
+/* (0.17.24) the song keeps its feel: SYNTHWV 02 walks into pattern 4 (index 3), the genre's half-time beat; its kick, snare and clap must play pattern 1's
+ * (index 0) while its hats move on, and the kick is heard on every beat throughout. Returns 0 when right; *reached: the song got there */
+static int run_feel(int *reached)
+{
+    static int32_t buf[512];
+    int16_t par[P_NPARAMS];
+    uint16_t pool, pats[EN_NPAT][EN_NLANE];
+    int p, l, b, bad = 0;
+    const int g = 13, pc = 1;
+    en_init();
+    en_genre(g);
+    en_piece_g(g, pc, par, &pool);
+    en_piece_pats_g(g, pc, pats);
+    for (p = 0; p < P_NPARAMS; p++)
+        en_set(p, par[p]);
+    en_pool(pool);
+    for (p = 0; p < EN_NPAT; p++)
+        for (l = 0; l < EN_NLANE; l++)
+            en_pats[p][l] = pats[p][l];
+    en_song = 1;
+    en_play(1);
+    *reached = 0;
+    for (b = 0; b < (int)(40.0f * 4.0f * 60.0f / (float)par[P_TEMPO] * 44100.0f / 256.0f); b++) {
+        en_render(buf, 256, 4096);
+        if (en_pat_now == 3) {
+            *reached = 1;
+            bad |= en_lane_src[0] != 0 || en_lane_src[1] != 0 || en_lane_src[2] != 0 || en_lane_src[3] != 3;
+            if (en_lane_pos[0] == 15)            /* a whole bar played: the kick on all four beats */
+                bad |= (en_played[0] & 0x1111u) != 0x1111u;
+        }
+    }
+    return bad;
+}
+
 int main(void)
 {
     int g, pc, multi = 0, total = 0, fails = 0, seen, n, gm = -1, pm = 0;
@@ -84,6 +118,11 @@ int main(void)
     n = run(gm, pm, 1, 2, 1, 40, &seen);                   /* the player's Drum Drift: Random every 4 bars */
     printf("gsong: Song with the player's Drum Drift (Random, 4 bars), 40 bars: %d changes\n", n);
     fails += n < 8;
+    {
+        int reached, bad = run_feel(&reached);
+        printf("gsong: Song keeps its feel (SYNTHWV 02 into its half-time pattern): %s\n", !reached ? "NOT REACHED" : bad ? "WRONG" : "kick, snare, clap kept, hats moved");
+        fails += !reached || bad;
+    }
     printf(fails ? "gsong: FAILED\n" : "gsong: ok\n");
     return fails ? 1 : 0;
 }

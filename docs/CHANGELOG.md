@@ -26,6 +26,16 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **From the maker's jam (0.17.24).**
+  - **Song keeps the beat's feel.** On W02 the song walked from four on the floor into the genre's half-time pattern, and the beat fell apart. Many pieces had a pattern of another feel among their four. Now, when the song moves to a pattern whose kick or backbeat differs from the first one's, the kick, snare and clap stay as they were and only the hats, open hat and perc move on. A pattern you choose yourself plays as it is.
+  - **The drums show what really plays.** Home's drum view shows the steps just played as they sounded (fills, ghosts, the breakdown) and the rest as they will play (the pattern at its density). The drum pages follow the pattern playing, the song's moves included, and while playing an edit goes to the pattern you hear.
+  - **Pluck Steps is blue** like the pluck's other pages (and the pluck's meter on Home and its mix tile).
+- **The DJ snips, gone over (0.17.24).** Each measured alone: their levels were 25 dB apart, every pitched one a fixed B flat, all mono, the crash, the roll and the riser mostly hiss.
+  - **In key**: the horns, the stabs, the rave horn and the riser start on the root of the chord playing (the horns play that chord); the sirens, beeps, whoops, the dub siren and the bell take its nearest note.
+  - **Level matched**: 23 of the 27 now sit within half a dB of each other (four short, sharp ones a few dB under, kept from peaking).
+  - **Wide**: the horns, sirens, stabs, rave horn, crash, riser and roll differ left and right; in mono nothing is lost.
+  - **Remade**: the air horns (less of the piercing 2-5 kHz: from 26% of the sound to 6%), the rave horn (three saws, the hoover's swoop down into the note, the filter left open; it was muffled), the crash (metal tones and noise; it was hiss), the snare roll (a body and a band of noise, getting louder), the riser (a rising tone under the noise, louder) and the bell (in tune).
+  - **CHORD STAB** takes HORN MIN's key (`G3`): the chord playing, in saws.
 - **More from the Reddit player (0.17.23).**
   - **Everything back to factory.** Stopped, on Global, hold SEL + SAVE for 6 s (past the piece's own reset at 1.5 s): every stored piece in every genre goes back to factory, one genre at a time, and the screen says how many. Settings, voices and the set list stay.
   - **One part on by itself, from Perform.** SEL + A#4: the drums' next pattern (from the next bar). SEL + F#4: a new acid line. SEL + F#5: a new pluck line. (SEL + white keys 1-6 already chose a drum pattern.) The SEL card on Perform lists them.

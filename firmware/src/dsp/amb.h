@@ -405,6 +405,7 @@ void en_acid_ans_now(void);                     /* (0.17.22) the acid answers on
 int en_acid_preview(int step, int answer);     /* the acid line's note at a step as the call (answer 0) or an answer (P_AC_RESP's value) would play it, -1: a rest */
 uint16_t en_lane_mask(int lane, int pat, int dens);   /* a lane of pattern pat as it plays at density dens (50: as written; the screen's preview too) */
 extern volatile uint8_t en_lane_src[EN_NLANE]; /* the pattern each lane plays now */
+extern volatile uint16_t en_played[EN_NLANE]; /* each lane's last sixteen steps as they sounded (bit = step; 0.17.24: Home shows what plays) */
 extern volatile uint8_t en_lane_pos[EN_NLANE]; /* each lane's step (its own length: P_LLEN + lane) */
 extern volatile float en_drum_glow[EN_NDRUM];
 extern volatile uint8_t en_pat_now, en_pat_next;

@@ -172,7 +172,7 @@
 |---|---|---|---|---|---|
 | `F3` | AIR HORN (held) | `D4` | ZAP | `B4` | DUB LOW |
 | `F#3` | AIR BLAST (short) | `D#4` | ZAP HI | `C5` | DROP |
-| `G3` | HORN MIN (minor, held) | `E4` | BEEP | `C#5` | DROP LONG |
+| `G3` | CHORD STAB (the chord playing) | `E4` | BEEP | `C#5` | DROP LONG |
 | `G#3` | RAVE HORN (hoover, held) | `F4` | BEEP LO | `D5` | RISER |
 | `A3` | SIREN | `F#4` | BEEP HI | `D#5` | REWIND |
 | `A#3` | SIREN 2 | `G4` | 2 BEEP | `E5` | CRASH |

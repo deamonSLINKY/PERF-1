@@ -1504,9 +1504,13 @@ The Flex settings page (below) has three settings:
 
 These are the sound effects a DJ throws in over a set, made on the spot. The 27 keys, `F3` to `G5`, are:
 
-AIR HORN (held), AIR BLAST (a short blast), HORN MIN (a minor chord, held), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, SIREN 3, LASER, LASER LO, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover as a short stab), BELL and SNR ROLL (a snare roll that speeds up).
+AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord playing, in saws), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, SIREN 3, LASER, LASER LO, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover as a short stab), BELL and SNR ROLL (a snare roll that speeds up).
 
 Up to four can sound at once. Snips play when you press the key. They don't latch.
+
+The ones with a pitch play in key: the horns, the stabs, the rave horn and the riser start on the root of the chord playing
+(the horns play that chord), and the sirens, beeps, whoops, the dub siren and the bell take the nearest note of it. They all
+sit at about the same loudness, and the horns, sirens, stabs, crash, riser and roll are wide in stereo (in mono nothing is lost).
 
 The Snips settings page has four settings:
 
@@ -1898,7 +1902,7 @@ The Settings page:
 |---|---|
 | Key | A key change for the drop: same, +2, +3, +5 or +7 semitones. When a breakdown or build ends and the groove comes back in, the whole piece moves up by this much for that round. The next breakdown, a stop or another piece moves it back. `KEY` shows in the header while it's on. |
 | Voices | Which set of DX7 voices the pluck uses: **DY**, thirty human-made voices from public-domain banks (the default), or **DX**, the thirty built-in ones. |
-| Form | **Song** (the default): a piece moves through its own drum patterns, a new one every 8 bars (16 in the slower genres), with a fill just before each change, so it plays like a track. Song also arranges the parts: now and then a phrase rests the pluck or the acid (or both) for half of it, and the bass may sit out the fill bar and land on the change. The pad always plays. A set-list slot with its own bars leaves the arranging to you. **Loop**: it stays on its first pattern, for when you want to steer it yourself. If you set Drum drift (**SEQ** x4), yours plays instead, in either. |
+| Form | **Song** (the default): a piece moves through its own drum patterns, a new one every 8 bars (16 in the slower genres), with a fill just before each change, so it plays like a track. Song also arranges the parts: now and then a phrase rests the pluck or the acid (or both) for half of it, and the bass may sit out the fill bar and land on the change. The pad always plays. A set-list slot with its own bars leaves the arranging to you. **Loop**: it stays on its first pattern, for when you want to steer it yourself. If you set Drum drift (**SEQ** x4), yours plays instead, in either. Song keeps the beat's feel: when it moves to a pattern with another feel (half time after four on the floor, say), the kick, snare and clap stay as they were and only the hats and perc move on. |
 | Start | **Last** (the default): the FM-1 switches on to the piece you last played, as it is saved (unsaved changes are not kept: save with **GLO**, then **SAVE**). **Random**: a piece of HYPNO at random, the old way. |
 
 ### The SCREEN page
