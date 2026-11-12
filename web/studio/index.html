@@ -229,6 +229,13 @@
   .vibecard .knob .dial { width: 54px; height: 54px; }
   .vibecard .knob .dial i { transform-origin: 50% 19px; height: 15px; }
   #imp { width: 34px; height: 44px; image-rendering: pixelated; cursor: pointer; flex: none; }
+  #mixcheck .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 10px 0 0; }
+  .mixrows { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 6px 14px; }
+  .mixrow { display: grid; grid-template-columns: 14px 8.5em 5.2em minmax(0, 1fr); gap: 6px; align-items: baseline; font-size: .82rem; }
+  .mixrow i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #6fd39a; }
+  .mixrow.warn i { background: var(--acc); } .mixrow.fail i { background: #ff5a5f; }
+  .mixrow b { font: 700 .82rem "Chakra Petch", sans-serif; text-align: right; }
+  .mixrow span { color: var(--dim); }
   .chips { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
   .chip { border-left: 3px solid var(--c, var(--line)) !important; cursor: grab; }
   .chip:active { cursor: grabbing; }
@@ -347,6 +354,9 @@
 </main>
 <script type="application/json" id="pdata">/*PARAMS*/</script>
 <script type="application/json" id="edata">/*PENUM*/</script>
+<!-- the mix check's targets: .claude/skills/perf-sound-check/references/targets.json and tools/soundcheck_genres.json, copied in (the perf-sound-check
+     skill's own numbers and sources; re-sync when they change) -->
+<script type="application/json" id="mixtargets">{"targets":{"_about":"Thresholds for soundcheck.py judge(). Each rule: warn_/fail_ below/above, a plain-words 'say', and 'source' ('sourced: ...' or 'heuristic: calibrate'). Genre 'rules' override 'default'. Genres inherit a 'profile' (club, groove, slow, ambient). Rule numbers (#n) refer to the rule table in references/knowledge.md. Calibrate heuristics with `soundcheck.py calibrate` against PERF's own best renders before trusting a fail.","default":{"artefacts.nan_or_inf":{"fail_above":0,"say":"NaN or Inf samples in the render: an engine bug (#1)","source":"sourced: zero tolerance"},"artefacts.clip_runs":{"warn_above":0,"fail_above":20,"say":"runs of 3+ samples at full scale: the master clips (#2)","source":"heuristic: calibrate"},"sample_peak_dbfs":{"warn_above":-0.1,"say":"sample peak at full scale: no headroom before the DAC (#2)","source":"heuristic: calibrate"},"true_peak_dbtp":{"warn_above":0.0,"fail_above":1.2,"say":"true peak over 0 dBTP: inter-sample overs, the DAC or a later encode may distort; club masters reach +1.2 (#3)","source":"sourced: Spotify (-1 dBTP), TrackSensei club medians +0.5 to +1.2"},"psr_db":{"warn_below":8,"fail_below":6,"say":"peak-to-short-term ratio in the loud parts is low: over-limited, transients squashed (#5)","source":"sourced: Ian Shepherd PSR >= 8"},"plr_db":{"warn_below":7,"say":"peak-to-loudness ratio under 7 dB: very dense master (#6)","source":"heuristic: TrackSensei medians ~8.6, calibrate"},"loudness.short_term_jumps_3lu":{"warn_above":6,"say":"many 3 LU+ steps between seconds: level jumps between sections or pieces (#39)","source":"heuristic: calibrate"},"stereo.correlation_below_120hz":{"warn_below":0.97,"fail_below":0.9,"say":"the bass is not mono: weak on club systems and mono speakers (#12)","source":"sourced: TrackSensei sub correlation 0.998-1.0; threshold heuristic"},"mono_sum_drop_lu":{"warn_above":0.5,"fail_above":1.0,"say":"loudness drops when summed to mono: phase problems (#13)","source":"sourced: TrackSensei 0.18-0.46 LU; 1 LU rule of thumb"},"stereo.correlation":{"warn_below":0.3,"fail_below":0.0,"say":"left and right are too far apart or out of phase (#14)","source":"heuristic: calibrate"},"artefacts.dc_dbfs":{"warn_above":-60,"say":"DC offset: wastes headroom, thumps at start and stop (#16)","source":"heuristic"},"spectrum.bands.infra_below_20":{"warn_above":0.02,"say":"energy below 20 Hz: inaudible rumble eating headroom; add a high-pass on the master (#17)","source":"heuristic: calibrate"},"artefacts.clicks":{"warn_above":0,"fail_above":5,"say":"clicks (single-sample jumps): voice steals, envelope resets or buffer bugs (#22)","source":"heuristic: calibrate"},"artefacts.clicks_at_block_edge":{"fail_above":0,"say":"clicks cluster at audio block edges: a buffer or core hand-off bug (#22)","source":"heuristic"},"stuck_notes":{"fail_above":0,"say":"note-ons with no note-off in the MIDI out (#23)","source":"sourced: zero tolerance"},"drum_offset_sd_ms":{"warn_above":2.0,"say":"drum hits wander off the grid: timing jitter (unless a Feel is on) (#26)","source":"heuristic"},"in_scale_share":{"warn_below":0.9,"fail_below":0.8,"say":"a lot of note time outside the detected scale (#31)","source":"heuristic: calibrate"}},"profiles":{"club":{"loudness.integrated":{"warn_below":-14,"warn_above":-6.4,"say":"outside the club-master range (-9.9 to -6.4 LUFS) by a lot; PERF has a master knob, so this is a gain-staging hint, not an error (#4)","source":"sourced: TrackSensei 563 techno/house tracks"},"spectrum.bands.below_250":{"warn_below":0.7,"warn_above":0.95,"say":"share of energy below 250 Hz off the club range (78-92%) (#8)","source":"sourced: TrackSensei; band heuristic"},"spectrum.bands.sub_to_low_ratio":{"warn_below":0.5,"warn_above":1.4,"say":"sub (20-60 Hz) vs low (60-250 Hz) off the observed 0.67-1.11 (#9)","source":"heuristic from TrackSensei"},"spectrum.low_peak_hz":{"warn_below":41,"warn_above":70,"say":"the low-end peak (usually the kick) sits off the 48-62 Hz club range (#10)","source":"sourced: TrackSensei 48-62 Hz; Deruty 808 median 49.5 Hz"},"loudness.lra":{"warn_below":2,"say":"almost no dynamic arc across the render (#7)","source":"heuristic"}},"groove":{"loudness.integrated":{"warn_below":-18,"warn_above":-7,"say":"far from typical master levels (#4)","source":"heuristic"},"spectrum.bands.below_250":{"warn_below":0.55,"warn_above":0.95,"say":"low-end share unusual for a groove genre (#8)","source":"heuristic: calibrate"}},"slow":{"loudness.integrated":{"warn_below":-20,"warn_above":-8,"say":"far from typical levels for this style (#4)","source":"heuristic"}},"ambient":{"loudness.integrated":{"warn_below":-26,"warn_above":-10,"say":"far from typical ambient levels (#4)","source":"heuristic"},"psr_db":{"warn_below":10,"say":"ambient this dense loses its air (#5)","source":"heuristic"},"stereo.correlation":{"warn_below":0.1,"fail_below":-0.1,"say":"wide is fine here, out of phase is not (#14)","source":"heuristic"},"in_scale_share":{"warn_below":0.85,"say":"drones drifting out of the scale (#31)","source":"heuristic"}}},"genres":{"techno":{"profile":"club","bpm":[120,140],"bpm_source":"sourced: Ableton Learning Music","swing":[50,54]},"hypno":{"profile":"club","bpm":[125,135],"bpm_source":"convention","swing":[50,54]},"hard_techno":{"profile":"club","bpm":[140,180],"bpm_source":"sourced (range disputed)","swing":[50,52]},"acid":{"profile":"club","bpm":[120,140],"bpm_source":"sourced: techno/house bands","swing":[50,58],"rules":{"in_scale_share":{"warn_below":0.85,"say":"acid lines use chromatic passing notes, but this many is off-key (#31)","source":"heuristic"}}},"house":{"profile":"club","bpm":[115,130],"bpm_source":"sourced: Ableton","swing":[52,62]},"deep_house":{"profile":"club","bpm":[115,125],"bpm_source":"sourced: house band","swing":[54,62]},"dub_techno":{"profile":"club","bpm":[118,128],"bpm_source":"convention (often confused with dub)","swing":[50,56]},"trance":{"profile":"club","bpm":[125,140],"bpm_source":"sourced: Ableton","swing":[50,52]},"psytrance":{"profile":"club","bpm":[135,150],"bpm_source":"sourced (138-145 or 135-150)","swing":[50,52]},"industrial":{"profile":"club","bpm":[125,150],"bpm_source":"convention","swing":[50,54]},"ebm":{"profile":"club","bpm":[115,135],"bpm_source":"convention","swing":[50,54]},"electro":{"profile":"club","bpm":[120,135],"bpm_source":"convention","swing":[50,56]},"breaks":{"profile":"club","bpm":[125,140],"bpm_source":"convention","swing":[50,58]},"dnb":{"profile":"club","bpm":[160,180],"bpm_source":"sourced: Ableton","swing":[50,54],"signature":{"kick":"x.........x.....","snare":"....x.......x..."}},"jungle":{"profile":"club","bpm":[160,175],"bpm_source":"sourced: 165-174","swing":[50,56]},"dubstep":{"profile":"club","bpm":[135,145],"bpm_source":"sourced: Ableton (half-time feel)","swing":[50,56],"signature":{"snare":"........x......."}},"garage":{"profile":"club","bpm":[130,140],"bpm_source":"convention","swing":[58,66],"signature":{"kick":"x.........x....."}},"footwork":{"profile":"club","bpm":[155,165],"bpm_source":"sourced: ~160","swing":[50,60]},"amapiano":{"profile":"groove","bpm":[110,115],"bpm_source":"sourced: ~112","swing":[54,62]},"afro_house":{"profile":"groove","bpm":[118,125],"bpm_source":"convention","swing":[54,60]},"reggaeton":{"profile":"groove","bpm":[90,100],"bpm_source":"sourced","swing":[50,54]},"dub":{"profile":"slow","bpm":[60,90],"bpm_source":"sourced: Ableton","swing":[52,62]},"hiphop":{"profile":"groove","bpm":[60,100],"bpm_source":"sourced: Ableton","swing":[54,66]},"lofi":{"profile":"slow","bpm":[60,95],"bpm_source":"sourced: hip-hop band","swing":[56,66],"rules":{"in_scale_share":{"warn_below":0.85,"say":"lo-fi jazz colour is fine, but this much is off-key (#31)","source":"heuristic"}}},"triphop":{"profile":"slow","bpm":[70,100],"bpm_source":"convention","swing":[52,62]},"synthwave":{"profile":"groove","bpm":[80,118],"bpm_source":"convention","swing":[50,52]},"ambient":{"profile":"ambient","bpm":null,"swing":null}}},"map":{"HYPNO":"hypno","LOFI":"lofi","HOUSE":"house","DUBSTEP":"dubstep","DUB":"dub","DNB":"dnb","BREAKS":"breaks","GARAGE":"garage","ELECTRO":"electro","TRAP":"dubstep","DISCO":"house","FUNK":"afro_house","REGGAE":"dub","SYNTHWV":"synthwave","AMAPI":"amapiano","TRIPHOP":"triphop","INDUS":"industrial","PSY":"psytrance","FOREST":"psytrance"}}</script>
 <script type="module">
 /*LIB*/
 "use strict";
@@ -2462,10 +2472,11 @@ function songRender() {
   const sel = setSel, q = song.places[sel] ? pcSetPlaces([song.places[sel]])[0] : null, mode = !song.on ? 0 : song.end ? 2 : 1;
   const used = song.places.map((x, i) => (x ? i : -1)).filter((i) => i >= 0), total = used.reduce((a, i) => a + (song.bars[i] || 0), 0), autos = used.filter((i) => !song.bars[i]).length;
   let h = '<div class="bar"><button id="mvRec" aria-pressed="' + mvRec + '" title="While the song plays: the effects you tap (FX) and the fades (DESK) are kept where they happen, and play back with the song and its WAV">' + (mvRec ? "● Recording moves" : "● Rec moves") + "</button>" +
-    (moves.some((e) => e.k !== "base") ? '<button id="mvClear" title="Forget every recorded move">Clear moves (' + moves.filter((e) => e.k !== "base").length + ")</button>" : "") + '<button id="slWav"' + (used.length || rec ? "" : " disabled") + ' title="Plays the song once from its first place and records it: a WAV (44.1 kHz, 16-bit stereo) to download">' + (rec ? "■ Stop recording" : "● Song to WAV") + '</button><button id="slSend"' + (used.length ? "" : " disabled") + ' title="Opens the Library &amp; pieces page with this song as a set: connect the FM-1 there and add it">Send the song to the FM-1</button><button id="slPlay"' + (used.length ? "" : " disabled") + '>' + (live && live.playing && song.on ? "■ Stop" : "▶ Play the song") + '</button><button id="slFrom"' + (q ? "" : " disabled") + ">▶ From place " + (sel + 1) + "</button>" +
+    (moves.some((e) => e.k !== "base") ? '<button id="mvClear" title="Forget every recorded move">Clear moves (' + moves.filter((e) => e.k !== "base").length + ")</button>" : "") + '<button id="slWav"' + (used.length || rec ? "" : " disabled") + ' title="Plays the song once from its first place and records it: a WAV (44.1 kHz, 16-bit stereo) to download">' + (rec ? "■ Stop recording" : exp ? "■ Cancel export" : "● Song to WAV") + '</button><button id="slSend"' + (used.length ? "" : " disabled") + ' title="Opens the Library &amp; pieces page with this song as a set: connect the FM-1 there and add it">Send the song to the FM-1</button><button id="slPlay"' + (used.length ? "" : " disabled") + '>' + (live && live.playing && song.on ? "■ Stop" : "▶ Play the song") + '</button><button id="slFrom"' + (q ? "" : " disabled") + ">▶ From place " + (sel + 1) + "</button>" +
     '<span class="lbl">&nbsp;SONG</span>' + ["Off", "Loop", "Once"].map((t, k) => '<button class="small" data-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + t + "</button>").join("") +
     '<span class="muted">' + used.length + " places · " + total + " bars" + (autos ? " + " + autos + " on Auto" : "") + (song.full ? song.full2 ? "" : " · patterns and energy need 0.17.14" : " · this firmware has no song mode (bars and parts need 0.17.13)") + "</span></div>" +
     '<canvas id="songline" height="' + SLH + '" aria-label="The song: a block a place, as long as its bars, a lane a part, its energy"></canvas><div id="songnow" class="muted" style="margin-top:4px"></div>' +
+    '<div id="mixcheck">' + mixHTML() + "</div>" +
     '<div class="muted" style="margin-top:2px;font-size:.8rem">On the song: click a lane to take that part out or bring it back · drag a block\'s right edge for its bars · drag up or down in ENERGY (right-click: as is) · drag a block\'s name to move it · ▶ on a block plays from there.</div>' +
     '<div class="bar chips" style="margin-top:8px"><span class="lbl">PIECES</span><select id="slGenre" aria-label="Genre of the pieces to add">' + N.genres.map((n, g) => '<option value="' + g + '"' + (g === slGenre ? " selected" : "") + ">" + n + "</option>").join("") + "</select>" +
     (N.pieces[slGenre] || []).map((n, k) => '<button class="small chip" draggable="true" data-g="' + slGenre + '" data-p="' + k + '" style="--c:' + GENRE_COL[slGenre % 5] + '" title="Drag onto the song, or click: into place ' + (sel + 1) + '">' + n + "</button>").join("") +
@@ -2745,7 +2756,7 @@ function wavOf(L, R, sr) {                                    // 16-bit stereo P
   return new Blob([b], { type: "audio/wav" });
 }
 const mmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
-async function songWav() {                                    // the song once (Once, from its first place), recorded as it plays, and 2.5 s of tail
+async function songWavLive() {                                // the song once (Once, from its first place), recorded as it plays, and 2.5 s of tail
   if (!node || !song || rec) return;
   const s0 = song.places.findIndex((x) => x), pq = s0 >= 0 ? pcSetPlaces([song.places[s0]])[0] : null;
   if (!pq) return;
@@ -2789,6 +2800,216 @@ async function songWav() {                                    // the song once (
     if (t > 1800) rec.stop("30 minutes, the most");
   }, 100);
 }
+/* ======================================================================== the fast export: the firmware in a Web Worker, rendered as fast as the
+ * computer goes (the song once from its first place, a fresh take, the effects as they are, its recorded moves), stopped when the song ends plus a
+ * tail; then the mix check: the perf-sound-check skill's measures (BS.1770 loudness, PSR, PLR, true peak, the bands, the low end's mono, DC,
+ * clipping) judged against its genre targets. The FM-1 plays the same song; the export is this browser's copy of it. */
+const RENDER_SRC = `
+let ex, mem;
+const SR = 44100;
+onmessage = async (e) => {
+  const m = e.data;
+  if (m.type !== "go") return;
+  let frames = 0;
+  const wasi = { clock_time_get: (id, prec, out) => { new DataView(mem.buffer).setBigUint64(out, BigInt(Math.round(frames / SR * 1e9)), true); return 0; },
+    fd_write: (fd, iov, n, out) => { new DataView(mem.buffer).setUint32(out, 0, true); return 0; }, proc_exit: () => {} };
+  const stub = new Proxy(wasi, { get: (t, k) => (k in t ? t[k] : () => 0) }), env = new Proxy({}, { get: () => () => 0 });
+  const { instance } = await WebAssembly.instantiate(m.wasm, { wasi_snapshot_preview1: stub, env });
+  ex = instance.exports; mem = ex.memory;
+  if (ex._initialize) ex._initialize();
+  const max = ex.web_store_max();
+  for (const [obj, bytes] of Object.entries(m.store || {})) { const b = new Uint8Array(bytes).subarray(0, max); new Uint8Array(mem.buffer, ex.web_store(+obj), b.length).set(b); ex.web_store_set_len(+obj, b.length); }
+  ex.web_master(m.master); if (ex.web_seed) ex.web_seed(m.seed >>> 0);
+  ex.web_st_boot();
+  const N = 128, Ls = [], Rs = [], live = () => new Uint8Array(mem.buffer, ex.web_st_live(), 144);
+  const render = (keep) => { ex.web_render(N); frames += N; if (keep) { Ls.push(new Float32Array(mem.buffer, ex.web_out_l(), N).slice()); Rs.push(new Float32Array(mem.buffer, ex.web_out_r(), N).slice()); } };
+  for (let k = 0; k < SR / N; k++) render(false);                     // (the boot card: a second of the device's own time)
+  const sl = new Uint8Array(mem.buffer, ex.web_st_sl(), ex.web_st_sl_len()); sl.set(new Uint8Array(m.sl).subarray(0, sl.length)); ex.web_st_set(1);
+  ex.web_st_fx_lock(1, m.lo | 0, m.hi | 0);
+  ex.web_st_go(m.first); ex.web_st_play(1);
+  const moves = m.moves || [], ramps = [];
+  let last = null, started = false, endAt = 0, k = 0;
+  const pos = () => { const b = live(); return { pl: b[135], s: (b[136] === 255 ? 0 : b[136]) * 16 + b[4], trk: b[137] }; };
+  const fire = (ev) => {
+    if (ev.k === "fx") { ex.web_st_fx_lock(1, ev.lo | 0, ev.hi | 0); return; }
+    if (ev.k !== "fade") return;
+    const at = pos(), out = (at.trk & ev.trk) === ev.trk;
+    if (!!ev.dir !== out || ramps.some((r) => r.trk === ev.trk)) return;
+    const lvl = ex.web_st_par_get(ev.p), len = Math.round(ev.bars * 240 / Math.max(40, ex.web_st_par_get(m.ptempo)) * SR);
+    if (ev.dir) { ex.web_st_par(ev.p, 0); ex.web_st_trk(at.trk & ~ev.trk, 0); ramps.push({ p: ev.p, from: 0, to: lvl, t0: frames, len, trk: ev.trk, dir: 1, lvl }); }
+    else ramps.push({ p: ev.p, from: lvl, to: 0, t0: frames, len, trk: ev.trk, dir: 0, lvl });
+  };
+  for (;;) {
+    render(true); k++;
+    if (k % 4) continue;                                              // (every 11.6 ms: the moves, the fades, the end)
+    const playing = ex.web_st_playing();
+    if (playing) started = true;
+    if (moves.length && playing) {
+      const at = pos();
+      if (at.pl < 16) {
+        if (!last || at.pl !== last.pl || at.s < last.s) { if (at.pl === m.first && m.base) ex.web_st_fx_lock(1, m.base.lo | 0, m.base.hi | 0); moves.filter((v) => v.pl === at.pl && v.s <= at.s).forEach(fire); }
+        else moves.filter((v) => v.pl === at.pl && v.s > last.s && v.s <= at.s).forEach(fire);
+        last = at;
+      }
+    }
+    for (let r = ramps.length - 1; r >= 0; r--) {
+      const q = ramps[r], t = Math.min(1, (frames - q.t0) / q.len), v = Math.round(q.from + (q.to - q.from) * (q.dir ? Math.sqrt(t) : t * t));
+      ex.web_st_par(q.p, v);
+      if (t >= 1) { if (!q.dir) { ex.web_st_trk(pos().trk | q.trk, 0); ex.web_st_par(q.p, q.lvl); } ramps.splice(r, 1); }
+    }
+    if (started && !playing && !endAt) endAt = frames + Math.round(2.5 * SR);   // (the song ended: its echoes ring out)
+    if ((endAt && frames >= endAt) || frames > m.maxSecs * SR) break;
+    if (k % 344 === 0) postMessage({ type: "prog", secs: frames / SR - 1, pl: pos().pl });
+  }
+  const n = Ls.length * N, L = new Float32Array(n), R = new Float32Array(n);
+  for (let i = 0; i < Ls.length; i++) { L.set(Ls[i], i * N); R.set(Rs[i], i * N); }
+  let a = 0; while (a < n && Math.abs(L[a]) < 1e-4 && Math.abs(R[a]) < 1e-4) a++;   // (the silence before the first note, cut to 10 ms)
+  a = Math.max(0, a - SR / 100);
+  const Lt = L.slice(a), Rt = R.slice(a);
+  postMessage({ type: "prog", secs: Lt.length / SR, measuring: 1 });
+  const mx = measure(Lt, Rt, SR);
+  postMessage({ type: "done", L: Lt, R: Rt, mix: mx, cut: frames > m.maxSecs * SR }, [Lt.buffer, Rt.buffer]);
+};
+`;
+const MEASURE_SRC = String.raw`
+const EPS = 1e-12, dbv = (v) => 20 * Math.log10(Math.max(v, EPS));
+function biquad(x, b, a) { const y = new Float32Array(x.length); let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for (let i = 0; i < x.length; i++) { const v = b[0] * x[i] + b[1] * x1 + b[2] * x2 - a[1] * y1 - a[2] * y2; x2 = x1; x1 = x[i]; y2 = y1; y1 = v; y[i] = v; } return y; }
+function kweight(x, sr) {                                    // BS.1770 K-weighting, libebur128's coefficients for any rate
+  let f0 = 1681.974450955533, G = 3.999843853973347, Q = 0.7071752369554196, K = Math.tan(Math.PI * f0 / sr);
+  const Vh = 10 ** (G / 20), Vb = Vh ** 0.4996667741545416; let a0 = 1 + K / Q + K * K;
+  const y = biquad(x, [(Vh + Vb * K / Q + K * K) / a0, 2 * (K * K - Vh) / a0, (Vh - Vb * K / Q + K * K) / a0], [1, 2 * (K * K - 1) / a0, (1 - K / Q + K * K) / a0]);
+  f0 = 38.13547087602444; Q = 0.5003270373238773; K = Math.tan(Math.PI * f0 / sr); a0 = 1 + K / Q + K * K;
+  return biquad(y, [1, -2, 1], [1, 2 * (K * K - 1) / a0, (1 - K / Q + K * K) / a0]);
+}
+function loudness(chs, sr, raw) {                            // integrated (gated), short-term each 100 ms, PSR on the loud windows, the jumps
+  const ys = chs.map((c) => kweight(c, sr)), hop = Math.round(0.1 * sr), ns = Math.floor(ys[0].length / hop);
+  if (ns < 4) return { integrated: null };
+  const seg = new Float64Array(ns), pk = new Float64Array(ns);
+  for (let j = 0; j < ns; j++) { let s = 0, p = 0; for (const y of ys) for (let i = j * hop; i < (j + 1) * hop; i++) s += y[i] * y[i]; seg[j] = s / hop;
+    if (raw) for (const x of raw) for (let i = j * hop; i < (j + 1) * hop; i++) { const v = Math.abs(x[i]); if (v > p) p = v; } pk[j] = p; }
+  const lk = (z) => -0.691 + 10 * Math.log10(Math.max(z, EPS));
+  const blk = (n) => { const o = []; for (let i = 0; i + n <= ns; i++) { let z = 0; for (let j = i; j < i + n; j++) z += seg[j]; o.push(z / n); } return o; };
+  const zb = blk(4), lks = zb.map(lk), g = zb.filter((z, i) => lks[i] > -70);
+  let I = null;
+  if (g.length) { const rel = lk(g.reduce((a, b) => a + b, 0) / g.length) - 10, g2 = zb.filter((z, i) => lks[i] > -70 && lks[i] > rel); if (g2.length) I = lk(g2.reduce((a, b) => a + b, 0) / g2.length); }
+  const st = blk(30).map(lk);
+  let psr = null, jumps = 0;
+  if (st.length && raw) {
+    const mx = Math.max(...st), vals = [];
+    for (let i = 0; i < st.length; i++) if (st[i] >= mx - 3) { let p = 0; for (let j = i; j < i + 30; j++) p = Math.max(p, pk[j]); vals.push(dbv(p) - st[i]); }
+    vals.sort((a, b) => a - b); psr = vals.length ? vals[Math.floor(0.1 * (vals.length - 1))] : null;
+  }
+  for (let i = 10; i < st.length; i += 10) if (Math.abs(st[i] - st[i - 10]) > 3) jumps++;
+  return { integrated: I, short_term_max: st.length ? Math.max(...st) : null, psr_sample_db: psr, short_term_jumps_3lu: jumps };
+}
+function bessel0(x) { let s = 1, t = 1; for (let k = 1; k < 30; k++) { t *= (x / (2 * k)) ** 2; s += t; } return s; }
+function truePeak(chs, pk) {                                 // 4x windowed-sinc interpolation (Kaiser 8) around the loudest samples
+  const L = 4, half = 24, taps = []; for (let ph = 1; ph < L; ph++) { const h = []; for (let j = -half + 1; j <= half; j++) { const t = j - ph / L, w = bessel0(8 * Math.sqrt(Math.max(0, 1 - (t / half) ** 2))) / bessel0(8); h.push(Math.abs(t) < 1e-9 ? 1 : Math.sin(Math.PI * t) / (Math.PI * t) * w); } taps.push(h); }
+  let tp = pk;
+  for (const x of chs) for (let i = half; i < x.length - half; i++) {
+    if (Math.max(Math.abs(x[i]), Math.abs(x[i + 1])) < 0.7 * pk) continue;
+    for (const h of taps) { let v = 0; for (let j = 0; j < h.length; j++) v += h[j] * x[i - half + 1 + j]; if (Math.abs(v) > tp) tp = Math.abs(v); }
+  }
+  return tp;
+}
+function fft(re, im) { const n = re.length; for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; } }
+  for (let len = 2; len <= n; len <<= 1) { const a = -2 * Math.PI / len, wr = Math.cos(a), wi = Math.sin(a); for (let i = 0; i < n; i += len) { let cr = 1, ci = 0; for (let j = 0; j < len / 2; j++) { const ur = re[i + j], ui = im[i + j], vr = re[i + j + len / 2] * cr - im[i + j + len / 2] * ci, vi = re[i + j + len / 2] * ci + im[i + j + len / 2] * cr; re[i + j] = ur + vr; im[i + j] = ui + vi; re[i + j + len / 2] = ur - vr; im[i + j + len / 2] = ui - vi; const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } } } }
+function bands(L, R, sr) {                                   // Welch (8192, Hann, at most 400 frames), the skill's bands as shares of 20 Hz-20 kHz
+  const n = 8192, P = new Float64Array(n / 2 + 1), w = new Float64Array(n); for (let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / n);
+  const nf = Math.max(0, Math.floor((L.length - n) / (n / 2)) + 1), step = Math.max(1, Math.ceil(nf / 400));
+  const re = new Float64Array(n), im = new Float64Array(n);
+  for (let f = 0; f < nf; f += step) { const o = f * n / 2; for (let i = 0; i < n; i++) { re[i] = (L[o + i] + R[o + i]) * 0.5 * w[i]; im[i] = 0; } fft(re, im); for (let i = 0; i <= n / 2; i++) P[i] += re[i] * re[i] + im[i] * im[i]; }
+  const fr = (i) => i * sr / n, sum = (lo, hi) => { let s = 0; for (let i = 0; i <= n / 2; i++) { const f = fr(i); if (f >= lo && f < hi) s += P[i]; } return s; };
+  const tot = sum(20, 20000.0001) + EPS, b = { sub_20_60: sum(20, 60) / tot, low_60_250: sum(60, 250) / tot, lowmid_250_2k: sum(250, 2000) / tot, presence_2k_8k: sum(2000, 8000) / tot, air_8k_20k: sum(8000, 20000) / tot };
+  b.infra_below_20 = sum(0.001, 20) / tot; b.below_250 = b.sub_20_60 + b.low_60_250; b.sub_to_low_ratio = b.sub_20_60 / Math.max(b.low_60_250, EPS);
+  return b;
+}
+function corr(a, b) { let ma = 0, mb = 0; for (let i = 0; i < a.length; i++) { ma += a[i]; mb += b[i]; } ma /= a.length; mb /= b.length; let sab = 0, saa = 0, sbb = 0; for (let i = 0; i < a.length; i++) { const x = a[i] - ma, y = b[i] - mb; sab += x * y; saa += x * x; sbb += y * y; } return saa > EPS && sbb > EPS ? sab / Math.sqrt(saa * sbb) : null; }
+function lp120(x, sr) {                                      // 4th-order Butterworth low-pass at 120 Hz (the skill uses a sinc: the same band)
+  let y = x; for (const Q of [0.5411961, 1.3065630]) { const K = Math.tan(Math.PI * 120 / sr), a0 = 1 + K / Q + K * K; y = biquad(y, [K * K / a0, 2 * K * K / a0, K * K / a0], [1, 2 * (K * K - 1) / a0, (1 - K / Q + K * K) / a0]); } return y;
+}
+function measure(L, R, sr) {
+  let nan = 0, pk = 0, dl = 0, dr = 0, runs = 0;
+  for (const x of [L, R]) { let run = 0; for (let i = 0; i < x.length; i++) { const v = x[i]; if (!Number.isFinite(v)) { nan++; x[i] = 0; continue; } const a = Math.abs(v); if (a > pk) pk = a; if (a >= 0.999) run++; else { if (run >= 3) runs++; run = 0; } } }
+  for (let i = 0; i < L.length; i++) { dl += L[i]; dr += R[i]; }
+  const tp = truePeak([L, R], pk), lo = loudness([L, R], sr, [L, R]), M = new Float32Array(L.length);
+  for (let i = 0; i < L.length; i++) M[i] = (L[i] + R[i]) * 0.5 * Math.SQRT2;
+  const lm = loudness([M], sr, null), I = lo.integrated, side = new Float64Array(2);
+  for (let i = 0; i < L.length; i++) { const m = (L[i] + R[i]) / 2, s = (L[i] - R[i]) / 2; side[0] += m * m; side[1] += s * s; }
+  const res = { seconds: L.length / sr, sample_peak_dbfs: dbv(pk), true_peak_dbtp: dbv(tp), loudness: { integrated: I, short_term_max: lo.short_term_max, short_term_jumps_3lu: lo.short_term_jumps_3lu },
+    spectrum: { bands: bands(L, R, sr) }, stereo: { correlation: corr(L, R), correlation_below_120hz: corr(lp120(L, sr), lp120(R, sr)), side_to_mid_db: 10 * Math.log10(Math.max(side[1], EPS) / Math.max(side[0], EPS)) },
+    artefacts: { nan_or_inf: nan, clip_runs: runs, dc_dbfs: [dbv(Math.abs(dl / L.length)), dbv(Math.abs(dr / R.length))] } };
+  res.plr_db = I !== null ? res.true_peak_dbtp - I : null;
+  res.psr_db = lo.psr_sample_db !== null ? lo.psr_sample_db + (res.true_peak_dbtp - res.sample_peak_dbfs) : null;
+  res.mono_sum_drop_lu = I !== null && lm.integrated !== null ? I - lm.integrated : null;
+  return res;
+}
+`;
+let exp = null, mixLast = null;
+async function songWav() {
+  if (typeof Worker === "undefined") return songWavLive();
+  if (!node || !song || exp || rec) return;
+  const s0 = song.places.findIndex((x) => x);
+  if (s0 < 0) return;
+  let wasm;
+  try { wasm = await fetch("../emu/amb.wasm", { cache: "no-store" }).then((r) => r.arrayBuffer()); } catch { return songWavLive(); }
+  const fxr = await ask({ type: "st_fx", light: 1 }), sl = songBytes({ ...song, on: 1, end: 1 }), store = loadStore();
+  const url = URL.createObjectURL(new Blob([RENDER_SRC + MEASURE_SRC], { type: "application/javascript" })), w = new Worker(url);
+  const t0 = performance.now(), base = moves.find((e) => e.k === "base");
+  exp = { w, t0 };
+  songRender();
+  say("Exporting the song: rendered as fast as this computer goes (a fresh take, Once from place " + (s0 + 1) + (moves.some((e) => e.k !== "base") ? ", with your recorded moves" : "") + ")…");
+  w.onmessage = (e) => {
+    const m = e.data;
+    if (m.type === "prog") { const b = $("slWav"); if (b) b.textContent = m.measuring ? "■ Checking the mix…" : "■ Exporting " + mmss(m.secs); return; }
+    if (m.type !== "done") return;
+    w.terminate(); URL.revokeObjectURL(url); exp = null;
+    const blob = wavOf(m.L, m.R, 44100), name = "perf1-song-" + S.genreName(pcSetPlaces([song.places[s0]])[0].genre).toLowerCase() + "-" + new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "") + ".wav";
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    const secs = m.L.length / 44100, took = (performance.now() - t0) / 1000;
+    mixLast = mixJudge(m.mix);
+    songRender();
+    say("Exported " + mmss(secs) + " of song in " + took.toFixed(1) + " s (" + (secs / took).toFixed(1) + "× real time): " + name + " (" + (blob.size / 1048576).toFixed(1) + " MB)" + (m.cut ? ". It ran past 20 minutes and was cut there." : ". The mix check is under the song."));
+  };
+  w.onerror = (e) => { exp = null; w.terminate(); songRender(); say("The fast export failed (" + (e.message || "worker") + "): recording it live instead.", true); songWavLive(); };
+  w.postMessage({ type: "go", wasm, store, master: 2800, seed: (Math.random() * 4294967295) >>> 0 || 1, sl, first: s0, lo: fxr ? fxr.lo | 0 : 0, hi: fxr ? fxr.hi | 0 : 0,
+    moves: moves.filter((e) => e.k !== "base"), base: base || null, ptempo: PE.P_TEMPO, maxSecs: 1200 }, [wasm]);
+}
+function expCancel() { if (!exp) return; exp.w.terminate(); exp = null; songRender(); say("Export cancelled."); }
+/* the mix check: the export measured above, judged as the perf-sound-check skill judges (default rules, the genre's profile, the genre's own) */
+const MIXT = (() => { try { return JSON.parse($("mixtargets").textContent); } catch { return null; } })();
+const MIX_NAME = { "loudness.integrated": ["Loudness", (v) => v.toFixed(1) + " LUFS"], true_peak_dbtp: ["True peak", (v) => v.toFixed(1) + " dBTP"], sample_peak_dbfs: ["Sample peak", (v) => v.toFixed(1) + " dBFS"],
+  psr_db: ["Punch (PSR)", (v) => v.toFixed(1) + " dB"], plr_db: ["Peak to loudness", (v) => v.toFixed(1) + " dB"], "loudness.short_term_jumps_3lu": ["Level jumps", (v) => String(v)],
+  "stereo.correlation_below_120hz": ["Bass in mono", (v) => v.toFixed(2)], mono_sum_drop_lu: ["Mono check", (v) => "−" + v.toFixed(2) + " LU"], "stereo.correlation": ["Stereo", (v) => v.toFixed(2)],
+  "artefacts.dc_dbfs": ["DC offset", (v) => v.toFixed(0) + " dB"], "spectrum.bands.infra_below_20": ["Below 20 Hz", (v) => (v * 100).toFixed(1) + " %"], "artefacts.clip_runs": ["Clipping", (v) => String(v)],
+  "artefacts.nan_or_inf": ["Broken samples", (v) => String(v)], "spectrum.bands.below_250": ["Low end share", (v) => (v * 100).toFixed(0) + " %"], "spectrum.bands.sub_to_low_ratio": ["Sub vs bass", (v) => v.toFixed(2)] };
+const OK_SAY = { "loudness.integrated": "in the range for the genre", true_peak_dbtp: "no inter-sample overs", psr_db: "the drums still punch", "stereo.correlation_below_120hz": "the low end is mono: solid on any system",
+  mono_sum_drop_lu: "holds up on a mono speaker", "artefacts.clip_runs": "no clipping", "spectrum.bands.below_250": "the low end's share fits the genre", "spectrum.bands.sub_to_low_ratio": "sub and bass in balance" };
+function mixJudge(res) {
+  if (!MIXT || !song) return null;
+  let best = -1, bars = -1;                                  // (the song is judged as the genre that plays longest)
+  song.places.forEach((x, i) => { if (x && (song.bars[i] || 64) > bars) { bars = song.bars[i] || 64; best = i; } });
+  const gname = S.genreName(pcSetPlaces([song.places[best]])[0].genre), key = MIXT.map[gname] || "house", T = MIXT.targets, g = T.genres[key] || {};
+  const rules = { ...T.default, ...(T.profiles[g.profile] || {}), ...(g.rules || {}) }, get = (o, k) => k.split(".").reduce((a, b) => (a == null ? a : a[b]), o);
+  const rows = [];
+  for (const [k, r] of Object.entries(rules)) {
+    let v = get(res, k); if (Array.isArray(v)) v = Math.max(...v); if (v == null || !MIX_NAME[k]) continue;
+    let st = "pass";
+    for (const lv of ["fail", "warn"]) { const lo = r[lv + "_below"], hi = r[lv + "_above"]; if ((lo !== undefined && v < lo) || (hi !== undefined && v > hi)) { st = lv; break; } }
+    rows.push({ k, v, st, say: st === "pass" ? OK_SAY[k] || "fine" : r.say.replace(/\s*\(#\d+\)$/, "") });
+  }
+  rows.sort((a, b) => ({ fail: 0, warn: 1, pass: 2 }[a.st] - { fail: 0, warn: 1, pass: 2 }[b.st]));
+  return { gname, key, profile: g.profile || "default", rows, secs: res.seconds };
+}
+function mixHTML() {
+  const m = mixLast; if (!m) return "";
+  const bad = m.rows.filter((r) => r.st !== "pass").length;
+  return '<div class="sec"><h3>MIX CHECK · the last export (' + mmss(m.secs) + ") judged as " + m.gname + " (the sound-check skill's " + m.key.replace(/_/g, " ") + " targets, " + m.profile + " profile)</h3>" +
+    '<p style="margin:0 0 8px">' + (bad ? bad + (bad === 1 ? " thing" : " things") + " to look at, the rest is in shape." : "All in shape for the genre.") + "</p><div class=\"mixrows\">" +
+    m.rows.map((r) => '<div class="mixrow ' + r.st + '"><i></i><span style="color:var(--ink)">' + MIX_NAME[r.k][0] + "</span><b>" + MIX_NAME[r.k][1](r.v) + "</b><span>" + r.say + "</span></div>").join("") +
+    '</div><p class="muted" style="margin:8px 0 0;font-size:.75rem">The perf-sound-check skill\'s measures (BS.1770 loudness, PSR after Ian Shepherd, 4× true peak, the bands, the low end\'s mono). PERF has a master knob: loudness is a gain hint, not a fault.</p></div>';
+}
 async function slPutPiece(i, gq, pq) {                        // a piece into place i (an empty place starts at 16 bars, all parts)
   if (i < 0 || i > 15) return;
   const was = song.places[i];
@@ -2828,7 +3049,7 @@ $("song").addEventListener("click", async (e) => {
   const id = b.id;
   if (id === "slPlay" || id === "slFrom") return songPlay(id === "slFrom" ? setSel : -1);
   if (id === "slSend") return songSend();
-  if (id === "slWav") return rec ? rec.stop() : songWav();
+  if (id === "slWav") return rec ? rec.stop() : exp ? expCancel() : songWav();
   if (id === "mvRec") {
     mvRec = !mvRec;
     if (mvRec && !moves.some((e) => e.k === "base") && node) { const r = await fxAsk({}); if (r) { moves.unshift({ k: "base", lo: r.lo | 0, hi: r.hi | 0, pl: -1, s: -1 }); mvSave(); } }

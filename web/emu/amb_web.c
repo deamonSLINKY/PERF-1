@@ -291,6 +291,23 @@ __attribute__((used, visibility("default"))) int web_st_par(int p, int v)
     return ui_param_get(p);
 }
 
+/* ---- the studio's fast export (a Web Worker runs this wasm as fast as it can, web/studio): PLAY as the button starts it (a fresh track, the song's
+ * place from the top: ui.c B_PLAY) and stops it, whether it plays, and a parameter read (a fade's level, the tempo) */
+__attribute__((used, visibility("default"))) int web_st_play(int on)
+{
+    if (on && !en_playing) {
+        track_fresh(1, 0);
+        af_fresh = 1;
+        sl_start();
+        en_play(1);
+    } else if (!on && en_playing) {
+        en_play(0);
+    }
+    return en_playing;
+}
+__attribute__((used, visibility("default"))) int web_st_playing(void) { return en_playing; }
+__attribute__((used, visibility("default"))) int web_st_par_get(int p) { return ui_param_get(p); }
+
 /* the tracks muted and soloed (a bit a track, EN_TR_*), as the FM-1's GLO and keys: heard now, not stored; a song place's parts set them again */
 __attribute__((used, visibility("default"))) int web_st_trk(int mute, int solo)
 {
