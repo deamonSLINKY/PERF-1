@@ -8,6 +8,7 @@ then "device asks, host answers" reads of the logical image. Run from the repo r
 Also checks logical_image/product_of against web/fm1pkg.js (needs node and
 build/amb.fwsc, skipped otherwise)."""
 import io
+import os
 import queue
 import shutil
 import subprocess
@@ -282,7 +283,7 @@ def errors():
 
 
 def against_js():
-    clean = ROOT / "build/amb.fwsc"
+    clean = Path(os.environ["PERF_PKG"]) if os.environ.get("PERF_PKG") else ROOT / "build/amb.fwsc"   # (run_tests.sh: the newest package)
     if not shutil.which("node") or not clean.exists():
         print("logical image vs fm1pkg.js: skipped (needs node and build/amb.fwsc)")
         return
