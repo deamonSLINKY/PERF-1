@@ -37,7 +37,9 @@
 #define EN_NACID 31                    /* the acid's (more: supersaws, CZs, minis) */
 #define EN_NFMFACT 30                  /* the DX7 voices of fm6.inc built in */
 #define EN_NUSER 16                     /* and the ones the player loads (SysEx, en_user_voice), after them */
-#define EN_NCMFM (EN_NFMFACT + EN_NUSER)   /* the counter-melody's six-operator FM sounds: after the plain ones */
+#define EN_NFMX 30                     /* (0.17.25) thirty more built-in DX7 voices (the DY set's 30..59), after the player's slots so a stored piece's numbers hold */
+#define EN_NCMFM (EN_NFMFACT + EN_NUSER + EN_NFMX)   /* the counter-melody's six-operator FM sounds: after the plain ones */
+#define EN_CM_X0 (12 + EN_NFMFACT + EN_NUSER)       /* the first of the thirty more on the pluck's sound numbers */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
@@ -60,7 +62,9 @@ int en_user_voice(int slot, const uint8_t *packed128);   /* 1 taken; 0 not (busy
 void en_user_clear(void);                      /* all of them gone */
 int en_user_count(void);                       /* how many are loaded */
 int en_user_next(void);                        /* the slot a single voice goes to: the next free one, or the last when all are in use */
-int en_ncm_snd(void);                          /* how many pluck sounds can be chosen now: the plain ones, the built-in DX voices, the loaded ones */
+int en_ncm_snd(void);                          /* how many pluck sounds can be chosen now: the plain ones, the built-in DX voices (60), the loaded ones */
+int en_cm_snd_at(int pos);                     /* the sound at place pos (0 .. en_ncm_snd() - 1) of the list as the knob turns: the plain ones, the sixty built-in, the loaded */
+int en_cm_snd_pos(int snd);                    /* and a sound's place on it (0 for a loaded voice that is not there) */
 const uint8_t *en_user_get(int slot);          /* a loaded voice's 128 bytes (to store) */
 void en_voice_unpack(const uint8_t *packed128, uint8_t *voice155);   /* the DX7's two formats: for single-voice dumps (155 bytes) and the tests */
 void en_voice_pack(const uint8_t *voice155, uint8_t *packed128);

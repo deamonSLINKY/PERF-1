@@ -884,12 +884,21 @@ int main(void)
             ok &= b[k] == b2[k];
         CHECK(ok, "voice formats: pack(unpack(b)) differs from b");
         en_init();
-        CHECK(en_user_count() == 0 && en_ncm_snd() == 12 + EN_NFMFACT, "user voices: %d loaded and %d sounds after en_init", en_user_count(), en_ncm_snd());
+        CHECK(en_user_count() == 0 && en_ncm_snd() == 12 + EN_NFMFACT + EN_NFMX, "user voices: %d loaded and %d sounds after en_init", en_user_count(), en_ncm_snd());
+        /* (0.17.25) the thirty more built-in voices: numbered after the player's slots, on the knob's list before them; the first is Clyde Jones' WURLITZER */
+        CHECK(en_cm_snd_at(12 + EN_NFMFACT) == EN_CM_X0 && en_cm_snd_pos(EN_CM_X0) == 12 + EN_NFMFACT && en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX - 1) == EN_NCMSND - 1,
+              "more voices: the list's places %d %d %d", en_cm_snd_at(12 + EN_NFMFACT), en_cm_snd_pos(EN_CM_X0), en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX - 1));
+        CHECK(en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX) == 0 && en_cm_snd_pos(12 + EN_NFMFACT) == 0, "more voices: an empty slot is on the list (%d, %d)",
+              en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX), en_cm_snd_pos(12 + EN_NFMFACT));
+        CHECK(!strcmp(EN_CM_SOUND[EN_CM_X0], "WURLITZER") && !strcmp(EN_CM_SOUND[EN_NCMSND - 1], "SHORTHORNS"), "more voices: named '%s' .. '%s'", EN_CM_SOUND[EN_CM_X0],
+              EN_CM_SOUND[EN_NCMSND - 1]);
         CHECK(!en_user_voice(1, b), "user voices: a slot past the end was taken");
         CHECK(en_user_voice(0, b), "user voices: slot 0 was not taken");
         en_play(1);
         run(0.2f);
-        CHECK(en_user_count() == 1 && en_ncm_snd() == 12 + EN_NFMFACT + 1, "user voices: %d loaded, %d sounds", en_user_count(), en_ncm_snd());
+        CHECK(en_user_count() == 1 && en_ncm_snd() == 12 + EN_NFMFACT + EN_NFMX + 1, "user voices: %d loaded, %d sounds", en_user_count(), en_ncm_snd());
+        CHECK(en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX) == 12 + EN_NFMFACT && en_cm_snd_pos(12 + EN_NFMFACT) == 12 + EN_NFMFACT + EN_NFMX,
+              "more voices: the loaded one last on the list (%d)", en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX));
         CHECK(!strcmp(EN_CM_SOUND[12 + EN_NFMFACT], "DX TESTVOICE"), "user voices: named '%s'", EN_CM_SOUND[12 + EN_NFMFACT]);
         en_set(P_CM_LVL, 80);
         en_set(P_CM_DENS, 90);

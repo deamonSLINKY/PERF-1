@@ -3176,10 +3176,13 @@ static const cm_snd_t CM_SOUND[CM_NPLAIN] = {
     {1.0f, 0.0f, 0.0f, 0, 1.15f},    /* Bleep: a plain sine */
     {7.01f, 0.1f, 1.0f, 0, 0.9f},    /* Glass */
 };
+#include "fm6_dy.h"                             /* (the DY set's names: the thirty more are on the list as they are) */
 const char *EN_CM_SOUND[EN_NCMSND] = {"Pluck", "Marimba", "E.Piano", "Kalimba", "Bell", "Vibes", "Gong", "Clav", "Digital", "Brass", "Bleep", "Glass",
     "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet",
     "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)",
-    "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)"};
+    "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)", "(empty)",
+    FM6_DYX_NAME_LIST};
+typedef char fm_dyx_names_ok[FM6_NDY == EN_NFMFACT + EN_NFMX ? 1 : -1];
 static const char *const FM_DX_NAME[EN_NFMFACT] = {   /* (the same thirty, to put back when the DY set is switched off: en_fm_set_dy) */
     "DX Tine EP", "DX Glass Bell", "DX Round Bass", "DX Brass Sect", "DX Soft Pad", "DX Wood Bars", "DX Drawbars", "DX Nylon Pick", "DX Brass 2", "DX Solid Bass", "DX Bells", "DX Marimba", "DX Clavinet", "DX Strings", "DX Glass Pad", "DX Sync Lead", "DX Harp", "DX Kalimba", "DX Flute", "DX Steel Drum", "DX Saw Bass", "DX Tubular", "DX Steel Gtr", "DX Clean Gtr", "DX Muted Gtr", "DX Drive Gtr", "DX Slap Bass", "DX Synth Brass", "DX Sax", "DX Mute Trumpet"};
 const char *const EN_CM_STYLE[EN_NCMSTYLE] = {"Up", "Down", "Up-down", "Random", "Skip", "Thirds"};
@@ -3207,12 +3210,17 @@ static void hb_tick(uint32_t n)
  * a note (audit M-65), so the sustaining ones are taken down 8 dB (x0.40; x0.42 nylon and harp, x0.55 steel drum) and the percussive ones stay */
 static const float FM_GAIN[EN_NCMFM] = {0.24f, 0.38f, 0.29f, 0.38f, 1.02f, 1.87f, 0.30f, 0.53f, 0.38f, 0.53f, 0.30f, 2.55f, 0.35f, 0.49f, 1.54f, 0.34f, 0.55f, 2.13f, 0.27f, 0.87f, 0.65f, 0.29f,
                                          0.49f, 0.20f, 1.80f, 0.26f, 0.93f, 0.23f, 0.38f, 0.45f,   /* (the eight newer DX voices; the muted guitar's is its peak's, its rms is only a click) */
-                                         0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f};   /* (the loaded voices: not measured, a sustaining voice's -6 dB) */
+                                         0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,   /* (the loaded voices: not measured, a sustaining voice's -6 dB) */
+                                         /* (0.17.25) the thirty more DY voices: each one's rms in the arpeggio (dycal, at the loaded voices' 0.5) set to the median of the
+                                          * first thirty DY voices' levelled rms */
+                                         0.26f, 0.25f, 0.35f, 0.20f, 0.22f, 0.24f, 0.52f, 0.32f, 0.26f, 0.50f, 0.31f, 0.50f, 0.44f, 0.33f, 0.26f, 0.22f, 0.33f, 0.27f, 0.23f, 0.48f,
+                                         0.16f, 0.34f, 0.35f, 0.28f, 0.17f, 0.16f, 0.36f, 0.36f, 0.21f, 0.36f};
 /* the DY voices' gains: each set so the voice's rms in the arpeggio (tests/host/dycal on build/fm6_dy.bin, at the user slots' 0.5) equals the DX
  * voice's in the same slot (fmcal's rms column), then all x1.8 (+5 dB): the DX set sits 6 dB under the plain sounds (audit M-65), and on the unit
  * that read as too quiet against the loaded voices (0.14.13), which play at a flat 0.5, about 1.5 dB under the plain mean */
-static const float FM_GAIN_DY[EN_NFMFACT] = {0.45f, 0.29f, 0.22f, 0.59f, 3.73f, 0.88f, 0.40f, 1.15f, 0.70f, 0.52f, 0.52f, 1.64f, 0.29f, 0.49f, 0.77f, 0.29f, 1.17f, 3.35f, 0.94f, 0.59f,
-                                              0.23f, 0.20f, 1.37f, 0.52f, 0.92f, 0.34f, 0.76f, 0.23f, 0.40f, 0.43f};
+static const float FM_GAIN_DY[EN_NFMFACT] = {0.45f, 0.29f, 0.22f, 0.59f, 3.73f, 0.67f, 0.40f, 1.15f, 0.70f, 0.52f, 0.52f, 1.64f, 0.29f, 0.49f, 0.77f, 0.29f, 1.17f, 3.35f, 0.94f, 0.59f,
+                                              0.23f, 0.20f, 1.37f, 0.52f, 0.92f, 0.34f, 0.76f, 0.23f, 0.40f, 0.43f};   /* (0.17.25: Wood Bars is FLUTEMRMBA, levelled to
+                                              * LOG DRUM 1, which played one pitch on every key: at its level, -27.6 dB) */
 /* the DX voices are rendered by the other core, a chunk ahead: its job renders this chunk's samples into a ring, and the first core plays the ones from
  * FM_D samples before (a chunk), so it never waits for them; the cost is that they sound 5.8 ms late */
 #define FM_R 512
@@ -7260,6 +7268,34 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
     en_smp_active = (uint8_t)live;
 }
 
+/* (0.17.25) the DX pluck's ensemble, after SAMPERF's (0.29.0): a DX7 voice is one voice in the middle, which reads as thin beside the pad's chorus
+ * and the plain pluck's two pans. What is above 200 Hz goes through a delay with a tap a side, around 8 ms, swept 2.5 ms by a slow sine (0.37 Hz)
+ * the sides a quarter turn apart, with a small faster shimmer (5.3 Hz); the lows stay in the middle, and so does a bass voice (and the sends).
+ * On the DX voices' stage, so on the other core with them; off when the load is far too high (shed level 2). */
+#define FE_N 512                                /* (10.7 ms at the most: 471 samples) */
+#define FE_AMT 0.4f                             /* the taps' share (SAMPERF's pluck and keys: 0.4 .. 0.6 of its 0.8) */
+#define FE_Q 8192.0f                            /* the line holds 16-bit samples, 1/8192 a step (+-4): 1 KB, in RAM (the pool keeps its 4 KB spare) */
+static int16_t fe_buf[FE_N];
+static uint32_t fe_w;
+static float fe_hp, fe_ph, fe_ph2, fe_amt;
+static int fm_is_bass(int c)                   /* the bass voices (the same slots in the DX and the DY set; and the thirty more's three) */
+{
+    return c == 2 || c == 9 || c == 20 || c == 26 || (c >= EN_NFMFACT + EN_NUSER + 20 && c <= EN_NFMFACT + EN_NUSER + 22);
+}
+static float fe_tap(float d)                    /* d samples back, between two */
+{
+    float at = (float)fe_w - d, f;
+    int i;
+    if (at < 0.0f)
+        at += (float)FE_N;
+    i = (int)at;
+    f = at - (float)i;
+    {
+        const float a = (float)fe_buf[i & (FE_N - 1)], b = (float)fe_buf[(i + 1) & (FE_N - 1)];
+        return (a + (b - a) * f) * (1.0f / FE_Q);
+    }
+}
+
 /* the DX voices (the pluck's sounds from CM_NPLAIN): a stage of the chunk's job, with the pad's, into their own buffers */
 static void render_fm(uint32_t n)
 {
@@ -7268,23 +7304,47 @@ static void render_fm(uint32_t n)
     const float g = cm_vol * 0.5f * FM_OUT * (fm_dy_cur && cur < EN_NFMFACT ? FM_GAIN_DY[cur] : FM_GAIN[cur]);
     uint32_t j;
     float lvl = 0.0f;
+    const float fe_to = en_shed_level >= 2 || fm_is_bass(cur) ? 0.0f : FE_AMT, fe_k = 1.0f - fm_expf(-FM_TWO_PI * 200.0f / EN_SR), ms = EN_SR * 0.001f;
     if (!on) {
         for (j = 0; j < n; j++)
             fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = 0.0f;
         fm_ctr += n;
+        fe_amt = 0.0f;
         return;
     }
     for (j = 0; j < n; j++) {
         float x = fm_fifo[(fm_ctr - FM_D + j) & (FM_R - 1)];   /* (rendered a chunk ago, by the other core) */
         const float y = (x < -16.0f ? -16.0f : x > 16.0f ? 16.0f : x) * g * TG(TR_CM, j);
-        fm_ol[j] = y;
-        fm_or[j] = y;
+        fe_amt += (fe_to - fe_amt) * 0.0005f;   /* (gliding: a new voice, a bass, the load) */
+        fe_hp += fe_k * (y - fe_hp);
+        {
+            const float h = (y - fe_hp) * FE_Q;
+            fe_buf[fe_w] = (int16_t)(h > 32767.0f ? 32767.0f : h < -32767.0f ? -32767.0f : h);
+        }
+        fe_ph += 0.37f / EN_SR;
+        fe_ph2 += 5.3f / EN_SR;
+        if (fe_ph >= 1.0f)
+            fe_ph -= 1.0f;
+        if (fe_ph2 >= 1.0f)
+            fe_ph2 -= 1.0f;
+        if (fe_amt > 1e-4f) {
+            const float wl = fe_tap((8.0f + 2.5f * sine(fe_ph) + 0.12f * sine(fe_ph2)) * ms),
+                        wr = fe_tap((8.0f + 2.5f * sine(fe_ph + 0.25f) + 0.12f * sine(fe_ph2 + 0.5f)) * ms),
+                        nm = 1.0f - 0.5f * fe_amt * fe_amt;   /* (about 1 / sqrt(1 + amt^2): the level stays where it was) */
+            fm_ol[j] = (y + fe_amt * wl) * nm;
+            fm_or[j] = (y + fe_amt * wr) * nm;
+        } else {
+            fm_ol[j] = y;
+            fm_or[j] = y;
+        }
+        fe_w = (fe_w + 1u) & (FE_N - 1u);
         fm_rs[j] = y * 0.35f;
         fm_es[j] = y * 0.5f;
         lvl = fm_maxf(lvl, y < 0.0f ? -y : y);
     }
     en_cm_level = fm_minf(lvl * 4.0f, 1.0f);
     fm_ctr += n;
+    fe_hp = fm_flush(fe_hp);
 }
 
 static void render_cm(uint32_t n)

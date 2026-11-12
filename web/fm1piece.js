@@ -346,7 +346,8 @@ export function pcIntoBank(bank, genre, slot, piece, npar) {
 export const pcVoiceName = (v) => String.fromCharCode(...Array.from(v.slice(118, 128)).map((c) => (c < 32 || c > 126 ? 32 : c))).trimEnd() || "(no name)";
 export function pcUserSlot(piece, iSnd, nplain, nfmfact) {
   const v = pcGet(piece, iSnd, 0);
-  return v === undefined ? -1 : v - nplain - nfmfact;
+  const k = v === undefined ? -1 : v - nplain - nfmfact;
+  return k >= 0 && k < PC_NUSER ? k : -1;                        // (0.17.25: past the slots, the thirty more built-in voices)
 }
 // the voices' object (OBJ_VOICES; maybe empty): how many are loaded, and each
 export function pcVoices(vox) {

@@ -991,7 +991,7 @@ It sits under the other parts by default (Level 50, Density 45). Turn Level to 0
 The pluck has three groups of sounds:
 
 - **Plain (12):** Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass. All are FM except Bleep, which is a plain sine.
-- **Built-in DX7 voices (30):** DX Tine EP, DX Glass Bell, DX Round Bass, DX Brass Sect, DX Soft Pad, DX Wood Bars, DX Drawbars, DX Nylon Pick, DX Brass 2, DX Solid Bass, DX Bells, DX Marimba, DX Clavinet, DX Strings, DX Glass Pad, DX Sync Lead, DX Harp, DX Kalimba, DX Flute, DX Steel Drum, DX Saw Bass, DX Tubular, and the eight described below. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
+- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" after the DY set). DX Tine EP, DX Glass Bell, DX Round Bass, DX Brass Sect, DX Soft Pad, DX Wood Bars, DX Drawbars, DX Nylon Pick, DX Brass 2, DX Solid Bass, DX Bells, DX Marimba, DX Clavinet, DX Strings, DX Glass Pad, DX Sync Lead, DX Harp, DX Kalimba, DX Flute, DX Steel Drum, DX Saw Bass, DX Tubular, and the eight described below. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
 - **Yours (up to 16):** DX7 voices you load yourself come after the built-in ones, named `DX` plus the voice's own name (section 15).
 
 The last eight built-in DX voices are guitars, a bass and brass:
@@ -1017,6 +1017,32 @@ Jack Deckard's collection on Dave Benson's page. **DX** puts the built-in set ba
 own name. For example, madFame's `MF EPRHOD1` stands in for the Tine EP and the Aftertouch magazine's `SAXOPHONE`
 for the Sax. The full list is in the PERF-1 source. The names on the screen change with the switch. Each DY voice is
 set to the same loudness as the DX voice it replaces, so the genres' mix stays balanced.
+
+**Thirty more** (0.17.25). After the first thirty on the **Sound** list come thirty more DX7 voices made by people, from
+the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's and Narfman's folders, and the Aftertouch,
+Guitares & Claviers and E&MM magazine banks). They play in either set and show their banks' own names:
+
+| On the screen | What it is | On the screen | What it is |
+|---|---|---|---|
+| WURLITZER | Wurlitzer electric piano | TSQR DECAY | Sequencer pluck |
+| TF-RHODES | Bright Rhodes | CS 80 | Warm poly (CS-80 style) |
+| REAL GRAND | Grand piano | ANALOG 1 | Analog poly |
+| ARCTICKEYS | Digital keys | VNTGSTRNG1 | Vintage string machine |
+| COTTENKEYS | Soft keys | ANGEL VOX | Choir pad |
+| MAGICM1ORG | House organ (M1 style) | Fairlt.Vox | Sampled-choir style voice |
+| LORD-Y B3 | Rock organ | WD SQ BASS | Square bass |
+| Farfisa1 | Combo organ | PORTABass | Glide bass |
+| PROPHET | Poly synth (Prophet style) | SYNBASS 48 | Synth bass |
+| JUNO 106 7 | Poly keys (Juno style) | Femalevibe | Vibraphone |
+| OB Genviv/ | Poly brass (OB style) | CELESTE | Celeste |
+| Saw3Op | Saw lead | DOUG22PICK | Picked pluck |
+| SquarePWM | PWM lead | SITAR VIII | Sitar |
+| Techno2 | Techno lead | NEUTRNPLUK | Pluck |
+| ETH. STAB | Stab | SHORTHORNS | Short horn section |
+
+**Stereo.** A DX7 voice is mono. The pluck widens its DX voices with a light ensemble: what is above 200 Hz goes
+through a delay on each side, swept slowly, so the voice spreads about as wide as the plain pluck. The lows, the bass
+voices and the reverb and echo sends stay in the middle.
 
 For more sounds, load your own. The installer page takes any DX7 `.syx` bank or single voice (section 15), and there
 are large free collections, such as [Bobby Blues' DX7 archive](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html),

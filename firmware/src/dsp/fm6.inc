@@ -233,7 +233,9 @@ static void fm_reset(void)                       /* a new engine: no voices, no 
  * knows (0 ..) and where they are in those sets */
 static const uint8_t FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 /* the voices a patch may use at once: the heaviest (six operators ringing, bells, strings, pads) three; the middle four or five; the rest all six */
-static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 6, 6, 6, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};   /* (a loaded voice: four) */
+static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 6, 6, 6, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,   /* (a loaded voice: four) */
+                                        /* (0.17.25) the thirty more: the organs, the pads and the voices (sustaining) three, the rest four */
+                                        4, 4, 4, 4, 4, 3, 3, 3, 4, 4, 3, 4, 4, 4, 4, 3, 4, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
 /* the player's voices: 128-byte packed records. The main loop fills a staging slot and posts C_USERVOICE; the engine copies it in between chunks. */
 static uint8_t fm_user[EN_NUSER][128] EN_POOL, fm_stage[EN_NUSER][128] EN_POOL;
 static volatile uint16_t fm_stage_pend;
@@ -275,7 +277,7 @@ static void fm_user_wipe(void)
     fm_user_n = 0;
     for (s = 0; s < EN_NUSER; s++)
         EN_CM_SOUND[12 + EN_NFMFACT + s] = "(empty)";
-    if (fm_cur >= EN_NFMFACT)
+    if (fm_cur >= EN_NFMFACT && fm_cur < EN_NFMFACT + EN_NUSER)
         fm_cur = -1;
 }
 static uint8_t fm_req_n;                         /* the main loop's view of how many there will be (the engine takes the voices a chunk later) */
@@ -298,7 +300,24 @@ void en_user_clear(void)
     post(C_USERCLEAR, 0, 0);
 }
 int en_user_count(void) { return fm_user_n; }
-int en_ncm_snd(void) { return 12 + EN_NFMFACT + fm_user_n; }
+int en_ncm_snd(void) { return 12 + EN_NFMFACT + EN_NFMX + fm_user_n; }
+int en_cm_snd_at(int pos)                        /* the knob's order: the plain ones and the first thirty, the thirty more (after the player's slots in number), the loaded */
+{
+    if (pos < 12 + EN_NFMFACT)
+        return pos < 0 ? 0 : pos;
+    if (pos < 12 + EN_NFMFACT + EN_NFMX)
+        return EN_CM_X0 + pos - (12 + EN_NFMFACT);
+    pos -= EN_NFMX;
+    return pos < 12 + EN_NFMFACT + (int)fm_user_n ? pos : 0;
+}
+int en_cm_snd_pos(int snd)
+{
+    if (snd >= EN_CM_X0)
+        return snd < EN_NCMSND ? 12 + EN_NFMFACT + snd - EN_CM_X0 : 0;
+    if (snd >= 12 + EN_NFMFACT)
+        return snd - 12 - EN_NFMFACT < (int)fm_user_n ? snd + EN_NFMX : 0;
+    return snd < 0 ? 0 : snd;
+}
 int en_user_next(void) { return fm_req_n < EN_NUSER ? fm_req_n : EN_NUSER - 1; }   /* where the next single voice goes: appended, or replacing the last */
 const uint8_t *en_user_get(int slot) { return (unsigned)slot < EN_NUSER ? fm_user[slot] : fm_user[0]; }
 static void fm_set_patch(int idx)                /* between chunks: a new patch cuts the notes */
@@ -307,7 +326,7 @@ static void fm_set_patch(int idx)                /* between chunks: a new patch 
     fm_init();
     if (idx < 0 || idx >= EN_NCMFM)
         idx = 0;
-    if (idx >= EN_NFMFACT && idx - EN_NFMFACT >= (int)fm_user_n)
+    if (idx >= EN_NFMFACT && idx < EN_NFMFACT + EN_NUSER && idx - EN_NFMFACT >= (int)fm_user_n)
         idx = 0;                                 /* a loaded voice that is not there: the first */
     if (fm_dy_cur != en_fm_dy) {
         fm_dy_cur = en_fm_dy;                    /* the set changed: load the patch again from the other */
@@ -315,7 +334,9 @@ static void fm_set_patch(int idx)                /* between chunks: a new patch 
     }
     if (idx == fm_cur)
         return;
-    if (idx >= EN_NFMFACT) {
+    if (idx >= EN_NFMFACT + EN_NUSER) {
+        fm6_unpack(FM6_DY[idx - EN_NUSER], fm_ed);   /* (the thirty more: the DY set's 30 .., in either set) */
+    } else if (idx >= EN_NFMFACT) {
         fm6_unpack(fm_user[idx - EN_NFMFACT], fm_ed);
     } else if (fm_dy_cur) {
         fm6_unpack(FM6_DY[idx], fm_ed);

@@ -1441,6 +1441,8 @@ static int knob_get(int k)
         return ui.mix_trk;
     if (k == K_PLRT || k == K_DLRT)              /* (the place in speed order) */
         return lrt_pos(proj.par[p]);
+    if (p == P_CM_SND)                           /* (0.17.25: the place on the pluck's list: the thirty more DX voices come before the loaded ones) */
+        return en_cm_snd_pos(proj.par[p]);
     if (k == K_GENRE)
         return proj.genre;
     if (k == K_ACT)                              /* the answer's kind (P_AC_RESP is kind * 5 + direction) */
@@ -1516,6 +1518,11 @@ static int knob_get(int k)
 static void knob_range(int k, int *lo, int *hi)
 {
     int p = knob_par(k);
+    if (p == P_CM_SND) {                         /* the places on the pluck's list: what can be chosen now */
+        *lo = 0;
+        *hi = en_ncm_snd() - 1;
+        return;
+    }
     if (k == K_MXT) {
         *lo = 0;
         *hi = 4;
@@ -1855,6 +1862,16 @@ static void ps_freeze(void)                     /* the pluck line held: deja vu'
 static void knob_set(int k, int v)
 {
     int lo, hi, p = knob_par(k);
+    if (p == P_CM_SND) {                         /* a place on the list: its sound */
+        const int ns = en_ncm_snd();
+        v = en_cm_snd_at(v < 0 ? 0 : v > ns - 1 ? ns - 1 : v);
+        if (v == proj.par[p])
+            return;
+        proj.par[p] = (int16_t)v;
+        en_set(p, v);
+        edited();
+        return;
+    }
     if (k == K_PLRT || k == K_DLRT) {            /* the place in speed order: the engine's number */
         knob_set(p, LRT_ORDER[v < 0 ? 0 : v > NLRT - 1 ? NLRT - 1 : v]);
         return;
@@ -3221,7 +3238,7 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
         caps(a, b, sizeof a);
         say(WHO[vc], a);
     } else if (ui.view == V_CMEL || ui.view == V_CMEL2 || ui.view == V_CMVU || ui.view == V_CMSTEP) {   /* the counter-melody's sound */
-        const int ns = en_ncm_snd(), cur = proj.par[P_CM_SND] < ns ? proj.par[P_CM_SND] : 0;   /* (a loaded voice that is gone: from the first) */
+        const int ns = en_ncm_snd(), cur = en_cm_snd_pos(proj.par[P_CM_SND]);   /* (the place on the list; a loaded voice that is gone: from the first) */
         knob_set(P_CM_SND, (cur + d + ns) % ns);
         caps(a, EN_CM_SOUND[proj.par[P_CM_SND]], sizeof a);
         say("PLUCK", a);
@@ -3846,7 +3863,7 @@ static void mm_set(int p, uint32_t mode, uint32_t v)   /* a learned setting (0.1
         x = knob_get(p) + d * ((hi - lo) / 100 > 1 ? (hi - lo) / 100 : 1);
     }
     x = x < lo ? lo : x > hi ? hi : x;
-    if (x == proj.par[p])
+    if (x == knob_get(p))                        /* (the knob's own count: the pluck's sound is a place on its list) */
         return;
     if (p == P_MODE)                             /* (the scale: its notes too, as the ALGORITHM dial sets it) */
         set_mode(x);
