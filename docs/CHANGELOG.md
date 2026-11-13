@@ -26,6 +26,11 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **Dubstep's wub, rebuilt (0.17.27).**
+  - **The sound.** The wobble used to be the whole bass, sub included, through one low-pass that only moved between about 80 and 400 Hz. Now it is built the way producers make it. A clean sine sub sits underneath. The sound's own oscillator goes through a resonant low-pass that the LFO sweeps from about 70 Hz to 3-4 kHz, with a vowel band above it. It is driven hard after the filter, so it growls more as it opens, then high-passed at 110 Hz so the sub stays clean. Measured with the bass alone: it moves about 2 octaves a beat (was 0.3-1.3), and on the drop the wub is a third to two thirds of the bass's energy above 300 Hz (was a few percent).
+  - **The rhythm.** On the drop the LFO's speed changes beat by beat over two bars (1/4, 1/8, 1/8T, 1/16, 1/2), each piece with its own pattern and a second one every 8 bars. A build speeds it up from 1/4 to 1/16. The sweep is drawn smoothly across each block, with no steps. The change of speed each bar for the drop's first 8 bars is gone.
+  - **The sounds.** Dubstep's ten pieces now take their bass from Wub, Reese, Gnarl, Metal and Square (they had Rumble and the dark saws, which barely moved). The Wub sound gives the wub in any genre. Set the bass LFO's Target to anything but Cutoff for the old wobble.
+  - **The mix.** Across four pieces: the 250 Hz-2 kHz band is up 1.4-4.9 dB and 2-8 kHz up 1.3-3.6 dB. Loudness and peaks are unchanged.
 - **Fixes from an outside audit (0.17.26).**
   - **A shared piece can't crash the FILTERS page.** A piece's filter types and SCREAM settings are now held to their ranges when it loads. An out-of-range byte from a damaged or hand-made piece used to read past the list of filter names.
   - **Reverb Damping at 100 keeps a tail.** At the top of the knob, the plate's damping stopped moving: the tail died and a small DC offset stayed in the tank. It now bottoms out at a very dark setting instead.

@@ -597,6 +597,8 @@ standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** pas
 
 Start with Scream at 60 and Drive at 40 on an acid piece, then turn the acid's Cutoff and Env mod (or let an LFO on **Acid cut** do it). Turn the acid's level down a little if it gets too loud: the limiter will hold it, but it squashes the rest of the mix.
 
+**The wub.** In DUBSTEP, and with the Wub sound in any genre, the bass LFO on the cutoff makes a wub the way a producer builds one. A clean sine sub stays underneath. The sound's own oscillator goes through a resonant low-pass that the LFO sweeps from about 70 Hz up to 3-4 kHz, with a vowel band above it (the "yoi"). It is then driven hard after the filter, so it growls more as it opens, and high-passed so the sub stays clean. On the drop the LFO's speed follows a rhythm, beat by beat over two bars (1/4, 1/8, 1/8T, 1/16, 1/2), each piece with its own and a second one every 8 bars. Through a build it speeds up from 1/4 to 1/16. Depth sets how far it opens, Shape how it moves (Sine: closed on the beat, open between; Saw: open then closing; Square: open and shut; S&H: a level each cycle), Cutoff where it starts, Reso how much it sings. SCREAM on the bass drives it harder still. Set the Target to anything but Cutoff for the old wobble.
+
 The bass's LFO moving the cutoff (a wobble) works with every type. The setting is for every piece, kept with the
 settings. It's the MultiFilter idea from Caustic, rebuilt here.
 
@@ -696,7 +698,7 @@ a made-up title, such as `VELVET RAIN`, the same one every time.
 | HYPNO | 01-10 | 118-138 | The original hypnotic techno and acid set. |
 | LOFI | L01-L10 | 70-94 | Swung boom-bap. Rhodes chords in 7ths and 9ths over a warm bass, a soft sparse lead, the Dusty kit. Vinyl and tape latched on. |
 | HOUSE | H01-H10 | 118-126 | Four on the floor, claps on 2 and 4, open hats on the off-beats, stabs and organ, a sub or square bass, the House kit. The pump latched on. |
-| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, a wobble bass (its LFO moves the cutoff), a harsh lead, dark pads, chords in fourths. After a drop: 8 bars half time with the wobble changing speed each bar, then 8 bars at full time, then half time again. 8-bar builds that end in 32nds and triplets. |
+| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, a wub bass (see **The wub** below), a harsh lead, dark pads, chords in fourths. After a drop: 8 bars half time, then 8 bars at full time, then half time again. 8-bar builds that end in 32nds and triplets, the wub speeding up through them. |
 | DUB | V01-V10 | 64-76 | One-drop, steppers and rockers rhythms. A sparse kick and rim, a deep bass on beats one and three, the off-beat chord chops (the skank), a long dotted echo and worn tape latched on. A breakdown is a dub-out: the drums and the bass line go on, the rest falls away. |
 | DNB | N01-N10 | 170-178 | Two-step, liquid, roller, neuro, jump-up and half-time. The DnB kit, a shimmer reverb, a light pump and tape. |
 | BREAKS | B01-B10 | 100-135 | Patterns after classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat) and a big-beat stomp. Some are approximations. The Break kit, a gated reverb, tape and the phaser latched on. |
@@ -837,7 +839,7 @@ LFO with its Target on Filter sweeps it.
 | 14 | Metal | Clangy FM |
 | 15 | Sync | A saw with hard sync (one oscillator restarting another, for a tearing sound), swept by the envelope |
 | 16 | Bright | The Saws with the filter open |
-| 17 | Wub | A hard-driven sub with the filter low, the body of a dubstep wobble |
+| 17 | Wub | Saws over a clean sub: the dubstep wub (see **The wub**), in any genre |
 | 18 | Bite | A biting FM bass that the envelope opens up |
 | 19 | Tine | An electric piano's low end |
 | 20 | Clang | Even more clangy FM than Metal |

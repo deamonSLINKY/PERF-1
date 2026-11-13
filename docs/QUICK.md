@@ -335,7 +335,7 @@ The counter-melody: two plucked voices taking turns, an arpeggio of the chord on
 
 ### The bass
 
-**Bass** (LFO): Level, Sound (24: Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ, Rumble, Sub, Square, Hoover, Fifths, Metal, Sync, Bright, Wub, Bite, Tine, Clang, Gnarl, Wide, Power, Air), Cutoff, Reso. **Bass env**: Trigger (when it restarts: each chord, every 1, 2, 4 or 8 bars, or off), Attack, Decay, Amount. **Bass LFO**: Rate, Depth, Shape, Target (cutoff, pitch, level, drive). Dubstep's wobble is this LFO on the cutoff.
+**Bass** (LFO): Level, Sound (24: Saws, Warm, Grit, Dirty, Reese, Pulse, FM, Organ, Rumble, Sub, Square, Hoover, Fifths, Metal, Sync, Bright, Wub, Bite, Tine, Clang, Gnarl, Wide, Power, Air), Cutoff, Reso. **Bass env**: Trigger (when it restarts: each chord, every 1, 2, 4 or 8 bars, or off), Attack, Decay, Amount. **Bass LFO**: Rate, Depth, Shape, Target (cutoff, pitch, level, drive). Dubstep's wub is this LFO on the cutoff: a clean sub, the mid swept from 70 Hz to 3-4 kHz and driven after the filter, its speed changing beat by beat on the drop.
 
 **Bass line** (LFO x4): notes that follow the chord. **Mode**: Hold (one long note gliding to each chord's root), Root (the genre's bass rhythm: the beats in hypnotic, a lazy three in lofi, a roll in DnB), Kick (on every kick, as an 808 does), Eighths, Off-beat (the off-beat eighths of house), Walk (on the beats: root, third or fifth, fifth, the scale note below the root), Riff (the genre's figure: disco bounces the octave, funk and amapiano syncopate, reggae leans on the fifth), then nine figures by name in any genre: Octaves, Two-step, One-drop, Log drum, Skippy, Funk, Big beat, Dub, Gallop; **Steps**: your own, from **Bass steps** (LFO x5). **Length**: how long a note holds (a quarter step to five steps). **Move**: how often a note goes up an octave, to the fifth or to the note below the root instead. **Glide**: 0 none, 100 about 0.4 s. Each note opens the filter with the Bass env's attack and decay (Trigger doesn't apply). A breakdown plays no notes. New pieces start with a line in lofi, DnB, trip-hop (Root), house (Off-beat), dubstep, trap (Kick), electro, synthwave (Eighths), disco, funk, reggae, amapiano, breaks, garage (Riff); HYPNO and dub hold.
 
@@ -364,7 +364,7 @@ Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through th
 | HYPNO | 01 | 118-138 | The original hypnotic techno and acid set, from four on the floor to dub techno and warehouse. |
 | LOFI | L01 | 70-94 | Swung boom-bap, Rhodes in 7ths and 9ths, a warm bass, the Dusty kit; vinyl and tape latched. |
 | HOUSE | H01 | 118-126 | Four on the floor, claps on 2 and 4, off-beat open hats, stabs and organ; the pump latched. |
-| DUBSTEP | D01 | 136-150 | Half time, the Heavy kit, a wobble bass (its LFO on the cutoff), a harsh lead, chords in fourths. |
+| DUBSTEP | D01 | 136-150 | Half time, the Heavy kit, a wub bass (clean sub, the mid swept and driven, its speed changing each beat on the drop), a harsh lead, chords in fourths. |
 | DUB | V01 | 64-76 | One-drop, steppers, rockers; a deep bass on the one and three, the off-beat skank, a long echo, worn tape. |
 | DNB | N01 | 170-178 | Two-step, liquid, roller, neuro, jump-up, half-time; the DnB kit, shimmer reverb, a light pump. |
 | BREAKS | B01 | 100-135 | After the classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat); the Break kit, gated reverb. |

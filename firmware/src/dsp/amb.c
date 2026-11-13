@@ -399,7 +399,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{0}, {0}, {0}, {1, 4, 13, 28, 16}, {0}, {0}, {0}, {0}},
     {{0, 17, 5, 2, 3}, {1, 9, 7, 3, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 8, 7}, {8, 8, 1}, {8, 5, 8}, {8, 5, 8}},
     {{6, 13, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
-    {{7, 8, 11, 22, 1}, {4, 16, 20, 3, 8}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
+    {{7, 8, 11, 22, 1}, {16, 4, 20, 13, 10}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
     {{13, 8, 6, 17, 21}, {9, 1, 5, 8, 20}, {12, 4, 16, 21, 15}, {18, 24, 12, 30, 36}, {8, 8, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 11}},
     {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
     {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
@@ -1769,6 +1769,8 @@ static struct {
     float vd;                                   /* a key's velocity, as a gain less 1 (0: as the algorithm plays it; 0.15.23) */
 } bass;
 static float bl_env, bl_gate;                   /* the bass line's envelope, 0..1, and the samples its note still holds */
+#define WUB_OUT 0.8f                            /* the wub's level into the bass's last soft clip */
+static float wub_lv, wub_hp;                    /* (0.17.27) the wub's sweep a chunk ago (0..1: drawn from it to now across the chunk), its mid's high-pass */
 static uint8_t bl_up, bl_kick, bl_beat;         /* attacking; the kick hit this step; the notes since the bar (the riff's place) */
 static float bass_vol, reso_k = 1.0f;
 static const float GLIDE_K = 1.0f / (0.6f * EN_SR);
@@ -2680,7 +2682,28 @@ static const uint8_t FILL_OK[EN_NGENRE] = {0x3F, 0x16, 0x07, 0x49, 0x14, 0x7F, 0
 static uint8_t gap_on;                          /* the drop gap: the mix cut for the build's last beat (SF_GAP) */
 static float gap_g = 1.0f, perc_fall;           /* its gain; a tom fill's pitch, semitones under the perc's */
 static uint8_t grv_bars;                        /* bars of groove since the drop (the time plan) */
-static int8_t wob_rate = -1;                    /* the drone LFO's rate for this bar after a dubstep drop (-1: the piece's) */
+/* (0.17.27) THE WUB: dubstep's bass (and the Wub sound in any genre), its LFO on the cutoff. On the drop the LFO's rate follows a rhythm a beat at a
+ * time over two bars, as a dubstep producer draws it (a piece's own, and every 8 bars its other one); through a build it speeds up, 1/4 to 1/16; else
+ * the piece's rate. The beat-locked LFO starts each beat at the top of its cycle at every one of these rates (1/2 only on even beats), so a change is
+ * seamless. render_bass draws the sound (wub_on). Was (0.15.13): a different rate each bar for the drop's first 8 bars. */
+#define DR_WUB 16                               /* the drone's Wub sound */
+static const int8_t WUB_PAT[6][8] = {           /* LFO rates (LFO_RATE_NAME): 0 1/4, 1 1/2, 8 1/8, 9 1/8T, 10 1/16, 11 1/16T */
+    {0, 0, 8, 8, 0, 0, 9, 10}, {8, 8, 8, 8, 9, 9, 10, 10}, {1, 1, 8, 8, 1, 1, 10, 10},
+    {9, 9, 9, 9, 0, 0, 10, 11}, {0, 8, 0, 8, 0, 8, 10, 10}, {10, 10, 8, 8, 10, 10, 0, 0}};
+static int wub_on(void) { return par[P_DL_DEST] == 0 && ((SECT[chord_genre].fl & SF_WOB) || par[P_DR_INST] == DR_WUB); }
+static int wub_rate(void)
+{
+    unsigned base, alt;
+    if (!en_playing || !sixteenth || !(SECT[chord_genre].fl & SF_WOB))
+        return par[P_DL_RATE];
+    if (sec == SEC_BUILD)
+        return sec_bars >= 3 ? 0 : sec_bars == 2 ? 8 : 10;
+    if (sec != SEC_GROOVE)
+        return par[P_DL_RATE];
+    base = (unsigned)(par[P_ROOT] * 5 + par[P_TEMPO] + par[P_DR_INST]) % 6u;
+    alt = grv_bars ? ((unsigned)grv_bars - 1u) / 8u & 1u : 0u;
+    return WUB_PAT[(base + 3u * alt) % 6u][((sixteenth - 1u) >> 2) & 7u];
+}
 int en_build_len(void) { return SECT[chord_genre].build; }
 static int sec_n = 4;                           /* the build's length in bars (from SECT when it starts) */
 static float snr_rise;                          /* the snare's pitch, semitones: it climbs through a build */
@@ -3844,10 +3867,6 @@ static void tick(void)
         if (sec == SEC_GROOVE && grv_bars < 255u)
             grv_bars++;                         /* (the drop set it to 0: its first bar is 1) */
         gap_on = 0;
-        {   /* the wobble after a dubstep drop: the drone's LFO a different fast rate each bar for 8 bars */
-            static const int8_t WR[4] = {8, 10, 9, 1};   /* 1/8, 1/16, 1/8T, 1/2 */
-            wob_rate = (int8_t)((SECT[chord_genre].fl & SF_WOB) && sec == SEC_GROOVE && grv_bars >= 1u && grv_bars <= 8u ? WR[(bars * 3u + grv_bars) % 4u] : -1);
-        }
         dd_bar();                               /* drum drift: a fill coming, or a change now */
         arr_bar(intro_len > 0 && intro_t < intro_len);   /* the arrangement: which parts rest this bar */
         {   /* the acid's answer, Sync: Bar: this bar? (every 2nd .. 8th bar, or the bar before the drums change); Sync: Loop is decided where the line starts (acid_step) */
@@ -4707,7 +4726,6 @@ static void regrow(void)                        /* a new piece: a fresh acid lin
     arr_s = rng ^ 0x5BD1E995u;
     arr_chg = en_dd_changes;
     grv_bars = 0;                               /* the time plan, the fills and the drop's tricks too */
-    wob_rate = -1;
     fill_hold = fill_q = fill_bar = drop_imp = 0;
     gap_on = 0;
     gap_g = 1.0f;
@@ -7087,6 +7105,19 @@ static void render_bass(uint32_t n)
                 rate = tgt > 0.0f ? 1.0f / ((bass.play ? 0.03f : 2.0f) * EN_SR) : 1.0f / ((par[P_DR_MAN] ? 0.3f : 4.0f) * EN_SR),
                 fmi = 0.5f + 2.2f * bass.env + 0.3f * arcm, pw = 0.5f + 0.3f * mod[9].v;
     const int bl_on = par[P_BL_MODE] && !bass.play;    /* the drone as a bass line: its notes' envelope in the loop */
+    /* (0.17.27) THE WUB (wub_on): a clean sine sub under a mid layer (the sound's oscillator), the mid through a resonant low-pass the LFO sweeps over five
+     * octaves (about 70 Hz to 3-4 kHz) and a vowel band above it (the "yoi"), then driven after the filter, harder as it opens (the growl), then a
+     * high-pass at 110 Hz so the sub stays clean. The sweep: the LFO's place as a level (sine, triangle, drift: a raised cosine, closed at the beat;
+     * saw: open then closing; square: open/shut; S&H: a level a cycle), drawn across the chunk from the last one's (no steps on the cutoff). */
+    const int wub = wub_on();
+    const float wl0 = wub_lv, wdrv = (3.0f + 1.0f * DS->drive) * (1.0f + 2.0f * sqd);
+    float wl1 = 0.0f, wlv = wl0, wsa = 0.0f;
+    if (wub) {
+        const float lp = drone_lfo.ph;
+        const int sh = par[P_DL_SHAPE];
+        wl1 = sh == 2 ? 1.0f - lp : sh == 3 ? (lp < 0.5f ? 1.0f : 0.0f) : sh == 4 ? 0.5f + 0.5f * drone_lfo.b : 0.5f - 0.5f * fm_cosf(FM_TWO_PI * lp);
+    }
+    wub_lv = wl1;
     float p0 = bass.ph[0], p1 = bass.ph[1], p2 = bass.ph[2], sp = bass.sph, mp = bass.mph, amp = bass.amp, f, i0, i1, i2, mi, dsub = DS->sub, dsubu;
     if (amp < 1e-5f && !en_playing && !bass.play) {
         bass.amp = 0.0f;
@@ -7111,11 +7142,20 @@ static void render_bass(uint32_t n)
         dsubu = dsub * (1.0f - sg) * 0.7f;
         dsub *= sg;
     }
+    wsa = fm_clampf((f - 60.0f) * 0.05f, 0.0f, 1.0f);   /* (the wub's sub: on the note below 60 Hz, an octave down above 80, crossfaded between: no jump) */
     i2 = f * (osc == DO_REESE || osc == DO_HOOVER ? 1.0140f : 1.00521f) * (1.0f / EN_SR);
     mi = osc == DO_METAL ? i1 * 1.4142f : osc == DO_FMR ? i1 * DRONE_FR[(unsigned)par[P_DR_INST] < EN_NSOUND ? par[P_DR_INST] : 0] : i1 * (1.5f + 2.5f * bass.env);   /* Metal's and FMR's modulator; Sync's slave */
     for (j = 0; j < n; j++) {
         float x;
-        if (!(dr_ctl++ & 31u)) {                /* the filter, every 32 samples (counted across chunks) */
+        if (wub && !(dr_ctl & 31u)) {           /* the wub's: the sweep, its vowel band (Q about 3), the cutoff's base the knob's (40: none), the breakdown closing it */
+            float fc;
+            wlv = wl0 + (wl1 - wl0) * ((float)j / (float)n);
+            fc = fm_clampf(fm_maxf(f * 1.5f, 70.0f) * fm_exp2f((1.5f + 4.5f * depth) * wlv + (float)(par[P_DR_CUT] - 40) * 0.04f + 0.3f * motion * mod[9].v -
+                                                                2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) + 2.0f * (float)par[P_LK_KICK] * 0.01f * lk_kick), 50.0f, 7000.0f);
+            svf_coefs(bass.c1, fc * FT_FC[1][FT_IX(ft_bass)], k1 * 0.6f);
+            svf_coefs(bass.c2, fm_minf(fc * 1.8f, 9000.0f), 0.3f);
+        }
+        if (!(dr_ctl++ & 31u) && !wub) {        /* the filter, every 32 samples (counted across chunks) */
             float oct, fc;
             oct = (float)par[P_DR_CUT] * 0.075f - 1.5f + DS->cut + (dest == 0 ? 2.5f * depth * drone_lfo.v : 0.0f) +
                   4.0f * (float)par[P_DE_AMT] * 0.01f * bass.env + 0.8f * motion * mod[9].v + 0.8f * arcm -
@@ -7179,9 +7219,17 @@ static void render_bass(uint32_t n)
             x = (blep_saw(p0, i0) + blep_saw(p1, i1) + blep_saw(p2, i2)) * dsaw;
             break;
         }
-        x += dsub * sine(sp);
-        if (dsubu > 1e-4f)                       /* (the sub's share below 30 Hz: on the note) */
-            x += dsubu * sine(p1);
+        if (wub) {                              /* the mid: filtered, its vowel, driven, high-passed; the sub (on the note, an octave down from 80 Hz) left clean */
+            const float m = x * sqin;
+            float y = svf_mm(m, bass.c1, &bass.s[0], ft_bass) * FT_G[1][FT_IX(ft_bass)] + (0.4f + 0.8f * wlv) * svf_mm(m, bass.c2, &bass.s[2], 2);
+            y = fm_tanhf(y * wdrv * (1.0f + 1.5f * wlv) + 0.3f) - 0.2913f;   /* (a bias: the even harmonics too; tanh 0.3 off again) */
+            wub_hp += 0.0157f * (y - wub_hp);
+            x = 1.3f * (y - wub_hp) + 0.65f * (wsa <= 0.0f ? sine(p1) : wsa >= 1.0f ? sine(sp) : sine(p1) + wsa * (sine(sp) - sine(p1)));
+        } else {
+            x += dsub * sine(sp);
+            if (dsubu > 1e-4f)                   /* (the sub's share below 30 Hz: on the note) */
+                x += dsubu * sine(p1);
+        }
         p0 += i0;
         p1 += i1;
         p2 += i2;
@@ -7199,10 +7247,12 @@ static void render_bass(uint32_t n)
             p2 -= 1.0f;
         if (sp >= 1.0f)
             sp -= 1.0f;
-        x = svf_mm(x * sqin, bass.c1, &bass.s[0], ft_bass);
-        if (FT_TWO(ft_bass))
-            x = svf_mm(x, bass.c2, &bass.s[2], ft_bass);
-        x *= FT_G[1][FT_IX(ft_bass)];
+        if (!wub) {
+            x = svf_mm(x * sqin, bass.c1, &bass.s[0], ft_bass);
+            if (FT_TWO(ft_bass))
+                x = svf_mm(x, bass.c2, &bass.s[2], ft_bass);
+            x *= FT_G[1][FT_IX(ft_bass)];
+        }
         amp += (tgt - amp) * rate;
         if (bl_on) {                            /* the line's note: 4 ms attack, a slow fall while it holds, 30 ms release after */
             if (bl_up) {
@@ -7219,10 +7269,11 @@ static void render_bass(uint32_t n)
             }
             x *= bl_env;
         }
-        bass_o[j] = fm_tanhf(x * drv) * amp * g * TG(TR_DRONE, j);   /* (into the mix by render_chunk, with its sends: 0.06 and 0.04 of it) */
+        bass_o[j] = fm_tanhf(wub ? x * WUB_OUT : x * drv) * amp * g * TG(TR_DRONE, j);   /* (into the mix by render_chunk, with its sends: 0.06 and 0.04 of it) */
     }
     for (j = 0; j < 4; j++)
         bass.s[j] = fm_flush(bass.s[j]);
+    wub_hp = fm_flush(wub_hp);
     bass.ph[0] = p0;
     bass.ph[1] = p1;
     bass.ph[2] = p2;
@@ -8461,7 +8512,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     {   /* the LFOs, and where the pad's goes */
         float d = (float)par[P_PL_DEPTH] * 0.01f;
         lfo_step(&pad_lfo, par[P_PL_RATE], par[P_PL_SHAPE], (float)n, step_len);
-        lfo_step(&drone_lfo, wob_rate >= 0 ? wob_rate : par[P_DL_RATE], par[P_DL_SHAPE], (float)n, step_len);
+        lfo_step(&drone_lfo, wub_on() ? wub_rate() : par[P_DL_RATE], par[P_DL_SHAPE], (float)n, step_len);
         pad_filt = par[P_PL_DEST] == 0 ? d * pad_lfo.v : 0.0f;
         pad_lvl = par[P_PL_DEST] == 1 ? 1.0f - 0.85f * d * (0.5f - 0.5f * pad_lfo.v) : 1.0f;
         pad_pan = par[P_PL_DEST] == 2 ? 0.9f * d * pad_lfo.v : 0.0f;
