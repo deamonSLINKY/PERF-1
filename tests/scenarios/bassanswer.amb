@@ -1,0 +1,55 @@
+# The bass's answer (0.17.30, the Bass answer page, LFO x6; a Reddit player's "an answer for every voice"): its kind (K1, the piece's, fxs97), when (K2,
+# fxs98: every 2nd .. 8th bar, Drift, with the acid's answer, the bar after it), the acid answer's kind beside it (K3), the line's mode (K4).
+# And the SOUND page (0.17.30, the settings' walk, last): Vintage, Polish, Tilt, Width (fxs99 .. 102).
+seed 0
+wait 500
+tap GLO
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+expect view 11
+# a line to answer with (Root), an octave every second bar
+spin K4 1
+wait 100
+expect par152 1
+spin K1 1
+wait 100
+expect fxs97 1
+spin K2 -20
+wait 100
+expect fxs98 0
+shot bass_answer_page.png
+waitfor bassans 1 6000
+waitfor bassans 0 6000
+waitfor bassans 1 6000
+# the call and response: the acid answers (an octave up), the bass the bar after
+spin K3 1
+wait 100
+expect par151 8
+spin K2 20
+wait 100
+expect fxs98 9
+waitfor acidans 1 30000
+waitfor acidans 0 6000
+expect bassans 1
+# the SOUND page: the settings' walk, its eleventh
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 10
+wait 100
+expect fxpage 35
+expect fxs99 30
+expect fxs100 1
+expect fxs101 1
+expect fxs102 30
+spin K1 10
+spin K3 1
+wait 100
+expect fxs99 40
+expect fxs101 2
+shot sound_page.png

@@ -5,10 +5,10 @@ seed 0
 wait 3000
 tap GLO
 wait 100
-expect view 32
+expect view 33
 tap GLO
 wait 100
-expect view 33
+expect view 34
 expect setsl0 0
 shot setlist_empty.png
 # slot 1: the piece playing (HYPNO 01)

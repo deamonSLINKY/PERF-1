@@ -28,7 +28,7 @@ tap HOME
 wait 200
 tap GLO
 wait 200
-expect view 32
+expect view 33
 press SEL
 press SAVE
 wait 6300
@@ -50,7 +50,7 @@ tap HOME
 wait 200
 tap GLO
 wait 200
-expect view 32
+expect view 33
 press SEL
 press SAVE
 wait 6300

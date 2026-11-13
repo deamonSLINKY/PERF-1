@@ -26,6 +26,11 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **The bass answers, the voices wander, the master is polished (0.17.30).**
+  - **The bass answer** (a Reddit player's ask: an answer for every voice, the bass first). A new page, **Bass answer** (**LFO** x6, after Bass steps): every few bars the bass plays its line changed, for a bar. **Answer**: Octave, Fifth, Run (the last beat climbs the scale into the next bar), Busy (every empty eighth filled), Sparse (two long notes) or Slide (legato, every second note an octave up). **Every**: 2 to 8 bars, Drift, **With acid**, or **After acid** (the acid calls, the bass replies). The third knob is the acid answer's kind, so a call and response is set up from one page. Kept with the piece like FILTERS and SCREAM, and shared pieces carry it (one shared before reads as off). The Bass-led factory pieces run into every fourth bar, the Peak ones get busy every eighth; a piece you stored keeps what it had (off).
+  - **Vintage**: each voice's pitch wanders a little and slowly, as an analog synth's does (the pad's four voices, the bass, the acid, the pluck, each its own way). The new **SOUND** page (hold **HOME**, the last of the settings): 0 to 100, up to 12 cents; 30 by default, about 4.
+  - **The master's polish**, on the SOUND page: **Polish** (on: the lows below about 140 Hz mono, the peaks rounded before the limiter), **Tilt** (the genre's own tone balance, warmer, brighter or off) and **Width** (the stereo above 2.5 kHz up to +6 dB, 30 by default).
+  - **Fix: the acid answer's Level** came back at its default after a power-off (it is on no settings page, and the settings' loader only walked those). It is restored now.
 - **Two roles adjusted after the unit (0.17.29).**
   - **Peak no longer speeds the pluck up.** That doubled the DX notes: on the unit the Peak pieces ran at 80-85 % CPU with a few late renders (BREAKS 10, GARAGE 9, DISCO 6), the second core at 54-58 %. The pluck plays a little more often instead.
   - **Across the bar keeps the perc in 12 against the bar.** 10 drifted oddly.

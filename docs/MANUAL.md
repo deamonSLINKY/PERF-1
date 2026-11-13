@@ -443,6 +443,7 @@ columns are **KNOB1** to **KNOB4**.
 | Bass LFO | **LFO** x3 | Rate (as the pad's: 32 bars down to a 1/16T for a fast wobble, dotted and triplet values between; locked to the bar) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
 | Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, nine named figures, and Steps) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
 | Bass steps | **LFO** x5 | Step (pick one with a white key: rest, note, accent, glide, accent + glide) | Note (root, 2nd .. 7th, octave: scale steps above the chord's root) | Octave (down, mid, up) | Mode (Steps plays them) |
+| Bass answer | **LFO** x6 | Answer (off, octave, fifth, run, busy, sparse, slide) | Every (2-8 bars, drift, with acid, after acid) | Acid ans (the acid answer's kind) | Mode |
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | **ARP** x3 | Density | Length (1-16) | Range (1-3 octaves) | Mutate (hold **SEL** and turn to choose what a mutation changes: all, notes, rhythm or accents) |
@@ -945,6 +946,23 @@ played, so you can start from something that works and change what you like.
 
 The steps belong to the piece: save it (**GLO**, then **SAVE**) to keep them, and a shared piece carries them. A piece
 without steps plays its own bass line.
+
+### The bass answer
+
+The **Bass answer** page (press **LFO** six times, after Bass steps) lets the bass answer, the way the acid does: every
+few bars it plays its line changed, for one bar. It needs a bass line to change, so it does nothing while the bass's
+Mode is Hold (KNOB4 is the Mode, to pick a line from here).
+
+| Setting | Does |
+|---|---|
+| Answer | How the line changes. **Octave**: every second note jumps up an octave. **Fifth**: every second root goes to the fifth. **Run**: the last beat climbs the scale from the root, a fill into the next bar. **Busy**: a note on every eighth the line leaves empty, root and octave. **Sparse**: two notes in the bar, held long. **Slide**: every note glides from the one before and every second one jumps an octave, legato like a 303. **Off** by default. |
+| Every | When it answers. **2 bars** to **8 bars** (the last bar of each). **Drift**: the bar before the drums change pattern. **With acid**: in the same bar as the acid's answer. **After acid**: the bar after the acid's answer, so the acid calls and the bass replies. |
+| Acid ans | The acid answer's kind (the same knob as on the Acid answer page), so you can set up a call and response from one page. |
+| Mode | The bass line's mode (as on Bass line). |
+
+The answer's settings belong to the piece, like FILTERS and SCREAM: save the piece to keep them, and a shared piece
+carries them. Some factory pieces come with one: the Bass-led pieces run into every fourth bar, the Peak pieces get busy
+every eighth. `ANSWER` shows over the bass strip on Home while it answers.
 
 ### The acid: 31 sounds
 
@@ -1945,7 +1963,7 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 ![The settings page](img/perf-screen-settings.png)
 
-To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN** and **SAMPLE**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
+To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE** and **SOUND**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
 
 The Settings page:
 
@@ -1967,7 +1985,7 @@ The Settings page:
 
 ### The sampling helper (SAMPLE)
 
-The **SAMPLE** page plays PERF-1's sounds one at a time, so a sampler (an MPC sampling its input, say) can record them and your project keeps them without the FM-1. It's the last settings page.
+The **SAMPLE** page plays PERF-1's sounds one at a time, so a sampler (an MPC sampling its input, say) can record them and your project keeps them without the FM-1. It comes after SCREEN.
 
 | Knob | What it does |
 |---|---|
@@ -1980,6 +1998,17 @@ The **SAMPLE** page plays PERF-1's sounds one at a time, so a sampler (an MPC sa
 **By key.** White keys 1-6 are the drums, 7-10 the pad, bass, acid and pluck. A synth sound holds as long as the key does. The ten keys are lit while the page is up.
 
 The sounds are those of the piece that was playing: its kit, its sounds, its key. Pick the piece first, then open the page.
+
+### The SOUND page
+
+The last settings page shapes how everything sounds together. These are the unit's settings, the same for every piece.
+
+| Knob | What it does |
+|---|---|
+| Vintage | Each voice's pitch wanders a little and slowly, each its own way, as an analog synth's does: the pad's four voices, the bass, the acid and the pluck. 0 is off; 100 wanders up to 12 cents. The default, 30, is about 4 cents: you hear it as warmth more than as detuning. |
+| Polish | **On** (the default): the lows are made mono (the stereo below about 140 Hz goes to the middle, as a club system or a phone plays it anyway), and the loudest peaks are rounded off just before the limiter, so it has less to catch. **Off**: as before 0.17.30. |
+| Tilt | A gentle tone balance on the whole mix: **Genre** (the default: each genre's own, a dB or two at most), **Warmer** (more low end, softer top), **Brighter** (more top), or **Off**. |
+| Width | How much wider the top end is (the stereo above about 2.5 kHz): 0 as before, up to +6 dB. The default is 30. Mono stays as it was. |
 
 ### Visualizers
 

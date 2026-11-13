@@ -14,7 +14,7 @@ spin SELECT 1
 wait 200
 spin SELECT 1
 wait 100
-expect view 35
+expect view 36
 expect jamv 0
 key 5 down
 wait 100
@@ -29,7 +29,7 @@ expect lastvel 127
 key 7 up
 release SEL
 wait 100
-expect view 35
+expect view 36
 # the MPK on MIDI IN
 press HOME
 wait 900

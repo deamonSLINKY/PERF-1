@@ -38,15 +38,15 @@
 #include "../dsp/fastmath.h"
 
 /* --------------------------------------------------------------- pages --- */
-enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_BLSTEP, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
+enum { V_TEMPO, V_PAD, V_PADENV, V_PADLFO, V_CHORDS, V_PROG, V_DRONE, V_DRENV, V_DRLFO, V_DRBASS, V_BLSTEP, V_BLANS, V_ACID, V_ACENV, V_ACLINE, V_ACANS, V_ACSTEP, V_CMEL, V_CMEL2, V_CMVU, V_CMSTEP,
        V_DRUMS, V_LINKS, V_KIT, V_DDRIFT, V_GROOVE, V_STEPS, V_FEEL, V_PHRASE, V_SPACE, V_REVERB, V_MASTER, V_MIXER, V_GLOBAL, V_SETL, V_CODE, V_JAM, NDIAL, V_SEQ = NDIAL, V_PERF, V_VIZ, NVIEWS };   /* V_PERF: the second home screen; V_VIZ: the visualizers */
 static const char *const VIEW_NAME[NVIEWS] = {"Tempo", "Pad", "Pad env", "Pad LFO", "Chords", "Progression", "Bass", "Bass env",
-                                              "Bass LFO", "Bass line", "Bass steps", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Set list", "Code", "Jam",
+                                              "Bass LFO", "Bass line", "Bass steps", "Bass answer", "Acid", "Acid env", "Acid line", "Acid answer", "Acid steps", "Pluck", "Pluck 2", "Deja vu", "Pluck steps", "Drums", "Links", "Kit", "Drum drift", "Groove", "Steps", "Feel", "Phrase", "Space", "Reverb", "Comp/Limit", "Mixer", "Global", "Set list", "Code", "Jam",
                                               "Sequencer", "Perform", "Visual"};
 enum { VZ_PLASMA, VZ_KALEIDO, VZ_BARS, VZ_FLUX, VZ_DISCO, VZ_LIFE, VZ_ORBIT, VZ_TRIP, VZ_THEORY, VZ_AUTO, VZ_N };   /* the visualizers (viz.c; TRIP and THEORY 0.16.10, THEORY not in AUTO's turn) */
 static const char *const VZ_NAME[VZ_N] = {"PLASMA", "KALEIDO", "BARS", "FLUX", "DISCO", "LIFE", "ORBIT", "TRIP", "THEORY", "AUTO"};
 /* the knobs of each page: a parameter, or one of these (the sequencer's: the lane's) */
-enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_ACE, K_ACL, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_BSTY, K_BSNO, K_BSOC, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_JSND, K_PLRT, K_DLRT, K_CDPOS, K_CDCHR, K_CDROLL, K_SLPT, K_SLEN, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_JSND: the sound of the voice JAM plays (0.17.4); K_FX*: the FX menu's own knobs */
+enum { K_LVL = 200, K_TUNE, K_DEC, K_MXT, K_MXL, K_MXP, K_MXS, K_GRT, K_GRD, K_GRS, K_GRA, K_ACT, K_ACD, K_ACE, K_ACL, K_STR, K_STP, K_STV, K_PCOND, K_ASTY, K_ASNO, K_ASOC, K_PSNO, K_PSLV, K_BSTY, K_BSNO, K_BSOC, K_PGSL, K_PGCH, K_PGBR, K_PGPL, K_PGTY, K_SLSL, K_SLGN, K_SLPC, K_SLON, K_GENRE, K_JSND, K_PLRT, K_DLRT, K_CDPOS, K_CDCHR, K_CDROLL, K_SLPT, K_SLEN, K_BAT, K_BAE, K_NONE, K_FXF, K_FXC, K_FXT, K_FXW };   /* K_GENRE: the genre on Global; K_JSND: the sound of the voice JAM plays (0.17.4); K_FX*: the FX menu's own knobs */
 static const char *const FXK_LABEL[4] = {"Filter", "Crush", "Throw", "Wash"};
 
 /* the FX edit pages (SEL + FX walks them; FX alone is the performing menu, or closes): each effect's settings on
@@ -56,7 +56,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 35
+#define NFXP 36
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -106,6 +106,7 @@ static const char *const INTRO_NAME[6] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 M
                                                                                                     * player who moves between pieces through a breakdown): a piece begins in its breakdown */
 static const uint16_t INTRO_S[6] = {0, 60, 120, 240, 480, 0};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
+static const char *const TILT_NAME[4] = {"OFF", "GENRE", "WARMER", "BRIGHTER"};
 static const char *const XMIX_NAME[5] = {"CUT", "4 BARS", "8 BARS", "16 BARS", "32 BARS"};       /* the SET page's Mix: how long the next piece glides to its tempo */
 static const uint8_t XMIX_BARS[5] = {0, 4, 8, 16, 32};
 static const char *const SMPM_NAME[4] = {"ALL", "DRUMS", "SYNTHS", "BY KEY"};                   /* the SAMPLE page: what a run plays, or a key a sound */
@@ -198,6 +199,9 @@ static const struct {
     {"AUTO FX", FX_SPARE12, 0, {{"Auto FX", KN_NAME, EN_FXS_AF_AMT, AFA_NAME, 4}, {"Every", KN_NAME, EN_FXS_AF_EVERY, AFE_NAME, 4},
                         {"Length", KN_NAME, EN_FXS_AF_LEN, AFL_NAME, 4}, {"Pick", KN_NAME, EN_FXS_AF_PICK, AFP_NAME, 2}}},   /* (0.16.8; a spare effect bit: nothing held) effects played by
                                                     * themselves, ending on the phrase lines (af_tick) */
+    {"SOUND", FX_SPARE11, 0, {{"Vintage", KN_PLAIN, EN_FXS_VINTAGE, 0, 0}, {"Polish", KN_NAME, EN_FXS_POLISH, ONOFF_NAME, 2},
+                       {"Tilt", KN_NAME, EN_FXS_TILT, TILT_NAME, 4}, {"Width", KN_PLAIN, EN_FXS_WIDTH, 0, 0}}},   /* (0.17.30; a spare effect bit: nothing held) the voices' wandering pitch,
+                                                    * the master's polish (the lows mono, the peaks rounded), its tilt, the width up top */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -233,6 +237,8 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_BL_MODE, P_BL_LEN, P_BL_MOVE, P_BL_GLIDE},   /* the drone as a bass line: its mode, how long a note holds, how much it moves, its glide */
     {K_BSTY, K_BSNO, K_BSOC, P_BL_MODE},           /* the bass steps (0.16.29, issue #6): the step chosen (a white key): its kind, its note (scale steps above the chord's root), its
                                                     * octave; and the bass line's mode (Steps plays them; an edit turns it to Steps) */
+    {K_BAT, K_BAE, K_ACT, P_BL_MODE},              /* (0.17.30) the bass's answer: its kind, when (EN_FXS_BA_*, kept with the piece); the acid answer's kind beside it (call and response);
+                                                    * the line's mode (Hold has no line to answer with) */
     {P_ACID, P_AC_CUT, P_AC_RES, P_AC_ENV},
     {P_AC_DEC, P_AC_ACC, P_AC_SLIDE, P_AC_WAVE},
     {P_AC_DENS, P_AC_LEN, P_AC_RANGE, P_AC_MUT},
@@ -276,6 +282,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Rate", "Depth", "Shape", "Target"},
     {"Mode", "Length", "Move", "Glide"},
     {"Step", "Note", "Octave", "Mode"},                 /* the bass steps (0.16.29) */
+    {"Answer", "Every", "Acid ans", "Mode"},            /* the bass answer (0.17.30) */
     {"Level", "Cutoff", "Reso", "Env mod"},
     {"Decay", "Accent", "Slide", "Sound"},
     {"Density", "Length", "Range", "Mutate"},
@@ -309,7 +316,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 static const struct {
     uint8_t btn, first, n;
 } GROUP[] = {
-    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 5}, {B_LFO, V_DRONE, 5}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 3},
+    {B_HOME, V_TEMPO, 1}, {B_ENV, V_PAD, 5}, {B_LFO, V_DRONE, 6}, {B_ARP, V_ACID, 9}, {B_SEQ, V_DRUMS, 8}, {B_GLO, V_GLOBAL, 3},
 };
 #define NGROUP (int)(sizeof GROUP / sizeof GROUP[0])
 
@@ -1140,7 +1147,7 @@ void ui_fx_snapshot(uint8_t *v)
         v[k] = ui.fxs[PX_FXS[k]];
 }
 /* each one's top: the FILTERS page's three types (the pad's and the bass's five, the acid's six), SCREAM's Drive, Scream, Wow (0-100) and Target (3) */
-static const uint8_t PX_FXTOP[PX_NFX] = {4, 4, 5, 100, 100, 100, 2};
+static const uint8_t PX_FXTOP[PX_NFX] = {4, 4, 5, 100, 100, 100, 2, 6, 9};
 void ui_fx_apply(void)
 {
     uint8_t v[PX_NFX];
@@ -1439,6 +1446,10 @@ static const char *pg_roman(int d, char *b)     /* and its degree, lower case wh
     return b;
 }
 static const char *const MXT_NAME[5] = {"PAD", "BASS", "ACID", "PLUCK", "DRUMS"};
+#define BA_NT 7
+#define BA_NE 10
+static const char *const BA_TNAME[BA_NT] = {"Off", "Octave", "Fifth", "Run", "Busy", "Sparse", "Slide"};
+static const char *const BA_ENAME[BA_NE] = {"2 bars", "3 bars", "4 bars", "5 bars", "6 bars", "7 bars", "8 bars", "Drift", "With acid", "After acid"};
 static int knob_get(int k)
 {
     int p = knob_par(k);
@@ -1458,6 +1469,8 @@ static int knob_get(int k)
         return (proj.par[P_AC_EVERY] & 7) + (proj.par[P_AC_CHANCE] ? 8 : 0);
     if (k == K_ACL)
         return ui.fxs[EN_FXS_AC_ANS];
+    if (k == K_BAT || k == K_BAE)                /* (0.17.30) the bass's answer */
+        return ui.fxs[k == K_BAT ? EN_FXS_BA_TYPE : EN_FXS_BA_EVERY];
     if (k == K_GRT)
         return ui.lane;
     if (k == K_GRA)
@@ -1536,6 +1549,11 @@ static void knob_range(int k, int *lo, int *hi)
     if (k == K_PLRT || k == K_DLRT) {
         *lo = 0;
         *hi = NLRT - 1;
+        return;
+    }
+    if (k == K_BAT || k == K_BAE) {
+        *lo = 0;
+        *hi = k == K_BAT ? BA_NT - 1 : BA_NE - 1;
         return;
     }
     if (k == K_ACT || k == K_ACD || k == K_ACE || k == K_ACL) {
@@ -1620,6 +1638,17 @@ static void knob_text(int k, char *b)
     }
     if (k == K_GENRE) {
         const char *s = GENRE_UI_NAME[(unsigned)proj.genre < (unsigned)EN_NGENRE ? proj.genre : 0];
+        int n = 0;
+        while (s[n]) {
+            b[n] = s[n];
+            n++;
+        }
+        b[n] = 0;
+        return;
+    }
+    if (k == K_BAT || k == K_BAE) {              /* (0.17.30) the bass's answer: its kind, when */
+        const int v = knob_get(k);
+        const char *s = k == K_BAT ? BA_TNAME[v < BA_NT ? v : 0] : BA_ENAME[v < BA_NE ? v : 0];
         int n = 0;
         while (s[n]) {
             b[n] = s[n];
@@ -2007,6 +2036,15 @@ static void knob_set(int k, int v)
         v = v < 0 ? 0 : v > 15 ? 15 : v;
         knob_set(P_AC_EVERY, v & 7);
         knob_set(P_AC_CHANCE, v >= 8);
+        return;
+    }
+    if (k == K_BAT || k == K_BAE) {              /* (0.17.30) the bass's answer: the piece's, kept with it as its FILTERS are (keep() takes it, project.c PX_FXS) */
+        const int i = k == K_BAT ? EN_FXS_BA_TYPE : EN_FXS_BA_EVERY;
+        v = v < 0 ? 0 : v > (k == K_BAT ? BA_NT : BA_NE) - 1 ? (k == K_BAT ? BA_NT : BA_NE) - 1 : v;
+        if (v != ui.fxs[i])
+            ui.set_dirty = 1;
+        ui.fxs[i] = (uint8_t)v;
+        en_fxs(i, v);
         return;
     }
     if (k == K_ACL) {                            /* the answer's level: the unit's setting, kept with the effects' settings */
@@ -3060,7 +3098,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE */
+static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
@@ -3181,7 +3219,7 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
 /* ------------------------------------------------------------ buttons --- */
 /* the tab chain along the bottom (imp_tabs), and the breadcrumb's names: a tab a voice or group, with its pages */
 static const struct { const char *name; char ltr; uint8_t first, n; } TB[10] = {
-    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 5}, {"BASS", 'B', V_DRONE, 5}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
+    {"TEMPO", 'T', V_TEMPO, 1}, {"PAD", 'P', V_PAD, 5}, {"BASS", 'B', V_DRONE, 6}, {"ACID", 'A', V_ACID, 5}, {"PLUCK", 'L', V_CMEL, 4},
     {"DRUMS", 'R', V_DRUMS, 8}, {"SPACE", 'S', V_SPACE, 2}, {"MIX", 'M', V_MASTER, 2}, {"GLOBAL", 'G', V_GLOBAL, 3}, {"JAM", 'J', V_JAM, 1}};
 static void set_view(int v)
 {
@@ -3219,7 +3257,7 @@ static int voice_of(int v)                      /* the voice page v belongs to (
 {
     if (v >= V_PAD && v <= V_CHORDS)
         return EN_V_PAD;
-    if (v >= V_DRONE && v <= V_BLSTEP)
+    if (v >= V_DRONE && v <= V_BLANS)
         return EN_V_DRONE;
     if (v >= V_ACID && v <= V_ACLINE)
         return EN_V_ACID;
@@ -3264,7 +3302,7 @@ static int oct_par(int v)                       /* what OCT moves on page v */
 {
     if (v >= V_PAD && v <= V_CHORDS)
         return P_PAD_OCT;
-    if (v >= V_DRONE && v <= V_BLSTEP)
+    if (v >= V_DRONE && v <= V_BLANS)
         return P_BASSOCT;
     if ((v >= V_ACID && v <= V_ACLINE) || v == V_ACSTEP)
         return P_AC_OCT;
@@ -3290,7 +3328,7 @@ static int key_voice(void)                       /* the voice the keys play here
     const int v = ui.view;
     if (v >= V_PAD && v <= V_PROG)
         return 1;
-    if (v >= V_DRONE && v <= V_BLSTEP)
+    if (v >= V_DRONE && v <= V_BLANS)
         return 3;
     if (v >= V_ACID && v <= V_ACSTEP)
         return 2;
@@ -5745,10 +5783,10 @@ static void console_sheet(void)
         if (hi > lo)
             cv_rect(8, y + 22, (int32_t)(v - lo) * 166 / (hi - lo), 2, i == hot ? K_ACC : K_DIM);
     }
-    for (i = 0; i < ST_N; i++) {                 /* the walk */
-        const int32_t y = 24 + i * 12;
+    for (i = 0; i < ST_N; i++) {                 /* the walk (0.17.30: eleven pages, a row of 11 so the last clears the strip below) */
+        const int32_t y = 24 + i * 11;
         caps(t, FXP[ST_ORDER[i] - 1].name, 9);
-        cv_rect(184, y, 52, 11, i == at ? K_ACC : K_PANEL);
+        cv_rect(184, y, 52, 10, i == at ? K_ACC : K_PANEL);
         cv_text(187, y - 3, &FONT_XS, t, i == at ? K_BG : K_DIM);
     }
 }
@@ -7960,7 +7998,7 @@ static void console_voice(int v)
         }
     } else {                                     /* a line: the bar as a roll */
         console_roll(v, 8, 42, 176, 92);
-        if (v == LK_ACID && en_acid_ans)
+        if ((v == LK_ACID && en_acid_ans) || (v == LK_BASS && en_bass_ans))
             cv_text(184 - text_w(&FONT_XS, "ANSWER"), 25, &FONT_XS, "ANSWER", K_ACC);
     }
 }
@@ -9130,6 +9168,11 @@ static void settings_load(void)
                 fxp_set(k, s.fxs[FXP[p].c[c].idx]);
             }
         }
+    {   /* (0.17.30) the acid answer's level is on no settings page (the loop above passed it by): it came back at its default after a power-off */
+        const int a = s.fxs[EN_FXS_AC_ANS] > 3 ? 3 : s.fxs[EN_FXS_AC_ANS];
+        ui.fxs[EN_FXS_AC_ANS] = (uint8_t)a;
+        en_fxs(EN_FXS_AC_ANS, a);
+    }
     if (s.gx_preset < NGXP) {                    /* the gate's pattern, after its length (which says "the keys' own") */
         ui.gx_preset = s.gx_preset;
         ui.gx_pat = s.gx_pat;

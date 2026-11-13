@@ -56,8 +56,9 @@ export function pcSet(piece, p, lo, v) { piece.rec[PC_REC_PAR + p] = v - lo; }
 export const PC_KND_LEN = 3, PC_KND_MAGIC = 0x31444E4B;          // EN_PRK_LEN, "KND1"
 const kndAt = (genre, slot) => 4 + (genre * PC_NPIECES + slot) * PC_KND_LEN;
 // 0.16.28: the object is the pieces' extras ("PCX1", project.c): magic, 16, the genres, 2 spare; then 16 bytes a piece: its 3 types, flags (bit 0:
-// its FILTERS and SCREAM saved with it), those 7 settings (the FILTERS page's types: pad, bass, acid; SCREAM's drive, amount, wow, target), spare
-export const PC_PX_MAGIC = 0x31584350, PC_PX_HDR = 8, PC_PX_LEN = 16, PC_PX_NFX = 7;
+// its FILTERS and SCREAM saved with it), those 7 settings (the FILTERS page's types: pad, bass, acid; SCREAM's drive, amount, wow, target), and since
+// 0.17.30 the bass answer's kind and when (9 in all; a piece shared before has 7: the answer off), spare
+export const PC_PX_MAGIC = 0x31584350, PC_PX_HDR = 8, PC_PX_LEN = 16, PC_PX_NFX = 9, PC_PX_NFX_OLD = 7;
 const pxAt = (genre, slot) => PC_PX_HDR + (genre * PC_NPIECES + slot) * PC_PX_LEN;
 const isPx = (o) => o && o.length >= PC_PX_HDR && rd32(o, 0) === PC_PX_MAGIC && o[4] === PC_PX_LEN;
 // 0.16.29: the pieces' bass steps, their own object ("BSQ1", project.c OBJ_BSTEP): magic, 16, the genres, 2 spare; then 16 bytes a piece (amb.h EN_BS_*)
@@ -119,6 +120,7 @@ export function pcKindsWith(knd, genre, slot, kinds, ngenres) {
 }
 const bytesOk = (a, n) => Array.isArray(a) && a.length === n && a.every((v) => Number.isInteger(v) && v >= 0 && v < 256);
 const kindsOk = (k) => bytesOk(k, PC_KND_LEN);
+const fxIn = (x) => (bytesOk(x, PC_PX_NFX) || bytesOk(x, PC_PX_NFX_OLD) ? Uint8Array.from([...x, 0, 0].slice(0, PC_PX_NFX)) : null);   // (7: shared before 0.17.30)
 const kindsIn = (meta, kinds, fx, bass) => {
   const m = { ...meta };
   if (kinds && kinds.some((v) => v)) m.k = Array.from(kinds);
@@ -128,7 +130,7 @@ const kindsIn = (meta, kinds, fx, bass) => {
 };
 function kindsOut(meta) {                                         // the note without "k", "x" and "s", and what they carried (or null)
   const { k, x, s, ...rest } = meta || {};
-  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: bytesOk(x, PC_PX_NFX) ? Uint8Array.from(x) : null,
+  return { meta: rest, kinds: kindsOk(k) && k.some((v) => v) ? Uint8Array.from(k) : null, fx: fxIn(x),
            bass: bytesOk(s, PC_BS_LEN) && s.some((v) => v) ? Uint8Array.from(s) : null };
 }
 
@@ -247,7 +249,7 @@ export function pcSetDecode(buf) {
   const arr16 = (a, max) => (Array.isArray(a) && a.length === 16 && a.every((v) => Number.isInteger(v) && v >= 0 && v <= max) ? a.slice() : new Array(16).fill(0));
   pieces.forEach((pc, i) => {
     pc.kinds = k && kindsOk(k[i]) && k[i].some((v) => v) ? Uint8Array.from(k[i]) : null;
-    pc.fx = x && bytesOk(x[i], PC_PX_NFX) ? Uint8Array.from(x[i]) : null;
+    pc.fx = x ? fxIn(x[i]) : null;
     pc.bass = s && bytesOk(s[i], PC_BS_LEN) && s[i].some((v) => v) ? Uint8Array.from(s[i]) : null;
   });
   return { kind: "set", list, on, mix, bars: arr16(sb, 255), mutes: arr16(sm, 31), end: se ? 1 : 0, pats: arr16(sp, 6), moods: arr16(sv, 101), pieces, voices, meta: rest };

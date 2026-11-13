@@ -287,13 +287,20 @@ enum {
                                                                           * 1 gentle, 2 medium, 3 wild), every 4/8/16/32 bars, the longest (a beat, half a bar,
                                                                           * a bar, two bars), the genre's own first or any */
     EN_FXS_AC_ANS,                                                       /* (0.17.21) the acid answer's level, while it answers: 0 as the call, 1 +2 dB, 2 +4, 3 +6 (a Reddit player: "increase the volume of the acid answer") */
+    EN_FXS_BA_TYPE, EN_FXS_BA_EVERY,                                     /* (0.17.30) the bass's answer (the Bass answer page; kept with the piece, project.c PX_FXS): its kind (0 off,
+                                                                          * 1 octave, 2 fifth, 3 run, 4 busy, 5 sparse, 6 slide) and when (0 .. 6 every 2nd .. 8th bar, 7 the bar before
+                                                                          * the drums change, 8 with the acid's answer, 9 the bar after it) */
+    EN_FXS_VINTAGE, EN_FXS_POLISH, EN_FXS_TILT, EN_FXS_WIDTH,            /* (0.17.30) the SOUND page, the unit's: each voice's pitch wandering (0 .. 100: 0 .. 12 cents), the polish on the
+                                                                          * master (the lows mono, the peaks rounded before the limiter), the tilt (0 off, 1 the genre's, 2 warmer,
+                                                                          * 3 brighter) and the width above 2.5 kHz (0 .. 100: +0 .. +6 dB on the side) */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
                          70, 45, 20, 50, 3, 5, 1, 0, 88, 35, 1, 0xF0, 56, 100, 100, 0, \
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
-                         12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0, 0, 1, 2, 0, 0}
+                         12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0, 0, 1, 2, 0, 0, \
+                         0, 2, 30, 1, 1, 30}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the punch-ins' targets (0.15.19): all, the drums, the synths, the pad, the bass, the acid, the pluck, acid and pluck, pad and pluck, bass and acid */
@@ -405,7 +412,9 @@ extern volatile uint32_t en_diag[36];        /* the diagnostic frame: fourteen p
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
 extern volatile uint8_t en_acid_ans;           /* this bar the acid answers (UI) */
-void en_acid_ans_now(void);                     /* (0.17.22) the acid answers on the next bar, or the next time round on Sync Loop, whatever its count */
+void en_acid_ans_now(void);
+extern volatile uint8_t en_bass_ans;           /* (0.17.30) this bar the bass answers (UI) */
+int en_piece_fx_def(int g, int i, int k);       /* (0.17.30) an effect setting kept with the piece: the factory piece's own (piece i of genre g: its role's bass answer), else the default */                     /* (0.17.22) the acid answers on the next bar, or the next time round on Sync Loop, whatever its count */
 int en_acid_preview(int step, int answer);     /* the acid line's note at a step as the call (answer 0) or an answer (P_AC_RESP's value) would play it, -1: a rest */
 uint16_t en_lane_mask(int lane, int pat, int dens);   /* a lane of pattern pat as it plays at density dens (50: as written; the screen's preview too) */
 extern volatile uint8_t en_lane_src[EN_NLANE]; /* the pattern each lane plays now */

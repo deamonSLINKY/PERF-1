@@ -1594,6 +1594,8 @@ typedef struct {
     float pamp;                                 /* a played note's envelope, 0..1 */
 } pad_t;
 static pad_t pad[EN_NPAD];
+static volatile int16_t fxs_v[EN_NFXS];         /* (0.17.30: defined with the effects' settings, further on) */
+static float vt_d[7], vt_pf[2] = {1.0f, 1.0f};  /* (0.17.30) Vintage (vt_tick): 0 .. 3 the pad's voices, 4 the bass, 5 the acid, 6 the pluck, semitones; the acid's and the pluck's as factors */
 static float pad_gate, pad_gain, pad_vol, bright, detune = 0.00144f;
 static const float PAD_PAN[EN_NPAD] = {-0.55f, -0.18f, 0.18f, 0.55f};
 static const float BREATH[EN_NPAD] = {1.0f, 1.21f, 1.43f, 1.67f};    /* unequal cycles, as 2/1's 12..20 s loops */
@@ -1837,7 +1839,7 @@ static void pad_coefs(pad_t *v, int i)          /* every 32 samples: the breath,
     v->vib += (4.6f + 0.4f * (float)i) * 32.0f / EN_SR;
     if (v->vib >= 1.0f)
         v->vib -= 1.0f;
-    f = mtof(v->note + 0.08f * motion * mod[i].v + pad_pitch);              /* a slow drift, as tape; the LFO */
+    f = mtof(v->note + 0.08f * motion * mod[i].v + pad_pitch + vt_d[i & 3]);              /* a slow drift, as tape; the LFO */
     v->inc[0] = f * (1.0f - detune) * (1.0f / EN_SR);   /* Detune: 2.5 .. 25 cents either way */
     v->inc[1] = f * (1.0f + detune) * (1.0f / EN_SR);
     v->inc[2] = f * (1.0f - 0.45f * detune) * (1.0f / EN_SR);   /* the inner pair, a little less apart: four saws, no two beating alike */
@@ -3331,14 +3333,37 @@ static int32_t fm_bend;                          /* a keyboard's bend on the DX 
 static uint8_t hb_voice = 0xFF;
 static float hb_bend, hb_mod, hb_ph, hb_semi, hb_pf = 1.0f;
 
+/* VINTAGE (0.17.30; the outside research: the fuller firmwares let each voice wander a little, as an analog one does): a slow random walk of pitch
+ * for each of the pad's voices, the bass, the acid and the pluck, each its own (its own random numbers: the music's are untouched). A new target a
+ * second or two apart, glided to over about 0.7 s; Vintage (0 .. 100) is the walk's reach, 0 .. 12 cents (30: about 4). */
+static float vt_t[7];
+static uint32_t vt_rng = 0x2545F491u;
+static void vt_tick(uint32_t n)
+{
+    const float dep = (float)fxs_v[EN_FXS_VINTAGE] * 0.0012f, k = fm_minf((float)n * (1.0f / (0.7f * EN_SR)), 1.0f);
+    const uint32_t pc = (uint32_t)((float)n * (65536.0f / (1.4f * EN_SR)));
+    int i;
+    for (i = 0; i < 7; i++) {
+        vt_rng = vt_rng * 1664525u + 1013904223u;
+        if ((vt_rng >> 16) < pc) {
+            vt_rng = vt_rng * 1664525u + 1013904223u;
+            vt_t[i] = (float)(vt_rng >> 8) * (1.0f / 8388608.0f) - 1.0f;
+        }
+        vt_d[i] = fm_flush(vt_d[i] + (vt_t[i] * dep - vt_d[i]) * k);
+    }
+    vt_pf[0] = fm_exp2f(vt_d[5] * (1.0f / 12.0f));
+    vt_pf[1] = fm_exp2f(vt_d[6] * (1.0f / 12.0f));
+}
 static void hb_tick(uint32_t n)
 {
+    vt_tick(n);
     hb_ph += 5.5f * (float)n * (1.0f / EN_SR);
     if (hb_ph >= 1.0f)
         hb_ph -= 1.0f;
     hb_semi = hb_bend + (hb_mod > 0.0f ? 0.5f * hb_mod * sine(hb_ph) : 0.0f);
     hb_pf = hb_semi != 0.0f ? fm_exp2f(hb_semi * (1.0f / 12.0f)) : 1.0f;
-    fm_bend = hb_voice == EN_V_PLUCK ? (int32_t)(hb_semi * (16777216.0f / 12.0f)) : 0;
+    fm_bend = (hb_voice == EN_V_PLUCK ? (int32_t)(hb_semi * (16777216.0f / 12.0f)) : 0) +
+              (int32_t)(vt_d[6] * (1200.0f * 4.0f / 12.0f)) * 3495;   /* (the pluck's Vintage in quarter cents: the DX voices' frequencies are figured anew only when it moves) */
 }
 #define HB(v) (hb_voice == (v))
 #define BLK_FM 256                              /* = BLK (checked below) */
@@ -3716,7 +3741,7 @@ static void bl_note(int n, int fl)              /* fl (the steps, 0.16.29): bit 
         bass.env_up = 1;
         bl_up = 1;
     }
-    bl_gate = (0.25f + 0.0475f * (float)par[P_BL_LEN]) * step_len;
+    bl_gate = (0.25f + 0.0475f * (float)par[P_BL_LEN]) * step_len * (fl & 4 ? 3.0f : 1.0f);   /* (bit 2: the answer's Sparse, held) */
 }
 static void bl_go_f(int n, int32_t w, int fl)
 {
@@ -3746,7 +3771,6 @@ static void bl_rec(int st, int n, int root)     /* the line as heard, as steps: 
     }
     bs_hist[st & 15] = (uint8_t)(1 | best << 3 | o << 6);
 }
-static void bl_go(int n, int32_t w) { bl_go_f(n, w, 0); }
 static int bl_fifth(void)                       /* the fifth above the root, semitones: the chord's altered fifth if it has one (diminished, augmented), else the perfect fifth (a 9th chord leaves it out of the voicing, not the harmony), or the scale's if that is not in the scale */
 {
     int k;
@@ -3758,6 +3782,53 @@ static int bl_fifth(void)                       /* the fifth above the root, sem
             return d;
     }
     return pool >> (((chord_pcs[0] + 7 - par[P_ROOT]) % 12 + 12) % 12) & 1u ? 7 : 6;
+}
+/* THE BASS'S ANSWER (0.17.30, a Reddit player: "an answer for every voice", the bass first). In its bar the line plays changed: Octave (every second
+ * note up an octave), Fifth (every second root to the fifth), Run (the last beat climbs the scale from the root, into the next bar), Busy (a note on
+ * every eighth the line leaves empty, root and octave), Sparse (two notes a bar, held), Slide (every note glides from the one before, every second
+ * an octave up: legato, as the 303). When: every 2nd .. 8th bar (the last of each), the bar before the drums change, with the acid's answer, or the
+ * bar after it (a call and response between the two). A line of any mode but Hold answers; its steps (Steps) too. The settings are the piece's
+ * (EN_FXS_BA_*, kept with it as FILTERS are). */
+static uint8_t ba_bar, ba_acid_was, ba_half;   /* this bar answers; the acid answered the bar before; Sparse: this half bar has its note */
+static int8_t ba_seen_t = -1, ba_seen_e = -1;
+static uint32_t ba_bar0;                        /* the bar the count starts from (a change of the settings starts it again) */
+volatile uint8_t en_bass_ans;
+static int ba_note(int st, int n, int root, int *fl)   /* the note the answer plays for step st (n: the line's note, -1 a rest; -1 back: none) */
+{
+    const int t = fxs_v[EN_FXS_BA_TYPE];
+    if (!ba_bar || t <= 0)
+        return n;
+    switch (t) {
+    case 1: return n >= 0 && (bl_beat & 1) ? n + 12 : n;
+    case 2: return n >= 0 && (bl_beat & 1) && ((n - root) % 12 + 12) % 12 == 0 ? root + bl_fifth() : n;
+    case 3:
+        if (st < 12)
+            return n;
+        if (st == 15)
+            *fl |= 1;                           /* (the top of the run: an accent) */
+        return root + bs_semis(st - 11);
+    case 4: return n < 0 && !(st & 1) ? root + (st & 2 ? 12 : 0) : n;
+    case 5:
+        if (st == 0 || st == 8)
+            ba_half = 0;
+        if (n < 0 || ba_half)
+            return -1;
+        ba_half = 1;
+        *fl |= 4;                               /* (held three times as long) */
+        return n;
+    case 6:
+        if (n < 0)
+            return n;
+        *fl |= 2;
+        return bl_beat & 1 ? n + 12 : n;
+    }
+    return n;
+}
+static void bl_out(int st, int n, int root, int32_t w, int fl)   /* the line's step as played: the answer's change, then the note */
+{
+    n = ba_note(st, n, root, &fl);
+    if (n >= 0)
+        bl_go_f(n, w, fl);
 }
 static void bl_step(int st, int32_t w)
 {
@@ -3776,10 +3847,13 @@ static void bl_step(int st, int32_t w)
         en_bs_pos = (int8_t)st;
         v = bs[st & 15];
         k = v & 7;
-        if (!k || k > 4)
-            return;
         root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
-        bl_go_f(root + bs_semis(v >> 3 & 7) + 12 * ((v >> 6 & 3) - 1), w, (k == 2 || k == 4 ? 1 : 0) | (k >= 3 ? 2 : 0));
+        if (!k || k > 4)
+            bl_out(st, -1, root, w, 0);         /* (a rest: the answer may play there) */
+        else
+            bl_out(st, root + bs_semis(v >> 3 & 7) + 12 * ((v >> 6 & 3) - 1), root, w, (k == 2 || k == 4 ? 1 : 0) | (k >= 3 ? 2 : 0));
+        if (k && k <= 4)
+            bl_beat++;
         return;
     }
     en_bs_pos = -1;
@@ -3794,11 +3868,13 @@ static void bl_step(int st, int32_t w)
     }
     if (drop_imp && st == 0)
         hit = 1;
+    root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
     if (!hit) {
         bs_hist[st & 15] = 0;
+        if (ba_bar)
+            bl_out(st, -1, root, w, 0);
         return;
     }
-    root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
     if (mode == 5) {                            /* the walk (on pedal: the key's own triad, the scale's third and fifth) */
         const int beat = st >> 2,
                   three = pedal & 1u ? root + deg_nat(2) : chord_nt > 1 ? root + (chord_pcs[1] - chord_pcs[0] + 12) % 12 : root + 3,
@@ -3812,7 +3888,7 @@ static void bl_step(int st, int32_t w)
             n = frand() < 0.5f ? root - 1 : bl_below(root);   /* the lead-in to the bar's one: half the time the semitone below, a chromatic approach (0.16.7,
                                                  * the audit's; a passing note, the only one the engine plays outside the scale), else the scale's note below */
         bl_rec(st, n, root);
-        bl_go(n, w);
+        bl_out(st, n, root, w, 0);
         bl_beat++;
         return;
     }
@@ -3825,7 +3901,7 @@ static void bl_step(int st, int32_t w)
         iv = r < 0.5f ? 12 : r < 0.8f ? bl_fifth() : bl_below(root) - root;
     }
     bl_rec(st, root + iv, root);
-    bl_go(root + iv, w);
+    bl_out(st, root + iv, root, w, 0);
     bl_beat++;
 }
 
@@ -4004,6 +4080,27 @@ static void tick(void)
                 }
                 ac_ans_bar = en_acid_ans = (uint8_t)due;
             }
+        }
+        {   /* (0.17.30) the bass's answer: this bar? */
+            const int bt = fxs_v[EN_FXS_BA_TYPE], be = fxs_v[EN_FXS_BA_EVERY], an = par[P_AC_CHANCE] ? ac_ans_loop : ac_ans_bar;
+            int due = 0;
+            if (bt != ba_seen_t || be != ba_seen_e) {   /* the settings changed: the count starts at this bar */
+                ba_seen_t = (int8_t)bt;
+                ba_seen_e = (int8_t)be;
+                ba_bar0 = bars;
+            }
+            if (bt > 0) {
+                if (be >= 0 && be <= 6)
+                    due = (bars - ba_bar0) % ((uint32_t)be + 2u) == (uint32_t)be + 1u;
+                else if (be == 7)
+                    due = dd_fill ? 1 : (!par[P_DD_CHANGE] && (bars - ba_bar0) % 8u == 7u);
+                else if (be == 8)
+                    due = an;
+                else
+                    due = ba_acid_was && !an;
+            }
+            ba_acid_was = (uint8_t)an;
+            ba_bar = en_bass_ans = (uint8_t)due;
         }
         if (par[P_CHAIN] > 0 && par[P_CHAIN] <= 9) {   /* the chain: this bar's pattern, whatever was asked */
             const uint8_t *ch = CHAIN[par[P_CHAIN] - 1];
@@ -5191,6 +5288,18 @@ int en_bass_held(void) { return (int)(bass.gtarget + 0.5f); }         /* the bas
 int en_pad_held(int i) { return (int)(pad[i % EN_NPAD].target + 0.5f); }        /* the mutes the engine has (a test reads it: 0.16.12) */
 static uint16_t gx_pat = 0x5249;                 /* the pattern gate: steps 0 3 6 9 12 14 open (3+3+3+3+2+2) */
 const int16_t EN_FXS_DEF[EN_NFXS] = EN_FXS_DEFAULTS;
+typedef char fxs_defaults_all[sizeof((int16_t[])EN_FXS_DEFAULTS) == sizeof(int16_t) * EN_NFXS ? 1 : -1];   /* (every setting has its default) */
+int en_piece_fx_def(int g, int i, int k)
+{
+    if (k == EN_FXS_BA_TYPE || k == EN_FXS_BA_EVERY) {   /* (0.17.30) the roles' bass answers: Bass-led runs into every fourth bar, Peak gets busy every eighth */
+        const int r = en_piece_role(g, i);
+        if (r == RL_BASS)
+            return k == EN_FXS_BA_TYPE ? 3 : 2;
+        if (r == RL_PEAK)
+            return k == EN_FXS_BA_TYPE ? 4 : 6;
+    }
+    return (unsigned)k < EN_NFXS ? EN_FXS_DEF[k] : 0;
+}
 static volatile int16_t fxs_v[EN_NFXS] = EN_FXS_DEFAULTS;   /* the effects' settings (en_fxs) */
 static float gate_f[EN_NTRACK] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the pattern gate's gain a track */
 static float lp_amt, hp_amt, lp_s[4], hp_s[4], lp_c[4], hp_c[4], throw_amt, throw_key, crush_l, crush_r, gate_g = 1.0f;
@@ -6325,6 +6434,75 @@ static void reverb_set(void)                    /* once a chunk, before the tank
     rv_gate_hold = (0.08f + 0.32f * (float)par[P_RV_X] * 0.01f) * EN_SR;   /* the gate's hold: 80 .. 400 ms */
 }
 
+/* THE POLISH (0.17.30, the SOUND page; the outside research: the fuller firmwares' master chains). After the performance effects: the side below
+ * about 140 Hz taken out (the lows mono: a club's, a phone's), the side above 2.5 kHz up by Width (air), and a tilt: a low shelf at 120 Hz and a
+ * high one at 4 kHz, the genre's own (TILT, half dB) or warmer or brighter. Before the limiter, with Polish on: the peaks above -4.4 dB of the
+ * ceiling rounded (tanh), so the limiter has less to catch. One-pole filters: about 30 sums a sample, on the first core. */
+static const int8_t TILT[EN_NGENRE][2] = {   /* half dB: the low shelf, the high shelf. From the sound check of all 180 pieces (0.17.30): every genre's slope
+                                              * is inside the masters' 3-5 dB an octave; the tops nearly gone in reggae, dub, lofi, trip-hop and funk
+                                              * (0.03-0.18 % of the energy above 4 kHz) get a little back, the thinnest lows (DnB, psy: 85 % below 250 Hz) a
+                                              * little more; the rest as they were */
+    {0, 0}, {0, 1}, {0, 0}, {0, 0}, {-1, 2}, {2, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},   /* HYPNO LOFI HOUSE DUBSTEP DUB DNB BREAKS GARAGE ELECTRO TRAP */
+    {0, 0}, {0, 1}, {0, 3}, {0, 0}, {0, 0}, {0, 1}, {0, 0}, {2, 0}, {0, 0}};          /* DISCO FUNK REGGAE SYNTHWV AMAPI TRIPHOP INDUS PSY FOREST */
+static float po_s1, po_s2, po_l1, po_l2, po_r1, po_r2, po_glo, po_ghi, po_w, pc_k = 0.6f, pc_r = 0.45f, pc_ir = 2.2222f;
+static uint8_t po_on, po_clip;
+static inline void polish(float *pl, float *pr)
+{
+    float m = 0.5f * (*pl + *pr), s = 0.5f * (*pl - *pr), l, r;
+    po_s1 += (s - po_s1) * 0.019749f;            /* the side below 140 Hz */
+    po_s2 += (s - po_s2) * 0.29967f;             /* and below 2.5 kHz */
+    s += po_w * (s - po_s2) - (po_clip ? po_s1 : 0.0f);
+    l = m + s;
+    r = m - s;
+    if (po_glo != 0.0f || po_ghi != 0.0f) {
+        po_l1 += (l - po_l1) * 0.016952f;        /* 120 Hz */
+        po_l2 += (l - po_l2) * 0.43444f;         /* 4 kHz */
+        po_r1 += (r - po_r1) * 0.016952f;
+        po_r2 += (r - po_r2) * 0.43444f;
+        l += po_glo * po_l1 + po_ghi * (l - po_l2);
+        r += po_glo * po_r1 + po_ghi * (r - po_r2);
+    }
+    *pl = l;
+    *pr = r;
+}
+static inline float pclip(float x)              /* the peaks rounded: straight up to the knee, then a tanh towards a little over the ceiling */
+{
+    const float a = fm_fabsf(x);
+    float y;
+    if (a <= pc_k)
+        return x;
+    y = pc_k + pc_r * fm_tanhf((a - pc_k) * pc_ir);
+    return x < 0.0f ? -y : y;
+}
+static void polish_set(void)                    /* once a chunk */
+{
+    const int t = fxs_v[EN_FXS_TILT], g = (unsigned)chord_genre < EN_NGENRE ? chord_genre : 0;
+    float lo = 0.0f, hi = 0.0f;
+    if (t == 1) {
+        lo = 0.5f * (float)TILT[g][0];
+        hi = 0.5f * (float)TILT[g][1];
+    } else if (t == 2) {
+        lo = 1.5f;
+        hi = -1.5f;
+    } else if (t == 3) {
+        lo = -0.5f;
+        hi = 2.0f;
+    }
+    po_on = en_shed_level < 3;                  /* (the heaviest shedding: none of it) */
+    po_clip = fxs_v[EN_FXS_POLISH] > 0 && po_on;
+    po_glo = lo != 0.0f ? fm_db2lin(lo) - 1.0f : 0.0f;
+    po_ghi = hi != 0.0f ? fm_db2lin(hi) - 1.0f : 0.0f;
+    po_w = fxs_v[EN_FXS_WIDTH] > 0 ? fm_db2lin(0.06f * (float)fxs_v[EN_FXS_WIDTH]) - 1.0f : 0.0f;
+    pc_k = 0.6f * lk_ceil;
+    pc_r = 0.45f * lk_ceil;
+    pc_ir = 1.0f / pc_r;
+    po_s1 = fm_flush(po_s1);
+    po_s2 = fm_flush(po_s2);
+    po_l1 = fm_flush(po_l1);
+    po_l2 = fm_flush(po_l2);
+    po_r1 = fm_flush(po_r1);
+    po_r2 = fm_flush(po_r2);
+}
 static void master_dyn_set(void)                /* once a chunk: the settings, from the parameters */
 {
     static const float RATIO[7] = {1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 10.0f};
@@ -6335,6 +6513,7 @@ static void master_dyn_set(void)                /* once a chunk: the settings, f
     cp_ka = 1.0f - fm_expf(-1.0f / (0.004f * EN_SR));
     cp_kr = 1.0f - fm_expf(-1.0f / ((0.06f + 0.04f * cp_env) * EN_SR));     /* the release: ~60 ms, up to 400 ms at 9 dB of reduction (set once a chunk) */
     lk_ceil = fm_db2lin(-12.0f + 0.12f * (float)par[P_ML_CEIL]);   /* -12 .. 0 dB */
+    polish_set();
 }
 
 static void master_dyn_reset(void)              /* a new engine: nothing delayed, no reduction */
@@ -6387,6 +6566,10 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
                 l = 0.0f;
             if (!(fm_fabsf(r) < 64.0f))
                 r = 0.0f;
+            if (po_clip) {                      /* (0.17.30) the polish: the peaks rounded before the limiter */
+                l = pclip(l);
+                r = pclip(r);
+            }
             /* the limiter: the audio goes into the delay, the gain is figured for what is coming */
             p = fm_maxf(fm_fabsf(l), fm_fabsf(r));
             gq = p > lk_ceil ? lk_ceil / p : 1.0f;
@@ -7246,7 +7429,7 @@ static void render_bass(uint32_t n)
             gk = par[P_BL_GLIDE] ? 1.0f / ((0.01f + 0.004f * (float)par[P_BL_GLIDE]) * EN_SR) : bl_slide ? 1.0f / (0.06f * EN_SR) : 1.0f;   /* (a step's glide: 60 ms) */
         bass.note += (bass.target - bass.note) * fm_minf((float)n * gk, 1.0f);
     }
-    f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f) + (HB(EN_V_DRONE) ? hb_semi : 0.0f));   /* the LFO on the pitch: a semitone at most; a keyboard's bend */
+    f = mtof(bass.note + (dest == 1 ? depth * drone_lfo.v : 0.0f) + (HB(EN_V_DRONE) ? hb_semi : 0.0f) + vt_d[4]);   /* the LFO on the pitch: a semitone at most; a keyboard's bend */
     i0 = f * (osc == DO_FIFTHS ? 1.49831f : osc == DO_REESE || osc == DO_HOOVER ? 0.9862f : 0.99481f) *
          (1.0f / EN_SR);                        /* -9, 0, +9 cents (Reese and Hoover: 24; Fifths: a fifth) */
     i1 = f * (1.0f / EN_SR);
@@ -7516,7 +7699,7 @@ static void render_cm(uint32_t n)
 {
     const int sn = par[P_CM_SND] < 0 ? 0 : par[P_CM_SND] >= CM_NPLAIN ? CM_NPLAIN - 1 : par[P_CM_SND];
     const cm_snd_t *S = &CM_SOUND[sn];
-    const float g = cm_vol * 0.5f * S->g, pfc = HB(EN_V_PLUCK) ? hb_pf : 1.0f;   /* (a keyboard's bend) */
+    const float g = cm_vol * 0.5f * S->g, pfc = (HB(EN_V_PLUCK) ? hb_pf : 1.0f) * vt_pf[1];   /* (a keyboard's bend) */
     float lvl = 0.0f;
     int v;
     uint32_t j;
@@ -7614,7 +7797,7 @@ static void render_acid(uint32_t n)
         }
         if (acid.gate_left > 0 && --acid.gate_left == 0)
             acid.amp_t = 0.0f;                  /* the gate closes */
-        inc += (acid.inc_t * (HB(EN_V_ACID) ? hb_pf : 1.0f) - inc) * glide;      /* a slide: ~50 ms (a keyboard's bend on the target) */
+        inc += (acid.inc_t * (HB(EN_V_ACID) ? hb_pf : 1.0f) * vt_pf[0] - inc) * glide;      /* a slide: ~50 ms (a keyboard's bend on the target) */
         switch (osc) {
         case AO_SQUARE: case AO_PWM: {          /* a square (or a pulse): a saw less itself, part a turn on */
             float p2 = ph + (osc == AO_PWM ? pw : 0.5f);
@@ -8437,6 +8620,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     for (j = 0; j < n; j++) {                   /* the tank's output in, the performance effects */
         float l = mixl[j] + dk[j] * rv_wl[j], r = mixr[j] + dk[j] * rv_wr[j];
         fx_master(&l, &r);
+        if (po_on)
+            polish(&l, &r);                     /* (0.17.30) */
         mixl[j] = l;
         mixr[j] = r;
     }

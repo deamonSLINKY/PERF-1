@@ -6,7 +6,7 @@ tap GLO
 wait 100
 tap GLO
 wait 100
-expect view 33
+expect view 34
 # place 1: the piece playing (HYPNO 01), 4 bars
 spin K2 1
 spin K3 1

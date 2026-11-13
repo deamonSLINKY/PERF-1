@@ -39,7 +39,7 @@ expect held 0
 # Global: the keys are the scale (F#3 in, then out again); the root stays
 tap GLO
 wait 300
-expect view 32
+expect view 33
 tapkey 1
 wait 100
 expect pool 0x7AD

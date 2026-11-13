@@ -14,17 +14,17 @@ turn SELECT 8 100
 wait 1500
 expect view 9
 shot looks_bassline.png
-turn SELECT 4 100
+turn SELECT 5 100
 wait 1500
-expect view 13
+expect view 14
 shot looks_acidline.png
 turn SELECT 5 100
 wait 1500
-expect view 18
+expect view 19
 shot looks_dejavu.png
 turn SELECT 2 100
 wait 1500
-expect view 20
+expect view 21
 shot looks_drums.png
 press GLO
 wait 100
@@ -45,18 +45,18 @@ press SEQ
 wait 500
 release SEQ
 wait 1200
-expect view 36
+expect view 37
 shot looks_seq.png
-turn SELECT -20 100
+turn SELECT -21 100
 wait 300
 tap GLO
 wait 100
-expect view 32
+expect view 33
 spin K2 1
 wait 200
 expect theme 1
 shot looks_global_imp.png
-turn SELECT -32 100
+turn SELECT -33 100
 wait 1500
 expect view 0
 shot looks_home_imp.png
@@ -98,10 +98,10 @@ expect fxon 0
 # JAM: Sound on the fourth knob
 turn SELECT 3 100
 wait 1500
-expect view 35
+expect view 36
 shot looks_jam.png
 # a picture page (0.17.8): the title on a panel strip, the curve on a dark screen with a grid
-turn SELECT -33 100
+turn SELECT -34 100
 wait 1500
 expect view 2
 shot looks_padenv.png
@@ -112,21 +112,21 @@ shot looks_help.png
 release LFO
 wait 300
 # the step pages and Answer as rolls (0.17.9): a block a note, an accent taller, a slide a line into its note
-turn SELECT 13 100
+turn SELECT 14 100
 wait 1200
-expect view 15
+expect view 16
 shot looks_acsteps.png
 turn SELECT 4 100
 wait 1200
-expect view 19
+expect view 20
 shot looks_cmsteps.png
-turn SELECT -9 100
+turn SELECT -10 100
 wait 1200
 expect view 10
 shot looks_blsteps.png
-turn SELECT 4 100
+turn SELECT 5 100
 wait 1200
-expect view 14
+expect view 15
 shot looks_answer.png
 # the overlays: GLO held (the mix) and SEL held (the shift), the FX menu's tiles and tabs
 press GLO
@@ -142,5 +142,5 @@ wait 300
 # the Mixer as a desk (0.17.10)
 turn SELECT 17 100
 wait 1200
-expect view 31
+expect view 32
 shot looks_mixer.png

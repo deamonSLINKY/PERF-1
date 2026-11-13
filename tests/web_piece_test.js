@@ -161,7 +161,7 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
   check("a note's bad \"k\" is ignored", M.pcDecode(junk).kinds === null);
 
   // the pieces' extras (0.16.28, PCX1): the types and the FILTERS / SCREAM settings ("x" in the note)
-  const FX = Uint8Array.from([2, 1, 3, 70, 40, 20, 1]);
+  const FX = Uint8Array.from([2, 1, 3, 70, 40, 20, 1, 3, 2]);   // (0.17.30: and the bass answer's two)
   const px0 = M.pcExtrasWith(new Uint8Array(0), 18, 4, Uint8Array.from([0x2A, 1, 0]), FX, 19);
   check("the extras object: PCX1, 16 bytes a piece, its types and settings", px0.length === 8 + 19 * 160 && px0[0] === 0x50 && px0[3] === 0x31 && px0[4] === 16 &&
     eq(M.pcKindsOf(px0, 18, 4), [0x2A, 1, 0]) && eq(M.pcFxOf(px0, 18, 4), FX) && M.pcFxOf(px0, 18, 3) === null && M.pcKindsOf(px0, 18, 3) === null);
@@ -172,6 +172,13 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
   const fp = M.pcDecode(M.pcEncode({ ...pc, kinds: Uint8Array.from([3, 0, 0]), fx: FX }));
   check("a piece's FILTERS and SCREAM go with it, out of its note", eq(fp.fx, FX) && eq(fp.kinds, [3, 0, 0]) && fp.meta.x === undefined && fp.meta.t === "Night forest");
   check("none: no \"x\"", M.pcDecode(M.pcEncode({ ...pc, fx: null })).fx === null);
+  {   // (0.17.30) a piece shared before the bass answer has seven: read with the answer off
+    const old = M.pcEncode({ ...pc, fx: FX });
+    const d0 = M.pcDecode(old);
+    const meta = { ...d0.meta, x: [2, 1, 3, 70, 40, 20, 1] };
+    const fo = M.pcDecode(M.pcEncode({ ...pc, fx: null, meta }));
+    check("an older share's seven settings: the bass answer off", eq(fo.fx, [2, 1, 3, 70, 40, 20, 1, 0, 0]));
+  }
   const fset = M.pcSetDecode(M.pcSetEncode({ ...set, pieces: [{ ...pa, fx: FX }, pb] }));
   check("a set's pieces keep theirs", eq(fset.pieces[0].fx, FX) && fset.pieces[1].fx === null && fset.meta.x === undefined);
 

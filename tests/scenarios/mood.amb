@@ -6,7 +6,7 @@ expect mood 50
 expect moodacid 60
 tap HOME
 wait 100
-expect view 37
+expect view 38
 turn ALGO 5
 wait 100
 expect mood 60
@@ -31,7 +31,7 @@ expect mood 2
 # on Global it is the mode, the mood stays
 tap GLO
 wait 100
-expect view 32
+expect view 33
 turn ALGO 1
 wait 100
 expect mood 2
@@ -46,7 +46,7 @@ tap HOME
 wait 400
 tap HOME
 wait 100
-expect view 37
+expect view 38
 turn ALGO 24
 wait 100
 expect mood 50

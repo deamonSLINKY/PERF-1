@@ -62,7 +62,8 @@ static int glob_from_old;                    /* the old bank's header had them *
 #define PX_FXAT 4
 #define PX_SIZE (PX_HDR + EN_NGENRE * NPIECES * PX_LEN)
 typedef char px_fits[PX_SIZE <= PLAT_STORE_MAX ? 1 : -1];
-const uint8_t PX_FXS[PX_NFX] = {EN_FXS_FT_PAD, EN_FXS_FT_BASS, EN_FXS_FT_ACID, EN_FXS_SQ_DRIVE, EN_FXS_SQ_AMT, EN_FXS_SQ_WOW, EN_FXS_SQ_TGT};
+const uint8_t PX_FXS[PX_NFX] = {EN_FXS_FT_PAD, EN_FXS_FT_BASS, EN_FXS_FT_ACID, EN_FXS_SQ_DRIVE, EN_FXS_SQ_AMT, EN_FXS_SQ_WOW, EN_FXS_SQ_TGT,
+                                EN_FXS_BA_TYPE, EN_FXS_BA_EVERY};   /* (0.17.30: the bass answer's; a piece saved before has 0 there: off) */
 static uint8_t px[NPIECES][PX_LEN];          /* the playing genre's pieces' extras, as saved */
 static uint8_t pxl[NPIECES][1 + PX_NFX];     /* and their FILTERS and SCREAM as left this time in the genre ([0] 1: set), as keep() does for the rest */
 static uint8_t pending_px;
@@ -464,7 +465,7 @@ void project_fx_get(uint8_t *v)
         memcpy(v, px[i] + PX_FXAT, PX_NFX);
     else
         for (k = 0; k < PX_NFX; k++)
-            v[k] = (uint8_t)EN_FXS_DEF[PX_FXS[k]];
+            v[k] = (uint8_t)en_piece_fx_def(proj.genre, i, PX_FXS[k]);   /* (0.17.30: the factory piece's own: its role's bass answer) */
 }
 
 static void glob_load(void)                  /* the player's three: their object, else the old bank's header, else the defaults */

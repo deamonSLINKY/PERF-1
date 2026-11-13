@@ -6,13 +6,13 @@ tap HOME
 wait 100
 tap HOME
 wait 100
-expect view 38
+expect view 39
 spin SELECT 1
 wait 1500
 shot kaleido.png
 tap HOME
 wait 300
-expect view 37
+expect view 38
 tap HOME
 wait 300
 expect view 0
@@ -20,8 +20,8 @@ setpar 128 5
 setpar 129 25
 setpar 130 55
 setpar 131 70
-turn SELECT 30 100
-expect view 30
+turn SELECT 31 100
+expect view 31
 wait 4300
 shot master_hard.png
 wait 520

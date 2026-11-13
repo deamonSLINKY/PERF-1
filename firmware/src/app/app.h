@@ -52,8 +52,8 @@ void project_piece_save(void);           /* the playing piece, as it is, into th
 void project_piece_factory(void);        /* the playing piece back to its recipe, and out of the bank */
 int project_factory_genre(void);         /* (0.17.23) every stored piece of this genre to factory; how many */
 void project_piece_recipe(int i);        /* (0.17.11, a track code) piece i as its recipe into play; the bank as it is (a stored piece stays stored) */
-#define PX_NFX 7
-extern const uint8_t PX_FXS[PX_NFX];     /* (0.16.28) the effect settings a piece keeps: the FILTERS page's three types, SCREAM's four */
+#define PX_NFX 9
+extern const uint8_t PX_FXS[PX_NFX];     /* (0.16.28) the effect settings a piece keeps: the FILTERS page's three types, SCREAM's four, the bass answer's two (0.17.30) */
 void project_fx_get(uint8_t *v);        /* the playing piece's (as left this time, as saved with it, or the defaults) */
 void ui_fx_snapshot(uint8_t *v);        /* the UI's: as they are now */
 void ui_fx_apply(void);                  /* the playing piece's into the UI and the engine */

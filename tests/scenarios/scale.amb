@@ -2,7 +2,7 @@
 wait 300
 tap GLO
 wait 100
-expect view 32
+expect view 33
 # A Aeolian (Hypnos): A B C D E F G. F#3 is key 1: add F#
 tapkey 1
 expect pool 0x7AD
@@ -26,7 +26,7 @@ wait 300
 shot b_aeolian.png
 tap GLO
 wait 100
-expect view 32
+expect view 33
 # pentatonic minor, then strip it down to three notes and try a fourth removal
 turn ALGO 6
 expect par72 3
