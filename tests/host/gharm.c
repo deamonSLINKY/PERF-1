@@ -9,13 +9,16 @@
 
 extern int en_host_dimwalk, en_host_alt[3];
 static int maj_root = -1, bad_acid, acid_acc;          /* the chord now: its root if it is major (else -1) */
+static int pend[64], npend;                             /* (0.17.29) this block's accented notes on maj_root's fourth: they count only if the chord is
+                                                         * the same after the block (a note in the block where the chord changes is played over the new
+                                                         * one; judged against the old, REGGAE 01 once read as F over C, played over E) */
 
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
     if (st == 0x93u && d2 == 120u) {                   /* an accented acid note */
         acid_acc++;
-        if (maj_root >= 0 && ((int)d1 - maj_root + 120) % 12 == 5)
-            bad_acid++;
+        if (maj_root >= 0 && ((int)d1 - maj_root + 120) % 12 == 5 && npend < 64)
+            pend[npend++] = maj_root;
     }
 }
 
@@ -52,15 +55,19 @@ int main(int argc, char **argv)
             en_host_dimwalk = 0;
             en_host_alt[0] = en_host_alt[1] = en_host_alt[2] = 0;
             for (b = 0; b < secs * 44100 / 256; b++) {
-                int k, has3 = 0, has4 = 0;
+                int k, has3 = 0, has4 = 0, has5 = 0;
                 const int r = en_chord_root % 12;
                 en_render(buf, 256, 4096);
                 for (k = 0; k < EN_NPAD; k++) {
                     const int iv = (en_chord[k] - r + 120) % 12;
                     has3 |= iv == 3;
                     has4 |= iv == 4;
+                    has5 |= iv == 5;           /* (0.17.29: an 11th chord's own fourth is a chord tone) */
                 }
-                maj_root = has4 && !has3 ? r : -1;
+                maj_root = has4 && !has3 && !has5 ? r : -1;
+                for (k = 0; k < npend; k++)
+                    bad_acid += pend[k] == maj_root;
+                npend = 0;
             }
             for (b = 0; b < 3; b++)
                 alt[g][b] += en_host_alt[b];

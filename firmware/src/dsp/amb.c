@@ -499,9 +499,10 @@ static void role(int g, int i, int16_t *par)
             pset(par, P_DENS5, 38);
         }
         break;
-    case RL_PEAK:                               /* peak time: driven, brighter, the pluck faster, the drums up */
+    case RL_PEAK:                               /* peak time: driven, brighter, the pluck busier, the drums up (0.17.29: not faster: twice the DX notes ran the
+                                                 * second core at 54-58 %, the pieces 80-85 % with late renders on the unit) */
         padd(par, P_DRIVE, 12);
-        padd(par, P_CM_RATE, 1);
+        padd(par, P_CM_DENS, 10);
         padd(par, P_BRIGHT, 12);
         padd(par, P_AC_CUT, 8);
         padd(par, P_DR_CUT, 6);
@@ -516,9 +517,9 @@ static void role(int g, int i, int16_t *par)
         padd(par, P_RV_DAMP, 15);
         pscl(par, P_CM_LVL, 85);
         break;
-    case RL_SYNC:                               /* across the bar: the perc in 12 or 10 against it, the acid's loop shorter, the pluck skipping */
+    case RL_SYNC:                               /* across the bar: the perc in 12 against it (0.17.29: 10 drifted oddly), the acid's loop shorter, the pluck skipping */
         if (!(pr & PR_LANES))
-            par[P_LLEN5] = (int16_t)(i & 1 ? 12 : 10);
+            par[P_LLEN5] = 12;
         par[P_AC_LEN] = (int16_t)(par[P_AC_LEN] >= 16 ? 12 : 10);
         par[P_CM_STYLE] = 4;                    /* (Skip) */
         break;
@@ -2005,15 +2006,16 @@ static int ac_centre(void)                      /* the middle of the line's note
  * next note of the scale up, the fifth, takes its place. Minor chords keep their sixths and seconds (the acid's dark colours). */
 static int avoid_fix(int n)
 {
-    int k, maj = 0, mnr = 0;
+    int k, maj = 0, mnr = 0, has4th = 0;
     if (chord_nt < 2)
         return n;
     for (k = 1; k < chord_nt; k++) {
         const int d = (chord_pcs[k] - chord_pcs[0] + 12) % 12;
         maj |= d == 4;
         mnr |= d == 3;
+        has4th |= d == 5;                       /* (0.17.29) an 11th chord's own fourth is a chord tone, not an avoid note */
     }
-    return maj && !mnr && ((n - chord_pcs[0]) % 12 + 12) % 12 == 5 && n + 2 <= 96 ? n + 2 : n;
+    return maj && !mnr && !has4th && ((n - chord_pcs[0]) % 12 + 12) % 12 == 5 && n + 2 <= 96 ? n + 2 : n;
 }
 static int in_scale(int n)                      /* n is a note of the scale as it sounds now (an altered chord's too) */
 {
@@ -2678,8 +2680,9 @@ static void stab_fire(float envv);
 static struct { int n; uint8_t slid_ok, acc, hat, slide, beat; float dec; } ac_pend;
 static void acid_fire(void)
 {
-    const int n = ac_pend.acc || ac_pend.slide || ac_pend.beat ? avoid_fix(ac_pend.n) : ac_pend.n;   /* accented, held into the next or on the beat: no clashing
-                                                                                                       * fourth over the chord as it is when the note sounds (0.16.26) */
+    const int n = ac_pend.acc || ac_pend.slide || ac_pend.beat || (ac_pend.hat && par[P_LK_HAT] > 0) ? avoid_fix(ac_pend.n) : ac_pend.n;
+    /* accented (its own accent, or a hat's through the links, 0.17.29), held into the next or on the
+     * beat: no clashing fourth over the chord as it is when the note sounds (0.16.26) */
     const int slid = ac_pend.slid_ok && acid.amp_t > 0.0f;
     acid.inc_t = mtof((float)n) * (1.0f / EN_SR);
     if (!slid) {                                /* a new note: the envelope again */

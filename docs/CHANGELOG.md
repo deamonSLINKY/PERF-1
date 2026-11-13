@@ -26,6 +26,11 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **Two roles adjusted after the unit (0.17.29).**
+  - **Peak no longer speeds the pluck up.** That doubled the DX notes: on the unit the Peak pieces ran at 80-85 % CPU with a few late renders (BREAKS 10, GARAGE 9, DISCO 6), the second core at 54-58 %. The pluck plays a little more often instead.
+  - **Across the bar keeps the perc in 12 against the bar.** 10 drifted oddly.
+  - **The acid's avoid note, when a hat accents it.** A note accented by the hat link could still stress a major chord's fourth; it now steps up to the fifth like the acid's own accents. A chord that has the fourth in it (an 11th chord) keeps it: there it is a chord tone. The harmony test now judges a note against the chord it was played over: a note in the block where the chord changes had been judged against the old chord.
+  - **Your stored pieces are untouched by the roles.** A stored piece keeps everything it was stored with. Only the factory pieces you haven't stored take their roles.
 - **Each piece has a role, and Metal's wub tamed (0.17.28).**
   - **Roles.** The ten pieces of a genre used to differ in key, mode, chord, tempo and sounds, but they were all arranged the same way: the same voice in front, the same levels, line, echo and density. Now, in every genre but HYPNO, each piece after the first takes a role over the genre's recipe: bass-led, chords, acid, pluck hook, space, peak, dark, across the bar, or left field (the manual's table says what each changes). The genre's kit, swing, drum patterns, tempo, scales, chords and sounds stay put. Each genre also keeps the parts that define it: its bass line (house, dubstep, dub, funk, disco, reggae, trap, amapiano, drum and bass, psy, forest), its acid (psy, forest), its pad (lofi, synthwave, trip-hop), its drum lanes (the breakbeat and percussion genres).
   - **Measured on the host** (all 180 pieces, 32 bars; 29 features from the audio and the MIDI, including tempo, swing, and where the kick and snare fall):
