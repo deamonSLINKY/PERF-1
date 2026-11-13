@@ -453,6 +453,7 @@ const char *en_genre_name(int g);
 void en_genre(int g);                          /* the genre playing: its chords move in its own habits (the first bank keeps the original walk) */
 const char *en_piece_name_g(int g, int i);
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool);
+int en_piece_role(int g, int i);               /* (0.17.28) a factory piece's role over its genre (0 classic, 1 bass-led, 2 chords, 3 acid, 4 pluck, 5 space, 6 peak, 7 dark, 8 across the bar, 9 left field) */
 void en_piece_pats_g(int g, int i, uint16_t pats[EN_NPAT][EN_NLANE]);
 void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16]);   /* its factory step tricks (en_mod) */
 void en_piece_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]);   /* its factory drum patterns */

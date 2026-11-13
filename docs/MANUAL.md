@@ -726,6 +726,28 @@ pad, bass, acid, pluck and kits, and each piece takes one of each, picked by its
 style and rate change from piece to piece in every genre. Each genre also has its own compressor settings
 (section 11).
 
+**Each piece has a role.** In every genre but HYPNO, each piece after the first is arranged differently on top of the
+genre's recipe, so the ten don't sound like one track in ten keys:
+
+| Role | What changes |
+|---|---|
+| Classic | the genre as written (always piece 1) |
+| Bass-led | the bass line carries it: pad and pluck back, the line moving more |
+| Chords | the pad in front, comping; the bass line simple under it |
+| Acid | the acid leads and answers itself; the pluck out of its way |
+| Pluck hook | the pluck's riff held (Deja vu) and up front, the pad darker |
+| Space | more echo (a dotted quarter) and reverb, fewer notes, thinner hats |
+| Peak | more drive, brighter, the pluck faster, busier hats |
+| Dark | filters closed, a duller room |
+| Across the bar | the perc in 12 or 10 against the bar, the acid's loop shorter, the pluck skipping |
+| Left field | the phrase sliced, leaps in the pluck, a stranger acid, the pad moving more |
+
+Which piece gets which role rotates from genre to genre. What makes a genre stays put: its kit, swing, drum patterns,
+tempo, scales, chords and sounds. Each genre also keeps the parts that define it: house, dubstep, dub, funk, disco,
+reggae, trap, amapiano, drum and bass, psy and forest keep their bass line; psy and forest keep their acid; lofi,
+synthwave and trip-hop keep their pad; the breakbeat and percussion genres keep their drum lanes. Every setting a
+role changes is an ordinary setting you can turn back.
+
 Disco, funk, reggae, synthwave, amapiano and trip-hop use the same drum kits as the other genres.
 
 ### Storing a piece

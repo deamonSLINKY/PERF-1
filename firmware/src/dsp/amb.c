@@ -425,6 +425,116 @@ static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 0, 3, 2, 2, 3, 0, 2, 3
 /* pieces 6-10's pad: the palette shifted by PAD_K[g] from pieces 1-5's (0.16.7: it was 2 for all, which gave 1 and 9, 3 and 6, 4 and 7 one pad over the
  * same mode and chord kind: the audit's "twins"; each genre's shift chosen by tests/host/gtwin.c, SEARCH=1, for the fewest pairs too alike) */
 static const uint8_t PAD_K[EN_NGENRE] = {2, 4, 2, 4, 4, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 4, 4, 2, 0};
+/* (0.17.28) THE PIECES' ROLES. The ten pieces of a genre had differed in key, mode, chord, tempo and their sounds, but not in how they were arranged:
+ * the same voice in front, the same levels, line, echo and density in each, so they sounded like one track in ten keys (an outside review, 2026-11-12).
+ * Now each piece but the first takes a role over the genre's recipe: a nudge to which voice leads and how the space and the groove sit. The genre keeps
+ * what makes it the genre (its kit, swing, drum patterns, tempo, scale, chords, sounds), and each genre also locks the parts that define it (GPROT):
+ * its bass line, its acid, its pad, its drum lanes' lengths. Measured on the host (all 180 pieces, 32 bars: the audio's bands, loudness, width, and each
+ * voice's notes a bar and register): see the CHANGELOG. */
+enum { PR_BASS = 1, PR_ACID = 2, PR_PAD = 4, PR_LANES = 8 };
+enum { RL_CLASSIC, RL_BASS, RL_CHORDS, RL_ACID, RL_PLUCK, RL_SPACE, RL_PEAK, RL_DARK, RL_SYNC, RL_LEFT, EN_NROLE };
+static const uint8_t GPROT[EN_NGENRE] = {
+    0, PR_PAD, PR_BASS, PR_BASS, PR_BASS, PR_LANES | PR_BASS,                  /* HYPNO (no roles), LOFI, HOUSE, DUBSTEP, DUB, DNB */
+    PR_LANES, PR_LANES | PR_BASS, 0, PR_BASS | PR_LANES, PR_BASS | PR_LANES,   /* BREAKS, GARAGE, ELECTRO, TRAP, DISCO */
+    PR_BASS, PR_BASS | PR_LANES, PR_PAD, PR_BASS | PR_LANES, PR_PAD | PR_LANES, /* FUNK, REGGAE, SYNTHWV, AMAPI, TRIPHOP */
+    PR_LANES, PR_BASS | PR_ACID, PR_BASS | PR_ACID};                          /* INDUS, PSY, FOREST */
+static void pset(int16_t *par, int p, int v) { par[p] = (int16_t)(v < PARAMS[p].lo ? PARAMS[p].lo : v > PARAMS[p].hi ? PARAMS[p].hi : v); }
+static void padd(int16_t *par, int p, int d) { pset(par, p, par[p] + d); }
+static void pscl(int16_t *par, int p, int pct) { pset(par, p, (par[p] * pct + 50) / 100); }
+int en_piece_role(int g, int i) { return g <= 0 || (unsigned)g >= EN_NGENRE || i <= 0 || i >= EN_NPIECES ? RL_CLASSIC : 1 + (i - 1 + g) % (EN_NROLE - 1); }
+static void role(int g, int i, int16_t *par)
+{
+    const int pr = GPROT[g];
+    switch (en_piece_role(g, i)) {
+    case RL_BASS:                               /* the bass line carries it: the pad and the pluck back, the line moving */
+        if (!(pr & PR_PAD))
+            pscl(par, P_PAD, 60);
+        pscl(par, P_CM_LVL, 70);
+        pscl(par, P_CM_DENS, 60);
+        pscl(par, P_BASS, 112);
+        if (!(pr & PR_BASS)) {
+            par[P_BL_MODE] = 6;                 /* (Riff) */
+            padd(par, P_BL_MOVE, 20);
+        }
+        break;
+    case RL_CHORDS:                             /* the chords in front, comping; the line simple under them */
+        pscl(par, P_PAD, 125);
+        if (!par[P_PAD_COMP])
+            par[P_PAD_COMP] = par[P_SWING] > 20 ? 6 : 2;   /* (Syncop where it swings, else Off-beat) */
+        if (!(pr & PR_BASS))
+            par[P_BL_MODE] = 1;                 /* (Root) */
+        if (!(pr & PR_ACID))
+            pscl(par, P_ACID, 70);
+        pscl(par, P_CM_DENS, 70);
+        padd(par, P_BRIGHT, 8);
+        break;
+    case RL_ACID:                               /* the acid leads, answering itself; the pluck up and out of its way */
+        pset(par, P_ACID, par[P_ACID] * 135 / 100 < 50 ? 50 : par[P_ACID] * 135 / 100 > 68 ? 68 : par[P_ACID] * 135 / 100);   /* (50 .. 68: ELECTRO's went to 74, 2.6 dB over the rest) */
+        padd(par, P_AC_DENS, 15);
+        if (!par[P_AC_RESP])
+            par[P_AC_RESP] = 7;                 /* (an octave, the same way) */
+        if (par[P_CM_OCT] < 0)
+            padd(par, P_CM_OCT, 1);             /* (a low pluck up to the middle, out of the acid's way) */
+        pscl(par, P_CM_LVL, 80);
+        if (!(pr & PR_PAD))
+            pscl(par, P_PAD, 85);
+        break;
+    case RL_PLUCK:                              /* the pluck's riff is the hook: up, held (Deja vu), the pad darker under it */
+        pscl(par, P_CM_LVL, 130);
+        pset(par, P_CM_VU, par[P_CM_VU] > 85 ? par[P_CM_VU] : 85);
+        pset(par, P_CM_MOTIF, 85);
+        padd(par, P_BRIGHT, -12);
+        if (!(pr & PR_ACID))
+            pscl(par, P_ACID, 70);
+        break;
+    case RL_SPACE:                              /* dubbed out: more echo (dotted quarter) and room, fewer notes */
+        padd(par, P_ECHO, 16);
+        par[P_ETIME] = 3;
+        padd(par, P_REVERB, 8);
+        padd(par, P_SIZE, 10);
+        pscl(par, P_CM_DENS, 70);
+        pscl(par, P_AC_DENS, 80);
+        if (!(pr & PR_LANES)) {
+            pset(par, P_DENS3, 38);             /* (the hats and the perc thinned) */
+            pset(par, P_DENS5, 38);
+        }
+        break;
+    case RL_PEAK:                               /* peak time: driven, brighter, the pluck faster, the drums up */
+        padd(par, P_DRIVE, 12);
+        padd(par, P_CM_RATE, 1);
+        padd(par, P_BRIGHT, 12);
+        padd(par, P_AC_CUT, 8);
+        padd(par, P_DR_CUT, 6);
+        padd(par, P_PULSE, 5);
+        if (!(pr & PR_LANES))
+            pset(par, P_DENS3, 62);             /* (the hats busier) */
+        break;
+    case RL_DARK:                               /* dark: closed filters, a duller room (the registers stay: an octave down muddied it; more reverb widened the lows) */
+        padd(par, P_BRIGHT, -14);
+        padd(par, P_DR_CUT, -8);
+        padd(par, P_AC_CUT, -10);
+        padd(par, P_RV_DAMP, 15);
+        pscl(par, P_CM_LVL, 85);
+        break;
+    case RL_SYNC:                               /* across the bar: the perc in 12 or 10 against it, the acid's loop shorter, the pluck skipping */
+        if (!(pr & PR_LANES))
+            par[P_LLEN5] = (int16_t)(i & 1 ? 12 : 10);
+        par[P_AC_LEN] = (int16_t)(par[P_AC_LEN] >= 16 ? 12 : 10);
+        par[P_CM_STYLE] = 4;                    /* (Skip) */
+        break;
+    case RL_LEFT:                               /* left field: the phrase sliced, leaps in the pluck, a stranger acid, the pad moving */
+        if (!par[P_SLICE])
+            par[P_SLICE] = 9;                   /* (Auto) */
+        padd(par, P_CM_LEAP, 40);
+        if (!(pr & PR_ACID))
+            par[P_AC_WAVE] = (int16_t)(i & 1 ? 14 : 25);   /* (Fold, CZ) */
+        padd(par, P_PL_DEPTH, 20);
+        padd(par, P_DETUNE, 15);
+        break;
+    default:
+        break;
+    }
+}
 static void vary(int g, int i, int16_t *par)
 {
     const int pw = g * 3 + i, h = i / 5;
@@ -442,6 +552,7 @@ static void vary(int g, int i, int16_t *par)
     par[P_KIT_PERC] = PALETTE[g].perc[(i * 2 + 2 * g) % 3];
     par[P_PAN3] = (int16_t)(50 + ((i & 1) ? -14 : 14));    /* the pluck a little off the middle, the acid the other way */
     par[P_PAN2] = (int16_t)(50 + ((i & 1) ? 8 : -8));
+    role(g, i, par);
 }
 void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
 {
@@ -1045,24 +1156,24 @@ volatile float en_intro_k = 1.0f;
  * -17.6 .. -15.0 */
 static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
     {  4,   5,  -1,   5,   2,   6,   3,   2,  -2,  -2},   /* HYPNO */
-    {  1,   6,   5,   6,   4,   5,   2,   7,   0,   5},   /* LOFI */
-    { -2,  -2,  -1,  -3,  -1,  -3,  -3,  -1,  -1,  -2},   /* HOUSE */
-    {  1,  -2,  -8,  -3,  -2,  -7,  -6,  -2,  -4,  -6},   /* DUBSTEP */
-    {  2,   5,   6,   4,   5,   7,   5,   2,   6,   2},   /* DUB */
-    {  6,   4,   2,   5,   5,   5,   3,   2,   4,   4},   /* DNB */
-    { -3,  -2,  -1,  -3,  -4,  -1,  -3,  -7,   0,  -3},   /* BREAKS */
-    {  7,   2,   1,   4,   1,   3,   3,   3,   0,   4},   /* GARAGE */
-    { -3,  -1,   0,  -1,   1,   0,  -1,  -2,  -1,  -3},   /* ELECTRO */
-    { -4,   2,  -1,  -4,   0,  -3,  -1,  -2,   1,  -4},   /* TRAP */
-    { -1,   0,   0,  -4,  -3,   1,  -3,  -4,  -2,  -2},   /* DISCO */
-    {  2,   2,   0,   4,   1,   1,   2,   1,   1,   0},   /* FUNK */
-    {  2,   3,   6,   6,  -1,   3,   7,   5,  -1,   2},   /* REGGAE */
-    { -2,   3,  -1,  -1,   0,   3,  -3,   2,   2,  -5},   /* SYNTHWV */
-    { -1,   4,   4,  -2,   2,   2,   1,  -2,   1,   0},   /* AMAPI */
-    {  4,   8,   4,   5,   5,   5,   5,   8,   5,   2},   /* TRIPHOP */
-    {  1,  -5,  -7,  -1,  -6,  -3,  -3,  -7,  -5,  -1},   /* INDUS */
-    {  0,  -5,  -6,  -4,  -5,  -8,  -6,  -3,  -7,  -3},   /* PSY */
-    { -4,  -4,  -5,  -7,  -6,  -5,  -6,  -7,  -5,  -7},   /* FOREST */
+    {  1,   6,   3,   4,   3,   3,   2,   7,   0,   2},   /* LOFI */
+    { -2,  -3,  -1,  -3,  -3,  -3,  -3,  -1,  -2,  -2},   /* HOUSE */
+    {  0,  -1,  -8,  -4,  -1,  -7,  -7,  -1,  -4,  -6},   /* DUBSTEP */
+    {  3,   5,   5,   4,   6,   6,   4,   2,   3,   1},   /* DUB */
+    {  6,   3,   3,   4,   6,   4,   4,   1,   2,   4},   /* DNB */
+    { -3,  -2,  -2,  -3,  -5,   4,  -4,  -6,   0,  -3},   /* BREAKS */
+    {  7,   3,   0,   5,   2,   1,   3,   2,  -1,   6},   /* GARAGE */
+    { -3,  -1,   0,   0,  -4,   2,   0,  -2,  -1,  -3},   /* ELECTRO */
+    { -4,   1,  -3,  -5,   0,  -1,  -2,  -2,   1,  -4},   /* TRAP */
+    { -2,   0,  -1,  -4,  -3,   0,  -2,  -4,  -2,  -3},   /* DISCO */
+    {  2,  -1,   2,   4,   0,   1,   3,   1,   0,   3},   /* FUNK */
+    {  3,   2,   4,   6,   0,   3,   7,   2,   0,   0},   /* REGGAE */
+    { -2,   3,  -1,  -2,   1,   0,  -5,   4,  -2,  -4},   /* SYNTHWV */
+    { -1,   3,   5,  -2,   4,   3,   5,  -3,   1,   0},   /* AMAPI */
+    {  4,   7,   4,   5,   4,   8,   3,   7,   5,   2},   /* TRIPHOP */
+    {  1,  -6,  -6,  -3,  -6,  -3,  -2,  -7,  -7,   0},   /* INDUS */
+    {  0,  -5,  -6,  -4,  -6,  -8,  -5,  -3,  -7,  -4},   /* PSY */
+    { -4,  -4,  -5,  -7,  -6,  -4,  -6,  -6,  -5,  -7},   /* FOREST */
 };
 static float trim_to = 1.0f, trim_k = 1.0f;
 void en_trim(int g, int piece)
@@ -7110,7 +7221,7 @@ static void render_bass(uint32_t n)
      * high-pass at 110 Hz so the sub stays clean. The sweep: the LFO's place as a level (sine, triangle, drift: a raised cosine, closed at the beat;
      * saw: open then closing; square: open/shut; S&H: a level a cycle), drawn across the chunk from the last one's (no steps on the cutoff). */
     const int wub = wub_on();
-    const float wl0 = wub_lv, wdrv = (3.0f + 1.0f * DS->drive) * (1.0f + 2.0f * sqd);
+    const float wl0 = wub_lv, wdrv = (3.0f + 1.0f * DS->drive) * (osc == DO_METAL ? 0.65f : 1.0f) * (1.0f + 2.0f * sqd);   /* (0.17.28: Metal's tamed, "a bit too much") */
     float wl1 = 0.0f, wlv = wl0, wsa = 0.0f;
     if (wub) {
         const float lp = drone_lfo.ph;
@@ -7210,7 +7321,7 @@ static void render_bass(uint32_t n)
             x = sine_any(p1 + (0.25f + 1.5f * bass.env) * sine(mp)) * dsaw * 2.0f;
             break;
         case DO_METAL:                          /* FM, the modulator at 1.41: off the harmonics */
-            x = sine_any(p1 + (0.3f + 1.6f * bass.env) * sine(mp)) * dsaw * 2.0f;
+            x = sine_any(p1 + (0.3f + 1.6f * bass.env) * (wub ? 0.55f : 1.0f) * sine(mp)) * dsaw * 2.0f;   /* (the wub: a lower index, less clang) */
             break;
         case DO_SYNC:                           /* a saw synced to the note, the envelope sweeping it */
             x = blep_saw(mp, mi) * dsaw * 1.3f;
