@@ -6187,7 +6187,7 @@ static float gr_hold, pk_hold;
 static void reverb_set(void)                    /* once a chunk, before the tank's job: the type, damping, predelay */
 {
     rv_type = par[P_RV_TYPE] < 0 ? 0 : par[P_RV_TYPE] > 2 ? 2 : par[P_RV_TYPE];
-    rv_damp = 0.85f - 0.0085f * (float)par[P_RV_DAMP];
+    rv_damp = fm_maxf(0.85f - 0.0085f * (float)par[P_RV_DAMP], 0.03f);   /* (0.17.26) floored: at 0 the tank's damping froze, the tail died and a DC step stayed */
     rv_pre = 256 + (PRE_D - 256) * par[P_RV_PRE] / 100;                    /* 6 .. 30 ms (never under a chunk: the line is written as it is read) */
     rv_shim = 0.05f + 0.30f * (float)par[P_RV_X] * 0.01f;                  /* the shimmer's feedback */
     rv_gate_hold = (0.08f + 0.32f * (float)par[P_RV_X] * 0.01f) * EN_SR;   /* the gate's hold: 80 .. 400 ms */

@@ -80,7 +80,7 @@ static int st_erase(uint32_t off)
     if (!FL_STORE_OK(off, 0x1000u))
         return -8;
     if (!susp_bad) {                              /* in slices of about 1.2 ms with the interrupts on between, so the audio goes on */
-        uint32_t first = 1u;
+        uint32_t first = 1u, n = 0u;
         int rc;
         for (;;) {
             uint32_t f = irq_save();
@@ -88,6 +88,15 @@ static int st_erase(uint32_t off)
             irq_restore(f);
             first = 0u;
             susp_used = 1;
+            if (rc == 1 && ++n >= 1000u) {         /* (0.17.26) 1.2 s of erasing in slices and not done (a 4 KiB erase takes under 0.4 s): the part makes no
+                                                    * headway between suspends. Let it finish in one go, erase again whole, and slice no more this time on */
+                susp_bad = 1;
+                audio_silence();
+                f = irq_save();
+                FL_FAR(fl_resume_ram)();
+                irq_restore(f);
+                return fl_erase4k(off, &took);
+            }
             if (rc == 1) {                         /* suspended: the audio's interrupt may run now, and the main loop's keeper */
                 const uint32_t t0 = fm1_ticks();
                 fm1_wdt_feed();

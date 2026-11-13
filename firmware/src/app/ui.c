@@ -1139,11 +1139,16 @@ void ui_fx_snapshot(uint8_t *v)
     for (k = 0; k < PX_NFX; k++)
         v[k] = ui.fxs[PX_FXS[k]];
 }
+/* each one's top: the FILTERS page's three types (the pad's and the bass's five, the acid's six), SCREAM's Drive, Scream, Wow (0-100) and Target (3) */
+static const uint8_t PX_FXTOP[PX_NFX] = {4, 4, 5, 100, 100, 100, 2};
 void ui_fx_apply(void)
 {
     uint8_t v[PX_NFX];
     int k;
     project_fx_get(v);
+    for (k = 0; k < PX_NFX; k++)
+        if (v[k] > PX_FXTOP[k])                  /* (0.17.26) a shared or damaged piece's byte out of range: its top, not a read past a name table */
+            v[k] = PX_FXTOP[k];
     for (k = 0; k < PX_NFX; k++)
         if (ui.fxs[PX_FXS[k]] != v[k]) {
             ui.fxs[PX_FXS[k]] = v[k];
@@ -1254,7 +1259,7 @@ static void fxp_text(int k, char *b)
     else if (FXP_CTL(k).kind == KN_TGT || FXP_CTL(k).kind == KN_PTGT)
         s = GX_TGT[v].name;
     else if (FXP_CTL(k).kind == KN_NAME)
-        s = FXP_CTL(k).idx == EN_FXS_FT_PAD && !en_pad_filtered() ? "NO FILTER" : FXP_CTL(k).names[v];   /* (0.17.18) the pad's sound has none */
+        s = FXP_CTL(k).idx == EN_FXS_FT_PAD && !en_pad_filtered() ? "NO FILTER" : FXP_CTL(k).names[v < FXP_CTL(k).n ? v : FXP_CTL(k).n - 1];   /* (0.17.18) the pad's sound has none; (0.17.26) never past the table */
     if (s) {
         int n = 0;
         while (*s && n < 9)
@@ -9433,7 +9438,7 @@ void ui_frame(void)
          * the DX voices to four, then two, then give up the Echoplex and the vinyl; and it eases back a step after twenty seconds of neither. One step at a time (four seconds
          * after the last on a dropout, ten on the other: a step needs time to show; one overrun used to climb all three at once, the peak of the last second still reading 100 %).
          * (A single late render is not a dropout: the next one starts at once. The average CPU and the peaks were the gauge before, but they sit high in the heavy pieces.) */
-        static uint32_t calm_t, step_t, last_xr, last_late, win_t, win_n;
+        static uint32_t calm_t, step_t, last_xr, last_late, win_t, win_n, eased_t, need = 20000u;   /* (0.17.26) need: the calm an ease-back waits for */
         const uint32_t now = plat_ms(), xr = plat_xruns(), lt = plat_late();
         const int lost = xr != last_xr;
         win_n += lt - last_late;
@@ -9442,7 +9447,16 @@ void ui_frame(void)
         if (!en_playing) {
             calm_t = step_t = win_t = now;
             win_n = 0;
+            need = 20000u;                         /* (a new start: the short wait again) */
+            eased_t = 0;
         } else {
+            static int last_pc = -1;
+            const int pc = proj.genre * 16 + proj.piece;
+            if (pc != last_pc) {                   /* (another piece: the short wait again) */
+                last_pc = pc;
+                need = 20000u;
+                eased_t = 0;
+            }
             if (now - win_t > 10000u) {             /* the late renders of the last ten seconds */
                 win_t = now;
                 win_n = 0;
@@ -9453,10 +9467,14 @@ void ui_frame(void)
                     en_shed(en_shed_level + 1);
                     step_t = now;
                     win_n = 0;
+                    if (eased_t && now - eased_t < 30000u && need < 160000u)   /* (0.17.26) the last ease-back did not hold: wait twice as long next time,
+                                                                                   * so a piece that needs a step keeps it (it dropped out every 20-30 s) */
+                        need *= 2u;
+                    eased_t = 0;
                 }
-            } else if (now - calm_t > 20000u && en_shed_level > 0) {
+            } else if (now - calm_t > need && en_shed_level > 0) {
                 en_shed(en_shed_level - 1);
-                calm_t = now;
+                calm_t = eased_t = now;
             }
         }
     }
