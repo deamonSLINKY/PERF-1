@@ -152,6 +152,7 @@ def main():
     ap.add_argument("--out", default="build/dev_artifact")
     ap.add_argument("--commits", type=int, default=40)
     ap.add_argument("--page-only", action="store_true", help="the page alone: no docs, screenshots or emulator")
+    ap.add_argument("--extra", action="append", default=[], help="another Markdown file shown with the docs (a test plan, say); may repeat")
     a = ap.parse_args()
     out = (SRC / a.out).resolve()
     if out.exists():
@@ -175,6 +176,11 @@ def main():
                 files[f"docs/{name}"] = str(out / "docs" / name)
                 docs.append(f'<li><a href="docs/{name}" data-doc="docs/{name}">{name}</a></li>')
                 break
+    for x in ([] if a.page_only else a.extra):     # (the --extra files: first in the list, they are this build's)
+        p = Path(x)
+        shutil.copy2(p, out / "docs" / p.name)
+        files[f"docs/{p.name}"] = str(out / "docs" / p.name)
+        docs.insert(0, f'<li><a href="docs/{p.name}" data-doc="docs/{p.name}">{p.name}</a></li>')
 
     shots = [] if a.page_only else sorted((SRC / "docs" / "img").glob("perf-screen-*.png"))
     if shots:
