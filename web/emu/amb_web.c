@@ -195,13 +195,17 @@ __attribute__((used, visibility("default"))) int web_st_vox_put(int slot, int ke
         ui_voices_changed(1, 3);
     return slot;
 }
-/* the pluck's built-in DX sound idx (0..29) of the set in use into st_vox: 1 as 128 packed bytes, 2 as the 155-byte voice; 0 none */
+/* the pluck's built-in DX sound idx (0..59: the first thirty of the set in use, then the thirty more) into st_vox: 1 as 128 packed bytes, 2 as the 155-byte voice; 0 none */
 __attribute__((used, visibility("default"))) int web_st_vox_dx(int idx)
 {
     const fm6_rom_t *r;
     int n, i, src;
-    if ((unsigned)idx >= EN_NFMFACT)
+    if ((unsigned)idx >= EN_NFMFACT + EN_NFMX)
         return 0;
+    if (idx >= EN_NFMFACT) {                     /* (0.17.25) the thirty more: the DY set's 30 .., in either set (fm6.inc fm_set_patch) */
+        memcpy(st_vox, FM6_DY[idx], 128);
+        return 1;
+    }
     if (en_fm_dy) {
         memcpy(st_vox, FM6_DY[idx], 128);
         return 1;

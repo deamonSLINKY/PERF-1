@@ -374,7 +374,7 @@ const say = (t, warn) => { $("msg").textContent = t || ""; $("msg").className = 
  * lowest), the frozen pluck line in two halves around the frozen acid line, the step tricks. web/emu/amb_web.c's st_io adds the progression,
  * its chord types, the bass steps and the FILTERS and SCREAM after it. */
 const REC = 376, NPAT = 6, NL = 6, REC_PAR = 2 + 2 * NPAT * NL, REC_CML1 = 250, REC_MOD = REC - NL * 16, REC_ACL = REC_MOD - 24, REC_CML2 = REC_ACL + 18;
-const IO_PRG = REC, IO_PRK = IO_PRG + 6, IO_BS = IO_PRK + 3, IO_FXON = IO_BS + 16, IO_FX = IO_FXON + 1, IO_LEN = IO_FX + 7;
+const IO_PRG = REC, IO_PRK = IO_PRG + 6, IO_BS = IO_PRK + 3, IO_FXON = IO_BS + 16, IO_FX = IO_FXON + 1, IO_LEN = IO_FX + PC_PX_NFX;   // (0.17.30: 9 extras, the bass answer's two after the seven)
 const BL_STEPS = P[PE.P_BL_MODE].max;                       // the bass line's last mode: Steps
 let io = null;                                              // the piece in hand
 let cur = { genre: 2, piece: 0 };
@@ -1225,7 +1225,7 @@ document.addEventListener("keyup", (e) => { if (e.code === "Space" && document.a
 /* ---- a piece as a file or a code (fm1piece.js): out, and in (to its genre and place, put into play) */
 function pieceOut() {
   return { genre: cur.genre, slot: cur.piece, npar: P.length, rec: io.slice(0, REC), prg: io.slice(IO_PRG, IO_PRG + 6), voice: null,
-           kinds: io.slice(IO_PRK, IO_PRK + 3), fx: io[IO_FXON] ? io.slice(IO_FX, IO_FX + 7) : null, bass: io.slice(IO_BS, IO_BS + 16), meta: { t: S.tagOf({ genre: cur.genre, slot: cur.piece }) + " (studio)" } };
+           kinds: io.slice(IO_PRK, IO_PRK + 3), fx: io[IO_FXON] ? io.slice(IO_FX, IO_FX + PC_PX_NFX) : null, bass: io.slice(IO_BS, IO_BS + 16), meta: { t: S.tagOf({ genre: cur.genre, slot: cur.piece }) + " (studio)" } };
 }
 $("save").addEventListener("click", () => {
   const a = document.createElement("a");
@@ -1431,7 +1431,9 @@ document.addEventListener("keydown", (e) => {
 /* ======================================================================== controls: a setting as the unit's knob (a bar to drag, a list of names) */
 const FT = ["Low-pass", "High-pass", "Band-pass", "Notch", "Peak"];
 const FXMETA = [{ n: "Pad filter", min: 0, max: 4, def: 0, t: FT }, { n: "Bass filter", min: 0, max: 4, def: 0, t: FT }, { n: "Acid filter", min: 0, max: 5, def: 0, t: [...FT, "303"] },   // (0.17.17: the acid's sixth, the 303 ladder)
-                { n: "Drive", min: 0, max: 100, def: 0 }, { n: "Scream", min: 0, max: 100, def: 0 }, { n: "Wow", min: 0, max: 100, def: 0 }, { n: "Target", min: 0, max: 2, def: 0, t: ["Acid", "Bass", "Both"] }];
+                { n: "Drive", min: 0, max: 100, def: 0 }, { n: "Scream", min: 0, max: 100, def: 0 }, { n: "Wow", min: 0, max: 100, def: 0 }, { n: "Target", min: 0, max: 2, def: 0, t: ["Acid", "Bass", "Both"] },
+                { n: "Bass answer", min: 0, max: 6, def: 0, t: ["Off", "Octave", "Fifth", "Run", "Busy", "Sparse", "Slide"] },   // (0.17.30, ui.c BA_TNAME, BA_ENAME)
+                { n: "Answer every", min: 0, max: 9, def: 2, t: ["2 bars", "3 bars", "4 bars", "5 bars", "6 bars", "7 bars", "8 bars", "Drift", "With acid", "After acid"] }];
 const meta = (p) => (p >= 0 ? P[p] : FXMETA[-p - 1]);       // a setting, or (negative) one of the FILTERS and SCREAM pages' seven (the piece's extras)
 const parV = (p) => (p >= 0 ? P[p].min + io[REC_PAR + p] : io[IO_FX - p - 1]);
 const parSetV = (p, v) => {
@@ -1560,6 +1562,7 @@ function soundRender() {
   if (fx) h += '<div class="sec"><h3>FILTERS' + (fx.length > 1 ? " and SCREAM" : "") + ' (the FX menu&#39;s pages, kept with the piece)</h3>' +
     (noPadFilt ? '<p class="muted" style="margin:0 0 6px;font-size:.8rem">NO FILTER on this pad sound: its filter is on the saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck). The setting is kept for when you pick one.</p>' : "") +
     '<div class="ctls kn"' + (noPadFilt ? ' style="opacity:.4"' : "") + ">" + fx.map((p) => knobHTML(p, null, col)).join("") + "</div></div>";
+  if (sel === "bass") h += '<div class="sec"><h3>THE ANSWER (the bass answers in its own bars, kept with the piece: 0.17.30)</h3><div class="ctls kn">' + [-8, -9].map((q) => knobHTML(q, null, col)).join("") + "</div></div>";
   if (sel === "pluck") h += dxHTML();
   h = vibeHTML(col) + h;
   $("sound").innerHTML = h + '<p class="muted">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece.</p>';
@@ -1626,7 +1629,9 @@ function vGraph(a) {                                          // the firmware's 
   return { edges, carrier, fb };
 }
 let dxv = null, dxSlot = -1, dxDx = -1, dxOp = 1, dxN = 0, dxNames = [], dxFile = [], dxBusy = false, dxAgain = false, dxKeepT = 0, dxPutT = 0, dxEnvDrag = null, dxAlgHit = [];
-const DXB = () => N.nplain + N.nfmfact;                        // (the pluck's Sound: the plain sounds, the built-in DX ones, then the player's)
+const DXB = () => N.nplain + N.nfmfact;
+const DXX0 = () => N.nplain + N.nfmfact + (N.nuser || 16), NDXX = () => Math.max(0, P[PE.P_CM_SND].max + 1 - DXX0());   // (0.17.25: the thirty more, after the slots)
+const dxSndOf = (d) => (d < N.nfmfact ? N.nplain + d : DXX0() + d - N.nfmfact);   // a built-in's place on the pluck's Sound                        // (the pluck's Sound: the plain sounds, the built-in DX ones, then the player's)
 const dxSndNames = () => P[PE.P_CM_SND].t;
 const CURVE = ["-LIN", "-EXP", "+EXP", "+LIN"], LFOW = ["Triangle", "Saw down", "Saw up", "Square", "Sine", "S & H"];
 function dxFmt(i, v) {
@@ -1646,7 +1651,7 @@ function dxHTML() {                                           // (the rows are f
   const nm = dxSndNames(), b = DXB();
   return '<div class="sec dx7"><h3>DX7 VOICE <span class="muted" id="dxWhat" style="font-weight:500;letter-spacing:0"></span></h3>' +
     '<div class="bar" style="margin-bottom:8px"><span class="lbl">EDIT</span><select id="dxFrom" aria-label="The DX voice to edit">' +
-    '<optgroup label="The built-in DX sounds">' + Array.from({ length: N.nfmfact }, (_, k) => '<option value="d' + k + '">' + nm[N.nplain + k] + "</option>").join("") + "</optgroup>" +
+    '<optgroup label="The built-in DX sounds">' + Array.from({ length: N.nfmfact + NDXX() }, (_, k) => '<option value="d' + k + '">' + nm[dxSndOf(k)] + "</option>").join("") + "</optgroup>" +
     '<optgroup label="Your voices (the 16 slots)">' + Array.from({ length: 16 }, (_, k) => '<option value="u' + k + '"' + (k > dxN ? " disabled" : "") + ">" + (k + 1) + " · " + (k < dxN ? dxNames[k] || nm[b + k] : k === dxN ? "(the next free)" : "(empty)") + "</option>").join("") + "</optgroup>" +
     (dxFile.length ? '<optgroup label="From the .syx file">' + dxFile.map((v, k) => '<option value="f' + k + '">' + (vName(v) || "(no name)") + "</option>").join("") + "</optgroup>" : "") +
     '<option value="i">Init voice (a plain sine)</option></select>' +
@@ -1672,17 +1677,18 @@ async function dxSlots() {                                    // the player's vo
 async function dxReadPlaying() {                              // the voice the pluck plays now, into the editor
   await dxSlots();
   const s = parV(PE.P_CM_SND);
+  if (s >= DXX0()) return dxPick("d" + (N.nfmfact + s - DXX0()), true);
   if (s >= DXB() && s - DXB() < dxN) return dxPick("u" + (s - DXB()), true);
   if (s >= N.nplain && s < DXB()) return dxPick("d" + (s - N.nplain), true);
   return dxPick("d0", true);
 }
 async function dxPick(key, quiet) {                           // a voice into the editor: a built-in (heard as it is), a slot, a file's, the init voice
   const k = key[0], i = +key.slice(1);
-  if (k === "d") { const r = await ask({ type: "st_vox", op: "dx", idx: i }); if (!r.ok) return; dxv = r.ok === 2 ? vSanitize(r.vox.slice(0, FP.SIZE)) : vUnpack(r.vox.subarray(0, 128)); dxSlot = -1; dxDx = i; if (!quiet) dxPlay(N.nplain + i); }
+  if (k === "d") { const r = await ask({ type: "st_vox", op: "dx", idx: i }); if (!r.ok) return; dxv = r.ok === 2 ? vSanitize(r.vox.slice(0, FP.SIZE)) : vUnpack(r.vox.subarray(0, 128)); dxSlot = -1; dxDx = i; if (!quiet) dxPlay(dxSndOf(i)); }
   else if (k === "u") { const r = await ask({ type: "st_vox", op: "get", slot: i }); if (!r.ok) return; dxv = vUnpack(r.vox.subarray(0, 128)); dxSlot = i; dxDx = -1; if (!quiet) dxPlay(DXB() + i); }
   else { dxv = k === "f" ? Uint8Array.from(dxFile[i]) : vInit(); dxSlot = -1; dxDx = -1; await dxPut(true); }
   dxOp = 1;
-  if (!quiet) { dxFill(); say(k === "d" ? "The pluck plays " + dxSndNames()[N.nplain + i] + ". Edit it: your changes go into a voice slot of your own, the built-in stays." :
+  if (!quiet) { dxFill(); say(k === "d" ? "The pluck plays " + dxSndNames()[dxSndOf(i)] + ". Edit it: your changes go into a voice slot of your own, the built-in stays." :
     k === "u" ? "The pluck plays your voice " + (i + 1) + ". Edits go straight into it." : "In a voice slot of your own, and the pluck plays it."); }
 }
 function dxPlay(snd) { if (parV(PE.P_CM_SND) !== snd) { parSetV(PE.P_CM_SND, snd); changed(); } }
@@ -1912,8 +1918,8 @@ function fxPage(pg) {
 }
 function fxSide() {
   const el = $("fxSide"); if (!el || !fxd) return;
-  const af = fxd.pages.findIndex((x) => x.name === "AUTO FX");
-  el.innerHTML = xyHTML() + (fxSel >= 0 ? fxPage(fxSel) : '<div class="sec"><h3>SETTINGS</h3><p class="muted" style="margin:0">Tap or hold an effect: its settings come here.</p></div>') + (af >= 0 && af !== fxSel ? fxPage(af) : "");
+  const af = fxd.pages.findIndex((x) => x.name === "AUTO FX"), snd = fxd.pages.findIndex((x) => x.name === "SOUND");
+  el.innerHTML = xyHTML() + (fxSel >= 0 ? fxPage(fxSel) : '<div class="sec"><h3>SETTINGS</h3><p class="muted" style="margin:0">Tap or hold an effect: its settings come here.</p></div>') + (af >= 0 && af !== fxSel ? fxPage(af) : "") + (snd >= 0 && snd !== fxSel ? fxPage(snd) : "");
   xyDraw();
 }
 /* the XY pad: a setting across, another up; touching it turns their effects on (off again when let go, unless Keep on), as a Kaoss pad */

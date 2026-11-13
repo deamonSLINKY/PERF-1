@@ -62,7 +62,7 @@ int main(int argc, char **argv)
         printf("%s{\"i\":%d,\"n\":", p ? ",\n" : "", p);
         put_str(q->name);
         printf(",\"min\":%d,\"max\":%d,\"def\":%d", q->lo, q->hi, q->def);
-        if (q->hi - q->lo <= 70) {
+        if (q->hi - q->lo <= 70 || p == P_CM_SND) {   /* (0.17.25: the pluck's sounds are 88, past the usual limit; they still have names) */
             for (v = q->lo; v <= q->hi && !named; v++) {
                 en_param_text(p, v, t);
                 snprintf(num, sizeof num, "%d", v);
