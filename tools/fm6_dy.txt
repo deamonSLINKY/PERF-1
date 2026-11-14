@@ -1,5 +1,5 @@
 # The DY voices: thirty human-made DX7 voices standing in for the thirty DX voices, one per slot, chosen by name (tools/gen_fm6_dy.py reads this).
-# slot | name on the unit | bank file under the banks folder (dump index after # when a file holds several) | voice 0..31 | source and its permission
+# slot | name | bank file under the banks folder (dump index after # when a file holds several) | voice 0..31 | source and its permission [| the name shown, when not the bank's own]
 # Sources (research/dx7-banks-2026-10-29.md): BB = Bobby Blues' DX7 page (bobbyblues.recup.ch), whose terms read "All patches published on this page
 # become automatically free public domain material"; DB = Dave Benson's DX7 page (homepages.abdn.ac.uk/d.j.benson), "a collection of public domain
 # patches for the DX7". Pafreak's SYNTHOXICATED banks (2026), madFame's Custom Patches, Jexus (WC Olo Garb) and the magazine banks (Aftertouch US,
@@ -27,7 +27,7 @@
 20|DY Saw Bass|KBMag_syx/KBMag_syx/KB_MAG3.syx|7|Keyboards magazine (FR) bank 3 (BB)
 21|DY Tubular|Guit_Clav_syx/Guit&Clav_SYX/Guit_Clav5.syx|29|Guitares & Claviers magazine (FR) bank 5 (BB)
 22|DY Steel Gtr|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_1.syx|19|Aftertouch magazine (US) bank 1 (BB)
-23|DY Clean Gtr|SYNTHOXICATED_PAFREAK/DX7 SYNTHOXICATED PAFREAK/1-32.syx|6|Pafreak, SYNTHOXICATED 1-32 (BB)
+23|DY Clean Gtr|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Jezreel/INCONI23.SYX|31|Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: GITARA ELE measured mostly noise)
 24|DY Muted Gtr|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_1.syx|13|Aftertouch magazine (US) bank 1 (BB)
 25|DY Drive Gtr|loose/EMM_MT.syx|21|E&MM / Music Technology magazine bank (BB)
 26|DY Slap Bass|loose/EMM_MT.syx|14|E&MM / Music Technology magazine bank (BB)
@@ -41,27 +41,27 @@
 31|DY Bright Rhodes|DX7_AllTheWeb/DX7_AllTheWeb/Toby/Tobys2.syx|29|Toby, Tobys2 (BB)
 32|DY Grand Piano|loose/EMM_MT.syx|16|E&MM / Music Technology magazine bank (BB)
 33|DY Digital Keys|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_1.syx|31|Aftertouch magazine (US) bank 1 (BB)
-34|DY Soft Keys|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_3.syx|8|Aftertouch magazine (US) bank 3 (BB)
+34|DY Harpsichord|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Godric/pluck3.syx|25|Godric's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13 audit: was COTTENKEYS, a third Rhodes-type EP)|HARPSICHORD
 35|DY House Organ|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman3.syx|30|Narfman, bank 3 (BB)
-36|DY Rock Organ|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman2.syx|17|Narfman, bank 2 (BB)
+36|DY Accordion|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Jezreel/WIND--01.SYX|9|Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was LORD-Y B3, a second Hammond)|ACCORDION
 37|DY Combo Organ|DX7_AllTheWeb/DX7_AllTheWeb/Frank Carvalho/Frankpch.syx|8|Frank Carvalho, Frankpch (BB)
 38|DY Poly Synth|DX7_AllTheWeb/DX7_AllTheWeb/Frank Carvalho/Frankpch.syx|27|Frank Carvalho, Frankpch (BB)
 39|DY Poly Keys|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman3.syx|15|Narfman, bank 3 (BB)
-40|DY Poly Brass|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman3.syx|28|Narfman, bank 3 (BB)
+40|DY Oboe|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Jezreel/INCONI65.SYX|25|Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was OB Genviv/, a fourth synth brass)|OBOE
 41|DY Saw Lead|DX7_AllTheWeb/DX7_AllTheWeb/Frank Carvalho/Frankpc2.syx|0|Frank Carvalho, Frankpc2 (BB)
 42|DY PWM Lead|DX7_AllTheWeb/DX7_AllTheWeb/Frank Carvalho/Frankpc2.syx|10|Frank Carvalho, Frankpc2 (BB)
 43|DY Techno Lead|DX7_AllTheWeb/DX7_AllTheWeb/Frank Carvalho/Frankpc2.syx|13|Frank Carvalho, Frankpc2 (BB)
 44|DY Seq Pluck|SYNTHOXICATED_PAFREAK/DX7 SYNTHOXICATED PAFREAK/33-64.syx|2|Pafreak, SYNTHOXICATED 33-64 (BB)
 45|DY Warm Poly|Guit_Clav_syx/Guit&Clav_SYX/Guit_Clav4.syx|18|Guitares & Claviers magazine (FR) bank 4 (BB)
 46|DY Analog|DX7_AllTheWeb/DX7_AllTheWeb/Clyde Jones/Cjsp2.syx|15|Clyde Jones, Cjsp2 (BB)
-47|DY Vintage Str|DX7_AllTheWeb/DX7_AllTheWeb/madFame/DX7 - madFame Custom Patches VOL 3.syx|8|madFame, Custom Patches vol 3 (BB)
+47|DY Pan Pipe|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Godric/woodwind2.syx|24|Godric's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was VNTGSTRNG1, a second string patch)|PAN PIPE
 48|DY Angel Vox|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_3.syx|13|Aftertouch magazine (US) bank 3 (BB)
 49|DY Choir Vox|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman3.syx|18|Narfman, bank 3 (BB)
 50|DY Square Bass|DX7_AllTheWeb/DX7_AllTheWeb/madFame/DX7 - madFame Custom Patches VOL 1.syx|0|madFame, Custom Patches vol 1 (BB)
-51|DY Glide Bass|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman1.syx|26|Narfman, bank 1 (BB)
-52|DY Synth Bass|DX7_AllTheWeb/DX7_AllTheWeb/Narfman/Narfman2.syx|23|Narfman, bank 2 (BB)
+51|DY Koto|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Jezreel/INCONI64.SYX|21|Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was PORTABass, a sixth synth bass)|KOTO
+52|DY Cimbalom|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Jezreel/INCONI24.SYX|22|Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was SYNBASS 48, a seventh bass)|CIMBALOM
 53|DY Vibes|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_3.syx|18|Aftertouch magazine (US) bank 3 (BB)
-54|DY Celeste|Guit_Clav_syx/Guit&Clav_SYX/Guit_Clav5.syx|27|Guitares & Claviers magazine (FR) bank 5 (BB)
+54|DY Banjo|DX7_AllTheWeb/DX7_AllTheWeb/Dexed v1_0 (Black Winny)/Godric/pluck1.syx|4|Godric's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was CELESTE, a fourth bell)|BANJO
 55|DY Pick|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_3.syx|0|Aftertouch magazine (US) bank 3 (BB)
 56|DY Sitar|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_1.syx|4|Aftertouch magazine (US) bank 1 (BB)
 57|DY Pluck|Aftertouch_SYX/Aftertouch_SYX/Aftrtch_1.syx|20|Aftertouch magazine (US) bank 1 (BB)

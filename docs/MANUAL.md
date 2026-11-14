@@ -1098,29 +1098,30 @@ synthwave, amapiano and trip-hop genres use them. Tell the maker what you think 
 
 **The DY set.** On the Settings page, **Voices** chooses between two sets. **DY** (the default) swaps all thirty
 built-in voices for DX7 patches made by people, of the same kind, chosen by name from public-domain banks:
-Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the 1980s magazine banks on Bobby Blues' page, and one from
-Jack Deckard's collection on Dave Benson's page. **DX** puts the built-in set back. Each DY voice shows its bank's
+Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the 1980s magazine banks on Bobby Blues' page, one from
+Jack Deckard's collection on Dave Benson's page, and the Clean Gtr (`CHOR.STRAT`) from Jezreel's folder. **DX** puts the built-in set back. Each DY voice shows its bank's
 own name. For example, madFame's `MF EPRHOD1` stands in for the Tine EP and the Aftertouch magazine's `SAXOPHONE`
 for the Sax. The full list is in the PERF-1 source. The names on the screen change with the switch. Each DY voice is
 set to the same loudness as the DX voice it replaces, so the genres' mix stays balanced.
 
 **Thirty more** (0.17.25). After the first thirty on the **Sound** list come thirty more DX7 voices made by people, from
-the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's and Narfman's folders, and the Aftertouch,
-Guitares & Claviers and E&MM magazine banks). They play in either set and show their banks' own names:
+the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's, Narfman's, Godric's and Jezreel's folders, and the
+Aftertouch, Guitares & Claviers and E&MM magazine banks). They play in either set. Most show their banks' own names; the
+seven added in the 2026-11-13 audit (each one a kind of instrument the set lacked) show what they are:
 
 | On the screen | What it is | On the screen | What it is |
 |---|---|---|---|
 | WURLITZER | Wurlitzer electric piano | TSQR DECAY | Sequencer pluck |
 | TF-RHODES | Bright Rhodes | CS 80 | Warm poly (CS-80 style) |
 | REAL GRAND | Grand piano | ANALOG 1 | Analog poly |
-| ARCTICKEYS | Digital keys | VNTGSTRNG1 | Vintage string machine |
-| COTTENKEYS | Soft keys | ANGEL VOX | Choir pad |
+| ARCTICKEYS | Digital keys | PAN PIPE | Pan flute, breathy |
+| HARPSICHORD | Harpsichord | ANGEL VOX | Choir pad |
 | MAGICM1ORG | House organ (M1 style) | Fairlt.Vox | Sampled-choir style voice |
-| LORD-Y B3 | Rock organ | WD SQ BASS | Square bass |
-| Farfisa1 | Combo organ | PORTABass | Glide bass |
-| PROPHET | Poly synth (Prophet style) | SYNBASS 48 | Synth bass |
+| ACCORDION | Accordion | WD SQ BASS | Square bass |
+| Farfisa1 | Combo organ | KOTO | Koto |
+| PROPHET | Poly synth (Prophet style) | CIMBALOM | Cimbalom (hammered strings) |
 | JUNO 106 7 | Poly keys (Juno style) | Femalevibe | Vibraphone |
-| OB Genviv/ | Poly brass (OB style) | CELESTE | Celeste |
+| OBOE | Oboe | BANJO | Banjo |
 | Saw3Op | Saw lead | DOUG22PICK | Picked pluck |
 | SquarePWM | PWM lead | SITAR VIII | Sitar |
 | Techno2 | Techno lead | NEUTRNPLUK | Pluck |
