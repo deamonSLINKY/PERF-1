@@ -667,6 +667,23 @@ static int expect(const char *what, const char *val)
         got = (int)en_trk_heard();
     else if (!strcmp(what, "trkmute"))            /* the tracks muted (GLO held, the keys): a bit a track */
         got = ui.trk_m;
+    else if (!strcmp(what, "acidsteps")) {       /* (0.17.31) how many of the acid line's steps play */
+        int s2;
+        got = 0;
+        for (s2 = 0; s2 < 16; s2++)
+            got += en_acid_gate >> s2 & 1;
+    } else if (!strcmp(what, "bssteps")) {       /* and of the bass steps (not rests) */
+        int s2;
+        got = 0;
+        for (s2 = 0; s2 < 16; s2++)
+            got += EN_BS_KIND(en_bs[s2]) >= 1 && EN_BS_KIND(en_bs[s2]) <= 4;
+    }
+    else if (!strcmp(what, "gesture"))           /* (0.17.31) the gesture recorder: 0 off, 1 armed, 2 writing, 3 playing */
+        got = gs_st;
+    else if (!strcmp(what, "gsmask"))            /* the FX knobs it plays */
+        got = gs_mask;
+    else if (!strcmp(what, "gslen"))             /* its loop in sixteenths */
+        got = gs_len;
     else if (!strncmp(what, "fxk", 3))           /* fxkN: the FX knobs' values (filter, crush, throw, wash) */
         got = ui.fxk[atoi(what + 3) & 3];
     else if (!strcmp(what, "fxpage"))             /* the FX menu's page: 0 the keys, 1.. an effect's edit page */

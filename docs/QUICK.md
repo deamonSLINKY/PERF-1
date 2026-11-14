@@ -199,7 +199,7 @@
 
 **HOME** on the Tempo page (elsewhere, twice). It shows the section (GROOVE, BREAK, BUILD) and the auto-DJ's place in it, the bar's 16 steps, the eight tracks (a line through a muted one, a soloed one filled), the four scenes, the effects on, and the mood. Keys: the track mix below. Knobs: the FX knobs. **ALGORITHM**: the mood. **SEL** tapped: the swell (mood, throw and wash up over a bar, back over four). **SEL +** white 1-6: the drum pattern; **A#4**: the drums' next pattern; **F#4**: a new acid line; **F#5**: a new pluck line (not a frozen one).
 
-**The FX knobs.** **Filter**: left of centre cuts the highs (16 kHz down to about 250 Hz), right cuts the lows (20 Hz up to about 1.6 kHz), `OFF` in the middle. **Crush**: lo-fi grit (fewer bits, lower sample rate). **Throw**: more of the mix into the echo, for longer. **Wash**: the mix into the reverb. They go home at power-off, but a scene stores them. `KNOB` in the header: one is away from home.
+**The FX knobs.** **Filter**: left of centre cuts the highs (16 kHz down to about 250 Hz), right cuts the lows (20 Hz up to about 1.6 kHz), `OFF` in the middle. **Crush**: lo-fi grit (fewer bits, lower sample rate). **Throw**: more of the mix into the echo, for longer. **Wash**: the mix into the reverb. They go home at power-off, but a scene stores them. `KNOB` in the header: one is away from home. **Gesture:** in the FX menu, **SEL + REC** records your FX knob moves from the next bar (`REC`); again, and they loop (1-4 bars, `LOOP`). A knob turned by hand is yours again; SEL + REC lets go.
 
 ### The mix map (GLO held)
 
@@ -323,7 +323,7 @@ Each knob picks one drum's sound from the same fourteen kits: Kick, Snare (and c
 
 **Pluck steps** (ARP x9): the Deja vu loop as sixteen steps you can edit. Laid out like Acid steps. A **white key** picks a step. **Step**: Rest, Soft, Note, Accent. **Note**: 1-12, the chord's notes from low to high. **Octave**: the whole pluck's. **Frozen** holds the loop (setting Loop 16, Rate 1/16, Pluck vu 100) and **stores it with the piece**; any edit freezes it. Left free, a new piece forgets the loop.
 
-**Capture (SEL + REC)** turns the last bar you played on Jam into the voice's own line. Jam remembers your last 32 keys: play the bar, then press (`CAPTURED`). On the acid: a frozen 16-step line on Acid steps, each sixteenth you pressed a key on that note (scale steps above the chord of the moment), a key on a beat an accent, a key held past the next step a slide; it plays when you leave Jam. On the pluck: into the Deja vu loop (Loop 16, Rate 1/16, Pluck vu 100) from the next bar. The pad and bass can't be captured yet.
+**Capture (SEL + REC)** turns the last bar you played on Jam into the voice's own line. Jam remembers your last 32 keys: play the bar, then press (`CAPTURED`). On the acid: a frozen 16-step line on Acid steps, each sixteenth you pressed a key on that note (scale steps above the chord of the moment), a key on a beat an accent, a key held past the next step a slide; it plays when you leave Jam. On the pluck: into the Deja vu loop (Loop 16, Rate 1/16, Pluck vu 100) from the next bar. On the bass: into Bass steps (Mode Steps). Each note keeps the chord it was played over. The pad can't be captured. **On an Acid page, SEL + REC keeps the answer** as the line (frozen).
 
 ### The pluck
 
@@ -393,7 +393,7 @@ Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through th
 
 ### Storing a piece
 
-Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every page, scale and mode, sounds and kit, patterns and drum sounds, the frozen acid line, the step settings) in the genre you're in, in place of its factory piece. The line above the knobs says `01 SAVE: STORE` while there are changes, then `01 STORED`. Unstored changes last while you stay in the genre and are lost when you change genre or switch off. **Back to factory:** on Global hold **SEL + SAVE** 1.5 s (KEEP HOLDING: FACTORY). **Every stored piece of every genre:** stopped, hold on to 6 s. A store is written at once; while playing, the music dips for a moment (`STORING`). Don't switch off during it.
+Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every page, scale and mode, sounds and kit, patterns and drum sounds, the frozen acid line, the step settings) in the genre you're in, in place of its factory piece. The line above the knobs says `01 SAVE: STORE` while there are changes, then `01 STORED`. Unstored changes last while you stay in the genre and are lost when you change genre or switch off. **Back to factory:** on Global hold **SEL + SAVE** 1.5 s (KEEP HOLDING: FACTORY). **Start from nothing:** on Global, **SEL + OCT-** empties the piece (no drums, one chord, the bass, acid and pluck on steps, all rests); build it up and SAVE. **Every stored piece of every genre:** stopped, hold on to 6 s. A store is written at once; while playing, the music dips for a moment (`STORING`). Don't switch off during it.
 
 ### The settings pages
 

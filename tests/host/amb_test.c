@@ -744,12 +744,14 @@ int main(void)
             float jump[2] = {0.0f, 0.0f}, prev = 0.0f, top = 0.0f, at = 0.0f;
             int h;
             en_init();
+            en_set(P_ECHO, 0);                  /* (0.17.31) no tails from the tests before it (the engine's reset leaves the echo and the reverb ringing):
+            en_set(P_REVERB, 0);                 * a frozen acid line there changed what rang here */
             en_set(P_PAD, 0);
             en_set(P_BASS, 0);
             en_set(P_ACID, 0);
             en_set(P_CM_LVL, 0);
             en_set(P_NOISE, 0);
-            run(0.2f);
+            run(2.0f);
             prev = (float)buf[510] / 8388608.0f;
             for (h = 0; h < 2; h++) {
                 en_drum_tap(LANE[k], 127);
@@ -2427,6 +2429,31 @@ int main(void)
     CHECK(peak < 0.01f, "quiet after stopping (%f)", (double)peak);
     CHECK(midi_count > 50u, "MIDI out (%u)", midi_count);
 
+    /* (0.17.31) the acid's answer kept as the line: with the answer Reverse (type 5) the kept line is the call backwards (its gates and accents), and
+     * with Frozen a density change (a piece load and its mood send one) leaves a frozen line as it is */
+    {
+        int s;
+        uint16_t want = 0, wacc = 0;
+        en_init();
+        en_set(P_AC_LEN, 16);
+        en_set(P_AC_LOCK, 1);
+        for (s = 0; s < 16; s++) {
+            en_acid_step(s, s % 7, 0, s == 1 || s == 4 || s == 6, s == 4, 0);
+            if (s == 1 || s == 4 || s == 6)
+                want |= (uint16_t)(1u << (15 - s));
+        }
+        wacc = (uint16_t)(1u << 11);
+        run(0.1f);
+        en_set(P_AC_DENS, 90);
+        run(0.1f);
+        CHECK(en_acid_gate == (uint16_t)(1u << 1 | 1u << 4 | 1u << 6), "a frozen acid line remade by a density change: gates %04x", (unsigned)en_acid_gate);
+        en_set(P_AC_RESP, 25);
+        en_acid_keep_answer();
+        run(0.1f);
+        CHECK(en_acid_gate == want && en_acid_acc == wacc, "the reverse answer kept: gates %04x (want %04x), accents %04x (want %04x)", (unsigned)en_acid_gate,
+              (unsigned)want, (unsigned)en_acid_acc, (unsigned)wacc);
+        printf("the answer kept: reverse, gates %04x, accents %04x\n", (unsigned)en_acid_gate, (unsigned)en_acid_acc);
+    }
     printf(fails ? "amb: %d FAILED\n" : "amb: ok\n", fails);
     return fails != 0;
 }

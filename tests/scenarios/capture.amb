@@ -56,9 +56,38 @@ release SEL
 wait 200
 expect par173 1
 expect acidgate >0
+expect acidsteps >2
 shot capture_acid.png
+# (0.17.31) the bass: Voice bass, the same keys, captured into the bass steps (Mode Steps), a note on each beat
+spin K1 1
+wait 100
+expect jamv 3
+tapkey w0
+wait 469
+tapkey w2
+wait 469
+tapkey w4
+wait 469
+tapkey w2
+wait 469
+tapkey w0
+wait 469
+tapkey w2
+wait 469
+tapkey w4
+wait 469
+tapkey w2
+wait 100
+press SEL
+tap REC
+release SEL
+wait 200
+expect par152 16
+expect bsany 1
+expect bssteps >2
+shot capture_bass.png
 # the pad cannot be captured: Capture says so and changes nothing
-spin K1 -1
+spin K1 -2
 wait 100
 expect jamv 1
 press SEL

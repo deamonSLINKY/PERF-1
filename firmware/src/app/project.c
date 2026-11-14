@@ -644,6 +644,54 @@ void project_piece_factory(void)
     proj.edited &= (uint16_t)~(1u << proj.piece);
 }
 
+/* (0.17.31, Niclio's "can I make a song from nothing?") the playing piece emptied, to build up by hand: no drums, one chord held, and the bass,
+ * the acid and the pluck each on its own steps, all rests. Its sounds, kit, key and tempo stay. Not stored until SAVE; SEL + SAVE held brings
+ * the factory piece back. A silent line must still read as one set (a stored all-zero line means "none"), so each keeps one harmless bit on
+ * its last step: the bass a rest at the middle octave, the acid a rest marked accent, the pluck a rest on the chord's second rung. */
+void project_piece_empty(void)
+{
+    static const uint8_t ZERO_PAR[] = {P_EVOLVE, P_DD_CHANGE, P_DD_MUTATE, P_CHAIN, P_SLICE, P_GHOST, P_LINKS, P_AC_RESP, P_CM_MOTIF, P_PAD_MAN,
+                                       P_DR_MAN, P_AC_MAN};
+    int p, l;
+    for (p = 0; p < (int)sizeof ZERO_PAR; p++)
+        proj.par[ZERO_PAR[p]] = 0;
+    for (l = 0; l < EN_NLANE; l++) {
+        proj.par[P_DENS + l] = 50;               /* (as written: more than 50 would put hits on the empty steps) */
+        proj.par[P_PROB + l] = 100;
+        proj.par[P_COND + l] = 0;
+        proj.par[P_LSRC + l] = 0;
+        proj.par[P_LLEN + l] = 16;
+    }
+    for (p = 0; p < EN_NPAT; p++)
+        for (l = 0; l < EN_NLANE; l++)
+            en_pats[p][l] = 0;
+    for (l = 0; l < EN_NLANE; l++)
+        for (p = 0; p < 16; p++)
+            en_mod[l][p] = 0;
+    proj.par[P_PAD_COMP] = 1;                    /* the pad holds the chord (no stabs) */
+    proj.par[P_CH_LOOP] = 0;
+    proj.par[P_BL_MODE] = EN_BL_STEPS;
+    memset(proj.bs, 0, sizeof proj.bs);
+    proj.bs[15] = EN_BS_MAKE(0, 0, 1);
+    proj.par[P_AC_LOCK] = 1;
+    memset(proj.acl, 0, sizeof proj.acl);
+    proj.acl[17] = 0x40;                         /* step 15's nine bits are bits 135..143: its accent is bit 142 (byte 17, bit 6) */
+    proj.par[P_CM_LOCK] = 1;                     /* (as the Pluck steps page freezes it: the loop as sixteen sixteenths) */
+    proj.par[P_CM_RATE] = 3;
+    proj.par[P_CM_LOOP] = 2;
+    proj.par[P_CM_VU] = 100;
+    memset(proj.cml, 0, sizeof proj.cml);
+    proj.cml[11] = 0x04;                         /* step 15's six bits are bits 90..95: rung 1 is bit 90 (byte 11, bit 2) */
+    memset(proj.prg, 0, sizeof proj.prg);
+    en_prg_put(proj.prg, 0, 3, 1);               /* one slot: the home chord, a bar, played on loop */
+    en_prg_put(proj.prg, EN_PRG_PLAY, 1, 1);
+    memset(proj.prk, 0, sizeof proj.prk);
+    ui_fx_snapshot(pxl[proj.piece] + 1);         /* no bass answer */
+    pxl[proj.piece][1 + 7] = 0;
+    pxl[proj.piece][0] = 1;
+    proj.edited |= (uint16_t)(1u << proj.piece);
+}
+
 int project_factory_genre(void)                /* (0.17.23) every piece stored in this genre back to its factory settings (written with the next flush); how many */
 {
     const int p0 = proj.piece;

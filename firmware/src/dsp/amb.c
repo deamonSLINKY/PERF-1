@@ -401,7 +401,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{6, 13, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
     {{7, 8, 11, 22, 1}, {16, 4, 20, 13, 10}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
     {{13, 8, 6, 17, 21}, {9, 1, 5, 8, 20}, {12, 4, 16, 21, 15}, {18, 24, 12, 30, 36}, {8, 8, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 11}},
-    {{3, 23, 5, 22, 10}, {4, 9, 11, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
+    {{3, 23, 5, 22, 10}, {4, 9, 16, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
     {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
     {{13, 17, 0, 20, 21}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
     {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 9}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
@@ -412,7 +412,7 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {39, 27, 12, 26, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
     {{0, 5, 17, 2, 18}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
     {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {35, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
-    {{7, 13, 14, 6, 11}, {13, 20, 4, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
+    {{7, 13, 14, 6, 11}, {13, 20, 16, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
                                                  * Hollow; Metal, Gnarl, Reese, Grit, Dirty; Driven, Fold, Sync, Hyper, Saw; TUBUL-BELL, TEMPLEBELL, Gong, Bleep, Digital; the Hard
                                                  * kick (the Break kit's chop in a third of the pieces), Break and Hard snares, Techno hats, a Hard clank */
     {{9, 23, 1, 3, 2}, {9, 5, 10, 0, 6}, {0, 8, 13, 3, 14}, {10, 8, 11, 4, 13}, {2, 10, 3}, {10, 2, 11}, {2, 5, 11}, {3, 11, 5}},   /* psy (0.16.2): Trance, Air,
@@ -1093,7 +1093,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1161,7 +1161,7 @@ static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
     { -2,  -3,  -1,  -3,  -3,  -3,  -3,  -1,  -2,  -2},   /* HOUSE */
     {  0,  -1,  -8,  -4,  -1,  -7,  -7,  -1,  -4,  -6},   /* DUBSTEP */
     {  3,   5,   5,   4,   6,   6,   4,   2,   3,   1},   /* DUB */
-    {  6,   3,   3,   4,   6,   4,   4,   1,   2,   4},   /* DNB */
+    {  6,   4,   3,   4,   6,   5,   4,   1,   2,   4},   /* DNB (0.17.31: 2 and 6, the Wub, +0.5 each) */
     { -3,  -2,  -2,  -3,  -5,   4,  -4,  -6,   0,  -3},   /* BREAKS */
     {  7,   3,   0,   5,   2,   1,   3,   2,  -1,   6},   /* GARAGE */
     { -3,  -1,   0,   0,  -4,   2,   0,  -2,  -1,  -3},   /* ELECTRO */
@@ -1172,7 +1172,7 @@ static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
     { -2,   3,  -1,  -2,   1,   0,  -5,   4,  -2,  -4},   /* SYNTHWV */
     { -1,   3,   5,  -2,   4,   3,   5,  -3,   1,   0},   /* AMAPI */
     {  4,   7,   4,   5,   4,   8,   3,   7,   5,   2},   /* TRIPHOP */
-    {  1,  -6,  -6,  -3,  -6,  -3,  -2,  -7,  -7,   0},   /* INDUS */
+    {  1,  -6,  -6,  -2,  -6,  -3,  -2,  -8,  -7,   0},   /* INDUS (0.17.31: 4 and 8, the Wub: +0.5, -0.5) */
     {  0,  -5,  -6,  -4,  -6,  -8,  -5,  -3,  -7,  -4},   /* PSY */
     { -4,  -4,  -5,  -7,  -6,  -4,  -6,  -6,  -5,  -7},   /* FOREST */
 };
@@ -1199,6 +1199,8 @@ volatile uint8_t en_lane_pos[EN_NLANE];         /* and each lane's own (it may b
 volatile float en_drum_glow[EN_NDRUM];
 volatile uint8_t en_pat_now, en_pat_next;
 volatile uint32_t en_bars;
+volatile uint8_t en_deg;                         /* (0.17.31) the chord's scale degree now (Capture keeps it with each note played) */
+static uint8_t ac_barsync;                       /* (0.17.31) a line just captured: on the next step the line's step is the bar's */
 volatile float en_arc;
 volatile uint8_t en_pulse_rest;
 volatile uint8_t en_pad_note[EN_NPAD];
@@ -2538,6 +2540,15 @@ void en_acid_step(int s, int off, int oct, int gate, int accent, int slide)
     post(C_ACSTEP, s & 15, (off & 15) | (oct & 3) << 4 | (gate ? 1 : 0) << 6 | (accent ? 1 : 0) << 7 | (slide ? 1 : 0) << 8);
 }
 void en_acid_capture(int s, int note, int accent, int slide) { post(C_ACCAP, (s & 15) | (accent ? 16 : 0) | (slide ? 32 : 0), note & 127); }
+void en_acid_capture_d(int s, int note, int d, int accent, int slide)   /* (0.17.31) as played over degree d */
+{
+    post(C_ACCAP, (s & 15) | (accent ? 16 : 0) | (slide ? 32 : 0), (note & 127) | (d & 15) << 7 | 1 << 11);
+}
+void en_bass_capture_d(int s, int note, int d, int accent, int glide)   /* (0.17.31) a bass step as played over degree d */
+{
+    post(C_BSCAP, (s & 15) | (accent ? 16 : 0) | (glide ? 32 : 0), (note & 127) | (d & 15) << 7);
+}
+void en_acid_keep_answer(void) { post(C_ACKEEP, 0, 0); }
 void en_pluck_capture(int s, int note) { post(C_CMCAP, s & 15, note < 0 ? 128 : note & 127); }
 /* THE PLUCK'S LINE (the Pluck steps page, 0.14.21): deja vu's loop, Loop 16 and Rate 1/16 and Pluck vu 100, read as sixteen steps of the bar, each a rung of
  * the chord's ladder and a level; frozen (P_CM_LOCK) it survives a new piece and is stored with it, six bits a step. */
@@ -2628,12 +2639,12 @@ static void ac_step_set(int s, int off, int oct, int gate, int accent, int slide
     ac_publish();
 }
 
-static void ac_capture(int s, int note, int accent, int slide)   /* Capture: a note played by hand into step s, as the offset and octave nearest it under the chord and scale of now (the line then follows the chords) */
+static void ac_near(int note, int d0, int *po, int *pc)   /* the offset and octave of the line nearest a note, over degree d0 */
 {
     int off, oct, bo = 0, bc = 0, best = 999;
     for (oct = 0; oct < 4; oct++)
         for (off = 0; off < 12 && off < 2 * nsteps; off++) {
-            int d = deg + off, o, n, diff;
+            int d = d0 + off, o, n, diff;
             d += nsteps * 8;
             o = d / nsteps - 8;
             n = 36 + par[P_ROOT] + steps[d % nsteps] + 12 * (o + oct + par[P_AC_OCT] + par[P_OCT]);   /* (acid_raw, before its register wrap) */
@@ -2644,7 +2655,43 @@ static void ac_capture(int s, int note, int accent, int slide)   /* Capture: a n
                 bc = oct;
             }
         }
-    ac_step_set(s, bo, bc, 1, accent, slide);
+    *po = bo;
+    *pc = bc;
+}
+static void ac_capture(int s, int note, int d0, int accent, int slide)   /* Capture: a note played by hand into step s, as the offset and octave nearest it
+                                                 * under the chord it was played over (d0; -1: the chord now) and the scale (the line then follows the chords) */
+{
+    int off, oct;
+    ac_near(note, d0 < 0 ? deg : d0, &off, &oct);
+    ac_step_set(s, off, oct, 1, accent, slide);
+    ac_barsync = 1;
+}
+static void ac_keep_answer(void)                /* (0.17.31, a Reddit player's "learn what was answered into the track") the answer as the line, frozen */
+{
+    const int len = par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN] > EN_NSTEP ? EN_NSTEP : par[P_AC_LEN], v = par[P_AC_RESP], type = v / 5;
+    int8_t off[EN_NSTEP], oct[EN_NSTEP];
+    uint16_t g = 0, a = 0, sl = 0;
+    int st;
+    if (type < 1 || nsteps < 1)
+        return;
+    for (st = 0; st < len; st++) {
+        const int ss = acid_src(st, len, type);
+        int o, c;
+        ac_near(acid_note(ss, v), deg, &o, &c);
+        off[st] = (int8_t)o;
+        oct[st] = (int8_t)c;
+        g |= (uint16_t)(acid_gate(st, len, v) ? 1u << st : 0u);
+        a |= (uint16_t)((ac_accent >> ss & 1u) << st);
+        sl |= (uint16_t)((ac_slide >> ss & 1u) << st);
+    }
+    for (st = 0; st < len; st++) {
+        ac_off[st] = off[st];
+        ac_oct[st] = oct[st];
+    }
+    ac_gate = g;
+    ac_accent = a;
+    ac_slide = sl;
+    ac_publish();
 }
 
 static void ac_regrow(void)
@@ -2810,7 +2857,8 @@ static int wub_on(void) { return par[P_DL_DEST] == 0 && ((SECT[chord_genre].fl &
 static int wub_rate(void)
 {
     unsigned base, alt;
-    if (!en_playing || !sixteenth || !(SECT[chord_genre].fl & SF_WOB))
+    if (!en_playing || !sixteenth || !((SECT[chord_genre].fl & SF_WOB) || par[P_DR_INST] == DR_WUB))   /* (0.17.31: the Wub sound in any genre wobbles
+                                                 * to the drop's rhythms too: DnB 2 and 6, industrial 4 and 8 have it) */
         return par[P_DL_RATE];
     if (sec == SEC_BUILD)
         return sec_bars >= 3 ? 0 : sec_bars == 2 ? 8 : 10;
@@ -3686,6 +3734,27 @@ static int bs_semis(int k)                      /* k steps of the scale above th
     return steps[d % m] + 12 * (d / m) - (steps[d0 % m] + 12 * (d0 / m));
 }
 void en_bass_step(int s, int v) { post(C_BSSTEP, s & 15, v & 0xFF); }
+static void bs_publish(void);
+static int bl_fit(int n);
+static void bs_cap(int s, int note, int d0, int accent, int glide)   /* (0.17.31) Capture: a bass note played by hand into step s, as the scale step and
+                                                 * octave nearest it above the root of the chord it was played over (degree d0) */
+{
+    const int m = nsteps > 0 ? nsteps : 7, d = pedal & 1u ? 0 : d0, rp = (par[P_ROOT] + steps[d % m]) % 12,
+              root = bl_fit(36 + rp + 12 * (par[P_BASSOCT] + par[P_OCT])), r0 = steps[d % m] + 12 * (d / m);
+    int k, o, bk = 0, bo = 1, best = 999;
+    for (o = 0; o < 3; o++)
+        for (k = 0; k < 8; k++) {
+            const int dk = d + k, n = root + steps[dk % m] + 12 * (dk / m) - r0 + 12 * (o - 1), diff = n > note ? n - note : note - n;
+            if (diff < best) {
+                best = diff;
+                bk = k;
+                bo = o;
+            }
+        }
+    bs[s & 15] = EN_BS_MAKE(accent && glide ? 4 : glide ? 3 : accent ? 2 : 1, bk, bo);
+    bs_set = 1;
+    bs_publish();
+}
 void en_bass_capture(void) { post(C_BSSTEP, 0x20, 0); }   /* none set: the bar the line played last (the page opened) */
 static void bs_capture(void)
 {
@@ -4295,6 +4364,11 @@ static void tick(void)
         }
     }
     en_drum_pos = (uint8_t)st;
+    en_deg = (uint8_t)deg;
+    if (ac_barsync) {                           /* (0.17.31) a captured line plays where it was played: its step is the bar's */
+        ac_barsync = 0;
+        ac_pos = st % (par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN]);
+    }
     drop_imp = 0;
     if (links_on() && par[P_LK_PERC] && sec == SEC_GROOVE) {
         if (perc_hit)
@@ -4805,8 +4879,9 @@ static void apply(int p, int v)
             ac_pos = 0;
         en_acid_len = (uint8_t)v;
         break;
-    case P_AC_DENS: case P_AC_RANGE:             /* heard at once: the line made again */
-        if (nsteps)
+    case P_AC_DENS: case P_AC_RANGE:             /* heard at once: the line made again (0.17.31: not a frozen one, which a
+                                                 * piece load, then its mood, sent here and lost) */
+        if (nsteps && !par[P_AC_LOCK])
             ac_regrow();
         break;
     case P_DRIVE: drive_k = 1.0f + 0.04f * (float)v; break;
@@ -7041,7 +7116,9 @@ static void drain(void)
         case C_USERVOICE: fm_user_take(a); break;
         case C_USERCLEAR: fm_user_wipe(); break;
         case C_ACSTEP: ac_step_set(a & 15, b & 15, b >> 4 & 3, b >> 6 & 1, b >> 7 & 1, b >> 8 & 1); break;
-        case C_ACCAP: ac_capture(a & 15, b & 127, a >> 4 & 1, a >> 5 & 1); break;
+        case C_ACCAP: ac_capture(a & 15, b & 127, b & 0x800 ? b >> 7 & 15 : -1, a >> 4 & 1, a >> 5 & 1); break;
+        case C_BSCAP: bs_cap(a & 15, b & 127, b >> 7 & 15, a >> 4 & 1, a >> 5 & 1); break;
+        case C_ACKEEP: ac_keep_answer(); break;
         case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
         case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
         case C_BSSTEP:                          /* a bass step (the page), or a piece's (bit 4 of a: a rest of a piece's that set none); 0x20: capture */

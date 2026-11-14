@@ -547,6 +547,7 @@ static struct {
     uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
     uint16_t cap_t[32];                          /* Capture's memory (SEL + REC on Jam): the last 32 keys played: the sixteenth (en_bars), the note heard, the key and voice, how long it was held (sixteenths; 0: still down) */
     uint8_t cap_note[32], cap_kv[32], cap_len[32], cap_w;
+    uint8_t cap_deg[32];                         /* (0.17.31) and the chord each was played over (en_deg) */
     uint32_t home_t;                   /* when HOME last went down (twice quickly: the visualizers) */
     uint8_t mood;                      /* the mood macro, 0 (chill) .. 100 (peak); 50 leaves the piece as it is */
     uint8_t dj_phase, dj_fill;         /* groove 0, breakdown 1, build 2; a fill in the bar before the breakdown */
@@ -627,6 +628,10 @@ static void itoa_u(uint32_t v, char *b)
 int ui_dirty(void) { return project_pending(); }
 
 static void edited(void) { proj.edited |= (uint16_t)(1u << proj.piece); }   /* the piece changed */
+/* the gesture recorder's (0.17.31; below, at gesture_tick) */
+static int8_t gs_v[64][4];
+static uint8_t gs_st, gs_len, gs_bar, gs_pos, gs_stop, gs_mask, gs_busy, gs_w;   /* gs_st: 0 off, 1 armed, 2 recording, 3 playing */
+static uint32_t gs_t;
 
 /* TRACK CODES (0.17.11): nine letters for a track: its genre, its piece (as the recipe), its key, mode and tempo, and the seed every
  * generator starts from (a check letter last). A start from one plays the same track, note for note, from the top: on this firmware,
@@ -927,6 +932,8 @@ static int knob_get(int k);
 static void knob_range(int k, int *lo, int *hi);
 static void knob_text(int k, char *b);
 static void jam_capture(void);
+static void gesture_key(void);
+static void acid_keep(void);
 static void scene_reset(void);
 static void undo_save(void)                    /* before a big change: what it will undo to */
 {
@@ -2107,6 +2114,8 @@ static void knob_set(int k, int v)
     if (k >= K_FXF) {                            /* the FX knobs: the engine's, never stored */
         if (!ui.glide_busy)
             ui.glide_on &= (uint8_t)~(1u << (k - K_FXF));   /* (turned by hand: a gliding one is let go) */
+        if (!gs_busy && !ui.glide_busy)
+            gs_mask &= (uint8_t)~(1u << (k - K_FXF));      /* (and the gesture's, 0.17.31) */
         knob_range(k, &lo, &hi);
         v = v < lo ? lo : v > hi ? hi : v;
         if (v != ui.fxk[k - K_FXF]) {
@@ -2990,6 +2999,15 @@ static void piece_factory(void)                 /* Global, SAVE held: back to th
     en_regrow();
     caps(t + 8, piece_name(proj.piece), 4);
     store_now(t);
+}
+
+static void piece_empty(void)                   /* (0.17.31) Global, SEL + OCT-: the piece emptied, to build up (SEQ, Bass steps, Acid steps, Pluck steps, Progression) */
+{
+    project_piece_empty();
+    project_apply();
+    mood_apply();
+    track_fresh(1, 1);
+    say("EMPTY PIECE", "SAVE KEEPS IT");
 }
 
 /* ------------------------------------------------------------ the kit --- */
@@ -4307,9 +4325,14 @@ static void input(void)
                 runner_start();
                 return;
             }
-            if (i == B_REC && (btn >> B_SEL & 1u)) {   /* shift: Capture: the bar played on Jam into the acid line or the pluck loop */
+            if (i == B_REC && (btn >> B_SEL & 1u)) {   /* shift: Capture: the bar played on Jam into the acid line or the pluck loop; in the FX menu, the gesture */
                 ui.btn_used |= m | 1u << B_SEL;
-                jam_capture();
+                if (ui.fx_menu)
+                    gesture_key();
+                else if (ui.view >= V_ACID && ui.view <= V_ACSTEP)
+                    acid_keep();               /* (0.17.31) on an Acid page: the answer kept as the line */
+                else
+                    jam_capture();
                 continue;
             }
             if (i == B_ARP && (btn >> B_SEL & 1u)) {   /* shift (0.17.22): the acid answers on the next bar, whatever its count */
@@ -4348,6 +4371,10 @@ static void input(void)
             }
             if (i == B_SEL)
                 ui.shift_hint = 0;
+            if (i == B_OCTDN && (btn >> B_SEL & 1u) && ui.view == V_GLOBAL && !ui.fx_menu) {
+                piece_empty();                 /* shift on Global: the piece emptied (0.17.31) */
+                ui.btn_used |= m | 1u << B_SEL;
+            }
             if ((i == B_OCTDN || i == B_OCTUP) && (btn >> B_SEL & 1u) && ui.view == V_SEQ) {
                 shift_lane(i == B_OCTUP);      /* shift: the lane cleared, or the piece's own */
                 ui.btn_used |= m | 1u << B_SEL;
@@ -5038,7 +5065,7 @@ static void draw_header(void)
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
-                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18);
+                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)gs_st << 20 | (uint32_t)(gs_mask != 0) << 22);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
     h = hash(h, (uint32_t)(en_intro_k * 64.0f) | (uint32_t)ui.dj_round << 8 | (uint32_t)ui.dj_rounds << 12);   /* the intro's countdown, the round */
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
@@ -5117,7 +5144,12 @@ static void draw_header(void)
                 x -= 10;
             }
         }
-        if (ui.fxk[0] || ui.fxk[1] || ui.fxk[2] || ui.fxk[3]) {   /* an FX knob off its home: said, so a forgotten filter is not a mystery */
+        if (gs_st && (gs_st < 3 || gs_mask)) {     /* the gesture recorder (0.17.31): armed, writing (REC), or playing (LOOP) */
+            const char *g = gs_st == 3 ? "LOOP" : "REC";
+            x -= text_w(&FONT_XS, g);
+            cv_text(x, 8, &FONT_XS, g, gs_st == 2 ? K_ACID : K_ACC);
+            x -= 10;
+        } else if (ui.fxk[0] || ui.fxk[1] || ui.fxk[2] || ui.fxk[3]) {   /* an FX knob off its home: said, so a forgotten filter is not a mystery */
             x -= text_w(&FONT_XS, "KNOB");
             cv_text(x, 8, &FONT_XS, "KNOB", K_FROST);
             x -= 10;
@@ -5609,8 +5641,8 @@ static int help_lines(int b, const char *l[HELP_LINES])
     }
     case B_EDIT: L("THE NEXT CHORD,"); L("ON THE NEXT BAR"); L("HOLD: THE PROGRESSION"); break;
     case B_SEQ: L("DRUMS; AGAIN: LINKS, KIT,"); L("THEN DRUM DRIFT"); L("HOLD: THE SEQUENCER"); break;
-    case B_REC: L("FREEZE: THE CHORD HOLDS,"); L("THE REVERB RINGS; AGAIN: THAW"); L("SEL + REC: CAPTURE THE BAR"); L("YOU PLAYED ON JAM"); break;
-    case B_OCTDN: L("AN OCTAVE DOWN: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM ABOVE"); break;
+    case B_REC: L("FREEZE: THE CHORD HOLDS,"); L("THE REVERB RINGS; AGAIN: THAW"); L("SEL + REC: CAPTURE THE BAR (JAM);"); L("ACID PAGES: KEEP THE ANSWER; FX: GESTURE"); break;
+    case B_OCTDN: L("AN OCTAVE DOWN: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM ABOVE"); L("GLO, SEL + OCT-: EMPTY PIECE"); break;
     case B_OCTUP: L("AN OCTAVE UP: THIS"); L("PAGE'S VOICE, OR THE SONG"); L("SEQUENCER: THE DRUM BELOW"); break;
     default: break;
     }
@@ -8732,6 +8764,106 @@ static void leds(void)
 }
 
 /* the FX knobs glide to a scene's values (a second or so) instead of jumping; a knob turned by hand takes its own back */
+/* THE GESTURE RECORDER (0.17.31): the four FX knobs' moves, looped. In the FX menu, SEL + REC arms it; from the next bar every sixteenth of the
+ * knobs is written, up to four bars; SEL + REC again closes the loop at that bar's end (the fourth bar's end closes it anyway). Then the knobs
+ * play the loop, gliding from one sixteenth to the next. A knob turned by hand (or by MIDI, or home with FX + OCT-) is the hand's again; SEL +
+ * REC in the FX menu while it plays lets all of them go. Not stored, like the FX knobs. 256 B. */
+static void gesture_key(void)                   /* FX menu, SEL + REC */
+{
+    if (gs_st == 0) {
+        if (!en_playing) {
+            say("GESTURE", "PLAY FIRST");
+            return;
+        }
+        gs_st = 1;
+        gs_stop = 0;
+        gs_pos = en_drum_pos;
+        say("GESTURE: NEXT BAR", "TURN THE FX KNOBS");
+    } else if (gs_st == 1) {
+        gs_st = 0;
+        say("GESTURE", "OFF");
+    } else if (gs_st == 2) {
+        gs_stop = 1;
+        say("GESTURE", "LOOPS AT THE BAR'S END");
+    } else {
+        gs_st = 0;
+        gs_mask = 0;
+        say("GESTURE", "LET GO: THE KNOBS ARE YOURS");
+    }
+}
+static uint32_t cap_st_t, cap_st_b;              /* (0.17.31) when the sixteenth playing began (Capture rounds a key to the nearest) */
+static void cap_tick(void)
+{
+    if (en_bars != cap_st_b) {
+        cap_st_b = en_bars;
+        cap_st_t = plat_ms();
+    }
+}
+static void gesture_tick(void)
+{
+    const uint32_t now = plat_ms();
+    int k, i, p;
+    if (!gs_st)
+        return;
+    if (!en_playing) {                           /* stopped: armed or half written, gone; a loop waits for the start */
+        if (gs_st < 3)
+            gs_st = 0;
+        gs_pos = 0;
+        gs_bar = 0;
+        return;
+    }
+    p = en_drum_pos % EN_NSTEP;
+    if (p != gs_pos) {
+        const int wrap = p < gs_pos;
+        gs_pos = (uint8_t)p;
+        gs_t = now;
+        if (gs_st == 1 && wrap) {
+            gs_st = 2;
+            gs_bar = 0;
+            gs_w = 0;
+            for (k = 0; k < 4; k++)
+                gs_v[0][k] = ui.fxk[k];
+            say("GESTURE", "RECORDING: SEL + REC LOOPS IT");
+        } else if (gs_st == 2 && wrap) {
+            gs_bar++;
+            if (gs_stop || gs_bar >= 4) {
+                char t[16] = "PLAYS: 1 BAR";
+                gs_len = (uint8_t)(gs_bar * EN_NSTEP);
+                t[7] = (char)('0' + gs_bar);
+                if (gs_bar > 1)
+                    t[12] = 'S', t[13] = 0;
+                gs_st = 3;
+                gs_bar = 0;
+                gs_mask = 15;
+                say("GESTURE", t);
+            }
+        } else if (gs_st == 3 && wrap) {
+            gs_bar = (uint8_t)((gs_bar + 1) % (gs_len / EN_NSTEP));
+        }
+    }
+    i = gs_bar * EN_NSTEP + p;
+    if (gs_st == 2) {                            /* written as it is now (the steps a slow frame skipped: the same) */
+        int j = gs_w;
+        if (i < j)
+            j = i;
+        for (; j <= i; j++)
+            for (k = 0; k < 4; k++)
+                gs_v[j][k] = ui.fxk[k];
+        gs_w = (uint8_t)i;
+    } else if (gs_st == 3 && gs_mask) {          /* played: this sixteenth's value gliding to the next's */
+        const int n = (i + 1) % gs_len, tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
+        const uint32_t step = 15000u / (uint32_t)tempo, el = now - gs_t;
+        const float f = el >= step ? 1.0f : (float)el / (float)step;
+        gs_busy = 1;
+        for (k = 0; k < 4; k++)
+            if ((gs_mask >> k & 1u) && !(ui.glide_on >> k & 1u)) {
+                const float v = (float)gs_v[i][k] + (float)(gs_v[n][k] - gs_v[i][k]) * f;
+                knob_set(K_FXF + k, (int)(v + (v < 0.0f ? -0.5f : 0.5f)));
+            }
+        gs_busy = 0;
+    }
+}
+
 static void glide_tick(void)
 {
     int k;
@@ -8819,9 +8951,11 @@ static void jam_down_v(int i, int vc)            /* key i on voice vc (JAM's num
         ui.jam_note[i][k] = (uint8_t)(key > 127 ? 127 : key);
         en_note_v(VC[vc], ui.jam_note[i][k], (plat_buttons() >> B_SEL & 1u) ? 127 : 100);   /* SEL held: an accent (0.15.23) */
     }
-    if (en_playing) {                            /* Capture's memory: the note as heard, when, on which key and voice */
-        const int w = ui.cap_w & 31;
-        ui.cap_t[w] = (uint16_t)en_bars;
+    if (en_playing) {                            /* Capture's memory: the note as heard, when (0.17.31: to the nearest sixteenth), over which chord, on which key and voice */
+        const int w = ui.cap_w & 31, tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
+        const uint32_t half = 7500u / (uint32_t)tempo;
+        ui.cap_t[w] = (uint16_t)(en_bars + (plat_ms() - cap_st_t > half ? 1u : 0u));
+        ui.cap_deg[w] = en_deg;
         ui.cap_note[w] = nn[0];
         ui.cap_kv[w] = (uint8_t)(i | vc << 5);
         ui.cap_len[w] = 0;
@@ -8844,14 +8978,16 @@ static void jam_up(int i)
     }
 }
 /* CAPTURE (SEL + REC): the bar you last played on Jam becomes the acid line (frozen, 16 steps: a key on a beat is an accent, a key held past the
- * next step a slide) or the pluck's loop (16 slots, Deja vu at 100, the loop from the next bar), by the voice of the last key played */
+ * next step a slide), the pluck's loop (16 slots, Deja vu at 100, the loop from the next bar) or (0.17.31) the bass steps, by the page's voice.
+ * (0.17.31, "it doesn't play back as played": each note is kept with the chord it was played over, not the one at SEL + REC; a key a little early
+ * counts on the step it was meant for; the acid line plays from the bar's step it was played on.) */
 static void jam_capture(void)
 {
     const int vc = ui.jam_voice & 3;             /* the page's voice: its keys are the ones captured */
     int k, last = -1, s;
     uint32_t bar0;
-    if (vc != 0 && vc != 2) {
-        say("CAPTURE", "THE ACID OR THE PLUCK");
+    if (vc == 1) {
+        say("CAPTURE", "THE ACID, PLUCK OR BASS");
         return;
     }
     for (k = 1; k <= 32; k++) {
@@ -8865,21 +9001,48 @@ static void jam_capture(void)
         say("CAPTURE", "PLAY ON JAM FIRST");
         return;
     }
-    bar0 = (uint32_t)ui.cap_t[last] & ~15u;       /* the bar the last key fell in */
+    bar0 = (uint32_t)ui.cap_t[last] & ~15u;       /* the bar the last key fell in, or (0.17.31) of the last four bars the one with the most keys (the latest of
+                                                 * equals): a last key on the next bar's one left the phrase behind it out */
+    {
+        int best = 0, j;
+        for (k = 1; k <= 32; k++) {
+            const int w = (ui.cap_w - k) & 31;
+            uint32_t b;
+            int n = 0;
+            if (!ui.cap_note[w] || (ui.cap_kv[w] >> 5) != vc)
+                continue;
+            b = (uint32_t)ui.cap_t[w] & ~15u;
+            if ((uint16_t)((uint16_t)ui.cap_t[last] - (uint16_t)b) > 63u)
+                continue;
+            for (j = 0; j < 32; j++)
+                if (ui.cap_note[j] && (ui.cap_kv[j] >> 5) == vc && ((uint32_t)ui.cap_t[j] & ~15u) == b)
+                    n++;
+            if (n > best) {                      /* (the latest first: a later bar wins a tie) */
+                best = n;
+                bar0 = b;
+            }
+        }
+    }
     for (s = 0; s < 16; s++) {
-        int note = -1, len = 0;
+        int note = -1, len = 0, dg = 0;
         for (k = 1; k <= 32; k++) {              /* the first key of this voice on this step (the latest events first, so the earliest wins) */
             const int w = (ui.cap_w - k) & 31;
             if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc && (uint32_t)ui.cap_t[w] == bar0 + (uint32_t)s) {
                 note = ui.cap_note[w];
                 len = ui.cap_len[w];
+                dg = ui.cap_deg[w];
             }
         }
         if (vc == 2) {
             if (note >= 0)
-                en_acid_capture(s, note, (s & 3) == 0, len > 1);
+                en_acid_capture_d(s, note, dg, (s & 3) == 0, len > 1);
             else
                 en_acid_step(s, 0, 0, 0, 0, 0);
+        } else if (vc == 3) {
+            if (note >= 0)
+                en_bass_capture_d(s, note, dg, (s & 3) == 0, len > 1);
+            else
+                en_bass_step(s, 0);
         } else {
             en_pluck_capture(s, note);
         }
@@ -8888,12 +9051,27 @@ static void jam_capture(void)
         knob_set(P_AC_LEN, 16);
         knob_set(P_AC_LOCK, 1);
         say("CAPTURED", "ACID LINE (FROZEN)");
+    } else if (vc == 3) {
+        knob_set(P_BL_MODE, EN_BL_STEPS);
+        edited();
+        say("CAPTURED", "BASS STEPS");
     } else {
         knob_set(P_CM_RATE, 3);
         knob_set(P_CM_LOOP, 2);
         knob_set(P_CM_VU, 100);
         say("CAPTURED", "PLUCK LOOP");
     }
+}
+static void acid_keep(void)                     /* (0.17.31, a Reddit player's "learn what was answered into the track") */
+{
+    if (proj.par[P_AC_RESP] < 5) {
+        say("NO ANSWER SET", "ACID ANSWER: ARP x4");
+        return;
+    }
+    en_acid_keep_answer();
+    knob_set(P_AC_LOCK, 1);
+    edited();
+    say("ANSWER KEPT", "THE ACID LINE, FROZEN");
 }
 static void draw_jam(void)
 {
@@ -9474,6 +9652,8 @@ void ui_frame(void)
     smp_tick();
     key_tick();
     glide_tick();
+    gesture_tick();
+    cap_tick();
     swell_tick();
     factory_all_tick();
     saver_tick();

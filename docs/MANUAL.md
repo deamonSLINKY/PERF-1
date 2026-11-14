@@ -324,7 +324,7 @@ short version.
 | **SAVE** | A breakdown on the next bar. Again: a build and the drop. Held: the drop. On Global: stores the piece. |
 | **SEQ** | The Drums page. Again: Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. Held: the sequencer. Tapped in the sequencer: back to Drums. With **SEL** held: the links on and off. |
 | **PLAY** | Play and stop. Each start is a fresh track with its own code; on the Code page, the track again from the top (or the code typed in). |
-| **REC** | Freeze: the chord holds and the reverb rings on until you press it again. With **SEL**: Capture, which writes the bar you played on Jam into the acid line or the pluck loop (section 10). |
+| **REC** | Freeze: the chord holds and the reverb rings on until you press it again. With **SEL**: Capture, which writes the bar you played on Jam into the acid line, the pluck loop or the bass steps (section 10); on an Acid page, it keeps the acid's answer as its line; in the FX menu, the gesture recorder. |
 | White keys | Play a voice: on the pad's, bass's, acid's or pluck's pages that voice, elsewhere the Jam page's (with Jam's Keys and Octave). On **Global**: the scale, each key adding or removing its note (the root stays). In the sequencer: the 16 steps. In the FX menu: the effects. On Perform, the visualizers, and with **GLO** held: the track mix. |
 | Black keys | The same as the white keys. |
 
@@ -598,7 +598,7 @@ standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** pas
 
 Start with Scream at 60 and Drive at 40 on an acid piece, then turn the acid's Cutoff and Env mod (or let an LFO on **Acid cut** do it). Turn the acid's level down a little if it gets too loud: the limiter will hold it, but it squashes the rest of the mix.
 
-**The wub.** In DUBSTEP, and with the Wub sound in any genre, the bass LFO on the cutoff makes a wub the way a producer builds one. A clean sine sub stays underneath. The sound's own oscillator goes through a resonant low-pass that the LFO sweeps from about 70 Hz up to 3-4 kHz, with a vowel band above it (the "yoi"). It is then driven hard after the filter, so it growls more as it opens, and high-passed so the sub stays clean. On the drop the LFO's speed follows a rhythm, beat by beat over two bars (1/4, 1/8, 1/8T, 1/16, 1/2), each piece with its own and a second one every 8 bars. Through a build it speeds up from 1/4 to 1/16. Depth sets how far it opens, Shape how it moves (Sine: closed on the beat, open between; Saw: open then closing; Square: open and shut; S&H: a level each cycle), Cutoff where it starts, Reso how much it sings. SCREAM on the bass drives it harder still. Set the Target to anything but Cutoff for the old wobble.
+**The wub.** In DUBSTEP, and with the Wub sound in any genre, the bass LFO on the cutoff makes a wub the way a producer builds one. A clean sine sub stays underneath. The sound's own oscillator goes through a resonant low-pass that the LFO sweeps from about 70 Hz up to 3-4 kHz, with a vowel band above it (the "yoi"). It is then driven hard after the filter, so it growls more as it opens, and high-passed so the sub stays clean. On the drop the LFO's speed follows a rhythm, beat by beat over two bars (1/4, 1/8, 1/8T, 1/16, 1/2), each piece with its own and a second one every 8 bars (the Wub sound does this in any genre). DNB pieces 2 and 6 and INDUS pieces 4 and 8 come with it. Through a build it speeds up from 1/4 to 1/16. Depth sets how far it opens, Shape how it moves (Sine: closed on the beat, open between; Saw: open then closing; Square: open and shut; S&H: a level each cycle), Cutoff where it starts, Reso how much it sings. SCREAM on the bass drives it harder still. Set the Target to anything but Cutoff for the old wobble.
 
 The bass's LFO moving the cutoff (a wobble) works with every type. The setting is for every piece, kept with the
 settings. It's the MultiFilter idea from Caustic, rebuilt here.
@@ -771,6 +771,18 @@ factory piece. **SAVE** alone only stores.
 **SAVE** for 6 seconds: past the piece's own reset, the screen says `KEEP HOLDING: EVERY PIECE, ALL GENRES`, then
 it goes through the genres one by one and says how many pieces it put back. Your settings, voices and set list
 stay as they are. While the music plays it only resets the piece and says `STOP FIRST`.
+
+**Start from nothing.** On Global, hold **SEL** and press **OCT-**. The screen says `EMPTY PIECE`. The piece playing
+keeps its sounds, kit, key and tempo, and loses everything else: no drums, the pad holding the key's home chord, and
+the bass, the acid and the pluck each switched to its steps with every step a rest. Nothing changes by itself
+(Evolve, drum drift, the answers and ghost notes are off). Build it up from there:
+
+- the drums in the **sequencer** (hold **SEQ**, section 8);
+- the bass on **Bass steps** (**LFO** x5), the acid on **Acid steps** (**ARP** x5), the pluck on **Pluck
+  steps** (**ARP** x9): pick a step with a white key, then turn its kind from rest to a note;
+- the chords on the **Progression** page (hold **EDIT**): one chord to start, add more slots.
+
+**SAVE** keeps it, in that piece's place. Changed your mind? **SEL + SAVE** held brings the factory piece back.
 
 **When it's written.** Straight away. The FM-1 can't make sound while it writes to its memory. So if the music
 is playing, it fades out (the screen says `STORING`), writes, and fades back in exactly where it was. The
@@ -1011,6 +1023,9 @@ a changed version of itself. It's off by default, stored with the piece, and lis
 | Level | How loud the answer is against the call: **Same**, **+2 dB**, **+4 dB** or **+6 dB**, so it stands out when you play with it. This one is the unit's setting, kept for every piece (like the effects' settings), not stored with a piece. |
 
 The page draws the call and its answer, one dot per step at the height of its note.
+
+**Keep the answer.** Like what the answer did? On any Acid page, press **SEL + REC**: the answer becomes the line itself,
+frozen (`ANSWER KEPT`), and the answer goes on answering it. Save the piece to keep it.
 
 ### The pluck: 12 + 30 + up to 16 sounds
 
@@ -1434,6 +1449,20 @@ These four knobs work in the FX menu, on the Perform screen and on the visualize
 | Wash | Sends the mix into the reverb. |
 
 The FX knobs aren't saved. They go back to home when you power off. A scene does store them (section 10). While any FX knob is away from home, the header says `KNOB`.
+
+### The gesture recorder: loop your knob moves
+
+Record up to four bars of FX knob moves and they play on by themselves, so your hands are free for the keys.
+
+1. With the music playing, open the FX menu and press **SEL + REC**. The header says `REC`: it starts writing on the
+   next bar.
+2. Turn the FX knobs: a filter sweep, a crush on the last beat, a throw into the echo.
+3. Press **SEL + REC** again. It finishes the bar you're in and from then on plays your moves in a loop (1 to 4 bars;
+   after four it loops by itself). The header says `LOOP`.
+
+Turn a knob yourself and that knob is yours again; the others keep playing the loop. **SEL + REC** in the FX menu
+while it loops lets all of them go, where they are. **OCT-** in the FX menu (everything home) does too. Like the knobs
+themselves, the loop isn't saved; it keeps playing across pieces, and stopping pauses it.
 
 ### Bank 1: FX
 
@@ -1863,11 +1892,15 @@ The page shows a keyboard with the scale's notes lit and the keys you hold brigh
 
 **Accents (SEL).** The FM-1's keys can't feel how hard you press, so hold **SEL** while you play a key for an accent: a louder note, and on the acid a full accent (brighter, punchier). On the Jam page SEL + a key always plays; it doesn't change the pattern as it does elsewhere.
 
-**Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page and makes it that voice's own line:
+**Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page (of the last
+four, the one where you played the most) and makes it that voice's own line, as you played it: each note against the chord it was played over, a
+key a little early counted on the step it was meant for, and the line starting where the bar does:
 
 - With the voice on **acid**, the bar goes into the Acid steps page as a 16-step line, set to **Frozen**. Each sixteenth where you played a key gets that note. The notes are stored relative to the chord at the time, so the line follows the chords from then on. A key played on a beat becomes an accent (a louder note), and a key held past the next step becomes a slide (the pitch glides into the next note). The line plays when you leave the Jam page.
 - With the voice on the **pluck**, the bar goes into the Deja vu loop, set to Loop 16, Rate 1/16 and Pluck vu 100, starting at the next bar line. Turn Pluck vu down to let it drift again.
-- The pad and the bass can't be captured.
+- With the voice on the **bass**, the bar goes into the Bass steps page and the bass line's Mode goes to Steps. Each note becomes a scale step
+  above the chord's root, in the octave nearest to what you played; a key on a beat is an accent, a key held past the next step a glide.
+- The pad can't be captured.
 
 Capture remembers your last 32 key presses, so play the bar first, then press **SEL** + **REC**. The header says `CAPTURED`.
 

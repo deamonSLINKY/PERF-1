@@ -1,0 +1,41 @@
+# THE GESTURE RECORDER (0.17.31): in the FX menu SEL + REC arms it; from the next bar the FX knobs are written; SEL + REC again loops them
+# from that bar's end, and the knobs play the loop. A knob turned by hand is the hand's again; SEL + REC while it plays lets all of them go.
+seed 0
+seamless 1
+wait 2500
+expect playing 1
+tap FX
+wait 100
+press SEL
+tap REC
+release SEL
+expect gesture 1
+waitfor gesture 2 4000
+# the crush (K2) up and back down while it writes
+spin K2 15
+wait 400
+expect fxk1 >5
+spin K2 -15
+wait 100
+expect fxk1 0
+press SEL
+tap REC
+release SEL
+expect gesture 2
+waitfor gesture 3 6000
+expect gsmask 15
+expect gslen >15
+# the loop plays the crush up again by itself
+waitfor fxk1 >5 6000
+expect gesture 3
+shot gesture_loop.png
+# the crush by hand: that knob is let go, the others still play
+spin K2 3
+wait 100
+expect gsmask 13
+# all of them let go
+press SEL
+tap REC
+release SEL
+expect gesture 0
+expect gsmask 0

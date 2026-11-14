@@ -1,0 +1,61 @@
+# THE EMPTY PIECE (0.17.31, Niclio's "can I make a song from nothing?", issue #5): on Global, SEL + OCT- empties the piece playing: no drums,
+# the pad holding one chord, the bass, the acid and the pluck on their steps with every step a rest. Nothing but the pad sounds until
+# something is written; SAVE keeps it as it is (through a power cycle), and a step written plays.
+seed 0
+seamless 1
+wait 2500
+expect playing 1
+tap GLO
+wait 100
+expect view 33
+press SEL
+tap OCT-
+release SEL
+wait 200
+expect msgon 1
+expect par152 16
+expect acidgate 0
+expect bskind15 0
+expect bsoct15 1
+expect prgplay 1
+# nothing but the pad, from a fresh start
+hasharm 8000
+tap PLAY
+wait 300
+tap PLAY
+wait 9000
+expect notes 0
+# stored, and after a power cycle still empty
+expect view 33
+tap SAVE
+wait 1500
+reboot
+wait 2500
+expect par152 16
+expect acidgate 0
+expect bsoct15 1
+hasharm 8000
+tap PLAY
+wait 300
+tap PLAY
+wait 9000
+expect notes 0
+# a bass step written (the first white key, a note): it plays
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+wait 100
+expect view 10
+tapkey 1
+spin K1 1
+wait 100
+expect bskind0 1
+expect bsany 1
+hasharm 8000
+tap PLAY
+wait 300
+tap PLAY
+wait 9000
+expect notes >3
