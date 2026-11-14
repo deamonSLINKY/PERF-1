@@ -27,8 +27,8 @@ shot b_aeolian.png
 tap GLO
 wait 100
 expect view 33
-# pentatonic minor, then strip it down to three notes and try a fourth removal
-turn ALGO 6
+# Lydian (two back from Aeolian; 0.17.33: six steps forward now reach the newer scales), then strip it down to three notes and try a fourth removal
+turn ALGO -2
 expect par72 3
 expect pool 0xAD5
 # E pent min: E G A B D. Remove G (key 2 = G3) and A (key 4 = A3)

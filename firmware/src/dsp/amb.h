@@ -47,7 +47,8 @@ enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_SAMPLE, EN_V_PLUCK };   /* the voic
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
 enum { MODE_IONIAN, MODE_DORIAN, MODE_PHRYGIAN, MODE_LYDIAN, MODE_MIXOLYDIAN, MODE_AEOLIAN, MODE_PENT_MAJ,
-       MODE_PENT_MIN, EN_NMODES };
+       MODE_PENT_MIN, MODE_LOCRIAN, MODE_HARM_MIN, MODE_MEL_MIN, MODE_PHRYG_DOM, MODE_HUNG_MIN, MODE_DBL_HARM, EN_NMODES };   /* (0.17.33: the last six,
+                                                 * GitHub issue 2; a track code keeps the mode in four bits: sixteen at most) */
 extern const char *const EN_MODE_NAME[EN_NMODES];
 extern const uint16_t EN_MODE_POOL[EN_NMODES];
 extern const char *const EN_NOTE_NAME[12];

@@ -309,7 +309,7 @@ short version.
 | **MASTER** | Volume. |
 | **SELECT** | Steps through the pages in order. With **HOME** held: the tempo, from any page. In the FX menu: the bank (FX, BEAT FX, FLEX BEAT, DJ SNIPS), or inside an effect's settings, the next settings page. On the visualizers: the next one. |
 | **PRESETS** | The piece, 1 to 10. With **SEL** held, the new piece starts on the next bar. With **GLO** held: the genre. |
-| **ALGORITHM** | The mood, on every page but two (so a turn never changes the scale by accident). On the **Chords** page and **Global**: the mode of the scale (Aeolian is the natural minor, Dorian a brighter minor, Phrygian a darker one, Mixolydian a major with a flat seventh). With **SEL** held: the sound of the voice on screen (on the drum pages, the whole kit). |
+| **ALGORITHM** | The mood, on every page but two (so a turn never changes the scale by accident). On the **Chords** page and **Global**: the mode of the scale (Aeolian is the natural minor, Dorian a brighter minor, Phrygian a darker one, Mixolydian a major with a flat seventh; the fourteen are listed under **The scales**, section 5). With **SEL** held: the sound of the voice on screen (on the drum pages, the whole kit). |
 | **KNOB1**-**KNOB4** | The four values (a, b, c, d) of the page on screen. |
 | **OCT-** | Down an octave, to -3. On a voice's pages it moves that voice (pad, bass or acid; the pluck goes down to -2). On any other page it moves the whole song. In the sequencer it picks the previous drum. In the FX menu it turns every effect off. |
 | **OCT+** | Up an octave, to +3, the same way. In the sequencer it picks the next drum. |
@@ -559,6 +559,31 @@ clock and the screen says `EXT`.
 The line above the knobs shows the octave when it isn't at home: `OCT+2` for the page's voice, `SONG-1` for
 the song. Octaves are stored with the piece. Going down, each voice stops at the lowest note you can hear
 (about C1), so -2 and -3 may sound the same.
+
+### The scales
+
+**ALGORITHM** on the Chords page or on Global picks the scale. Every one starts on the piece's root (Global's Root).
+
+| Scale | Its notes over A | Sounds |
+|---|---|---|
+| Ionian | A B C# D E F# G# | the major scale: bright, settled |
+| Dorian | A B C D E F# G | a minor that's lighter: house, funk, dub |
+| Phrygian | A Bb C D E F G | a dark minor, the flat second: techno, dark psy |
+| Lydian | A B C# D# E F# G# | major with a raised fourth: dreamy, floating |
+| Mixolydian | A B C# D E F# G | major with a flat seventh: bluesy, rock |
+| Aeolian | A B C D E F G | the natural minor: most of the minor pieces |
+| Pent maj, Pent min | five notes | no wrong notes; no circle of chords to walk |
+| Locrian | A Bb C D Eb F G | the darkest: its own home chord is diminished |
+| Harm. min | A B C D E F G# | harmonic minor: the minor with a real pull home (E major leads to A minor) |
+| Mel. min | A B C D E F# G# | melodic minor, the "jazz minor": minor below, major above |
+| Phr. dom | A Bb C# D E F G | Phrygian dominant: flamenco, the Middle East, psytrance |
+| Hung. min | A B C D# E F G# | Hungarian minor: harmonic minor with a raised fourth, very dark |
+| Dbl. harm | A Bb C# D E F G# | double harmonic ("Arabic"): two wide steps, exotic |
+
+The chord walk never goes to a diminished or augmented chord (harmonic minor's C+ and the like), so these play the scale's
+strong chords and let its colour come from the melody lines. The borrowed chords and the dominants of the next chord (section 5,
+the circle) are for the first six; the newer seven-note scales are their own colour already. A progression you set by hand
+plays any chord you put in it.
 
 ### Chords
 
@@ -1027,7 +1052,7 @@ The page draws the call and its answer, one dot per step at the height of its no
 **Keep the answer.** Like what the answer did? On any Acid page, press **SEL + REC**: the answer becomes the line itself,
 frozen (`ANSWER KEPT`), and the answer goes on answering it. Save the piece to keep it.
 
-### The pluck: 12 + 30 + up to 16 sounds
+### The pluck: 12 + 60 + up to 16 sounds
 
 ![The Pluck page draws its decay and the line it plays over a bar](img/perf-screen-pluck.png)
 

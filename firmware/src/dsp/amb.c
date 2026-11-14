@@ -12,11 +12,16 @@
 
 const char *const EN_NOTE_NAME[12] = {"C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"};
 const char *const EN_MODE_NAME[EN_NMODES] = {"Ionian", "Dorian", "Phrygian", "Lydian", "Mixolyd.", "Aeolian",
-                                             "Pent maj", "Pent min"};
+                                             "Pent maj", "Pent min", "Locrian", "Harm.min", "Mel.min", "Phr.dom", "Hung.min", "Dbl.harm"};
 #define B(a, b, c, d, e, f, g) (1u << (a) | 1u << (b) | 1u << (c) | 1u << (d) | 1u << (e) | 1u << (f) | 1u << (g))
 const uint16_t EN_MODE_POOL[EN_NMODES] = {
     B(0, 2, 4, 5, 7, 9, 11), B(0, 2, 3, 5, 7, 9, 10), B(0, 1, 3, 5, 7, 8, 10), B(0, 2, 4, 6, 7, 9, 11),
-    B(0, 2, 4, 5, 7, 9, 10), B(0, 2, 3, 5, 7, 8, 10), B(0, 2, 4, 7, 9, 9, 9),  B(0, 3, 5, 7, 10, 10, 10)};
+    B(0, 2, 4, 5, 7, 9, 10), B(0, 2, 3, 5, 7, 8, 10), B(0, 2, 4, 7, 9, 9, 9),  B(0, 3, 5, 7, 10, 10, 10),
+    /* (0.17.33, GitHub issue 2) Locrian; harmonic minor (Aeolian with the major seventh: a real dominant, V, in minor); melodic minor (the jazz
+     * minor: Dorian with the major seventh); Phrygian dominant (harmonic minor's fifth mode: the flamenco, the Middle East, psytrance); Hungarian
+     * minor (harmonic minor with a raised fourth); double harmonic (the "Arabic" or Byzantine: two augmented seconds) */
+    B(0, 1, 3, 5, 6, 8, 10), B(0, 2, 3, 5, 7, 8, 11), B(0, 2, 3, 5, 7, 9, 11), B(0, 1, 4, 5, 7, 8, 10), B(0, 2, 3, 6, 7, 8, 11),
+    B(0, 1, 4, 5, 7, 8, 11)};
 #undef B
 const char *const EN_LANE_NAME[EN_NLANE] = {"Kick", "Snare", "Clap", "Hat", "Open hat", "Perc"};
 
@@ -2241,6 +2246,16 @@ static int hr_bars_v(int v)                     /* the genre's bars a chord, by 
 }
 static int deg_nat(int k) { return steps[k % 7] - (k % 7 == 6 ? dom_on : 0); }   /* the natural scale's step (without the dominant's raise) */
 static int deg_dim(int i) { return nsteps == 7 && (deg_nat(i + 4) - deg_nat(i) + 12) % 12 == 6; }   /* the degree's triad is diminished */
+static int deg_aug(int i) { return nsteps == 7 && (deg_nat(i + 4) - deg_nat(i) + 12) % 12 == 8; }   /* (0.17.33) or augmented (harmonic and melodic minor's III) */
+static int diatonic(void)                       /* (0.17.33) the scale is one of the major scale's modes (the borrowing and the secondary dominants are
+                                                 * for those: the other seven-note scales are their own colour already) */
+{
+    int r;
+    for (r = 0; r < 12; r++)
+        if ((((uint32_t)pool >> r | (uint32_t)pool << (12 - r)) & 0xFFFu) == 0xAB5u)
+            return 1;
+    return 0;
+}
 static void dom_apply(void)                     /* the dominant in minor: the seventh degree raised while the chord is V, in a genre that cadences (CHT dom) */
 {
     if (nsteps != 7)
@@ -2341,7 +2356,7 @@ static const uint8_t CH_SEC[EN_NGENRE] = {0, 45, 15, 0, 0, 30, 0, 35, 0, 0, 50, 
 static const uint8_t CH_BOR[EN_NGENRE] = {0, 20, 20, 0, 0, 15, 0, 15, 0, 0, 15, 10, 0, 40, 15, 25, 0, 0, 0};
 static const uint8_t AEOLIAN[7] = {0, 2, 3, 5, 7, 8, 10};
 static int fixed_shape(void) { return par[P_CHORD] == EN_CH_DUB || par[P_CHORD] == EN_CH_4THS; }
-static int bor_key(void) { return nsteps == 7 && chord_genre && CH_BOR[chord_genre] && steps_nat[2] == 4 && !fixed_shape(); }   /* a major key, a genre that borrows */
+static int bor_key(void) { return nsteps == 7 && chord_genre && CH_BOR[chord_genre] && steps_nat[2] == 4 && !fixed_shape() && diatonic(); }   /* a major key, a genre that borrows */
 static int borrow_vii(int i) { return i == 6 && bor_key(); }
 static int bor_decide(int i) { return bor_key() && (i == 6 || ((i == 3 || i == 5) && frand() * 100.0f < (float)CH_BOR[chord_genre])); }
 static void alt_clear(void)                     /* the natural scale again (dom_apply and alt_apply set it as the next chord needs) */
@@ -2355,7 +2370,7 @@ static void alt_clear(void)                     /* the natural scale again (dom_
 static void alt_apply(int i, int bor, int n)    /* the chord on degree i (just moved to): borrowed, or the dominant of the next (n) */
 {
     int k, changed = 0;
-    if (nsteps != 7 || !chord_genre || fixed_shape())
+    if (nsteps != 7 || !chord_genre || fixed_shape() || !diatonic())
         return;
     if (bor) {
         for (k = 0; k < 7; k++)
@@ -2380,7 +2395,7 @@ static void alt_apply(int i, int bor, int n)    /* the chord on degree i (just m
         bass_to(bass_pc());
     }
 }
-static int walk_ok(int i) { return !(i && deg_dim(i)) || borrow_vii(i); }
+static int walk_ok(int i) { return !(i && (deg_dim(i) || deg_aug(i))) || borrow_vii(i); }
 static int walk_pick(void)                      /* the walk's next degree from where it is (the natural scale): the genre's own moves first */
 {
     static const float W7[7] = {4.0f, 2.0f, 1.0f, 3.0f, 3.0f, 3.0f, 0.4f};
@@ -2390,8 +2405,8 @@ static int walk_pick(void)                      /* the walk's next degree from w
     const int rich = nsteps == 7 && cg;
     if (rich) {                                 /* the leading chord: the genre's, unless the mode makes it diminished (then V, or IV) */
         cad_to = CHT[cg].cad_to;
-        if (deg_dim(cad_to))
-            cad_to = deg_dim(4) ? 3 : 4;
+        if (deg_dim(cad_to) || deg_aug(cad_to))   /* (0.17.33: or augmented; and V or IV may be either in the newer scales: then home) */
+            cad_to = !deg_dim(4) && !deg_aug(4) ? 4 : !deg_dim(3) && !deg_aug(3) ? 3 : 0;
     }
     for (i = 0; i < nsteps; i++) {
         if (i == deg) {
@@ -2414,7 +2429,7 @@ static int walk_pick(void)                      /* the walk's next degree from w
         } else {
             w[i] = nsteps == 7 ? W7[i] : i == 0 ? 3.0f : 1.5f;
         }
-        if (i != 0 && deg_dim(i) && !borrow_vii(i))
+        if (i != 0 && (deg_dim(i) || deg_aug(i)) && !borrow_vii(i))
             w[i] = 0.0f;                        /* a diminished chord: not walked to (hypno's walk too); VII borrowed as bVII is (0.16.27) */
         sum += w[i];
     }
@@ -2492,7 +2507,7 @@ static void chord_change(void)                  /* to another degree: the progre
     en_walk_next = walk_next;
     alt_apply(i, bor, walk_next);
 #ifdef EN_HOST
-    if (i && deg_dim(i))
+    if (i && (deg_dim(i) || deg_aug(i)))   /* (0.17.33: or augmented) */
         en_host_dimwalk++;                      /* (with its alteration: bVII is not diminished) */
     en_host_alt[en_chord_alt]++;
 #endif

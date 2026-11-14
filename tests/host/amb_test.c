@@ -2454,6 +2454,33 @@ int main(void)
               (unsigned)want, (unsigned)en_acid_acc, (unsigned)wacc);
         printf("the answer kept: reverse, gates %04x, accents %04x\n", (unsigned)en_acid_gate, (unsigned)en_acid_acc);
     }
+    /* (0.17.33) the six newer scales (GitHub issue 2): in each, two minutes of LOFI's walk never land on a diminished or an augmented chord, and
+     * in the five that are not modes of the major scale the pad's chords stay in the scale (no borrowing, no secondary dominants there) */
+    {
+        extern int en_host_dimwalk;
+        int m, blk, out, k;
+        for (m = MODE_LOCRIAN; m < EN_NMODES; m++) {
+            en_init();
+            en_genre(1);
+            en_set(P_ROOT, 9);
+            en_set(P_MODE, m);
+            en_pool(EN_MODE_POOL[m]);
+            en_set(P_DRIFT, 90);
+            en_host_dimwalk = 0;
+            out = 0;
+            en_play(1);
+            for (blk = 0; blk < 20000; blk++) {
+                en_render(buf, 256, 2048);
+                if (m != MODE_LOCRIAN && !(blk & 63))
+                    for (k = 0; k < EN_NPAD; k++)
+                        out += !(EN_MODE_POOL[m] >> ((en_chord[k] - 9 + 120) % 12) & 1u);
+            }
+            en_play(0);
+            CHECK(en_host_dimwalk == 0, "scale %s: the walk went to a diminished or augmented chord %d times", EN_MODE_NAME[m], en_host_dimwalk);
+            CHECK(out == 0, "scale %s: the pad left the scale %d times", EN_MODE_NAME[m], out);
+            printf("scale %s: walked clean, the pad in the scale\n", EN_MODE_NAME[m]);
+        }
+    }
     printf(fails ? "amb: %d FAILED\n" : "amb: ok\n", fails);
     return fails != 0;
 }

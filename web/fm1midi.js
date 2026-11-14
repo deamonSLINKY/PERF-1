@@ -4,9 +4,11 @@
 // of pluck line (each written in scale steps above the chord they play over, as the FM-1 keeps them), and the chords as the progression's eight slots.
 // What does not fit is reported, not hidden. Nothing here touches the page, so tests/web_midi_test.js checks it in node.
 
-// the modes' pools, as amb.c EN_MODE_POOL (bit i: the root + i semitones): Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, pentatonic major, minor
+// the modes' pools, as amb.c EN_MODE_POOL (bit i: the root + i semitones): Ionian, Dorian, Phrygian, Lydian, Mixolydian, Aeolian, pentatonic major, minor,
+// and (0.17.33) Locrian, harmonic minor, melodic minor, Phrygian dominant, Hungarian minor, double harmonic (the key guess below tries the first eight)
 export const MIDI_MODES = [[0, 2, 4, 5, 7, 9, 11], [0, 2, 3, 5, 7, 9, 10], [0, 1, 3, 5, 7, 8, 10], [0, 2, 4, 6, 7, 9, 11], [0, 2, 4, 5, 7, 9, 10],
-                           [0, 2, 3, 5, 7, 8, 10], [0, 2, 4, 7, 9], [0, 3, 5, 7, 10]];
+                           [0, 2, 3, 5, 7, 8, 10], [0, 2, 4, 7, 9], [0, 3, 5, 7, 10], [0, 1, 3, 5, 6, 8, 10], [0, 2, 3, 5, 7, 8, 11],
+                           [0, 2, 3, 5, 7, 9, 11], [0, 1, 4, 5, 7, 8, 10], [0, 2, 3, 6, 7, 8, 11], [0, 1, 4, 5, 7, 8, 11]];
 export const midiPool = (mode) => MIDI_MODES[mode].reduce((a, s) => a | (1 << s), 0);
 export const MIDI_ROLES = ["skip", "drums", "bass", "acid", "pluck", "chords"];
 

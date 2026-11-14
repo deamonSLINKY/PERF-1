@@ -190,7 +190,7 @@
 - **Build: tap SAVE again.** A snare roll climbs as the bass opens, for four bars (two in trap, lofi and trip-hop; eight in house). In the last bar the open hat plays every eighth and, in the four-on-the-floor genres, the kick comes back. Then the drop. The header counts `DROP 3`.
 - **Drop: hold SAVE** (0.5 s). Everything is back on the next bar with a ringing crash, mostly on the home chord. SAVE is lit in a breakdown or build and blinks while it waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on until you press REC again. **Next chord: EDIT**, on the next bar.
-- **The scale: the keys on Global** (elsewhere they play a voice). Each adds or removes its note; the root stays. **ALGORITHM** there (and on Chords) picks a mode (Aeolian is plain minor, Dorian a brighter minor, Phrygian a darker one, Mixolydian major with a flat 7th). Root is on Global.
+- **The scale: the keys on Global** (elsewhere they play a voice). Each adds or removes its note; the root stays. **ALGORITHM** there (and on Chords) picks a mode (Aeolian is plain minor, Dorian a brighter minor, Phrygian a darker one, Mixolydian major with a flat 7th; also Locrian, harmonic and melodic minor, Phrygian dominant, Hungarian minor, double harmonic). Root is on Global.
 - **Patterns:** KNOB4 on the Drums page, or SEL + white keys 1-6; the change waits for the bar. Hold a pattern key past 0.25 s and it plays only while held, then the one before comes back.
 - **Pieces:** PRESETS; with SEL held, on the next bar. **Genres:** GLO held + PRESETS, or Global's Genre knob.
 - **Songs aren't saved:** record the audio or MIDI out into your DAW.
