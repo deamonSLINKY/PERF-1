@@ -62,8 +62,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_LK_HAT] = {"Hats", 0, 100, 50},      [P_LK_PERC] = {"Perc", 0, 1, 0},
     [P_OCT] = {"Song oct", -3, 3, 0},       [P_PAD_OCT] = {"Pad oct", -3, 3, 0},
     [P_DR_INST] = {"Sound", 0, EN_NSOUND - 1, 0},
-    [P_KIT_KICK] = {"Kick", 0, EN_NKIT - 1, 0}, [P_KIT_SNARE] = {"Snare", 0, EN_NKIT - 1, 0},
-    [P_KIT_HAT] = {"Hats", 0, EN_NKIT - 1, 0},  [P_KIT_PERC] = {"Perc", 0, EN_NKIT - 1, 0},
+    [P_KIT_KICK] = {"Kick", 0, EN_NKITS - 1, 0}, [P_KIT_SNARE] = {"Snare", 0, EN_NKITS - 1, 0},
+    [P_KIT_HAT] = {"Hats", 0, EN_NKITS - 1, 0},  [P_KIT_PERC] = {"Perc", 0, EN_NKITS - 1, 0},
     [P_PAD_MAN] = {"Pad hand", 0, 1, 0},     [P_DR_MAN] = {"Bass hand", 0, 1, 0}, [P_AC_MAN] = {"Acid hand", 0, 1, 0},
     [P_CHORD] = {"Chord", 0, EN_NCHORD - 1, 0}, [P_VOICING] = {"Voicing", 0, 1, 0},
     [P_DD_CHANGE] = {"Change", 0, 2, 0}, [P_DD_EVERY] = {"Every", 0, 5, 2}, [P_DD_POOL] = {"Pool", 2, EN_NPAT, 4},
@@ -253,7 +253,9 @@ static const int16_t X_HIPHOP[] = {P_CH_LOOP, 1, P_BL_MODE, 2, P_BL_LEN, 70, P_B
  * the supersaw lead, the Trance pad, minor four-chord loops of four bars, long breakdowns and eight-bar builds (PSY covers psytrance, not this). */
 static const int16_t X_TRANCE[] = {P_CH_LOOP, 2, P_BL_MODE, 4, P_BL_LEN, 30, P_BL_MOVE, 4, P_BL_GLIDE, 0, P_CM_VU, 60, P_CM_LOOP, 1, P_GHOST, 0, P_HUMAN, 5,
     P_PULSE, 85, P_DRIVE, 30, P_SWING, 0, P_DETUNE, 35, P_PAD, 55, P_ACID, 55, P_BASS, 80, P_AC_DENS, 65, P_AC_LEN, 16, P_AC_RES, 55, P_ECHO, 40, P_ETIME, 1,
-    P_REVERB, 50, P_SIZE, 80, P_RV_TYPE, 1, P_RV_X, 30, KIT(10), P_PATTERN, 0, P_EVOLVE, 40, P_MOTION, 50, P_PL_CHO, 50, P_MC_RATIO, 4, P_MC_THR, 40,
+    P_REVERB, 50, P_SIZE, 80, P_RV_TYPE, 0, KIT(10), P_PATTERN, 0, P_EVOLVE, 40, P_MOTION, 50, P_PL_CHO, 30,   /* (the plate and less chorus: the shimmer and
+                                                 * the ensemble had core 2 at its limit, TRANCE 1 at 81 % with late renders, the maker's log 2026-11-14) */
+    P_MC_RATIO, 4, P_MC_THR, 40,
     P_MC_MAKE, 35, -1};
 /* AMBIENT (0.17.35): 70-88, beatless or nearly (a soft kick now and then, a shaker, a ride), long pads, slow chords in the bright modes, the bass held, a
  * long shimmer and echo: a set's opener and its rest. */
@@ -763,8 +765,9 @@ const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", 
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft",
                                               "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
                                               "Super", "CZ", "Mini", "Hyper", "CZ Pulse", "CZ Bell", "Lead"};
-const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
-                                                   "909", "Electro", "DnB", "Trap", "Boom", "Ride", "Snap", "606", "Gabber", "Linn", "Shaker"};
+const char *const EN_KIT_NAME[EN_NKITS] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
+                                                   "909", "Electro", "DnB", "Trap", "Boom", "Ride", "Snap", "606", "Gabber", "Linn", "Shaker",
+                                                   "Machine", "Boombap"};   /* (0.17.36: the sampled ones last) */
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -824,7 +827,7 @@ void en_param_text(int i, int v, char *b)
     case P_MIDI: s = ONOFF[v ? 1 : 0]; break;
     case P_PADTONE: s = EN_PAD_SOUND[(unsigned)v < EN_NSOUND ? v : 0]; break;
     case P_DR_INST: s = EN_DRONE_SOUND[(unsigned)v < EN_NSOUND ? v : 0]; break;
-    case P_KIT_KICK: case P_KIT_SNARE: case P_KIT_HAT: case P_KIT_PERC: s = EN_KIT_NAME[(unsigned)v < EN_NKIT ? v : 0]; break;
+    case P_KIT_KICK: case P_KIT_SNARE: case P_KIT_HAT: case P_KIT_PERC: s = EN_KIT_NAME[(unsigned)v < EN_NKITS ? v : 0]; break;
     case P_MODE: s = EN_MODE_NAME[(unsigned)v < EN_NMODES ? v : 0]; break;
     case P_ROOT: s = EN_NOTE_NAME[(unsigned)v < 12u ? v : 0]; break;
     case P_PL_RATE: case P_DL_RATE: s = LFO_RATE_NAME[(unsigned)v < NLFO_RATE ? v : 0]; break;
@@ -1237,7 +1240,7 @@ static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
     {  0,  -5,  -6,  -4,  -7,  -8,  -5,  -4,  -7,  -4},   /* PSY */
     { -4,  -4,  -5,  -7,  -6,  -4,  -6,  -6,  -5,  -7},   /* FOREST */
     {  1,   2,  -2,   0,   0,   1,   1,  -3,  -1,  -1},   /* HIPHOP */
-    { -1,  -2,  -5,  -3,  -5,  -1,  -4,  -6,  -5,   0},   /* TRANCE */
+    { -1,  -2,  -5,  -3,  -5,  -1,  -4,  -5,  -5,   0},   /* TRANCE */
     {  1,   8,   0,   4,   4,   2,   2,   8,   8,   0},   /* AMBIENT */
 };
 static float trim_to = 1.0f, trim_k = 1.0f;
@@ -1576,8 +1579,29 @@ static const int8_t KIT_LV[EN_NKIT][5] = {   /* half dB: snare, clap, hat, open 
     { -4,   2,   7,   1,   8},   /* Linn */
     { 12,   5,   1,  -3,   1},   /* Shaker */
 };
-static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the levels above for the kits playing (the kick's is 1) */
-static float kit_db(int k, int d) { return fm_exp2f((float)KIT_LV[(unsigned)k < EN_NKIT ? k : 0][d] * (0.5f / 6.0206f)); }
+static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+/* THE SAMPLED KITS (0.17.36, the maker: "a few loadable and a few built in"): six sounds a kit (kick, snare, clap, hat, open hat, perc), each 4-bit
+ * IMA ADPCM at 22.05 kHz read straight from the flash, played at the lane's tune (a semitone a step) and cut short by its decay below the middle. The
+ * built-in ones are rendered offline by tools/smpkits.py (our own models: GPL-clean); they come after the synth kits in each drum's list. */
+typedef struct { const uint8_t *d; uint32_t n; uint8_t i0; } smp_t;
+typedef struct { const char *name; smp_t s[6]; } skit_t;
+#include "smpkits.h"
+_Static_assert(EN_NSKIT_BI == EN_NSKIT, "the sampled kits: EN_NSKIT as smpkits.h has them");
+static const int8_t SKIT_LV[EN_NSKIT][6] = {{-2, 0, 10, 19, 19, 12}, {1, 4, 3, 12, 9, 3}};   /* half dB: each sound against the synth kits' levels (measured) */
+static const smp_t *drum_smp[EN_NDRUM];           /* a drum's sample when its kit is a sampled one (else 0: the synth) */
+static const int16_t ADPCM_STEP[89] = {7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118,
+    130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878,
+    2066, 2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500,
+    20350, 22385, 24623, 27086, 29794, 32767};
+static const int8_t ADPCM_IDX[16] = {-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8};
+static void smp_kit(int d, int v, int s)         /* drum d plays sound s of kit v (a sampled kit), or the synth */
+{
+    const int k = v - EN_NKIT;
+    drum_smp[d] = (unsigned)k < (unsigned)EN_NSKIT ? &SKIT_BI[k].s[s] : 0;
+    if (drum_smp[d])
+        kit_g[d] = fm_exp2f((float)SKIT_LV[k][s] * (0.5f / 6.0206f));
+}   /* the levels above for the kits playing (the kick's is 1) */
+static float kit_db(int k, int d) { return (unsigned)k < EN_NKIT ? fm_exp2f((float)KIT_LV[k][d] * (0.5f / 6.0206f)) : 1.0f; }
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */
 
@@ -2070,6 +2094,10 @@ typedef struct {
     float xl, fo;                               /* the last sample out; a hit on a sounding voice: the old hit's last sample, fading (no step, no click) */
     uint8_t rn;
     uint8_t on, note;
+    const smp_t *sp;                            /* (0.17.36) the sample playing (0: the synth), its next sample's place, the decoder's predictor and index */
+    uint32_t si;
+    int32_t pr;
+    uint8_t ai;
 } drum_t;
 static drum_t drum[EN_NDRUM];
 #define DR_FADE (1.0f - 1.0f / (0.0008f * EN_SR))   /* the old hit's fade: ~0.8 ms, gone in ~4 */
@@ -3335,6 +3363,21 @@ static void drum_fire(int d, float vel)
     v->att = 0.0f;
     v->t = 0.0f;
     v->note = DRUM_GM[d];
+    v->sp = drum_smp[d];
+    if (v->sp) {                                 /* (0.17.36) a sampled kit's: the sample from its start, at the lane's tune; its decay below the middle cuts it */
+        v->si = 0;
+        v->pr = 0;
+        v->ai = v->sp->i0;
+        v->ph = 0.0f;
+        v->x1 = v->x2 = 0.0f;
+        v->inc = (22050.0f / EN_SR) * fm_exp2f((lane_tune[d] + (d == L_SNARE ? snr_rise : d == L_PERC ? perc_fall : 0.0f)) * (1.0f / 12.0f));
+        v->adec = dec >= 0.5f ? 1.0f : fm_expf(-6.9f / ((0.03f + 0.9f * dec) * EN_SR));
+        if (d == L_KICK && lane_g[L_KICK] > 0.0f)
+            duck_env = 1.0f;
+        if (d == L_HAT)
+            drum[L_OHAT].adec = fm_expf(-6.9f / (0.02f * EN_SR));   /* the closed chokes the open, as the synth's */
+        return;
+    }
     switch (d) {
     case L_KICK: {                              /* a sine dropping fast from (five) times its note */
         float f = mtof((float)kick_note() + lane_tune[0]);
@@ -5129,19 +5172,27 @@ static void apply(int p, int v)
         if (!v && !bass.play)
             bass_to(bass_pc());
         break;
-    case P_KIT_KICK: KK = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;   /* the kit: at each drum's next hit */
+    case P_KIT_KICK:                             /* the kit: at each drum's next hit */
+        KK = &KITS[(unsigned)v < EN_NKIT ? v : 0];
+        smp_kit(L_KICK, v, 0);
+        break;
     case P_KIT_SNARE:
         KS = &KITS[(unsigned)v < EN_NKIT ? v : 0];
         kit_g[L_SNARE] = kit_db(v, 0);
         kit_g[L_CLAP] = kit_db(v, 1);
+        smp_kit(L_SNARE, v, 1);
+        smp_kit(L_CLAP, v, 2);
         break;
     case P_KIT_PERC:
         KP = &KITS[(unsigned)v < EN_NKIT ? v : 0];
         kit_g[L_PERC] = kit_db(v, 4);
+        smp_kit(L_PERC, v, 5);
         break;
     case P_KIT_HAT: {
         kit_g[L_HAT] = kit_db(v, 2);
         kit_g[L_OHAT] = kit_db(v, 3);
+        smp_kit(L_HAT, v, 3);
+        smp_kit(L_OHAT, v, 4);
         int k;
         KH = &KITS[(unsigned)v < EN_NKIT ? v : 0];
         for (k = 0; k < 4; k++)
@@ -7229,6 +7280,8 @@ static void drain(void)
             }
             else if (!a && en_playing)
                 play_stop();
+            if (!a)
+                en_frozen = 0;                   /* (0.17.36) stopped: the freeze thawed (its reverb, held for ever, rang on after STOP: the maker, 2026-11-14) */
             break;
         case C_NEXT:
             if (en_playing)
@@ -8553,13 +8606,65 @@ static void render_perc(drum_t *v, uint32_t n, float g)
     v->on = amp > 0.0005f;
 }
 
+static float smp_next(drum_t *v)                /* the next sample of v's, decoded (0 past its end) */
+{
+    const smp_t *s = v->sp;
+    int c, st, df;
+    if (v->si >= s->n)
+        return 0.0f;
+    c = s->d[v->si >> 1] >> ((v->si & 1u) * 4u) & 15;
+    v->si++;
+    st = ADPCM_STEP[v->ai];
+    df = st >> 3;
+    if (c & 4)
+        df += st;
+    if (c & 2)
+        df += st >> 1;
+    if (c & 1)
+        df += st >> 2;
+    v->pr += c & 8 ? -df : df;
+    v->pr = v->pr < -32768 ? -32768 : v->pr > 32767 ? 32767 : v->pr;
+    st = v->ai + ADPCM_IDX[c];
+    v->ai = (uint8_t)(st < 0 ? 0 : st > 88 ? 88 : st);
+    return (float)v->pr * (1.0f / 32768.0f);
+}
+static void render_smp(drum_t *v, uint32_t n, float g, int tr, float pl, float pr, float rs, float es)   /* a drum playing a sample */
+{
+    uint32_t j;
+    float ph = v->ph, amp = v->amp, fo = v->fo, x = 0.0f;
+    if (!v->on)
+        return;
+    for (j = 0; j < n; j++) {
+        while (ph >= 0.0f) {                     /* (x1, x2: the two samples about the place; ph from -1 to 0 between them) */
+            v->x1 = v->x2;
+            v->x2 = smp_next(v);
+            ph -= 1.0f;
+        }
+        x = (v->x2 + (v->x1 - v->x2) * -ph) * amp * g * TG(tr, j) + fo;
+        fo *= DR_FADE;
+        ph += v->inc;
+        mixl[j] += x * pl;
+        mixr[j] += x * pr;
+        rsend[j] += x * rs;
+        esend[j] += x * es;
+        amp *= v->adec;
+    }
+    v->ph = ph;
+    v->amp = amp;
+    v->fo = fm_flush(fo);
+    v->xl = x;
+    v->on = (v->si < v->sp->n || fm_fabsf(v->x2) > 0.0001f) && amp > 0.0005f;
+}
+
 static void render_drums(uint32_t n)
 {
     uint32_t j;
     const float g = pulse_vol * 1.1f;
     drum_t *v;
     v = &drum[L_KICK];                           /* kick: a sine falling fast to its note, a click, driven */
-    if (v->on) {
+    if (v->sp)
+        render_smp(v, n, g * lane_g[L_KICK] * kit_g[L_KICK] * 0.9f, TR_KICK, 1.0f, 1.0f, 0.06f, 0.04f);
+    else if (v->on) {
         float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, ck = v->idx, gk = g * lane_g[L_KICK] * 1.15f, fo = v->fo, x = 0.0f;
         float r1 = v->x1, r2 = v->x2, rl1 = v->mph[0], rl2 = v->mph[1], rp = v->ph2;
         const float dk = drive_k * KK->k_drive, drop = KK->k_drop, cka = KK->k_click, rum = KK->k_rumble;
@@ -8605,11 +8710,13 @@ static void render_drums(uint32_t n)
         v->xl = x;
         v->on = amp > 0.0005f || r1 - r2 > 0.002f;
     }
-    render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE] * kit_g[L_SNARE]);
-    render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP] * kit_g[L_CLAP]);
-    render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT] * kit_g[L_HAT], 0.75f, 1.0f);    /* a little right */
-    render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT] * kit_g[L_OHAT], 1.0f, 0.75f);  /* a little left */
-    render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC] * kit_g[L_PERC]);
+#define SMP_OR(d, call, gs, tr, pl, pr, rs, es) do { if (drum[d].sp) render_smp(&drum[d], n, g * (gs) * lane_g[d] * kit_g[d], tr, pl, pr, rs, es); else call; } while (0)
+    SMP_OR(L_SNARE, render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE] * kit_g[L_SNARE]), 0.5f, TR_SNARE, 1.0f, 0.95f, 0.35f, 0.1f);
+    SMP_OR(L_CLAP, render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP] * kit_g[L_CLAP]), 0.5f, TR_SNARE, 0.95f, 1.0f, 0.4f, 0.1f);
+    SMP_OR(L_HAT, render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT] * kit_g[L_HAT], 0.75f, 1.0f), 0.3f, TR_HATS, 0.75f, 1.0f, 0.1f, 0.1f);    /* a little right */
+    SMP_OR(L_OHAT, render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT] * kit_g[L_OHAT], 1.0f, 0.75f), 0.3f, TR_HATS, 1.0f, 0.75f, 0.15f, 0.1f);  /* a little left */
+    SMP_OR(L_PERC, render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC] * kit_g[L_PERC]), 0.4f, TR_PERC, 0.8f, 1.0f, 0.3f, 0.25f);
+#undef SMP_OR
 }
 
 _Static_assert(BLK == BLK_FM, "the DX voices' buffers are a chunk long");

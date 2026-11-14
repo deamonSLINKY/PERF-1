@@ -43,6 +43,8 @@
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 21                      /* the sounds each drum (kick, snare + clap, hats, perc) can play (0.17.34: 14 -> 21) */
+#define EN_NSKIT 2                      /* (0.17.36) and after them the sampled kits (built in: smpkits.h) */
+#define EN_NKITS (EN_NKIT + EN_NSKIT)
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_SAMPLE, EN_V_PLUCK };   /* the voices the keys can play (en_note) */
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
@@ -54,7 +56,7 @@ extern const uint16_t EN_MODE_POOL[EN_NMODES];
 extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_LANE_NAME[EN_NLANE];
 extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NACID];
-extern const char *const EN_KIT_NAME[EN_NKIT];
+extern const char *const EN_KIT_NAME[EN_NKITS];
 extern const char *EN_CM_SOUND[EN_NCMSND];     /* (the user voices' names change as they are loaded) */
 extern const char *const EN_CM_STYLE[EN_NCMSTYLE], *const EN_CM_RATE[4];
 /* the player's own DX7 voices: up to EN_NUSER, 128-byte packed records (the DX7's bulk-dump format: a 32-voice bank is 32 of them). en_user_voice may be

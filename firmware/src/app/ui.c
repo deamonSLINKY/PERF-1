@@ -3307,7 +3307,7 @@ static void shift_sound(int d)                  /* SEL + ALGORITHM: the voice's 
         caps(a, EN_CM_SOUND[proj.par[P_CM_SND]], sizeof a);
         say("PLUCK", a);
     } else if (kit_view(ui.view)) {             /* the drums: all four to the next kit */
-        int k = (proj.par[P_KIT_KICK] + d + EN_NKIT) % EN_NKIT;
+        int k = (proj.par[P_KIT_KICK] + d + EN_NKITS) % EN_NKITS;
         knob_set(P_KIT_KICK, k);
         knob_set(P_KIT_SNARE, k);
         knob_set(P_KIT_HAT, k);
@@ -7858,7 +7858,7 @@ static void lk_sound(int v, char *u)            /* the voice's sound, short, or 
             t[j] = s[j], j++;
         t[j] = 0;
     } else {
-        const char *s = EN_KIT_NAME[(unsigned)proj.par[P_KIT_KICK] < EN_NKIT ? proj.par[P_KIT_KICK] : 0];
+        const char *s = EN_KIT_NAME[(unsigned)proj.par[P_KIT_KICK] < EN_NKITS ? proj.par[P_KIT_KICK] : 0];
         int j = 0;
         while (s[j] && j < 15)
             t[j] = s[j], j++;
@@ -8642,7 +8642,7 @@ static void draw_knobs(void)
             } else if (kit_view(ui.view)) {
                 int k = proj.par[P_KIT_KICK];
                 int same = proj.par[P_KIT_SNARE] == k && proj.par[P_KIT_HAT] == k && proj.par[P_KIT_PERC] == k;
-                caps(u, same ? EN_KIT_NAME[(unsigned)k < EN_NKIT ? k : 0] : "Mixed kit", sizeof u);
+                caps(u, same ? EN_KIT_NAME[(unsigned)k < EN_NKITS ? k : 0] : "Mixed kit", sizeof u);
             } else {
                 caps(u, LOOK_CONSOLE ? "" : "PERF-1", sizeof u);
             }

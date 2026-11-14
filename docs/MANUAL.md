@@ -324,7 +324,7 @@ short version.
 | **SAVE** | A breakdown on the next bar. Again: a build and the drop. Held: the drop. On Global: stores the piece. |
 | **SEQ** | The Drums page. Again: Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. Held: the sequencer. Tapped in the sequencer: back to Drums. With **SEL** held: the links on and off. |
 | **PLAY** | Play and stop. Each start is a fresh track with its own code; on the Code page, the track again from the top (or the code typed in). |
-| **REC** | Freeze: the chord holds and the reverb rings on until you press it again. With **SEL**: Capture, which writes the bar you played on Jam into the acid line, the pluck loop or the bass steps (section 10); on an Acid page, it keeps the acid's answer as its line; in the FX menu, the gesture recorder. |
+| **REC** | Freeze: the chord holds and the reverb rings on until you press it again (or STOP). With **SEL**: Capture, which writes the bar you played on Jam into the acid line, the pluck loop or the bass steps (section 10); on an Acid page, it keeps the acid's answer as its line; in the FX menu, the gesture recorder. |
 | White keys | Play a voice: on the pad's, bass's, acid's or pluck's pages that voice, elsewhere the Jam page's (with Jam's Keys and Octave). On **Global**: the scale, each key adding or removing its note (the root stays). In the sequencer: the 16 steps. In the FX menu: the effects. On Perform, the visualizers, and with **GLO** held: the track mix. |
 | Black keys | The same as the white keys. |
 
@@ -837,7 +837,7 @@ stored it. If you didn't, it plays the factory piece with small random changes.
 
 ## 7. Sounds, kits and playing
 
-Each voice has its own list of sounds, and each drum can take its sound from any of twenty-one kits. The sounds you
+Each voice has its own list of sounds, and each drum can take its sound from any of twenty-three kits. The sounds you
 pick are stored with the piece.
 
 To change a voice's sound, turn the **Sound** knob on its page, or hold **SEL** and turn **ALGORITHM** on any of its
@@ -1220,7 +1220,7 @@ Hold **SEL** and turn the Mutate knob on that page to choose what a rewrite chan
 
 ![The Kit page](img/perf-screen-kit.png)
 
-Press **SEQ** three times for the Kit page. Each knob picks one drum's sound from the same twenty-one kits: the kick,
+Press **SEQ** three times for the Kit page. Each knob picks one drum's sound from the same twenty-three kits: the kick,
 the snare (with the clap), the hats (closed and open) and the perc.
 
 Some kits **duck** other parts: each kick briefly turns them down, which gives a pumping feel. Some **crush** the
@@ -1249,10 +1249,16 @@ drums, adding a grainy, lo-fi grit. 808 and 909 are Roland's classic drum machin
 | Gabber | Driven hard, with a long tail (hardcore) | A hard noisy snare, harsh hats, a metal perc |
 | Linn | Round (the 80s) | A fat long snare for the gated reverb, a wide clap, a tom |
 | Shaker | Soft and round | Its perc is a shaker, its hats noisy; a rim for the snare |
+| Machine | **Sampled**: an 808 / 909 style drum machine | The 808's six-square hats, its cowbell, its clap's bursts, a 909-style snare |
+| Boombap | **Sampled**: an acoustic kit through an SP-1200 (26 kHz, 12 bits) | A round kick, a fat snare with its wires, a cymbal's shimmer, a side-stick |
 
 On any of the drums' pages, **SEL** + **ALGORITHM** switches all four to the next kit at once. Mix them freely. A
 Techno kick under House hats is fine. Since 0.17.34 every kit's drums are levelled to each other: a snare or hats from any kit
 sit at the same loudness, so mixing them doesn't leave one drum too quiet.
+
+**The sampled kits** (Machine, Boombap) play recorded sounds instead of the synth: made for PERF-1 with heavier models than the FM-1 could
+run live, then stored in its memory. Tune pitches a sampled drum up or down; Decay below the middle cuts it shorter. More can come: your
+own kits, loaded from the installer page, are planned next.
 
 ### Playing a voice by hand
 
