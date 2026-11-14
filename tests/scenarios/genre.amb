@@ -192,6 +192,37 @@ peakreset
 wait 2500
 expect peak_db_min -40
 shot genre_forest.png
+# (0.17.35) hiphop: its second piece, 94 BPM; trance, 134; ambient, 76
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 19
+expect tempo 94
+peakreset
+wait 2500
+expect peak_db_min -40
+shot genre_hiphop.png
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 20
+expect tempo 134
+peakreset
+wait 2500
+expect peak_db_min -40
+shot genre_trance.png
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 21
+expect tempo 76
+peakreset
+wait 2500
+expect peak_db_min -50
+shot genre_ambient.png
 # round to the first again; its piece 1 as it was
 press GLO
 turn PRESET 1

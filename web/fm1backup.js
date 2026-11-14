@@ -6,11 +6,13 @@ export const BK_CHUNK = 256, BK_FRAME = 64, BK_MAX = 3840;
 
 // the flash objects worth keeping (plat.h OBJ_*; the panel's calibration, 1, is the unit's own and is never saved), in the order they are read and written
 const BK_GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP", "INDUS", "PSY", "FOREST"];
+const BK_GENRES2 = ["HIPHOP", "TRANCE", "AMBIENT"];   // (0.17.35: their objects come after the bass steps, so the ones above keep their numbers; never append to the list above)
 export const BK_OBJECTS = [
   { id: 2, name: "settings" }, { id: 3, name: "voices" }, { id: 4, name: "globals" }, { id: 0, name: BK_GENRES[0] },
   ...BK_GENRES.slice(1).map((n, i) => ({ id: 5 + i, name: n })), { id: 5 + BK_GENRES.length - 1, name: "piece extras" },   // (0.16.6: the progression slots' types; 0.16.28: with FILTERS and SCREAM, plat.h OBJ_KINDS)
   { id: 5 + BK_GENRES.length, name: "MIDI map" },                // (0.16.11: the player's MIDI map, plat.h OBJ_MMAP)
   { id: 5 + BK_GENRES.length + 1, name: "bass steps" },          // (0.16.29: the pieces' bass steps, plat.h OBJ_BSTEP)
+  ...BK_GENRES2.map((n, i) => ({ id: 5 + BK_GENRES.length + 2 + i, name: n })),   // (0.17.35: the newer genres' banks after the bass steps, plat.h OBJ_G19 ..)
 ];
 
 // the player's MIDI map (0.16.11, ui.c mm_*): the emulator's learned controls ({"c:ch:cc" | "n:ch:note": {t: "b<button>" | "k<key>" | "e<knob>" | "m", mode}})

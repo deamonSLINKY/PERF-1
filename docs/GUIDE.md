@@ -47,7 +47,7 @@ Only a few. The rest can wait.
 
 **4. Turn PRESETS one click.** A new piece starts: a new key, a new tempo, new sounds. There are ten pieces in each style.
 
-**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are nineteen: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance and dark forest. Let go of GLO when you find one you like.
+**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are twenty-two: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance, dark forest, hip-hop, trance and ambient. Let go of GLO when you find one you like.
 
 ## Make it move
 

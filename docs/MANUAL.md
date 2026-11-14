@@ -1,6 +1,6 @@
 # PERF-1
 
-PERF-1 is free firmware that turns your M-VAVE FM-1 into a groovebox that plays by itself. Switch it on and a piece of music starts: drums, a bass line, a pad, an acid line and a short plucked melody, made up as it plays so it never repeats exactly. There are seventeen styles, from techno and house to lofi, reggae, drum and bass and industrial, with ten pieces each.
+PERF-1 is free firmware that turns your M-VAVE FM-1 into a groovebox that plays by itself. Switch it on and a piece of music starts: drums, a bass line, a pad, an acid line and a short plucked melody, made up as it plays so it never repeats exactly. There are twenty-two styles, from techno and house to lofi, hip-hop, reggae, drum and bass, trance and ambient, with ten pieces each.
 
 You don't have to program anything to get going. You steer the music: change the chords, break the beat down and bring it back, mute parts, throw on effects, or let the auto-DJ do it for you. When you want to go deeper, almost everything can be edited, from the drum steps to the sounds, and any piece you shape can be saved. The FM-1 also works as a USB audio and MIDI device, so you can record what you play straight into your computer.
 
@@ -60,7 +60,7 @@ Only a few. The rest can wait.
 
 **4. Turn PRESETS one click.** A new piece starts: a new key, a new tempo, new sounds. There are ten pieces in each style.
 
-**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are nineteen: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance and dark forest. Let go of GLO when you find one you like.
+**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are twenty-two: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance, dark forest, hip-hop, trance and ambient. Let go of GLO when you find one you like.
 
 ### Make it move
 
@@ -704,7 +704,7 @@ genre takes over again, with your slots kept for later. The progression is store
 
 ![Storing a piece on Global](img/perf-screen-store.png)
 
-PERF-1 has nineteen **genres**. Each is a bank of ten **pieces**, ready-made songs to play and change.
+PERF-1 has twenty-two **genres**. Each is a bank of ten **pieces**, ready-made songs to play and change.
 
 - Turn **PRESETS** for another piece in the bank. It goes from 01 to 10 and wraps round.
 - Hold **GLO** and turn **PRESETS** for another bank (it wraps round too), or use the Genre knob on the Global
@@ -740,6 +740,9 @@ a made-up title, such as `VELVET RAIN`, the same one every time.
 | INDUS | I01-I10 | 118-145 | Industrial techno, EBM and industrial breakbeat. Driven, harsh drums tuned against each other (the snare a tritone up, the perc a semitone off), the Hard kit with the Break kit's chops in some pieces, broken and off-beat kicks, an EBM stomp, perc in threes against the beat. Phrygian and minor, suspended and fourths chords, a grinding bass, metal and bell sounds, a gated reverb and hard tape. Fills roll on the off-beats and in triplets. |
 | PSY | Y01-Y10 | 92-146 | Psytrance: progressive, full-on and goa (132-146), the kick on every beat with the rolling bass between (K-B-B-B), soft 16th hats, the open hat off the beat, the acid as the squelching lead, a dotted (3/16) echo, phrygian and minor, a chord held for 8 bars. Y01, Y02 and Y10 are psy-ambient and psychill (92-112): a downtempo beat, a held bass, a wide shimmer reverb. With the set list and the SET page's Mix you can go from the cosmic into the trance and back. |
 | FOREST | O01-O10 | 148-165 | Dark forest and dark psy: the same rolling bass under every-16th hats and a glitching percussion in threes against the four, hat rolls, triplets, the Hard kit, phrygian and fourths, the chord barely moving. |
+| HIPHOP | M01-M10 | 86-98 | Boom-bap instrumentals: the kick off the one, a loud snare on 2 and 4, an MPC swing, the bass on the kick, minor loops of one and four (harmonic minor's real V in M03 and M10), Rhodes, strings, organ, a muted trumpet; M06 and M08 G-funk (Mixolydian, the acid a whistle), M05 and M09 dark. The Boom kit. |
+| TRANCE | U01-U10 | 132-140 | Classic and uplifting trance (PSY is psytrance): four on the floor, the open hat off every beat, the bass off the beat, the supersaw lead, the Trance pad, four-chord minor loops of four bars, long breakdowns and eight-bar builds with a snare roll. |
+| AMBIENT | Z01-Z10 | 70-88 | Beatless or nearly: a soft kick now and then, a ride, a shaker, bars with no drums; long pads, a held bass, slow chords in Lydian, Ionian and Dorian, a long shimmer. A set's opener, or its rest. |
 
 The sections follow each genre's habits too. House, dubstep, DnB, trap, disco and synthwave cut everything for the
 last beat before the drop. Lofi, dub, reggae, amapiano and trip-hop build on the perc instead of a snare roll. Breaks

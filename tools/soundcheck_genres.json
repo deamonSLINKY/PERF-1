@@ -3,5 +3,5 @@
  "HYPNO": "hypno", "LOFI": "lofi", "HOUSE": "house", "DUBSTEP": "dubstep", "DUB": "dub", "DNB": "dnb",
  "BREAKS": "breaks", "GARAGE": "garage", "ELECTRO": "electro", "TRAP": "dubstep", "DISCO": "house",
  "FUNK": "afro_house", "REGGAE": "dub", "SYNTHWV": "synthwave", "AMAPI": "amapiano", "TRIPHOP": "triphop",
- "INDUS": "industrial", "PSY": "psytrance", "FOREST": "psytrance"
+ "INDUS": "industrial", "PSY": "psytrance", "FOREST": "psytrance", "HIPHOP": "hiphop", "TRANCE": "trance", "AMBIENT": "ambient"
 }

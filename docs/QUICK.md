@@ -6,7 +6,7 @@
 
 <div class="cols">
 
-**What it is.** PERF-1 turns the M-VAVE FM-1 into a groovebox that makes up music as it plays. Five tracks start when you switch it on: a slow pad, a bass, a 303-style acid line, a plucked counter-melody and drums you can program, all written on the spot from the key, scale and chord, in seventeen genres of ten pieces. You steer: break it down, build it, drop it, mute and solo, throw effects, edit the drums, play along, store what you like, and record it over the same USB cable (the FM-1 is a USB audio and MIDI device). By deamonSLINKY; a fork of HYP-1 (RedtailWorks), itself a fork of AMB-1 (Charles Vestal). GPL-3.0-only, no warranty. It's still in development and can crash.
+**What it is.** PERF-1 turns the M-VAVE FM-1 into a groovebox that makes up music as it plays. Five tracks start when you switch it on: a slow pad, a bass, a 303-style acid line, a plucked counter-melody and drums you can program, all written on the spot from the key, scale and chord, in twenty-two genres of ten pieces. You steer: break it down, build it, drop it, mute and solo, throw effects, edit the drums, play along, store what you like, and record it over the same USB cable (the FM-1 is a USB audio and MIDI device). By deamonSLINKY; a fork of HYP-1 (RedtailWorks), itself a fork of AMB-1 (Charles Vestal). GPL-3.0-only, no warranty. It's still in development and can crash.
 
 ## Install in five steps
 
@@ -380,6 +380,9 @@ Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through th
 | INDUS | I01 | 118-145 | Industrial: harsh tuned drums, broken kicks, phrygian. |
 | PSY | Y01 | 92-146 | Psytrance, rolling bass; Y01, Y02, Y10 psychill. |
 | FOREST | O01 | 148-165 | Dark forest: glitching perc, hat rolls. |
+| HIPHOP | M01 | 86-98 | Boom-bap; M06, M08 G-funk; M05, M09 dark. |
+| TRANCE | U01 | 132-140 | Classic trance: supersaw, long breakdowns. |
+| AMBIENT | Z01 | 70-88 | Beatless or nearly: pads, shimmer. |
 
 | HYPNO | Character | BPM | Key | HYPNO | Character | BPM | Key |
 |---|---|---|---|---|---|---|---|

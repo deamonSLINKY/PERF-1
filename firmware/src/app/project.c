@@ -165,7 +165,7 @@ static uint16_t rd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
 static uint32_t rd32(const uint8_t *b) { return (uint32_t)rd16(b) | (uint32_t)rd16(b + 2) << 16; }
 static void wr16(uint8_t *b, uint32_t v) { b[0] = (uint8_t)v; b[1] = (uint8_t)(v >> 8); }
 static void wr32(uint8_t *b, uint32_t v) { wr16(b, v); wr16(b + 2, v >> 16); }
-static uint32_t obj_of(int g) { return g <= 0 ? (uint32_t)OBJ_PROJ : (uint32_t)OBJ_G1 + (uint32_t)g - 1u; }
+static uint32_t obj_of(int g) { return g <= 0 ? (uint32_t)OBJ_PROJ : g >= 19 ? (uint32_t)OBJ_G19 + (uint32_t)g - 19u : (uint32_t)OBJ_G1 + (uint32_t)g - 1u; }   /* (0.17.35: genres 19.. after OBJ_BSTEP) */
 
 static void glob_sync(void)                  /* the player's three, from play */
 {
