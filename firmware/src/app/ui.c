@@ -112,7 +112,7 @@ static const uint8_t XMIX_BARS[5] = {0, 4, 8, 16, 32};
 static const char *const SMPM_NAME[4] = {"ALL", "DRUMS", "SYNTHS", "BY KEY"};                   /* the SAMPLE page: what a run plays, or a key a sound */
 static const char *const SMPG_NAME[4] = {"0.5 S", "1 S", "2 S", "4 S"};
 static const uint16_t SMP_GAP_MS[4] = {500, 1000, 2000, 4000};
-static const char *const MIN_NAME[4] = {"KEYS", "PADS", "M:S", "MPK"};   /* (KEYS was SCALE until 0.17.7: its notes changed the scale anywhere) */
+static const char *const MIN_NAME[5] = {"KEYS", "PADS", "M:S", "MPK", "CHORDS"};   /* (KEYS was SCALE until 0.17.7: its notes changed the scale anywhere) */
 static const char *const CC_NAME[4] = {"OFF", "IN", "OUT", "IN+OUT"};
 static const char *const FT_NAME[6] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK", "303"};   /* (303: the acid's alone, 0.17.17) */
 static const char *const SQT_NAME[3] = {"ACID", "BASS", "BOTH"};   /* SCREAM's target (0.16.4) */
@@ -182,7 +182,7 @@ static const struct {
                             {"Gate", KN_NAME, EN_FXS_RP_GATE, RPG_NAME, 4}, {"Refresh", KN_NAME, EN_FXS_RP_REFRESH, RPR_NAME, 3}}},   /* the eight repeat keys' page (fx_page_of maps them all here) */
     {"USB & MIDI", 63, 0, {{"Level", KN_NAME, 12, USBL_NAME, 2}, {"MIDI out", KN_PAR, P_MIDI, 0, 0}, {"MIDI map", KN_NAME, 18, EN_MAP_NAME, EN_NMAP}, {"", KN_NONE, 0, 0, 0}}},   /* (Scanlines on SCREEN, 0.16.1) */   /* the cable: the USB audio's level (the knob's, or fixed), MIDI out (it was Global's); the screen's scanlines; and where MIDI out's parts go (GM, or a sampler's own layout) */
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 6}, {"Mix", KN_NAME, 24, XMIX_NAME, 5}}},   /* the set: rounds a piece, the tempo's climb, the intro; the mix into the next piece (0.16.1) */
-    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 4}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"Knob CCs", KN_NAME, 22, CC_NAME, 4}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
+    {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 5}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"Knob CCs", KN_NAME, 22, CC_NAME, 4}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 6}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
     {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, FT_NAME, 5}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
                              {"Targets", KN_NAME, EN_FXS_TF_TGT, EN_PT_NAME, EN_NPT}}},   /* (0.15.19) the punch-ins on tracks: a multimode filter on the tracks chosen */
@@ -3994,6 +3994,137 @@ static int32_t in_enc(int role)
 #define plat_keys in_keys
 #define plat_enc in_enc
 
+/* MIDI IN's CHORDS (0.17.31, a YouTube commenter: "following chords played by MIDI in, Yamaha arranger chord recognition as the basics, four
+ * finger bass inversions"): the keys below middle C are an arranger's left hand. What they hold is read as a chord, a moment after the last key
+ * goes down (so a chord's keys landing one by one are read once), and the song follows it until the next: the pad plays it, the scale bends to
+ * it, the bass plays its lowest key (an inversion, or a slash chord: C/D). One key: the scale's chord on it (a key outside the scale: major).
+ * Letting go keeps it (an arranger's memory). From middle C up the keys play the voice, as KEYS does. Another Notes setting: the walk again. */
+static const struct { uint16_t iv; char nm[6]; } CHORD_T[] = {   /* intervals over the root (bit 0 the root), the most usual first */
+    {0x091, ""}, {0x089, "m"}, {0x491, "7"}, {0x891, "maj7"}, {0x489, "m7"}, {0x049, "dim"}, {0x111, "aug"}, {0x0A1, "sus4"}, {0x085, "sus2"},
+    {0x449, "m7b5"}, {0x249, "dim7"}, {0x889, "mmaj7"}, {0x4A1, "7sus4"}, {0x291, "6"}, {0x289, "m6"}, {0x095, "add9"}, {0x08D, "madd9"},
+    {0x495, "9"}, {0x895, "maj9"}, {0x48D, "m9"}, {0x451, "7b5"}, {0x511, "7#5"}, {0x411, "7"}, {0x811, "maj7"}, {0x409, "m7"}, {0x081, "5"}};
+static const char *const PC_NAME[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+static uint64_t ci_held;                         /* the keys held below middle C */
+static uint32_t ci_due;                          /* when to read them (0: nothing new) */
+static uint8_t ci_was;                           /* the Notes setting a moment ago (leaving CHORDS: the walk again) */
+static int ci_match(uint32_t m, int r)           /* the chord on root r these pitch classes are, or -1 */
+{
+    const uint32_t iv = ((m >> r) | (m << (12 - r))) & 0xFFFu;
+    int k;
+    for (k = 0; k < (int)(sizeof CHORD_T / sizeof CHORD_T[0]); k++)
+        if (CHORD_T[k].iv == iv)
+            return k;
+    return -1;
+}
+static void ci_read(void)
+{
+    uint32_t m = 0, m2;
+    int lo = -1, n, k, r = -1, t = -1, cnt = 0, bass;
+    char nm[16];
+    for (n = 0; n < 60; n++)
+        if (ci_held >> n & 1u) {
+            if (lo < 0)
+                lo = n;
+            m |= 1u << (n % 12);
+        }
+    if (lo < 0)
+        return;
+    bass = lo % 12;
+    for (k = 0; k < 12; k++)
+        cnt += (int)(m >> k & 1u);
+    if (cnt == 1 || (cnt == 2 && ci_match(m, bass) >= 0)) {   /* one key (or it and its fifth): the scale's chord on it, or major */
+        const uint32_t pool = pool_abs();
+        if (pool >> bass & 1u) {
+            int pcs[4], nn, d = 0, j;
+            for (j = 0; j < 12; j++) {      /* its degree: the scale's tones counted up from the key's root */
+                const int pc = (proj.par[P_ROOT] + j) % 12;
+                if (pc == bass)
+                    break;
+                d += (int)(pool >> pc & 1u);
+            }
+            nn = en_prog_chord(d, 0, pcs);
+            m = 0;
+            for (j = 0; j < nn; j++)
+                m |= 1u << (pcs[j] % 12);
+            r = pcs[0] % 12;
+            t = ci_match(m, r);
+        } else {
+            m = 1u << bass | 1u << ((bass + 4) % 12) | 1u << ((bass + 7) % 12);
+            r = bass;
+            t = 0;
+        }
+    } else {
+        if ((t = ci_match(m, bass)) >= 0) {      /* the lowest key the root: as played */
+            r = bass;
+        } else {                                 /* else an inversion (the root among the others) or a chord over another bass (a slash chord):
+                                                  * the plainer of the two (C E G over D is C/D, not Cadd9/D; E G C is C/E) */
+            int t1 = -1, r1 = -1, t2 = -1, r2 = -1;
+            for (k = 0; k < 12 && t1 < 0; k++)
+                if ((m >> k & 1u) && (t1 = ci_match(m, k)) >= 0)
+                    r1 = k;
+            m2 = m & ~(1u << bass);
+            for (k = 0; k < 12 && t2 < 0; k++)
+                if ((m2 >> k & 1u) && (t2 = ci_match(m2, k)) >= 0)
+                    r2 = k;
+            if (t2 >= 0 && (t1 < 0 || t2 < t1)) {
+                t = t2;
+                r = r2;
+                m = m2;
+            } else {
+                t = t1;
+                r = r1;
+            }
+        }
+    }
+    if (t < 0) {
+        say("CHORD?", "NOT ONE I KNOW");
+        return;
+    }
+    en_ext_chord(r, bass == r ? -1 : bass, m | 1u << r);
+    {
+        const char *a = PC_NAME[r], *b = CHORD_T[t].nm;
+        int i = 0;
+        while (*a && i < 15)
+            nm[i++] = *a++;
+        while (*b && i < 15)
+            nm[i++] = *b++;
+        if (bass != r && i < 12) {
+            a = PC_NAME[bass];
+            nm[i++] = '/';
+            while (*a && i < 15)
+                nm[i++] = *a++;
+        }
+        nm[i] = 0;
+        say("CHORD IN", nm);                     /* (as written: "Cm7" and "CM7" are two chords) */
+    }
+}
+static void ci_key(int on, int n)                /* a key below middle C */
+{
+    if (on) {
+        ci_held |= 1ull << n;
+        ci_due = plat_ms() + 30u;
+        if (!ci_due)
+            ci_due = 1u;
+    } else {
+        ci_held &= ~(1ull << n);
+    }
+}
+static void ci_tick(void)
+{
+    if (ui.min_pads != ci_was) {
+        if (ci_was == 4) {
+            en_ext_chord(0, -1, 0);              /* CHORDS off: the walk again, from the chord playing */
+            ci_held = 0;
+            ci_due = 0;
+        }
+        ci_was = ui.min_pads;
+    }
+    if (ci_due && (int32_t)(plat_ms() - ci_due) >= 0) {
+        ci_due = 0;
+        ci_read();
+    }
+}
+
 /* MIDI in (USB and the TRS jack): on the channel chosen (MIDI IN page; all by default), notes add or remove their note from the scale
  * (channel 1 only, as before), or with PADS play PERF (pads_in); clock and start / stop drive the grid */
 static void midi_in(void)
@@ -4030,6 +4161,12 @@ static void midi_in(void)
             ms_in((int)(st & 15u));
         else if (ui.min_pads == 1 && ch_ok && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u))
             pads_in((st & 0xF0u) == 0x90u && v, (int)n, (int)v);
+        else if (ui.min_pads == 4 && ch_ok && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u)) {   /* CHORDS (0.17.31): below middle C the chord, above the voice */
+            if (n < 60u)
+                ci_key((st & 0xF0u) == 0x90u && v, (int)n);
+            else
+                midi_key((st & 0xF0u) == 0x90u && v, (int)n, (int)v, key_voice());
+        }
         else if (!ui.min_pads && ((st & 0xF0u) == 0x90u || (st & 0xF0u) == 0x80u) && ch_ok && (ui.min_ch || !(st & 15u))) {
             /* a keyboard (channel 1, or the one chosen): on Global its notes put the scale's in and out, as the keys there do; anywhere else
              * they play the voice the keys play (0.17.7: they changed the scale on every page) */
@@ -9268,8 +9405,8 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1) << 15);
-    s.viz = (uint8_t)((ui.viz >= VZ_TRIP ? 7u : ui.viz) | (ui.min_pads == 2) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
+    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
+    s.viz = (uint8_t)((ui.viz >= VZ_TRIP ? 7u : ui.viz) | (ui.min_pads == 2 || ui.min_pads == 4) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
         set_have = 1;
@@ -9335,7 +9472,7 @@ static void settings_load(void)
                 else if (FXP[p].c[c].idx == 19)
                     fxp_set(k, (s.uiv[11] & 0x1Fu) <= 16u ? s.uiv[11] & 0x1Fu : 0);
                 else if (FXP[p].c[c].idx == 20)
-                    fxp_set(k, (s.viz >> 6 & 1u) ? 3 : (s.viz >> 3 & 1u) ? 2 : s.usb >> 15 & 1);   /* (M:S in set_t.viz's bit 3, 0.15.22; MPK bit 6, 0.15.23) */
+                    fxp_set(k, (s.viz >> 6 & 1u) ? 3 : (s.viz >> 3 & 1u) && (s.usb >> 15 & 1u) ? 4 : (s.viz >> 3 & 1u) ? 2 : s.usb >> 15 & 1);   /* (CHORDS: both, 0.17.31) */   /* (M:S in set_t.viz's bit 3, 0.15.22; MPK bit 6, 0.15.23) */
                 else if (FXP[p].c[c].idx == 22)
                     fxp_set(k, s.viz >> 4 & 3u);
             } else if (kind == KN_TGT) {
@@ -9654,6 +9791,7 @@ void ui_frame(void)
     glide_tick();
     gesture_tick();
     cap_tick();
+    ci_tick();
     swell_tick();
     factory_all_tick();
     saver_tick();

@@ -1093,7 +1093,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1227,6 +1227,12 @@ static uint32_t pg_lo;                          /* the slots' chords, until thei
 static uint8_t pg_start;                        /* the next chord is the first slot's (Play just turned to Loop) */
 volatile int8_t en_prog_pos = -1;                          /* a dominant in minor: the scale's seventh degree raised a semitone while the chord is V (dom_apply) */
 static int chord_pcs[4], chord_nt;
+/* THE CHORD FROM OUTSIDE (0.17.31, MIDI in's CHORDS, an arranger's left hand): its tones (root first, up to four), its bass (12: the root), on
+ * (1). The walk and the progression hold while it is on; the scale is bent to it (each tone outside it takes the place of the nearest one that
+ * is not a tone), so the acid, the bass and the pluck stay in key with it; the pad plays its tones as they are. */
+static uint8_t ext_on, ext_n, ext_bass = 12;
+static int8_t ext_pc[4];
+volatile uint8_t en_extch;
 static float tunefac = 1.0f;
 static uint32_t rng = 0x9E3779B9u;
 
@@ -2094,7 +2100,7 @@ int en_acid_preview(int st, int v)
  * key's chord, I, while the harmony moves on; en_chord still shows the harmony). A player's switch, not the piece's (the UI keeps it in
  * the global record). */
 static uint8_t pedal;
-static int bass_pc(void) { return pedal & 1u ? par[P_ROOT] % 12 : chord_pcs[0]; }
+static int bass_pc(void) { return pedal & 1u ? par[P_ROOT] % 12 : ext_on && ext_bass < 12 ? ext_bass : chord_pcs[0]; }
 static void pad_retarget(void)                  /* the chord's tones to the four voices */
 {
     int from[4], to[4], i;
@@ -2108,6 +2114,11 @@ static void pad_retarget(void)                  /* the chord's tones to the four
                     chord_pcs[i] = (par[P_ROOT] + steps[j]) % 12;
                     break;
                 }
+    }
+    if (ext_on && ext_n >= 3) {                 /* (0.17.31) the chord from outside, as it is */
+        chord_nt = ext_n;
+        for (i = 0; i < ext_n; i++)
+            chord_pcs[i] = ext_pc[i];
     }
     for (i = 0; i < EN_NPAD; i++)
         from[i] = (int)(pad[i].target + 0.5f);
@@ -2235,7 +2246,7 @@ static void dom_apply(void)                     /* the dominant in minor: the se
     if (nsteps != 7)
         return;
     steps[6] -= dom_on;
-    dom_on = (uint8_t)(CHT[chord_genre].dom && deg == 4 && steps[6] - steps[4] == 3 && steps[6] < 11);
+    dom_on = (uint8_t)(!ext_on && CHT[chord_genre].dom && deg == 4 && steps[6] - steps[4] == 3 && steps[6] < 11);
     steps[6] += dom_on;
 }
 int en_prog_chord(int d, int kind, int *pcs)     /* a degree's chord as chord_change would play it, of a slot's type (0 the piece's: the Progression page) */
@@ -2441,6 +2452,10 @@ static int walk_pick(void)                      /* the walk's next degree from w
 static void chord_change(void)                  /* to another degree: the progression set by hand, or the walk (its next chosen a chord ahead) */
 {
     int i, bor;
+    if (ext_on) {                               /* (0.17.31) the chord from outside holds until another comes */
+        drift_reset();
+        return;
+    }
     alt_clear();
     if (pg_on) {                                /* the progression set by hand: its next slot (the drop: its first); an empty slot keeps the chord for its bars */
         pg_i = (uint8_t)(drop_tonic || pg_start ? 0 : (pg_i + 1) % pg_len);
@@ -2500,6 +2515,45 @@ static void chord_to(int i)                     /* the chord moves to degree i *
         bass.env_up = 1;                        /* the drone's envelope: on each chord */
     drift_reset();
 }
+static void ext_apply(void)                     /* (0.17.31) the chord from outside into the scale, its degree, the voices */
+{
+    int j, k, d = 0, best = 99;
+    const int r = par[P_ROOT] % 12;
+    alt_clear();
+    if (nsteps == 7) {
+        for (j = 0; j < ext_n; j++) {
+            const int off = (ext_pc[j] - r + 24) % 12;
+            int in = 0, bk = -1, bd = 99;
+            for (k = 0; k < 7; k++)
+                in |= steps[k] == off;
+            if (in)
+                continue;
+            for (k = 0; k < 7; k++) {
+                int t, ct = 0, dd = steps[k] > off ? steps[k] - off : off - steps[k];
+                for (t = 0; t < ext_n; t++)
+                    ct |= (ext_pc[t] - r + 24) % 12 == steps[k];
+                if (!ct && dd < bd) {
+                    bd = dd;
+                    bk = k;
+                }
+            }
+            if (bk >= 0 && bd <= 2)
+                steps[bk] = off;
+        }
+        en_chord_alt = 3;
+    }
+    for (k = 0; k < nsteps; k++) {              /* its degree: the scale's tone nearest its root */
+        int dd = ((steps[k] - (ext_pc[0] - r)) % 12 + 24) % 12;
+        if (dd > 6)
+            dd = 12 - dd;
+        if (dd < best) {
+            best = dd;
+            d = k;
+        }
+    }
+    walk_next = en_walk_next = -1;
+    chord_to(d);
+}
 
 /* ----------------------------------------------------------- the acid line --- */
 int en_acid_pack(uint8_t *b)
@@ -2549,6 +2603,7 @@ void en_bass_capture_d(int s, int note, int d, int accent, int glide)   /* (0.17
     post(C_BSCAP, (s & 15) | (accent ? 16 : 0) | (glide ? 32 : 0), (note & 127) | (d & 15) << 7);
 }
 void en_acid_keep_answer(void) { post(C_ACKEEP, 0, 0); }
+void en_ext_chord(int root, int bass, uint32_t mask) { post(C_EXTCH, (root & 15) | ((bass < 0 || bass > 11 ? 12 : bass) & 15) << 4, (int)(mask & 0xFFFu)); }
 void en_pluck_capture(int s, int note) { post(C_CMCAP, s & 15, note < 0 ? 128 : note & 127); }
 /* THE PLUCK'S LINE (the Pluck steps page, 0.14.21): deja vu's loop, Loop 16 and Rate 1/16 and Pluck vu 100, read as sixteen steps of the bar, each a rung of
  * the chord's ladder and a level; frozen (P_CM_LOCK) it survives a new piece and is stored with it, six bits a step. */
@@ -4970,6 +5025,10 @@ static void pool_set(uint32_t p)
     scale_set();
     if (deg >= nsteps)
         deg = 0;
+    if (ext_on) {                               /* (0.17.31) the chord from outside, bent into the new scale */
+        ext_apply();
+        return;
+    }
     dom_apply();
     pad_retarget();
     pad_handoff();
@@ -5241,6 +5300,7 @@ void en_init(void)
             en_pats[i][l] = EN_PIECE_PATS[0][i][l];
     arcm = 0.0f;
     pad_gain = 0.0f;
+    ext_on = en_extch = 0;                      /* (0.17.31) no chord from outside */
     for (i = 0; i < P_NPARAMS; i++)
         apply(i, PARAMS[i].def);
     pool_set(EN_MODE_POOL[par[P_MODE]]);
@@ -7119,6 +7179,31 @@ static void drain(void)
         case C_ACCAP: ac_capture(a & 15, b & 127, b & 0x800 ? b >> 7 & 15 : -1, a >> 4 & 1, a >> 5 & 1); break;
         case C_BSCAP: bs_cap(a & 15, b & 127, b >> 7 & 15, a >> 4 & 1, a >> 5 & 1); break;
         case C_ACKEEP: ac_keep_answer(); break;
+        case C_EXTCH:                            /* (0.17.31) the chord from outside (a 12-bit mask; 0: off, back to the walk from this chord) */
+            if (!(b & 0xFFF)) {
+                if (ext_on) {
+                    ext_on = en_extch = 0;
+                    alt_clear();
+                    chord_to(deg);
+                }
+                break;
+            }
+            {
+                const int root = a & 15, m = b & 0xFFF;
+                int iv[4], n = 0, k2;
+                static const uint8_t ORD[11] = {4, 3, 10, 11, 7, 2, 5, 9, 6, 8, 1};   /* after the root: the third, the seventh, the fifth, then the colours */
+                ext_pc[0] = (int8_t)root;
+                n = 1;
+                for (k2 = 0; k2 < 11 && n < 4; k2++)
+                    if (m >> ((root + ORD[k2]) % 12) & 1)
+                        iv[n] = ORD[k2], ext_pc[n++] = (int8_t)((root + ORD[k2]) % 12);
+                (void)iv;
+                ext_n = (uint8_t)n;
+                ext_bass = (uint8_t)(a >> 4 & 15);
+                ext_on = en_extch = 1;
+                ext_apply();
+            }
+            break;
         case C_CMCAP: cm_capture(a & 15, b & 128 ? -1 : b & 127); cm_publish(); break;
         case C_CMSTEP: cm_step_set(a & 15, b & 15, b >> 4 & 3); break;
         case C_BSSTEP:                          /* a bass step (the page), or a piece's (bit 4 of a: a rest of a piece's that set none); 0x20: capture */

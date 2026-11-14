@@ -678,6 +678,8 @@ static int expect(const char *what, const char *val)
         for (s2 = 0; s2 < 16; s2++)
             got += EN_BS_KIND(en_bs[s2]) >= 1 && EN_BS_KIND(en_bs[s2]) <= 4;
     }
+    else if (!strcmp(what, "extch"))             /* (0.17.31) a chord from outside on (MIDI in CHORDS) */
+        got = en_extch;
     else if (!strcmp(what, "gesture"))           /* (0.17.31) the gesture recorder: 0 off, 1 armed, 2 writing, 3 playing */
         got = gs_st;
     else if (!strcmp(what, "gsmask"))            /* the FX knobs it plays */

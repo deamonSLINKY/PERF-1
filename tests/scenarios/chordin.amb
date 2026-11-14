@@ -1,0 +1,104 @@
+# MIDI IN's CHORDS (0.17.31, an arranger's left hand): the keys below middle C are read as a chord and the song follows it (the pad plays it,
+# the bass its lowest key: an inversion, a slash chord), holding it until the next; from middle C up the keys play the voice. Back to KEYS:
+# the walk again.
+seed 0
+wait 3000
+expect playing 1
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 7
+wait 100
+expect fxpage 26
+spin K1 4
+wait 200
+expect minpads 4
+shot midiin_chords.png
+# D major (D3 F#3 A3)
+midi 90 32 64
+midi 90 36 64
+midi 90 39 64
+wait 300
+expect extch 1
+expect chordroot 2
+expect extch 1
+expect chordiv 145
+expect msgon 1
+midi 80 32 00
+midi 80 36 00
+midi 80 39 00
+wait 200
+expect chordroot 2
+expect extch 1
+# C over D (D2, then C3 E3 G3): a slash chord, the bass on D
+midi 90 26 64
+midi 90 30 64
+midi 90 34 64
+midi 90 37 64
+wait 300
+expect chordroot 0
+expect extch 1
+expect chordiv 145
+waitfor bassheld 2 3000
+midi 80 26 00
+midi 80 30 00
+midi 80 34 00
+midi 80 37 00
+# C over E (E2 G2 C3): the first inversion, the bass on E
+midi 90 28 64
+midi 90 2B 64
+midi 90 30 64
+wait 300
+expect chordroot 0
+expect extch 1
+waitfor bassheld 4 3000
+midi 80 28 00
+midi 80 2B 00
+midi 80 30 00
+# A minor seventh (A2 C3 E3 G3)
+midi 90 2D 64
+midi 90 30 64
+midi 90 34 64
+midi 90 37 64
+wait 300
+expect chordroot 9
+expect extch 1
+expect chordiv 1161
+midi 80 2D 00
+midi 80 30 00
+midi 80 34 00
+midi 80 37 00
+# one finger (E2): the scale's chord on E (a key outside the scale: its major)
+midi 90 28 64
+wait 300
+expect chordroot 4
+expect extch 1
+midi 80 28 00
+# A minor seventh again
+midi 90 2D 64
+midi 90 30 64
+midi 90 34 64
+midi 90 37 64
+wait 300
+expect chordroot 9
+midi 80 2D 00
+midi 80 30 00
+midi 80 34 00
+midi 80 37 00
+# a key from middle C up plays the voice; the chord stays
+midi 90 48 64
+wait 200
+midi 80 48 00
+expect chordroot 9
+expect extch 1
+# the walk holds it
+wait 16000
+expect chordroot 9
+expect extch 1
+expect extch 1
+# back to KEYS: the walk again
+spin K1 -4
+wait 300
+expect minpads 0
+expect extch 0

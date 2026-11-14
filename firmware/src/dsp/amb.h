@@ -365,11 +365,14 @@ int en_prog_chord(int deg, int kind, int *pcs);   /* (kind: a slot type, 0 the p
 extern volatile int8_t en_prog_pos;             /* the slot playing (-1: the genre's walk) */
 int en_genre_bars(void);                        /* 1: the genre counts its chords in bars (Drift's own unit), 0: in seconds (hypno) */
 void en_acid_capture(int s, int note, int accent, int slide);   /* Capture: a note played by hand (MIDI) into step s, as the nearest offset and octave the chord and scale of now give; the step sounds */
-void en_pluck_capture(int s, int note);
+void en_pluck_capture(int s, int note);         /* Capture: a note (or a rest, note < 0) into slot s of the pluck's loop; the loop's slot 0 is the next bar's first step */
 void en_acid_capture_d(int s, int note, int d, int accent, int slide);   /* (0.17.31) as played over the chord of degree d (en_deg then) */
 void en_bass_capture_d(int s, int note, int d, int accent, int glide);   /* (0.17.31) a bass step as played over degree d */
 void en_acid_keep_answer(void);                /* (0.17.31) the acid's answer (P_AC_RESP) made the line itself (the UI freezes it) */
-extern volatile uint8_t en_deg;                /* (0.17.31) the chord's scale degree now */         /* Capture: a note (or a rest, note < 0) into slot s of the pluck's loop; the loop's slot 0 is the next bar's first step */
+extern volatile uint8_t en_deg;                /* (0.17.31) the chord's scale degree now */
+void en_ext_chord(int root, int bass, uint32_t mask);   /* (0.17.31) a chord from outside (MIDI in's CHORDS): its root (pitch class), its bass (-1 the
+                                                 * root), its tones (bit per pitch class; 0: off, the walk again from it). The walk holds while it is on */
+extern volatile uint8_t en_extch;              /* 1 while one is on (en_ext is the outside clock's) */
 int en_acid_pack(uint8_t *b18);                /* the line as stored: 16 steps of nine bits (18 bytes) */
 void en_acid_unpack(const uint8_t *b18);       /* and back into the engine (a stored piece's frozen line) */
 extern volatile uint16_t en_acid_gate, en_acid_acc;  /* its steps that play; those accented */

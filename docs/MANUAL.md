@@ -1659,7 +1659,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
 | Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
-| MIDI IN | Notes: keys, pads, M:S, MPK | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
+| MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
 | SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Scanlines: off, on |
@@ -2187,6 +2187,19 @@ On the sampler:
 These maps follow the samplers' manuals and default settings (for the MPC Sample, the pad map in its default project). They haven't all been tried on the real boxes yet, so if a pad doesn't answer, check the sampler's MIDI settings first, and tell us what you found.
 
 **MIDI in:** notes on channel 1 (or the channel chosen on the MIDI IN page) play like the FM-1's own keys: the voice whose page is up, or the Jam page's voice, snapped to the scale. On **Global** they add their note to the scale, or remove it if it's already there. MIDI clock and start / stop from other gear set the tempo, and `EXT` shows where the tempo usually is. The FM-1 listens on its USB MIDI port, and on the TRS MIDI input where the build has one.
+
+**Playing the chords from a keyboard (CHORDS).** Like an arranger keyboard: your left hand plays the chords, PERF-1 plays the
+band around them. Set **Notes** on the **MIDI IN** page to **CHORDS** and play a keyboard into the FM-1 (any channel, or the one you pick):
+
+- **Below middle C** the keys are read as a chord, and the song follows it straight away: the pad plays it, the bass plays the lowest
+  key, the acid and the pluck bend the scale to fit it. The screen says what it heard (`CHORD IN Dm7`). The chord stays when you let go,
+  until you play the next; the walk and the progression wait.
+- It knows the usual chords: major, minor, 7, maj7, m7, dim, aug, sus4, sus2, m7b5, dim7, m(maj7), 7sus4, 6, m6, add9, m(add9), 9, maj9,
+  m9, 7b5, 7#5, and the 7ths without their fifth. **The lowest key is the bass**: E G C is C over E (a first inversion), and a key under a
+  chord it isn't part of makes a slash chord (D under C E G is C/D). **One key** plays the scale's own chord on it (a key outside the scale:
+  its major), the quickest way to steer.
+- **From middle C up** the keys play the voice, as **KEYS** does: the melody on top.
+- Another Notes setting lets go: the walk carries on from the chord you left it on.
 
 **Playing PERF-1 from a pad controller.** An MPC, or any box with pads that sends MIDI notes, can play PERF-1. Connect the pad box's MIDI out to the FM-1's TRS MIDI input with a 3.5 mm TRS MIDI cable (both ends type A for an MPC Sample), or over USB through a computer. Then open the **MIDI IN** settings page (hold **HOME**, then turn **SELECT** past USB & MIDI) and set **Notes** to **Pads**. **Channel** listens to all channels, or only the one you pick.
 
