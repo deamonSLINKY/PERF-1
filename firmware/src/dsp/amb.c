@@ -47,12 +47,12 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_AC_DENS] = {"Density", 0, 100, 60},  [P_AC_LEN] = {"Length", 1, 16, 16},    [P_AC_RANGE] = {"Range", 1, 3, 1},
     [P_AC_MUT] = {"Mutate", 0, 100, 25},    [P_AC_OCT] = {"Acid oct", -3, 3, 0},
     [P_DRIVE] = {"Drive", 0, 100, 40},      [P_SWING] = {"Swing", 0, 100, 0},      [P_PATTERN] = {"Pattern", 0, EN_NPAT - 1, 0},
-    [P_LANE_LVL(0)] = {"Level", 0, 100, 85}, [P_LANE_TUNE(0)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(0)] = {"Decay", 0, 100, 50},
-    [P_LANE_LVL(1)] = {"Level", 0, 100, 60}, [P_LANE_TUNE(1)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(1)] = {"Decay", 0, 100, 45},
-    [P_LANE_LVL(2)] = {"Level", 0, 100, 65}, [P_LANE_TUNE(2)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(2)] = {"Decay", 0, 100, 45},
-    [P_LANE_LVL(3)] = {"Level", 0, 100, 55}, [P_LANE_TUNE(3)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(3)] = {"Decay", 0, 100, 35},
-    [P_LANE_LVL(4)] = {"Level", 0, 100, 50}, [P_LANE_TUNE(4)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(4)] = {"Decay", 0, 100, 50},
-    [P_LANE_LVL(5)] = {"Level", 0, 100, 50}, [P_LANE_TUNE(5)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(5)] = {"Decay", 0, 100, 40},
+    [P_LANE_LVL(0)] = {"Level", 0, 150, 85}, [P_LANE_TUNE(0)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(0)] = {"Decay", 0, 100, 50},
+    [P_LANE_LVL(1)] = {"Level", 0, 150, 60}, [P_LANE_TUNE(1)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(1)] = {"Decay", 0, 100, 45},
+    [P_LANE_LVL(2)] = {"Level", 0, 150, 65}, [P_LANE_TUNE(2)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(2)] = {"Decay", 0, 100, 45},
+    [P_LANE_LVL(3)] = {"Level", 0, 150, 55}, [P_LANE_TUNE(3)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(3)] = {"Decay", 0, 100, 35},
+    [P_LANE_LVL(4)] = {"Level", 0, 150, 50}, [P_LANE_TUNE(4)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(4)] = {"Decay", 0, 100, 50},
+    [P_LANE_LVL(5)] = {"Level", 0, 150, 50}, [P_LANE_TUNE(5)] = {"Tune", -50, 50, 0}, [P_LANE_DEC(5)] = {"Decay", 0, 100, 40},
     [P_ECHO] = {"Echo", 0, 100, 45},        [P_ETIME] = {"Echo time", 0, 5, 1},    [P_REVERB] = {"Reverb", 0, 100, 40},
     [P_SIZE] = {"Size", 0, 100, 70},
     [P_ROOT] = {"Root", 0, 11, 9},          [P_MODE] = {"Mode", 0, EN_NMODES - 1, 5}, [P_TUNE] = {"Tune", -50, 50, 0},
@@ -1162,23 +1162,23 @@ volatile float en_intro_k = 1.0f;
  * -17.6 .. -15.0 */
 static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
     {  4,   5,  -1,   5,   2,   6,   3,   2,  -2,  -2},   /* HYPNO */
-    {  1,   6,   3,   4,   3,   3,   2,   7,   0,   2},   /* LOFI */
+    {  1,   6,   3,   4,   3,   3,   2,   6,   0,   2},   /* LOFI */
     { -2,  -3,  -1,  -3,  -3,  -3,  -3,  -1,  -2,  -2},   /* HOUSE */
-    {  0,  -1,  -8,  -4,  -1,  -7,  -7,  -1,  -4,  -6},   /* DUBSTEP */
-    {  3,   5,   5,   4,   6,   6,   4,   2,   3,   1},   /* DUB */
-    {  6,   4,   3,   4,   6,   5,   4,   1,   2,   4},   /* DNB (0.17.31: 2 and 6, the Wub, +0.5 each) */
+    {  0,  -1,  -8,  -4,  -1,  -7,  -7,  -2,  -5,  -6},   /* DUBSTEP */
+    {  4,   5,   5,   4,   5,   6,   4,   3,   3,   2},   /* DUB */
+    {  5,   3,   2,   3,   5,   4,   3,   0,   2,   3},   /* DNB */
     { -3,  -2,  -2,  -3,  -5,   4,  -4,  -6,   0,  -3},   /* BREAKS */
-    {  7,   3,   0,   5,   2,   1,   3,   2,  -1,   6},   /* GARAGE */
+    {  7,   3,   0,   5,   2,   1,   4,   3,  -1,   5},   /* GARAGE */
     { -3,  -1,   0,   0,  -4,   2,   0,  -2,  -1,  -3},   /* ELECTRO */
-    { -4,   1,  -3,  -5,   0,  -1,  -2,  -2,   1,  -4},   /* TRAP */
-    { -2,   0,  -1,  -4,  -3,   0,  -2,  -4,  -2,  -3},   /* DISCO */
-    {  2,  -1,   2,   4,   0,   1,   3,   1,   0,   3},   /* FUNK */
-    {  3,   2,   4,   6,   0,   3,   7,   2,   0,   0},   /* REGGAE */
-    { -2,   3,  -1,  -2,   1,   0,  -5,   4,  -2,  -4},   /* SYNTHWV */
+    { -4,   1,  -2,  -5,   0,  -1,  -2,  -2,   1,  -4},   /* TRAP */
+    { -1,   0,  -2,  -4,  -3,  -1,  -2,  -4,  -2,  -3},   /* DISCO */
+    {  2,  -1,   2,   4,  -1,   1,   2,   1,   0,   3},   /* FUNK */
+    {  3,   2,   4,   4,   0,   3,   6,   2,   0,   0},   /* REGGAE */
+    { -2,   3,  -1,  -1,   1,   0,  -5,   4,  -2,  -3},   /* SYNTHWV */
     { -1,   3,   5,  -2,   4,   3,   5,  -3,   1,   0},   /* AMAPI */
-    {  4,   7,   4,   5,   4,   8,   3,   7,   5,   2},   /* TRIPHOP */
-    {  1,  -6,  -6,  -2,  -6,  -3,  -2,  -8,  -7,   0},   /* INDUS (0.17.31: 4 and 8, the Wub: +0.5, -0.5) */
-    {  0,  -5,  -6,  -4,  -6,  -8,  -5,  -3,  -7,  -4},   /* PSY */
+    {  4,   6,   4,   6,   4,   8,   4,   8,   5,   2},   /* TRIPHOP */
+    {  1,  -6,  -6,  -2,  -6,  -4,  -2,  -7,  -6,   0},   /* INDUS */
+    {  0,  -5,  -6,  -4,  -7,  -8,  -5,  -4,  -7,  -4},   /* PSY */
     { -4,  -4,  -5,  -7,  -6,  -4,  -6,  -6,  -5,  -7},   /* FOREST */
 };
 static float trim_to = 1.0f, trim_k = 1.0f;
@@ -1461,6 +1461,28 @@ static const kit_t KITS[EN_NKIT] = {
      200.0f, 390.0f, 1.2f, 0.6f, 0.9f, 460.0f, 1.0f,
      1.7f, 0.4f, 0.4f, 0.9f, 460.0f, 1.48f, 1.0f, 1.1f, 0.0f, 0.0f},
 };
+/* (0.17.34, the maker: "sometimes snare or closed hat are too quiet") each kit's drums levelled to one loudness per drum: every drum of
+ * every kit measured alone (build/audit/drumlev.c: K-weighted, its loudest 50 ms), then brought to the kicks' median less 7 dB (snare), 9
+ * (clap), 17.5 (closed hat), 11 (open hat), 9 (perc); at most 8 dB up, 4 down. The quiet hats of Techno, Minimal, DnB, Trap and Electro
+ * were 8-11 dB under the others. */
+static const int8_t KIT_LV[EN_NKIT][5] = {   /* half dB: snare, clap, hat, open hat, perc */
+    {  4,   5,   5,   5,   2},   /* Hypno */
+    {  4,   4,  -3,  -3,   6},   /* House */
+    {  3,   6,  16,  12,   2},   /* Techno */
+    { -2,   4,   6,   3,   2},   /* Acid */
+    {  6,   7,   9,   3,   8},   /* Break */
+    { 11,   7,  16,  16,   1},   /* Minimal */
+    {  1,   8,   5,   3,   3},   /* Hard */
+    {  4,   3,   8,   6,   2},   /* 808 */
+    {  6,   6,   9,   6,   3},   /* Dusty */
+    {  0,   5,  12,   8,   2},   /* Heavy */
+    {  3,   5,   4,   2,   9},   /* 909 */
+    {  4,  11,  15,   8,   7},   /* Electro */
+    {  6,  10,  16,  10,   4},   /* DnB */
+    {  4,   5,  16,  13,   3},   /* Trap */
+};
+static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the levels above for the kits playing (the kick's is 1) */
+static float kit_db(int k, int d) { return fm_exp2f((float)KIT_LV[(unsigned)k < EN_NKIT ? k : 0][d] * (0.5f / 6.0206f)); }
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
                                                  * clap, hats, perc: each its kit */
 
@@ -5006,9 +5028,18 @@ static void apply(int p, int v)
             bass_to(bass_pc());
         break;
     case P_KIT_KICK: KK = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;   /* the kit: at each drum's next hit */
-    case P_KIT_SNARE: KS = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;
-    case P_KIT_PERC: KP = &KITS[(unsigned)v < EN_NKIT ? v : 0]; break;
+    case P_KIT_SNARE:
+        KS = &KITS[(unsigned)v < EN_NKIT ? v : 0];
+        kit_g[L_SNARE] = kit_db(v, 0);
+        kit_g[L_CLAP] = kit_db(v, 1);
+        break;
+    case P_KIT_PERC:
+        KP = &KITS[(unsigned)v < EN_NKIT ? v : 0];
+        kit_g[L_PERC] = kit_db(v, 4);
+        break;
     case P_KIT_HAT: {
+        kit_g[L_HAT] = kit_db(v, 2);
+        kit_g[L_OHAT] = kit_db(v, 3);
         int k;
         KH = &KITS[(unsigned)v < EN_NKIT ? v : 0];
         for (k = 0; k < 4; k++)
@@ -8461,11 +8492,11 @@ static void render_drums(uint32_t n)
         v->xl = x;
         v->on = amp > 0.0005f || r1 - r2 > 0.002f;
     }
-    render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE]);
-    render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP]);
-    render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT], 0.75f, 1.0f);    /* a little right */
-    render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT], 1.0f, 0.75f);  /* a little left */
-    render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC]);
+    render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE] * kit_g[L_SNARE]);
+    render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP] * kit_g[L_CLAP]);
+    render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT] * kit_g[L_HAT], 0.75f, 1.0f);    /* a little right */
+    render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT] * kit_g[L_OHAT], 1.0f, 0.75f);  /* a little left */
+    render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC] * kit_g[L_PERC]);
 }
 
 _Static_assert(BLK == BLK_FM, "the DX voices' buffers are a chunk long");

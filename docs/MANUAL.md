@@ -449,7 +449,7 @@ columns are **KNOB1** to **KNOB4**.
 | Acid line | **ARP** x3 | Density | Length (1-16) | Range (1-3 octaves) | Mutate (hold **SEL** and turn to choose what a mutation changes: all, notes, rhythm or accents) |
 | Acid answer | **ARP** x4 | Answer (off, octave, fifth, third, mirror, reverse, rotate, sparse, accents) | Every (2 to 8 bars or loops of the line, or Drift: the bar before the drums change) | Direction (down 2, down, same, up, up 2) | Level (same, +2, +4, +6 dB) |
 | Acid steps | **ARP** x5 | Step (pick one with a white key: rest, note, accent, slide, accent + slide) | Note (0-11 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
-| Pluck | **ARP** x6 | Level | Sound (12 + 30 DX7 + yours) | Density | Octave (-2 to +2) |
+| Pluck | **ARP** x6 | Level | Sound (12 + 60 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | **ARP** x7 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16, slow to fast) | Range (1-3 octaves) |
 | Deja vu | **ARP** x8 | Pluck vu (0 always new notes, 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (notes jumping an octave) | Motif (0 off to 100: how often a bar reworks the phrase's first bar) |
 | Pluck steps | **ARP** x9 | Step (pick a step with a white key: rest, soft, note, accent) | Note (1-12: the chord's notes, low to high) | Octave (the pluck's, -2 to +2) | Frozen (free, frozen) |
@@ -1299,7 +1299,7 @@ The sequencer is where you write the drum patterns. **Hold SEQ** to open it. Tap
 - There are six **lanes**, one for each drum: kick, snare, clap, closed hat, open hat and perc. Each has sixteen steps and its own colour.
 - The sixteen **white keys** are the steps of the drum you're on. They light where it hits, and a moving light shows where the beat is. Tap a key to turn that hit on or off.
 - **OCT-** and **OCT+** choose the previous or next drum.
-- The knobs set the drum's **Level**, **Tune** (+-1 octave) and **Decay**, and which **Pattern** you're editing. You can edit a pattern before it plays. A pattern change waits for the next bar.
+- The knobs set the drum's **Level** (0 to 150: past 100 it's louder than the piece made it, up to +7 dB, for a snare or hats that sit too low), **Tune** (+-1 octave) and **Decay**, and which **Pattern** you're editing. You can edit a pattern before it plays. A pattern change waits for the next bar.
 
 With **SEL** held:
 
