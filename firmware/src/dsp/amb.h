@@ -42,7 +42,7 @@
 #define EN_CM_X0 (12 + EN_NFMFACT + EN_NUSER)       /* the first of the thirty more on the pluck's sound numbers */
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
-#define EN_NKIT 14                      /* the sounds each drum (kick, snare + clap, hats, perc) can play */
+#define EN_NKIT 21                      /* the sounds each drum (kick, snare + clap, hats, perc) can play (0.17.34: 14 -> 21) */
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_SAMPLE, EN_V_PLUCK };   /* the voices the keys can play (en_note) */
 
 /* modes: pools relative to the root (bit i: root + i semitones) */

@@ -834,7 +834,7 @@ stored it. If you didn't, it plays the factory piece with small random changes.
 
 ## 7. Sounds, kits and playing
 
-Each voice has its own list of sounds, and each drum can take its sound from any of fourteen kits. The sounds you
+Each voice has its own list of sounds, and each drum can take its sound from any of twenty-one kits. The sounds you
 pick are stored with the piece.
 
 To change a voice's sound, turn the **Sound** knob on its page, or hold **SEL** and turn **ALGORITHM** on any of its
@@ -1217,7 +1217,7 @@ Hold **SEL** and turn the Mutate knob on that page to choose what a rewrite chan
 
 ![The Kit page](img/perf-screen-kit.png)
 
-Press **SEQ** three times for the Kit page. Each knob picks one drum's sound from the same fourteen kits: the kick,
+Press **SEQ** three times for the Kit page. Each knob picks one drum's sound from the same twenty-one kits: the kick,
 the snare (with the clap), the hats (closed and open) and the perc.
 
 Some kits **duck** other parts: each kick briefly turns them down, which gives a pumping feel. Some **crush** the
@@ -1239,9 +1239,17 @@ drums, adding a grainy, lo-fi grit. 808 and 909 are Roland's classic drum machin
 | Electro | Short and high | A tight bright snare, a thin clap, glassy hats, a zappy tom |
 | DnB | Tight | A loud cracking snare, a clap, fast tiny hats, a clicky perc |
 | Trap | A long 808 sub with almost no click | A snare and a wide clap together, tiny hats, a bell |
+| Boom | Round with body (boom-bap, SP-1200 style) | A fat cracking snare, crisp short hats, a rim; a little crushed |
+| Ride | Light | Its hats are a ride: a long tick, and the open one a wash; a woodblock |
+| Snap | A short sub | Its snare is a snap (high and short), its clap one burst; tight hats, a high rim |
+| 606 | Short and tight | A small snappy snare, bright short hats, a tom (Roland's TR-606) |
+| Gabber | Driven hard, with a long tail (hardcore) | A hard noisy snare, harsh hats, a metal perc |
+| Linn | Round (the 80s) | A fat long snare for the gated reverb, a wide clap, a tom |
+| Shaker | Soft and round | Its perc is a shaker, its hats noisy; a rim for the snare |
 
 On any of the drums' pages, **SEL** + **ALGORITHM** switches all four to the next kit at once. Mix them freely. A
-Techno kick under House hats is fine.
+Techno kick under House hats is fine. Since 0.17.34 every kit's drums are levelled to each other: a snare or hats from any kit
+sit at the same loudness, so mixing them doesn't leave one drum too quiet.
 
 ### Playing a voice by hand
 

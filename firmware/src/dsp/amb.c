@@ -708,7 +708,7 @@ const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", 
                                               "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
                                               "Super", "CZ", "Mini", "Hyper", "CZ Pulse", "CZ Bell", "Lead"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
-                                                   "909", "Electro", "DnB", "Trap"};
+                                                   "909", "Electro", "DnB", "Trap", "Boom", "Ride", "Snap", "606", "Gabber", "Linn", "Shaker"};
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -1402,65 +1402,94 @@ typedef struct {
     float h_metal, h_noise, h_dec, oh_dec;      /* hats: the metal's pitch, the noise in it, the decays */
     float p_freq, p_ratio, p_idx;               /* perc: its note (Hz), the modulator's ratio, its index */
     float duck, chop, crush;                    /* the kick's: its duck; chops and crush (the drums all) */
+    float p_noise;                              /* (0.17.34) the perc's noise against its FM blip: 1, a shaker */
 } kit_t;
 static const kit_t KITS[EN_NKIT] = {
     /* Hypno: as it always was */
     {5.0f, 0.0016f, 0.15f, 0.75f, 0.25f, 1.0f, 0.0f,
      185.0f, 330.0f, 1.1f, 0.7f, 1.0f, 353.0f, 1.0f,
-     1.0f, 0.6f, 1.0f, 1.0f, 380.0f, 1.48f, 1.4f, 1.0f, 0.0f, 0.0f},
+     1.0f, 0.6f, 1.0f, 1.0f, 380.0f, 1.48f, 1.4f, 1.0f, 0.0f, 0.0f, 0.0f},
     /* House: a round kick, a wide clap, open hats, congas */
     {3.2f, 0.0011f, 0.2f, 0.8f, 0.12f, 0.6f, 0.0f,
      210.0f, 360.0f, 1.3f, 0.5f, 0.9f, 440.0f, 1.4f,
-     1.25f, 0.9f, 1.1f, 1.4f, 300.0f, 1.0f, 0.6f, 1.25f, 0.0f, 0.0f},
+     1.25f, 0.9f, 1.1f, 1.4f, 300.0f, 1.0f, 0.6f, 1.25f, 0.0f, 0.0f, 0.0f},
     /* Techno: a hard kick with a rumble, metal hats, a tight clap, a bell perc */
     {7.0f, 0.0024f, 0.12f, 0.5f, 0.4f, 1.6f, 0.6f,
      170.0f, 290.0f, 1.4f, 0.4f, 0.7f, 260.0f, 0.7f,
-     1.55f, 0.35f, 0.7f, 1.3f, 560.0f, 3.5f, 2.2f, 1.1f, 0.0f, 0.0f},
+     1.55f, 0.35f, 0.7f, 1.3f, 560.0f, 3.5f, 2.2f, 1.1f, 0.0f, 0.0f, 0.0f},
     /* Acid: a punchy 909-ish kit with a cowbell */
     {4.0f, 0.0014f, 0.13f, 0.6f, 0.35f, 1.25f, 0.0f,
      180.0f, 330.0f, 1.5f, 0.6f, 1.2f, 440.0f, 1.1f,
-     1.0f, 0.6f, 0.9f, 1.6f, 560.0f, 1.48f, 2.0f, 1.0f, 0.0f, 0.0f},
+     1.0f, 0.6f, 0.9f, 1.6f, 560.0f, 1.48f, 2.0f, 1.0f, 0.0f, 0.0f, 0.0f},
     /* Break: a distorted kick, a cracking snare, noisy hats, a tom; chopped and crushed */
     {6.0f, 0.0022f, 0.1f, 0.45f, 0.45f, 2.5f, 0.2f,
      240.0f, 420.0f, 1.6f, 0.8f, 0.6f, 300.0f, 0.8f,
-     1.3f, 1.0f, 0.6f, 0.8f, 200.0f, 1.0f, 0.9f, 0.8f, 1.0f, 0.6f},
+     1.3f, 1.0f, 0.6f, 0.8f, 200.0f, 1.0f, 0.9f, 0.8f, 1.0f, 0.6f, 0.0f},
     /* Minimal: a short clicky kick, a rim, tight hats, a woodblock */
     {4.0f, 0.0018f, 0.08f, 0.35f, 0.5f, 1.0f, 0.0f,
      400.0f, 820.0f, 0.5f, 1.0f, 0.5f, 300.0f, 0.6f,
-     1.4f, 0.3f, 0.5f, 0.7f, 720.0f, 2.0f, 0.8f, 0.9f, 0.0f, 0.0f},
+     1.4f, 0.3f, 0.5f, 0.7f, 720.0f, 2.0f, 0.8f, 0.9f, 0.0f, 0.0f, 0.0f},
     /* Hard: an industrial kick, distorted with a long rumble, a noisy snare, a metal clank; a little crushed */
     {8.0f, 0.0028f, 0.14f, 0.6f, 0.6f, 3.2f, 0.9f,
      200.0f, 340.0f, 1.8f, 0.5f, 0.8f, 220.0f, 0.8f,
-     1.7f, 0.8f, 0.8f, 1.2f, 140.0f, 2.76f, 2.8f, 1.3f, 0.0f, 0.25f},
+     1.7f, 0.8f, 0.8f, 1.2f, 140.0f, 2.76f, 2.8f, 1.3f, 0.0f, 0.25f, 0.0f},
     /* 808: a long boom, a snappy snare, a wide clap, a cowbell */
     {2.2f, 0.0007f, 0.3f, 1.6f, 0.08f, 0.5f, 0.0f,
      238.0f, 476.0f, 1.0f, 0.9f, 1.1f, 380.0f, 1.6f,
-     1.15f, 0.5f, 0.8f, 1.8f, 540.0f, 1.48f, 1.2f, 1.0f, 0.0f, 0.0f},
+     1.15f, 0.5f, 0.8f, 1.8f, 540.0f, 1.48f, 1.2f, 1.0f, 0.0f, 0.0f, 0.0f},
     /* Dusty (lofi): a soft round kick, a loose low snare, a muted clap, dull short hats, a soft rim; the kick ducks the rest a little */
     {2.8f, 0.0010f, 0.2f, 0.95f, 0.08f, 0.45f, 0.0f,
      172.0f, 290.0f, 0.9f, 0.85f, 0.95f, 380.0f, 0.8f,
-     0.85f, 0.55f, 0.85f, 1.1f, 520.0f, 1.5f, 0.9f, 0.35f, 0.0f, 0.0f},
+     0.85f, 0.55f, 0.85f, 1.1f, 520.0f, 1.5f, 0.9f, 0.35f, 0.0f, 0.0f, 0.0f},
     /* Heavy (dubstep): a deep sub kick with a long tail, a big cracking snare, a wide clap, tight hats, a metal perc; it ducks the bass hard */
     {3.0f, 0.0013f, 0.28f, 1.35f, 0.25f, 1.1f, 0.35f,
      190.0f, 330.0f, 1.5f, 0.75f, 1.05f, 330.0f, 1.1f,
-     1.2f, 0.5f, 0.7f, 1.0f, 300.0f, 2.2f, 1.6f, 1.0f, 0.0f, 0.0f},
+     1.2f, 0.5f, 0.7f, 1.0f, 300.0f, 2.2f, 1.6f, 1.0f, 0.0f, 0.0f, 0.0f},
     /* 909: a punchy kick with a click, a snappy snare, a clap, ticking hats and long open ones, a tom */
     {5.0f, 0.0015f, 0.16f, 0.7f, 0.3f, 1.1f, 0.0f,
      188.0f, 332.0f, 1.25f, 0.75f, 0.85f, 410.0f, 0.95f,
-     1.3f, 0.7f, 0.7f, 1.2f, 150.0f, 1.0f, 0.5f, 1.1f, 0.0f, 0.0f},
+     1.3f, 0.7f, 0.7f, 1.2f, 150.0f, 1.0f, 0.5f, 1.1f, 0.0f, 0.0f, 0.0f},
     /* Electro: a short high kick, a tight bright snare, a thin clap, glassy hats, a zappy tom */
     {6.0f, 0.0020f, 0.09f, 0.4f, 0.5f, 1.3f, 0.0f,
      220.0f, 400.0f, 1.5f, 0.5f, 0.6f, 300.0f, 0.4f,
-     1.6f, 0.5f, 0.5f, 1.0f, 160.0f, 1.0f, 1.2f, 1.0f, 0.0f, 0.0f},
+     1.6f, 0.5f, 0.5f, 1.0f, 160.0f, 1.0f, 1.2f, 1.0f, 0.0f, 0.0f, 0.0f},
     /* DnB: a tight kick, a loud cracking snare, a clap, fast tiny hats, a clicky perc */
     {5.5f, 0.0018f, 0.1f, 0.4f, 0.35f, 1.0f, 0.0f,
      240.0f, 460.0f, 1.3f, 0.7f, 0.55f, 380.0f, 0.5f,
-     1.5f, 0.5f, 0.45f, 0.8f, 320.0f, 1.5f, 0.8f, 1.0f, 0.0f, 0.0f},
+     1.5f, 0.5f, 0.45f, 0.8f, 320.0f, 1.5f, 0.8f, 1.0f, 0.0f, 0.0f, 0.0f},
     /* Trap: a long 808 sub with almost no click, a snare and a wide clap together, tiny hats, a bell */
     {2.0f, 0.0006f, 0.35f, 2.0f, 0.05f, 0.6f, 0.0f,
      200.0f, 390.0f, 1.2f, 0.6f, 0.9f, 460.0f, 1.0f,
-     1.7f, 0.4f, 0.4f, 0.9f, 460.0f, 1.48f, 1.0f, 1.1f, 0.0f, 0.0f},
-};
+     1.7f, 0.4f, 0.4f, 0.9f, 460.0f, 1.48f, 1.0f, 1.1f, 0.0f, 0.0f, 0.0f},
+
+    /* (0.17.34) Boom: boom-bap, an SP-1200 / MPC flavour: a round kick with body, a fat cracking snare, crisp short hats, a rim; a little crushed */
+    {3.5f, 0.0012f, 0.2f, 0.9f, 0.2f, 1.4f, 0.0f,
+     190.0f, 340.0f, 1.5f, 0.85f, 1.1f, 400.0f, 1.0f,
+     1.2f, 0.8f, 0.5f, 0.9f, 600.0f, 2.0f, 0.9f, 0.9f, 0.0f, 0.35f, 0.0f},
+    /* Ride: the hats as a ride (low metal, little noise, a long tick; open: the wash), a light kick and snare, a woodblock */
+    {4.0f, 0.0014f, 0.15f, 0.65f, 0.25f, 1.0f, 0.0f,
+     200.0f, 350.0f, 1.1f, 0.6f, 0.9f, 380.0f, 0.9f,
+     0.62f, 0.25f, 1.6f, 3.0f, 800.0f, 2.0f, 0.7f, 1.0f, 0.0f, 0.0f, 0.0f},
+    /* Snap: the snare a snap (high, little body, short), the clap one burst; a short sub kick, tight hats, a high rim */
+    {3.0f, 0.0010f, 0.2f, 1.0f, 0.15f, 0.8f, 0.0f,
+     330.0f, 640.0f, 1.3f, 0.35f, 0.55f, 120.0f, 0.6f,
+     1.5f, 0.5f, 0.45f, 0.9f, 900.0f, 1.0f, 0.6f, 1.0f, 0.0f, 0.0f, 0.0f},
+    /* 606: a short tight kick, a small snappy snare, bright short hats, a tom */
+    {4.5f, 0.0018f, 0.1f, 0.35f, 0.3f, 0.9f, 0.0f,
+     260.0f, 480.0f, 1.4f, 0.4f, 0.6f, 300.0f, 0.7f,
+     1.65f, 0.6f, 0.4f, 0.8f, 220.0f, 1.0f, 0.4f, 1.0f, 0.0f, 0.0f, 0.0f},
+    /* Gabber: the kick driven hard with a long tail, a hard noisy snare, harsh hats, a metal perc */
+    {7.0f, 0.0026f, 0.15f, 1.0f, 0.6f, 4.5f, 0.3f,
+     210.0f, 380.0f, 1.9f, 0.6f, 0.8f, 250.0f, 0.8f,
+     1.6f, 0.9f, 0.6f, 1.0f, 180.0f, 2.76f, 3.0f, 1.2f, 0.0f, 0.1f, 0.0f},
+    /* Linn: the 80s, a round kick, a fat long snare (for the gated reverb), a wide clap, a tom */
+    {3.0f, 0.0011f, 0.18f, 0.6f, 0.15f, 0.7f, 0.0f,
+     180.0f, 300.0f, 1.6f, 0.9f, 1.4f, 450.0f, 1.3f,
+     1.1f, 0.7f, 0.6f, 1.3f, 260.0f, 1.0f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f},
+    /* Shaker: the perc a shaker (noise, no blip), the hats noisy, a soft round kick, a rim snare */
+    {3.2f, 0.0011f, 0.2f, 0.75f, 0.12f, 0.6f, 0.0f,
+     380.0f, 760.0f, 0.6f, 0.9f, 0.5f, 380.0f, 0.9f,
+     1.4f, 1.0f, 0.5f, 1.0f, 450.0f, 1.0f, 0.3f, 1.2f, 0.0f, 0.0f, 1.0f},};
 /* (0.17.34, the maker: "sometimes snare or closed hat are too quiet") each kit's drums levelled to one loudness per drum: every drum of
  * every kit measured alone (build/audit/drumlev.c: K-weighted, its loudest 50 ms), then brought to the kicks' median less 7 dB (snare), 9
  * (clap), 17.5 (closed hat), 11 (open hat), 9 (perc); at most 8 dB up, 4 down. The quiet hats of Techno, Minimal, DnB, Trap and Electro
@@ -1480,6 +1509,13 @@ static const int8_t KIT_LV[EN_NKIT][5] = {   /* half dB: snare, clap, hat, open 
     {  4,  11,  15,   8,   7},   /* Electro */
     {  6,  10,  16,  10,   4},   /* DnB */
     {  4,   5,  16,  13,   3},   /* Trap */
+    {  0,   4,   8,   5,   3},   /* Boom */
+    {  5,   5,  16,  15,   1},   /* Ride */
+    {  9,   8,  14,   9,   2},   /* Snap */
+    {  5,   8,  13,   6,  11},   /* 606 */
+    { -3,   6,   5,  -1,   2},   /* Gabber */
+    { -4,   2,   7,   1,   8},   /* Linn */
+    { 12,   5,   1,  -3,   1},   /* Shaker */
 };
 static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};   /* the levels above for the kits playing (the kick's is 1) */
 static float kit_db(int k, int d) { return fm_exp2f((float)KIT_LV[(unsigned)k < EN_NKIT ? k : 0][d] * (0.5f / 6.0206f)); }
@@ -8410,9 +8446,18 @@ static void render_perc(drum_t *v, uint32_t n, float g)
     float ph = v->ph, ph2 = v->ph2, inc = v->inc, amp = v->amp, idx = v->idx, att = v->att, fo = v->fo, x = 0.0f;
     if (!v->on)
         return;
+    const float pn = KP->p_noise;
+    float lp = v->x1;
     for (j = 0; j < n; j++) {
-        float m = sine(ph2) * idx;
-        x = sine(ph + m + 4.0f) * amp * att * g * TG(TR_PERC, j) + fo;
+        float m = sine(ph2) * idx, y = sine(ph + m + 4.0f);
+        if (pn > 0.0f) {                         /* (0.17.34) the shaker: the noise above about 2.5 kHz */
+            float w;
+            noise = noise * 1664525u + 1013904223u;
+            w = (float)(int32_t)noise * (1.0f / 2147483648.0f);
+            lp += 0.3f * (w - lp);
+            y += pn * (1.6f * (w - lp) - y);
+        }
+        x = y * amp * att * g * TG(TR_PERC, j) + fo;
         fo *= DR_FADE;
         ph += inc;
         ph2 += inc * v->inc2;
@@ -8435,6 +8480,7 @@ static void render_perc(drum_t *v, uint32_t n, float g)
     v->amp = amp;
     v->idx = idx;
     v->att = att;
+    v->x1 = fm_flush(lp);
     v->fo = fm_flush(fo);
     v->xl = x;
     v->on = amp > 0.0005f;
