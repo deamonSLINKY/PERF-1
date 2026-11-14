@@ -9682,6 +9682,65 @@ static void splash_tick(void)                    /* the HYP-1 card's steps, fill
     plat_leds(n ? 1u << B_PLAY : 0u, k);
 }
 
+/* THE SAMPLE KITS YOU LOAD (0.17.38): three slots in the flash (plat.h PLAT_RAW_*), five sectors each, written from the installer page a sector at a time
+ * (backup_proto.h BK_RAW0: the backup protocol's chunks), only while the music is stopped. A slot is a header (ukit_*: "SKU1", its name, its six sounds'
+ * places, lengths, first ADPCM index and level) then the sounds, 4-bit IMA ADPCM at 22.05 kHz; it plays only when its CRC checks. */
+#define UKIT_SECT 5u
+static uint32_t ukit_crc(const uint8_t *p, uint32_t n)
+{
+    uint32_t c = 0xFFFFFFFFu, k;
+    while (n--) {
+        c ^= *p++;
+        for (k = 0; k < 8u; k++)
+            c = c >> 1 ^ (0xEDB88320u & (0u - (c & 1u)));
+    }
+    return ~c;
+}
+static void ui_kits_load(void)
+{
+    int u;
+    for (u = 0; u < EN_NUKIT; u++) {
+        const uint8_t *b = plat_raw_ptr(PLAT_RAW_LO + (uint32_t)u * UKIT_SECT * 4096u);
+        uint32_t tot = b ? (uint32_t)b[20] | (uint32_t)b[21] << 8 | (uint32_t)b[22] << 16 | (uint32_t)b[23] << 24 : 0u;
+        const uint32_t crc = b ? (uint32_t)b[24] | (uint32_t)b[25] << 8 | (uint32_t)b[26] << 16 | (uint32_t)b[27] << 24 : 0u;
+        const int ok = b && b[0] == 'S' && b[1] == 'K' && b[2] == 'U' && b[3] == '1' && tot > 128u && tot <= UKIT_SECT * 4096u &&
+                       ukit_crc(b + 128, tot - 128u) == crc;
+        en_user_kit(u, ok ? b : 0, ok ? tot : 0u);
+    }
+}
+int ui_kit_read(uint32_t sect, uint8_t *dst)     /* a slot's sector as it is (a backup) */
+{
+    const uint8_t *b = plat_raw_ptr(PLAT_RAW_LO + sect * 4096u);
+    uint32_t k;
+    if (!b)
+        return 0;
+    for (k = 0; k < 4096u; k++)
+        dst[k] = b[k];
+    return 4096;
+}
+int ui_kit_write(uint32_t sect, const uint8_t *src, uint32_t len)   /* 0 written; 3 not (playing, or the flash said no) */
+{
+    if (en_playing) {
+        say("SAMPLE KIT", "STOP FIRST");
+        return 3;
+    }
+    en_hush(1);
+    if (plat_raw_write(PLAT_RAW_LO + sect * 4096u, src, len) != 0) {
+        en_hush(0);
+        say("SAMPLE KIT", "NOT WRITTEN");
+        return 3;
+    }
+    ui_kits_load();
+    en_hush(0);
+    if (sect % UKIT_SECT == 0u) {                /* (the header goes last: the kit is whole) */
+        char t[16] = "KIT LOADED ";
+        t[11] = (char)('1' + sect / UKIT_SECT);
+        t[12] = 0;
+        say(t, EN_KIT_NAME[EN_NKIT + EN_NSKIT_BI + (int)(sect / UKIT_SECT)]);
+    }
+    return 0;
+}
+
 void ui_init(void)
 {
     if (rm.on)
@@ -9711,6 +9770,7 @@ void ui_init(void)
     }
     settings_load();                             /* the effects' and performing settings as you left them */
     voices_load();                               /* and the player's DX7 voices */
+    ui_kits_load();                              /* (0.17.38) and the sample kits loaded into the flash */
     mm_load();                                   /* and their MIDI map (0.16.11) */
     en_pedal(glob.sl_rsv[2] & 3);                /* and the pedal (0.16.21: the global record's last spare byte) */
     ui_fx_apply();                               /* the piece's FILTERS and SCREAM over the settings' (0.16.28) */

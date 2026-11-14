@@ -765,9 +765,11 @@ const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", 
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft",
                                               "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
                                               "Super", "CZ", "Mini", "Hyper", "CZ Pulse", "CZ Bell", "Lead"};
+static char ukit_name[EN_NUKIT][13] = {"Empty 1", "Empty 2", "Empty 3"};   /* (0.17.38) the loaded kits' names */
 const char *const EN_KIT_NAME[EN_NKITS] = {"Hypno", "House", "Techno", "Acid", "Break", "Minimal", "Hard", "808", "Dusty", "Heavy",
                                                    "909", "Electro", "DnB", "Trap", "Boom", "Ride", "Snap", "606", "Gabber", "Linn", "Shaker",
-                                                   "Machine", "Boombap"};   /* (0.17.36: the sampled ones last) */
+                                                   "Machine", "Boombap", ukit_name[0], ukit_name[1], ukit_name[2]};   /* (0.17.36: the sampled ones last; 0.17.38:
+                                                 * the loaded ones by the names they came with) */
 
 /* the envelopes' times, from their knobs (0..100), in seconds */
 static float pe_atk_s(int v) { return 0.05f * fm_exp2f((float)v * 0.0764f); }        /* 0.05 .. 10 s */
@@ -1157,7 +1159,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH, C_KITS };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1586,8 +1588,11 @@ static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 typedef struct { const uint8_t *d; uint32_t n; uint8_t i0; } smp_t;
 typedef struct { const char *name; smp_t s[6]; } skit_t;
 #include "smpkits.h"
-_Static_assert(EN_NSKIT_BI == EN_NSKIT, "the sampled kits: EN_NSKIT as smpkits.h has them");
-static const int8_t SKIT_LV[EN_NSKIT][6] = {{-2, 0, 10, 19, 19, 12}, {1, 4, 3, 12, 9, 3}};   /* half dB: each sound against the synth kits' levels (measured) */
+_Static_assert(EN_NSKIT_BI == EN_NSKIT_BI_H, "the sampled kits: EN_NSKIT_BI as smpkits.h has them");
+static skit_t skit_user[EN_NUKIT];               /* (0.17.38) the loaded kits (their sounds in the flash), */
+static int8_t ukit_lv[EN_NUKIT][6];              /* their sounds' levels (half dB, the installer measured them), */
+static uint8_t ukit_ok[EN_NUKIT];                /* and which hold one */
+static const int8_t SKIT_LV[EN_NSKIT_BI][6] = {{-2, 0, 10, 19, 19, 12}, {1, 4, 3, 12, 9, 3}};   /* half dB: each sound against the synth kits' levels (measured) */
 static const smp_t *drum_smp[EN_NDRUM];           /* a drum's sample when its kit is a sampled one (else 0: the synth) */
 static const int16_t ADPCM_STEP[89] = {7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80, 88, 97, 107, 118,
     130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878,
@@ -1596,10 +1601,48 @@ static const int16_t ADPCM_STEP[89] = {7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 
 static const int8_t ADPCM_IDX[16] = {-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8};
 static void smp_kit(int d, int v, int s)         /* drum d plays sound s of kit v (a sampled kit), or the synth */
 {
-    const int k = v - EN_NKIT;
-    drum_smp[d] = (unsigned)k < (unsigned)EN_NSKIT ? &SKIT_BI[k].s[s] : 0;
+    const int k = v - EN_NKIT, u = k - EN_NSKIT_BI;
+    drum_smp[d] = (unsigned)k < (unsigned)EN_NSKIT_BI ? &SKIT_BI[k].s[s] : (unsigned)u < (unsigned)EN_NUKIT && ukit_ok[u] ? &skit_user[u].s[s] : 0;
     if (drum_smp[d])
-        kit_g[d] = fm_exp2f((float)SKIT_LV[k][s] * (0.5f / 6.0206f));
+        kit_g[d] = fm_exp2f((float)(k < EN_NSKIT_BI ? SKIT_LV[k][s] : ukit_lv[u][s]) * (0.5f / 6.0206f));
+}
+static uint32_t rd32le(const uint8_t *b) { return (uint32_t)b[0] | (uint32_t)b[1] << 8 | (uint32_t)b[2] << 16 | (uint32_t)b[3] << 24; }
+int en_user_kit(int slot, const uint8_t *img, uint32_t len)   /* (0.17.38) a loaded kit: its header checked (ui.c checked its CRC), its sounds in place */
+{
+    int s, ok = img != 0 && (unsigned)slot < (unsigned)EN_NUKIT && len > 128u && img[4] == 1 && img[5] == 6;
+    for (s = 0; ok && s < 6; s++) {
+        const uint8_t *e = img + 28 + 12 * s;
+        const uint32_t off = rd32le(e), n = rd32le(e + 4);
+        ok = off >= 128u && n >= 2u && off + (n + 1u) / 2u <= len && e[8] <= 88u;
+    }
+    if ((unsigned)slot >= (unsigned)EN_NUKIT)
+        return 0;
+    ukit_ok[slot] = 0;                           /* (taken out first: the sounds are swapped while none plays them) */
+    if (ok) {
+        int k;
+        for (s = 0; s < 6; s++) {
+            const uint8_t *e = img + 28 + 12 * s;
+            skit_user[slot].s[s].d = img + rd32le(e);
+            skit_user[slot].s[s].n = rd32le(e + 4);
+            skit_user[slot].s[s].i0 = e[8];
+            ukit_lv[slot][s] = (int8_t)e[9];
+        }
+        for (k = 0; k < 12 && img[8 + k] >= 32 && img[8 + k] < 127; k++)
+            ukit_name[slot][k] = (char)img[8 + k];
+        ukit_name[slot][k] = 0;
+        if (!k)
+            ukit_name[slot][0] = 'U', ukit_name[slot][1] = 's', ukit_name[slot][2] = 'e', ukit_name[slot][3] = 'r', ukit_name[slot][4] = (char)('1' + slot),
+            ukit_name[slot][5] = 0;
+        skit_user[slot].name = ukit_name[slot];
+        ukit_ok[slot] = 1;
+    } else {
+        static const char EMPTY[8] = "Empty 1";
+        for (s = 0; s < 8; s++)
+            ukit_name[slot][s] = EMPTY[s];
+        ukit_name[slot][6] = (char)('1' + slot);
+    }
+    post(C_KITS, 0, 0);                          /* the drums take their kits again (a drum on this slot: its new sound, or the synth) */
+    return ok;
 }   /* the levels above for the kits playing (the kick's is 1) */
 static float kit_db(int k, int d) { return (unsigned)k < EN_NKIT ? fm_exp2f((float)KIT_LV[k][d] * (0.5f / 6.0206f)) : 1.0f; }
 static const kit_t *KK = &KITS[0], *KS = &KITS[0], *KH = &KITS[0], *KP = &KITS[0];   /* kick, snare and
@@ -7382,6 +7425,12 @@ static void drain(void)
         case C_ACCAP: ac_capture(a & 15, b & 127, b & 0x800 ? b >> 7 & 15 : -1, a >> 4 & 1, a >> 5 & 1); break;
         case C_BSCAP: bs_cap(a & 15, b & 127, b >> 7 & 15, a >> 4 & 1, a >> 5 & 1); break;
         case C_ACKEEP: ac_keep_answer(); break;
+        case C_KITS:                             /* (0.17.38) a loaded kit came or went: each drum's kit again */
+            apply(P_KIT_KICK, par[P_KIT_KICK]);
+            apply(P_KIT_SNARE, par[P_KIT_SNARE]);
+            apply(P_KIT_HAT, par[P_KIT_HAT]);
+            apply(P_KIT_PERC, par[P_KIT_PERC]);
+            break;
         case C_EXTCH:                            /* (0.17.31) the chord from outside (a 12-bit mask; 0: off, back to the walk from this chord) */
             if (!(b & 0xFFF)) {
                 if (ext_on) {

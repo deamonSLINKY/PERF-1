@@ -837,7 +837,7 @@ stored it. If you didn't, it plays the factory piece with small random changes.
 
 ## 7. Sounds, kits and playing
 
-Each voice has its own list of sounds, and each drum can take its sound from any of twenty-three kits. The sounds you
+Each voice has its own list of sounds, and each drum can take its sound from any of twenty-three kits, and three more you load yourself. The sounds you
 pick are stored with the piece.
 
 To change a voice's sound, turn the **Sound** knob on its page, or hold **SEL** and turn **ALGORITHM** on any of its
@@ -1258,8 +1258,15 @@ Techno kick under House hats is fine. Since 0.17.34 every kit's drums are levell
 sit at the same loudness, so mixing them doesn't leave one drum too quiet.
 
 **The sampled kits** (Machine, Boombap) play recorded sounds instead of the synth: made for PERF-1 with heavier models than the FM-1 could
-run live, then stored in its memory. Tune pitches a sampled drum up or down; Decay below the middle cuts it shorter. More can come: your
-own kits, loaded from the installer page, are planned next.
+run live, then stored in its memory. Tune pitches a sampled drum up or down; Decay below the middle cuts it shorter.
+
+**Your own sample kits.** Three more places at the very end of each drum's list hold kits you load yourself, from your own sound files,
+on the installer page (**Your own sample kits**): pick a slot, give the kit a name, choose up to six files (kick, snare, clap, closed hat,
+open hat, perc: WAV, MP3, anything your browser plays), stop the music on the FM-1, and press **Load into the FM-1**. The page makes each
+sound mono at 22 kHz, trims the silence before it, levels it to sit like the other kits and, if all six won't fit (about 1.8 seconds between
+them), cuts them a little shorter. The kit shows by its name in the Kit page's lists (an empty place says Empty 1, 2, 3); a drum on a slot you
+empty plays the Hypno synth. Your samples live only on your FM-1: nothing of them is in PERF-1 itself, so samples you may use but not pass on
+are fine here.
 
 ### Playing a voice by hand
 

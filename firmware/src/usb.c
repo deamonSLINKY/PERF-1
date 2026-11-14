@@ -612,7 +612,7 @@ static void px_end(void)
     else if (n == 5u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x01u)         /* backup: read an object */
         e = 4u << 28 | (uint32_t)(m[4] & 0x7Fu);
     else if (n == 7u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x04u)         /* restore: the object is complete, write it */
-        e = 5u << 28 | (uint32_t)(m[4] & 0x1Fu) << 14 | (uint32_t)((m[5] << 7 | m[6]) & 0x3FFF);
+        e = 5u << 28 | (uint32_t)(m[4] & 0x7Fu) << 14 | (uint32_t)((m[5] << 7 | m[6]) & 0x3FFF);   /* (0.17.38: seven bits of the object: the kits' sectors are 64 ..) */
     else if (n == 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x05u)         /* restore: restart */
         e = 6u << 28;
     else if (n == 4u && m[0] == 0x7Du && m[1] == 0x50u && m[2] == 0x42u && m[3] == 0x06u)         /* about: what this firmware is (the pieces page) */

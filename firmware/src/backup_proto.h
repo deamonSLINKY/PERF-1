@@ -19,6 +19,11 @@
 #include <stdint.h>
 
 #define BK_MAX 3840u                             /* an object (plat.h PLAT_STORE_MAX) */
+#define BK_RAW0 64u                              /* (0.17.38) the sample kits' flash: slot s, its sector k (0 .. 4) is "object" BK_RAW0 + 5 s + k, a whole */
+#define BK_NRAW 15u                              /* sector of 4096 (sector 0 starts with the kit's header: ui.c kits); written only while stopped */
+#define BK_RAW_MAX 4096u
+static inline int bk_is_raw(uint32_t obj) { return obj >= BK_RAW0 && obj < BK_RAW0 + BK_NRAW; }
+static inline uint32_t bk_max(uint32_t obj) { return bk_is_raw(obj) ? BK_RAW_MAX : BK_MAX; }
 #define BK_FRAME 64u                             /* raw bytes in a frame the FM-1 sends */
 #define BK_CHUNK 256u                            /* raw bytes in a chunk the FM-1 takes */
 #define BK_FRAME_MAX 144u                        /* the longest frame the FM-1 sends: 4 + 1 + 2 + 2 + 2 + 128 + 1 + 1 = 141 */
@@ -60,7 +65,7 @@ static inline uint32_t bk_build_ack(uint8_t *f, uint32_t obj, uint32_t idx, uint
 #define BK_ABOUT_LEN 10u
 static inline uint32_t bk_build_about(uint8_t *f, uint32_t npar, uint32_t genres, uint32_t voices)
 {
-    f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x45, f[4] = 3;
+    f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x45, f[4] = 4;   /* (4 from 0.17.38: the sample kits' sectors) */
     f[5] = (uint8_t)((npar >> 7) & 0x7Fu), f[6] = (uint8_t)(npar & 0x7Fu);
     f[7] = (uint8_t)(genres & 0x7Fu), f[8] = (uint8_t)(voices & 0x7Fu), f[9] = 0xF7;
     return BK_ABOUT_LEN;
@@ -103,7 +108,7 @@ static inline int bk_accept(bk_sess_t *s, uint8_t *buf, const bk_chunk_t *c)   /
 {
     const uint32_t off = (uint32_t)c->idx * BK_CHUNK;
     uint32_t k;
-    if (c->len == 0u || c->len > BK_MAX || c->idx >= 16u || off + c->n > c->len)
+    if (c->len == 0u || c->len > bk_max(c->obj) || c->idx >= 16u || off + c->n > c->len)
         return 2;
     if (c->idx == 0u) {                          /* the first chunk starts the object */
         s->obj = c->obj;
@@ -122,5 +127,5 @@ static inline int bk_accept(bk_sess_t *s, uint8_t *buf, const bk_chunk_t *c)   /
 static inline int bk_complete(const bk_sess_t *s, uint32_t obj, uint32_t len)   /* every chunk of this object is in */
 {
     const uint32_t chunks = (len + BK_CHUNK - 1u) / BK_CHUNK;
-    return s->mask && s->obj == obj && s->len == len && len && len <= BK_MAX && s->mask == (uint16_t)((1u << chunks) - 1u);
+    return s->mask && s->obj == obj && s->len == len && len && len <= bk_max(obj) && s->mask == (uint16_t)((1u << chunks) - 1u);
 }

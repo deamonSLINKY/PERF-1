@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* PERF-1's built-in sampled kits (0.17.36), written by tools/smpkits.py: rendered offline by our own models (no samples from elsewhere),
  * 4-bit IMA ADPCM at 22.05 kHz, the low nibble first; each sound its samples, its first step index (the predictor starts at 0). */
-#define EN_NSKIT_BI 2
+#define EN_NSKIT_BI_H 2
 static const uint8_t SK0_kick[4410] = {
     112, 119, 119, 119, 119, 132, 17, 0, 8, 24, 0, 0, 0, 128, 128, 128, 0, 136, 136, 136, 128, 24, 144, 170,
     138, 237, 171, 184, 206, 235, 187, 218, 189, 186, 205, 154, 203, 187, 204, 170, 155, 170, 172, 153, 169, 170, 154, 153,

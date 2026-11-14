@@ -288,7 +288,7 @@ Drum hits push the other voices, 0 to 100 each; **SEL + SEQ** turns them all on 
 
 ### The kits (SEQ x3)
 
-Each knob picks one drum's sound from the same twenty-three kits (new: Boom, Ride, Snap, 606, Gabber, Linn, Shaker; and two sampled, Machine and Boombap): Kick, Snare (and clap), Hats (closed and open), Perc. **SEL + ALGORITHM** on any drums page turns all four to the next kit. Mix them freely.
+Each knob picks one drum's sound from the same twenty-three kits (new: Boom, Ride, Snap, 606, Gabber, Linn, Shaker; and two sampled, Machine and Boombap), then three slots for your own sample kits, loaded from the installer page (Your own sample kits): Kick, Snare (and clap), Hats (closed and open), Perc. **SEL + ALGORITHM** on any drums page turns all four to the next kit. Mix them freely.
 
 | Kit | The kick | The rest |
 |---|---|---|

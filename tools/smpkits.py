@@ -258,7 +258,7 @@ def main():
     lines = ["/* SPDX-License-Identifier: GPL-3.0-only */",
              "/* PERF-1's built-in sampled kits (0.17.36), written by tools/smpkits.py: rendered offline by our own models (no samples from elsewhere),",
              " * 4-bit IMA ADPCM at 22.05 kHz, the low nibble first; each sound its samples, its first step index (the predictor starts at 0). */",
-             "#define EN_NSKIT_BI %d" % len(KITS)]
+             "#define EN_NSKIT_BI_H %d" % len(KITS)]
     total = 0
     tab = []
     for k, (name, fns) in enumerate(KITS):

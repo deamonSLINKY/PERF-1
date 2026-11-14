@@ -116,6 +116,15 @@
   <p><button id="mmdl" class="alt" disabled data-t="mmdl"></button> <span class="small" data-t="mmor"></span> <input type="file" id="mmfile" accept=".perfmap,.json"></p>
   <p id="mmstatus" class="small"></p>
   </div>
+  <h2 data-t="kith" id="kits"></h2>
+  <div class="card">
+  <p class="small" data-t="kitinfo"></p>
+  <p><label><span data-t="kitslot"></span> <select id="kitslot"><option value="0">1</option><option value="1">2</option><option value="2">3</option></select></label>
+     <label><span data-t="kitname"></span> <input id="kitnm" maxlength="12" size="12" value="My kit"></label></p>
+  <table class="small" id="kitfiles"></table>
+  <p><button id="kitsend" disabled data-t="kitsend"></button> <button id="kitclear" class="alt" data-t="kitclear"></button></p>
+  <p id="kitstatus" class="small"></p>
+  </div>
   <h2 data-t="bkh"></h2>
   <div class="card">
   <p class="small" data-t="bkinfo"></p>
@@ -226,6 +235,12 @@ const TEXT = {
     mmsend: "FM-1 に送る", mmread: "FM-1 から読む", mmclear: "FM-1 のマップを消す", mmdl: ".perfmap を保存", mmor: "または読み込む:",
     mmnone: "まだありません。エミュレーターで MIDI learn を使ってください。", mmsent: "送りました。FM-1 が再起動します。", mmcleared: "消しました。FM-1 が再起動します。",
     mmbadfile: "MIDI マップのファイルではありません。", mmmaster: "MASTER は FM-1 では本体のノブだけです（送りません）。", mmread0: "FM-1 にマップはありません。", mmreadok: "FM-1 のマップを読みました。",
+    kith: "Your own sample kits",
+    kitinfo: "Load six sounds of your own (WAV, MP3 or any file the browser plays) into one of three slots on the FM-1: they show up last in each drum's kit list (the Kit page, SEQ x3) under the name you give them, after Machine and Boombap. Each is made mono at 22 kHz, trimmed, levelled to sit like the other kits and cut short if all six won't fit (about 1.8 seconds between them). Stop the music first. Your samples stay on your FM-1: only you load them.",
+    kitslot: "Slot", kitname: "Name", kitsend: "Load into the FM-1", kitclear: "Empty this slot",
+    kitdrums: ["Kick", "Snare", "Clap", "Closed hat", "Open hat", "Perc"],
+    kitnone: "Choose at least one sound.", kitmaking: "Making the kit\u2026", kitsending: "Sending: sector ", kitdone: "Loaded into slot ",
+    kitcut: " (cut a little to fit)", kitcleared: "Slot emptied: ", kitold: "This FM-1's firmware has no sample kits (0.17.38 or later needed).", kitstop: "Stop the music on the FM-1 first.",
     bkh: "ピースと設定のバックアップ",
     bkinfo: "FM-1 に保存されているもの（全ジャンルで保存したピース、設定、DX7 の音色、テーマとチューニング）をファイルに保存し、あとで戻せます。別のファームウェアを試して、戻ってきても失われません。このファイルを読めるのは PERF-1 だけです。復元すると今の内容は置き換わり、FM-1 が再起動します。（保存していないピースの変更と、パネルの調整値は含まれません。）",
     bksave: "バックアップを保存", bkrestore: "選んだバックアップを復元",
@@ -304,6 +319,12 @@ const TEXT = {
     mmsend: "Send to my FM-1", mmread: "Read it from my FM-1", mmclear: "Clear the FM-1's map", mmdl: "Download .perfmap", mmor: "or load one:",
     mmnone: "Nothing learned yet. Use MIDI learn in the emulator, or load a .perfmap file.", mmsent: "Sent. The FM-1 restarts now.", mmcleared: "Cleared. The FM-1 restarts now.",
     mmbadfile: "That is not a MIDI map file.", mmmaster: "MASTER is the FM-1's own knob: a learned MASTER is not sent.", mmread0: "The FM-1 has no map.", mmreadok: "Read the FM-1's map: it is the list now (the emulator's too).",
+    kith: "Your own sample kits",
+    kitinfo: "Load six sounds of your own (WAV, MP3 or any file the browser plays) into one of three slots on the FM-1: they show up last in each drum's kit list (the Kit page, SEQ x3) under the name you give them, after Machine and Boombap. Each is made mono at 22 kHz, trimmed, levelled to sit like the other kits and cut short if all six won't fit (about 1.8 seconds between them). Stop the music first. Your samples stay on your FM-1: only you load them.",
+    kitslot: "Slot", kitname: "Name", kitsend: "Load into the FM-1", kitclear: "Empty this slot",
+    kitdrums: ["Kick", "Snare", "Clap", "Closed hat", "Open hat", "Perc"],
+    kitnone: "Choose at least one sound.", kitmaking: "Making the kit\u2026", kitsending: "Sending: sector ", kitdone: "Loaded into slot ",
+    kitcut: " (cut a little to fit)", kitcleared: "Slot emptied: ", kitold: "This FM-1's firmware has no sample kits (0.17.38 or later needed).", kitstop: "Stop the music on the FM-1 first.",
     bkh: "Back up and restore your pieces",
     bkinfo: "Saves everything the FM-1 has stored (the pieces you saved in every genre, your settings, your DX7 voices, the theme and tuning) to a file, and puts it back, so you can try another firmware and come back without losing them. Only PERF-1 reads these files. A restore replaces what is stored now, then the FM-1 restarts. (Unsaved changes to a piece and the panel's calibration are not included.)",
     bksave: "Save a backup", bkrestore: "Restore the chosen backup",
@@ -634,6 +655,62 @@ $("bkrestore").addEventListener("click", async () => {
     $("bkstatus").textContent = t("bkrestored");
   } catch (err) { writing = false; $("bkstatus").textContent = err.message; $("bkrestore").disabled = false; }
 });
+
+/* ---- your own sample kits (0.17.38, web/fm1kit.js): six files decoded and resampled here, made into a slot's image, sent a sector at a time */
+const kitFiles = [null, null, null, null, null, null];
+function kitTable() {
+  const tb = $("kitfiles");
+  tb.textContent = "";
+  t("kitdrums").forEach((nm, d) => {
+    const tr = document.createElement("tr"), a = document.createElement("td"), b = document.createElement("td"), inp = document.createElement("input");
+    a.textContent = nm;
+    inp.type = "file";
+    inp.accept = "audio/*,.wav,.aif,.aiff,.mp3,.flac,.ogg";
+    inp.addEventListener("change", (e) => { kitFiles[d] = e.target.files[0] || null; $("kitsend").disabled = !kitFiles.some(Boolean); });
+    b.append(inp);
+    tr.append(a, b);
+    tb.append(tr);
+  });
+}
+async function kitDecode(file) {                       /* mono at KIT_SR (the browser's decoder and resampler) */
+  const raw = await file.arrayBuffer(), ac = new (window.AudioContext || window.webkitAudioContext)();
+  const buf = await ac.decodeAudioData(raw);
+  ac.close();
+  const n = Math.max(1, Math.ceil(buf.duration * KIT_SR)), oc = new OfflineAudioContext(1, n, KIT_SR), src = oc.createBufferSource();
+  src.buffer = buf;
+  src.connect(oc.destination);
+  src.start();
+  return (await oc.startRendering()).getChannelData(0);
+}
+async function kitWrite(secs, say) {
+  const p = await openPort();
+  writing = true;
+  try {
+    for (let i = 0; i < secs.length; i++) {
+      say(t("kitsending") + (i + 1) + " / " + secs.length);
+      await writeObj(p, secs[i].obj, secs[i].data);
+    }
+  } finally { writing = false; releasePort(); }
+}
+$("kitsend").addEventListener("click", async () => {
+  const say = (x) => { $("kitstatus").textContent = x; };
+  if (!kitFiles.some(Boolean)) { say(t("kitnone")); return; }
+  try {
+    $("kitsend").disabled = true;
+    say(t("kitmaking"));
+    const sounds = [];
+    for (const f of kitFiles) sounds.push(f ? await kitDecode(f) : null);
+    const slot = +$("kitslot").value, k = kitImage($("kitnm").value, sounds);
+    await kitWrite(kitSectors(slot, k.img), say);
+    say(t("kitdone") + (slot + 1) + (k.cut ? t("kitcut") : ""));
+  } catch (err) { say(/did not accept/.test(err.message) ? t("kitstop") : err.message); }
+  $("kitsend").disabled = !kitFiles.some(Boolean);
+});
+$("kitclear").addEventListener("click", async () => {
+  const say = (x) => { $("kitstatus").textContent = x; }, slot = +$("kitslot").value;
+  try { await kitWrite(kitClear(slot), say); say(t("kitcleared") + (slot + 1)); } catch (err) { say(/did not accept/.test(err.message) ? t("kitstop") : err.message); }
+});
+kitTable();
 
 /* ---- the live status: the unit sends a frame four times a second while this page asks (every 3 s) */
 var stTimer = null, frames = [];            /* (var: applyLang looks at stTimer before this line runs) */

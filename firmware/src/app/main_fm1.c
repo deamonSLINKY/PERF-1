@@ -450,13 +450,13 @@ static void bench_run(uint32_t *w)
 /* BACKUP AND RESTORE (backup_proto.h; the installer page's buttons): an object of flash read out in frames, or written from chunks. The chunks gather in bk_buf,
  * the object is checked as its loader would take it, and written when the page says it is complete; after any write nothing else is stored (plat_store_restore)
  * and the page asks for a restart, which loads everything afresh. */
-static uint8_t bk_buf[BK_MAX] __attribute__((section(".pool.bk")));
+static uint8_t bk_buf[BK_RAW_MAX] __attribute__((section(".pool.bk")));   /* (a kit's sector, 4096: 0.17.38) */
 static bk_sess_t bk_sess;
 static uint8_t bk_restored;                      /* an object was written: a restart may follow */
 static uint8_t bk_ack[8], bk_ack_n;              /* an answer waiting for room in the USB queue */
 static uint32_t bk_rd_obj = 0xFFFFFFFFu, bk_rd_i, bk_rd_len;   /* an object being sent: which, how far, how long */
 static uint32_t bk_wait_obj = 0xFFFFFFFFu;       /* an object being written (the music fading out): which */
-static int bk_obj_ok(uint32_t obj) { return obj < OBJ_NOBJ && obj != OBJ_PANEL; }
+static int bk_obj_ok(uint32_t obj) { return (obj < OBJ_NOBJ && obj != OBJ_PANEL) || bk_is_raw(obj); }
 static void bk_ack_put(uint32_t obj, uint32_t idx, uint32_t status) { bk_ack_n = (uint8_t)bk_build_ack(bk_ack, obj, idx, status); }
 
 /* THE PLAYER'S DX7 VOICES. usb.c collects a DX7 SysEx (a 32-voice bulk dump: the first EN_NUSER voices replace the loaded ones; a single voice, appended; or
@@ -538,16 +538,18 @@ static void px_service(void)
         else if (e >> 28 == 4u) {                        /* backup: send an object (a restore under way is dropped) */
             const uint32_t obj = e & 0x7Fu;
             if (bk_obj_ok(obj) && bk_rd_obj == 0xFFFFFFFFu && ui_restore_state() != 1) {
-                const int n = plat_store_load(obj, bk_buf, BK_MAX);
+                const int n = bk_is_raw(obj) ? ui_kit_read(obj - BK_RAW0, bk_buf) : plat_store_load(obj, bk_buf, BK_MAX);
                 bk_sess.mask = 0;
                 bk_rd_len = n > 0 ? (uint32_t)n : 0u;
                 bk_rd_i = 0;
                 bk_rd_obj = obj;
             }
         } else if (e >> 28 == 5u) {                      /* restore: the object is complete: check it, write it */
-            const uint32_t obj = e >> 14 & 0x1Fu, len = e & 0x3FFFu;
+            const uint32_t obj = e >> 14 & 0x7Fu, len = e & 0x3FFFu;
             if (!bk_obj_ok(obj) || !bk_complete(&bk_sess, obj, len) || ui_restore_state() == 1)
                 bk_ack_put(obj, 0x7Fu, 1u);
+            else if (bk_is_raw(obj))                    /* (0.17.38) a sample kit's sector: written now (stopped only), the kits read again */
+                bk_ack_put(obj, 0x7Fu, (uint32_t)ui_kit_write(obj - BK_RAW0, bk_buf, len));
             else if (!ui_restore_valid(obj, bk_buf, len))
                 bk_ack_put(obj, 0x7Fu, 2u);
             else {

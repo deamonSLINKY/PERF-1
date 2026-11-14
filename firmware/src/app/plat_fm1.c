@@ -201,6 +201,22 @@ int plat_store_save(uint32_t obj, const void *src, uint32_t len)
     tel_stores++;
     return (int)r;
 }
+int plat_raw_write(uint32_t off, const void *src, uint32_t len)
+{
+    if (!flash_ok)
+        return -9;
+    if (store_lock)
+        return -8;
+    if (off < PLAT_RAW_LO || off >= PLAT_RAW_HI || (off & 0xFFFu) || len > 4096u)
+        return -2;
+    if (st_erase(off))
+        return -3;
+    if (len && st_prog(off, src, len))
+        return -4;
+    tel_stores++;
+    return 0;
+}
+const uint8_t *plat_raw_ptr(uint32_t off) { return off >= PLAT_RAW_LO && off < PLAT_RAW_HI ? (const uint8_t *)FM1_XIP(off) : 0; }
 int plat_store_restore(uint32_t obj, const void *src, uint32_t len)
 {
     int r;

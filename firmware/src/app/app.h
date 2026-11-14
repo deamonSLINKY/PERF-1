@@ -50,6 +50,8 @@ void project_piece(int i);               /* the playing piece kept as it is, pie
 void project_set_genre(int g);           /* another bank: the pieces as they were left in it (or their recipes), the same number playing */
 void project_piece_save(void);           /* the playing piece, as it is, into the bank */
 void project_piece_factory(void);        /* the playing piece back to its recipe, and out of the bank */
+int ui_kit_write(uint32_t sect, const uint8_t *src, uint32_t len);   /* (0.17.38) a sample kit's sector from the installer: 0 written, 3 not */
+int ui_kit_read(uint32_t sect, uint8_t *dst);   /* and read back (4096 bytes) */
 void project_piece_empty(void);          /* (0.17.31) the playing piece emptied to build up by hand: no drums, one chord, the bass, acid and pluck on steps, all rests (edited, not stored) */
 int project_factory_genre(void);         /* (0.17.23) every stored piece of this genre to factory; how many */
 void project_piece_recipe(int i);        /* (0.17.11, a track code) piece i as its recipe into play; the bank as it is (a stored piece stays stored) */

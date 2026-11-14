@@ -176,6 +176,16 @@ int plat_usb_host_msg(void)
     return m;
 }
 int plat_store_locked(void) { return store_lock; }
+static uint8_t raw_flash[PLAT_RAW_HI - PLAT_RAW_LO];   /* (0.17.38) the sample kits' flash */
+int plat_raw_write(uint32_t off, const void *src, uint32_t len)
+{
+    if (off < PLAT_RAW_LO || off >= PLAT_RAW_HI || (off & 0xFFFu) || len > 4096u)
+        return -2;
+    memset(raw_flash + (off - PLAT_RAW_LO), 0xFF, 4096u);
+    memcpy(raw_flash + (off - PLAT_RAW_LO), src, len);
+    return 0;
+}
+const uint8_t *plat_raw_ptr(uint32_t off) { return off >= PLAT_RAW_LO && off < PLAT_RAW_HI ? raw_flash + (off - PLAT_RAW_LO) : 0; }
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
     if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
@@ -678,6 +688,10 @@ static int expect(const char *what, const char *val)
         for (s2 = 0; s2 < 16; s2++)
             got += EN_BS_KIND(en_bs[s2]) >= 1 && EN_BS_KIND(en_bs[s2]) <= 4;
     }
+    else if (!strncmp(what, "kitnamelen", 10))     /* (0.17.38) a loaded kit slot's name, its length (an empty slot: "Empty N", 7) */
+        got = (int)strlen(EN_KIT_NAME[EN_NKIT + EN_NSKIT_BI + (atoi(what + 10) % EN_NUKIT)]);
+    else if (!strncmp(what, "kitempty", 8))       /* 1: that slot holds no kit */
+        got = !strncmp(EN_KIT_NAME[EN_NKIT + EN_NSKIT_BI + (atoi(what + 8) % EN_NUKIT)], "Empty", 5);
     else if (!strcmp(what, "extch"))             /* (0.17.31) a chord from outside on (MIDI in CHORDS) */
         got = en_extch;
     else if (!strcmp(what, "gesture"))           /* (0.17.31) the gesture recorder: 0 off, 1 armed, 2 writing, 3 playing */
@@ -1151,6 +1165,20 @@ int main(int argc, char **argv)
         } else if (!strcmp(cmd, "setfxs")) {         /* (0.17.19) setfxs N V: the effects' setting N (EN_FXS_*), as its page sets it */
             ui.fxs[atoi(a)] = (uint8_t)atoi(b);
             en_fxs(atoi(a), atoi(b));
+        } else if (!strcmp(cmd, "kitload")) {        /* (0.17.38) kitload SLOT FILE: a kit's image written into the slot as the installer does, its sectors
+                                                         * through the firmware's own writer (ui_kit_write), the header's last */
+            static uint8_t kb[5 * 4096];
+            FILE *kf = fopen(b, "rb");
+            const int slot = atoi(a);
+            size_t kn = kf ? fread(kb, 1, sizeof kb, kf) : 0;
+            int ks;
+            if (kf)
+                fclose(kf);
+            for (ks = 1; ks <= 5; ks++) {
+                const int k = ks % 5;
+                if ((size_t)k * 4096u < kn)
+                    ui_kit_write((uint32_t)(slot * 5 + k), kb + k * 4096, (uint32_t)(kn - (size_t)k * 4096u > 4096u ? 4096u : kn - (size_t)k * 4096u));
+            }
         } else if (!strcmp(cmd, "setpar")) {         /* setpar N V: parameter N set as its knob sets it */
             ui_param_set(atoi(a), atoi(b));
         } else if (!strcmp(cmd, "oldimage")) {       /* the first genre's stored bank marked as written before the pluck's DX voices were thirty (the sounds renumber on the next load) */

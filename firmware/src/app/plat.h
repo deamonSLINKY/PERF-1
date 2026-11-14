@@ -49,6 +49,10 @@ enum { PLAT_UH_NONE, PLAT_UH_ON, PLAT_UH_OFF, PLAT_UH_MIDI, PLAT_UH_NOMIDI, PLAT
 /* persistent storage (Felucca storage.c objects: A/B sectors, CRC, torn-write safe) */
 int plat_store_load(uint32_t obj, void *dst, uint32_t max);   /* bytes loaded, < 0 = none / bad */
 int plat_store_save(uint32_t obj, const void *src, uint32_t len);   /* 0 = ok */
+#define PLAT_RAW_LO 0xCD000u                    /* (0.17.38) the sample kits' flash: three slots of five sectors, 0xCD000 .. 0xDBFFF */
+#define PLAT_RAW_HI 0xDC000u
+int plat_raw_write(uint32_t off, const void *src, uint32_t len);   /* a sector there erased, then written (len <= 4096); 0 = ok */
+const uint8_t *plat_raw_ptr(uint32_t off);      /* those bytes, to read in place (the flash mapped; 0 outside the area) */
 int plat_store_restore(uint32_t obj, const void *src, uint32_t len);   /* a restored backup's object: written, and no other store is written after it (the unit restarts) */
 int plat_store_locked(void);
 int plat_store_seamless(void);        /* a flash write does not stop the audio (the erase goes in slices with the interrupts on between): no fade around it */

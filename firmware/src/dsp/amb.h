@@ -43,7 +43,9 @@
 #define EN_NCMSND (12 + EN_NCMFM)      /* the counter-melody's sounds */
 #define EN_NCMSTYLE 6                  /* its styles */
 #define EN_NKIT 21                      /* the sounds each drum (kick, snare + clap, hats, perc) can play (0.17.34: 14 -> 21) */
-#define EN_NSKIT 2                      /* (0.17.36) and after them the sampled kits (built in: smpkits.h) */
+#define EN_NSKIT_BI 2                   /* (0.17.36) and after them the sampled kits: built in (smpkits.h), */
+#define EN_NUKIT 3                      /* (0.17.38) then the three the player loads (ui.c, the flash) */
+#define EN_NSKIT (EN_NSKIT_BI + EN_NUKIT)
 #define EN_NKITS (EN_NKIT + EN_NSKIT)
 enum { EN_V_PAD, EN_V_DRONE, EN_V_ACID, EN_V_SAMPLE, EN_V_PLUCK };   /* the voices the keys can play (en_note) */
 
@@ -57,6 +59,7 @@ extern const char *const EN_NOTE_NAME[12];
 extern const char *const EN_LANE_NAME[EN_NLANE];
 extern const char *const EN_PAD_SOUND[EN_NSOUND], *const EN_DRONE_SOUND[EN_NSOUND], *const EN_ACID_SOUND[EN_NACID];
 extern const char *const EN_KIT_NAME[EN_NKITS];
+int en_user_kit(int slot, const uint8_t *img, uint32_t len);   /* (0.17.38) a loaded kit (its header and sounds, in place; 0: the slot empty): 1 taken */
 extern const char *EN_CM_SOUND[EN_NCMSND];     /* (the user voices' names change as they are loaded) */
 extern const char *const EN_CM_STYLE[EN_NCMSTYLE], *const EN_CM_RATE[4];
 /* the player's own DX7 voices: up to EN_NUSER, 128-byte packed records (the DX7's bulk-dump format: a 32-voice bank is 32 of them). en_user_voice may be
