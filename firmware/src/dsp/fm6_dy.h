@@ -4,8 +4,8 @@
 #pragma once
 #include <stdint.h>
 #define FM6_NDY 60
-#define FM6_DY_NAME_LIST "MF EPRHOD1", "WINEGLASS", "SMOOTHBASS", "FULL-BRASS", "EASY DXPAD", "FLUTEMRMBA", "DRAWBARS", "GITARA AKU", "ROLAND BRS", "SOLID BASS", "TEMPLEBELL", "MARIMBA", "CLAVINET", "SOFTSTRNGS", "SHIMMERPAD", "SKY SYNC", "HARFA LSR", "KALIMBA", "FLUTE BLOW", "STEEL PANS", "MOOGBASS", "TUBUL-BELL", "PEDALSTEEL", "GITARA ELE", "GUITARDAMP", "AXE", "SLAPS", "MFSYNBRASS", "SAXOPHONE", "SOLO TRPT", "WURLITZER", "TF-RHODES", "REAL GRAND", "ARCTICKEYS", "COTTENKEYS", "MAGICM1ORG", "LORD-Y B3", "Farfisa1", "PROPHET", "JUNO 106 7", "OB Genviv/", "Saw3Op", "SquarePWM", "Techno2", "TSQR DECAY", "CS 80", "ANALOG 1", "VNTGSTRNG1", "ANGEL VOX", "Fairlt.Vox", "WD SQ BASS", "PORTABass", "SYNBASS 48", "Femalevibe", "CELESTE", "DOUG22PICK", "SITAR VIII", "NEUTRNPLUK", "ETH. STAB", "SHORTHORNS"
-#define FM6_DYX_NAME_LIST "WURLITZER", "TF-RHODES", "REAL GRAND", "ARCTICKEYS", "COTTENKEYS", "MAGICM1ORG", "LORD-Y B3", "Farfisa1", "PROPHET", "JUNO 106 7", "OB Genviv/", "Saw3Op", "SquarePWM", "Techno2", "TSQR DECAY", "CS 80", "ANALOG 1", "VNTGSTRNG1", "ANGEL VOX", "Fairlt.Vox", "WD SQ BASS", "PORTABass", "SYNBASS 48", "Femalevibe", "CELESTE", "DOUG22PICK", "SITAR VIII", "NEUTRNPLUK", "ETH. STAB", "SHORTHORNS"
+#define FM6_DY_NAME_LIST "MF EPRHOD1", "WINEGLASS", "SMOOTHBASS", "FULL-BRASS", "EASY DXPAD", "FLUTEMRMBA", "DRAWBARS", "GITARA AKU", "ROLAND BRS", "SOLID BASS", "TEMPLEBELL", "MARIMBA", "CLAVINET", "SOFTSTRNGS", "SHIMMERPAD", "SKY SYNC", "HARFA LSR", "KALIMBA", "FLUTE BLOW", "STEEL PANS", "MOOGBASS", "TUBUL-BELL", "PEDALSTEEL", "CHOR.STRAT", "GUITARDAMP", "AXE", "SLAPS", "MFSYNBRASS", "SAXOPHONE", "SOLO TRPT", "WURLITZER", "TF-RHODES", "REAL GRAND", "ARCTICKEYS", "HARPSICHORD", "MAGICM1ORG", "ACCORDION", "Farfisa1", "PROPHET", "JUNO 106 7", "OBOE", "Saw3Op", "SquarePWM", "Techno2", "TSQR DECAY", "CS 80", "ANALOG 1", "PAN PIPE", "ANGEL VOX", "Fairlt.Vox", "WD SQ BASS", "KOTO", "CIMBALOM", "Femalevibe", "BANJO", "DOUG22PICK", "SITAR VIII", "NEUTRNPLUK", "ETH. STAB", "SHORTHORNS"
+#define FM6_DYX_NAME_LIST "WURLITZER", "TF-RHODES", "REAL GRAND", "ARCTICKEYS", "HARPSICHORD", "MAGICM1ORG", "ACCORDION", "Farfisa1", "PROPHET", "JUNO 106 7", "OBOE", "Saw3Op", "SquarePWM", "Techno2", "TSQR DECAY", "CS 80", "ANALOG 1", "PAN PIPE", "ANGEL VOX", "Fairlt.Vox", "WD SQ BASS", "KOTO", "CIMBALOM", "Femalevibe", "BANJO", "DOUG22PICK", "SITAR VIII", "NEUTRNPLUK", "ETH. STAB", "SHORTHORNS"
 static const char *const FM6_DY_NAME[FM6_NDY] = {FM6_DY_NAME_LIST};
 static const uint8_t FM6_DY[FM6_NDY][128] = {
     {/* 0: DY Tine EP: "MF EPRHOD1", DX7 - madFame Custom Patches VOL 3.syx voice 20: madFame, Custom Patches vol 3 (BB) */
@@ -238,15 +238,15 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,  58,   4,  96,   0,   0,  99,  99,  99,  99,  50,  50,  50,  50,  17,  14,
        0,   0,   0,   0,  69,  24,  80,  69,  68,  65,  76,  83,  84,  69,  69,  76
     },
-    {/* 23: DY Clean Gtr: "GITARA ELE", 1-32.syx voice 6: Pafreak, SYNTHOXICATED 1-32 (BB) */
-      99,  10,  99,  40,  99,   0,   0,   0,  44,   0,  35,   0,  59,   0,  75,  16,
-       0,  99,  10,  99,  40,  99,   0,   0,   0,  44,   0,  15,   0,  59,   0,  90,
-       0,   0,  99,  10,  99,  40,  99,   0,   0,   0,   0,   0,   0,   0,  59,  12,
-      90,   8,   0,  99,  10,  99,  60,  99,   0,   0,   0,   0,   0,   0,   0,  59,
-      12,  90,   4,   0,  99,  25,  99,  50,  99,   0,   0,   0,   0,   0,   0,   0,
-      59,  12,  90,   0,   0,  99,  25,  99,  50,  99,   0,   0,   0,   0,   0,   0,
-       0,  59,  12,  90,   0,   0,  99,  99,  99,  99,   0,  50,  50,  50,  13,   7,
-      40,   0,   0,   0,  33,  24,  71,  73,  84,  65,  82,  65,  32,  69,  76,  69
+    {/* 23: DY Clean Gtr: "CHOR.STRAT", INCONI23.SYX voice 31: Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: GITARA ELE measured mostly noise) */
+      99,  99,  35,  99,   0,  99,   0,  99,  44,   0,  72,   0, 117,   8,  53,  36,
+       0,  99,  99,  19,  99,   0,  99,   0,  99,   0,   0,   0,   0, 112,   0,  75,
+       2,   0,  32,  99,  25,  52,   0,  99,   0,   0,   0,   0,   0,   0, 117,  12,
+      99,   4,   0,  99,  99,  35,  42,   0,  99,   0,  99,  44,   0,  99,   0,  61,
+       8,  53,  36,   0,  99,  99,  17,  99,   0,  99,   0,  99,   0,   0,   0,   0,
+      56,   0,  75,   2,   0,  99,  99,  25,  52,   0,  99,   0,   0,   0,   0,   0,
+       0,  61,  12,  99,   4,   0,  99,  99,  99,  99,  50,  50,  50,  50,   2,   8,
+      35,   0,   0,   0,  49,  24,  67,  72,  79,  82,  46,  83,  84,  82,  65,  84
     },
     {/* 24: DY Muted Gtr: "GUITARDAMP", Aftrtch_1.syx voice 13: Aftertouch magazine (US) bank 1 (BB) */
       99,  60,  43,  99,  99,  79,   0,  75,  39,  65,   0,   4,  58,  24,  75,  16,
@@ -348,15 +348,15 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,  83,   8,  96,   2,   0,  99,  99,  99,  99,  50,  50,  50,  50,   4,   2,
       30,  33,  30,   0,  25,  12,  65,  82,  67,  84,  73,  67,  75,  69,  89,  83
     },
-    {/* 34: DY Soft Keys: "COTTENKEYS", Aftrtch_3.syx voice 8: Aftertouch magazine (US) bank 3 (BB) */
-      70,  30,  25,  50,  99,  90,   0,   0,   0,   0,   0,   0,  81,   8,  69,   2,
-       0,  70,  30,  25,  50,  99,  90,   0,   0,   0,   0,   0,   0,  33,   0,  99,
-       2,   0,  60,  95,  70,   0,  99,  95,  80,   0,  48,   0,  50,   0,  17,   0,
-      69,   2,   0,  50,   0,  10,  45,  99,  90,  99,   0,  27,   0,   0,   0,  97,
-       4,  99,   4,   0,  60,  95,  70,   0,  99,  95,  80,   0,  48,   0,  50,   0,
-      97,   0,  89,   2,   0,  50,   0,  10,  45,  99,  90,  99,   0,  27,   0,   0,
-       0,  17,   4,  99,   2,   0,  99,  99,  99,  99,  50,  50,  50,  50,   5,  15,
-      35,  50,   0,   0,  33,  24,  67,  79,  84,  84,  69,  78,  75,  69,  89,  83
+    {/* 34: DY Harpsichord: "Harpsi 14", pluck3.syx voice 25: Godric's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13 audit: was COTTENKEYS, a third Rhodes-type EP) */
+      95,  55,  40,  45,  99,  70,  50,   0,   0,   0,   0,   0,  56,   0,  60,  16,
+       0,  95,  55,  40,  40,  99,  70,  50,   0,   0,   0,   0,   0,  56,   0,  80,
+       4,   0,  92,  40,  35,  40,  99,  96,   0,   0,   0,   0,   0,   0,  56,   3,
+      83,   6,   0,  90,  35,  32,  45,  99,  90,   0,   0,   0,   0,   0,   0,  56,
+       0,  90,   2,   0,  99,  99,  99,  99,  99,  99,  99,   0,   0,   0,   0,   0,
+      56,   0,   0,   2,   0,  99,  99,  99,  99,  99,  99,  99,   0,   0,   0,   0,
+       0,  56,   0,   0,   2,   0,  99,  99,  99,  99,  50,  50,  50,  50,   7,  14,
+      35,   0,   0,   0,  49,  24,  72,  97, 114, 112, 115, 105,  32,  49,  52,  32
     },
     {/* 35: DY House Organ: "MAGICM1ORG", Narfman3.syx voice 30: Narfman, bank 3 (BB) */
       99,  99,  80,  99,  99,  99,  80,   0,   0,   0,   0,   0,   0,  14,  80,   2,
@@ -368,15 +368,15 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,  56,   3,  99,   9,   0,  99,  99,  99,  99,  50,  50,  50,  50,   4,  15,
       35,   0,   0,   0,  49,  24,  77,  65,  71,  73,  67,  77,  49,  79,  82,  71
     },
-    {/* 36: DY Rock Organ: "LORD-Y B3", Narfman2.syx voice 17: Narfman, bank 2 (BB) */
-      99,  99,  99,  80,  99,  99,  99,   0,   0,   0,   0,   4,  48,   0,  70,   0,
-      50,  99,  99,  99,  80,  99,  99,  99,   0,   0,   0,   0,   4,  56,   0,  44,
-       0,   0,  90,  58,   0,  80,  99,   0,   0,   0,   0,   0,   0,   4,   0,   0,
-      72,   2,  50,  99,  99,  99,  80,  99,  99,  99,   0,   0,   0,   0,   4,  48,
-       0,  50,   0,   0,  99,  99,  99,  80,  99,  99,  99,   0,   0,   0,   2,   4,
-     112,   0,  67,   0,   0,  90,  99,   0,  80,  99,  99,  99,   0,  39,   0,  40,
-       4,  56,   1,  99,   2,   0,  99,  99,  99,  99,  50,  50,  50,  50,  15,  15,
-      49,   0,   0,   0,  32,  24,  76,  79,  82,  68,  45,  89,  32,  66,  51,  32
+    {/* 36: DY Accordion: "9accordian", WIND--01.SYX voice 9: Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was LORD-Y B3, a second Hammond) */
+      76,  75,  23,  33,  76,  88,   0,   0,  15,   0,   0,   4,  80,   0,  87,   4,
+       0,  76,  90,  32,  39,  99,  88,  86,   0,  15,   0,  25,   4,  64,   0,  71,
+      14,   0,  49,  38,  39,  45,  96,  94,  94,   0,  15,   0,   9,   4,  48,   0,
+      70,   8,   0,  44,  28,  20,  50,  99,  95,  96,   0,  15,   0,  10,   4,  61,
+       0,  99,   2,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+      56,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+       0,  56,   0,   0,   0,   0,  99,  99,  99,  99,  50,  50,  50,  50,   0,  13,
+      41,   0,   0,   0,  64,  24,  57,  97,  99,  99, 111, 114, 100, 105,  97, 110
     },
     {/* 37: DY Combo Organ: "Farfisa1", Frankpch.syx voice 8: Frank Carvalho, Frankpch (BB) */
       99,  99,  99,  99,  99,  99,  99,   0,   0,   0,   0,   0,  56,   2,  69,  12,
@@ -408,15 +408,15 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,  48,   0,  99,   2,   0,  99,  99,  99,  99,  50,  50,  50,  50,  24,   7,
       34,   0,   0,  10,  40,  24,  74,  85,  78,  79,  32,  49,  48,  54,  32,  55
     },
-    {/* 40: DY Poly Brass: "OB Genviv\", Narfman3.syx voice 28: Narfman, bank 3 (BB) */
-      78,  95,  70,  11,  99,  96,  75,   0,  55,   0,  27,   0, 113,   0,  63,   4,
-       0,  40,  30,  25,  36,  99,  90,  90,   0,  51,   0,   0,   0,  17,   3,  99,
-       2,   0,  62,  95,  70,  12,  99,  96,  79,   0,  48,   0,  30,   0,  25,   0,
-      68,   4,   0,  40,  30,  25,  36,  99,  90,  90,   0,  51,   0,   0,   0,  97,
-      23,  99,   2,   1,  57,  95,  70,  11,  99,  96,  91,   0,  34,   0,  34,   0,
-     105,   0,  72,   2,   0,  40,  30,  25,  36,  99,  90,  90,   0,  51,   0,   0,
-       0,   9,  19,  99,   2,   0,  57,  83,  80,  84,  43,  51,  50,  50,   5,   5,
-      28,  99,  11,  50,  40,  24,  79,  66,  32,  71, 101, 110, 118, 105, 118,  92
+    {/* 40: DY Oboe: "Oboe    *", INCONI65.SYX voice 25: Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was OB Genviv/, a fourth synth brass) */
+      63,   0,  12,  70,  99,  90,  99,   0,  51,   0,   0,   0,  57,   0,  79,   2,
+       0,  63,   0,  12,  70,  99,  90,  99,   0,  51,   0,   0,   0,  57,   0,  75,
+       2,   0,  50,  45,  27,  70,  99,  99,  95,   0,  51,   0,   0,   0,  59,  11,
+      75,  12,   0,  97,  80,  80,  70,  99,  90,  80,   0,  51,   0,   0,   0,  56,
+       0,  75,  18,   0,  63,   0,  12,  70,  99,  90,  99,   0,  51,   0,   0,   0,
+      57,   0,  76,   2,   0,  60,  40,  20,  70,  95,  95,  85,   0,  51,   0,   0,
+       0,  57,  11,  99,   8,   0,  55,  71,  87,  89,  48,  51,  50,  50,   2,  13,
+      20,  42,  11,   0,  24,  24,  79,  98, 111, 101,  32,  32,  32,  32,  42,  32
     },
     {/* 41: DY Saw Lead: "Saw3Op", Frankpc2.syx voice 0: Frank Carvalho, Frankpc2 (BB) */
       99,  99,  99,  99,  99,  99,  99,   0,   0,   0,   0,   0,  56,   0,   0,   8,
@@ -478,15 +478,15 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,   0,   0,  99,   1,   0,  94,  67,  95,  60,  50,  50,  50,  50,   1,  15,
       38,  33,   0,   0,  40,  24,  65,  78,  65,  76,  79,  71,  32,  49,  32,  32
     },
-    {/* 47: DY Vintage Str: "VNTGSTRNG1", DX7 - madFame Custom Patches VOL 3.syx voice 8: madFame, Custom Patches vol 3 (BB) */
-      99,  99,  99,   0,  99,  99,  99,   0,   0,   0,   0,   0,  56,   0,  80,   2,
-       1,  55,  99,  99,  60,  99,  99,  99,   0,   0,   0,   0,   0,  56,   0,  99,
-       2,   0,  99,  99,  99,   0,  99,  99,  99,   0,   0,   0,   0,   0,  56,   0,
-      80,   2,   0,  55,  99,  99,  60,  99,  99,  99,   0,   0,   0,   0,   0,  56,
-       0,  99,   4,   0,  99,  99,  99,   0,  99,  99,  99,   0,   0,   0,   0,   0,
-      56,   0,  80,   0,  99,  55,  99,  99,  60,  99,  99,  99,   0,   0,   0,   0,
-       0,  56,   0,  99,   1,  24,  99,  99,  99,  99,  50,  50,  50,  50,   4,  15,
-      10,   0,  10,   0,  49,  24,  86,  78,  84,  71,  83,  84,  82,  78,  71,  49
+    {/* 47: DY Pan Pipe: "Pan Pipe 1", woodwind2.syx voice 24: Godric's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was VNTGSTRNG1, a second string patch) */
+      80,  26,  34,  99,  99,  99,  99,   0,  50,   0,   0,   0, 112,   4,  99,  16,
+       0,  60,  67,  77,  62,  76,  99,  28,   0,  39,  99,   0,   0, 113,   4,  79,
+       8,   0,  52,  73,  98,  49,  79,  99,   0,   0,  50,   0,   0,   0,  88,   4,
+      76,  21,  64,  85,  83,  62,  64,  76,  99,  71,   0,  51,   3,   9,   0, 113,
+      16,  93,   8,   0,  78,  70,  77,  99,  68,  99,   0,   0,  62,   0,   0,   0,
+       1,  12,  99,   6,  82,  42,  60,  44,  63,  35,  99,  99,   0,  46,   0,   8,
+       0,   1,  12,  95,   2,   0,  76,  99,  99,   0,  52,  50,  50,  50,  15,  15,
+      35,  30,   7,   0,  48,  24,  80,  97, 110,  32,  80, 105, 112, 101,  32,  49
     },
     {/* 48: DY Angel Vox: "ANGEL VOX", Aftrtch_3.syx voice 13: Aftertouch magazine (US) bank 3 (BB) */
       99,  65,  56,  41,  99,  99,  99,   0,   0,   0,   0,   0,  64,   0,  65,   0,
@@ -518,25 +518,25 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,  56,   8,  99,   0,   0,  99,  99,  99,  99,  50,  50,  50,  50,   3,  15,
        3,   0,   0,   0,   1,  24,  87,  68,  32,  83,  81,  32,  66,  65,  83,  83
     },
-    {/* 51: DY Glide Bass: "PORTABass", Narfman1.syx voice 26: Narfman, bank 1 (BB) */
-      99,  99,  38,  44,  99,  99,   0,   0,   0,   0,   0,   0,  56,   0,  91,   0,
-       0,  99,  99,  21,  57,  99,  99,   0,   0,   0,   0,   0,   0,  72,   0,  42,
-       0,   0,  99,  99,  99,  60,  99,  99,  99,   0,   0,   0,   0,   0,  64,   4,
-      99,   1,   0,  99,  99,  49,  64,  99,  90,  25,   0,  27,   0,  24,   0,  72,
-       0,  90,  10,   0,  99,  99,  99,  65,  99,  99,  93,  90,   0,   0,   0,   0,
-      56,   0,  88,   0,   0,  99,  28,  27,  60,  99,  89,   0,   0,   0,   0,   0,
-       0,  56,   4,  88,   2,   0,   0,   0,   0,   0,  50,  50,  50,  50,  10,  13,
-      35,   0,   0,   0,  73,  24,  80,  79,  82,  84,  65,  66,  97, 115, 115,  32
+    {/* 51: DY Koto: "N-KOTO-A 5", INCONI64.SYX voice 21: Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was PORTABass, a sixth synth bass) */
+      82,  82,  37,  48,  99,  81,   0,   0,   0,   0,  10,   0,  61,   4,   0,   6,
+       0,  91,  54,  29,  29,  99,  90,   0,   0,   0,   0,   5,   0,  60,   4,  81,
+       8,   0,  90,  33,  18,  39,  99,  72,   0,   0,  10,   0,  22,   4,  62,   4,
+      89,   2,   0,  94,  64,  20,  31,  99,  92,   0,   0,   0,   0,   0,   0,  61,
+       4,  99,   2,   0,  99,  47,  32,  48,  99,  86,   0,   0,   0,   0,  11,   0,
+      63,   0,  87,   8,   0,  94,  43,  16,  34,  99,  92,   0,   0,   0,   0,   0,
+       0,  63,   4,  99,   2,   0,  90,  11,  75,  53,  49,  50,  50,  50,   1,  13,
+      30,   0,   0,  16,  41,  24,  78,  45,  75,  79,  84,  79,  45,  65,  32,  53
     },
-    {/* 52: DY Synth Bass: "SYNBASS 48", Narfman2.syx voice 23: Narfman, bank 2 (BB) */
-      45,  98,  50,  98,  99,  97,  99,   0,  15,   0,   0,   4,  71,   0,  99,  62,
-       0,  98,  35,  50,  98,  87,  27,  99,   0,  15,   0,   0,   4,  55,   0,  99,
-       4,   0,  98,  64,  50,  98,  96,  27,  18,   0,  15,   0,   0,   4,  86,   0,
-      98,   0,   0,  98,  42,  46,  42,  99,  77,  65,   0,  15,   0,   0,   4,  59,
-       4,  99,   0,   0,  67,  39,  98,  48,  99,   0,   0,   0,  49,   0,   0,   0,
-      56,   0,  99,   0,   0,  98,  10,  10,  60,  99,  99,  99,   0,  49,   0,   0,
-       0,  59,   4,  99,   0,   0,  98,  98,  98,  98,  50,  50,  50,  50,  13,  13,
-      36,  28,   2,  80, 112,  24,  83,  89,  78,  66,  65,  83,  83,  32,  52,  56
+    {/* 52: DY Cimbalom: "Cimbalon 2", INCONI24.SYX voice 22: Jezreel's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was SYNBASS 48, a seventh bass) */
+      95,  32,  35,  33,  99,  70,   0,   0,  60,   0,   0,   0,  59,   0,  67,   6,
+       0,  95,  32,  35,  33,  99,  70,   0,   0,  60,   0,   0,   0,  59,   0,  75,
+       6,   0,  95,  32,  35,  35,  99,  70,   0,   0,   0,   0,   0,   0,  59,  20,
+      99,   2,   0,  95,  32,  35,  33,  99,  70,   0,   0,  60,   0,   0,   0,  59,
+       0,  70,   4,   0,  72,  32,  35,  33,  91,  71,   0,   0,  46,   0,  18,   0,
+      56,   0,  94,   4,   0,  95,  32,  35,  35,  99,  70,   0,   0,  60,   0,   0,
+       0,  59,  20,  99,   2,   0,  94,  67,  95,  60,  50,  50,  50,  50,   2,  14,
+      34,  33,   0,   0,  25,  24,  67, 105, 109,  98,  97, 108, 111, 110,  32,  50
     },
     {/* 53: DY Vibes: "Femalevibe", Aftrtch_3.syx voice 18: Aftertouch magazine (US) bank 3 (BB) */
       38,   0,  11,  23,  88,  84,  85,   0,   0,   0,   0,   0,  64,  13,  76,  10,
@@ -548,15 +548,15 @@ static const uint8_t FM6_DY[FM6_NDY][128] = {
        0,  48,   8,  99,   2,   0,  18,  60,  95,  60,  48,  51,  50,  50,   6,  15,
       35,  35,   0,   8,  64,  24,  70, 101, 109,  97, 108, 101, 118, 105,  98, 101
     },
-    {/* 54: DY Celeste: "CELESTE", Guit_Clav5.syx voice 27: Guitares & Claviers magazine (FR) bank 5 (BB) */
-      50,  99,   0,  30,  99,  99,   0,   0,   0,   0,   0,   0,  56,   0,  57,  36,
-       0,  50,  99,   0,  30,  99,  99,   0,   0,   0,   0,   0,   0,  56,   0,  99,
-       4,   0,  50,  99,   0,  30,  99,  99,  36,   0,   0,   0,   0,   0,  56,   0,
-      85,   4,   0,  50,  99,   0,  30,  99,  99,   0,   0,   0,   0,   0,   0, 112,
-       0,  99,   4,   0,  50,  99,   0,  30,  99,  99,  28,   0,   0,   0,   0,   0,
-       0,   0,  78,   8,   0,  50,  99,   0,  30,  99,  99,  36,   0,   0,   0,   0,
-       0,  64,   0,  99,   4,   0,  99,  99,  99,  99,  50,  50,  50,  50,   4,   8,
-      24,   0,   0,   0,  48,  12,  67,  69,  76,  69,  83,  84,  69,  32,  32,  32
+    {/* 54: DY Banjo: "Banjo  5", pluck1.syx voice 4: Godric's folder, Black Winny's Dexed cartridge set in DX7 All The Web (BB) (2026-11-13: was CELESTE, a fourth bell) */
+      99,  67,  60,  68,  90,  58,  50,   9,   0,   0,   0,   0,  56,  16,  99,   0,
+      99,  99,  45,  24,  30,  99,  86,  90,   0,   0,   0,   0,   0,  48,  12,  85,
+       8,   0,  99,  80,  60,  68,  90,  58,  65,   9,   0,   0,   0,   0,  56,  16,
+      99,  18,  64,  99,  50,  53,  35,  99,  85,  80,   0,   0,   0,   0,   0,  64,
+      12,  85,   4,   0,  99,  40,  26,  25,  99,  56,  90,  46,   0,   0,   0,   0,
+      56,   8,  90,   2,   0,  99,  63,  49,  52,  99,  86,  89,   0,   0,   0,   0,
+       0,  56,   0,  99,   2,   0,  99,  99,  99,  99,  50,  49,  50,  50,  16,  14,
+      50,  35,   5,   2,  80,  12,  66,  97, 110, 106, 111,  32,  32,  53,  32,  32
     },
     {/* 55: DY Pick: "DOUG22PICK", Aftrtch_3.syx voice 0: Aftertouch magazine (US) bank 3 (BB) */
       99,  84,  69,  99,  99,  82,  74,   0,   0,   0,   0,   0,  73,   2,  83,   6,
