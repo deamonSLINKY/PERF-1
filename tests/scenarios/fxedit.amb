@@ -340,12 +340,16 @@ expect fxpage 32
 spin SELECT 1
 wait 100
 expect fxpage 35
+# (0.17.44) CHORUS after SOUND, the walk's last
 spin SELECT 1
 wait 100
-expect fxpage 35
+expect fxpage 36
+spin SELECT 1
+wait 100
+expect fxpage 36
 spin SELECT -1
 wait 100
-expect fxpage 32
+expect fxpage 35
 # SEL + FX from a setting: the effects' walk, from its first page
 press SEL
 tap FX

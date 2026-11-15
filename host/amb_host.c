@@ -694,8 +694,17 @@ static int expect(const char *what, const char *val)
         got = !strncmp(EN_KIT_NAME[EN_NKIT + EN_NSKIT_BI + (atoi(what + 8) % EN_NUKIT)], "Empty", 5);
     else if (!strcmp(what, "extch"))             /* (0.17.31) a chord from outside on (MIDI in CHORDS) */
         got = en_extch;
-    else if (!strcmp(what, "gesture"))           /* (0.17.31) the gesture recorder: 0 off, 1 armed, 2 writing, 3 playing */
+    else if (!strcmp(what, "gesture"))           /* (0.17.31) the gesture recorder: 0 off, 1 armed, 2 writing, 3 playing, 4 kept for AUTO FX (0.17.44) */
         got = gs_st;
+    else if (!strcmp(what, "gsshot"))            /* (0.17.44) AUTO FX is playing the kept gesture */
+        got = gs_shot;
+    else if (!strcmp(what, "gsfx"))              /* the effects written into the gesture: how many sixteenths hold one */
+    {
+        int s2;
+        got = 0;
+        for (s2 = 0; s2 < 64; s2++)
+            got += gs_fx[s2] != 0;
+    }
     else if (!strcmp(what, "gsmask"))            /* the FX knobs it plays */
         got = gs_mask;
     else if (!strcmp(what, "gslen"))             /* its loop in sixteenths */

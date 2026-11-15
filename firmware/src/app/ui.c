@@ -56,7 +56,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 36
+#define NFXP 37
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -108,6 +108,8 @@ static const char *const INTRO_NAME[6] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 M
 static const uint16_t INTRO_S[6] = {0, 60, 120, 240, 480, 0};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const char *const TILT_NAME[4] = {"OFF", "GENRE", "WARMER", "BRIGHTER"};
+static const char *const JC_NAME[4] = {"OFF", "I", "II", "I+II"};   /* the CHORUS page (0.17.44): the Juno's three */
+static const char *const JCT_NAME[3] = {"PLUCK", "ACID", "BOTH"};
 static const char *const XMIX_NAME[5] = {"CUT", "4 BARS", "8 BARS", "16 BARS", "32 BARS"};       /* the SET page's Mix: how long the next piece glides to its tempo */
 static const uint8_t XMIX_BARS[5] = {0, 4, 8, 16, 32};
 static const char *const SMPM_NAME[4] = {"ALL", "DRUMS", "SYNTHS", "BY KEY"};                   /* the SAMPLE page: what a run plays, or a key a sound */
@@ -120,7 +122,7 @@ static const char *const SQT_NAME[3] = {"ACID", "BASS", "BOTH"};   /* SCREAM's t
 static const char *const AFA_NAME[4] = {"OFF", "GENTLE", "MEDIUM", "WILD"};   /* AUTO FX (0.16.8): how much, how often, how long, which */
 static const char *const AFE_NAME[4] = {"4 BARS", "8 BARS", "16 BARS", "32 BARS"};
 static const char *const AFL_NAME[4] = {"A BEAT", "HALF BAR", "A BAR", "2 BARS"};
-static const char *const AFP_NAME[2] = {"GENRE", "ANY"};
+static const char *const AFP_NAME[3] = {"GENRE", "ANY", "YOURS"};   /* (YOURS, 0.17.44: the gesture recorder's, kept) */
 static const char *const MCH_NAME[17] = {"ALL", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"};
 static const struct {
     const char *name;
@@ -198,11 +200,12 @@ static const struct {
     {"SCREAM", FX_SPARE13, 0, {{"Drive", KN_PLAIN, EN_FXS_SQ_DRIVE, 0, 0}, {"Scream", KN_PLAIN, EN_FXS_SQ_AMT, 0, 0}, {"Wow", KN_PLAIN, EN_FXS_SQ_WOW, 0, 0},
                        {"Target", KN_NAME, EN_FXS_SQ_TGT, SQT_NAME, 3}}},   /* (0.16.4; a spare effect bit, as FILTERS: nothing held) the acid's and the bass's filters pushed to scream: drive into it, resonance towards singing, accents opening it */
     {"AUTO FX", FX_SPARE12, 0, {{"Auto FX", KN_NAME, EN_FXS_AF_AMT, AFA_NAME, 4}, {"Every", KN_NAME, EN_FXS_AF_EVERY, AFE_NAME, 4},
-                        {"Length", KN_NAME, EN_FXS_AF_LEN, AFL_NAME, 4}, {"Pick", KN_NAME, EN_FXS_AF_PICK, AFP_NAME, 2}}},   /* (0.16.8; a spare effect bit: nothing held) effects played by
+                        {"Length", KN_NAME, EN_FXS_AF_LEN, AFL_NAME, 4}, {"Pick", KN_NAME, EN_FXS_AF_PICK, AFP_NAME, 3}}},   /* (0.16.8; a spare effect bit: nothing held) effects played by
                                                     * themselves, ending on the phrase lines (af_tick) */
     {"SOUND", FX_SPARE11, 0, {{"Vintage", KN_PLAIN, EN_FXS_VINTAGE, 0, 0}, {"Polish", KN_NAME, EN_FXS_POLISH, ONOFF_NAME, 2},
                        {"Tilt", KN_NAME, EN_FXS_TILT, TILT_NAME, 4}, {"Width", KN_PLAIN, EN_FXS_WIDTH, 0, 0}}},   /* (0.17.30; a spare effect bit: nothing held) the voices' wandering pitch,
                                                     * the master's polish (the lows mono, the peaks rounded), its tilt, the width up top */
+    {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 4}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -636,8 +639,12 @@ int ui_dirty(void) { return project_pending(); }
 
 static void edited(void) { proj.edited |= (uint16_t)(1u << proj.piece); }   /* the piece changed */
 /* the gesture recorder's (0.17.31; below, at gesture_tick) */
-static int8_t gs_v[64][4];
-static uint8_t gs_st, gs_len, gs_bar, gs_pos, gs_stop, gs_mask, gs_busy, gs_w;   /* gs_st: 0 off, 1 armed, 2 recording, 3 playing */
+static int8_t gs_v[64][4], gs_a[4], gs_home[4];   /* the knobs a sixteenth; as they were when armed; before AUTO FX played it */
+static uint8_t gs_fx[64];                        /* (0.17.44) the effect held a sixteenth: its bit + 1, 0 none */
+#define AF_GS 0xFFu                              /* AUTO FX's plan: your gesture (0.17.44), not an effect */
+static uint8_t gs_st, gs_len, gs_bar, gs_pos, gs_stop, gs_mask, gs_busy, gs_w, gs_hand, gs_fxnow, gs_shot;   /* gs_st: 0 off, 1 armed, 2 recording, 3 looping,
+                                                 * 4 kept for AUTO FX (Pick: YOURS); gs_hand: the effect played by hand now (bit + 1); gs_fxnow: the one the
+                                                 * gesture plays now; gs_shot: AUTO FX is playing it */
 static uint32_t gs_t;
 
 /* TRACK CODES (0.17.11): nine letters for a track: its genre, its piece (as the recipe), its key, mode and tempo, and the seed every
@@ -2525,7 +2532,7 @@ static void af_tick(void)
     ui.af_live = (uint8_t)(ui.af_end && s16 >= ui.af_start);
     if (ui.af_live && !ui.af_said) {
         ui.af_said = 1;
-        say("AUTO FX", EN_FX_NAME[ui.af_fx]);
+        say("AUTO FX", ui.af_fx == AF_GS ? "YOUR GESTURE" : EN_FX_NAME[ui.af_fx]);
     }
     if (bar == ui.af_bar)
         return;
@@ -2533,6 +2540,16 @@ static void af_tick(void)
     if (ui.af_end || bar < ui.af_quiet)
         return;
     predrop = en_sec == EN_SEC_BUILD && en_sec_bars == 1 && amt >= 2;
+    if (!predrop && ui.fxs[EN_FXS_AF_PICK] == 2 && gs_st == 4 && gs_len) {   /* (0.17.44) Pick YOURS: the gesture kept, its whole length, ending on the line */
+        nb = gs_len / EN_NSTEP;
+        if ((bar + (uint32_t)nb) % (uint32_t)every || af_dice() % 100u >= CHANCE[amt])
+            return;
+        ui.af_fx = AF_GS;
+        ui.af_end = (bar + (uint32_t)nb) * 16u;
+        ui.af_start = ui.af_end - gs_len;
+        ui.af_said = 0;
+        return;
+    }
     nb = len_set > 16 ? 2 : 1;                   /* (two bars long: planned two bars before the line) */
     if (predrop)
         nb = 1;
@@ -3130,7 +3147,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
+static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
@@ -4671,7 +4688,16 @@ static void input(void)
             }
         }
         ui.af_user = m != 0;                     /* (an effect played or latched by hand: AUTO FX gives way) */
-        if (ui.af_live && !ui.af_user)
+        {   /* (0.17.44) the gesture recorder: the effect the hand plays now (the lowest), and the one the gesture plays when the hand plays none */
+            int b = 0;
+            if (m)
+                while (!(m >> b & 1u))
+                    b++;
+            gs_hand = (uint8_t)(m ? b + 1 : 0);
+            if (gs_fxnow && !m)
+                m |= FXB(gs_fxnow - 1u);
+        }
+        if (ui.af_live && !ui.af_user && ui.af_fx != AF_GS)
             m |= FXB(ui.af_fx);
         if (ui.dj_on && en_playing) {              /* the auto-DJ: a fill before the breakdown, the riser in the build */
             if (ui.dj_fill)
@@ -5272,7 +5298,7 @@ static void draw_header(void)
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
-                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)gs_st << 20 | (uint32_t)(gs_mask != 0) << 22);
+                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)(gs_st & 3u) << 20 | (uint32_t)(gs_mask != 0) << 22 | (uint32_t)gs_shot << 23 | (uint32_t)(gs_st >> 2) << 24);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
     h = hash(h, (uint32_t)(en_intro_k * 64.0f) | (uint32_t)ui.dj_round << 8 | (uint32_t)ui.dj_rounds << 12);   /* the intro's countdown, the round */
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
@@ -5359,8 +5385,8 @@ static void draw_header(void)
                 x -= 10;
             }
         }
-        if (gs_st && (gs_st < 3 || gs_mask)) {     /* the gesture recorder (0.17.31): armed, writing (REC), or playing (LOOP) */
-            const char *g = gs_st == 3 ? "LOOP" : "REC";
+        if (gs_st == 1 || gs_st == 2 || (gs_st == 3 && gs_mask) || gs_shot) {   /* the gesture recorder: armed (ARM), writing (REC), looping (LOOP), AUTO FX's (AUTO) */
+            const char *g = gs_shot ? "AUTO" : gs_st == 3 ? "LOOP" : gs_st == 2 ? "REC" : "ARM";
             x -= text_w(&FONT_XS, g);
             cv_text(x, 8, &FONT_XS, g, gs_st == 2 ? K_ACID : K_ACC);
             x -= 10;
@@ -9094,12 +9120,16 @@ static void leds(void)
 }
 
 /* the FX knobs glide to a scene's values (a second or so) instead of jumping; a knob turned by hand takes its own back */
-/* THE GESTURE RECORDER (0.17.31): the four FX knobs' moves, looped. In the FX menu, SEL + REC arms it; from the next bar every sixteenth of the
- * knobs is written, up to four bars; SEL + REC again closes the loop at that bar's end (the fourth bar's end closes it anyway). Then the knobs
- * play the loop, gliding from one sixteenth to the next. A knob turned by hand (or by MIDI, or home with FX + OCT-) is the hand's again; SEL +
- * REC in the FX menu while it plays lets all of them go. Not stored, like the FX knobs. 256 B. */
+/* THE GESTURE RECORDER (0.17.31; 0.17.44: it waits for you, and records the effect played too). In the FX menu, SEL + REC arms it (ARM); the
+ * first move of an FX knob, or an effect played, starts it (REC), the loop's first step the start of that bar (the steps before the move: the
+ * knobs as they were). Every sixteenth of the four knobs and the effect held is written, up to four bars; SEL + REC closes the loop at that
+ * bar's end (the fourth bar's end closes it anyway). Then it loops: the knobs gliding from one sixteenth to the next, the effect on where it was
+ * played (a hand's effect goes first). Or, with AUTO FX on and its Pick on YOURS, it is kept for AUTO FX, which plays it once on its own
+ * phrase lines (Every) and puts the knobs back. A knob turned by hand (or by MIDI, or home with FX + OCT-) is the hand's again; SEL + REC in the
+ * FX menu while it loops (or is kept) lets it go. Not stored, like the FX knobs. 324 B. */
 static void gesture_key(void)                   /* FX menu, SEL + REC */
 {
+    int k;
     if (gs_st == 0) {
         if (!en_playing) {
             say("GESTURE", "PLAY FIRST");
@@ -9107,17 +9137,21 @@ static void gesture_key(void)                   /* FX menu, SEL + REC */
         }
         gs_st = 1;
         gs_stop = 0;
-        gs_pos = en_drum_pos;
-        say("GESTURE: NEXT BAR", "TURN THE FX KNOBS");
+        gs_shot = 0;
+        for (k = 0; k < 4; k++)
+            gs_a[k] = ui.fxk[k];
+        say("GESTURE READY", "MOVE A KNOB OR PLAY AN FX");
     } else if (gs_st == 1) {
         gs_st = 0;
         say("GESTURE", "OFF");
     } else if (gs_st == 2) {
         gs_stop = 1;
-        say("GESTURE", "LOOPS AT THE BAR'S END");
+        say("GESTURE", "ENDS AT THE BAR'S END");
     } else {
         gs_st = 0;
         gs_mask = 0;
+        gs_shot = 0;
+        gs_fxnow = 0;
         say("GESTURE", "LET GO: THE KNOBS ARE YOURS");
     }
 }
@@ -9129,32 +9163,69 @@ static void cap_tick(void)
         cap_st_t = plat_ms();
     }
 }
+static void gs_shot_end(void)                   /* AUTO FX's play of the gesture is over: the knobs it still holds back where they were */
+{
+    int k;
+    if (!gs_shot)
+        return;
+    gs_shot = 0;
+    gs_fxnow = 0;
+    gs_busy = 1;
+    for (k = 0; k < 4; k++)
+        if (gs_mask >> k & 1u)
+            knob_set(K_FXF + k, gs_home[k]);
+    gs_busy = 0;
+    gs_mask = 0;
+}
 static void gesture_tick(void)
 {
     const uint32_t now = plat_ms();
     int k, i, p;
     if (!gs_st)
         return;
-    if (!en_playing) {                           /* stopped: armed or half written, gone; a loop waits for the start */
+    if (!en_playing) {                           /* stopped: armed or half written, gone; a loop or a kept one waits for the start */
         if (gs_st < 3)
             gs_st = 0;
+        gs_shot_end();
         gs_pos = 0;
         gs_bar = 0;
+        gs_fxnow = 0;
         return;
     }
     p = en_drum_pos % EN_NSTEP;
+    if (gs_st == 1) {                            /* armed: the first move starts it, in the bar it falls in */
+        int moved = gs_hand != 0;
+        for (k = 0; k < 4; k++)
+            if (ui.fxk[k] != gs_a[k])
+                moved = 1;
+        gs_pos = (uint8_t)p;
+        if (!moved)
+            return;
+        gs_st = 2;
+        gs_bar = 0;
+        gs_t = now;
+        for (i = 0; i < p; i++) {
+            for (k = 0; k < 4; k++)
+                gs_v[i][k] = gs_a[k];
+            gs_fx[i] = 0;
+        }
+        gs_w = (uint8_t)p;
+        say("GESTURE: REC", "SEL + REC ENDS IT");
+    }
+    if (gs_st == 4 && !gs_shot && ui.af_live && ui.af_fx == AF_GS && p == 0) {   /* AUTO FX's turn: from the top, the knobs' places kept */
+        gs_shot = 1;
+        gs_bar = 0;
+        gs_mask = 15;
+        for (k = 0; k < 4; k++)
+            gs_home[k] = ui.fxk[k];
+    } else if (gs_shot && !(ui.af_live && ui.af_fx == AF_GS)) {
+        gs_shot_end();
+    }
     if (p != gs_pos) {
         const int wrap = p < gs_pos;
         gs_pos = (uint8_t)p;
         gs_t = now;
-        if (gs_st == 1 && wrap) {
-            gs_st = 2;
-            gs_bar = 0;
-            gs_w = 0;
-            for (k = 0; k < 4; k++)
-                gs_v[0][k] = ui.fxk[k];
-            say("GESTURE", "RECORDING: SEL + REC LOOPS IT");
-        } else if (gs_st == 2 && wrap) {
+        if (gs_st == 2 && wrap) {
             gs_bar++;
             if (gs_stop || gs_bar >= 4) {
                 char t[16] = "PLAYS: 1 BAR";
@@ -9162,12 +9233,19 @@ static void gesture_tick(void)
                 t[7] = (char)('0' + gs_bar);
                 if (gs_bar > 1)
                     t[12] = 'S', t[13] = 0;
-                gs_st = 3;
                 gs_bar = 0;
-                gs_mask = 15;
-                say("GESTURE", t);
+                gs_fxnow = 0;
+                if ((ui.fxs[EN_FXS_AF_AMT] & 3) && ui.fxs[EN_FXS_AF_PICK] == 2) {
+                    gs_st = 4;
+                    gs_mask = 0;
+                    say("GESTURE KEPT", "AUTO FX PLAYS IT");
+                } else {
+                    gs_st = 3;
+                    gs_mask = 15;
+                    say("GESTURE", t);
+                }
             }
-        } else if (gs_st == 3 && wrap) {
+        } else if ((gs_st == 3 || gs_shot) && wrap && gs_len) {
             gs_bar = (uint8_t)((gs_bar + 1) % (gs_len / EN_NSTEP));
         }
     }
@@ -9176,14 +9254,17 @@ static void gesture_tick(void)
         int j = gs_w;
         if (i < j)
             j = i;
-        for (; j <= i; j++)
+        for (; j <= i; j++) {
             for (k = 0; k < 4; k++)
                 gs_v[j][k] = ui.fxk[k];
+            gs_fx[j] = gs_hand;
+        }
         gs_w = (uint8_t)i;
-    } else if (gs_st == 3 && gs_mask) {          /* played: this sixteenth's value gliding to the next's */
+    } else if (gs_len && ((gs_st == 3 && gs_mask) || gs_shot)) {   /* played: this sixteenth's value gliding to the next's, its effect */
         const int n = (i + 1) % gs_len, tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
         const uint32_t step = 15000u / (uint32_t)tempo, el = now - gs_t;
         const float f = el >= step ? 1.0f : (float)el / (float)step;
+        gs_fxnow = gs_fx[i];
         gs_busy = 1;
         for (k = 0; k < 4; k++)
             if ((gs_mask >> k & 1u) && !(ui.glide_on >> k & 1u)) {
@@ -9191,6 +9272,8 @@ static void gesture_tick(void)
                 knob_set(K_FXF + k, (int)(v + (v < 0.0f ? -0.5f : 0.5f)));
             }
         gs_busy = 0;
+    } else {
+        gs_fxnow = 0;
     }
 }
 

@@ -1588,6 +1588,7 @@ static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 typedef struct { const uint8_t *d; uint32_t n; uint8_t i0; } smp_t;
 typedef struct { const char *name; smp_t s[6]; } skit_t;
 #include "smpkits.h"
+#include "djsmp.h"                              /* (0.17.44) the sampled DJ snips: the air horn, the rave horn, the crash (tools/djsamples.py) */
 _Static_assert(EN_NSKIT_BI == EN_NSKIT_BI_H, "the sampled kits: EN_NSKIT_BI as smpkits.h has them");
 static skit_t skit_user[EN_NUKIT];               /* (0.17.38) the loaded kits (their sounds in the flash), */
 static int8_t ukit_lv[EN_NUKIT][6];              /* their sounds' levels (half dB, the installer measured them), */
@@ -1801,6 +1802,7 @@ static const float VOWEL[4][2] = {{320.0f, 800.0f}, {480.0f, 900.0f}, {730.0f, 1
 static float arcm;                              /* the slow arc, -1 sparse .. +1 full, times Motion */
 static float pad_filt, pad_lvl = 1.0f, pad_pan, pad_pitch;   /* the pad's LFO, where it goes this chunk */
 static float lfo_acut, lfo_ares, lfo_echo, lfo_tcut;   /* (0.16.4) the LFOs on others: the acid's cutoff (octaves) and resonance (0..1), the echo's time, the punch-in filter's cutoff */
+static float acut_was, dlv_was;                 /* (0.17.44) the acid's and the bass's cutoff LFO as the last chunk left it: each glides from there across the next */
 
 static float breath(const pad_t *v, float t)    /* rise, hang, fall, rest: the envelope */
 {
@@ -4722,7 +4724,7 @@ static inline float tap(const dl_t *d, int k)
 static inline void push(dl_t *d, float x)
 {
     x = fm_clampf(x * RV_Q, -32767.0f, 32767.0f);
-    d->b[d->i] = (int16_t)(int32_t)(x + (x < 0.0f ? -0.5f : 0.5f));
+    d->b[d->i] = (int16_t)(int32_t)x;           /* (0.17.44: truncated, toward 0: rounded, a dying tail never reached 0 and hissed at -80 dBFS for good) */
     if (++d->i >= d->n)
         d->i = 0;
 }
@@ -4799,7 +4801,7 @@ static inline void reverb_tank(float x, float *ol, float *or_)
     } else if (rv_type == 1) {                    /* shimmer: the tail, an octave up, goes back in (a little) */
         const float m = 0.5f * (*ol + *or_), p2 = sh_ph + 0.5f >= 1.0f ? sh_ph - 0.5f : sh_ph + 0.5f;
         const float w1 = 1.0f - fm_fabsf(2.0f * sh_ph - 1.0f), w2 = 1.0f - fm_fabsf(2.0f * p2 - 1.0f);
-        sh_dc += 0.0142f * (m - sh_dc);           /* a one-pole high-pass, ~100 Hz, before the shifter */
+        sh_dc += 0.04f * (m - sh_dc);             /* a one-pole high-pass, ~290 Hz (0.17.44: ~100 Hz let Size 100 and X 85+ build back up to a 50 Hz howl after minutes), before the shifter */
         sh_buf[sh_w] = m - sh_dc;
         rv_shim_fb = fm_flush((sh_tap((1.0f - sh_ph) * SH_W + 2.0f) * w1 + sh_tap((1.0f - p2) * SH_W + 2.0f) * w2) * rv_shim);
         sh_ph += 1.0f / SH_W;
@@ -4949,7 +4951,7 @@ static void plate_init(void)
 #define TAPE_SR 11025.0f
 static int16_t tape[TAPE_N] EN_POOL;
 static int tape_w, tape_ph;
-static float tape_acc, tape_lp, tape_hp, tape_p1, tape_p2, tape_c1, tape_c2;
+static float tape_acc, tape_lp, tape_hp, tape_p1, tape_p2, tape_c1, tape_c2, tp_l1, tp_l2;   /* (tp_l1, tp_l2: its feed's low-pass, 0.17.44) */
 static const float HEAD2[5] = {0.75f, 0.6667f, 0.625f, 0.5f, 0.375f};   /* the second head's parts */
 static float head2 = 0.75f, head2_t = 0.75f, head2_v;   /* its place (of the loop), target, speed */
 static float fb_lean;                            /* 0..1: how much of the feedback is the second head's */
@@ -5003,6 +5005,8 @@ static void heads_step(uint32_t n)
 {
     float p, want, vmax;
     int i;
+    tp_l1 = fm_flush(tp_l1);                    /* (the tape feed's low-pass, 0.17.44) */
+    tp_l2 = fm_flush(tp_l2);
     for (i = 0; i < 2; i++) {
         p = fm_clampf((i ? 0.7f : -0.7f) + 0.9f * motion * mod[6 + i].v, -1.0f, 1.0f);
         p = (p + 1.0f) * (FM_PI / 4.0f);
@@ -5030,7 +5034,9 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
     int t = plex_w - PLEX_TAP;
     if (shed3) {                                 /* shed level 3: no Echoplex (the tape alone) */
         *xl = *xr = 0.0f;
-        tape_acc += in;
+        tp_l1 += 0.51f * (in - tp_l1);          /* (0.17.44) the tape's feed low-passed at ~5 kHz twice before it is boxed down to 11 kHz: above ~6 kHz the alias came */
+        tp_l2 += 0.51f * (tp_l1 - tp_l2);       /* back louder than the tone (HYPNO 1, PSY 1: -27 dB of alias in the echo; now -38) */
+        tape_acc += tp_l2;
         goto tape_part;
     }
     y = (float)plex[plex_w] * (1.0f / 12000.0f);         /* the Echoplex: 160 ms, fed back, darker */
@@ -5041,7 +5047,9 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
         plex_w = 0;
     *xl = plex_lp;
     *xr = plex_lp2;
-    tape_acc += in + 0.3f * plex_lp;
+    tp_l1 += 0.51f * (in + 0.3f * plex_lp - tp_l1);   /* (the tape's feed low-passed, as above) */
+    tp_l2 += 0.51f * (tp_l1 - tp_l2);
+    tape_acc += tp_l2;
 tape_part:
     if (++tape_ph >= 4) {                        /* the tape, a quarter of the time */
         float d, h1, h2, fb;
@@ -5987,15 +5995,20 @@ static void flx_tick(int st)                    /* on every sixteenth */
  * zaps, beeps, a whoop, a dub siren, a drop, a riser, a rewind, a crash, a rave stab, a bell, a snare roll. Up to four at once. Held mode (the page's Play):
  * the sounds that go on (horns, sirens, the dub siren, the riser, the roll) sound as long as the key is down; the others play out. One shot: every one plays
  * out (the long ones for at most a second or so). Pitch: the page's octave, up or down. Echo: how much of them goes to the echo and the reverb. Level. */
-enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL, DJ_BLAST, DJ_RAVE, DJ_RSTAB };
+enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL, DJ_BLAST, DJ_RAVE, DJ_RSTAB,
+       DJ_KICK, DJ_SNARE };
+/* (0.17.44, the maker: "the horns are still trash, maybe a sampled sound would be easier and sound better. A good crash, kick, and snare too") the air
+ * horn and blast, the rave horn and stab, and the crash are samples now (djsmp.h: rendered offline by tools/djsamples.py, our own models), the horns
+ * looped while held and played on the chord's root; the kick and the snare (on SIREN 3's and LASER LO's keys) are the sampled kits' (MACHINE's kick,
+ * BOOMBAP's snare). */
 /* (0.17.24, the snips pass: each one measured alone; their levels were 25 dB apart, every pitched one a fixed B flat, all mono, the crash, the roll and the
  * riser mostly hiss.) Now: the pitched ones take the chord playing (dj_note), each has its own trim (DJ_TRIM, from the measure: within 2 dB of each other),
  * the horns, the sirens, the rave horn, the stabs, the crash, the riser and the roll have a side (left and right differ; in mono it cancels), and the air
  * horns, the rave horn, the crash, the roll, the riser and the bell are remade. HORN MIN's key is a chord stab now (the chord playing, in saws). */
 static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] = {
     {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 466.0f, 0.0f, "AIR BLAST"}, {DJ_STAB, 233.0f, 0.0f, "CHORD STAB"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
-    {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_SIREN, 700.0f, 0.4f, "SIREN 3"},
-    {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_LASER, 1400.0f, 0.1f, "LASER LO"},
+    {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_KICK, 0.0f, 0.0f, "KICK"},
+    {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_SNARE, 0.0f, 0.0f, "SNARE"},
     {DJ_ZAP, 3000.0f, 0.15f, "ZAP"}, {DJ_ZAP, 6000.0f, 0.08f, "ZAP HI"},
     {DJ_BEEP, 1000.0f, 0.1f, "BEEP"}, {DJ_BEEP, 600.0f, 0.12f, "BEEP LO"}, {DJ_BEEP, 1700.0f, 0.08f, "BEEP HI"}, {DJ_DBL, 1200.0f, 0.07f, "2 BEEP"},
     {DJ_WHOOP, 300.0f, 0.35f, "WHOOP"}, {DJ_WHOOP, 800.0f, 0.6f, "WHOOP 2"},
@@ -6004,9 +6017,18 @@ static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] =
     {DJ_RISER, 110.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 1.2f, "CRASH"},
     {DJ_RSTAB, 233.0f, 0.0f, "RAVE STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
 /* each snip's trim, half dB (+ louder), so that each sits at the same loudness (its loudest 400 ms, K-weighted): measured alone (0.17.24) */
-static const int8_t DJ_TRIM[27] = {-12, -11, 1, -14, -11, -11, -9, 3, 4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, 14, -4, -7, 6};
+static const int8_t DJ_TRIM[27] = {-14, -12, 1, -10, -11, -11, -10, 3, -4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, -2, 10, -7, 6};   /* (0.17.44: the sampled horns, crash, kick and snare measured the same way) */
 const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
-typedef struct { uint8_t on, held, key, type, hold_mode; float hz, aux, aux2, t, ph, ph2, ph3, ph4, env, z, z2, zs, zs2, g; uint32_t age; } dj_t;
+typedef struct {
+    uint8_t on, held, key, type, hold_mode;
+    float hz, aux, aux2, t, ph, ph2, ph3, ph4, env, z, z2, zs, zs2, g;
+    uint32_t age;
+    const uint8_t *sd;                          /* (0.17.44) a sampled snip: its ADPCM, length and loop (0: none), where it is, the decoder and its state at the loop's start, */
+    uint32_t sn, sls, sle, si;
+    int32_t spr, slpr;
+    uint8_t sai, slai, slsv;
+    float sx1, sx2, sph, srate;                 /* the two samples about the place, the place between them, the step (the sample's rate and the note) */
+} dj_t;
 static dj_t djv[4];
 static uint32_t dj_age;
 volatile uint8_t en_smp_active;                 /* the snips sounding */
@@ -6090,9 +6112,74 @@ static void smp_note(int key, int on)
         d->g = fm_exp2f(0.0830482f * (float)DJ_TRIM[key]);   /* (half dB: 2^(h/12.04)) */
         d->t = d->ph = d->ph2 = d->ph3 = d->ph4 = d->env = d->z = d->z2 = d->zs = d->zs2 = 0.0f;
         d->age = ++dj_age;
+        d->sd = 0;
+        {   /* (0.17.44) the sampled ones: the horns at the chord's root (as their note against the sample's), the crash, the kick and the snare as they are */
+            const djsmp_t *s = ty == DJ_HORN || ty == DJ_BLAST ? &DJ_SMP[DJS_HORN_I] : ty == DJ_RAVE || ty == DJ_RSTAB ? &DJ_SMP[DJS_RAVE_I] :
+                               ty == DJ_CRASH ? &DJ_SMP[DJS_CRASH_I] : 0;
+            const float po = oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f;   /* (the page's octave, for the unpitched ones too) */
+            if (s) {
+                d->sd = s->d, d->sn = s->n, d->sls = s->ls, d->sle = s->le, d->sai = s->i0;
+                d->srate = s->sr * (1.0f / EN_SR) * (s->hz > 0.0f ? hz / s->hz : po);
+            } else if (ty == DJ_KICK || ty == DJ_SNARE) {
+                const smp_t *k = ty == DJ_KICK ? &SKIT_BI[0].s[0] : &SKIT_BI[1].s[1];
+                d->sd = k->d, d->sn = k->n, d->sls = d->sle = 0, d->sai = k->i0;
+                d->srate = 22050.0f * (1.0f / EN_SR) * po;
+            }
+            d->si = 0;
+            d->spr = d->slpr = 0;
+            d->slai = d->sai;
+            d->slsv = 0;
+            d->sx1 = d->sx2 = 0.0f;
+            d->sph = 0.0f;
+        }
     }
 }
 
+static float dj_next(dj_t *v)                    /* (0.17.44) the next sample of a sampled snip, decoded (0 past its end); a held horn loops (the decoder's state
+                                                 * kept at the loop's start, so each time round decodes the same) */
+{
+    int c, st, df;
+    if (v->sle && v->si >= v->sle) {
+        v->si = v->sls;
+        v->spr = v->slpr;
+        v->sai = v->slai;
+    }
+    if (v->si >= v->sn)
+        return 0.0f;
+    if (v->sle && v->si == v->sls && !v->slsv) {
+        v->slsv = 1;
+        v->slpr = v->spr;
+        v->slai = v->sai;
+    }
+    c = v->sd[v->si >> 1] >> ((v->si & 1u) * 4u) & 15;
+    v->si++;
+    st = ADPCM_STEP[v->sai];
+    df = st >> 3;
+    if (c & 4)
+        df += st;
+    if (c & 2)
+        df += st >> 1;
+    if (c & 1)
+        df += st >> 2;
+    v->spr += c & 8 ? -df : df;
+    v->spr = v->spr < -32768 ? -32768 : v->spr > 32767 ? 32767 : v->spr;
+    st = v->sai + ADPCM_IDX[c];
+    v->sai = (uint8_t)(st < 0 ? 0 : st > 88 ? 88 : st);
+    return (float)v->spr * (1.0f / 32768.0f);
+}
+static float dj_smp(dj_t *v)                    /* one output sample of it, between two of its own (its rate and note) */
+{
+    while (v->sph >= 0.0f) {
+        v->sx1 = v->sx2;
+        v->sx2 = dj_next(v);
+        v->sph -= 1.0f;
+    }
+    {
+        const float y = v->sx2 + (v->sx1 - v->sx2) * -v->sph;
+        v->sph += v->srate;
+        return y * 1.6f;                        /* (about the synthesized ones' level: DJ_TRIM evens them) */
+    }
+}
 static inline float dj_wrap(float p) { return p - (float)(int)p; }
 static inline float dj_pulse(float ph, float w, float inc) { return blep_saw(ph, inc) - blep_saw(dj_wrap(ph + w), inc); }
 /* one sample of a voice: its middle (returned), its side (*side: left gets + it, right - it), its own envelope (*amp); it ends itself (on = 0) */
@@ -6101,88 +6188,19 @@ static float dj_voice(dj_t *v, float *amp, float *side)
     const float t = v->t * (1.0f / EN_SR), inc = v->hz * (1.0f / EN_SR), n = frand() * 2.0f - 1.0f;
     float y = 0.0f, a = 1.0f, s = 0.0f;
     switch (v->type) {
-    case DJ_HORN: case DJ_BLAST: {              /* AN AIR HORN (held, or a short blast): three reeds on the chord playing (root, its third, its fifth), each a pulse
-                                                 * (two band-limited saws offset 40%), a free octave on the root, the pitch scooping up into the note and running out
-                                                 * of air, a noise blat at the start, an asymmetric clip and a resonance (research/audit/horns.md). 0.17.24: the
-                                                 * resonance lower and gentler (it put a quarter of the sound in the ear's sharpest band, 2-5 kHz), the reeds a
-                                                 * little further apart, the third to the left and the fifth to the right */
-        const int bl = v->type == DJ_BLAST;
-        const float r2 = v->aux > 1.0f ? v->aux : 1.26f, r3 = v->aux2 > 1.0f ? v->aux2 : 1.498f, e1 = fm_expf(-t * 30.0f);
-        const float tl = t > 0.30f ? (t - 0.30f) * 4.0f : 0.0f, tail = tl > 1.0f ? 1.0f : tl;   /* the blast's air dying */
-        float sc = (1.0f - 0.06f * e1) * (1.0f + 0.0015f * sine(dj_wrap(t * 6.3f)));
-        float x, u, hp, f, a2, a3;
-        sc *= bl ? 1.0f - 0.05f * tail * tail : 1.0f - 0.012f * (1.0f - fm_expf(-t * 0.7f));
-        {
-            const float i1 = inc * sc * 0.9955f, i2 = inc * r2 * sc * 1.0025f, i3 = inc * r3 * sc * 1.0045f;
-            const float p1 = dj_pulse(v->ph, 0.4f, i1);
-            a2 = dj_pulse(v->ph2, 0.4f, i2);
-            a3 = dj_pulse(v->ph3, 0.4f, i3);
-            x = p1 + a2 * 0.9f + a3 * 0.85f + blep_saw(dj_wrap(v->ph * 2.0f), 2.0f * i1) * 0.25f;
-            v->ph = dj_wrap(v->ph + i1);
-            v->ph2 = dj_wrap(v->ph2 + i2);
-            v->ph3 = dj_wrap(v->ph3 + i3);
-        }
-        x += n * (0.25f * fm_expf(-t * 45.0f) + 0.02f);
-        x *= 0.33f;
-        u = 2.4f * x + 0.25f;
-        x = u / (1.0f + fm_fabsf(u)) - 0.2f;
-        f = 0.20f + 0.05f * (1.0f - e1) - (bl ? 0.10f * tail : 0.0f);   /* (~1.4 .. 1.8 kHz; it was ~1.8 .. 2.2) */
-        v->z += f * v->z2;
-        hp = x - v->z - 0.7f * v->z2;
-        v->z2 += f * hp;
-        y = 0.55f * x + 0.5f * v->z + 0.75f * v->z2;
-        v->zs += 0.25f * ((a2 - a3) * 0.33f - v->zs);   /* the side: the third against the fifth, softened */
-        s = 0.5f * v->zs;
-        if (bl) {
-            a = (t < 0.006f ? t * 166.0f : 1.0f) * (t < 0.32f ? 1.0f : fm_expf(-(t - 0.32f) * 12.0f));
+    case DJ_HORN: case DJ_BLAST: case DJ_RAVE: case DJ_RSTAB: case DJ_CRASH: case DJ_KICK: case DJ_SNARE: {   /* (0.17.44) the sampled ones (djsmp.h) */
+        y = dj_smp(v);
+        if (v->type == DJ_BLAST) {              /* a short blast of the horn: the air dying after a third of a second */
+            a = t < 0.32f ? 1.0f : fm_expf(-(t - 0.32f) * 12.0f);
             if (t > 0.9f)
                 v->on = 0;
-        } else {
-            a = t * 80.0f < 1.0f ? t * 80.0f : 1.0f;
-        }
-        break;
-    }
-    case DJ_RAVE: case DJ_RSTAB: {              /* THE RAVE HORN (the hoover, held, or a stab). 0.17.24, remade (it was two voices under a filter that closed to a
-                                                 * muffle): three saws (two of them pulse-width-modulated, out to the left and the right, the third in the middle)
-                                                 * and a square sub-octave; the pitch swoops in from a fourth above, dips under the note and comes back up (the
-                                                 * hoover's bend); a low-pass that stays open, and grit */
-        const int st = v->type == DJ_RSTAB;
-        const float tt = st ? t * 2.0f : t, e1 = fm_expf(-t * (st ? 18.0f : 7.0f)), lr = st ? 7.0f : 4.6f;
-        float sem, sc, i1, i2, i3, w1, w2, p1, p2, x, hp, u, f;
-        if (tt < 0.12f) {
-            const float q = tt * (1.0f / 0.12f);
-            sem = 5.0f - 6.0f * q * (2.0f - q);
-        } else if (tt < 0.32f) {
-            const float q = (tt - 0.12f) * 5.0f;
-            sem = -1.0f + q * q * (3.0f - 2.0f * q);
-        } else {
-            sem = 0.0f;
-        }
-        sc = fm_exp2f(sem * (1.0f / 12.0f));
-        i1 = inc * sc * 1.012f, i2 = inc * sc * 0.988f, i3 = inc * sc;
-        w1 = 0.50f + 0.28f * sine(dj_wrap(t * lr)), w2 = 0.50f - 0.28f * sine(dj_wrap(t * lr + 0.25f));
-        p1 = dj_pulse(v->ph, w1, i1);
-        p2 = dj_pulse(v->ph2, w2, i2);
-        x = 0.8f * (p1 + p2) + 0.9f * blep_saw(v->ph3, i3) + 0.6f * dj_pulse(v->ph4, 0.5f, i3 * 0.5f);
-        v->ph = dj_wrap(v->ph + i1);
-        v->ph2 = dj_wrap(v->ph2 + i2);
-        v->ph3 = dj_wrap(v->ph3 + i3);
-        v->ph4 = dj_wrap(v->ph4 + i3 * 0.5f);
-        x *= 0.35f;
-        f = st ? 0.22f + 0.40f * e1 : 0.34f + 0.22f * e1;   /* (open: ~2.4 kHz held; it fell to ~0.7 kHz) */
-        v->z += f * v->z2;
-        hp = x - v->z - 0.6f * v->z2;
-        v->z2 += f * hp;
-        u = 2.2f * v->z;
-        y = u / (1.0f + fm_fabsf(u)) * 1.3f;
-        v->zs += f * 0.6f * ((p1 - p2) * 0.35f - v->zs);
-        s = 0.9f * v->zs;
-        if (st) {
-            a = (t < 0.003f ? t * 333.0f : 1.0f) * fm_expf(-t * 7.0f);
+        } else if (v->type == DJ_RSTAB) {       /* a stab of the rave horn */
+            a = fm_expf(-t * 7.0f);
             if (t > 0.55f)
                 v->on = 0;
-        } else {
-            a = t * 200.0f < 1.0f ? t * 200.0f : 1.0f;
+        } else if (v->type == DJ_CRASH || v->type == DJ_KICK || v->type == DJ_SNARE) {
+            if (v->si >= v->sn && fm_fabsf(v->sx1) < 1e-4f)
+                v->on = 0;                       /* (played out) */
         }
         break;
     }
@@ -6283,29 +6301,6 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         y = v->z;
         a = 1.0f - u * u;
         if (t > v->aux)
-            v->on = 0;
-        break;
-    }
-    case DJ_CRASH: {                            /* THE CRASH (0.17.24, remade: it was hiss): six square tones at the 808 cymbal's odd ratios and noise, high-passed near
-                                                 * 3 kHz and rounded off above 8: a metal that shimmers and rings; the side is its own noise */
-        static const float CF[6] = {205.3f * 1.7f, 304.4f * 1.7f, 369.6f * 1.7f, 522.7f * 1.7f, 540.0f * 1.7f, 800.0f * 1.7f};
-        float m = 0.0f, hp;
-        int i;
-        for (i = 0; i < 6; i++)
-            m += dj_wrap(v->t * CF[i] * (1.0f / EN_SR)) < 0.5f ? 0.16f : -0.16f;
-        m = m * (0.35f + 0.65f * fm_expf(-t * 2.5f)) + 0.38f * n;
-        v->z += 0.348f * (m - v->z);            /* high-pass ~3 kHz */
-        hp = m - v->z;
-        v->z2 += 0.68f * (hp - v->z2);          /* low-pass ~8 kHz */
-        y = v->z2;
-        {
-            const float n2 = frand() * 2.0f - 1.0f;
-            v->zs += 0.348f * (n2 - v->zs);
-            v->zs2 += 0.68f * ((n2 - v->zs) - v->zs2);
-            s = 0.45f * v->zs2;
-        }
-        a = 0.6f * fm_expf(-t * (1.0f / 0.55f)) + 0.4f * fm_expf(-t * 20.0f);
-        if (t > v->aux * 2.0f)
             v->on = 0;
         break;
     }
@@ -6815,6 +6810,8 @@ static void reverb_set(void)                    /* once a chunk, before the tank
     rv_pre = 256 + (PRE_D - 256) * par[P_RV_PRE] / 100;                    /* 6 .. 30 ms (never under a chunk: the line is written as it is read) */
     rv_shim = 0.05f + 0.30f * (float)par[P_RV_X] * 0.01f;                  /* the shimmer's feedback */
     rv_gate_hold = (0.08f + 0.32f * (float)par[P_RV_X] * 0.01f) * EN_SR;   /* the gate's hold: 80 .. 400 ms */
+    pl_damp_l = fm_flush(pl_damp_l);            /* (0.17.44: with the lines truncated a dying tail reaches 0, and these would park on the smallest subnormal) */
+    pl_damp_r = fm_flush(pl_damp_r);
 }
 
 /* THE POLISH (0.17.30, the SOUND page; the outside research: the fuller firmwares' master chains). After the performance effects: the side below
@@ -6887,6 +6884,7 @@ static void polish_set(void)                    /* once a chunk */
     po_r1 = fm_flush(po_r1);
     po_r2 = fm_flush(po_r2);
 }
+static void jc_set(void);
 static void master_dyn_set(void)                /* once a chunk: the settings, from the parameters */
 {
     static const float RATIO[7] = {1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 10.0f};
@@ -6897,6 +6895,7 @@ static void master_dyn_set(void)                /* once a chunk: the settings, f
     cp_ka = 1.0f - fm_expf(-1.0f / (0.010f * EN_SR));              /* (0.17.42: 10 ms, was 4: a drum's hit gets through before the bus comes down, the punch kept) */
     cp_kr = 1.0f - fm_expf(-1.0f / ((0.08f + 0.05f * cp_env) * EN_SR));     /* the release: ~80 ms, up to 530 ms at 9 dB of reduction (set once a chunk) */
     lk_ceil = fm_db2lin(-12.0f + 0.12f * (float)par[P_ML_CEIL]);   /* -12 .. 0 dB */
+    jc_set();                                   /* (0.17.44) the CHORUS page */
     polish_set();
 }
 
@@ -7877,7 +7876,7 @@ static void render_bass(uint32_t n)
         }
         if (!(dr_ctl++ & 31u) && !wub) {        /* the filter, every 32 samples (counted across chunks) */
             float oct, fc;
-            oct = (float)par[P_DR_CUT] * 0.075f - 1.5f + DS->cut + (dest == 0 ? 2.5f * depth * drone_lfo.v : 0.0f) +
+            oct = (float)par[P_DR_CUT] * 0.075f - 1.5f + DS->cut + (dest == 0 ? 2.5f * depth * (dlv_was + (drone_lfo.v - dlv_was) * (float)j / (float)n) : 0.0f) +
                   4.0f * (float)par[P_DE_AMT] * 0.01f * bass.env + 0.8f * motion * mod[9].v + 0.8f * arcm -
                   2.0f * fm_maxf(brk, 0.0f) - 1.6f * fm_minf(brk, 0.0f) - 0.35f * bass_duck * pulse_vol +
                   4.0f * (float)par[P_LK_KICK] * 0.01f * lk_kick;   /* the links: the kick opens it */
@@ -7991,6 +7990,7 @@ static void render_bass(uint32_t n)
         }
         bass_o[j] = fm_tanhf(wub ? x * WUB_OUT : x * drv) * amp * g * TG(TR_DRONE, j);   /* (into the mix by render_chunk, with its sends: 0.06 and 0.04 of it) */
     }
+    dlv_was = drone_lfo.v;                      /* (0.17.44: where the cutoff LFO glides from next chunk) */
     for (j = 0; j < 4; j++)
         bass.s[j] = fm_flush(bass.s[j]);
     wub_hp = fm_flush(wub_hp);
@@ -8067,6 +8067,57 @@ static float fe_tap(float d)                    /* d samples back, between two *
     }
 }
 
+/* THE CHORUS (0.17.44, the CHORUS page; the maker: "a Juno-106 with different types of chorus" for wider sounds). As the Juno's: one short
+ * delay swept by a triangle, the other side swept the opposite way, mixed with the dry: I slow and deep (0.51 Hz), II faster (0.86 Hz), I+II
+ * a fast shallow shimmer (9.75 Hz), 1.7 .. 5.4 ms. On the pluck (its line is the DX voices' ensemble's: the plain pluck and a DX voice never
+ * play at once, so they share it; the ensemble steps aside), the acid (a line of its own, 512 B), or both; the lows (under 200 Hz) stay
+ * dry in the middle. Off when the load is far too high (shed level 2). */
+#define JA_N 256
+#define JC_WET 0.8f                             /* the swept copies' share; the dry and the copies scaled so the level stays where it was */
+#define JC_NORM 0.78f
+static int16_t ja_buf[JA_N];
+static uint32_t ja_w;
+static float jc_ph, jc_rate, jc_c, jc_d, ja_hp, jp_hp;
+static uint8_t jc_pl, jc_ac;
+static void jc_set(void)                        /* once a chunk: the type and the targets */
+{
+    static const float RATE[3] = {0.513f, 0.863f, 9.75f};
+    const int t = fxs_v[EN_FXS_JC_TYPE], g = fxs_v[EN_FXS_JC_TGT];
+    const int on = t >= 1 && t <= 3 && en_shed_level < 2;
+    jc_pl = (uint8_t)(on && g != 1);
+    jc_ac = (uint8_t)(on && g != 0);
+    if (!on)
+        return;
+    jc_rate = RATE[t - 1] * (1.0f / EN_SR);
+    jc_c = 0.0035f * EN_SR;
+    jc_d = (t == 3 ? 0.00025f : 0.00185f) * EN_SR;
+    ja_hp = fm_flush(ja_hp);
+    jp_hp = fm_flush(jp_hp);
+}
+static inline float jc_tri(float p)             /* the triangle, -1 .. 1 */
+{
+    p -= (float)(int)p;
+    return p < 0.5f ? 4.0f * p - 1.0f : 3.0f - 4.0f * p;
+}
+static inline float ja_tap(float d)
+{
+    float at = (float)ja_w - d, f;
+    int i;
+    if (at < 0.0f)
+        at += (float)JA_N;
+    i = (int)at;
+    f = at - (float)i;
+    {
+        const float a = (float)ja_buf[i & (JA_N - 1)], b = (float)ja_buf[(i + 1) & (JA_N - 1)];
+        return (a + (b - a) * f) * (1.0f / FE_Q);
+    }
+}
+static inline int16_t jc_q(float h)
+{
+    h *= FE_Q;
+    return (int16_t)(h > 32767.0f ? 32767.0f : h < -32767.0f ? -32767.0f : h);
+}
+
 /* the DX voices (the pluck's sounds from CM_NPLAIN): a stage of the chunk's job, with the pad's, into their own buffers */
 static void render_fm(uint32_t n)
 {
@@ -8098,7 +8149,11 @@ static void render_fm(uint32_t n)
             fe_ph -= 1.0f;
         if (fe_ph2 >= 1.0f)
             fe_ph2 -= 1.0f;
-        if (fe_amt > 1e-4f) {
+        if (jc_pl && !fm_is_bass(cur)) {        /* (0.17.44) the CHORUS on the pluck: the Juno's sweep on the same line, instead of the ensemble's */
+            const float t = jc_tri(jc_ph + (float)j * jc_rate);
+            fm_ol[j] = (y + JC_WET * fe_tap(jc_c + jc_d * t)) * JC_NORM;
+            fm_or[j] = (y + JC_WET * fe_tap(jc_c - jc_d * t)) * JC_NORM;
+        } else if (fe_amt > 1e-4f) {
             const float wl = fe_tap((8.0f + 2.5f * sine(fe_ph) + 0.12f * sine(fe_ph2)) * ms),
                         wr = fe_tap((8.0f + 2.5f * sine(fe_ph + 0.25f) + 0.12f * sine(fe_ph2 + 0.5f)) * ms),
                         nm = 1.0f - 0.5f * fe_amt * fe_amt;   /* (about 1 / sqrt(1 + amt^2): the level stays where it was) */
@@ -8173,10 +8228,11 @@ static void render_acid(uint32_t n)
     const float sqd = sq ? (float)fxs_v[EN_FXS_SQ_DRIVE] * 0.01f : 0.0f, sqa = sq ? (float)fxs_v[EN_FXS_SQ_AMT] * 0.01f : 0.0f,
                 sqw = sq ? (float)fxs_v[EN_FXS_SQ_WOW] * 0.01f : 0.0f;
     const float g = acid_vol * 0.75f * AS->g / (1.0f + 0.5f * sqd + 0.4f * sqa), adrv = AS->drive, res = (float)par[P_AC_RES] * 0.01f,
-                envmod = (float)par[P_AC_ENV] * 0.06f, accamt = (float)par[P_AC_ACC] * 0.01f, base = (float)par[P_AC_CUT] * 0.066f + lfo_acut,
+                envmod = (float)par[P_AC_ENV] * 0.06f, accamt = (float)par[P_AC_ACC] * 0.01f, base = (float)par[P_AC_CUT] * 0.066f,
                 k1 = (1.45f - 1.38f * res) * (1.0f - 0.93f * sqa) * (1.0f - 0.85f * lfo_ares),   /* Scream: the resonance to about Q 200; an LFO on it */
                 k2 = 1.2f * (1.0f - 0.75f * sqa), sqin = 1.0f + 3.0f * sqd,   /* the second stage follows (it held the peak down); Drive: harder into the filter */
                 vel = 0.75f + 0.5f * accamt * acid.acc, glide = acid.sliding ? 0.0012f : 1.0f;
+    const float inv_n = 1.0f / (float)(n ? n : 1u);   /* (0.17.44: the LFO's glide across the chunk) */
     float sqg = sqin;                            /* this block's drive: Wow, an accent opening the resonance and the drive further */
     static float ans_k = 1.0f;                   /* the answer's level (EN_FXS_AC_ANS), gliding over about 20 ms as the answer comes and goes */
     {
@@ -8195,7 +8251,7 @@ static void render_acid(uint32_t n)
     for (j = 0; j < n; j++) {
         float x, y;
         if (!(ac_ctl++ & 31u)) {                /* the cutoff: its knob, the envelope, an accent's push (every 32 samples, counted across chunks) */
-            float oct = base + envmod * acid.env * (1.0f + accamt * acid.acc) + 1.2f * accamt * acid.acc * acid.env;
+            float oct = base + acut_was + (lfo_acut - acut_was) * (float)j * inv_n + envmod * acid.env * (1.0f + accamt * acid.acc) + 1.2f * accamt * acid.acc * acid.env;   /* (0.17.44: the LFO gliding across the chunk from its last value: a fast one stepped, a zipper) */
             float fc = fm_clampf(60.0f * fm_exp2f(oct), 50.0f, 14000.0f);
             const float wow = sqw * acid.acc * acid.env;
             sqg = sqin + 2.0f * wow;
@@ -8242,7 +8298,10 @@ static void render_acid(uint32_t n)
             x = ph < 0.5f ? 0.75f : -0.75f;
             break;
         case AO_SUB:                            /* the saw and a square an octave down */
-            x = blep_saw(ph, inc) + 0.7f * (ps < 0.5f ? 1.0f : -1.0f);
+        {   /* (0.17.44: band-limited, two saws half a turn apart: the raw square aliased at -30 dB on a high note) */
+            const float q = ps + 0.5f >= 1.0f ? ps - 0.5f : ps + 0.5f;
+            x = blep_saw(ph, inc) + 0.7f * (blep_saw(q, inc * 0.5f) - blep_saw(ps, inc * 0.5f));
+        }
             ps += inc * 0.5f;
             if (ps >= 1.0f)
                 ps -= 1.0f;
@@ -8318,7 +8377,10 @@ static void render_acid(uint32_t n)
             break;
         }
         case AO_MINI:                           /* two saws 7 cents apart and a pulse an octave down */
-            x = 0.55f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0041f)) + 0.6f * (p3 < 0.4f ? 1.0f : -1.0f);
+        {   /* (0.17.44: the pulse band-limited, two saws 0.6 of a turn apart: no DC, no alias) */
+            const float q = p3 + 0.6f >= 1.0f ? p3 - 0.4f : p3 + 0.6f;
+            x = 0.55f * (blep_saw(ph, inc) + blep_saw(ps, inc * 1.0041f)) + 0.6f * (blep_saw(q, inc * 0.5f) - blep_saw(p3, inc * 0.5f));
+        }
             ps += inc * 1.0041f;
             p3 += inc * 0.5f;
             if (ps >= 1.0f)
@@ -8404,6 +8466,7 @@ static void render_acid(uint32_t n)
     for (j = 0; j < 4; j++)
         acid.s[j] = fm_flush(acid.s[j]);
     acid.lfb = fm_flush(acid.lfb);
+    acut_was = lfo_acut;
     acid.ph = ph;
     acid.ps = ps;
     acid.p3 = p3;
@@ -8792,10 +8855,11 @@ static void mx_gains(int t, float *gl, float *gr, float *sg)
     *sg = (float)par[P_SEND + t] * 0.02f;
 }
 static int mx_off(int t) { return par[P_PAN + t] != 50 || par[P_SEND + t] != 50; }
+static int jc_plain(void) { return jc_pl && par[P_CM_SND] < CM_NPLAIN; }   /* (0.17.44) the CHORUS on the plain pluck: it needs the mix as it was before it */
 static void mx_begin(int t, uint32_t n)
 {
     uint32_t j;
-    if (!mx_off(t))
+    if (!mx_off(t) && !(t == 3 && jc_plain()))
         return;
     for (j = 0; j < n; j++) {
         mx_sv[0][j] = mixl[j];
@@ -8816,6 +8880,18 @@ static void mx_end(int t, uint32_t n)
         mixr[j] = mx_sv[1][j] + (mixr[j] - mx_sv[1][j]) * gr;
         rsend[j] = mx_sv[2][j] + (rsend[j] - mx_sv[2][j]) * sg;
         esend[j] = mx_sv[3][j] + (esend[j] - mx_sv[3][j]) * sg;
+    }
+}
+static void jc_cm(uint32_t n)                   /* (0.17.44) the plain pluck through the CHORUS: its part of the mix (the mix less what it was before it, mx_begin's) */
+{
+    uint32_t j;
+    for (j = 0; j < n; j++) {
+        const float dl = mixl[j] - mx_sv[0][j], dr = mixr[j] - mx_sv[1][j], x = 0.5f * (dl + dr), t = jc_tri(jc_ph + (float)j * jc_rate);
+        jp_hp += 0.0281f * (x - jp_hp);         /* (200 Hz: the lows stay dry) */
+        fe_buf[fe_w] = jc_q(x - jp_hp);
+        mixl[j] = mx_sv[0][j] + (dl + JC_WET * fe_tap(jc_c + jc_d * t)) * JC_NORM;
+        mixr[j] = mx_sv[1][j] + (dr + JC_WET * fe_tap(jc_c - jc_d * t)) * JC_NORM;
+        fe_w = (fe_w + 1u) & (FE_N - 1u);
     }
 }
 
@@ -8889,6 +8965,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     DT0();
     mx_begin(3, n);
     render_cm(n);
+    if (jc_plain())
+        jc_cm(n);
     DT(2);
     render_fm(n);                               /* the DX voices' samples from a chunk ago (the other core's), into the fm_ buffers added below */
     mx_end(3, n);
@@ -9032,11 +9110,24 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             float *const tal = bus_m >> TR_ACID & 1u ? busl : mixl, *const tar = bus_m >> TR_ACID & 1u ? busr : mixr;
             tbl[j] += b * bl * dg;
             tbr[j] += b * br * dg;
-            tal[j] += a * al * dg;
-            tar[j] += a * ar * dg;
+            if (jc_ac) {                        /* (0.17.44) the CHORUS on the acid: its own line, the sides swept apart */
+                const float t = jc_tri(jc_ph + (float)j * jc_rate);
+                ja_hp += 0.0281f * (a - ja_hp);
+                ja_buf[ja_w] = jc_q(a - ja_hp);
+                tal[j] += (a + JC_WET * ja_tap(jc_c + jc_d * t)) * JC_NORM * al * dg;
+                tar[j] += (a + JC_WET * ja_tap(jc_c - jc_d * t)) * JC_NORM * ar * dg;
+                ja_w = (ja_w + 1u) & (JA_N - 1u);
+            } else {
+                tal[j] += a * al * dg;
+                tar[j] += a * ar * dg;
+            }
             rsend[j] += (b * 0.06f * bs + a * 0.15f * as) * gg_v[j];
             esend[j] += (b * 0.04f * bs + a * 0.35f * as) * gg_v[j];
         }
+    }
+    if (jc_pl || jc_ac) {                       /* the chorus's sweep on, a chunk on */
+        jc_ph += (float)n * jc_rate;
+        jc_ph -= (float)(int)jc_ph;
     }
     duck_env = fm_flush(de);
     DT(9);
@@ -9067,7 +9158,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             mixr[j] += x[1];
         }
         for (j = 0; j < 4; j++)
-            tf_s[j] = fm_flush(tf_s[j]);
+            tf_s[j] = fm_flush(tf_s[j]), tp_z[0][j] = fm_flush(tp_z[0][j]), tp_z[1][j] = fm_flush(tp_z[1][j]);   /* (0.17.44: the phaser's too: they held a subnormal for good once the bus went quiet) */
     }
     {
     const float thr = throw_amt * 0.5f, tdg = tdx_m * (float)fxs_v[EN_FXS_TD_SEND] * 0.006f;   /* (the bus is cleared each chunk, so 0 when unused) */

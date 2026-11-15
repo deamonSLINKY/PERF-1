@@ -1,0 +1,53 @@
+# THE GESTURE RECORDER, 0.17.44: an effect played is written too, and with AUTO FX's Pick on YOURS the gesture is kept for AUTO FX, which plays
+# it once on its phrase lines (here every 4 bars) and lets go. Wild, every 4 bars, Pick YOURS on the AUTO FX page.
+seed 0
+seamless 1
+wait 3000
+press HOME
+wait 800
+release HOME
+wait 100
+turn SELECT 4
+wait 100
+expect fxpage 34
+spin K1 3
+spin K2 -1
+spin K4 2
+wait 100
+expect fxs92 3
+expect fxs93 0
+expect fxs95 2
+tap FX
+wait 500
+expect view 0
+expect playing 1
+# arm it, then the roll (key 15) starts the writing
+tap FX
+wait 100
+press SEL
+tap REC
+release SEL
+expect gesture 1
+wait 1500
+expect gesture 1
+key 15 down
+wait 100
+expect gesture 2
+wait 900
+key 15 up
+wait 100
+press SEL
+tap REC
+release SEL
+waitfor gesture 4 8000
+expect gsfx >3
+expect gslen >15
+# out of the FX menu: AUTO FX plays it (whole bars, ending on a line), the roll included, and lets go
+tap FX
+wait 300
+waitfor gsshot 1 40000
+expect affx 255
+waitfor fxbit22 1 4000
+waitfor gsshot 0 12000
+expect gesture 4
+expect fxbit22 0

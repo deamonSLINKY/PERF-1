@@ -299,6 +299,7 @@ enum {
     EN_FXS_VINTAGE, EN_FXS_POLISH, EN_FXS_TILT, EN_FXS_WIDTH,            /* (0.17.30) the SOUND page, the unit's: each voice's pitch wandering (0 .. 100: 0 .. 12 cents), the polish on the
                                                                           * master (the lows mono, the peaks rounded before the limiter), the tilt (0 off, 1 the genre's, 2 warmer,
                                                                           * 3 brighter) and the width above 2.5 kHz (0 .. 100: +0 .. +6 dB on the side) */
+    EN_FXS_JC_TYPE, EN_FXS_JC_TGT,                                      /* (0.17.44) the CHORUS page, the unit's: a Juno-style chorus (0 off, 1 I, 2 II, 3 I+II) on the pluck (0), the acid (1) or both (2) */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
@@ -306,7 +307,7 @@ enum {
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
                          12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0, 0, 1, 2, 0, 0, \
-                         0, 2, 30, 1, 1, 30}
+                         0, 2, 30, 1, 1, 30, 0, 2}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the punch-ins' targets (0.15.19): all, the drums, the synths, the pad, the bass, the acid, the pluck, acid and pluck, pad and pluck, bass and acid */

@@ -1,5 +1,6 @@
-# THE GESTURE RECORDER (0.17.31): in the FX menu SEL + REC arms it; from the next bar the FX knobs are written; SEL + REC again loops them
-# from that bar's end, and the knobs play the loop. A knob turned by hand is the hand's again; SEL + REC while it plays lets all of them go.
+# THE GESTURE RECORDER (0.17.31; 0.17.44: it waits for a move): in the FX menu SEL + REC arms it; the first move of an FX knob (or an effect
+# played) starts the writing, from that bar's start; SEL + REC again loops it from that bar's end, and the knobs play the loop. A knob turned
+# by hand is the hand's again; SEL + REC while it plays lets all of them go.
 seed 0
 seamless 1
 wait 2500
@@ -10,10 +11,14 @@ press SEL
 tap REC
 release SEL
 expect gesture 1
-waitfor gesture 2 4000
-# the crush (K2) up and back down while it writes
+# armed: nothing moves, so nothing is written (it used to start at the next bar on its own)
+wait 3000
+expect gesture 1
+# the crush (K2) up and back down: the first move starts it
 spin K2 15
-wait 400
+wait 100
+expect gesture 2
+wait 300
 expect fxk1 >5
 spin K2 -15
 wait 100

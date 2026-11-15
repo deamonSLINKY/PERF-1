@@ -1502,17 +1502,23 @@ The FX knobs aren't saved. They go back to home when you power off. A scene does
 
 ### The gesture recorder: loop your knob moves
 
-Record up to four bars of FX knob moves and they play on by themselves, so your hands are free for the keys.
+Record up to four bars of FX knob moves and effects, and they play on by themselves, so your hands are free for the keys.
 
-1. With the music playing, open the FX menu and press **SEL + REC**. The header says `REC`: it starts writing on the
-   next bar.
-2. Turn the FX knobs: a filter sweep, a crush on the last beat, a throw into the echo.
+1. With the music playing, open the FX menu and press **SEL + REC**. The header says `ARM`: it waits for you.
+2. Turn an FX knob or play an effect key: that starts the recording (`REC`), from the start of the bar you're in. Sweep
+   the filter, crush the last beat, throw into the echo, hold a roll or a stutter: the knobs and the effect you hold are
+   both written, every sixteenth.
 3. Press **SEL + REC** again. It finishes the bar you're in and from then on plays your moves in a loop (1 to 4 bars;
-   after four it loops by itself). The header says `LOOP`.
+   after four it loops by itself). The header says `LOOP`. An effect you play by hand goes first; the loop's comes back
+   when you let go.
 
 Turn a knob yourself and that knob is yours again; the others keep playing the loop. **SEL + REC** in the FX menu
 while it loops lets all of them go, where they are. **OCT-** in the FX menu (everything home) does too. Like the knobs
 themselves, the loop isn't saved; it keeps playing across pieces, and stopping pauses it.
+
+**Now and then instead of all the time:** set **Auto FX** on (its settings page) with **Pick** on **YOURS** before you
+record. When you close the loop it's kept (`GESTURE KEPT`), and Auto FX plays it once, whole, ending on its phrase
+lines (**Every**: 4, 8, 16 or 32 bars), then puts the knobs back. The header says `AUTO` while it plays.
 
 ### Bank 1: FX
 
@@ -1650,9 +1656,11 @@ The Flex settings page (below) has three settings:
 
 ![The DJ SNIPS bank](img/perf-screen-snips.png)
 
-These are the sound effects a DJ throws in over a set, made on the spot. The 27 keys, `F3` to `G5`, are:
+These are the sound effects a DJ throws in over a set. The 27 keys, `F3` to `G5`, are:
 
-AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord playing, in saws), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, SIREN 3, LASER, LASER LO, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover as a short stab), BELL and SNR ROLL (a snare roll that speeds up).
+AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord playing, in saws), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, KICK, LASER, SNARE, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover as a short stab), BELL and SNR ROLL (a snare roll that speeds up).
+
+The horns, the crash, the kick and the snare are samples, made by PERF-1's own models (not taken from anywhere). The horns play on the root of the chord playing, and a held horn goes on for as long as you hold the key. The kick and the snare are the sampled kits' (MACHINE's kick, BOOMBAP's snare). The rest are made on the spot.
 
 Up to four can sound at once. Snips play when you press the key. They don't latch.
 
@@ -1705,7 +1713,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Rv swell (backwards, getting louder) | Length: 1/2, 1, 2 beats | Mix | - | - |
 | Ring mod (a metallic clang) | Tone: 40-800 Hz | Mix | - | - |
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
-| Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any |
+| Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any, yours (your gesture) |
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
 | Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
@@ -1843,7 +1851,7 @@ Turn on **DJ new pieces** (**GLO** + `G5`) and the auto-DJ brings in the next pi
 
 - **Each effect ends on a phrase line.** With **Every** at 8 bars, an effect leads into bar 9, 17, 25 and so on, finishing exactly as the next phrase starts. **Length** is the longest one may take: a beat, half a bar, a bar or two bars. Short effects such as a throw or a tape stop always stay short.
 - **It picks what suits the moment.** In a groove: gates, repeats, sweeps and filters. In a breakdown: washes such as the reverse swell, freeze and tape. In a build: rolls and rising filters. At the end of a build (Medium and Wild), a stop, reverse, brake or spin-back leads into the drop, and the four bars after a drop are left alone.
-- **It knows the genre.** With **Pick** on Genre, each genre's own effects come four times as often: throws and tape in dub and reggae, the pump and filters in house and disco, scratches and repeats in breaks and funk, hat rolls and half time in trap and dubstep, gates and flangers in psy. **Any** treats them all alike.
+- **It knows the genre.** With **Pick** on Genre, each genre's own effects come four times as often: throws and tape in dub and reggae, the pump and filters in house and disco, scratches and repeats in breaks and funk, hat rolls and half time in trap and dubstep, gates and flangers in psy. **Any** treats them all alike. **Yours** plays your own gesture instead (record one in the FX menu with SEL + REC: see the gesture recorder), once, whole, ending on the phrase line.
 - **Auto FX** sets how much: **Gentle** keeps to washes and sweeps; **Medium** adds gates, filters, repeats and rolls; **Wild** adds stops, brakes, scatter and half time. It never plays the same effect twice in a row. A phrase line is sometimes skipped (more often at Gentle).
 - **It gets out of your way.** Nothing plays while you hold or latch an effect yourself, and playing one ends an automatic one at once. It also waits while the FX menu is open, during the intro, and when the music is stopped.
 
@@ -2098,6 +2106,19 @@ The last settings page shapes how everything sounds together. These are the unit
 | Polish | **On** (the default): the lows are made mono (the stereo below about 140 Hz goes to the middle, as a club system or a phone plays it anyway), and the loudest peaks are rounded off just before the limiter, so it has less to catch. **Off**: as before 0.17.30. |
 | Tilt | A gentle tone balance on the whole mix: **Genre** (the default: each genre's own, a dB or two at most), **Warmer** (more low end, softer top), **Brighter** (more top), or **Off**. |
 | Width | How much wider the top end is (the stereo above about 2.5 kHz): 0 as before, up to +6 dB. The default is 30. Mono stays as it was. |
+
+### The CHORUS page
+
+After SOUND, the last settings page: a chorus in the style of the Juno-106's, to make the pluck and the acid wide. Like the Juno's, it is one short
+delay swept by a slow triangle, with the other side swept the opposite way, mixed with the dry sound. The lows (under about 200 Hz) stay dry in the
+middle, so the low end stays mono. These are the unit's settings, the same for every piece.
+
+| Knob | What it does |
+|---|---|
+| Type | **Off** (the default), **I** (slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), or **I+II** (a fast, shallow shimmer, close to a vibrato). |
+| Target | What goes through it: the **Pluck** (its plain sounds and its DX voices; it replaces the DX voices' own ensemble), the **Acid**, or **Both**. |
+
+The level stays where it was, and in mono nothing is lost. It switches off by itself when the load is very high, like the pad's chorus.
 
 ### Visualizers
 

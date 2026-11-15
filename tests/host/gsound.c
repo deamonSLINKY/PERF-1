@@ -76,6 +76,17 @@ int main(int argc, char **argv)
     for (p = 0; p < P_NPARAMS; p++)
         en_set(p, par[p]);
     en_set(P_MIDI, 1);
+    if (getenv("FXS")) {                         /* FXS="index:value,...": the unit's settings (EN_FXS_*) changed, e.g. the CHORUS page (after en_init: it drops what was posted before) */
+        const char *s = getenv("FXS");
+        while (*s) {
+            char *e;
+            const long k = strtol(s, &e, 10);
+            if (*e != ':')
+                break;
+            en_fxs((int)k, (int)strtol(e + 1, &e, 10));
+            s = *e == ',' ? e + 1 : e;
+        }
+    }
     if (getenv("SET")) {                         /* SET="param:value,param:value": parameters changed after the piece's (an A/B of one setting) */
         const char *s = getenv("SET");
         while (*s) {
