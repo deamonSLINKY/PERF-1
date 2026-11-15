@@ -746,6 +746,8 @@ function onStatus(d) {
   if (n < 22) return;
   for (let i = 0; i < n; i++) w[FIELDS[i]] = dv.getUint32(i * 4, true);
   FIELDS.forEach((f) => { if (w[f] === undefined) w[f] = 0; });
+  w.ui_view = w.playing >>> 1 & 127; w.bl_hdr = w.playing >>> 8 & 255; w.bl_main = w.playing >>> 16 & 255; w.bl_knob = w.playing >>> 24;   /* 0.17.39 on: the page and the bands sent */
+  w.playing &= 1;
   w.t = Date.now();
   frames.push(w);
   $("ststatus").textContent = "";
@@ -786,7 +788,7 @@ $("stgo").addEventListener("click", async () => {
   } catch (err) { $("ststatus").textContent = err.message; }
 });
 $("stsave").addEventListener("click", () => {
-  const cols = FIELDS.concat(EXTRA, DIAG);
+  const cols = FIELDS.concat(EXTRA, DIAG, ["ui_view", "bl_hdr", "bl_main", "bl_knob"]);
   const rows = ["t," + cols.join(",")].concat(frames.map((w) => ((w.t - frames[0].t) / 1000).toFixed(2) + "," + cols.map((f) => (w[f] === undefined ? 0 : w[f])).join(",")));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([rows.join("\n") + "\n"], { type: "text/csv" }));

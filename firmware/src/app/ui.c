@@ -3257,9 +3257,14 @@ static void set_view(int v)
                 char b[24];
                 int n;
                 caps(b, VIEW_NAME[v], 18);
-                for (n = 0; b[n]; n++)
+                for (n = 0; b[n] && b[n] == TB[t].name[n]; n++)
                     ;
-                b[n++] = ' ';
+                if (b[n] || TB[t].name[n]) {         /* (0.17.39: the group's first page, of the group's name, not said twice: "PAD 1/5") */
+                    for (n = 0; b[n]; n++)
+                        ;
+                    b[n++] = ' ';
+                } else
+                    n = 0;
                 b[n++] = (char)('1' + (v - TB[t].first));
                 b[n++] = '/';
                 b[n++] = (char)('0' + TB[t].n);
@@ -5079,6 +5084,21 @@ static uint16_t mix(uint16_t a, uint16_t b, int t)   /* t 0..16: a -> b */
     bl = ((a & 31) * (16 - t) + (b & 31) * t) / 16;
     return (uint16_t)(r << 11 | g << 5 | bl);
 }
+/* (0.17.39) a panel with depth: lit from the top left, a pixel of light along its top and left edges and of shade along its bottom and
+ * right (sunk: the other way round, a track or a screen set into the desk). Square corners, the Console's */
+static void cv_panel(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t base, int sunk)
+{
+    uint16_t hi = mix(base, th->text, 3), lo = mix(base, 0x0000, 9);
+    if (sunk) {
+        const uint16_t t = hi;
+        hi = mix(base, 0x0000, 11), lo = t;
+    }
+    cv_rect(x, y, w, h, base);
+    cv_rect(x, y, w, 1, hi);
+    cv_rect(x, y + 1, 1, h - 2, hi);
+    cv_rect(x, y + h - 1, w, 1, lo);
+    cv_rect(x + w - 1, y + 1, 1, h - 2, lo);
+}
 static int q16(float x) { return x <= 0.0f ? 0 : x >= 1.0f ? 16 : (int)(x * 16.0f + 0.5f); }
 
 static const char *const MASCOT[23];
@@ -5156,7 +5176,7 @@ static void draw_mascot(int32_t x, int32_t y, int sleepy)
             int32_t dy = dy0;
             if (ch == '.')
                 continue;
-            if (ch == 'Y' && sleepy)
+            if ((ch == 'Y' || ch == 'E') && sleepy && r > 4)
                 ch = 'K';
             if (grp > 0 && c < 16)
                 dy = (int32_t)(hm.lift + hm.dh * ((float)(4 - grp) - fm_clampf((float)(c - 2) * (1.0f / 13.0f), 0.0f, 1.0f)) * 0.25f + 0.5f);
@@ -5197,7 +5217,8 @@ static void draw_header(void)
     char t[24];
     int msg = plat_ms() < ui.msg_until;
     uint32_t h;
-    mascot_step();
+    if (!LOOK_CONSOLE)                          /* (the Console header has no imp: nothing to spring) */
+        mascot_step();
     if (ui.frame % 2u)                          /* (the spring moves every frame; the header is redrawn thirty times a second) */
         return;
     h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
@@ -5211,9 +5232,11 @@ static void draw_header(void)
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
-    h = hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
-                    (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 12);
-    h = hash(h, (uint32_t)(plat_ms() / 66u) | (uint32_t)q16(en_drum_glow[0]) << 20 | (uint32_t)(en_playing ? en_drum_pos + 1u : 0u) << 25);
+    if (!LOOK_CONSOLE)                          /* 0.17.39: the imp, its hop and its clock only where it is drawn (the Console header redrew 15 times a second for nothing) */
+        h = hash(hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
+                             (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 12),
+                 (uint32_t)(plat_ms() / 66u) | (uint32_t)q16(en_drum_glow[0]) << 20);
+    h = hash(h, (uint32_t)(en_playing ? en_drum_pos + 1u : 0u) << 25);
     h = hash(h, ui.piece_q);
     if (h == ui.sig[0])
         return;
@@ -6101,7 +6124,7 @@ static void draw_fxedit(void)
  * its knobs, the FX knobs. */
 static void draw_perf(void)
 {
-    static const char *const TN[8] = {"KCK", "HAT", "SNR", "PRC", "DRN", "ACD", "PAD", "PLK"};
+    static const char *const TN[8] = {"KCK", "HAT", "SNR", "PRC", "BAS", "ACD", "PAD", "PLK"};
     const int g = DJ_G(), b = dj_break_len(g);
     int i;
     {   /* the section, and the auto-DJ's place in it */
@@ -6334,18 +6357,18 @@ static void con_tile(int k, const char *lb, uint16_t kc, int on, int locked)
     const int pc = (5 + k) % 12;
     const int black = pc == 1 || pc == 3 || pc == 6 || pc == 8 || pc == 10;
     const uint16_t base = black ? mix(K_BG, K_PANEL, 3) : mix(K_PANEL, K_TEXT, 2);   /* (0.17.23) the black keys dark, the white ones lighter: told apart at a glance (a Reddit player hit Tape stop by mistake) */
-    cv_rect(tx, ty, 76, 13, on ? kc : base);
+    cv_panel(tx, ty, 76, 13, on ? kc : base, 0);
     if (!on)
         cv_rect(tx, ty, 2, 13, kc);
     if (locked)
         cv_rect(tx + 2, ty + 11, 72, 2, K_BG);
     cv_text(tx + 4, ty - 1, &FONT_XS, EN_NOTE_NAME[pc], on ? K_BG : K_DIM);
-    cv_text(tx + 20, ty - 1, &FONT_XS, lb, on ? K_BG : kc);
+    cv_text_fit(tx + 22, ty - 1, &FONT_XS, lb, on ? K_BG : kc, 53, 0);   /* (0.17.39: its own column, "C# PHASER" not "C#PHASER"; TAP TEMPO fitted) */
 }
 static int32_t con_chip(int32_t x, const char *t, int lit)   /* a tab along the top: lit (the accent, dark text) or not; where it ends */
 {
     const int32_t w = text_w(&FONT_XS, t) + 10;
-    cv_rect(x, 1, w, 12, lit ? K_ACC : K_PANEL);
+    cv_panel(x, 1, w, 12, lit ? K_ACC : K_PANEL, 0);
     cv_text(x + 5, -2, &FONT_XS, t, lit ? K_BG : K_DIM);
     return x + w + 2;
 }
@@ -6359,7 +6382,8 @@ static void draw_mix(void)
     if (LOOK_CONSOLE) {                          /* (0.17.9) a tab, what the keys do, the load at the right */
         const int32_t x = con_chip(2, "MIX", 1);
         cv_text(x + 2, -2, &FONT_XS, "GLO + KEY", K_DIM);
-        cv_text(236 - text_w(&FONT_XS, c), -2, &FONT_XS, c, K_DIM);
+        if (en_shed_level || plat_xruns())       /* 0.17.39: the load only when it matters (an xrun, the engine easing off; SEL's help has it always) */
+            cv_text(236 - text_w(&FONT_XS, c), -2, &FONT_XS, c, K_ACC);
     } else {
         cv_text(4, 1, &FONT_XS, "MIX: GLO + KEY", K_ACC);
         cv_text(118, 1, &FONT_XS, c, K_DIM);
@@ -6526,10 +6550,14 @@ static void scope_trace(uint16_t col)            /* sc_y[x] (0 .. SC_H): a fille
     if (!LOOK_CONSOLE)
         cv_rect(SC_X, sc_oy, 1, sc_oh, K_LINE);
     for (x = 0; x < SC_W; x++) {
-        const int32_t y = sc_y[x], py = x ? sc_y[x - 1] : y, hi = y > py ? y : py, lo = y > py ? py : y;
+        const int32_t y = sc_y[x];
         if (y > 1)
             cv_rect(SC_X + x, sc_oy + sc_oh - y, 1, y, fill);
-        cv_rect(SC_X + x, sc_oy + sc_oh - hi - 1, 1, hi - lo + 2, col);
+    }
+    for (x = 1; x < SC_W; x++) {                 /* (0.17.39) the line smooth: two anti-aliased strokes a column, as thick as the old one */
+        const float x0 = (float)(SC_X + x - 1), y0 = (float)(sc_oy + sc_oh - sc_y[x - 1]) - 1.0f, y1 = (float)(sc_oy + sc_oh - sc_y[x]) - 1.0f;
+        kr_seg(x0, y0, x0 + 1.0f, y1, col, 1.0f);
+        kr_seg(x0, y0 + 1.0f, x0 + 1.0f, y1 + 1.0f, col, 1.0f);
     }
 }
 
@@ -6539,7 +6567,7 @@ static int32_t sc_tx;                            /* where the title ends */
 static void sc_title(const char *t, uint16_t col)
 {
     if (LOOK_CONSOLE) {
-        cv_rect(2, 0, 236, 17, K_PANEL);
+        cv_panel(2, 0, 236, 17, K_PANEL, 0);
         cv_rect(2, 0, 3, 17, col);
         sc_tx = cv_text(10, 0, &FONT_XS, t, col);
     } else {
@@ -6556,7 +6584,7 @@ static int sc_screen_kind(int k)                 /* the pages drawn as a curve o
 static void sc_screen(void)                      /* the screen: dark, eight columns and four rows of grid */
 {
     int k;
-    cv_rect(SC_X, sc_oy, SC_W, sc_oh, SC_SCREEN);
+    cv_panel(SC_X - 1, sc_oy - 1, SC_W + 2, sc_oh + 2, SC_SCREEN, 1);
     for (k = 1; k < 8; k++)
         cv_rect(SC_X + k * SC_W / 8, sc_oy, 1, sc_oh, mix(SC_SCREEN, K_LINE, k == 4 ? 9 : 5));
     for (k = 1; k < 4; k++)
@@ -6608,8 +6636,8 @@ static void step_roll(int32_t y0, int32_t h, uint16_t col, const int16_t *pit, c
         y = y < y0 + 4 ? y0 + 4 : y > y0 + h - 9 ? y0 + h - 9 : y;
         c = st >= len ? K_LINE : st == pos ? K_TEXT : lv[st] == 3 ? col : lv[st] == 1 ? mix(K_PANEL, col, 6) : mix(K_PANEL, col, 11);
         if (px >= 0 && (slide_in >> st & 1u)) {  /* a slide: a line from the note before into this one */
-            cv_line(px, py + 1, x, y + 1, c);
-            cv_line(px, py + 2, x, y + 2, c);
+            kr_seg((float)px, (float)py + 1.0f, (float)x, (float)y + 1.0f, c, 1.0f);   /* (0.17.39: smooth) */
+            kr_seg((float)px, (float)py + 2.0f, (float)x, (float)y + 2.0f, c, 1.0f);
         }
         cv_rect(x, y - (lv[st] == 3 ? 1 : 0), cw - 4, lv[st] == 3 ? 6 : 4, c);
         px = x + cw - 5, py = y;
@@ -7357,7 +7385,7 @@ static void draw_scope(int kind)
         return;
     }
     if (kind == SCOPE_MIX) {                     /* the mixer: a strip a layer, its level set and its level now, the output last */
-        static const char *const NAME[6] = {"PAD", "DRN", "ACID", "PLK", "DRUM", "OUT"};
+        static const char *const NAME[6] = {"PAD", "BASS", "ACID", "PLUCK", "DRUMS", "OUT"};   /* (0.17.39: the strips' names, as home's) */
         static const uint8_t TRK[6] = {0x40, 0x10, 0x20, 0x80, 0x0F, 0};
         const uint8_t lv[5] = {(uint8_t)proj.par[P_PAD], (uint8_t)proj.par[P_BASS], (uint8_t)proj.par[P_ACID], (uint8_t)proj.par[P_CM_LVL], (uint8_t)proj.par[P_PULSE]};
         float live[6], dg = 0.0f;
@@ -7377,14 +7405,14 @@ static void draw_scope(int kind)
                 const int n = muted ? 0 : (int)(fm_clampf(live[k], 0.0f, 1.0f) * 10.0f + 0.5f);
                 int i;
                 char tx[8];
-                cv_rect(sx, top, sw, 98, k < 5 && k == ui.mix_trk ? mix(K_PANEL, c, 3) : K_PANEL);
+                cv_panel(sx, top, sw, 98, k < 5 && k == ui.mix_trk ? mix(K_PANEL, c, 3) : K_PANEL, 0);
                 cv_rect(sx, top, sw, 2, muted ? K_LINE : c);
-                text_c(sx + sw / 2, top + 1, &FONT_XS, NAME[k], muted ? K_DIM : c);
+                cv_text_fit(sx + sw / 2, top + 1, &FONT_XS, NAME[k], muted ? K_DIM : c, sw - 2, 1);
                 for (i = 0; i < 10; i++)         /* the meter: what sounds */
                     cv_rect(sx + 23, fy + fh - 5 - i * 6, 8, 5, i < n ? (i >= 9 ? K_BASS : i >= 7 ? K_ACC : c) : K_LINE);
                 if (k < 5) {                     /* the fader: what it is set to */
                     const int32_t cy = fy + fh - 1 - (int32_t)lv[k] * (fh - 2) / 100;
-                    cv_rect(sx + 10, fy, 2, fh, K_LINE);
+                    cv_panel(sx + 9, fy - 1, 4, fh + 2, K_BG, 1);   /* (a slot in the desk) */
                     cv_rect(sx + 10, cy, 2, fy + fh - cy, muted ? K_DIM : c);
                     cv_rect(sx + 4, cy - 2, 14, 5, muted ? K_DIM : K_TEXT);
                     itoa_u((uint32_t)lv[k], tx);
@@ -7864,7 +7892,7 @@ static void lk_sound(int v, char *u)            /* the voice's sound, short, or 
             t[j] = s[j], j++;
         t[j] = 0;
     }
-    caps(u, t, 7);                               /* six letters fit a strip */
+    caps(u, t, 16);                              /* (fitted where it is drawn: 0.17.39, MARIMBA not MARIMB) */
 }
 
 /* CONSOLE: the main band's top line: the chord, where it goes (and why), the section, the way to the next chord */
@@ -7907,7 +7935,7 @@ static void console_home(void)
         const int32_t sx = 2 + v * 47, sw = v == 4 ? 46 : 45;
         const int q = lk_quiet(v), lit = v == cur;
         const uint16_t col = lk_col(v), c = q ? mix(K_PANEL, col, 5) : col;
-        cv_rect(sx, 24, sw, 120, lit ? mix(K_PANEL, col, 3) : K_PANEL);
+        cv_panel(sx, 24, sw, 120, lit ? mix(K_PANEL, col, 3) : K_PANEL, 0);
         if (lit)
             cv_rect(sx, 24, sw, 2, col);
         cv_text(sx + 3, 25, &FONT_XS, LK_NAME[v], c);
@@ -7945,7 +7973,7 @@ static void console_home(void)
                 cv_rect(sx + sw - 6, 112 - k * 6, 4, 4, k < n ? (k >= 10 ? K_BASS : k >= 8 ? K_ACC : K_ACID) : K_LINE);
         }
         lk_sound(v, u);
-        cv_text(sx + 3, 124, &FONT_XS, u, q ? K_BASS : K_DIM);
+        cv_text_fit(sx + 3, 124, &FONT_XS, u, q ? K_BASS : K_DIM, sw - 3, 0);
     }
 }
 
@@ -8051,7 +8079,7 @@ static void console_sliver(int v, int32_t x)
     char l[2] = {LK_NAME[v][0], 0};
     int k;
     const int n = q ? 0 : (int)(fm_clampf(lk_level(v), 0.0f, 1.0f) * 10.0f + 0.5f);
-    cv_rect(x, 24, 11, 120, q ? mix(K_PANEL, K_BASS, 4) : K_PANEL);
+    cv_panel(x, 24, 11, 120, q ? mix(K_PANEL, K_BASS, 4) : K_PANEL, 0);
     cv_rect(x, 24, 11, 2, q ? K_LINE : col);
     cv_text(x + 6 - text_w(&FONT_XS, l) / 2, 25, &FONT_XS, l, q ? K_BASS : col);
     for (k = 0; k < 10; k++)
@@ -8093,7 +8121,7 @@ static void console_roll(int v, int32_t x0, int32_t y0, int32_t w, int32_t h)
             const int32_t x = x0 + s * cw + 1, y = y0 + h - 6 - n * (h - 8) / 23;
             const uint16_t c = d == 0 && en_playing ? K_TEXT : acc ? col : mix(K_PANEL, col, 11);
             if (v == LK_ACID && px >= 0 && (en_acid_slide >> ((s + 15) & 15) & 1u))
-                cv_line(px, py + 2, x, y + 2, mix(K_PANEL, col, 9));   /* a slide into it */
+                kr_seg((float)px, (float)py + 2.0f, (float)x, (float)y + 2.0f, mix(K_PANEL, col, 9), 1.0f);   /* a slide into it (smooth: 0.17.39) */
             cv_rect(x, y - (acc ? 1 : 0), cw - 2, acc ? 6 : 4, c);
             px = x + cw - 3, py = y;
         }
@@ -8109,7 +8137,7 @@ static void console_voice(int v)
     char u[16];
     int i, j = 0, k;
     console_top();
-    cv_rect(2, 24, 184, 120, mix(K_PANEL, col, 2));
+    cv_panel(2, 24, 184, 120, mix(K_PANEL, col, 2), 0);
     cv_rect(2, 24, 184, 2, col);
     {
         int32_t x = cv_text(6, 25, &FONT_XS, LK_NAME[v], q ? K_BASS : col);
@@ -8462,7 +8490,7 @@ static void draw_main(void)
                     (uint32_t)q16(en_acid_level) << 18);
     for (i = 0; i < 5; i++)
         h = hash(h, (uint32_t)proj.par[i]);
-    h = hash(h, (en_playing ? plat_ms() / 66u : 0u) | (uint32_t)en_sec << 28 | (uint32_t)ui.centre_imp << 30 | (uint32_t)en_shed_level << 26);   /* the sigil moves: 15 frames a second while playing */
+    h = hash(h, (en_playing && !LOOK_CONSOLE ? plat_ms() / 66u : 0u) | (uint32_t)en_sec << 28 | (uint32_t)ui.centre_imp << 30 | (uint32_t)en_shed_level << 26);   /* the sigil moves: 15 frames a second while playing */
     h = lk_hash(h);
     h = hash(h, proj.pool | (uint32_t)sound_root() << 12 | (uint32_t)proj.par[P_MODE] << 16);   /* (Global's scale) */
     if (ui.view == V_CODE) {                     /* (the code: its letters, the place, the seed, the settings it checks) */
@@ -8566,6 +8594,46 @@ static void console_tabs(void)
             for (p = 0; TB[i].n > 1 && p < TB[i].n; p++)
                 cv_rect(x + 12 - TB[i].n * 2 + p * 4, 21, 3, 2, p == v - TB[i].first ? K_BG : mix(col[i], K_BG, 7));
     }
+}
+
+/* (0.17.39) a knob's value as the Console strip shows it: the number, and its unit apart ("0.54" "s", "-3.0" "dB", "4" "bars"),
+ * the unit as written (lower case: drawn small after the number); a word value whole, in capitals. Returns the largest font it may use */
+static const felucca_font_t *const KV_F[4] = {&FONT_M, &FONT_B, &FONT_S, &FONT_XS};
+static const int8_t KV_Y[4] = {34, 40, 40, 42};  /* one baseline (row 52) whatever the font */
+static int kv_split(int k, char *num, char *unit)
+{
+    char t[16];
+    int i = 0, j, u = 0;
+    knob_text(k, t);
+    unit[0] = 0;
+    if (k == K_PGCH && knob_get(k)) {            /* (a program change's name: as written) */
+        memcpy(num, t, 16);
+        return 1;
+    }
+    while (t[i] == ' ' || t[i] == '-' || t[i] == '+')
+        i++;
+    if (t[i] >= '0' && t[i] <= '9') {
+        while ((t[i] >= '0' && t[i] <= '9') || t[i] == '.' || t[i] == ':')
+            i++;
+        j = i + (t[i] == ' ');
+        while ((t[j + u] >= 'a' && t[j + u] <= 'z') || (t[j + u] >= 'A' && t[j + u] <= 'Z'))
+            u++;
+        if (u && u <= 4 && !t[j + u]) {
+            memcpy(unit, t + j, (uint32_t)u + 1u);
+            t[i] = 0;
+        } else
+            u = 0;
+    }
+    caps(num, t, 16);
+    return 0;
+}
+static int kv_num(const char *num)              /* a number (its own size class: the numbers on a strip share one size, the words another) */
+{
+    return (num[0] >= '0' && num[0] <= '9') || ((num[0] == '-' || num[0] == '+' || num[0] == ' ') && num[1] >= '0' && num[1] <= '9');
+}
+static int kv_fits(int fi, const char *num, const char *unit)
+{
+    return text_w(KV_F[fi], num) + (unit[0] ? 2 + text_w(&FONT_XS, unit) : 0) <= 52;
 }
 
 static void draw_knobs(void)
@@ -8691,6 +8759,18 @@ static void draw_knobs(void)
             cv_rect(xd + k * 5, 17, 3, 4, cur ? K_ACC : same ? K_DIM : K_LINE);
         }
     }
+    int vfi[2] = {0, 0};                         /* (0.17.39) one value font for the strip's words, one for its numbers: the largest all of them fit */
+    if (LOOK_CONSOLE)
+        for (i = 0; i < 4; i++) {
+            char vn[16], vu[8];
+            int fi;
+            if (view_knob((int)i) == K_NONE)
+                continue;
+            fi = kv_split(view_knob((int)i), vn, vu);
+            while (fi < 3 && !kv_fits(fi, vn, vu))
+                fi++;
+            vfi[kv_num(vn)] = fi > vfi[kv_num(vn)] ? fi : vfi[kv_num(vn)];
+        }
     for (i = 0; i < 4; i++) {
         int k = view_knob((int)i), lo, hi, v, hot = now_touch && ui.touched == (int)i;
         int32_t x = (int32_t)i * 60, cx = x + 30;
@@ -8699,31 +8779,22 @@ static void draw_knobs(void)
         if (k == K_NONE)
             continue;
         if (LOOK_CONSOLE) {                      /* the Console look: a fader a knob: its name, the value left, a track and a cap */
-            char vt[16];
-            const felucca_font_t *vf = &FONT_M;
-            int32_t vy = 34, cp;
+            char vt[16], vu[8];
+            int32_t cp, xe;
             knob_range(k, &lo, &hi);
             v = knob_get(k);
             if (i)
                 cv_rect(x, 27, 1, 40, K_LINE);
             if (hot)
-                cv_rect(x + 2, 25, 56, 43, K_PANEL);
+                cv_panel(x + 2, 25, 56, 43, K_PANEL, 0);
             caps(t, view_label((int)i), sizeof t);
             cv_text(x + 5, 24, &FONT_XS, t, hot ? K_TEXT : K_DIM);
-            knob_text(k, t);
-            if (k == K_PGCH && knob_get(k))
-                memcpy(vt, t, sizeof vt), vf = &FONT_B, vy = 37;
-            else
-                caps(vt, t, sizeof vt);
-            if (text_w(vf, vt) > 52)
-                vf = &FONT_B, vy = 37;
-            if (text_w(vf, vt) > 52)
-                vf = &FONT_S, vy = 37;
-            if (text_w(vf, vt) > 52)
-                vf = &FONT_XS, vy = 40;
-            cv_text(x + 5, vy, vf, vt, hot ? K_ACC : K_TEXT);
+            kv_split(k, vt, vu);
+            xe = cv_text_fit(x + 5, KV_Y[vfi[kv_num(vt)]], KV_F[vfi[kv_num(vt)]], vt, hot ? K_ACC : K_TEXT, vu[0] ? 52 - 2 - text_w(&FONT_XS, vu) : 52, 0);
+            if (vu[0])                           /* the unit: small, after the number, on its baseline */
+                cv_text(xe + 2, 42, &FONT_XS, vu, hot ? K_TEXT : K_DIM);
             cp = hi > lo ? (int32_t)(v - lo) * 45 / (hi - lo) : 0;
-            cv_rect(x + 5, 61, 50, 2, hot ? K_BG : K_LINE);
+            cv_panel(x + 4, 60, 52, 4, hot ? K_BG : mix(K_BG, K_LINE, 6), 1);
             if (lo < 0)                          /* bipolar: from the middle */
                 cv_rect(cp < 22 ? x + 5 + cp : x + 27, 61, cp < 22 ? 22 - cp : cp - 22, 2, fill);
             else
@@ -9542,51 +9613,59 @@ static void autosave(void)
  * and the credit (a fork of HYP-1 by RedtailWorks), with sixteen steps filling in (the white keys lighting with them) until the
  * music starts. Any button or key: straight to the music.
  * Sprite letters: K outline, H horn, h horn shade, Y eye, R body, r body shade, L highlight, T tail, . nothing. */
-static const char *const MASCOT[23] = {
-    "..K............K.......",
-    ".KHK..........KHK......",
-    "..KHK........KHK.......",
-    "..KhK.KKKKKK.KhK.......",
-    "...KhKRRRRRRKhK........",
-    "..KRLLRRRRRRRRRK.......",
-    ".KRLRKKRRRRKKRRRK......",
-    ".KRRRYYRRRRYYRRRK......",
-    ".KRRRKRRRRRRKRRRK......",
-    ".KrrrKHKKKKHKrrrK...K..",
-    "..KKKKKKKKKKKKKK...KRK.",
-    "..KRLLRKKKKrrrrK..KRLRK",
-    "..KrrrrRLRRKKKK...KKKKK",
-    "...KKKKrrrrRRRRK....T..",
-    "..KRLLRKKKKrrrrK....T..",
-    "..KrrrrRLRRKKKK.....T..",
-    "...KKKKrrrrRRRRK...T...",
-    "..KRLLRKKKKrrrrK..T....",
-    "..KrrrrRLRRKKKK...T....",
-    "...KKKKrrrrRRRRKTT.....",
-    "..KRLLRKKKKrrrrK.......",
-    "..KrrrrRLRRKKKKK.......",
-    "...KKKKKKKKKKKK........"};
+static const char *const MASCOT[23] = {   /* (0.17.39 re-art: lit from the top left; k its own dark outline, D r R L W the body's ramp (shade to light, hue-shifted),
+                                           * g h H the horns, E a glint, A a rim of the theme's accent on the side away from the light, K the dark inside) */
+    "..g............g.......",
+    ".gEg..........gEg......",
+    "..gHg........gHg.......",
+    "..ghg.kkkkkk.ghg.......",
+    "...ghkWLLRRrkhg........",
+    "..kLWLRRRRRRRRAk.......",
+    ".kLRRKKRRRRKKRrAk......",
+    ".kLRREYRRRrEYrrAk......",
+    ".kRRrKRRRRRrKrrAk......",
+    ".kDrrKHKKKKHKrDAk...k..",
+    "..kKKKKKKKKKKKKk...kLk.",
+    "..kWLLRKKKKDDDDk..kLRrk",
+    "..kDDDDLRRrKKKK...kkkkk",
+    "...kKKKDDDDRRrAk....T..",
+    "..kWLLRKKKKDDDDk....T..",
+    "..kDDDDLRRrKKKK.....T..",
+    "...kKKKDDDDRRrAk...T...",
+    "..kWLLRKKKKDDDDk..T....",
+    "..kDDDDLRRrKKKK...T....",
+    "...kKKKDDDDRRrAkTT.....",
+    "..kWLLRKKKKDDDDk.......",
+    "..kDDDDLRRrKKKKk.......",
+    "...kkkkkkkkkkkk........"};
 static uint16_t mascot_color(char ch)
 {
     if (LOOK_SYNTH)                              /* neon tube light: a magenta outline, chrome horns, cyan eyes, the body dark */
         switch (ch) {
-        case 'K': case 'T': return RGB(255, 47, 142);
-        case 'H': return RGB(255, 255, 255);
+        case 'K': case 'T': case 'k': case 'g': return RGB(255, 47, 142);
+        case 'H': case 'E': return RGB(255, 255, 255);
         case 'h': return RGB(159, 220, 255);
-        case 'Y': return RGB(62, 240, 255);
+        case 'Y': case 'A': return RGB(62, 240, 255);
         case 'R': return RGB(58, 11, 48);
-        case 'r': return RGB(36, 6, 31);
-        case 'L': return RGB(255, 122, 209);
+        case 'r': case 'D': return RGB(36, 6, 31);
+        case 'L': case 'W': return RGB(255, 122, 209);
         default: return 0;
         }
     switch (ch) {
-    case 'K': case 'T': return RGB(27, 16, 34);
+    case 'K': return RGB(27, 16, 34);
+    case 'k': return RGB(72, 16, 46);            /* (the outline: the body's own colour, darkest) */
+    case 'D': return RGB(112, 24, 66);           /* (the ramp leans purple into the shade, orange into the light) */
+    case 'r': return RGB(166, 32, 66);
+    case 'R': return RGB(226, 56, 78);
+    case 'L': return RGB(255, 118, 106);
+    case 'W': return RGB(255, 192, 152);
+    case 'T': return RGB(120, 26, 58);
+    case 'g': return RGB(98, 72, 66);
+    case 'h': return RGB(190, 160, 120);
     case 'H': return RGB(242, 230, 196);
-    case 'h': return RGB(196, 173, 126);
+    case 'E': return RGB(255, 252, 238);
     case 'Y': return RGB(255, 212, 71);
-    case 'R': return RGB(224, 52, 79);
-    case 'r': return RGB(156, 29, 58);
-    case 'L': return RGB(255, 143, 143);
+    case 'A': return th->acc;                    /* (the rim light) */
     default: return 0;
     }
 }
@@ -9595,10 +9674,11 @@ static void splash_mascot(int hop, int blink)    /* the mascot, hopped up hop pi
 {
     int x, y;
     cv_begin(240, 108, K_BG);
+    kr_glow(120.0f, 62.0f - (float)hop, 22.0f, 70.0f, RGB(156, 29, 58), 0.6f);   /* (0.17.39) a faint glow behind him, rising with him */
     for (y = 0; y < 23; y++)
         for (x = 0; x < 23; x++)
             if (MASCOT[y][x] != '.')
-                cv_rect(120 - 23 * 2 + x * 4, 108 - 23 * 4 + y * 4 - hop, 4, 4, mascot_color(blink && MASCOT[y][x] == 'Y' ? 'K' : MASCOT[y][x]));
+                cv_rect(120 - 23 * 2 + x * 4, 108 - 23 * 4 + y * 4 - hop, 4, 4, mascot_color(blink && y > 4 && (MASCOT[y][x] == 'Y' || MASCOT[y][x] == 'E') ? 'K' : MASCOT[y][x]));
     cv_blit(0, 0);
 }
 
@@ -9608,11 +9688,17 @@ static void draw_splash(void)
     lcd_fill(0, 0, 240, 240, K_BG);
     splash_mascot(0, 0);
     cv_begin(240, 132, K_BG);                    /* the name, the rings, and what's next */
-    text_c(120, 0, &FONT_L, "DEAMON", RGB(242, 230, 196));
-    text_c(120, 36, &FONT_L, "SLINKY", RGB(255, 143, 143));
-    for (i = 0; i < 9; i++)
-        cv_rect(48 + i * 16, 86, 12, 6, i & 1 ? RGB(224, 52, 79) : RGB(156, 29, 58));
-    cv_frame(40, 80, 160, 18, K_LINE);
+    for (i = 2; i >= 0; i--) {                   /* (0.17.39) block letters: two darker copies down and right under each word */
+        text_c(120 + i, i, &FONT_L, "DEAMON", i ? mix(RGB(150, 40, 80), K_BG, i * 4) : RGB(242, 230, 196));
+        text_c(120 + i, 36 + i, &FONT_L, "SLINKY", i ? mix(RGB(150, 40, 80), K_BG, i * 4) : RGB(255, 143, 143));
+    }
+    cv_panel(40, 80, 160, 18, K_BG, 1);           /* the bar set into the card, its segments lit on top and shaded under */
+    for (i = 0; i < 9; i++) {
+        const uint16_t c = i & 1 ? RGB(224, 52, 79) : RGB(156, 29, 58);
+        cv_rect(48 + i * 16, 86, 12, 6, c);
+        cv_rect(48 + i * 16, 86, 12, 1, mix(c, RGB(255, 220, 190), 7));
+        cv_rect(48 + i * 16, 91, 12, 1, mix(c, 0x0000, 7));
+    }
     text_c(120, 110, &FONT_XS, "PRESENTS", K_DIM);
     cv_blit(0, 108);
 }

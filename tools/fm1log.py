@@ -71,6 +71,9 @@ def decode(msg):
     d["susp_bad"] = d["shed"] >> 14 & 1           # its erase didn't suspend: saves stop the audio
     d["boot"] = d["shed"] >> 15 & 3               # the startup code (0.16.25): 1 M-VAVE's V15, 2 V16 (the chip 12.5% slower), 3 another
     d["shed"] &= 0xFF
+    pw = d["playing"]                             # 0.17.39 on: the page (ui.view) and the bands sent since the last frame
+    d["playing"], d["ui_view"] = pw & 1, pw >> 1 & 127
+    d["bl_hdr"], d["bl_main"], d["bl_knob"] = pw >> 8 & 255, pw >> 16 & 255, pw >> 24
     return d
 
 
@@ -151,7 +154,9 @@ def selftest():
     w = list(range(1, len(FIELDS) + 1))
     msg = PREFIX + pack7(struct.pack("<%dI" % len(w), *w))
     d = decode(msg)
-    assert d and d.pop("chorus") == 0 and d.pop("bass") == 0 and [d[k] for k in FIELDS] == w, d
+    assert d and d.pop("chorus") == 0 and d.pop("bass") == 0, d
+    assert d.pop("ui_view") == 6 and [d.pop(k) for k in ("bl_hdr", "bl_main", "bl_knob")] == [0, 0, 0], d
+    assert [d[k] for k in FIELDS] == w[:11] + [0] + w[12:], d
     assert decode([0x00, 0x59, 0x11]) is None
     w = list(range(1, 36))                        # a firmware before 0.16.5: no stack words, they read 0
     d = decode(PREFIX + pack7(struct.pack("<35I", *w)))

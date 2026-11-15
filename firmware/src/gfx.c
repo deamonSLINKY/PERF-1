@@ -93,8 +93,11 @@ static void cv_scanlines(uint32_t y, uint32_t r0)
         }
     }
 }
+static uint8_t cv_sent[3];                      /* 0.17.39: the bands sent since the last status frame (the header, the main band, the knobs) */
+static void cv_count(uint32_t y) { cv_sent[y < 28u ? 0 : y < 172u ? 1 : 2]++; }
 static void cv_blit(uint32_t x, uint32_t y)
 {
+    cv_count(y);
     cv_scanlines(y, 0);
     lcd_blit(x, y, cv_w, cv_h, cv_px);
 }
@@ -102,6 +105,7 @@ static void cv_blit(uint32_t x, uint32_t y)
 /* canvas rows r0 .. cv_h-1 only, to screen row y + r0 */
 static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
 {
+    cv_count(y);
     cv_scanlines(y, r0);
     if (r0 < cv_h)
         lcd_blit(x, y + r0, cv_w, cv_h - r0, cv_px + r0 * cv_w);
@@ -165,8 +169,9 @@ static uint32_t glyph(const felucca_font_t *f, uint32_t ch)
 }
 
 /* text in colour c, each pixel's coverage blended over what is already on the canvas (an
- * anti-aliased face on a coloured box gets no dark fringe); returns the end x */
-static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
+ * anti-aliased face on a coloured box gets no dark fringe); returns the end x. tr: the letters
+ * closer (-1) or wider apart (0.17.39) */
+static int32_t cv_text_tr(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c, int32_t tr)
 {
     uint32_t r = c >> 11, g = (c >> 5) & 63u, b = c & 31u;
     for (; *s; s++) {
@@ -187,14 +192,18 @@ static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char
                 } else {
                     uint32_t bg = swap16(cv_px[(uint32_t)py * cv_w + (uint32_t)px]);
                     uint32_t br = bg >> 11, bgg = (bg >> 5) & 63u, bb = bg & 31u;
-                    uint32_t nr = (r * a + br * (15u - a)) / 15u, ng = (g * a + bgg * (15u - a)) / 15u,
-                             nb = (b * a + bb * (15u - a)) / 15u;
+                    uint32_t nr = (r * a + br * (15u - a)) * 34953u >> 19, ng = (g * a + bgg * (15u - a)) * 34953u >> 19,   /* (/15, without the divide: exact below 74,000) */
+                             nb = (b * a + bb * (15u - a)) * 34953u >> 19;
                     cv_px[(uint32_t)py * cv_w + (uint32_t)px] = swap16((nr << 11) | (ng << 5) | nb);
                 }
             }
-        x += f->adv[gi];
+        x += f->adv[gi] + (s[0] != ' ' && s[1] && s[1] != ' ' ? tr : 0);   /* (a space keeps its width: RESET ALL, not RESETALL) */
     }
     return x;
+}
+static int32_t cv_text(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
+{
+    return cv_text_tr(x, y, f, s, c, 0);
 }
 
 static int32_t text_w(const felucca_font_t *f, const char *s)
@@ -203,6 +212,41 @@ static int32_t text_w(const felucca_font_t *f, const char *s)
     for (; *s; s++)
         w += f->adv[glyph(f, (uint8_t)*s)];
     return w;
+}
+
+static int32_t text_w_tr(const felucca_font_t *f, const char *s, int32_t tr)   /* (as cv_text_tr spaces it) */
+{
+    int32_t w = 0;
+    for (; *s; s++)
+        w += f->adv[glyph(f, (uint8_t)*s)] + (s[0] != ' ' && s[1] && s[1] != ' ' ? tr : 0);
+    return w;
+}
+
+/* (0.17.39) text in at most maxw (the last letter's own gap after it not counted): as it is, else its
+ * letters a pixel closer, else cut (a last letter dimmed, so a cut reads as one); align 1: x is the
+ * middle. Returns the end x */
+static int32_t cv_text_fit(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c, int32_t maxw, int align)
+{
+    char b[24];
+    int32_t n = 0, w = text_w(f, s), cut = 0;
+    while (s[n] && n < 23)
+        b[n] = s[n], n++;
+    b[n] = 0;
+    if (w - 1 <= maxw)
+        return cv_text(align ? x - w / 2 : x, y, f, s, c);
+    while (n > 1 && text_w_tr(f, b, -1) - 1 > maxw)
+        b[--n] = 0, cut = 1;
+    w = text_w_tr(f, b, -1);
+    if (align)
+        x -= w / 2;
+    if (cut && n > 1) {                          /* the last letter at half strength: the word goes on */
+        const char last[2] = {b[n - 1], 0};
+        int32_t e;
+        b[n - 1] = 0;
+        e = cv_text_tr(x, y, f, b, c, -1);
+        return cv_text(e, y, f, last, (uint16_t)(((c & 0xF7DEu) >> 1)));
+    }
+    return cv_text_tr(x, y, f, b, c, -1);
 }
 
 /* one-shot: text in a box, cleared to black, blitted */

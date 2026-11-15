@@ -26,6 +26,16 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **The screen, polished (0.17.39).** From a study of what makes small music screens look finished (Elektron, Teenage Engineering, Polyend, pixel-art games).
+  - **Depth.** Strips, key tiles, tabs, the touched knob and the mixer's strips are lit from the top left: a pixel of light along the top and left, shade along the bottom and right. The fader slots, the knobs' tracks and the scopes' screens are set into the desk the other way round.
+  - **Smooth lines.** The scopes' curves and the acid's slides are drawn anti-aliased, like the text.
+  - **Text that fits.** The keys' labels sit in their own column ("C#  PHASER", no longer "C#PHASER"); long ones close up a pixel instead of running off the key (TAP TEMPO, RESET ALL). Sounds on the home strips are whole (MARIMBA, not MARIMB). Each voice has one name everywhere (the Mixer's DRN, PLK and DRUM are BASS, PLUCK and DRUMS; Perform's DRN is BAS). The page's name isn't said twice ("PAD 1/5", not "PAD  PAD 1/5").
+  - **Knob values.** All four values on a page share one size and one baseline (a long word no longer shrinks one beside three large numbers), and units are small after the number: 0.54 s, 12 ms, -3.0 dB, 4 bars.
+  - **The imp, redrawn.** The same imp, lit from the top left: a body ramp from purple shade to warm light, his own dark red for the outline, a glint in each eye, a dark underside on every coil, and a rim of the theme's accent on his right side. The boot card has a glow behind him, block shadows under DEAMON SLINKY and a bar set into the card.
+  - **Less redrawing.** The header and the home screen were redrawn about 15 times a second for an imp the Console layout doesn't show; they redraw only when something on them changes now, which frees screen time and makes the keys a little quicker. Text draws a little faster too.
+  - **Mix map.** The CPU and XR readout shows only when there has been a dropout or the engine is easing off (SEL's help still has it always).
+  - **Status log.** Four new columns: the page (`ui_view`), and how many times the header, main area and knobs were sent to the screen since the last row (`bl_hdr`, `bl_main`, `bl_knob`).
+
 - **Start from nothing: the Empty piece (0.17.31).** Niclio's question in issue #5, "can I make a song from nothing?". On Global, **SEL + OCT-** empties the piece playing: its sounds, kit, key and tempo stay; the drums are gone, the pad holds the home chord, and the bass, the acid and the pluck are each on their steps with every step a rest. Nothing moves by itself. Write the drums in the sequencer, the lines on Bass steps, Acid steps and Pluck steps, the chords on the Progression page, and SAVE. SEL + SAVE held brings the factory piece back.
 - **The gesture recorder (0.17.31).** In the FX menu, **SEL + REC** records the four FX knobs from the next bar; SEL + REC again loops what you did (1 to 4 bars), and the knobs play it by themselves, gliding. Turn a knob and it's yours again; SEL + REC lets all of them go. `REC` and `LOOP` in the header. Not saved, like the knobs.
 - **Capture plays back as you played it, takes the bass, and keeps the answer (0.17.31).** A Reddit player's "learn what was played or answered into the track".

@@ -536,7 +536,7 @@ static void vz_dancer(void)
                     int32_t w;
                     if (ch == '.')
                         continue;
-                    if (ch == 'Y' && (sleepy > 0.5f || hide || blink))
+                    if ((ch == 'Y' || (ch == 'E' && r > 4)) && (sleepy > 0.5f || hide || blink))
                         ch = hide ? 'R' : 'K';
                     if (mouth && !hide && r == 8 && c >= 7 && c <= 10)      /* the mouth open: a dark hole between the fangs */
                         ch = 'K';
@@ -556,7 +556,7 @@ static void vz_dancer(void)
                             const int gn = g < 4 ? g + 1 : 4;
                             yc = vfloor - 23 * PX + r * PX - (int32_t)((vz.lift + dyg[g] + (dyg[gn] - dyg[g]) * fr) * ks);
                         }
-                        col = ch == 'K' || ch == 'T' ? (LOOK_SYNTH ? mascot_color('K') : RGB(27, 16, 34)) :
+                        col = ch == 'K' ? (LOOK_SYNTH ? mascot_color('K') : RGB(27, 16, 34)) :
                               ch == 'Y' && wide > 0.5f ? RGB(255, 255, 255) :
                               LOOK_SYNTH && ch == 'R' ? RGB(150, 40, 120) : LOOK_SYNTH && ch == 'r' ? RGB(104, 24, 88) : mascot_color(ch);
                         cv_rect(CXD + (int32_t)(xx + rowdx) - (sx[g] < 0.0f ? w : 0), yc, w, PX, col);
