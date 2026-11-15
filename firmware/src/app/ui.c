@@ -7810,31 +7810,29 @@ static uint32_t chord_pcs(void)                 /* the chord playing: a bit a pi
 }
 /* ZOOM (the SCREEN page, 0.16.1, for playing at a distance or outdoors): a knob turned fills the main area with its name and its value, twice the
  * largest type, and a bar, for as long as the knob strip lights it (1.2 s) */
-static uint32_t g_cov(const uint8_t *gd, int32_t bpr, int32_t w, int32_t h, int32_t gx, int32_t gy)   /* a glyph's coverage 0..15 (0 off it) */
-{
-    uint32_t a;
-    if (gx < 0 || gy < 0 || gx >= w || gy >= h)
-        return 0;
-    a = gd[gy * bpr + gx / 2];
-    return (gx & 1) ? (a & 15u) : (a >> 4);
-}
-/* text at twice the size (0.17.40: its edges kept soft: each new pixel 9:3:3:1 of the four nearest, so the font's anti-aliasing grows with it, no jaggies) */
+/* text at twice the size: a pixel two by two, each block at its pixel's coverage (0.17.40: the font's soft edge pixels stay soft, the
+ * strokes stay sharp; a 9:3:3:1 blend of neighbours read fuzzy on the unit) */
 static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
 {
     for (; *s; s++) {
-        const uint32_t gi = glyph(f, (uint8_t)*s);
-        const int32_t w = f->bw[gi], bpr = (w + 1) / 2, gh = f->h;
+        const uint32_t gi = glyph(f, (uint8_t)*s), w = f->bw[gi], bpr = (w + 1u) / 2u;
         const uint8_t *gd = f->data + f->off[gi];
-        int32_t ox, oy;
-        for (oy = 0; oy < 2 * gh; oy++) {
-            const int32_t gy = oy >> 1, ny = oy & 1 ? gy + 1 : gy - 1;
-            for (ox = 0; ox < 2 * w; ox++) {
-                const int32_t gx = ox >> 1, nx = ox & 1 ? gx + 1 : gx - 1;
-                const uint32_t a = 9u * g_cov(gd, bpr, w, gh, gx, gy) + 3u * g_cov(gd, bpr, w, gh, nx, gy) + 3u * g_cov(gd, bpr, w, gh, gx, ny) + g_cov(gd, bpr, w, gh, nx, ny);
-                if (a)
-                    px_blend(x - 2 * f->pad + ox, y + oy, c, a * 34953u >> 19);   /* (/15: 0..16) */
+        uint32_t gx, gy;
+        for (gy = 0; gy < f->h; gy++)
+            for (gx = 0; gx < w; gx++) {
+                uint32_t a = gd[gy * bpr + gx / 2u];
+                int32_t px, py;
+                a = (gx & 1u) ? (a & 15u) : (a >> 4);
+                if (!a)
+                    continue;
+                px = x + 2 * ((int32_t)gx - f->pad), py = y + 2 * (int32_t)gy;
+                if (a == 15u) {
+                    cv_rect(px, py, 2, 2, c);
+                } else {
+                    a = a * 16u * 34953u >> 19;          /* (0..15 to 0..16) */
+                    px_blend(px, py, c, a), px_blend(px + 1, py, c, a), px_blend(px, py + 1, c, a), px_blend(px + 1, py + 1, c, a);
+                }
             }
-        }
         x += 2 * f->adv[gi];
     }
 }
