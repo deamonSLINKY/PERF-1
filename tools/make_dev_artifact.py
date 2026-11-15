@@ -213,7 +213,7 @@ def main():
             from make_site import strip_module      # noqa: E402
             from make_params import param_enum      # noqa: E402
             lib = "\n".join(strip_module((SRC / "web" / f).read_text(encoding="utf-8"))
-                            for f in ("fm1backup.js", "fm1piece.js", "fm1card.js", "fm1share.js", "fm1idle.js", "fm1midi.js"))
+                            for f in ("fm1backup.js", "fm1piece.js", "fm1card.js", "fm1share.js", "fm1idle.js", "fm1midi.js", "fm1link.js"))
             pg = studio.read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8")).replace("/*LIB*/", lib)
             pg = pg.replace("/*PENUM*/", json.dumps(param_enum())).replace("<title>PERF-1 studio</title>", "<title>PERF-1 " + html.escape(version) + " studio</title>")
             (out / "studio").mkdir()

@@ -56,6 +56,10 @@
   .menu .pop { position: absolute; right: 0; top: calc(100% + 4px); display: flex; flex-direction: column; gap: 4px; min-width: 250px; padding: 8px;
                background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 10px 24px rgba(0,0,0,.5); z-index: 40; }
   .menu .pop button { text-align: left; }
+  .lkdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--line); margin-left: 3px; vertical-align: 1px; }
+  #lkSum.on .lkdot { background: var(--acid); } #lkSum.live .lkdot { background: var(--bass); box-shadow: 0 0 6px var(--bass); }
+  #lkSum.live { color: var(--bass); }
+  .menu .pop label { display: block; line-height: 1.3; }
   .menu .pop hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
   #pos { font: 600 .95rem "Chakra Petch", sans-serif; color: var(--acc); min-width: 11em; }
   #msg { min-height: 1.5em; color: var(--dim); margin: 6px 2px; font-size: .95rem; overflow-wrap: anywhere; }
@@ -285,6 +289,17 @@
       <button id="save" disabled>Download the piece (.piece)</button>
       <button id="code" disabled>Copy the piece code</button>
       <button id="send" disabled title="Opens the Library &amp; pieces page with this piece, to add it to your FM-1 over USB">Send the piece to the FM-1</button>
+    </div></details>
+    <!-- THE FM-1 LINK (fm1link.js: the Editor page's USB messages): the unit's settings and DX voices from here, live as they change -->
+    <details class="menu" id="lkMenu"><summary id="lkSum" title="Your FM-1 over USB">FM-1 <i class="lkdot"></i></summary><div class="pop" style="width:290px">
+      <span class="muted" id="lkStat" style="font-size:.88rem">Your FM-1 on USB (Chrome or Edge): what you change here, played on the unit.</span>
+      <button id="lkConn">Connect my FM-1</button>
+      <label class="muted"><input type="checkbox" id="lkLive" disabled> <b>Live</b>: the FM-1 plays the studio's settings and the DX voice you edit, as you change them</label>
+      <button id="lkPush" disabled>Send the piece's settings now</button>
+      <button id="lkPull" disabled>Take the FM-1's settings into the piece</button>
+      <button id="lkVox" disabled>Take the FM-1's DX voices</button>
+      <hr>
+      <span class="muted" style="font-size:.82rem">Settings and voices only: the drum steps, the lines and the FILTERS go with File → Send the piece to the FM-1. SAVE on the unit keeps what you sent.</span>
     </div></details>
     <input type="file" id="file" accept=".piece" hidden>
     <input type="file" id="mfile" accept=".mid,.midi,.MID,audio/midi" hidden>
@@ -1128,7 +1143,7 @@ function drawFacts() {
   if ($("facts").dataset.h !== fh) { $("facts").innerHTML = fh; $("facts").dataset.h = fh; }
 }
 let raf = 0;
-function refresh() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (view === "loom") drawLoom(); drawEditor(); drawFacts(); syncCtls(); syncQuick(); drawPics(); }); }
+function refresh() { lkSyncSoon(); if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (view === "loom") drawLoom(); drawEditor(); drawFacts(); syncCtls(); syncQuick(); drawPics(); }); }
 setInterval(() => { if (live && live.playing) refresh(); }, 66);
 window.addEventListener("resize", refresh);
 
@@ -1494,7 +1509,7 @@ const parSend = new Map();
 let parTimer = 0;
 function changedPar(p) {                                      // (the piece's copy here has it; the engine gets that one setting; SAVE stores it as the unit's does)
   undoNote(); refresh();
-  parSend.set(p, parV(p));
+  parSend.set(p, parV(p)); lkPar(p, parV(p));
   if (!parTimer) parTimer = setTimeout(() => { parTimer = 0; if (node) for (const [q, v] of parSend) node.port.postMessage({ type: "st_par", p: q, v, id: ++reqId }); parSend.clear(); }, 15);
 }
 let drag = null;
@@ -1656,7 +1671,7 @@ function dxHTML() {                                           // (the rows are f
     (dxFile.length ? '<optgroup label="From the .syx file">' + dxFile.map((v, k) => '<option value="f' + k + '">' + (vName(v) || "(no name)") + "</option>").join("") + "</optgroup>" : "") +
     '<option value="i">Init voice (a plain sine)</option></select>' +
     '<button class="small" id="dxLoad" title="DX7 banks (32 voices) or single voices, from any librarian">Open .syx…</button><input type="file" id="dxFileIn" accept=".syx,.SYX" hidden>' +
-    '<button class="small" id="dxSave">Save .syx</button></div>' +
+    '<button class="small" id="dxSave">Save .syx</button><button class="small" id="dxUnit" title="This voice into one of your FM-1\'s 16 slots (FM-1 menu: connect first; with Live on, every change goes)">To my FM-1</button></div>' +
     '<div class="dxgrid"><div><canvas id="dxAlg" height="200" aria-label="The algorithm: click an operator"></canvas>' +
     '<div class="bar" style="margin:6px 0"><button class="small" id="dxAlgP" aria-label="Algorithm before">◀</button><b id="dxAlgN" style="min-width:4.5em;text-align:center"></b><button class="small" id="dxAlgX" aria-label="Algorithm after">▶</button>' +
     '<span class="lbl">&nbsp;NAME</span><input id="dxName" maxlength="10" size="11" aria-label="The voice name"></div><div id="dxGlob"></div></div>' +
@@ -1684,6 +1699,7 @@ async function dxReadPlaying() {                              // the voice the p
 }
 async function dxPick(key, quiet) {                           // a voice into the editor: a built-in (heard as it is), a slot, a file's, the init voice
   const k = key[0], i = +key.slice(1);
+  if (lk) lk.vslot = -1;                                      // (the FM-1 link: a new voice in hand has no slot there yet)
   if (k === "d") { const r = await ask({ type: "st_vox", op: "dx", idx: i }); if (!r.ok) return; dxv = r.ok === 2 ? vSanitize(r.vox.slice(0, FP.SIZE)) : vUnpack(r.vox.subarray(0, 128)); dxSlot = -1; dxDx = i; if (!quiet) dxPlay(dxSndOf(i)); }
   else if (k === "u") { const r = await ask({ type: "st_vox", op: "get", slot: i }); if (!r.ok) return; dxv = vUnpack(r.vox.subarray(0, 128)); dxSlot = i; dxDx = -1; if (!quiet) dxPlay(DXB() + i); }
   else { dxv = k === "f" ? Uint8Array.from(dxFile[i]) : vInit(); dxSlot = -1; dxDx = -1; await dxPut(true); }
@@ -1780,6 +1796,7 @@ function dxSet(i, v, quiet) {                                 // a byte of the v
 function dxEdit() {                                           // into the emulator (the newest, one at a time); kept a moment after the last change
   clearTimeout(dxPutT); dxPutT = setTimeout(() => dxPut(false), 40);
   clearTimeout(dxKeepT); dxKeepT = setTimeout(() => dxPut(true), 900);
+  if (lk && lk.live) { clearTimeout(lk.vT); lk.vT = setTimeout(lkVoxSend, 250); }
   dxDraw();
   if (document.querySelector("#dxOps")) { const g = vGraph(dxv[FP.ALG]); document.querySelectorAll("#dxOps button[data-dxop]").forEach((b) => { const n = +b.dataset.dxop; b.querySelector("i").style.width = Math.round(dxv[(6 - n) * FP.OP + FP.OL] / 99 * 100) + "%"; b.classList.toggle("car", !!g.carrier[n]); }); }
 }
@@ -1836,6 +1853,7 @@ $("sound").addEventListener("click", (e) => {
   if (b.dataset.dxop) { dxOp = +b.dataset.dxop; dxOpFill(); dxDraw(); return; }
   if (b.id === "dxAlgP" || b.id === "dxAlgX") { dxSet(FP.ALG, (dxv[FP.ALG] + (b.id === "dxAlgP" ? 31 : 1)) % 32); $("dxAlgN").textContent = "ALG " + (dxv[FP.ALG] + 1); dxOpFill(); return; }
   if (b.id === "dxLoad") return $("dxFileIn").click();
+  if (b.id === "dxUnit") { if (!lk.on) { $("lkMenu").open = true; return say("Connect your FM-1 first (the FM-1 menu at the top).", true); } return lkVoxSend(); }
   if (b.id === "dxSave") {
     const v = vSanitize(Uint8Array.from(dxv)), a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([new Uint8Array([0xF0, 0x43, 0x00, 0x00, 0x01, 0x1B, ...v, vSum(v), 0xF7])], { type: "application/octet-stream" }));
@@ -3165,6 +3183,207 @@ $("saveEmu").addEventListener("click", async () => {
   say(r.ok ? "Saved: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " is in the emulator's bank (this browser). The Library & pieces page can send it to the FM-1." : "The emulator is writing; try again in a moment.", !r.ok);
   if (view === "song") songRender();
 });
+
+/* ======================================================================== the FM-1 link (fm1link.js; the Editor page's messages, R2 of the studio plan)
+ * Connect: what the firmware is (the about message: its number of settings must be the studio's, or a setting's number means another setting), its 176
+ * settings read (a dump), how many DX voices it holds. Live: each setting changed here goes as its knob would set it (six each 25 ms, the editor's
+ * pace), and a whole-piece change (a load, an undo, a move, the dice) sends the settings that differ from the unit's; the DX voice being edited goes
+ * into its slot a moment after the last change. The player's own three (Tune, MIDI out, the theme) are never sent. The port is let go after 4 s quiet
+ * unless Live is on (fm1idle.js: Windows gives a USB MIDI port to one program at a time). */
+var lk = { on: false, live: false, same: false, port: null, val: null, got: 0, pend: new Map(), t: 0, sT: 0, vT: 0, busy: 0, nvox: -1,
+           acks: [], slotW: null, dumpW: null, aboutW: null, vBusy: false, vAgain: false, map: new Map(), vslot: -1 };
+const LK_SKIP = new Set(["P_TUNE", "P_MIDI", "P_THEME"].map((k) => PE[k]).filter((p) => p !== undefined));
+const lkSay = (t, warn) => { $("lkStat").textContent = t; if (warn || !$("lkMenu").open) say(t, warn); };
+function lkShow() {
+  const s = $("lkSum"), ok = lk.on && lk.same;
+  s.classList.toggle("on", lk.on); s.classList.toggle("live", lk.live);
+  s.title = lk.live ? "Live: the FM-1 plays what you change here" : lk.on ? "Your FM-1 is connected" : "Your FM-1 over USB";
+  $("lkConn").textContent = lk.on ? "Reconnect" : "Connect my FM-1";
+  $("lkLive").disabled = !ok; $("lkLive").checked = lk.live;
+  $("lkPush").disabled = $("lkPull").disabled = !ok; $("lkVox").disabled = !lk.on;
+}
+function lkLost(why) {
+  const was = lk.on;
+  lk.on = lk.live = false; lk.port = null; lk.pend.clear(); lkShow();
+  if (was) lkSay("The FM-1 went away (" + why + "): Live is off. Connect again from the FM-1 menu.", true);
+}
+async function lkOpen() {
+  if (lk.port && lk.port.inp.state !== "disconnected" && lk.port.out.state !== "disconnected") return lk.port;
+  if (!navigator.requestMIDIAccess) throw new Error("This browser cannot talk to the FM-1: open the studio in Chrome or Edge.");
+  let m;
+  try { m = await midiAccess(); } catch (_) { throw new Error("MIDI (SysEx) was not allowed: allow MIDI in the site settings (the address bar) and try again."); }
+  const pick = (ps) => [...ps.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
+  const inp = pick(m.inputs), out = pick(m.outputs);
+  if (!inp || !out) throw new Error("FM-1 not found: check the USB cable (a data cable, not a charging one) and close other apps that use its MIDI.");
+  inp.onmidimessage = (ev) => {
+    const d = Array.from(ev.data);
+    idleTouch();
+    if (d[3] === 0x45 && d[0] === 0xF0 && lk.aboutW) return lk.aboutW(pcParseAbout(d));
+    const r = lkParse(d);
+    if (!r) return;
+    if (r.k === "dump" && lk.val) {
+      r.vals.forEach((v, k) => { if (r.first + k < lk.val.length) lk.val[r.first + k] = v; });
+      lk.got = Math.max(lk.got, r.first + r.vals.length);
+      if (lk.got >= lk.val.length && lk.dumpW) lk.dumpW(true);
+    } else if (r.k === "ack") { const w = lk.acks.shift(); if (w) w(r); }
+    else if (r.k === "slot" && lk.slotW) lk.slotW(r);
+  };
+  m.onstatechange = (e) => { if (lk.port && (e.port === lk.port.inp || e.port === lk.port.out) && e.port.state === "disconnected") lkLost("unplugged"); };
+  lk.port = { inp, out };
+  return lk.port;
+}
+async function lkSend(bytes) {
+  try { (await lkOpen()).out.send(bytes); idleTouch(); return true; } catch (e) { lkLost(e.message); return false; }
+}
+function lkWait(key, ms) {                                      // the next answer of a kind (about, dump, a slot), or null after `ms`
+  return new Promise((res) => {
+    const tm = setTimeout(() => { lk[key] = null; res(null); }, ms);
+    lk[key] = (a) => { clearTimeout(tm); lk[key] = null; res(a); };
+  });
+}
+function lkAck(ms) {
+  return new Promise((res) => {
+    const w = (a) => { clearTimeout(tm); res(a); };
+    lk.acks.push(w);
+    const tm = setTimeout(() => { const i = lk.acks.indexOf(w); if (i >= 0) lk.acks.splice(i, 1); res(null); }, ms);
+  });
+}
+async function lkAbout() { const p = lkWait("aboutW", 1500); return (await lkSend(pcAboutMsg())) ? p : null; }
+async function lkReadAll() {                                    // the unit's settings into lk.val: true when every one came
+  lk.val = new Array(P.length).fill(null); lk.got = 0;
+  const p = lkWait("dumpW", 3000);
+  return (await lkSend(lkDumpMsg())) && !!(await p);
+}
+async function lkReadSlot(i) { const p = lkWait("slotW", 1500); return (await lkSend(lkSlotMsg(i))) ? p : null; }
+async function lkConnect() {
+  lk.on = lk.live = false; lk.port = null; lk.map.clear(); lk.vslot = -1; lkShow();
+  lkSay("Looking for the FM-1…");
+  try { await lkOpen(); } catch (e) { return lkSay(e.message, true); }
+  lk.busy++;
+  try {
+    const ab = await lkAbout();
+    lk.same = !!ab && ab.npar === P.length;
+    const all = lk.same && (await lkReadAll());
+    const s0 = await lkReadSlot(0);
+    lk.nvox = s0 ? s0.loaded : -1;
+    lk.on = true;
+    const vox = lk.nvox >= 0 ? " It holds " + lk.nvox + " DX voice" + (lk.nvox === 1 ? "" : "s") + " of yours." : "";
+    if (!ab) lkSay("Connected to " + lk.port.inp.name + ", but this PERF-1 is too old to say what it is (before 0.16.3): update it to send settings. DX voices work." + vox, true);
+    else if (!lk.same) lkSay("Connected, but the FM-1 runs another PERF-1 (" + ab.npar + " settings, the studio's " + P.length + "): settings stay off, or one would land on another. Put the same version on both. DX voices work." + vox, true);
+    else lkSay("Connected: " + (all ? "the FM-1's " + P.length + " settings read." : "its settings did not all come (they go whole when Live starts).") + vox + " Turn Live on to play the studio on it.");
+  } finally { lk.busy--; lkShow(); }
+}
+function lkQueue(p, v) { lk.pend.set(p, v); if (!lk.t) lk.t = setTimeout(lkFlush, LK_FLUSH_MS); }
+async function lkFlush() {
+  lk.t = 0;
+  if (!lk.pend.size) return;
+  let pt;
+  try { pt = await lkOpen(); } catch (e) { return lkLost(e.message); }
+  let n = 0;
+  for (const [p, v] of lk.pend) {
+    try { pt.out.send(lkSetMsg(p, v)); } catch (e) { return lkLost(e.message); }
+    if (lk.val) lk.val[p] = v;
+    lk.pend.delete(p);
+    if (++n >= LK_FLUSH_N) break;
+  }
+  idleTouch();
+  if (lk.pend.size) lk.t = setTimeout(lkFlush, LK_FLUSH_MS);
+}
+function lkPar(p) { if (lk && lk.live && p >= 0 && !LK_SKIP.has(p)) { const v = lkWant(p); if (v !== null) lkQueue(p, v); } }
+// The studio's voice slots are the emulator's (this browser), the unit's its own: a voice goes to a slot of the unit's only when it is free (the next) or
+// it went there from here before (lk.map: the studio's slot -> the unit's), never over a voice of the unit's the studio does not hold. After "Take the
+// FM-1's DX voices" the two are the same, slot for slot. The pluck's sound, when it is one of the studio's voices, is sent as the unit's slot of it
+// (none: not sent, the unit keeps its own).
+function lkWant(p) {
+  const v = parV(p);
+  if (p !== PE.P_CM_SND || v < DXB() || v >= DXB() + LK_SLOTS) return v;
+  const u = lk.map.get(v - DXB());
+  return u === undefined ? null : DXB() + u;
+}
+function lkSync() {                                             // the settings the unit's differ in, sent; how many
+  if (!io) return 0;
+  const want = P.map((_, p) => lkWant(p)), d = lkDiff(want, lk.val, LK_SKIP).filter((p) => want[p] !== null);
+  for (const p of d) lkQueue(p, want[p]);
+  return d.length;
+}
+function lkSyncSoon() { if (!lk || !lk.live || lk.sT) return; lk.sT = setTimeout(() => { lk.sT = 0; if (lk.live) lkSync(); }, 120); }   // (at most one diff each 120 ms: refresh runs each frame while playing)
+async function lkVoxSend() {                                    // the voice in the DX editor into the unit's slot (the studio's slot, or its next free)
+  if (!dxv || !lk.on) return;
+  if (lk.vBusy) { lk.vAgain = true; return; }
+  lk.vBusy = true; lk.busy++;
+  try {
+    do {
+      lk.vAgain = false;
+      if (lk.nvox < 0) { const s = await lkReadSlot(0); if (!s) { lkSay("The FM-1 did not answer.", true); break; } lk.nvox = s.loaded; }
+      const k = dxSlot, had = k >= 0 && lk.map.has(k) ? lk.map.get(k) : lk.vslot;   // (lk.vslot: this voice's slot there before it had one here)
+      const slot = had >= 0 ? had : lk.nvox;
+      if (slot >= LK_SLOTS) { lkSay("The FM-1's 16 voice slots are full, and this voice is not one of them: Take the FM-1's DX voices (FM-1 menu), then edit one of those.", true); break; }
+      if (!(await lkSend(lkVoiceMsg(slot, vPack(dxv))))) break;
+      const a = await lkAck(1500);
+      if (!a) { lkSay("The FM-1 did not answer the voice.", true); break; }
+      if (a.n === 0x7F) { lkSay("The FM-1 did not take the voice.", true); break; }
+      lk.nvox = Math.max(lk.nvox, slot + 1);
+      if (dxSlot >= 0) { lk.map.set(dxSlot, slot); lk.vslot = -1; } else lk.vslot = slot;
+      if (lk.same) lkQueue(PE.P_CM_SND, DXB() + slot);           // (its pluck plays it; with Live the studio's pluck plays it too)
+      if (lk.val) lk.val[PE.P_CM_SND] = DXB() + slot;
+      lkSay("“" + vName(dxv).trim() + "” is in the FM-1's voice " + (slot + 1) + (dxSlot >= 0 && dxSlot !== slot ? " (the studio's voice " + (dxSlot + 1) + ")" : "") + ": its pluck plays it.");
+    } while (lk.vAgain);
+  } finally { lk.vBusy = false; lk.busy--; }
+}
+async function lkTakeVoices() {                                 // the unit's DX voices into the studio's slots (the emulator's, this browser)
+  if (!node) return lkSay("Switch the studio on first (the voices go into its slots).", true);
+  lk.busy++;
+  try {
+    lkSay("Reading the FM-1's voices…");
+    const got = [];
+    for (let i = 0; i < LK_SLOTS; i++) {
+      const r = await lkReadSlot(i);
+      if (!r) return lkSay("The FM-1 did not answer.", true);
+      lk.nvox = r.loaded;
+      if (i >= r.loaded || !r.data) break;
+      got.push(r.data);
+    }
+    if (!got.length) return lkSay("The FM-1 holds no DX voices of yours (its 16 slots are empty).");
+    await dxSlots();
+    if (dxN && !confirm("Put the FM-1's " + got.length + " DX voice" + (got.length > 1 ? "s" : "") + " into the studio's slots 1–" + got.length + "? The studio's own voices there are replaced (Save .syx first to keep one).")) return lkSay("Nothing changed.");
+    for (let i = 0; i < got.length; i++) {
+      let r, tries = 0;
+      do { r = await ask({ type: "st_vox", op: "put", slot: i, keep: true, vox: got[i] }); if (r.ok < 0) await new Promise((res) => setTimeout(res, 40)); } while (r.ok < 0 && ++tries < 30);
+      if (r.ok < 0) return lkSay("The emulator was busy writing: took " + i + " of " + got.length + ". Try again.", true);
+    }
+    for (let t = 0; t < 30; t++) {                            // (the engine takes staged voices a block later: fm6.inc en_user_voice)
+      await new Promise((res) => setTimeout(res, 40));
+      if (((await ask({ type: "st_vox", op: "get", slot: 0 })).n || 0) >= got.length) break;
+    }
+    await new Promise((res) => setTimeout(res, 60));
+    await dxSlots(); dxv = null; dxSlot = -1;
+    lk.map.clear(); for (let i = 0; i < got.length; i++) lk.map.set(i, i);   // (slot for slot now)
+    soundRender();
+    lkSay("The studio's voices 1–" + got.length + " are the FM-1's now: " + dxNames.slice(0, got.length).map((s) => s.replace(/^DX /, "").trim()).join(", ") + ".");
+  } finally { lk.busy--; }
+}
+idleRelease(() => lk.live || lk.busy > 0, () => { lk.port = null; });
+$("lkConn").addEventListener("click", lkConnect);
+$("lkLive").addEventListener("change", (e) => {
+  lk.live = e.target.checked && lk.on && lk.same;
+  if (lk.live) { const n = lkSync(); lkSay("Live: " + (n ? n + (n === 1 ? " setting" : " settings") + " sent, so the FM-1 plays the studio's; " : "") + "each change goes as you make it. SAVE on the unit keeps them."); }
+  else lkSay("Live off: the FM-1 keeps what it got (SAVE on it to keep it after power off).");
+  lkShow();
+});
+$("lkPush").addEventListener("click", () => { const n = lkSync(); lkSay(n ? n + (n === 1 ? " setting" : " settings") + " sent to the FM-1 (the ones it had different)." : "The FM-1 already has the piece's settings."); });
+$("lkPull").addEventListener("click", async () => {
+  lk.busy++;
+  try {
+    if (!(await lkReadAll())) return lkSay("The FM-1 did not send all its settings.", true);
+    let n = 0;
+    for (let p = 0; p < P.length; p++) if (!LK_SKIP.has(p) && lk.val[p] !== null && parSetV(p, lk.val[p])) n++;
+    if (n) changed();
+    lkSay(n ? n + (n === 1 ? " setting" : " settings") + " taken from the FM-1 into the piece (↶ puts them back). Its steps and lines stay the studio's." : "The piece already has the FM-1's settings.");
+  } finally { lk.busy--; }
+});
+$("lkVox").addEventListener("click", lkTakeVoices);
+$("lkMenu").addEventListener("toggle", lkShow);
+lkShow();
 
 
 /* ======================================================================== pictures: a section's settings drawn, its knobs as handles on the drawing
