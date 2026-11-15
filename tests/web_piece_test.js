@@ -254,6 +254,17 @@ const voiceOf = (name, k) => { const v = new Uint8Array(128).map((_, i) => (i * 
       "loadobj 0 " + path.join(dir, "bank_new.bin"), "loadobj 4 " + path.join(dir, "glob_song2.bin"), "seed 0", "reboot", "wait 2000",
       "expect setsl1 23", "expect setbars1 16", "expect setpat1 4", "expect setpat15 6", "expect setpat0 0", "expect setmood0 81", "expect setmood2 1", "expect setmood1 0"]));
   }
+  {   // each genre's stored object as the firmware numbers it (plat.h's enum, project.c obj_of): 0.17.35 put genres 19.. after OBJ_BSTEP
+    const shs = fs.readFileSync(path.join(__dirname, "..", "web", "fm1share.js"), "utf8").replace(/^export /gm, "");
+    const S2 = new Function("pcGet", "pcUserSlot", shs + "\nreturn shareNames;")(() => 0, () => -1)({ params: [{ def: 0 }], enum: { P_TUNE: 0, P_MIDI: 0, P_THEME: 0 }, names: { genres: [], pieces: [] } });
+    const plat = fs.readFileSync(path.join(__dirname, "..", "firmware", "src", "app", "plat.h"), "utf8");
+    const objs = /enum \{ (OBJ_PROJ[^}]*)\}/.exec(plat)[1].split(",").map((x) => x.trim()).filter((x) => x);
+    const want = (g) => objs.indexOf(g === 0 ? "OBJ_PROJ" : "OBJ_G" + g);
+    let okg = true;
+    for (let g = 0; g < 22; g++) if (want(g) < 0 || S2.objOf(g) !== want(g)) { okg = false; console.log("    genre " + g + ": " + S2.objOf(g) + ", the firmware's " + want(g)); }
+    check("each genre's object as the firmware numbers it (0.17.35: 19.. after OBJ_BSTEP)", okg);
+    check("the named objects as plat.h", S2.OBJ_KINDS === objs.indexOf("OBJ_KINDS") && S2.OBJ_BSTEP === objs.indexOf("OBJ_BSTEP") && S2.OBJ_GLOB === objs.indexOf("OBJ_GLOB") && S2.OBJ_VOICES === objs.indexOf("OBJ_VOICES"));
+  }
   console.log(bad ? "web piece: FAILED" : "web piece: ok");
   process.exit(bad ? 1 : 0);
 })();

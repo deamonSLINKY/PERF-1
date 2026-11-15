@@ -39,7 +39,8 @@ export function shareNames(D) {
     return { tag: tagOf(x), title: m.t, by: m.a, based: basedText(m), line: describe(x), lanes, center: tempo !== undefined ? tempo + " BPM" : "", url };
   }
   return { P, E, N, genreName, pieceName, describe, tagOf, placeName, basedText, cardOf, userSlot,
-           objOf: (g) => (g === 0 ? 0 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23, OBJ_BSTEP: 25,   // (plat.h's enum; OBJ_KINDS from 0.16.6)
+           objOf: (g) => (g === 0 ? 0 : g >= 19 ? 26 + g - 19 : 4 + g), OBJ_VOICES: 3, OBJ_GLOB: 4, OBJ_KINDS: 23, OBJ_BSTEP: 25,   // (plat.h's enum; OBJ_KINDS from 0.16.6;
+                                                    // 0.17.35: genres 19.. are OBJ_G19 = 26 on, after OBJ_BSTEP: project.c obj_of. 4 + g put HIPHOP on OBJ_KINDS)
            globDefs: { tune: P[E.P_TUNE].def, midi: P[E.P_MIDI].def, theme: P[E.P_THEME].def } };
 }
 
