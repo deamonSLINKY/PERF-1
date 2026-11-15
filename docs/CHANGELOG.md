@@ -26,6 +26,11 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **PSY and FOREST: the bass in time with the kick (0.17.43).** "The bass and drums feel out of time for a bit, then come back, mostly with the cutoff up." The timing was right (your direct recordings: kick, bass and hats within 3 ms of the grid for 49 s); what was wrong was what you could hear of it. The kick rang on into the first bass note after it (only 1 to 6 dB down when that note started; with the Techno and Hard kicks' rumble, under 4 dB at any decay), so a kick-bass-bass-bass bar was heard as a long boom and two notes, the beat sliding; and the bass notes, longer than a sixteenth, ran into each other.
+  - **A short kick, no rumble.** PSY and FOREST's kicks decay fast (PSY 8, FOREST 2) and come from the Acid, 909 and Hypno kits, not Techno or Hard: the kick is 12 to 21 dB down by the first bass note (was 0.3 to 6).
+  - **A tighter bass.** The bass line's Length is 12 in PSY (was 25) and 10 in FOREST (was 22): each of the three notes now starts 12 to 30 dB out of the one before (FOREST's second and third were 2.5).
+  - **Levelled.** Each piece's level trimmed back: all twenty within 0.4 LU of 0.17.41. The low end is less boomy (the kick's long sub tail is gone): listen for whether the kick still has enough weight.
+
 - **The master compressor works, held notes, no harsh bass to start (0.17.42).**
   - **The compressor works at the mix's real level.** It was set for a hotter mix than PERF plays: the music peaked 7 to 12 dB under the limiter's ceiling, so in 13 of 22 genres the compressor barely moved (under 0.3 dB) and the limiter never did. The piece's level and 6 dB now go in before it and the 6 dB come off after, so the volume is the same and the compressor works in every genre (0.1 to 2.4 dB on average, the busiest most).
   - **It sounds like a bus compressor.** It listens without the lows under ~100 Hz (the kick no longer pumps the whole mix), reacts in 10 ms instead of 4 (a drum's hit gets through: the punch stays), lets go in 80 to 530 ms, and gives back most of what it takes on average, so the knobs change the feel, not the level. The 22-genre sound check: loudness +0.1 LU on average (each genre within ±1.1), the peaks' room over the loudness +0.2 dB.

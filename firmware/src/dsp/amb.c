@@ -234,12 +234,12 @@ static const int16_t X_INDUS[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 40, P_BL
  * the four-on-the-floor kick with the rolling bass between its beats (K-B-B-B), the 16th hats soft, the open hat off the beat, the acid as the squelching
  * lead, a 3/16 echo, phrygian and minor, a chord held for 8 bars; and three slow pieces (01, 02, 10: psy-ambient / psychill, 92-112) with a downtempo
  * beat, held bass, a wide shimmer (psy_slow), so a set can go from the cosmic into the trance and back. The Mix glide (SET page) carries the tempo. */
-static const int16_t X_PSY[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 25, P_BL_MOVE, 4, P_BL_GLIDE, 0, P_CM_VU, 65, P_CM_LOOP, 1, P_GHOST, 10, P_HUMAN, 5, P_PULSE, 85,
+static const int16_t X_PSY[] = {P_CH_LOOP, 1, DE(0), 8, P_BL_MODE, 1, P_BL_LEN, 12, P_BL_MOVE, 4, P_BL_GLIDE, 0, P_CM_VU, 65, P_CM_LOOP, 1, P_GHOST, 10, P_HUMAN, 5, P_PULSE, 85,
     P_DRIVE, 30, P_SWING, 0, P_DETUNE, 30, P_PAD, 45, P_ACID, 60, P_BASS, 85, P_AC_DENS, 70, P_AC_LEN, 16, P_AC_RES, 70, P_AC_ENV, 60, P_AC_CUT, 40, P_AC_MUT, 30,
     P_ECHO, 35, P_ETIME, 1, P_REVERB, 40, P_SIZE, 70, P_RV_TYPE, 1, P_RV_X, 35, KIT(2), P_PATTERN, 0, P_EVOLVE, 50, P_MOTION, 55, P_MC_RATIO, 4, P_MC_THR, 40, P_MC_MAKE, 35, -1};
 /* DARK FOREST (0.16.2, genre 19): forest and dark psy, 148-165 BPM, the same K-B-B-B under a dense, glitching percussion (3-against-4 perc, rolls, triplets),
  * driven hard drums, phrygian and fourths, the chord barely moving (i and the flat II), a dry room and a short echo */
-static const int16_t X_FOREST[] = {P_CH_LOOP, 1, P_BL_MODE, 1, P_BL_LEN, 22, P_BL_MOVE, 6, P_BL_GLIDE, 0, P_CM_VU, 65, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 5, P_PULSE, 88,
+static const int16_t X_FOREST[] = {P_CH_LOOP, 1, DE(0), 2, P_BL_MODE, 1, P_BL_LEN, 10, P_BL_MOVE, 6, P_BL_GLIDE, 0, P_CM_VU, 65, P_CM_LOOP, 1, P_GHOST, 40, P_HUMAN, 5, P_PULSE, 88,
     P_DRIVE, 55, P_SWING, 0, P_DETUNE, 45, P_PAD, 35, P_ACID, 55, P_BASS, 72, P_AC_DENS, 85, P_AC_LEN, 16, P_AC_RES, 80, P_AC_ENV, 70, P_AC_CUT, 35, P_AC_MUT, 45,
     P_ECHO, 30, P_ETIME, 0, P_REVERB, 35, P_SIZE, 55, P_RV_TYPE, 0, P_RV_DAMP, 55, KIT(6), TU(5), 7, P_PATTERN, 0, P_EVOLVE, 60, P_MOTION, 60, P_MC_RATIO, 4, P_MC_THR, 38,
     P_MC_MAKE, 35, -1};
@@ -461,11 +461,11 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{7, 13, 14, 6, 11}, {4, 20, 16, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
                                                  * Hollow; Reese, Gnarl, Wub, Grit, Dirty; Driven, Fold, Sync, Hyper, Saw; TUBUL-BELL, TEMPLEBELL, Gong, Bleep, Digital; the Hard
                                                  * kick (the Break kit's chop in a third of the pieces), Break and Hard snares, Techno hats, a Hard clank */
-    {{9, 23, 1, 3, 2}, {9, 5, 10, 0, 1}, {0, 8, 13, 3, 14}, {10, 8, 11, 4, 13}, {2, 10, 3}, {10, 2, 11}, {2, 5, 11}, {3, 11, 5}},   /* psy (0.16.2): Trance, Air,
-                                                 * Voices, Glass, Strings; Sub, Pulse, Square, Saws, Warm; Saw, Trance, Laser, Sync, Fold; Bleep, Digital, Glass, Bell, DX Glass Bell; Techno and 909 kicks,
+    {{9, 23, 1, 3, 2}, {9, 5, 10, 0, 1}, {0, 8, 13, 3, 14}, {10, 8, 11, 4, 13}, {3, 10, 0}, {10, 2, 11}, {2, 5, 11}, {3, 11, 5}},   /* psy (0.16.2): Trance, Air,
+                                                 * Voices, Glass, Strings; Sub, Pulse, Square, Saws, Warm; Saw, Trance, Laser, Sync, Fold; Bleep, Digital, Glass, Bell, DX Glass Bell; Acid, 909 and Hypno kicks, short (0.17.43: no rumble kick, the bass is the rumble),
                                                  * 909 and Electro snares, Techno and Minimal hats, the Acid perc */
-    {{7, 11, 23, 22, 16}, {9, 4, 20, 8, 3}, {13, 14, 2, 27, 9}, {6, 10, 8, 33, 11}, {6, 2, 10}, {11, 6, 4}, {5, 11, 2}, {11, 6, 5}},   /* dark forest (0.16.2): Dark,
-                                                 * Hollow, Air, Chapel, Ooh; Sub, Reese, Gnarl, Rumble, Dirty; Laser, Fold, Driven, Hyper, Bleep; Gong, Bleep, Digital, DX Tubular, Glass; the Hard kick */
+    {{7, 11, 23, 22, 16}, {9, 4, 20, 8, 3}, {13, 14, 2, 27, 9}, {6, 10, 8, 33, 11}, {10, 3, 0}, {11, 6, 4}, {5, 11, 2}, {11, 6, 5}},   /* dark forest (0.16.2): Dark,
+                                                 * Hollow, Air, Chapel, Ooh; Sub, Reese, Gnarl, Rumble, Dirty; Laser, Fold, Driven, Hyper, Bleep; Gong, Bleep, Digital, DX Tubular, Glass; 909, Acid and Hypno kicks, short (0.17.43: the Hard kick's rumble hid the bass after it) */
     {{0, 2, 4, 19, 17}, {9, 1, 8, 10, 5}, {15, 17, 22, 26, 30}, {12, 41, 40, 36, 5}, {14, 8, 7}, {14, 16, 8}, {14, 8, 10}, {14, 20, 8}},   /* hiphop (0.17.35):
                                                  * Rhodes, Strings, Organ, Brass, Wurli; Sub, Warm, Rumble, Square, Pulse; Soft, E.Piano, Vibes, Mini, Lead; DX Tine EP, Mute Trumpet, Sax,
                                                  * Muted Gtr, Vibes; the Boom kit, Dusty and 808 kicks, Snap snares, 909 hats, a shaker */
@@ -1239,8 +1239,8 @@ static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
     { -1,   3,   5,  -2,   4,   3,   5,  -3,   1,   0},   /* AMAPI */
     {  4,   6,   4,   6,   4,   8,   4,   8,   5,   2},   /* TRIPHOP */
     {  1,  -6,  -6,  -2,  -6,  -4,  -2,  -7,  -6,   0},   /* INDUS */
-    {  0,  -5,  -6,  -4,  -7,  -8,  -5,  -4,  -7,  -4},   /* PSY */
-    { -4,  -4,  -5,  -7,  -6,  -4,  -6,  -6,  -5,  -7},   /* FOREST */
+    {  1,  -4,  -7,  -3, -10,  -3,  -5,  -4,  -8,  -5},   /* PSY (0.17.43: re-levelled after its short kick and bass) */
+    { -1,  -2,  -3,  -6,  -4,  -2,  -4,  -2,  -1,  -3},   /* FOREST (0.17.43: the same) */
     {  1,   2,  -2,   0,   0,   1,   1,  -3,  -1,  -1},   /* HIPHOP */
     { -1,  -2,  -5,  -3,  -5,  -1,  -4,  -5,  -5,   0},   /* TRANCE */
     {  1,   8,   0,   4,   4,   2,   2,   8,   8,   0},   /* AMBIENT */
