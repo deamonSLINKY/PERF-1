@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "amb.h"
 
 #define SR 44100
@@ -57,8 +58,9 @@ int main(int argc, char **argv)
     int p, l, f, i;
     char path[512];
     FILE *w, *m;
-    long frames, fr = 0;
-    double bpm;
+    long frames, fr = 0, dn = 0, dc1 = 0, dl1 = 0;
+    double bpm, dc = 0.0, dl = 0.0, dp = 0.0;
+    float dcm = 0.0f, dlm = 0.0f, dpm = 0.0f;
     if (argc < 5) {
         fprintf(stderr, "gsound genre piece bars out_prefix\n");
         return 2;
@@ -74,6 +76,18 @@ int main(int argc, char **argv)
     for (p = 0; p < P_NPARAMS; p++)
         en_set(p, par[p]);
     en_set(P_MIDI, 1);
+    if (getenv("SET")) {                         /* SET="param:value,param:value": parameters changed after the piece's (an A/B of one setting) */
+        const char *s = getenv("SET");
+        while (*s) {
+            char *e;
+            const long k = strtol(s, &e, 10);
+            if (*e != ':')
+                break;
+            par[k] = (int16_t)strtol(e + 1, &e, 10);
+            en_set((int)k, par[k]);
+            s = *e == ',' ? e + 1 : e;
+        }
+    }
     en_pool(pool);
     en_trim(g, getenv("NOTRIM") ? -1 : pc);      /* the piece's output level, as the unit sets it (NOTRIM=1: the raw mix, to measure it) */
     for (p = 0; p < EN_NPAT; p++)
@@ -100,7 +114,20 @@ int main(int argc, char **argv)
             fwrite(&x, 4, 1, w);
         }
         fr += n;
+        if (getenv("DYN")) {                    /* DYN=1: the master's gain reduction, a block at a time, summed for the line at the end */
+            dn++;
+            dc += en_comp_gr, dl += en_lim_gr;
+            dc1 += en_comp_gr > 1.0f, dl1 += en_lim_gr > 0.5f;
+            if (en_comp_gr > dcm) dcm = en_comp_gr;
+            if (en_lim_gr > dlm) dlm = en_lim_gr;
+            dp += en_out_peak;
+            if (en_out_peak > dpm) dpm = en_out_peak;
+        }
     }
+    if (dn)
+        printf("DYN %s comp mean %.2f >1dB %.0f%% max %.1f  limit mean %.2f >0.5dB %.0f%% max %.1f  peak mean %.1f max %.1f dB  thr %.1f ratio %d make %.1f\n",
+               argv[4], dc / dn, 100.0 * dc1 / dn, dcm, dl / dn, 100.0 * dl1 / dn, dlm, 20.0 * log10(dp / dn + 1e-9), 20.0 * log10(dpm + 1e-9),
+               -30.0 + 0.3 * par[P_MC_THR], par[P_MC_RATIO], 0.12 * par[P_MC_MAKE]);
     {
         const uint32_t data = (uint32_t)frames * 8u;
         fseek(w, 4, SEEK_SET); le32(w, 36u + data);

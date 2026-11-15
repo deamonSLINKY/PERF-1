@@ -26,6 +26,12 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **The master compressor works, held notes, no harsh bass to start (0.17.42).**
+  - **The compressor works at the mix's real level.** It was set for a hotter mix than PERF plays: the music peaked 7 to 12 dB under the limiter's ceiling, so in 13 of 22 genres the compressor barely moved (under 0.3 dB) and the limiter never did. The piece's level and 6 dB now go in before it and the 6 dB come off after, so the volume is the same and the compressor works in every genre (0.1 to 2.4 dB on average, the busiest most).
+  - **It sounds like a bus compressor.** It listens without the lows under ~100 Hz (the kick no longer pumps the whole mix), reacts in 10 ms instead of 4 (a drum's hit gets through: the punch stays), lets go in 80 to 530 ms, and gives back most of what it takes on average, so the knobs change the feel, not the level. The 22-genre sound check: loudness +0.1 LU on average (each genre within ±1.1), the peaks' room over the loudness +0.2 dB.
+  - **Capture keeps held notes.** A key held over several steps now lasts as long as you held it: on the bass, **Hold** steps (a new step kind, also on the Bass steps page); on the acid, the same note slid into (the 303's tie). It used to be one short note.
+  - **No piece starts its bass on FM or Metal** (as Bite, Tine and Clang since 0.15.5): too harsh and piercing for a bass, worst on a fast one. Dubstep 1 and 10, Electro 1 and 10, Industrial 3 and 7, Psy 2 and 6, Forest 4, 5, 8 and 9 start on Dirty, Saws, Reese, Warm or Dirty instead. They stay to choose by hand.
+
 - **The screen, finished (0.17.40).** The rest of the screen study.
   - **One focus cue.** What is "now" has a soft ring around it: the knob's cap while you turn it, the lit tab, the playing step on the drums' grid. The playhead column on the bass, acid and pluck rolls has lit edges.
   - **Light that falls off.** The home strips, a voice's wide panel and the Mixer's strips are brightest at the top and darker toward the bottom, in four bands; the scopes' screens are darker under their lip.

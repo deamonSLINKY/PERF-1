@@ -442,7 +442,7 @@ columns are **KNOB1** to **KNOB4**.
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | **LFO** x3 | Rate (as the pad's: 32 bars down to a 1/16T for a fast wobble, dotted and triplet values between; locked to the bar) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
 | Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, nine named figures, and Steps) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
-| Bass steps | **LFO** x5 | Step (pick one with a white key: rest, note, accent, glide, accent + glide) | Note (root, 2nd .. 7th, octave: scale steps above the chord's root) | Octave (down, mid, up) | Mode (Steps plays them) |
+| Bass steps | **LFO** x5 | Step (pick one with a white key: rest, note, accent, glide, accent + glide, hold: the note before goes on through it) | Note (root, 2nd .. 7th, octave: scale steps above the chord's root) | Octave (down, mid, up) | Mode (Steps plays them) |
 | Bass answer | **LFO** x6 | Answer (off, octave, fifth, run, busy, sparse, slide) | Every (2-8 bars, drift, with acid, after acid) | Acid ans (the acid answer's kind) | Mode |
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
@@ -977,7 +977,7 @@ played, so you can start from something that works and change what you like.
 
 - Press a **white key** to pick a step (the sixteen white keys are the sixteen steps; the one you picked is lit).
 - **Step** (KNOB1): rest, note, accent (louder), glide (slides into the note from the one before, without a new attack),
-  or accent and glide.
+  accent and glide, or **hold**: the note before keeps sounding through this step (a few holds in a row make a long note).
 - **Note** (KNOB2): the root, 2nd, 3rd, 4th, 5th, 6th, 7th or octave, counted in the scale above the chord's root. The
   notes follow the chords: a 5th is always the fifth of the chord playing.
 - **Octave** (KNOB3): down, mid or up.
@@ -1948,10 +1948,11 @@ The page shows a keyboard with the scale's notes lit and the keys you hold brigh
 four, the one where you played the most) and makes it that voice's own line, as you played it: each note against the chord it was played over, a
 key a little early counted on the step it was meant for, and the line starting where the bar does:
 
-- With the voice on **acid**, the bar goes into the Acid steps page as a 16-step line, set to **Frozen**. Each sixteenth where you played a key gets that note. The notes are stored relative to the chord at the time, so the line follows the chords from then on. A key played on a beat becomes an accent (a louder note), and a key held past the next step becomes a slide (the pitch glides into the next note). The line plays when you leave the Jam page.
+- With the voice on **acid**, the bar goes into the Acid steps page as a 16-step line, set to **Frozen**. Each sixteenth where you played a key gets that note. The notes are stored relative to the chord at the time, so the line follows the chords from then on. A key played on a beat becomes an accent (a louder note). A key you hold keeps sounding for as long as you held it: the steps it covers get the same note, slid into from the one before, so it plays as one long note (the 303's tie). The line plays when you leave the Jam page.
 - With the voice on the **pluck**, the bar goes into the Deja vu loop, set to Loop 16, Rate 1/16 and Pluck vu 100, starting at the next bar line. Turn Pluck vu down to let it drift again.
 - With the voice on the **bass**, the bar goes into the Bass steps page and the bass line's Mode goes to Steps. Each note becomes a scale step
-  above the chord's root, in the octave nearest to what you played; a key on a beat is an accent, a key held past the next step a glide.
+  above the chord's root, in the octave nearest to what you played; a key on a beat is an accent. A key you hold keeps sounding: the steps it
+  covers become **Hold** steps, so the note lasts as long as you held it (still held when you press **SEL** + **REC**: to the bar's end).
 - The pad can't be captured.
 
 Capture remembers your last 32 key presses, so play the bar first, then press **SEL** + **REC**. The header says `CAPTURED`.
@@ -2009,7 +2010,10 @@ After the **MASTER** volume there's also a gentle soft clip as a last safety net
 | Make-up | 0 to +12 dB | Turns the sound back up after compressing. |
 | Ceiling | -12 to 0 dB | The limiter's ceiling, before the **MASTER** volume. |
 
-The compressor reacts in 4 ms. It lets go in about 60 ms, more slowly (up to 400 ms) when it's turning the sound down by 9 dB or more.
+The compressor listens without the deep lows (below about 100 Hz), so the kick and the sub don't pull the whole mix down on every beat. It
+reacts in 10 ms, so a drum's hit gets through before it comes down (the punch stays). It lets go in about 80 ms, more slowly (up to half a
+second) when it's turning the sound down a lot. It gives back most of what it takes on average, so the level stays about where it was and
+the knobs change the feel, not the volume.
 
 The page draws the compressor's curve, with the sound going in along the bottom and coming out up the side. The dotted line is where in and out are equal, the upright tick is the threshold, and the flat tick is the ceiling. There are also live meters: **COMP** (how much the compressor is turning down), **LIMIT** (how much the limiter is) and **OUT** (the output's peak).
 

@@ -441,16 +441,16 @@ const char *en_piece_name_g(int g, int i)
 /* Each genre's palette of sounds, five of the pad, drone, acid and pluck (the pluck's from the plain sounds and the DX voices) and three of each drum's kit: a piece takes one of each by its number, with a
  * different stride for each (1, 2, 3, 4 of five; 1, 2 of three), so the pieces of a genre differ in sound as well as in key and tempo, and no two
  * neighbours share them. The pad, drone and acid sounds are the genres' own choices (the original genre's keep theirs). */
-static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {   /* (0.15.5: no piece starts its bass on Bite, Tine or Clang, too high and jarring for a bass; they stay to choose by hand) */
+static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {   /* (0.15.5: no piece starts its bass on Bite, Tine or Clang, too high and jarring for a bass; 0.17.42: nor on FM or Metal, too harsh and piercing; they stay to choose by hand) */
     {{0}, {0}, {0}, {1, 4, 13, 28, 16}, {0}, {0}, {0}, {0}},
     {{0, 17, 5, 2, 3}, {1, 9, 7, 3, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 8, 7}, {8, 8, 1}, {8, 5, 8}, {8, 5, 8}},
     {{6, 13, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
-    {{7, 8, 11, 22, 1}, {16, 4, 20, 13, 10}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
+    {{7, 8, 11, 22, 1}, {16, 4, 20, 3, 10}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
     {{13, 8, 6, 17, 21}, {9, 1, 5, 8, 20}, {12, 4, 16, 21, 15}, {18, 24, 12, 30, 36}, {8, 8, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 11}},
     {{3, 23, 5, 22, 10}, {4, 9, 16, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
     {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
     {{13, 17, 0, 20, 21}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
-    {{10, 14, 9, 3, 12}, {5, 10, 14, 6, 9}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
+    {{10, 14, 9, 3, 12}, {5, 10, 14, 0, 9}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
     {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
     {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 3}, {21, 4, 17, 19, 12}, {35, 24, 39, 15, 25}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
     {{17, 21, 13, 19, 0}, {1, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {36, 24, 35, 41, 12}, {8, 10, 8}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},   /* (funk's kick 0.15.13: Dusty and 909, not Break: its chops and crush broke the pocket) */
@@ -458,14 +458,14 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {39, 27, 12, 26, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
     {{0, 5, 17, 2, 18}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
     {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {35, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
-    {{7, 13, 14, 6, 11}, {13, 20, 16, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
-                                                 * Hollow; Metal, Gnarl, Reese, Grit, Dirty; Driven, Fold, Sync, Hyper, Saw; TUBUL-BELL, TEMPLEBELL, Gong, Bleep, Digital; the Hard
+    {{7, 13, 14, 6, 11}, {4, 20, 16, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
+                                                 * Hollow; Reese, Gnarl, Wub, Grit, Dirty; Driven, Fold, Sync, Hyper, Saw; TUBUL-BELL, TEMPLEBELL, Gong, Bleep, Digital; the Hard
                                                  * kick (the Break kit's chop in a third of the pieces), Break and Hard snares, Techno hats, a Hard clank */
-    {{9, 23, 1, 3, 2}, {9, 5, 10, 0, 6}, {0, 8, 13, 3, 14}, {10, 8, 11, 4, 13}, {2, 10, 3}, {10, 2, 11}, {2, 5, 11}, {3, 11, 5}},   /* psy (0.16.2): Trance, Air,
-                                                 * Voices, Glass, Strings; Sub, Pulse, Square, Saws, FM; Saw, Trance, Laser, Sync, Fold; Bleep, Digital, Glass, Bell, DX Glass Bell; Techno and 909 kicks,
+    {{9, 23, 1, 3, 2}, {9, 5, 10, 0, 1}, {0, 8, 13, 3, 14}, {10, 8, 11, 4, 13}, {2, 10, 3}, {10, 2, 11}, {2, 5, 11}, {3, 11, 5}},   /* psy (0.16.2): Trance, Air,
+                                                 * Voices, Glass, Strings; Sub, Pulse, Square, Saws, Warm; Saw, Trance, Laser, Sync, Fold; Bleep, Digital, Glass, Bell, DX Glass Bell; Techno and 909 kicks,
                                                  * 909 and Electro snares, Techno and Minimal hats, the Acid perc */
-    {{7, 11, 23, 22, 16}, {9, 13, 20, 8, 6}, {13, 14, 2, 27, 9}, {6, 10, 8, 33, 11}, {6, 2, 10}, {11, 6, 4}, {5, 11, 2}, {11, 6, 5}},   /* dark forest (0.16.2): Dark,
-                                                 * Hollow, Air, Chapel, Ooh; Sub, Metal, Gnarl, Rumble, FM; Laser, Fold, Driven, Hyper, Bleep; Gong, Bleep, Digital, DX Tubular, Glass; the Hard kick */
+    {{7, 11, 23, 22, 16}, {9, 4, 20, 8, 3}, {13, 14, 2, 27, 9}, {6, 10, 8, 33, 11}, {6, 2, 10}, {11, 6, 4}, {5, 11, 2}, {11, 6, 5}},   /* dark forest (0.16.2): Dark,
+                                                 * Hollow, Air, Chapel, Ooh; Sub, Reese, Gnarl, Rumble, Dirty; Laser, Fold, Driven, Hyper, Bleep; Gong, Bleep, Digital, DX Tubular, Glass; the Hard kick */
     {{0, 2, 4, 19, 17}, {9, 1, 8, 10, 5}, {15, 17, 22, 26, 30}, {12, 41, 40, 36, 5}, {14, 8, 7}, {14, 16, 8}, {14, 8, 10}, {14, 20, 8}},   /* hiphop (0.17.35):
                                                  * Rhodes, Strings, Organ, Brass, Wurli; Sub, Warm, Rumble, Square, Pulse; Soft, E.Piano, Vibes, Mini, Lead; DX Tine EP, Mute Trumpet, Sax,
                                                  * Muted Gtr, Vibes; the Boom kit, Dusty and 808 kicks, Snap snares, 909 hats, a shaker */
@@ -4197,6 +4197,11 @@ static void bl_step(int st, int32_t w)
         en_bs_pos = (int8_t)st;
         v = bs[st & 15];
         k = v & 7;
+        if (k == EN_BS_HOLD) {                  /* (0.17.42) held: the note sounding goes on to the next step (no new note, no answer) */
+            if (bl_env > 0.05f || bl_wait > 0)
+                bl_gate = fm_maxf(bl_gate, 1.05f * step_len + (float)(w > 0 ? w : 0));
+            return;
+        }
         root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
         if (!k || k > 4)
             bl_out(st, -1, root, w, 0);         /* (a rest: the answer may play there) */
@@ -6801,7 +6806,7 @@ static float cp_g = 1.0f, lk_subm = 1.0f;       /* the compressor's gain at the 
 static uint32_t lk_i, lk_n, lk_si;
 static float cp_thr = 0.0f, cp_slope, cp_make = 1.0f, cp_ka = 0.05f, cp_kr = 0.0005f, lk_ceil = 1.0f;
 volatile float en_comp_gr, en_lim_gr, en_out_peak;
-static float gr_hold, pk_hold;
+static float gr_hold, pk_hold, cp_hl, cp_hr, cp_avg;    /* (cp_hl, cp_hr: the compressor's ear, the lows it leaves out) */
 
 static void reverb_set(void)                    /* once a chunk, before the tank's job: the type, damping, predelay */
 {
@@ -6888,9 +6893,9 @@ static void master_dyn_set(void)                /* once a chunk: the settings, f
     const int r = par[P_MC_RATIO] < 0 ? 0 : par[P_MC_RATIO] > 6 ? 6 : par[P_MC_RATIO];
     cp_slope = r ? 1.0f - 1.0f / RATIO[r] : 0.0f;
     cp_thr = -30.0f + 0.3f * (float)par[P_MC_THR];                 /* -30 .. 0 dB */
-    cp_make = fm_db2lin(0.12f * (float)par[P_MC_MAKE]);            /* 0 .. +12 dB */
-    cp_ka = 1.0f - fm_expf(-1.0f / (0.004f * EN_SR));
-    cp_kr = 1.0f - fm_expf(-1.0f / ((0.06f + 0.04f * cp_env) * EN_SR));     /* the release: ~60 ms, up to 400 ms at 9 dB of reduction (set once a chunk) */
+    cp_make = fm_db2lin(0.12f * (float)par[P_MC_MAKE] + 0.8f * cp_avg);   /* 0 .. +12 dB, and (0.17.42) most of what it takes on average given back: the level kept */
+    cp_ka = 1.0f - fm_expf(-1.0f / (0.010f * EN_SR));              /* (0.17.42: 10 ms, was 4: a drum's hit gets through before the bus comes down, the punch kept) */
+    cp_kr = 1.0f - fm_expf(-1.0f / ((0.08f + 0.05f * cp_env) * EN_SR));     /* the release: ~80 ms, up to 530 ms at 9 dB of reduction (set once a chunk) */
     lk_ceil = fm_db2lin(-12.0f + 0.12f * (float)par[P_ML_CEIL]);   /* -12 .. 0 dB */
     polish_set();
 }
@@ -6905,7 +6910,7 @@ static void master_dyn_reset(void)              /* a new engine: nothing delayed
     lk_cur = lk_rs = lk_subm = cp_g = 1.0f;
     lk_sum = (float)LK;
     lk_i = lk_n = lk_si = 0;
-    cp_env = gr_hold = pk_hold = 0.0f;
+    cp_env = gr_hold = pk_hold = cp_hl = cp_hr = cp_avg = 0.0f;
 }
 
 
@@ -6921,8 +6926,11 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
         uint32_t i;
         if (cp_slope > 0.0f) {                  /* the compressor */
             float d = 0.0f, gr = 0.0f, lv;
-            for (i = 0; i < m; i++)
-                d = fm_maxf(d, fm_maxf(fm_fabsf(pl[j + i]), fm_fabsf(pr[j + i])));
+            for (i = 0; i < m; i++) {           /* (0.17.42) it listens through a high-pass at ~100 Hz: the kick and the sub no longer pull the whole mix down */
+                cp_hl += (pl[j + i] - cp_hl) * 0.0142f;
+                cp_hr += (pr[j + i] - cp_hr) * 0.0142f;
+                d = fm_maxf(d, fm_maxf(fm_fabsf(pl[j + i] - cp_hl), fm_fabsf(pr[j + i] - cp_hr)));
+            }
             lv = 6.0206f * fm_log2f(d + 1e-9f) - cp_thr;
             if (lv > 3.0f)
                 gr = cp_slope * lv;
@@ -6931,8 +6939,9 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
             cp_env = fm_flush(cp_env + (gr - cp_env) * ((gr > cp_env ? cp_ka : cp_kr) * (float)m));
             g1 = fm_db2lin(-cp_env);
             en_comp_gr = cp_env;
+            cp_avg = fm_flush(cp_avg + (cp_env - cp_avg) * (0.00003f * (float)m));   /* its reduction on average, over ~0.75 s */
         } else {
-            cp_env = 0.0f;
+            cp_env = cp_avg = 0.0f;
             en_comp_gr = 0.0f;
         }
         gs = (g1 - g0) * INV[m];
@@ -8840,6 +8849,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     DIAG_LOCALS
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
     float dk[BLK], de = duck_env, gg = gate_g;
+    const float pre = 2.0f * trim_k;            /* (0.17.42) the master bus's input: +6 dB and the piece's level (en_render takes the 6 dB off after it) */
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
     const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : 0;
     const int odd = (int)((sixteenth - 1u) & 1u);         /* the sixteenth playing now: the second of an eighth? */
@@ -9100,8 +9110,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         fx_master(&l, &r);
         if (po_on)
             polish(&l, &r);                     /* (0.17.30) */
-        mixl[j] = l;
-        mixr[j] = r;
+        mixl[j] = l * pre;
+        mixr[j] = r * pre;
     }
     DT(11);
     master_dyn_block(mixl, mixr, n);            /* the compressor and the limiter */
@@ -9326,9 +9336,9 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     RT(32, drain());
     gain = muted ? 0.0f : (float)gain_q12 * (1.0f / 4096.0f) * 2.0f;
     usb_gain = muted ? 0.0f : 1.0f;             /* the USB audio at a fixed level (en_usb_out): unity, the knob at about three quarters */
-    trim_k += (trim_to - trim_k) * 0.15f;       /* the piece's level (en_trim), over about 40 ms */
-    gain *= trim_k;
-    usb_gain *= trim_k;
+    trim_k += (trim_to - trim_k) * 0.15f;       /* the piece's level (en_trim), over about 40 ms: now before the compressor (render_chunk's pre) */
+    gain *= 0.5f;                               /* (0.17.42) the bus's +6 dB taken off again after it: the same level out, the dynamics working at the mix's real level */
+    usb_gain *= 0.5f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
     while (n) {

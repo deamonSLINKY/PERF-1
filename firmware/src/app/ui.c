@@ -1606,7 +1606,7 @@ static void knob_range(int k, int *lo, int *hi)
     }
     if (k == K_BSTY || k == K_BSNO || k == K_BSOC) {
         *lo = 0;
-        *hi = k == K_BSTY ? 4 : k == K_BSNO ? 7 : 2;
+        *hi = k == K_BSTY ? 5 : k == K_BSNO ? 7 : 2;
         return;
     }
     if (k == K_SLPT || k == K_SLEN) {
@@ -1794,11 +1794,11 @@ static void knob_text(int k, char *b)
         return;
     }
     if (k == K_BSTY || k == K_BSNO || k == K_BSOC) {   /* the bass step: its kind, its note above the chord's root, its octave */
-        static const char *const BK[5] = {"Rest", "Note", "Accent", "Glide", "Acc+glide"};
+        static const char *const BK[6] = {"Rest", "Note", "Accent", "Glide", "Acc+glide", "Hold"};   /* (Hold: 0.17.42) */
         static const char *const BN[8] = {"Root", "2nd", "3rd", "4th", "5th", "6th", "7th", "Octave"};
         static const char *const BO[3] = {"Down", "Mid", "Up"};
         const int v = knob_get(k);
-        const char *s = k == K_BSTY ? BK[v < 0 ? 0 : v > 4 ? 4 : v] : k == K_BSNO ? BN[v & 7] : BO[v < 0 ? 0 : v > 2 ? 2 : v];
+        const char *s = k == K_BSTY ? BK[v < 0 ? 0 : v > 5 ? 5 : v] : k == K_BSNO ? BN[v & 7] : BO[v < 0 ? 0 : v > 2 ? 2 : v];
         int n = 0;
         while (s[n]) {
             b[n] = s[n];
@@ -2014,7 +2014,7 @@ static void knob_set(int k, int v)
         const int s = ui.bstp & 15, o = en_bs[s];
         int kind = EN_BS_KIND(o), note = EN_BS_NOTE(o), oct = EN_BS_OCT(o);
         if (k == K_BSTY)
-            kind = v < 0 ? 0 : v > 4 ? 4 : v;
+            kind = v < 0 ? 0 : v > EN_BS_HOLD ? EN_BS_HOLD : v;
         else if (k == K_BSNO)
             note = v < 0 ? 0 : v > 7 ? 7 : v;
         else
@@ -7404,15 +7404,15 @@ static void draw_scope(int kind)
             uint32_t gl = 0;
             for (s = 0; s < 16; s++) {
                 const int v = en_bs[s], kd = EN_BS_KIND(v);
-                pit[s] = (int16_t)(EN_BS_NOTE(v) + 7 * EN_BS_OCT(v));
-                lv[s] = (uint8_t)(!kd || kd > 4 ? 0 : kd == 2 || kd == 4 ? 3 : 2);
-                if (kd == 3 || kd == 4)
+                pit[s] = (int16_t)(kd == EN_BS_HOLD && s ? pit[s - 1] : EN_BS_NOTE(v) + 7 * EN_BS_OCT(v));   /* (a HOLD: the note before, drawn on) */
+                lv[s] = (uint8_t)(!kd || kd > EN_BS_HOLD ? 0 : kd == 2 || kd == 4 ? 3 : 2);
+                if (kd == 3 || kd == 4 || kd == EN_BS_HOLD)
                     gl |= 1u << s;
             }
             step_roll(22, 86, K_BASS, pit, lv, gl, 16, ui.bstp & 15, on && en_playing ? (int)en_bs_pos : -1, 0, 0);
         }
         {
-            static const char *const KN[5] = {"REST", "NOTE", "ACCENT", "GLIDE", "ACC+GLIDE"};
+            static const char *const KN[6] = {"REST", "NOTE", "ACCENT", "GLIDE", "ACC+GLIDE", "HOLD"};
             static const char *const NN[8] = {"ROOT", "2ND", "3RD", "4TH", "5TH", "6TH", "7TH", "OCTAVE"};
             const int v = en_bs[ui.bstp & 15];
             int n = 0;
@@ -7421,7 +7421,7 @@ static void draw_scope(int kind)
                 tx[n++] = *q++;
             itoa_u((uint32_t)(ui.bstp & 15u) + 1u, tx + n);
             cv_text(4, 112, &FONT_XS, tx, K_TEXT);
-            cv_text(48, 112, &FONT_XS, KN[EN_BS_KIND(v) > 4 ? 0 : EN_BS_KIND(v)], EN_BS_KIND(v) ? K_ACC : K_DIM);
+            cv_text(48, 112, &FONT_XS, KN[EN_BS_KIND(v) > EN_BS_HOLD ? 0 : EN_BS_KIND(v)], EN_BS_KIND(v) ? K_ACC : K_DIM);
             cv_text(132, 112, &FONT_XS, EN_BS_KIND(v) ? NN[EN_BS_NOTE(v)] : "", K_DIM);
         }
         return;
@@ -7925,7 +7925,7 @@ static int lk_note(int v, int d, int *acc)
     if (v == LK_BASS) {
         const int s = ((en_bs_pos >= 0 ? en_bs_pos : (int)en_drum_pos) + d) & 15;
         const uint8_t b = en_bs_pos >= 0 ? en_bs[s] : en_bs_hist[s];
-        if (!EN_BS_KIND(b))
+        if (!EN_BS_KIND(b) || EN_BS_KIND(b) == EN_BS_HOLD)
             return -1;
         *acc = EN_BS_KIND(b) == 2 || EN_BS_KIND(b) == 4;
         return EN_BS_NOTE(b) + EN_BS_OCT(b) * 7;
@@ -9353,28 +9353,39 @@ static void jam_capture(void)
             }
         }
     }
-    for (s = 0; s < 16; s++) {
-        int note = -1, len = 0, dg = 0;
-        for (k = 1; k <= 32; k++) {              /* the first key of this voice on this step (the latest events first, so the earliest wins) */
-            const int w = (ui.cap_w - k) & 31;
-            if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc && (uint32_t)ui.cap_t[w] == bar0 + (uint32_t)s) {
-                note = ui.cap_note[w];
-                len = ui.cap_len[w];
-                dg = ui.cap_deg[w];
+    {   /* (0.17.42, "it treats a held note as a single moment") a key held over several steps holds: the bass's HOLD steps, the acid's same note slid
+         * into (the 303's tie); held when SEL + REC came (length 0), it holds to the bar's end */
+        int hold_to = -1, hn = -1, hd = 0;
+        for (s = 0; s < 16; s++) {
+            int note = -1, len = 0, dg = 0;
+            for (k = 1; k <= 32; k++) {          /* the first key of this voice on this step (the latest events first, so the earliest wins) */
+                const int w = (ui.cap_w - k) & 31;
+                if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc && (uint32_t)ui.cap_t[w] == bar0 + (uint32_t)s) {
+                    note = ui.cap_note[w];
+                    len = ui.cap_len[w];
+                    dg = ui.cap_deg[w];
+                }
             }
-        }
-        if (vc == 2) {
-            if (note >= 0)
-                en_acid_capture_d(s, note, dg, (s & 3) == 0, len > 1);
-            else
-                en_acid_step(s, 0, 0, 0, 0, 0);
-        } else if (vc == 3) {
-            if (note >= 0)
-                en_bass_capture_d(s, note, dg, (s & 3) == 0, len > 1);
-            else
-                en_bass_step(s, 0);
-        } else {
-            en_pluck_capture(s, note);
+            if (note >= 0) {
+                hold_to = s + (len ? len : 16) - 1;
+                hn = note;
+                hd = dg;
+            }
+            if (vc == 2) {
+                if (note >= 0 || s <= hold_to)  /* the note, or the held note again; slid into the next step while the key is still down there */
+                    en_acid_capture_d(s, hn, hd, note >= 0 && (s & 3) == 0, s < hold_to);
+                else
+                    en_acid_step(s, 0, 0, 0, 0, 0);
+            } else if (vc == 3) {
+                if (note >= 0)
+                    en_bass_capture_d(s, note, dg, (s & 3) == 0, 0);
+                else if (s <= hold_to)
+                    en_bass_step(s, EN_BS_MAKE(EN_BS_HOLD, 0, 1));
+                else
+                    en_bass_step(s, 0);
+            } else {
+                en_pluck_capture(s, note);
+            }
         }
     }
     if (vc == 2) {

@@ -388,8 +388,10 @@ extern volatile uint8_t en_held;              /* keys held playing the voices (e
 extern volatile uint8_t en_bass_c1;            /* 1: the drone and the acid are rendered by the other core */
 /* THE BASS STEPS (0.16.29, GitHub issue #6): the bass line's mode EN_BL_STEPS plays sixteen steps, a byte each: EN_BS_KIND 0 rest, 1 note,
  * 2 accent, 3 glide (into it, legato), 4 accent + glide; EN_BS_NOTE 0 .. 7 steps of the scale above the chord's root; EN_BS_OCT 0 .. 2 (down, as
- * written, up). A piece's sixteen are its own (project.c OBJ_BSTEP); all rests: Steps starts from the bar the line played last. */
+ * written, up). A piece's sixteen are its own (project.c OBJ_BSTEP); all rests: Steps starts from the bar the line played last.
+ * (0.17.42) EN_BS_HOLD: the note before goes on through this step (a key held as Capture heard it; the page's HOLD). */
 #define EN_BL_STEPS 16
+#define EN_BS_HOLD 5
 #define EN_BS_KIND(v) ((v) & 7)
 #define EN_BS_NOTE(v) ((v) >> 3 & 7)
 #define EN_BS_OCT(v) ((v) >> 6 & 3)
