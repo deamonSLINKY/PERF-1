@@ -9,9 +9,25 @@
 #include <stdint.h>
 
 static void web_audio(const int32_t *blk, uint32_t n);
+/* the studio's stems (its fast export): every mute the app asks for (GLO's, a song place's parts) also keeps these tracks out, so a part plays alone
+ * through the whole song, place changes and all; the engine's own en_trk (amb.c) is called with them added */
+void web_en_trk(uint32_t mute, uint32_t solo);
+#define en_trk(m, s) web_en_trk(m, s)
 #include "../../host/amb_host.c"
+#undef en_trk
+void en_trk(uint32_t mute, uint32_t solo);
+static uint32_t st_stem_m;
+void web_en_trk(uint32_t mute, uint32_t solo) { en_trk(mute | st_stem_m, solo); }
 
 #undef __attribute__
+
+/* (below the undef: the host defines __attribute__ away, which would leave an export out of the wasm) */
+__attribute__((used, visibility("default"))) int web_st_stem(int mask)
+{
+    st_stem_m = (uint32_t)mask & 0xFFu;
+    en_trk(ui.trk_m | st_stem_m, ui.trk_s);
+    return (int)st_stem_m;
+}
 
 /* output ring, stereo float, filled by run_ms, drained by web_render */
 #define RING 4096u
