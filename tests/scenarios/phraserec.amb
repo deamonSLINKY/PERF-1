@@ -1,0 +1,48 @@
+# THE PHRASE RECORDER (0.17.45): on JAM, SEL + REC arms it; the first key on the bass starts it (from its bar), each key written with how long it
+# was held; SEL + REC ends it with that bar and it loops from the next, through the bass's hand path, its line off; SEL + REC lets it go.
+seed 0
+wait 3000
+turn SELECT 36 100
+expect view 36
+spin K1 3
+wait 100
+expect jamv 3
+press SEL
+tap REC
+release SEL
+expect phrase 1
+# armed: nothing played, nothing written
+wait 1500
+expect phrase 1
+# a long note (about six sixteenths at 128 BPM), a rest, a short one
+key 0 down
+wait 100
+expect phrase 2
+wait 600
+key 0 up
+wait 400
+key 4 down
+wait 120
+key 4 up
+wait 100
+expect phnotes 2
+expect phmax >3
+press SEL
+tap REC
+release SEL
+waitfor phrase 3 5000
+wait 100
+expect ph_v 1
+expect ph_n >15
+shot phraserec_jam.png
+# off the JAM page it plays on by itself, a note sounding now and then
+turn SELECT -1 100
+waitfor ph_cur >0 6000
+expect phrase 3
+# let go: anywhere, SEL + REC
+press SEL
+tap REC
+release SEL
+wait 100
+expect phrase 0
+expect ph_v 255

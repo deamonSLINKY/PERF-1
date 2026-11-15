@@ -1,4 +1,4 @@
-# Capture (SEL + REC, 0.14.8): the bar played on the Jam page becomes the pluck's loop (Deja vu at 100, 16 slots) or the acid's frozen line.
+# Capture (SEL + REC, 0.14.8; 0.17.45: pressed off the JAM page, where SEL + REC is the phrase recorder): the bar played on the Jam page becomes the pluck's loop (Deja vu at 100, 16 slots) or the acid's frozen line.
 # At 128 BPM a beat is 469 ms: four keys a beat apart, twice over, so the last bar holds a key on each beat whatever the phase.
 seed 0
 wait 3000
@@ -22,6 +22,8 @@ tapkey w4
 wait 469
 tapkey w2
 wait 100
+turn SELECT -1 100
+expect view 35
 press SEL
 tap REC
 release SEL
@@ -29,6 +31,7 @@ wait 200
 expect par156 100
 expect par157 2
 shot capture_pluck.png
+turn SELECT 1 100
 # the acid: Voice acid, the same four keys, captured as a frozen line with a note on each beat
 spin K1 2
 wait 100
@@ -50,6 +53,8 @@ tapkey w4
 wait 469
 tapkey w2
 wait 100
+turn SELECT -1 100
+expect view 35
 press SEL
 tap REC
 release SEL
@@ -58,6 +63,7 @@ expect par173 1
 expect acidgate >0
 expect acidsteps >2
 shot capture_acid.png
+turn SELECT 1 100
 # (0.17.31) the bass: Voice bass, the same keys, captured into the bass steps (Mode Steps), a note on each beat
 spin K1 1
 wait 100
@@ -78,6 +84,8 @@ tapkey w4
 wait 469
 tapkey w2
 wait 100
+turn SELECT -1 100
+expect view 35
 press SEL
 tap REC
 release SEL
@@ -86,10 +94,13 @@ expect par152 16
 expect bsany 1
 expect bssteps >2
 shot capture_bass.png
+turn SELECT 1 100
 # the pad cannot be captured: Capture says so and changes nothing
 spin K1 -2
 wait 100
 expect jamv 1
+turn SELECT -1 100
+expect view 35
 press SEL
 tap REC
 release SEL

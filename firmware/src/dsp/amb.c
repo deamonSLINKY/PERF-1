@@ -1159,7 +1159,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH, C_KITS };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH, C_KITS, C_PHRASE };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -4039,6 +4039,61 @@ static void bs_cap(int s, int note, int d0, int accent, int glide)   /* (0.17.31
     bs_publish();
 }
 void en_bass_capture(void) { post(C_BSSTEP, 0x20, 0); }   /* none set: the bar the line played last (the page opened) */
+
+/* THE PHRASE (0.17.45, the maker: "I want to be able to play and record a line that is typically longer than the 16 steps, with held notes and
+ * spaces"). The JAM page records up to four bars of what is played on a voice (the pluck, the acid or the bass), each sixteenth a note as
+ * pressed (its key, as the page sends it) and how long it was held (bit 7: an accent); here it plays them back, from the bar's first step,
+ * through the hand's own path (note_cmd: what the page's keys do), each note let go when its length is up. The UI takes the voice's own line
+ * off while it plays (its hand switch). Not stored with the piece. The UI writes en_ph_* only while no phrase plays (en_phrase(-1, 0) first). */
+uint8_t en_ph_note[EN_PH_N], en_ph_len[EN_PH_N];
+static uint8_t ph_v = 0xFF, ph_n, ph_pos, ph_arm, ph_cur, ph_left;
+static void note_cmd(int voice, int key, int vel);
+void en_phrase(int voice, int len) { post(C_PHRASE, voice, len); }
+static void ph_release(void)                    /* the note it holds, let go */
+{
+    if (ph_v != 0xFF && ph_cur)
+        note_cmd(ph_v, ph_cur, 0);
+    ph_cur = 0;
+    ph_left = 0;
+}
+static void ph_set(int v, int len)
+{
+    ph_release();
+    if (v < 0 || len <= 0 || len > EN_PH_N) {
+        ph_v = 0xFF;
+        return;
+    }
+    ph_v = (uint8_t)v;
+    ph_n = (uint8_t)len;
+    ph_pos = 0;
+    ph_arm = 1;                                 /* (from the next bar's first step) */
+}
+#ifdef EN_HOST
+int en_test_ph(int w) { return w == 0 ? ph_v : w == 1 ? ph_n : ph_cur; }   /* the host tests: the phrase's voice (255 none), length, note sounding */
+#endif
+static void ph_step(int st)                     /* on every sixteenth */
+{
+    uint8_t nt, ln;
+    if (ph_v == 0xFF || !en_playing)
+        return;
+    if (ph_arm) {
+        if (st != 0)
+            return;
+        ph_arm = 0;
+        ph_pos = 0;
+    }
+    if (ph_left && !--ph_left)
+        ph_release();
+    nt = en_ph_note[ph_pos];
+    ln = en_ph_len[ph_pos];
+    if (nt) {
+        ph_release();
+        note_cmd(ph_v, nt, ln & 0x80u ? 127 : 100);
+        ph_cur = nt;
+        ph_left = (uint8_t)((ln & 0x7Fu) ? (ln & 0x7Fu) : 1u);
+    }
+    ph_pos = (uint8_t)((ph_pos + 1u) % ph_n);
+}
 static void bs_capture(void)
 {
     int k, v = 0;
@@ -4635,6 +4690,7 @@ static void tick(void)
         }
     }
     bl_step(st, loose(sw, 4.0f));
+    ph_step(st);                                /* (0.17.45) a phrase played back */
     if (pad_stabs() && !par[P_PAD_MAN] && en_playing &&   /* the pad's stabs: a rhythm (Comp; Auto: the genre's), the off-beats with more with Evolve; in a breakdown
                                                            * the rhythm alone, softer (0.15.4: none fired there, so an all-stab genre had the pluck alone) */
         (comp_hit(st) || (sec != SEC_BREAK && comp_mask() == 0x4444u && par[P_PAD_COMP] == 0 && (st == 7 || st == 15) && frand() < 0.35f * evolve))) {
@@ -5454,6 +5510,8 @@ static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 10
         } else if (bass.play) {                 /* let go: back to the chord's root */
             bass.play = 0;
             bass.vd = 0.0f;
+            if (par[P_DR_MAN])                  /* (0.17.45) played by hand (JAM, a phrase): the note's MIDI off now, as it fades (it waited for the next note) */
+                midi(0x82, bass.midi_note, 0);
             bass_to((int)bass.gtarget % 12);
         }
     } else if (t >= 0) {                        /* the acid */
@@ -5625,6 +5683,8 @@ static void play_stop(void)
     for (d = 0; d < EN_NDRUM; d++)
         drum[d].wait = drum[d].wait2 = 0, drum[d].rn = 0;        /* a swung hit still waiting stays unplayed */
     cm_wait = ac_wait = bl_wait = stab_wait = 0;   /* and the swung pluck, acid, bass and stab notes */
+    ph_release();                               /* (0.17.45) the phrase's note let go; it starts again from its top with the next bar */
+    ph_arm = ph_v != 0xFF;
     en_playing = 0;
     pad_gate = 0.0f;
     acid.amp_t = 0.0f;
@@ -7433,6 +7493,9 @@ static void drain(void)
         case C_ACCAP: ac_capture(a & 15, b & 127, b & 0x800 ? b >> 7 & 15 : -1, a >> 4 & 1, a >> 5 & 1); break;
         case C_BSCAP: bs_cap(a & 15, b & 127, b >> 7 & 15, a >> 4 & 1, a >> 5 & 1); break;
         case C_ACKEEP: ac_keep_answer(); break;
+        case C_PHRASE:                           /* (0.17.45) a phrase to play (a voice, its length in sixteenths), or none */
+            ph_set(a, b);
+            break;
         case C_KITS:                             /* (0.17.38) a loaded kit came or went: each drum's kit again */
             apply(P_KIT_KICK, par[P_KIT_KICK]);
             apply(P_KIT_SNARE, par[P_KIT_SNARE]);

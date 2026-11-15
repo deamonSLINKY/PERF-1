@@ -548,7 +548,7 @@ static struct {
     uint8_t pat_rev, pat_held, pat_up; /* the pattern to go back to (+1), the one held, and the key let go after a hold */
     uint32_t pat_t;
     uint8_t scene_g[4][13];            /* a scene's groove: the lanes' densities, their sources, the pattern */
-    uint8_t jam_man;                   /* the voice the JAM page has taken off its line (1 + voice), 0 none */
+    uint8_t jam_man;                   /* the voices taken off their line by hand (a bit a JAM voice: the JAM page's, a phrase's; 0.17.45) */
     uint8_t jam_voice, jam_mode, jam_oct, jam_ans;   /* the JAM page: the voice (pluck, pad, acid, drone), the keys (scale, chords, harp), the octave (0..4: -2..+2), the answer */
     uint8_t jam_n[NKEYS], jam_vc[NKEYS], jam_note[NKEYS][4];   /* what each key is sounding, to let go */
     uint16_t cap_t[32];                          /* Capture's memory (SEL + REC on Jam): the last 32 keys played: the sixteenth (en_bars), the note heard, the key and voice, how long it was held (sixteenths; 0: still down) */
@@ -646,6 +646,12 @@ static uint8_t gs_st, gs_len, gs_bar, gs_pos, gs_stop, gs_mask, gs_busy, gs_w, g
                                                  * 4 kept for AUTO FX (Pick: YOURS); gs_hand: the effect played by hand now (bit + 1); gs_fxnow: the one the
                                                  * gesture plays now; gs_shot: AUTO FX is playing it */
 static uint32_t gs_t;
+/* the phrase recorder's (0.17.45; below, at phrase_key): 0 off, 1 armed, 2 recording, 3 playing; the JAM voice; the bar it began (in sixteenths); the
+ * bar SEL + REC ended it in (+1, 0: not yet); each key's step while held (+1) */
+static uint8_t ph_st, ph_vc, ph_ks[NKEYS];
+static uint32_t ph_b0, ph_endb;
+static void phrase_key(void);
+static void phrase_tick(void);
 
 /* TRACK CODES (0.17.11): nine letters for a track: its genre, its piece (as the recipe), its key, mode and tempo, and the seed every
  * generator starts from (a check letter last). A start from one plays the same track, note for note, from the top: on this firmware,
@@ -4502,8 +4508,12 @@ static void input(void)
                 ui.btn_used |= m | 1u << B_SEL;
                 if (ui.fx_menu)
                     gesture_key();
+                else if (ui.view == V_JAM)
+                    phrase_key();              /* (0.17.45) on JAM: the phrase recorder */
                 else if (ui.view >= V_ACID && ui.view <= V_ACSTEP)
                     acid_keep();               /* (0.17.31) on an Acid page: the answer kept as the line */
+                else if (ph_st == 3)
+                    phrase_key();              /* (a phrase playing: let go) */
                 else
                     jam_capture();
                 continue;
@@ -5298,7 +5308,7 @@ static void draw_header(void)
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
-                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)(gs_st & 3u) << 20 | (uint32_t)(gs_mask != 0) << 22 | (uint32_t)gs_shot << 23 | (uint32_t)(gs_st >> 2) << 24);
+                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)(gs_st & 3u) << 20 | (uint32_t)(gs_mask != 0) << 22 | (uint32_t)gs_shot << 23 | (uint32_t)(gs_st >> 2) << 24 | (uint32_t)ph_st << 25);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
     h = hash(h, (uint32_t)(en_intro_k * 64.0f) | (uint32_t)ui.dj_round << 8 | (uint32_t)ui.dj_rounds << 12);   /* the intro's countdown, the round */
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
@@ -5384,6 +5394,12 @@ static void draw_header(void)
                 cv_text(x, 8, &FONT_XS, sn, K_FROST);
                 x -= 10;
             }
+        }
+        if (ph_st) {                              /* (0.17.45) the phrase recorder: armed (ARM), writing (REC), playing (PHR) */
+            const char *g = ph_st == 3 ? "PHR" : ph_st == 2 ? "REC" : "ARM";
+            x -= text_w(&FONT_XS, g);
+            cv_text(x, 8, &FONT_XS, g, ph_st == 2 ? K_ACID : K_ACC);
+            x -= 10;
         }
         if (gs_st == 1 || gs_st == 2 || (gs_st == 3 && gs_mask) || gs_shot) {   /* the gesture recorder: armed (ARM), writing (REC), looping (LOOP), AUTO FX's (AUTO) */
             const char *g = gs_shot ? "AUTO" : gs_st == 3 ? "LOOP" : gs_st == 2 ? "REC" : "ARM";
@@ -9364,6 +9380,30 @@ static void jam_down_v(int i, int vc)            /* key i on voice vc (JAM's num
         ui.jam_note[i][k] = (uint8_t)(key > 127 ? 127 : key);
         en_note_v(VC[vc], ui.jam_note[i][k], (plat_buttons() >> B_SEL & 1u) ? 127 : 100);   /* SEL held: an accent (0.15.23) */
     }
+    if (en_playing && n > 0 && (ph_st == 1 || (ph_st == 2 && vc == ph_vc))) {   /* (0.17.45) the phrase: the first key starts it (from its bar), each written */
+        const int tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
+        const uint32_t t16 = en_bars + (plat_ms() - cap_st_t > 7500u / (uint32_t)tempo ? 1u : 0u);
+        if (ph_st == 1) {
+            if (vc == 1) {
+                say("PHRASE", "THE ACID, PLUCK OR BASS");
+            } else {
+                ph_st = 2;
+                ph_vc = (uint8_t)vc;
+                ph_b0 = t16 & ~15u;
+                ph_endb = 0;
+                memset(en_ph_note, 0, sizeof en_ph_note);
+                memset(en_ph_len, 0, sizeof en_ph_len);
+                memset(ph_ks, 0, sizeof ph_ks);
+                say("PHRASE: REC", "SEL + REC ENDS IT");
+            }
+        }
+        if (ph_st == 2 && t16 >= ph_b0 && t16 - ph_b0 < EN_PH_N) {
+            const uint32_t s = t16 - ph_b0;
+            en_ph_note[s] = ui.jam_note[i][0];
+            en_ph_len[s] = (uint8_t)((plat_buttons() >> B_SEL & 1u) ? 0x80u : 0u);
+            ph_ks[i] = (uint8_t)(s + 1u);
+        }
+    }
     if (en_playing) {                            /* Capture's memory: the note as heard, when (0.17.31: to the nearest sixteenth), over which chord, on which key and voice */
         const int w = ui.cap_w & 31, tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
         const uint32_t half = 7500u / (uint32_t)tempo;
@@ -9381,6 +9421,12 @@ static void jam_up(int i)
     for (k = 0; k < ui.jam_n[i]; k++)
         en_note(ui.jam_vc[i], ui.jam_note[i][k], 0);
     ui.jam_n[i] = 0;
+    if (ph_st == 2 && ph_ks[i]) {                /* (0.17.45) the phrase: how long the key was held, to the nearest sixteenth */
+        const int tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
+        const uint32_t s = ph_ks[i] - 1u, t16 = en_bars + (plat_ms() - cap_st_t > 7500u / (uint32_t)tempo ? 1u : 0u), held = t16 - (ph_b0 + s);
+        en_ph_len[s] = (uint8_t)((en_ph_len[s] & 0x80u) | (held < 1u || held > 0x7FFFu ? 1u : held > 127u ? 127u : held));
+        ph_ks[i] = 0;
+    }
     for (k = 1; k <= 32; k++) {                  /* Capture's memory: how long the key was held (the latest event of this key still open) */
         const int w = (ui.cap_w - k) & 31;
         if (ui.cap_note[w] && (ui.cap_kv[w] & 31) == i && !ui.cap_len[w]) {
@@ -9388,6 +9434,69 @@ static void jam_up(int i)
             ui.cap_len[w] = (uint8_t)(held < 1u ? 1u : held > 255u ? 255u : held);
             break;
         }
+    }
+}
+/* THE PHRASE RECORDER (0.17.45, the maker: "I want to be able to play and record a line that is typically longer than the 16 steps, with held
+ * notes and spaces"). On JAM, SEL + REC arms it (header ARM); the first key on the pluck, the acid or the bass starts it, from the start of that
+ * bar (REC): each key is written on its sixteenth with how long it was held (SEL held: an accent). SEL + REC ends it with that bar (four bars end it
+ * anyway); it is handed to the engine on the bar's last sixteenth, so it plays from the very next one, looping, with the voice's own line off
+ * (PHR). A phrase of one bar is also written into the line (Capture's way, stored with the piece). SEL + REC lets it go (on JAM or anywhere). */
+static void phrase_key(void)
+{
+    if (ph_st == 0) {
+        if (!en_playing) {
+            say("PHRASE", "PLAY FIRST");
+            return;
+        }
+        ph_st = 1;
+        say("PHRASE READY", "THE FIRST KEY STARTS IT");
+    } else if (ph_st == 1) {
+        ph_st = 0;
+        say("PHRASE", "OFF");
+    } else if (ph_st == 2) {
+        ph_endb = (en_bars >> 4) + 1u;
+        say("PHRASE", "ENDS WITH THIS BAR");
+    } else {
+        ph_st = 0;
+        en_phrase(-1, 0);
+        say("PHRASE", "LET GO: THE LINE IS BACK");
+    }
+}
+static void phrase_tick(void)
+{
+    static const uint8_t VC[4] = {EN_V_PLUCK, EN_V_PAD, EN_V_ACID, EN_V_DRONE};
+    uint32_t bar, nb, len, s;
+    int i;
+    if (ph_st != 2)
+        return;
+    if (!en_playing) {                           /* stopped while writing: gone */
+        ph_st = 0;
+        return;
+    }
+    bar = en_bars >> 4;
+    nb = bar - (ph_b0 >> 4);                     /* the bars written so far, this one not counted */
+    if (!(nb >= 4u || (ph_endb && bar >= ph_endb) || (en_drum_pos % EN_NSTEP == 15 && (nb == 3u || (ph_endb && bar + 1u == ph_endb)))))
+        return;                                  /* (on the last sixteenth of the last bar: so it plays from the very next) */
+    len = (en_drum_pos % EN_NSTEP == 15 && nb < 4u && !(ph_endb && bar >= ph_endb)) ? (nb + 1u) * 16u : nb * 16u;
+    if (len < 16u)
+        len = 16u;
+    if (len > EN_PH_N)
+        len = EN_PH_N;
+    for (i = 0; i < NKEYS; i++)                  /* keys still down: held to the end */
+        if (ph_ks[i]) {
+            s = ph_ks[i] - 1u;
+            en_ph_len[s] = (uint8_t)((en_ph_len[s] & 0x80u) | (len - s > 127u ? 127u : len - s));
+            ph_ks[i] = 0;
+        }
+    ph_st = 3;
+    en_phrase(VC[ph_vc & 3], (int)len);
+    if (len == 16u) {
+        jam_capture();                           /* (one bar: kept in the line too, with the piece) */
+        say("PHRASE PLAYS", "AND IS KEPT IN THE LINE");
+    } else {
+        char t[20] = "PHRASE PLAYS: 2 BARS";
+        t[14] = (char)('0' + len / 16u);
+        say(t, "SEL + REC LETS GO");
     }
 }
 /* CAPTURE (SEL + REC): the bar you last played on Jam becomes the acid line (frozen, 16 steps: a key on a beat is an accent, a key held past the
@@ -10153,6 +10262,7 @@ void ui_frame(void)
     glide_tick();
     gesture_tick();
     cap_tick();
+    phrase_tick();
     ci_tick();
     swell_tick();
     factory_all_tick();
@@ -10203,12 +10313,12 @@ void ui_frame(void)
     }
     {   /* the JAM page plays one voice by hand: its own line stops (the engine's hand switch, not the piece's setting), and comes back when you leave */
         static const uint8_t MAN[4] = {P_CM_MAN, P_PAD_MAN, P_AC_MAN, P_DR_MAN};
-        const int want = ui.view == V_JAM ? 1 + (ui.jam_voice & 3) : 0;
+        const int want = (ui.view == V_JAM ? 1 << (ui.jam_voice & 3) : 0) | (ph_st == 3 ? 1 << (ph_vc & 3) : 0);   /* (0.17.45: a mask; a phrase's voice too) */
         if (want != ui.jam_man) {
-            if (ui.jam_man)
-                en_set(MAN[ui.jam_man - 1], proj.par[MAN[ui.jam_man - 1]]);
-            if (want)
-                en_set(MAN[want - 1], 1);
+            int k;
+            for (k = 0; k < 4; k++)
+                if ((ui.jam_man ^ want) >> k & 1)
+                    en_set(MAN[k], want >> k & 1 ? 1 : proj.par[MAN[k]]);
             ui.jam_man = (uint8_t)want;
         }
     }

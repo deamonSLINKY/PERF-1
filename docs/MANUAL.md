@@ -324,7 +324,7 @@ short version.
 | **SAVE** | A breakdown on the next bar. Again: a build and the drop. Held: the drop. On Global: stores the piece. |
 | **SEQ** | The Drums page. Again: Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. Held: the sequencer. Tapped in the sequencer: back to Drums. With **SEL** held: the links on and off. |
 | **PLAY** | Play and stop. Each start is a fresh track with its own code; on the Code page, the track again from the top (or the code typed in). |
-| **REC** | Freeze: the chord holds and the reverb rings on until you press it again (or STOP). With **SEL**: Capture, which writes the bar you played on Jam into the acid line, the pluck loop or the bass steps (section 10); on an Acid page, it keeps the acid's answer as its line; in the FX menu, the gesture recorder. |
+| **REC** | Freeze: the chord holds and the reverb rings on until you press it again (or STOP). With **SEL**: on the Jam page, the phrase recorder (up to four bars played back as played); elsewhere Capture, which writes the bar you played on Jam into the acid line, the pluck loop or the bass steps (section 10); on an Acid page, it keeps the acid's answer as its line; in the FX menu, the gesture recorder. |
 | White keys | Play a voice: on the pad's, bass's, acid's or pluck's pages that voice, elsewhere the Jam page's (with Jam's Keys and Octave). On **Global**: the scale, each key adding or removing its note (the root stays). In the sequencer: the 16 steps. In the FX menu: the effects. On Perform, the visualizers, and with **GLO** held: the track mix. |
 | Black keys | The same as the white keys. |
 
@@ -1952,7 +1952,21 @@ The page shows a keyboard with the scale's notes lit and the keys you hold brigh
 
 **Accents (SEL).** The FM-1's keys can't feel how hard you press, so hold **SEL** while you play a key for an accent: a louder note, and on the acid a full accent (brighter, punchier). On the Jam page SEL + a key always plays; it doesn't change the pattern as it does elsewhere.
 
-**Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page (of the last
+**The phrase recorder (SEL + REC on the Jam page).** For a line longer than a bar, with long notes and rests, record it as you play it:
+
+1. On the Jam page, with the music playing and the voice on the **pluck**, the **acid** or the **bass**, press **SEL** + **REC**. The header
+   says `ARM`: it waits for you.
+2. Play. Your first key starts the recording (`REC`), from the start of the bar you're in. Every key is written on its sixteenth, with how long
+   you held it; hold **SEL** for an accent.
+3. Press **SEL** + **REC** to end it with the bar you're in (after four bars it ends by itself). It plays from the very next bar, over and over,
+   exactly as you played it: long notes long, rests as rests. The voice's own line is off while it plays. The header says `PHR`.
+4. **SEL** + **REC** again (on the Jam page or anywhere else) lets it go, and the voice's own line comes back.
+
+A phrase of one bar is also written into the voice's line (as Capture does, below), so it's kept when you save the piece. Longer phrases play
+until you let them go, and aren't saved with the piece. The notes play as you played them: when the chords change under a long phrase, it
+doesn't follow them.
+
+**Capture (SEL + REC on any other page).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page (of the last
 four, the one where you played the most) and makes it that voice's own line, as you played it: each note against the chord it was played over, a
 key a little early counted on the step it was meant for, and the line starting where the bar does:
 
@@ -1963,7 +1977,7 @@ key a little early counted on the step it was meant for, and the line starting w
   covers become **Hold** steps, so the note lasts as long as you held it (still held when you press **SEL** + **REC**: to the bar's end).
 - The pad can't be captured.
 
-Capture remembers your last 32 key presses, so play the bar first, then press **SEL** + **REC**. The header says `CAPTURED`.
+Capture remembers your last 32 key presses, so play the bar on the Jam page first, then turn to any other page and press **SEL** + **REC** (on the Jam page itself, SEL + REC is the phrase recorder). The header says `CAPTURED`.
 
 ---
 

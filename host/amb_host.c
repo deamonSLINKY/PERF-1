@@ -698,6 +698,22 @@ static int expect(const char *what, const char *val)
         got = gs_st;
     else if (!strcmp(what, "gsshot"))            /* (0.17.44) AUTO FX is playing the kept gesture */
         got = gs_shot;
+    else if (!strcmp(what, "phrase"))            /* (0.17.45) the phrase recorder: 0 off, 1 armed, 2 writing, 3 playing */
+        got = ph_st;
+    else if (!strcmp(what, "phnotes") || !strcmp(what, "phmax")) {   /* the notes written; the longest held (sixteenths) */
+        int s2, c = 0, mx = 0;
+        for (s2 = 0; s2 < EN_PH_N; s2++)
+            if (en_ph_note[s2]) {
+                c++;
+                if ((en_ph_len[s2] & 0x7F) > mx)
+                    mx = en_ph_len[s2] & 0x7F;
+            }
+        got = what[2] == 'n' ? c : mx;
+    }
+    else if (!strncmp(what, "ph_", 3)) {         /* the engine's: ph_v (its voice, 255 none), ph_n (length), ph_cur (the note sounding) */
+        int en_test_ph(int w);
+        got = en_test_ph(what[3] == 'v' ? 0 : what[3] == 'n' ? 1 : 2);
+    }
     else if (!strcmp(what, "gsfx"))              /* the effects written into the gesture: how many sixteenths hold one */
     {
         int s2;
