@@ -701,10 +701,11 @@ static void tel_service(void)
         w[9] = en_dbg.nested;
         w[10] = (uint32_t)en_shed_level | (uint32_t)en_chorus_c0 << 8 | (uint32_t)en_bass_c1 << 9 |   /* (bit 8: the chorus on the first core) */
                 (uint32_t)flash_chip << 12 | (uint32_t)susp_bad << 14 |   /* bits 12-13 the flash part (1 P25Q80, 2 UC25HQ80), 14 its erase didn't suspend (0.16.23) */
-                (uint32_t)boot_head << 15;          /* bits 15-16 the startup code: 1 V15, 2 V16, 3 another (0.16.25) */
+                (uint32_t)boot_head << 15 |         /* bits 15-16 the startup code: 1 V15, 2 V16, 3 another (0.16.25) */
+                (uint32_t)cv_rows_sent << 17;       /* bits 17-24 the main band's 8-row blocks sent since the last frame (0.17.40; 18 a whole band) */
         w[11] = (uint32_t)en_playing | (uint32_t)(ui.view & 127u) << 1 |   /* 0.17.39: the page, and the bands sent since the last frame (header, main, knobs) */
                 (uint32_t)cv_sent[0] << 8 | (uint32_t)cv_sent[1] << 16 | (uint32_t)cv_sent[2] << 24;
-        cv_sent[0] = cv_sent[1] = cv_sent[2] = 0;
+        cv_sent[0] = cv_sent[1] = cv_sent[2] = cv_rows_sent = 0;
         w[12] = tel_stores;
         w[13] = tel_store_us;
         w[14] = fm1_crash.magic == FM1_CRASH_MAGIC ? fm1_crash.count : 0u;

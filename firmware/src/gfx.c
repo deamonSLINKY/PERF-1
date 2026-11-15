@@ -15,7 +15,7 @@ typedef struct {               /* proportional, see tools/gen_font.py */
 #include "felucca_font.h"
 
 #define CV_MAX (240u * 144u)      /* X0X: the main area, both bands, is 240 x 144 */
-static uint16_t cv_px[CV_MAX] __attribute__((section(".pool")));
+static uint16_t cv_px[CV_MAX] __attribute__((section(".pool"), aligned(4)));
 static uint32_t cv_w, cv_h;
 static int32_t cv_oy;            /* y offset for graph drawing */
 static int32_t cv_y0, cv_y1;     /* X0X: the rows drawing may touch (cv_band) */
@@ -94,9 +94,55 @@ static void cv_scanlines(uint32_t y, uint32_t r0)
     }
 }
 static uint8_t cv_sent[3];                      /* 0.17.39: the bands sent since the last status frame (the header, the main band, the knobs) */
+static uint8_t cv_rows_sent;                    /* 0.17.40: the main band's 8-row blocks sent since then */
 static void cv_count(uint32_t y) { cv_sent[y < 28u ? 0 : y < 172u ? 1 : 2]++; }
+
+/* (0.17.40) The main band (240 x 144 at row 28) sends only its 8-row blocks that changed: a hash of each block
+ * against the one sent last. Anything else sent over those rows (a viz frame, a card, a toast's canvas) or a
+ * cleared signature (cv_rows_reset) sends it whole next time. */
+#define CV_RB 8u
+static uint32_t cv_rowh[144u / CV_RB];
+static uint8_t cv_rows_ok;
+static void cv_rows_reset(void) { cv_rows_ok = 0; }
+static void cv_blit_rows(void)
+{
+    const uint32_t nb = cv_h / CV_RB;
+    uint32_t b, run = 0, n = 0, chg[144u / CV_RB];
+    for (b = 0; b < nb; b++) {
+        const uint32_t *p = (const uint32_t *)(const void *)(cv_px + b * CV_RB * cv_w), *e = p + CV_RB * cv_w / 2u;
+        uint32_t h = 2166136261u ^ cv_scan;
+        for (; p < e; p++)
+            h = (h ^ *p) * 16777619u;
+        chg[b] = !cv_rows_ok || h != cv_rowh[b];
+        cv_rowh[b] = h;
+        n += chg[b];
+    }
+    cv_rows_ok = 1;
+    if (!n)
+        return;
+    cv_count(28u);
+    cv_rows_sent = (uint8_t)(cv_rows_sent + n > 255u ? 255u : cv_rows_sent + n);
+    cv_scanlines(28u, 0);
+    for (b = 0; b <= nb; b++) {                  /* each run of changed blocks, one transfer */
+        if (b < nb && chg[b]) {
+            if (!run++)
+                n = b;
+            continue;
+        }
+        if (run)
+            lcd_blit(0, 28u + n * CV_RB, cv_w, run * CV_RB, cv_px + n * CV_RB * cv_w);
+        run = 0;
+    }
+}
+
 static void cv_blit(uint32_t x, uint32_t y)
 {
+    if (!x && y == 28u && cv_w == 240u && cv_h == 144u) {
+        cv_blit_rows();
+        return;
+    }
+    if (y < 172u && y + cv_h > 28u)
+        cv_rows_ok = 0;
     cv_count(y);
     cv_scanlines(y, 0);
     lcd_blit(x, y, cv_w, cv_h, cv_px);
@@ -105,6 +151,8 @@ static void cv_blit(uint32_t x, uint32_t y)
 /* canvas rows r0 .. cv_h-1 only, to screen row y + r0 */
 static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
 {
+    if (y + r0 < 172u && y + cv_h > 28u)
+        cv_rows_ok = 0;
     cv_count(y);
     cv_scanlines(y, r0);
     if (r0 < cv_h)

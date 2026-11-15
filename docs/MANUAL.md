@@ -1712,7 +1712,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
-| SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Scanlines: off, on |
+| SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Look: plain, scanlines, calm, calm+scan |
 | SAMPLE (section 13) | Sounds: all, drums, synths, by key | FX: off, on | Gap: 0.5, 1, 2, 4 s | - |
 | FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
 | DELAY (A4) | Send | Repeats | Targets | - |
@@ -1730,7 +1730,7 @@ What some of these mean:
 - **Roll.** From and To set the speed the repeats start and end at. Each sets how often a roll happens.
 - **Riser.** Time is how long it takes to climb. Filter, Wash and Echo set how much of each it builds up.
 - **Settings page.** Key is the drop's key change (section 13). Voices chooses which set of thirty built-in DX7 voices the pluck's `DX` sounds use (section 7).
-- **SCREEN page.** Zoom shows a knob's name and value large as you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Scanlines darkens every other row of the screen by a quarter, like an old CRT TV.
+- **SCREEN page.** Zoom shows a knob's name and value large as you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Look adds scanlines (every other row a quarter darker, like an old CRT TV) and Calm (the screen's small movements off).
 - **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. MIDI map chooses where the notes go (section 14).
 - **Repeat page.** Pitch makes each repeat step toward that pitch over four beats while you hold the key, which sounds like a build. Every repeat still starts on the beat grid. Decay makes each repeat quieter than the last, for a dub-style tail. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh grabs a fresh slice of the newest music every beat or bar, which DJs call a slip roll. It only works where there's enough recent music held to do it.
 
@@ -1781,9 +1781,11 @@ On this screen the keys are the track mix (the mix map, below), the knobs are th
 
 ### The mix map (GLO held)
 
-The mix map lets you mute, solo and recall scenes while you play. Hold **GLO** and the screen shows what each key does. On the Perform screen or a visualizer you don't need to hold **GLO**: just press the keys, with FX closed. The load meter is at the top right.
+The mix map lets you mute, solo and recall scenes while you play. Hold **GLO** and the screen shows what each key does. On the Perform screen or a visualizer you don't need to hold **GLO**: just press the keys, with FX closed. The load meter shows at the top right only when something is wrong: after a dropout, or when the engine eases off to keep up.
 
-A mute stays on until you press the key again. The black key above a track solos it, so you hear only that track. The hats', snare's and perc's black keys freeze a part instead (a drum on its own was little use): **F:BASS** puts the bass on Pedal (it holds the key while the chords move, as on the Progression page), **F:ACID** and **F:PLUCK** freeze that line as it is (as on its steps page, stored with the piece). Press again to let go.
+Each key shows its job as an icon and a name: a crossed speaker mutes, headphones solo, a snowflake freezes, four squares recall a scene.
+
+A mute stays on until you press the key again. The black key above a track solos it, so you hear only that track. The hats', snare's and perc's black keys freeze a part instead (a drum on its own was little use; their icon is a snowflake): **freeze BASS** puts the bass on Pedal (it holds the key while the chords move, as on the Progression page), **freeze ACID** and **freeze PLUCK** keep that line as it is (as on its steps page, stored with the piece). Press again to let go.
 
 | Key | Does |
 |---|---|
@@ -2064,7 +2066,7 @@ The Settings page:
 | Zoom | Off or on. With Zoom on, turning any knob fills the middle of the screen with its name and value in large type for a second, on any page. It's for playing at a distance, outdoors, or on camera. |
 | Saver | The screensaver: off, 1, 3 or 10 minutes. If you leave the FM-1 alone while it plays, the visualizers (the AUTO one) take over the **whole screen**, with no header and no knobs. Any key, button or knob brings the page back. It doesn't come on in the FX menu or while a visualizer is already up. |
 | Lights | Off or show. With show, the key lights join in with the visualizers. In a groove you get two chasers and flashes on the kick and snare. In a breakdown they slowly pulse. In a build they fill up. |
-| Scanlines | Off or on. Darkens every other row of the screen by a quarter, like an old CRT TV. |
+| Look | Plain, scanlines, calm or calm+scan. **Scanlines** darkens every other row of the screen by a quarter, like an old CRT TV. **Calm** turns off the screen's small movements: the imp that hops into the header on a drop, a break or a build, the brighter flick of a knob as you turn it, and the moment a new page takes to settle in. The music's own movement (the steps, the meters) stays. |
 
 ### The sampling helper (SAMPLE)
 
@@ -2124,7 +2126,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre, with their FILTERS and SCREAM settings, their drum drift and their chord types | Straight away (section 6). |
 | Theme, Tune, MIDI out, the set list, Zoom, the SET page's Mix | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, scanlines), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, look), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 

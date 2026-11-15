@@ -84,6 +84,7 @@ static const char *const JV_NAME[4];
 static const char *const JM_NAME[3];
 static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
+static const char *const LOOK_NAME[4] = {"PLAIN", "SCANLINES", "CALM", "CALM+SCAN"};     /* (0.17.40) SCREEN's Look: the scanlines; Calm, the screen's small motion off (no imp up top, no knob tick, no page fade) */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
 static const char *const VOICES_NAME[2] = {"DX", "DY"};
@@ -191,7 +192,7 @@ static const struct {
     {"PHASE", FX_TPHASE, 0, {{"Rate", KN_PLAIN, EN_FXS_TP_RATE, 0, 0}, {"Depth", KN_PLAIN, EN_FXS_TP_DEPTH, 0, 0}, {"Mix", KN_PLAIN, EN_FXS_TP_MIX, 0, 0},
                              {"Targets", KN_NAME, EN_FXS_TP_TGT, EN_PT_NAME, EN_NPT}}},   /* a phaser on them */
     {"SCREEN", 63, 0, {{"Zoom", KN_NAME, 23, ONOFF_NAME, 2}, {"Saver", KN_NAME, 5, SAVER_NAME, 4}, {"Lights", KN_NAME, 6, LIGHTS_NAME, 2},
-                       {"Scanlines", KN_NAME, 14, ONOFF_NAME, 2}}},   /* (0.16.1) the screen's settings together; Zoom: a knob turned shows its name and value across the screen */
+                       {"Look", KN_NAME, 14, LOOK_NAME, 4}}},   /* (0.17.40: Scanlines became Look: the scanlines, and Calm) (0.16.1) the screen's settings together; Zoom: a knob turned shows its name and value across the screen */
     {"SAMPLE", 63, 0, {{"Sounds", KN_NAME, 25, SMPM_NAME, 4}, {"FX", KN_NAME, 26, ONOFF_NAME, 2}, {"Gap", KN_NAME, 27, SMPG_NAME, 4},
                        {"", KN_NONE, 0, 0, 0}}},   /* (0.16.1) the sampling helper: PERF's drums and voices one at a time, for a sampler (not kept) */
     {"SCREAM", FX_SPARE13, 0, {{"Drive", KN_PLAIN, EN_FXS_SQ_DRIVE, 0, 0}, {"Scream", KN_PLAIN, EN_FXS_SQ_AMT, 0, 0}, {"Wow", KN_PLAIN, EN_FXS_SQ_WOW, 0, 0},
@@ -417,35 +418,37 @@ static const uint8_t BLACK_KEY[11] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25};
 /* ---------------------------------------------------------------- themes --- */
 /* seven palettes for the screen (Global > Theme; the layout, Console since 0.17.3, is the same in all of them): a ground, its panel and lines, the text, an accent for what is
  * happening now, a primary for the music in three shades (the pad and the chord; the acid; the drone),
- * the drums' colour, and a colour for the sections and freeze. Each layer has a dark tint for shapes at rest. */
+ * the drums' colour, and a colour for the sections and freeze. Each layer has a dark tint for shapes at rest.
+ * (0.17.40) The tints lean 10-14 degrees toward blue, as a shadow does (Phosphor's stay one phosphor); the ground,
+ * panel and line stay apart once cut to 565 (tests/host/palette_test.py checks both). */
 typedef struct {
     uint16_t bg, panel, line, dim, text, acc, pad, pad_t, acid, acid_t, bass, bass_t, pulse, pulse_t, frost, pluck;
 } theme_t;
 static const theme_t THEMES[EN_NTHEME] = {
     /* Console (0.17.3, the default): a desk's charcoal, amber for now, a colour a channel */
     {RGB(14, 15, 18), RGB(24, 26, 31), RGB(46, 49, 58), RGB(139, 142, 152), RGB(242, 239, 230), RGB(255, 176, 0),
-     RGB(165, 139, 255), RGB(52, 44, 84), RGB(184, 245, 58), RGB(50, 70, 16), RGB(255, 90, 95), RGB(80, 26, 30),
-     RGB(255, 154, 60), RGB(90, 52, 22), RGB(150, 210, 255), RGB(63, 216, 255)},
+     RGB(165, 139, 255), RGB(44, 44, 84), RGB(184, 245, 58), RGB(37, 70, 16), RGB(255, 90, 95), RGB(80, 26, 43),
+     RGB(255, 154, 60), RGB(90, 36, 22), RGB(150, 210, 255), RGB(63, 216, 255)},
     /* Imp: warm black, bone, crimson, lime, pink; ember is for "now" (the playhead, the knob you touched) */
     {RGB(20, 14, 12), RGB(42, 30, 27), RGB(78, 56, 49), RGB(166, 140, 126), RGB(244, 232, 200), RGB(255, 212, 71),
-     RGB(242, 230, 196), RGB(86, 78, 62), RGB(182, 242, 60), RGB(60, 80, 22), RGB(224, 52, 79), RGB(84, 22, 32),
-     RGB(255, 143, 143), RGB(88, 52, 52), RGB(150, 210, 255), RGB(111, 224, 210)},
+     RGB(242, 230, 196), RGB(86, 72, 62), RGB(182, 242, 60), RGB(46, 80, 22), RGB(224, 52, 79), RGB(84, 22, 46),
+     RGB(255, 143, 143), RGB(88, 52, 60), RGB(150, 210, 255), RGB(111, 224, 210)},
     /* Synth (Synth Imp, 0.14.18): demon synthwave: a night sky, crimson to magenta neon, a banded sun on the horizon behind the sigil, the imp in tube light */
     {RGB(12, 3, 24), RGB(28, 6, 32), RGB(69, 18, 63), RGB(154, 95, 134), RGB(255, 233, 242), RGB(255, 225, 74),
-     RGB(192, 140, 255), RGB(60, 36, 96), RGB(182, 255, 46), RGB(50, 80, 16), RGB(255, 47, 95), RGB(84, 16, 36),
-     RGB(255, 138, 61), RGB(88, 44, 24), RGB(150, 210, 255), RGB(62, 240, 255)},
+     RGB(192, 140, 255), RGB(50, 36, 96), RGB(182, 255, 46), RGB(39, 80, 16), RGB(255, 47, 95), RGB(84, 16, 47),
+     RGB(255, 138, 61), RGB(88, 33, 24), RGB(150, 210, 255), RGB(62, 240, 255)},
     /* Acid: black, a 303's yellow-green, hot pink */
     {RGB(12, 13, 10), RGB(30, 34, 24), RGB(52, 60, 40), RGB(140, 152, 118), RGB(236, 242, 222), RGB(255, 60, 160),
-     RGB(196, 255, 40), RGB(54, 72, 16), RGB(240, 255, 120), RGB(70, 80, 30), RGB(120, 200, 30), RGB(40, 62, 14),
-     RGB(210, 220, 190), RGB(56, 62, 46), RGB(255, 90, 180), RGB(110, 230, 240)},
+     RGB(196, 255, 40), RGB(41, 72, 16), RGB(240, 255, 120), RGB(58, 80, 30), RGB(120, 200, 30), RGB(29, 62, 14),
+     RGB(210, 220, 190), RGB(52, 62, 46), RGB(255, 90, 180), RGB(110, 230, 240)},
     /* Ice: deep navy, cyan, a cold pink */
     {RGB(10, 16, 28), RGB(22, 34, 54), RGB(38, 56, 84), RGB(120, 150, 186), RGB(226, 240, 255), RGB(255, 84, 130),
-     RGB(0, 200, 255), RGB(10, 56, 84), RGB(120, 228, 255), RGB(26, 70, 96), RGB(40, 130, 230), RGB(16, 44, 82),
-     RGB(196, 216, 236), RGB(48, 64, 86), RGB(255, 120, 160), RGB(255, 196, 110)},
+     RGB(0, 200, 255), RGB(10, 41, 84), RGB(120, 228, 255), RGB(26, 56, 96), RGB(40, 130, 230), RGB(16, 31, 82),
+     RGB(196, 216, 236), RGB(48, 56, 86), RGB(255, 120, 160), RGB(255, 196, 110)},
     /* Ember: black-brown, red, amber */
     {RGB(20, 12, 10), RGB(40, 24, 20), RGB(70, 40, 34), RGB(170, 130, 116), RGB(250, 232, 220), RGB(255, 176, 32),
-     RGB(255, 46, 66), RGB(92, 20, 26), RGB(255, 110, 90), RGB(96, 38, 32), RGB(200, 40, 40), RGB(72, 18, 18),
-     RGB(230, 200, 186), RGB(82, 56, 50), RGB(255, 200, 80), RGB(110, 220, 200)},
+     RGB(255, 46, 66), RGB(92, 20, 43), RGB(255, 110, 90), RGB(96, 32, 41), RGB(200, 40, 40), RGB(72, 18, 31),
+     RGB(230, 200, 186), RGB(82, 50, 51), RGB(255, 200, 80), RGB(110, 220, 200)},
     /* Phosphor: a green screen's black, its green, a brighter green */
     {RGB(6, 14, 8), RGB(14, 32, 18), RGB(26, 58, 32), RGB(80, 160, 96), RGB(170, 255, 190), RGB(220, 255, 120),
      RGB(60, 255, 120), RGB(14, 70, 30), RGB(150, 255, 170), RGB(24, 76, 40), RGB(30, 190, 90), RGB(10, 56, 26),
@@ -594,7 +597,11 @@ static struct {
     char msg[2][24];
     uint32_t msg_until;
     int8_t touched;                    /* the knob turned last (0..3), shown bright for a moment */
-    uint32_t touch_until;
+    uint32_t touch_until, tick_until;  /* (0.17.40 tick_until: a step just made, the touched knob a moment brighter) */
+    uint32_t imp_until;                /* (0.17.40) the imp in the Console header: a drop, a break, a build, for a moment */
+    uint8_t imp_sec;                   /* (the section it last came up for) */
+    uint8_t fade_view;                 /* (0.17.40) the page the main band last showed, and when it changed (main_blit) */
+    uint32_t fade_t;
     uint32_t frame;
     uint32_t sig[3];                   /* what each band shows: redrawn when it changes */
 } ui;
@@ -1066,7 +1073,7 @@ static void mix_key(int k)
         knob_set(p, on);
         say(c == 30 ? "ACID LINE" : "PLUCK LINE", on ? "FROZEN" : "FREE");
     } else if (c == 32) {                      /* the bass held on the key while the chords move (Pedal, as on the Progression page) */
-        glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ 1u) & 7u);
+        glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ 1u) & 15u);   /* (bit 3 is Calm's, 0.17.40) */
         en_pedal(glob.sl_rsv[2] & 3);
         project_globals();
         say("BASS", glob.sl_rsv[2] & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
@@ -1245,6 +1252,10 @@ static void fxp_set(int k, int v)
                 project_globals();               /* (zoom and the mix: the global record, stored at once) */
             else if (FXP_CTL(k).idx == 29)
                 project_start_random_set(v);
+            else if (FXP_CTL(k).idx == 14 && (glob.sl_rsv[2] >> 3 & 1u) != (unsigned)(v >> 1 & 1)) {   /* (0.17.40) Look's Calm: the global record's bit 3 */
+                glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] & ~8u) | (v & 2 ? 8u : 0u));
+                project_globals();
+            }
             else if (FXP_CTL(k).idx == 28) {     /* Form: the engine at once, the global record's bit 2 */
                 en_song = (uint8_t)!v;
                 glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] & ~4u) | (v ? 4u : 0u));
@@ -3942,7 +3953,7 @@ static void mm_set(int p, uint32_t mode, uint32_t v)   /* a learned setting (0.1
     for (i = 0; i < 4; i++)                      /* on the page: that knob lit (and zoomed, with ZOOM on) */
         if (view_knob(i) != K_NONE && knob_par(view_knob(i)) == p) {
             ui.touched = (int8_t)i;
-            ui.touch_until = plat_ms() + 1200u;
+            ui.touch_until = plat_ms() + 1200u, ui.tick_until = plat_ms() + 90u;
             return;
         }
     if (p != P_MODE) {                           /* elsewhere: its name and value a moment */
@@ -4740,7 +4751,7 @@ static void input(void)
                             pg_fill(s);
                     for (s = 0; s < 2; s++)       /* white keys 9 and 10: the bass, the pad, follow the chords or hold the key (PEDAL, 0.16.21) */
                         if (WHITE_KEY[8 + s] == i) {
-                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 7u);   /* (bit 2 is Form's) */
+                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 15u);   /* (bit 2 is Form's, bit 3 Calm's) */
                             en_pedal(glob.sl_rsv[2] & 3);
                             project_globals();
                             say(s ? "PAD" : "BASS", glob.sl_rsv[2] >> s & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
@@ -4804,7 +4815,7 @@ static void input(void)
             ui.btn_used |= 1u << B_HOME;
             if (ui.view == V_TEMPO) {
                 ui.touched = 0;
-                ui.touch_until = plat_ms() + 1200u;
+                ui.touch_until = plat_ms() + 1200u, ui.tick_until = plat_ms() + 90u;
             } else {
                 char t[8];
                 itoa_u((uint32_t)proj.par[P_TEMPO], t);
@@ -4974,7 +4985,7 @@ static void input(void)
             }
             turn(EN_K1 + (int)i, view_knob((int)i), e);
             ui.touched = (int8_t)i;
-            ui.touch_until = plat_ms() + 1200u;
+            ui.touch_until = plat_ms() + 1200u, ui.tick_until = plat_ms() + 90u;
             ui.act_t = ui.turn_t = plat_ms();
         }
     help_tick(btn, keys);
@@ -5086,19 +5097,44 @@ static uint16_t mix(uint16_t a, uint16_t b, int t)   /* t 0..16: a -> b */
 }
 /* (0.17.39) a panel with depth: lit from the top left, a pixel of light along its top and left edges and of shade along its bottom and
  * right (sunk: the other way round, a track or a screen set into the desk). Square corners, the Console's */
-static void cv_panel(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t base, int sunk)
+/* (0.17.40) a fill in n flat bands from c0 at the top to c1 at the bottom: a light falling off down a panel, at a flat fill's cost (no dither: text sits on it) */
+static void cv_vgrad(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c0, uint16_t c1, int n)
 {
-    uint16_t hi = mix(base, th->text, 3), lo = mix(base, 0x0000, 9);
-    if (sunk) {
-        const uint16_t t = hi;
-        hi = mix(base, 0x0000, 11), lo = t;
-    }
-    cv_rect(x, y, w, h, base);
+    int i;
+    for (i = 0; i < n; i++)
+        cv_rect(x, y + h * i / n, w, h * (i + 1) / n - h * i / n, mix(c0, c1, n > 1 ? 16 * i / (n - 1) : 0));
+}
+/* (0.17.40) the panel with its light falling off: top at the top edge, bot at the bottom, in four bands */
+static void cv_panel_g(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t top, uint16_t bot, int sunk)
+{
+    uint16_t hi = mix(top, th->text, 3), lo = mix(bot, 0x0000, 9);
+    if (sunk)
+        hi = mix(top, 0x0000, 11), lo = mix(bot, th->text, 3);
+    if (top == bot)
+        cv_rect(x, y, w, h, top);
+    else
+        cv_vgrad(x, y, w, h, top, bot, 4);
     cv_rect(x, y, w, 1, hi);
     cv_rect(x, y + 1, 1, h - 2, hi);
     cv_rect(x, y + h - 1, w, 1, lo);
     cv_rect(x + w - 1, y + 1, 1, h - 2, lo);
 }
+static void cv_panel(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t base, int sunk) { cv_panel_g(x, y, w, h, base, base, sunk); }
+/* (0.17.40) THE focus cue, one for every page: n rings of col outside a box, each fainter into bg (what is "now": the knob being
+ * turned, the lit tab, the playhead). Rings of flat colour, no square roots */
+static void cv_glow(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t col, uint16_t bg, int n)
+{
+    int i;
+    for (i = 1; i <= n; i++) {
+        const uint16_t c = mix(col, bg, 2 + 4 * i);
+        cv_rect(x - i, y - i, w + 2 * i, 1, c);
+        cv_rect(x - i, y + h + i - 1, w + 2 * i, 1, c);
+        cv_rect(x - i, y - i + 1, 1, h + 2 * i - 2, c);
+        cv_rect(x + w + i - 1, y - i + 1, 1, h + 2 * i - 2, c);
+    }
+}
+/* (0.17.40) Look (SCREEN): bit 0 the scanlines, bit 1 Calm: no imp in the header, no knob tick, no page fade */
+#define UI_CALM (ui.scan >> 1 & 1u)
 static int q16(float x) { return x <= 0.0f ? 0 : x >= 1.0f ? 16 : (int)(x * 16.0f + 0.5f); }
 
 static const char *const MASCOT[23];
@@ -5215,10 +5251,20 @@ static void imp_header(void)
 static void draw_header(void)
 {
     char t[24];
-    int msg = plat_ms() < ui.msg_until;
+    int msg = plat_ms() < ui.msg_until, imp, hp = -1;
     uint32_t h;
-    if (!LOOK_CONSOLE)                          /* (the Console header has no imp: nothing to spring) */
+    if (en_sec != ui.imp_sec) {                 /* (0.17.40) a drop, a break, a build: the imp comes up in the Console header for a moment */
+        if (en_playing && !UI_CALM)
+            ui.imp_until = plat_ms() + 1400u;
+        ui.imp_sec = en_sec;
+    }
+    imp = !LOOK_CONSOLE || plat_ms() < ui.imp_until;
+    if (imp)                                    /* (the Console header, the rest of the time: no imp, nothing to spring) */
         mascot_step();
+    if (msg && ui.save_global && ui.save_fact && ui.factory_done < 2 && (ui.btn >> B_SAVE & 1u)) {   /* (0.17.40) a hold to factory: how far along, under the words */
+        const uint32_t held = plat_ms() - ui.down_t[B_SAVE], tgt = ui.factory_done ? FACTORY_ALL_HOLD : FACTORY_HOLD;
+        hp = held >= tgt ? 16 : (int)(held * 16u / tgt);
+    }
     if (ui.frame % 2u)                          /* (the spring moves every frame; the header is redrawn thirty times a second) */
         return;
     h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
@@ -5232,7 +5278,8 @@ static void draw_header(void)
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
-    if (!LOOK_CONSOLE)                          /* 0.17.39: the imp, its hop and its clock only where it is drawn (the Console header redrew 15 times a second for nothing) */
+    h = hash(h, (uint32_t)imp | (uint32_t)(hp + 1) << 1);
+    if (imp)                                    /* 0.17.39: the imp, its hop and its clock only where it is drawn (the Console header redrew 15 times a second for nothing) */
         h = hash(hash(h, (uint32_t)(int)(hm.lift * 2.0f) | (uint32_t)((int)(hm.dh * 2.0f) + 16) << 4 |
                              (uint32_t)(en_playing && en_sec == EN_SEC_BUILD ? 1u + (ui.frame / 2u & 1u) : 0u) << 12),
                  (uint32_t)(plat_ms() / 66u) | (uint32_t)q16(en_drum_glow[0]) << 20);
@@ -5245,8 +5292,13 @@ static void draw_header(void)
     if (msg) {
         int32_t x = cv_text(10, 6, &FONT_B, ui.msg[0], K_TEXT);
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
+        if (hp >= 0) {                           /* the hold's progress: sixteen cells filling */
+            int j;
+            for (j = 0; j < 16; j++)
+                cv_rect(10 + j * 14, 23, 12, 2, j < hp ? K_ACC : K_LINE);
+        }
     } else {
-        int32_t x = LOOK_CONSOLE ? 236 : 207, w;   /* (the Console layout: no imp up here, the status runs to the edge) */
+        int32_t x = LOOK_CONSOLE && !imp ? 236 : 207, w;   /* (the Console layout: no imp up here, the status runs to the edge; 0.17.40: but for its moments) */
         const uint32_t bv = plat_battery();
         if (bv != 0xFFFFFFFFu && bv > 100u) {      /* the battery, left of the mascot: a cell, its charge in three steps (the stock firmware's own: the divider's reading under 531 is the last, 561 and 591 the others), a bolt in it while USB powers the unit */
             const int lvl = bv >= 591u ? 3 : bv >= 561u ? 2 : bv >= 531u ? 1 : 0;
@@ -5264,8 +5316,8 @@ static void draw_header(void)
             }
             x -= 20;
         }
-        if (!LOOK_CONSOLE)
-            draw_mascot(212 + (en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 3, en_playing && en_sec == EN_SEC_BREAK);
+        if (imp)
+            draw_mascot(212 +(en_playing && en_sec == EN_SEC_BUILD ? (int)(ui.frame / 2u & 1u) * 2 - 1 : 0), 3, en_playing && en_sec == EN_SEC_BREAK);
         if (project_pending()) {                   /* not yet in flash (the theme, Tune, MIDI out: two seconds on) */
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
@@ -6351,6 +6403,21 @@ static void cpu_line(char *c)
 
 /* the Console look's key tiles (0.17.9: the FX menu's, the mix's): key k in the menus' columns (F3 top left, down), its note, its label in its
  * colour on a stripe; the whole tile lit while on, a dark foot while latched; the black keys' rows darker */
+/* (0.17.40) 9 x 9 one-bit icons (bit 8 the left column): the mix keys' mute, solo, freeze and scene */
+static const uint16_t ICON9[4][9] = {
+    {0x010, 0x030, 0x075, 0x1F2, 0x1F5, 0x070, 0x030, 0x010, 0x000},   /* mute: a speaker, crossed */
+    {0x07C, 0x082, 0x101, 0x101, 0x183, 0x1C7, 0x1C7, 0x183, 0x000},   /* solo: headphones */
+    {0x010, 0x092, 0x054, 0x038, 0x1FF, 0x038, 0x054, 0x092, 0x010},   /* freeze: a snowflake */
+    {0x1EF, 0x1EF, 0x1EF, 0x000, 0x1EF, 0x1EF, 0x1EF, 0x000, 0x000},   /* scene: four squares */
+};
+static void cv_icon(int32_t x, int32_t y, int i, uint16_t c)
+{
+    int r, b;
+    for (r = 0; r < 9; r++)
+        for (b = 0; b < 9; b++)
+            if (ICON9[i & 3][r] >> (8 - b) & 1u)
+                cv_pset(x + b, y + r, c);
+}
 static void con_tile(int k, const char *lb, uint16_t kc, int on, int locked)
 {
     const int32_t tx = 2 + (k / 9) * 79, ty = 16 + (k % 9) * 14;
@@ -6363,6 +6430,11 @@ static void con_tile(int k, const char *lb, uint16_t kc, int on, int locked)
     if (locked)
         cv_rect(tx + 2, ty + 11, 72, 2, K_BG);
     cv_text(tx + 4, ty - 1, &FONT_XS, EN_NOTE_NAME[pc], on ? K_BG : K_DIM);
+    if (lb[0] >= 1 && lb[0] <= 4) {              /* (0.17.40) a label that starts with an icon: mute, solo, freeze, scene, in place of "M:" "S:" "F:" */
+        cv_icon(tx + 22, ty + 2, lb[0] - 1, on ? K_BG : kc);
+        cv_text_fit(tx + 33, ty - 1, &FONT_XS, lb + 1, on ? K_BG : kc, 42, 0);
+        return;
+    }
     cv_text_fit(tx + 22, ty - 1, &FONT_XS, lb, on ? K_BG : kc, 53, 0);   /* (0.17.39: its own column, "C# PHASER" not "C#PHASER"; TAP TEMPO fitted) */
 }
 static int32_t con_chip(int32_t x, const char *t, int lit)   /* a tab along the top: lit (the accent, dark text) or not; where it ends */
@@ -6424,24 +6496,26 @@ static void draw_mix(void)
         t[n] = 0;
         if (code < 8 || (code >= 8 && code < 16)) {
             const char *q = MIX_NAME[code < 8 ? code : code - 8];
-            lb[j++] = code < 8 ? 'M' : 'S';
-            lb[j++] = ':';
+            if (LOOK_CONSOLE)                    /* (0.17.40) the Console tiles: an icon, mute or solo */
+                lb[j++] = code < 8 ? '\1' : '\2';
+            else
+                lb[j++] = code < 8 ? 'M' : 'S', lb[j++] = ':';
             while (*q && j < 11)
                 lb[j++] = *q++;
             lb[j] = 0;
         } else if (code == 16 || code == 17) {
-            const char *q = code == 16 ? "M:DRUMS" : "S:DRUMS";
+            const char *q = LOOK_CONSOLE ? (code == 16 ? "\1DRUMS" : "\2DRUMS") : code == 16 ? "M:DRUMS" : "S:DRUMS";
             while (*q)
                 lb[j++] = *q++;
             lb[j] = 0;
         } else if (code >= 20 && code <= 23) {
-            const char *q = "SCENE ";
+            const char *q = LOOK_CONSOLE ? "\4SCENE " : "SCENE ";
             while (*q)
                 lb[j++] = *q++;
             lb[j++] = (char)('1' + code - 20);
             lb[j] = 0;
         } else if (code >= 30 && code <= 32) {
-            const char *q = code == 30 ? "F:ACID" : code == 31 ? "F:PLUCK" : "F:BASS";
+            const char *q = LOOK_CONSOLE ? (code == 30 ? "\3ACID" : code == 31 ? "\3PLUCK" : "\3BASS") : code == 30 ? "F:ACID" : code == 31 ? "F:PLUCK" : "F:BASS";
             while (*q)
                 lb[j++] = *q++;
             lb[j] = 0;
@@ -6584,7 +6658,7 @@ static int sc_screen_kind(int k)                 /* the pages drawn as a curve o
 static void sc_screen(void)                      /* the screen: dark, eight columns and four rows of grid */
 {
     int k;
-    cv_panel(SC_X - 1, sc_oy - 1, SC_W + 2, sc_oh + 2, SC_SCREEN, 1);
+    cv_panel_g(SC_X - 1, sc_oy - 1, SC_W + 2, sc_oh + 2, mix(SC_SCREEN, 0x0000, 5), SC_SCREEN, 1);   /* (0.17.40: darker under its lip) */
     for (k = 1; k < 8; k++)
         cv_rect(SC_X + k * SC_W / 8, sc_oy, 1, sc_oh, mix(SC_SCREEN, K_LINE, k == 4 ? 9 : 5));
     for (k = 1; k < 4; k++)
@@ -7405,7 +7479,7 @@ static void draw_scope(int kind)
                 const int n = muted ? 0 : (int)(fm_clampf(live[k], 0.0f, 1.0f) * 10.0f + 0.5f);
                 int i;
                 char tx[8];
-                cv_panel(sx, top, sw, 98, k < 5 && k == ui.mix_trk ? mix(K_PANEL, c, 3) : K_PANEL, 0);
+                cv_panel_g(sx, top, sw, 98, k < 5 && k == ui.mix_trk ? mix(K_PANEL, c, 4) : mix(K_PANEL, K_LINE, 3), k < 5 && k == ui.mix_trk ? mix(K_PANEL, c, 1) : K_PANEL, 0);
                 cv_rect(sx, top, sw, 2, muted ? K_LINE : c);
                 cv_text_fit(sx + sw / 2, top + 1, &FONT_XS, NAME[k], muted ? K_DIM : c, sw - 2, 1);
                 for (i = 0; i < 10; i++)         /* the meter: what sounds */
@@ -7736,19 +7810,31 @@ static uint32_t chord_pcs(void)                 /* the chord playing: a bit a pi
 }
 /* ZOOM (the SCREEN page, 0.16.1, for playing at a distance or outdoors): a knob turned fills the main area with its name and its value, twice the
  * largest type, and a bar, for as long as the knob strip lights it (1.2 s) */
-static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)   /* text at twice the size: a pixel two by two */
+static uint32_t g_cov(const uint8_t *gd, int32_t bpr, int32_t w, int32_t h, int32_t gx, int32_t gy)   /* a glyph's coverage 0..15 (0 off it) */
+{
+    uint32_t a;
+    if (gx < 0 || gy < 0 || gx >= w || gy >= h)
+        return 0;
+    a = gd[gy * bpr + gx / 2];
+    return (gx & 1) ? (a & 15u) : (a >> 4);
+}
+/* text at twice the size (0.17.40: its edges kept soft: each new pixel 9:3:3:1 of the four nearest, so the font's anti-aliasing grows with it, no jaggies) */
+static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *s, uint16_t c)
 {
     for (; *s; s++) {
-        const uint32_t gi = glyph(f, (uint8_t)*s), w = f->bw[gi], bpr = (w + 1u) / 2u;
+        const uint32_t gi = glyph(f, (uint8_t)*s);
+        const int32_t w = f->bw[gi], bpr = (w + 1) / 2, gh = f->h;
         const uint8_t *gd = f->data + f->off[gi];
-        uint32_t gx, gy;
-        for (gy = 0; gy < f->h; gy++)
-            for (gx = 0; gx < w; gx++) {
-                uint32_t a = gd[gy * bpr + gx / 2u];
-                a = (gx & 1u) ? (a & 15u) : (a >> 4);
-                if (a >= 7u)
-                    cv_rect(x + 2 * ((int32_t)gx - f->pad), y + 2 * (int32_t)gy, 2, 2, c);
+        int32_t ox, oy;
+        for (oy = 0; oy < 2 * gh; oy++) {
+            const int32_t gy = oy >> 1, ny = oy & 1 ? gy + 1 : gy - 1;
+            for (ox = 0; ox < 2 * w; ox++) {
+                const int32_t gx = ox >> 1, nx = ox & 1 ? gx + 1 : gx - 1;
+                const uint32_t a = 9u * g_cov(gd, bpr, w, gh, gx, gy) + 3u * g_cov(gd, bpr, w, gh, nx, gy) + 3u * g_cov(gd, bpr, w, gh, gx, ny) + g_cov(gd, bpr, w, gh, nx, ny);
+                if (a)
+                    px_blend(x - 2 * f->pad + ox, y + oy, c, a * 34953u >> 19);   /* (/15: 0..16) */
             }
+        }
         x += 2 * f->adv[gi];
     }
 }
@@ -7935,7 +8021,7 @@ static void console_home(void)
         const int32_t sx = 2 + v * 47, sw = v == 4 ? 46 : 45;
         const int q = lk_quiet(v), lit = v == cur;
         const uint16_t col = lk_col(v), c = q ? mix(K_PANEL, col, 5) : col;
-        cv_panel(sx, 24, sw, 120, lit ? mix(K_PANEL, col, 3) : K_PANEL, 0);
+        cv_panel_g(sx, 24, sw, 120, lit ? mix(K_PANEL, col, 4) : mix(K_PANEL, K_LINE, 3), lit ? mix(K_PANEL, col, 1) : K_PANEL, 0);   /* (0.17.40: lit from above, falling off) */
         if (lit)
             cv_rect(sx, 24, sw, 2, col);
         cv_text(sx + 3, 25, &FONT_XS, LK_NAME[v], c);
@@ -8107,8 +8193,12 @@ static void console_roll(int v, int32_t x0, int32_t y0, int32_t w, int32_t h)
             cv_text(x0 + 2, y0 + h / 2 - 8, &FONT_XS, "NO NOTES THIS BAR", K_DIM);
         return;
     }
-    if (en_playing)
-        cv_rect(x0 + (pos & 15) * cw, y0, cw, h, mix(K_PANEL, K_ACC, 3));
+    if (en_playing) {                            /* the playhead's column, its edges lit (0.17.40: the focus cue) */
+        const int32_t px0 = x0 + (pos & 15) * cw;
+        cv_rect(px0, y0, cw, h, mix(K_PANEL, K_ACC, 3));
+        cv_rect(px0, y0, 1, h, mix(K_PANEL, K_ACC, 8));
+        cv_rect(px0 + cw - 1, y0, 1, h, mix(K_PANEL, K_ACC, 8));
+    }
     for (s = 0; s < 16; s++) {                   /* step s of the bar: d steps from now */
         const int d = (s - (pos & 15)) & 15;
         int acc, n = lk_note(v, d, &acc);
@@ -8137,7 +8227,7 @@ static void console_voice(int v)
     char u[16];
     int i, j = 0, k;
     console_top();
-    cv_panel(2, 24, 184, 120, mix(K_PANEL, col, 2), 0);
+    cv_panel_g(2, 24, 184, 120, mix(K_PANEL, col, 3), mix(K_PANEL, col, 1), 0);
     cv_rect(2, 24, 184, 2, col);
     {
         int32_t x = cv_text(6, 25, &FONT_XS, LK_NAME[v], q ? K_BASS : col);
@@ -8183,6 +8273,8 @@ static void console_voice(int v)
         }
     } else if (v == LK_DRUMS) {                  /* the drums: six lanes by sixteen steps, the lane's name lit by its hit */
         int l, s;
+        if (en_playing)                          /* (0.17.40) the step playing: its column lit behind the six lanes */
+            cv_glow(36 + (int32_t)(en_drum_pos & 15u) * 9, 42, 8, 92, K_ACC, mix(K_PANEL, col, 2), 1);
         for (l = 0; l < EN_NLANE && l < 6; l++) {
             const int32_t y = 42 + l * 16;
             const uint16_t bits = lane_now(l);
@@ -8258,12 +8350,33 @@ static uint32_t lk_hash(uint32_t h)             /* what the strips and the track
     return h;
 }
 
+/* (0.17.40) the main band sent; a new page's first frame a quarter darker, the next as it is: it settles in, not slides
+ * (not in Calm, nor while the pages are being flipped through: a page lasting under a third of a second gets none) */
+static void main_blit(void)
+{
+    if (ui.view != ui.fade_view) {
+        const uint32_t now = plat_ms();
+        ui.fade_view = ui.view;
+        if (!UI_CALM && now - ui.fade_t > 300u && now - ui.boot_t > 2000u) {
+            uint16_t *p = cv_px, *e = cv_px + cv_w * cv_h;
+            for (; p < e; p++) {
+                const uint32_t c = swap16(*p);
+                *p = swap16(c - ((c >> 2) & 0x39E7u));
+            }
+            ui.sig[1] = 0;                       /* (drawn again, whole, the next frame) */
+        }
+        ui.fade_t = now;
+    }
+    cv_blit(0, MAIN_Y);
+}
 static void draw_main(void)
 {
     uint32_t h = hash(2166136261u, pool_abs() | (uint32_t)sound_root() << 12 | (uint32_t)en_frozen << 16 | proj.piece << 24 |
                                         (uint32_t)en_playing << 17 | (uint32_t)proj.par[P_MODE] << 20), i;
     if (ui.frame % 2u)                           /* 30 frames a second is plenty */
         return;
+    if (!ui.sig[1])                              /* (0.17.40) drawn again from scratch: sent whole, not only the rows that changed */
+        cv_rows_reset();
     h = hash(h, ui.theme);
     if (!mix_show() && shift_show()) {           /* SEL held: what the shift does */
         h = hash(0x53484654u, (uint32_t)ui.theme | (uint32_t)(ui.view == V_SEQ) << 8 | (uint32_t)(ui.fx_menu && !ui.fx_page) << 9);
@@ -8271,7 +8384,7 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_shift();
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8283,7 +8396,7 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_mix();
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8294,7 +8407,7 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_zoom(zi);
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8325,7 +8438,7 @@ static void draw_main(void)
                 draw_fxedit();
             else
                 draw_fx();
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8337,7 +8450,7 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_help();
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8349,7 +8462,7 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_jam();
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8372,7 +8485,7 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_perf();
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8452,7 +8565,7 @@ static void draw_main(void)
             draw_scope(scope_kind(ui.view));
             if (LOOK_CONSOLE)                    /* the Console layout: a picture page wears its channel's colour along the top, as a strip does */
                 cv_rect(0, 0, 240, 2, view_color());
-            cv_blit(0, MAIN_Y);
+            main_blit();
         }
         return;
     }
@@ -8478,7 +8591,7 @@ static void draw_main(void)
             console_seq();
         else
             draw_seq();
-        cv_blit(0, MAIN_Y);
+        main_blit();
         return;
     }
     for (i = 0; i < EN_NPAD; i++)
@@ -8513,7 +8626,7 @@ static void draw_main(void)
             console_voice(lk_voice());   /* a voice's page: its strip opened wide */
         else
             console_home();
-        cv_blit(0, MAIN_Y);
+        main_blit();
         return;
     }
     if (LOOK_SYNTH)
@@ -8529,7 +8642,7 @@ static void draw_main(void)
     draw_sigil();
     draw_meters();
     draw_kit();
-    cv_blit(0, MAIN_Y);
+    main_blit();
 }
 
 /* the knob strip (X0X's): a rule with the page's name and a dot a page at its right end; under it a
@@ -8586,7 +8699,11 @@ static void console_tabs(void)
         const int32_t x = i * 24;
         const int on = v >= TB[i].first && v < TB[i].first + TB[i].n;
         char l[2] = {TB[i].ltr, 0};
-        cv_rect(x + 1, 11, 22, 13, on ? col[i] : K_PANEL);
+        if (on) {                                /* (0.17.40) the lit tab raised, with the focus ring; the others flat */
+            cv_glow(x + 1, 11, 22, 13, col[i], K_BG, 1);
+            cv_panel(x + 1, 11, 22, 13, col[i], 0);
+        } else
+            cv_rect(x + 1, 11, 22, 13, K_PANEL);
         cv_text(x + 12 - text_w(&FONT_XS, l) / 2, 9, &FONT_XS, l, on ? K_BG : K_DIM);
         if (!on)
             cv_rect(x + 1, 22, 22, 2, mix(K_PANEL, col[i], 7));
@@ -8648,9 +8765,10 @@ static void draw_knobs(void)
     if (ui.view == V_GLOBAL)
         h = hash(h, (uint32_t)proj.piece | (uint32_t)(proj.edited >> proj.piece & 1u) << 8 |
                         (uint32_t)project_saved(proj.piece) << 9);
-    int now_touch = plat_ms() < ui.touch_until;
+    int now_touch = plat_ms() < ui.touch_until, tick = now_touch && plat_ms() < ui.tick_until && !UI_CALM;
     for (i = 0; i < 4; i++)
         h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
+    h = hash(h, (uint32_t)tick << 31);
     h = hash(h, (uint32_t)now_touch | (uint32_t)ui.fx_menu << 1 | (uint32_t)ui.fx_page << 2 | (uint32_t)fx_bank << 10 | (uint32_t)(ui.btn >> B_SEL & 1u) << 20);
     if (h == ui.sig[2])
         return;
@@ -8775,7 +8893,8 @@ static void draw_knobs(void)
         int k = view_knob((int)i), lo, hi, v, hot = now_touch && ui.touched == (int)i;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
-        const uint16_t fill = hot ? K_ACC : view_color();
+        const uint16_t acc = hot && tick ? mix(K_ACC, K_TEXT, 6) : K_ACC;   /* (0.17.40) a step: the accent a moment brighter, then settled */
+        const uint16_t fill = hot ? acc : view_color();
         if (k == K_NONE)
             continue;
         if (LOOK_CONSOLE) {                      /* the Console look: a fader a knob: its name, the value left, a track and a cap */
@@ -8790,7 +8909,7 @@ static void draw_knobs(void)
             caps(t, view_label((int)i), sizeof t);
             cv_text(x + 5, 24, &FONT_XS, t, hot ? K_TEXT : K_DIM);
             kv_split(k, vt, vu);
-            xe = cv_text_fit(x + 5, KV_Y[vfi[kv_num(vt)]], KV_F[vfi[kv_num(vt)]], vt, hot ? K_ACC : K_TEXT, vu[0] ? 52 - 2 - text_w(&FONT_XS, vu) : 52, 0);
+            xe = cv_text_fit(x + 5, KV_Y[vfi[kv_num(vt)]], KV_F[vfi[kv_num(vt)]], vt, hot ? acc : K_TEXT, vu[0] ? 52 - 2 - text_w(&FONT_XS, vu) : 52, 0);
             if (vu[0])                           /* the unit: small, after the number, on its baseline */
                 cv_text(xe + 2, 42, &FONT_XS, vu, hot ? K_TEXT : K_DIM);
             cp = hi > lo ? (int32_t)(v - lo) * 45 / (hi - lo) : 0;
@@ -8799,7 +8918,9 @@ static void draw_knobs(void)
                 cv_rect(cp < 22 ? x + 5 + cp : x + 27, 61, cp < 22 ? 22 - cp : cp - 22, 2, fill);
             else
                 cv_rect(x + 5, 61, cp, 2, fill);
-            cv_rect(x + 5 + cp - 1, 57, 5, 10, hot ? K_ACC : K_TEXT);
+            if (hot)                             /* (0.17.40) the focus: the cap glows */
+                cv_glow(x + 4 + cp, 57, 5, 10, K_ACC, K_PANEL, 2);
+            cv_rect(x + 5 + cp - 1, 57, 5, 10, hot ? acc : K_TEXT);
             continue;
         }
         {                                        /* the label, the value large, a bar under it */
@@ -9479,7 +9600,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | ui.scan << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
+    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | (ui.scan & 1) << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
     s.viz = (uint8_t)((ui.viz >= VZ_TRIP ? 7u : ui.viz) | (ui.min_pads == 2 || ui.min_pads == 4) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -9538,7 +9659,7 @@ static void settings_load(void)
                 else if (FXP[p].c[c].idx == 13)
                     fxp_set(k, !(s.usb >> 1 & 1));
                 else if (FXP[p].c[c].idx == 14)
-                    fxp_set(k, s.usb >> 2 & 1);
+                    fxp_set(k, (s.usb >> 2 & 1) | (glob.sl_rsv[2] >> 3 & 1u) << 1);   /* (Look: the scanlines here, Calm the global record's bit 3, 0.17.40) */
                 else if (FXP[p].c[c].idx >= 15 && FXP[p].c[c].idx <= 17)
                     fxp_set(k, s.usb >> (3 + 3 * (FXP[p].c[c].idx - 15)) & 7);
                 else if (FXP[p].c[c].idx == 18)
@@ -10012,7 +10133,7 @@ void ui_frame(void)
         ui.frame++;
         return;
     }
-    cv_scan = ui.scan;
+    cv_scan = ui.scan & 1u;                     /* (Look's bit 0; bit 1 is Calm) */
     if (!ui.saver_on)
         draw_header();                           /* (the screensaver has the whole screen) */
     draw_main();

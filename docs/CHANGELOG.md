@@ -26,6 +26,15 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **The screen, finished (0.17.40).** The rest of the screen study.
+  - **One focus cue.** What is "now" has a soft ring around it: the knob's cap while you turn it, the lit tab, the playing step on the drums' grid. The playhead column on the bass, acid and pluck rolls has lit edges.
+  - **Light that falls off.** The home strips, a voice's wide panel and the Mixer's strips are brightest at the top and darker toward the bottom, in four bands; the scopes' screens are darker under their lip.
+  - **Colours.** Every theme's dark shades lean a little toward blue, as real shadows do, so a part's resting colour and its bright one read as one material (Phosphor stays one green). A test keeps the ground, panel and lines apart on the real screen's colours.
+  - **Icons on the mix map.** A crossed speaker for mute, headphones for solo, a snowflake for freeze and four squares for a scene, in place of M:, S: and F:.
+  - **Zoom's big type is smooth.** The large value keeps the font's soft edges instead of stepping in two-pixel blocks.
+  - **Small movement.** A knob flicks a little brighter while it moves, then settles. A new page settles in over one frame. The imp hops into the header for a moment on a drop, a break or a build. Holding SAVE for factory shows how far along the hold is.
+  - **Look (SCREEN page).** Scanlines became Look: plain, scanlines, calm, or calm with scanlines. Calm turns the small movements above off; the steps and meters still move.
+  - **Less sent to the screen.** The middle of the screen sends only the rows that changed (in 8-row blocks), not all 144 every time. The status log has a new column, `bl_rows`: the blocks sent since the last row (18 is a whole screen).
 - **The screen, polished (0.17.39).** From a study of what makes small music screens look finished (Elektron, Teenage Engineering, Polyend, pixel-art games).
   - **Depth.** Strips, key tiles, tabs, the touched knob and the mixer's strips are lit from the top left: a pixel of light along the top and left, shade along the bottom and right. The fader slots, the knobs' tracks and the scopes' screens are set into the desk the other way round.
   - **Smooth lines.** The scopes' curves and the acid's slides are drawn anti-aliased, like the text.

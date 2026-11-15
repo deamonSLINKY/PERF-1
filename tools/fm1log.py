@@ -70,6 +70,7 @@ def decode(msg):
     d["flash"] = d["shed"] >> 12 & 3              # the flash part (0.16.23): 1 P25Q80, 2 UC25HQ80, 3 another (flash off), 0 an older build
     d["susp_bad"] = d["shed"] >> 14 & 1           # its erase didn't suspend: saves stop the audio
     d["boot"] = d["shed"] >> 15 & 3               # the startup code (0.16.25): 1 M-VAVE's V15, 2 V16 (the chip 12.5% slower), 3 another
+    d["bl_rows"] = d["shed"] >> 17 & 255          # 0.17.40 on: the main band's 8-row blocks sent since the last frame (18 a whole band)
     d["shed"] &= 0xFF
     pw = d["playing"]                             # 0.17.39 on: the page (ui.view) and the bands sent since the last frame
     d["playing"], d["ui_view"] = pw & 1, pw >> 1 & 127
