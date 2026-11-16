@@ -7692,6 +7692,9 @@ static void drain(void)
 
 /* --------------------------------------------------------------- render --- */
 #define BLK 256
+#define RZ_MAKE 13.0f                          /* (0.17.51) the resonator's level at Amount 100, Q 8 (made up by sqrt Q above it): measured, THE RESONATOR */
+#define RZ_PLK 0.06f                             /* the pluck's level, 24 dB under a hit's: its notes are the chord's, on the bands' own pitches, where a hit's
+                                                 * make-up rang them 20 dB louder than the drums (HOUSE 3: the mix +4.5 dB) */
 #ifndef EN_MIN_CHUNK
 #define EN_MIN_CHUNK 128                        /* frames: the shortest chunk a swung or humanized hit may cut (en_render; the clock pulse cuts anywhere) */
 #endif
@@ -8946,6 +8949,92 @@ static void render_smp(drum_t *v, uint32_t n, float g, int tr, float pl, float p
     v->on = (v->si < v->sp->n || fm_fabsf(v->x2) > 0.0001f) && amp > 0.0005f;
 }
 
+/* THE RESONATOR (0.17.51; after the DUB-1 resonator idea, the modal resonators of Mutable Instruments' Rings (MIT) as the model, three bands here, written
+ * for PERF): the hits of the tracks chosen (the perc, the hats, the snare and clap, all of them, the pluck) ring three band-pass filters tuned to the
+ * chord's notes (its root, third and fifth, in the register chosen, rising), so a rim or a tick sounds pitched, in the key, retuned with each chord. Decay:
+ * how long they ring (Q 8 .. 256: wood to glass); Amount: how loud (0 off). The first band in the middle, the second left, the third right; a little
+ * into the reverb. A send: what goes in is each chosen track's share of the mix (the mix after it less before it: no copies). The CHORUS page's
+ * neighbour. Off when the load is far too high (shed level 2). */
+static float *rz_in;                             /* (render_chunk's own, on the stack: the pool has no 1 KB to spare) */
+#define RZ_FN __attribute__((noinline))          /* (one copy each: inlined at the five drums they cost 2 KB of flash) */
+static float rz_c[3][4], rz_s[3][2], rz_g, rz_lv;   /* (rz_lv: the input's level, followed a chunk at a time) */
+static uint8_t rz_m;                             /* the lanes in (bit L_*), 0x80 the pluck; 0 off */
+static RZ_FN void rz_set(void)                   /* once a control: on, the bands' tuning and level */
+{
+    static const uint8_t TM[6] = {1u << L_PERC, 1u << L_HAT | 1u << L_OHAT, 1u << L_SNARE | 1u << L_CLAP, 1u << L_PERC | 1u << L_HAT | 1u << L_OHAT,
+                                  1u << L_SNARE | 1u << L_CLAP | 1u << L_HAT | 1u << L_OHAT | 1u << L_PERC, 0x80u};
+    static uint32_t key = 0xFFFFFFFFu;
+    const int amt = fxs_v[EN_FXS_RZ_AMT], dec = fxs_v[EN_FXS_RZ_DEC], reg = fxs_v[EN_FXS_RZ_REG], tg = fxs_v[EN_FXS_RZ_TGT];
+    const uint8_t m = amt > 0 && en_shed_level < 2 ? TM[(unsigned)tg < 6u ? tg : 0] : 0u;
+    uint32_t k2;
+    int b;
+    if (!m) {
+        if (rz_m)
+            for (b = 0; b < 3; b++)
+                rz_s[b][0] = rz_s[b][1] = 0.0f;
+        rz_m = 0;
+        return;
+    }
+    rz_m = m;
+    k2 = (uint32_t)(chord_pcs[0] & 15) | (uint32_t)(chord_pcs[chord_nt > 1 ? 1 : 0] & 15) << 4 | (uint32_t)(chord_pcs[chord_nt > 2 ? 2 : 0] & 15) << 8 |
+         (uint32_t)(reg & 3) << 12 | (uint32_t)(dec & 127) << 14 | (uint32_t)(par[P_ROOT] & 15) << 21;
+    if (k2 != key) {                             /* (the chord, the register or the decay changed: the bands retuned) */
+        const float kq = 0.125f * fm_exp2f(-0.05f * (float)dec);   /* 1/Q: 1/8 .. 1/256 */
+        int prev = 0;
+        key = k2;
+        for (b = 0; b < 3; b++) {
+            int nt = 36 + 12 * (reg % 3) + (chord_pcs[b < chord_nt ? b : 0] % 12);
+            while (nt <= prev)
+                nt += 12;
+            prev = nt;
+            svf_coefs(rz_c[b], 440.0f * fm_exp2f((float)(nt - 69) * (1.0f / 12.0f)), kq);
+        }
+    }
+    rz_g = (float)amt * 0.01f * RZ_MAKE * fm_exp2f(0.025f * (float)dec) * (m & 0x80u ? RZ_PLK : 1.0f);   /* (the narrower, the less a hit's energy rings it: made
+                                                                                                    * up by about sqrt Q; the pluck's notes need none of it) */
+}
+static RZ_FN void rz_sub(uint32_t n, float k)          /* before a chosen track: the mix as it was (k: its share) */
+{
+    uint32_t j;
+    for (j = 0; j < n; j++)
+        rz_in[j] -= (mixl[j] + mixr[j]) * k;
+}
+static RZ_FN void rz_add(uint32_t n, float k)          /* after it: what it added */
+{
+    uint32_t j;
+    for (j = 0; j < n; j++)
+        rz_in[j] += (mixl[j] + mixr[j]) * k;
+}
+static RZ_FN void rz_run(uint32_t n)             /* the bands rung, into the mix and the reverb */
+{
+    uint32_t j;
+    int b;
+    float pk = 0.0f, nm;
+    for (j = 0; j < n; j++)                      /* the input brought to one level (its peaks over about a second): a quiet pluck or a soft perc rings them as a
+                                                 * loud snare does, so Amount means the same in every piece (it was 30 dB apart) */
+        pk = fm_maxf(pk, fm_fabsf(rz_in[j]));
+    rz_lv = pk > rz_lv ? pk : fm_flush(rz_lv * fm_expf(-(float)n * (1.0f / EN_SR)));
+    nm = 0.5f * fm_minf(0.25f / (rz_lv + 1e-4f), 32.0f);
+    for (j = 0; j < n; j++) {
+        float y[3];
+        const float x = rz_in[j] * nm;
+        for (b = 0; b < 3; b++) {
+            float *const s = rz_s[b];
+            const float *const c = rz_c[b], v3 = x - s[1], v1 = c[0] * s[0] + c[1] * v3, v2 = s[1] + c[1] * s[0] + c[2] * v3;
+            s[0] = 2.0f * v1 - s[0];
+            s[1] = 2.0f * v2 - s[1];
+            y[b] = c[3] * v1 * rz_g;
+        }
+        mixl[j] += y[0] + y[1] + 0.5f * y[2];
+        mixr[j] += y[0] + 0.5f * y[1] + y[2];
+        rsend[j] += 0.3f * (y[0] + y[1] + y[2]);
+    }
+    for (b = 0; b < 3; b++) {
+        rz_s[b][0] = fm_flush(rz_s[b][0]);
+        rz_s[b][1] = fm_flush(rz_s[b][1]);
+    }
+}
+
 static void render_drums(uint32_t n)
 {
     uint32_t j;
@@ -9000,13 +9089,16 @@ static void render_drums(uint32_t n)
         v->xl = x;
         v->on = amp > 0.0005f || r1 - r2 > 0.002f;
     }
-#define SMP_OR(d, call, gs, tr, pl, pr, rs, es) do { if (drum[d].sp) render_smp(&drum[d], n, g * (gs) * lane_g[d] * kit_g[d], tr, pl, pr, rs, es); else call; } while (0)
+#define SMP_OR(d, call, gs, tr, pl, pr, rs, es) do { const int rz_ = rz_m >> (d) & 1u; if (rz_) rz_sub(n, 1.0f); \
+        if (drum[d].sp) render_smp(&drum[d], n, g * (gs) * lane_g[d] * kit_g[d], tr, pl, pr, rs, es); else call; if (rz_) rz_add(n, 1.0f); } while (0)
     SMP_OR(L_SNARE, render_snare(&drum[L_SNARE], n, g * 0.38f * lane_g[L_SNARE] * kit_g[L_SNARE]), 0.5f, TR_SNARE, 1.0f, 0.95f, 0.35f, 0.1f);
     SMP_OR(L_CLAP, render_clap(&drum[L_CLAP], n, g * 0.42f * lane_g[L_CLAP] * kit_g[L_CLAP]), 0.5f, TR_SNARE, 0.95f, 1.0f, 0.4f, 0.1f);
     SMP_OR(L_HAT, render_hat(&drum[L_HAT], n, g * 0.22f * lane_g[L_HAT] * kit_g[L_HAT], 0.75f, 1.0f), 0.3f, TR_HATS, 0.75f, 1.0f, 0.1f, 0.1f);    /* a little right */
     SMP_OR(L_OHAT, render_hat(&drum[L_OHAT], n, g * 0.18f * lane_g[L_OHAT] * kit_g[L_OHAT], 1.0f, 0.75f), 0.3f, TR_HATS, 1.0f, 0.75f, 0.15f, 0.1f);  /* a little left */
     SMP_OR(L_PERC, render_perc(&drum[L_PERC], n, g * 0.3f * lane_g[L_PERC] * kit_g[L_PERC]), 0.4f, TR_PERC, 0.8f, 1.0f, 0.3f, 0.25f);
 #undef SMP_OR
+    if (rz_m)
+        rz_run(n);                               /* (0.17.51) the resonator */
 }
 
 _Static_assert(BLK == BLK_FM, "the DX voices' buffers are a chunk long");
@@ -9093,7 +9185,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     uint32_t j, pt0_ = en_prof_clock ? en_prof_clock() : 0u, bal_t0 = pt0_, bal_a = 0u, bal_w = 0u, cs_[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     DIAG_LOCALS
     const float rg = rev_send * rev_in_gain * (1.0f - 0.25f * arcm) * (1.0f + 0.7f * fm_maxf(brk, 0.0f)), eg = echo_send;
-    float dk[BLK], de = duck_env, gg = gate_g;
+    float dk[BLK], de = duck_env, gg = gate_g, rzb[BLK];   /* (rzb: the resonator's input, 0.17.51) */
     const float pre = 2.0f * trim_k;            /* (0.17.42) the master bus's input: +6 dB and the piece's level (en_render takes the 6 dB off after it) */
     const float depth = fm_minf(0.55f * KK->duck, 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK];   /* a muted kick ducks nothing */
     const int gate = fx_on >> FX_GATE16 & 1u ? 1 : fx_on >> FX_GATE8 & 1u ? 2 : 0;
@@ -9133,7 +9225,16 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     PT(1);                                      /* bass, acid */
     DT0();
     mx_begin(3, n);
+    rz_in = rzb;
+    if (rz_m) {                                  /* (0.17.51) the resonator's input from silence; the plain pluck's share of the mix, if chosen */
+        for (j = 0; j < n; j++)
+            rz_in[j] = 0.0f;
+        if (rz_m & 0x80u)
+            rz_sub(n, 1.0f);
+    }
     render_cm(n);
+    if (rz_m & 0x80u)
+        rz_add(n, 1.0f);
     if (jc_plain())
         jc_cm(n);
     DT(2);
@@ -9170,6 +9271,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             par_[j] += pad_ring[1][q] * pr;
             fal[j] += fm_ol[j] * fl;
             far_[j] += fm_or[j] * fr;
+            if (rz_m & 0x80u)                    /* (0.17.51) the DX pluck into the resonator */
+                rz_in[j] += fm_ol[j] * fl + fm_or[j] * fr;
             rsend[j] += ds * 0.6f + fm_rs[j] * fs;
             esend[j] += ds * 0.2f + fm_es[j] * fs;
         }
@@ -9512,6 +9615,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         fm_gates(n, (int32_t)((0.35f + 2.2f * d * d) * EN_SR));
     }
     master_dyn_set();
+    rz_set();
     reverb_set();
     en_lim_gr = 8.6859f * gr_hold;               /* 20 log10 of 1/(1 - x), near enough for the small ones: the limiter's reduction in dB */
     en_out_peak = pk_hold;

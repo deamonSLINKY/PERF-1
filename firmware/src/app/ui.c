@@ -56,7 +56,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 38
+#define NFXP 39
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -113,6 +113,8 @@ static const char *const JCT_NAME[3] = {"PLUCK", "ACID", "BOTH"};
 static const char *const LKM_NAME[4] = {"OFF", "AUTO", "LEAD", "FOLLOW"};   /* the LINK page (0.17.47): AUTO, the unit that is the USB host leads */
 static const char *const LKP_NAME[5] = {"ALL", "BEAT", "TOP", "DRUMS", "NO DRUMS"};   /* what this unit plays when linked: BEAT the drums and the bass, TOP the pad, pluck and acid */
 static const char *const LKS_NAME[2] = {"OWN", "FOLLOW"};
+static const char *const RZR_NAME[3] = {"LOW", "MID", "HIGH"};   /* the RESONATOR page (0.17.51): the bands' register, and what goes in */
+static const char *const RZT_NAME[6] = {"PERC", "HATS", "SNARE", "PERC+HATS", "DRUMS", "PLUCK"};
 static uint32_t lk_heard;                        /* (0.17.47) THE LINK (lk_tick): when the partner's hello came last (ms; 0 never) */
 static uint8_t lk_pk, lk_role, lk_lo[3];         /* its hello (the unit, + 64 if it leads); 0 alone, 1 leading, 2 following, 3 linked with no lead (or two);
                                                   * the low bits waiting for their pair (the scale's, the chord's two) */
@@ -216,6 +218,9 @@ static const struct {
     {"LINK", FX_SPARE9, 0, {{"Link", KN_NAME, EN_FXS_LK_MODE, LKM_NAME, 4}, {"Plays", KN_NAME, EN_FXS_LK_PLAYS, LKP_NAME, 5},
                      {"Sections", KN_NAME, EN_FXS_LK_SEC, LKS_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.47; a spare effect bit: nothing held) two units as one band: who leads,
                                                     * what this one plays, the lead's breakdowns and drops followed */
+    {"RESONATOR", FX_SPARE8, 0, {{"Amount", KN_PLAIN, EN_FXS_RZ_AMT, 0, 0}, {"Decay", KN_PLAIN, EN_FXS_RZ_DEC, 0, 0},
+                     {"Register", KN_NAME, EN_FXS_RZ_REG, RZR_NAME, 3}, {"Targets", KN_NAME, EN_FXS_RZ_TGT, RZT_NAME, 6}}},   /* (0.17.51; a spare effect bit: nothing held)
+                                                    * three bands tuned to the chord, rung by the tracks chosen */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -3172,7 +3177,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36, 37};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
+static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36, 38, 37};   /* (0.17.51: RESONATOR, page 38, after CHORUS, before LINK) */   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */

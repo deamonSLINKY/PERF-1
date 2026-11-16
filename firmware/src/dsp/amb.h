@@ -300,7 +300,9 @@ enum {
                                                                           * master (the lows mono, the peaks rounded before the limiter), the tilt (0 off, 1 the genre's, 2 warmer,
                                                                           * 3 brighter) and the width above 2.5 kHz (0 .. 100: +0 .. +6 dB on the side) */
     EN_FXS_JC_TYPE, EN_FXS_JC_TGT,                                      /* (0.17.44) the CHORUS page, the unit's: a Juno-style chorus (0 off, 1 I, 2 II, 3 I+II; 0.17.49: 4 rotary slow, 5 rotary fast) on the pluck (0), the acid (1) or both (2) */
-    EN_FXS_LK_MODE, EN_FXS_LK_PLAYS, EN_FXS_LK_SEC,                     /* (0.17.47) the LINK page, the unit's (the UI's alone): off, auto (the USB host leads), lead, follow; what this
+    EN_FXS_LK_MODE, EN_FXS_LK_PLAYS, EN_FXS_LK_SEC,
+    EN_FXS_RZ_AMT, EN_FXS_RZ_DEC, EN_FXS_RZ_REG, EN_FXS_RZ_TGT,          /* (0.17.51) the RESONATOR page, the unit's: amount (0 off), decay, register (low, mid, high), the tracks in
+                                                                          * (perc, hats, snare, perc+hats, drums, pluck) */                     /* (0.17.47) the LINK page, the unit's (the UI's alone): off, auto (the USB host leads), lead, follow; what this
                                                                           * unit plays when linked (all, beat, top, drums, no drums); the lead's sections followed (1) or not */
     EN_NFXS
 };
@@ -309,7 +311,7 @@ enum {
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
                          12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0, 0, 1, 2, 0, 0, \
-                         0, 2, 30, 1, 1, 30, 0, 2, 1, 0, 1}
+                         0, 2, 30, 1, 1, 30, 0, 2, 1, 0, 1, 0, 50, 1, 0}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the punch-ins' targets (0.15.19): all, the drums, the synths, the pad, the bass, the acid, the pluck, acid and pluck, pad and pluck, bass and acid */

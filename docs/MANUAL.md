@@ -1716,6 +1716,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
+| RESONATOR (pitched percussion; section 13) | Amount: 0 (off)-100 | Decay: 0-100 | Register: low, mid, high | Targets: perc, hats, snare, perc+hats, drums, pluck |
 | LINK (two units as one band; section 14) | Link: off, auto, lead, follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
@@ -2133,6 +2134,23 @@ middle, so the low end stays mono. These are the unit's settings, the same for e
 | Target | What goes through it: the **Pluck** (its plain sounds and its DX voices; it replaces the DX voices' own ensemble), the **Acid**, or **Both**. |
 
 The level stays where it was, and in mono nothing is lost. It switches off by itself when the load is very high, like the pad's chorus.
+
+### The RESONATOR page
+
+After CHORUS: three ringing filters tuned to the chord playing (its root, third and fifth), struck by the drums you choose. A rim, a perc
+tick or a hat comes out pitched, in the key, and the ringing follows each chord change. These are the unit's settings, the same for every piece.
+
+| Knob | What it does |
+|---|---|
+| Amount | How loud the ringing is. **0** (the default) is off. |
+| Decay | How long it rings: low is short and woody (a marimba, a log drum), high is long and glassy (a bell, a steel tine). The level stays about the same across the range. |
+| Register | Where the three notes sit: **Low**, **Mid** or **High**. |
+| Targets | What strikes them: the **Perc**, the **Hats**, the **Snare** (and clap), **Perc+Hats**, all the **Drums** but the kick, or the **Pluck**. |
+
+The ringing is about as loud whatever the piece (it follows how hard it's being struck, not how loud that track is set). The first note is in the
+middle, the second a little left, the third a little right, with some reverb. With the **Pluck**, it rings only when the pluck plays in the
+Register's octave: try each one. Try Perc on an Industrial piece, or Hats at a long Decay on an ambient one. It switches off by itself when
+the load is very high.
 
 ### Visualizers
 
