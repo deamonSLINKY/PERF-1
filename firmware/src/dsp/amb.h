@@ -299,7 +299,7 @@ enum {
     EN_FXS_VINTAGE, EN_FXS_POLISH, EN_FXS_TILT, EN_FXS_WIDTH,            /* (0.17.30) the SOUND page, the unit's: each voice's pitch wandering (0 .. 100: 0 .. 12 cents), the polish on the
                                                                           * master (the lows mono, the peaks rounded before the limiter), the tilt (0 off, 1 the genre's, 2 warmer,
                                                                           * 3 brighter) and the width above 2.5 kHz (0 .. 100: +0 .. +6 dB on the side) */
-    EN_FXS_JC_TYPE, EN_FXS_JC_TGT,                                      /* (0.17.44) the CHORUS page, the unit's: a Juno-style chorus (0 off, 1 I, 2 II, 3 I+II) on the pluck (0), the acid (1) or both (2) */
+    EN_FXS_JC_TYPE, EN_FXS_JC_TGT,                                      /* (0.17.44) the CHORUS page, the unit's: a Juno-style chorus (0 off, 1 I, 2 II, 3 I+II; 0.17.49: 4 rotary slow, 5 rotary fast) on the pluck (0), the acid (1) or both (2) */
     EN_FXS_LK_MODE, EN_FXS_LK_PLAYS, EN_FXS_LK_SEC,                     /* (0.17.47) the LINK page, the unit's (the UI's alone): off, auto (the USB host leads), lead, follow; what this
                                                                           * unit plays when linked (all, beat, top, drums, no drums); the lead's sections followed (1) or not */
     EN_NFXS

@@ -6785,7 +6785,21 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         lp_amt_e = fm_maxf(fm_maxf(lp_amt, lpk_s), 0.35f * fm_maxf(brk, 0.0f));   /* (a breakdown darkens the whole mix) */
         hp_amt_e = fm_maxf(fm_maxf(hp_amt, hpk_s), rs_filt * riser_amt);   /* the build: a high-pass rising */
     }
-    echo_fbx = echo_fb + (0.86f - echo_fb) * fm_maxf(throw_amt, tdx_m * (float)fxs_v[EN_FXS_TD_FB] * 0.0095f);   /* (the punch-in DELAY's repeats too) */
+    {   /* (0.17.49) THE DUB THROW: a throw by a key (THROW, or the DELAY punch-in on its tracks) lets its send go at once when the key is let go, as
+         * before, but its repeats stay up for a bar after (over the next downbeat), then die away over half a bar: the echo carries the throw.
+         * Before, the repeats fell back with the send. (The THROW knob and the swell are steered by hand: not held.) */
+        static float th_tail, th_hold;
+        const float th_src = fm_maxf(throw_key, tdx_m * (float)fxs_v[EN_FXS_TD_FB] * 0.0095f);
+        if (th_src >= th_tail) {
+            th_tail = th_src;
+            th_hold = 16.0f * step_len;
+        } else if (th_hold > 0.0f) {
+            th_hold -= (float)n;
+        } else {
+            th_tail = fm_flush(th_tail * fm_expf(-(float)n / (8.0f * step_len)));
+        }
+        echo_fbx = echo_fb + (0.86f - echo_fb) * fm_maxf(fm_maxf(throw_amt, tdx_m * (float)fxs_v[EN_FXS_TD_FB] * 0.0095f), th_tail);   /* (the punch-in DELAY's repeats too) */
+    }
     if (fill_hold != (uint8_t)(m >> FX_FILL & 1u)) {
         fill_hold = (uint8_t)(m >> FX_FILL & 1u);
         drum_publish();
@@ -8218,7 +8232,9 @@ static float fe_tap(float d)                    /* d samples back, between two *
     }
 }
 
-/* THE CHORUS (0.17.44, the CHORUS page; the maker: "a Juno-106 with different types of chorus" for wider sounds). As the Juno's: one short
+/* THE CHORUS (0.17.44, the CHORUS page; the maker: "a Juno-106 with different types of chorus" for wider sounds). (0.17.49) And a rotary speaker's,
+ * slow and fast: the same delay swept by a sine (the horn coming and going, a little pitch), each side's level swung a quarter turn later (the
+ * horn pointing at it, then away), 0.8 or 6.7 turns a second, the speed gliding from one to the other over about a second. As the Juno's: one short
  * delay swept by a triangle, the other side swept the opposite way, mixed with the dry: I slow and deep (0.51 Hz), II faster (0.86 Hz), I+II
  * a fast shallow shimmer (9.75 Hz), 1.7 .. 5.4 ms. On the pluck (its line is the DX voices' ensemble's: the plain pluck and a DX voice never
  * play at once, so they share it; the ensemble steps aside), the acid (a line of its own, 512 B), or both; the lows (under 200 Hz) stay
@@ -8228,20 +8244,24 @@ static float fe_tap(float d)                    /* d samples back, between two *
 #define JC_NORM 0.78f
 static int16_t ja_buf[JA_N];
 static uint32_t ja_w;
-static float jc_ph, jc_rate, jc_c, jc_d, ja_hp, jp_hp;
-static uint8_t jc_pl, jc_ac;
+static float jc_ph, jc_rate, jc_c, jc_d, ja_hp, jp_hp, jc_am;
+static uint8_t jc_pl, jc_ac, jc_sin;
 static void jc_set(void)                        /* once a chunk: the type and the targets */
 {
-    static const float RATE[3] = {0.513f, 0.863f, 9.75f};
+    static const float RATE[5] = {0.513f, 0.863f, 9.75f, 0.8f, 6.7f};
     const int t = fxs_v[EN_FXS_JC_TYPE], g = fxs_v[EN_FXS_JC_TGT];
-    const int on = t >= 1 && t <= 3 && en_shed_level < 2;
+    const int on = t >= 1 && t <= 5 && en_shed_level < 2;
+    float want;
     jc_pl = (uint8_t)(on && g != 1);
     jc_ac = (uint8_t)(on && g != 0);
     if (!on)
         return;
-    jc_rate = RATE[t - 1] * (1.0f / EN_SR);
+    want = RATE[t - 1] * (1.0f / EN_SR);
+    jc_rate = t >= 4 && jc_sin ? jc_rate + (want - jc_rate) * 0.012f : want;   /* (the rotor speeds up and slows down; the Juno's at once) */
+    jc_sin = (uint8_t)(t >= 4);
     jc_c = 0.0035f * EN_SR;
-    jc_d = (t == 3 ? 0.00025f : 0.00185f) * EN_SR;
+    jc_d = (t == 3 ? 0.00025f : t >= 4 ? 0.0004f : 0.00185f) * EN_SR;
+    jc_am = t >= 4 ? 0.3f : 0.0f;
     ja_hp = fm_flush(ja_hp);
     jp_hp = fm_flush(jp_hp);
 }
@@ -8250,6 +8270,7 @@ static inline float jc_tri(float p)             /* the triangle, -1 .. 1 */
     p -= (float)(int)p;
     return p < 0.5f ? 4.0f * p - 1.0f : 3.0f - 4.0f * p;
 }
+static inline float jc_lfo(float p) { return jc_sin ? sine(p) : jc_tri(p); }   /* (0.17.49: the rotor's a sine) */
 static inline float ja_tap(float d)
 {
     float at = (float)ja_w - d, f;
@@ -8301,9 +8322,9 @@ static void render_fm(uint32_t n)
         if (fe_ph2 >= 1.0f)
             fe_ph2 -= 1.0f;
         if (jc_pl && !fm_is_bass(cur)) {        /* (0.17.44) the CHORUS on the pluck: the Juno's sweep on the same line, instead of the ensemble's */
-            const float t = jc_tri(jc_ph + (float)j * jc_rate);
-            fm_ol[j] = (y + JC_WET * fe_tap(jc_c + jc_d * t)) * JC_NORM;
-            fm_or[j] = (y + JC_WET * fe_tap(jc_c - jc_d * t)) * JC_NORM;
+            const float p = jc_ph + (float)j * jc_rate, t = jc_lfo(p), a = jc_am * jc_tri(p + 0.25f);   /* (a: the rotor's level swing, 0 for the Juno) */
+            fm_ol[j] = (y + JC_WET * fe_tap(jc_c + jc_d * t)) * JC_NORM * (1.0f + a);
+            fm_or[j] = (y + JC_WET * fe_tap(jc_c - jc_d * t)) * JC_NORM * (1.0f - a);
         } else if (fe_amt > 1e-4f) {
             const float wl = fe_tap((8.0f + 2.5f * sine(fe_ph) + 0.12f * sine(fe_ph2)) * ms),
                         wr = fe_tap((8.0f + 2.5f * sine(fe_ph + 0.25f) + 0.12f * sine(fe_ph2 + 0.5f)) * ms),
@@ -9037,11 +9058,12 @@ static void jc_cm(uint32_t n)                   /* (0.17.44) the plain pluck thr
 {
     uint32_t j;
     for (j = 0; j < n; j++) {
-        const float dl = mixl[j] - mx_sv[0][j], dr = mixr[j] - mx_sv[1][j], x = 0.5f * (dl + dr), t = jc_tri(jc_ph + (float)j * jc_rate);
+        const float dl = mixl[j] - mx_sv[0][j], dr = mixr[j] - mx_sv[1][j], x = 0.5f * (dl + dr), p = jc_ph + (float)j * jc_rate, t = jc_lfo(p),
+                    a = jc_am * jc_tri(p + 0.25f);
         jp_hp += 0.0281f * (x - jp_hp);         /* (200 Hz: the lows stay dry) */
         fe_buf[fe_w] = jc_q(x - jp_hp);
-        mixl[j] = mx_sv[0][j] + (dl + JC_WET * fe_tap(jc_c + jc_d * t)) * JC_NORM;
-        mixr[j] = mx_sv[1][j] + (dr + JC_WET * fe_tap(jc_c - jc_d * t)) * JC_NORM;
+        mixl[j] = mx_sv[0][j] + (dl + JC_WET * fe_tap(jc_c + jc_d * t)) * JC_NORM * (1.0f + a);
+        mixr[j] = mx_sv[1][j] + (dr + JC_WET * fe_tap(jc_c - jc_d * t)) * JC_NORM * (1.0f - a);
         fe_w = (fe_w + 1u) & (FE_N - 1u);
     }
 }
@@ -9262,11 +9284,11 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             tbl[j] += b * bl * dg;
             tbr[j] += b * br * dg;
             if (jc_ac) {                        /* (0.17.44) the CHORUS on the acid: its own line, the sides swept apart */
-                const float t = jc_tri(jc_ph + (float)j * jc_rate);
+                const float p = jc_ph + (float)j * jc_rate, t = jc_lfo(p), sw = jc_am * jc_tri(p + 0.25f);
                 ja_hp += 0.0281f * (a - ja_hp);
                 ja_buf[ja_w] = jc_q(a - ja_hp);
-                tal[j] += (a + JC_WET * ja_tap(jc_c + jc_d * t)) * JC_NORM * al * dg;
-                tar[j] += (a + JC_WET * ja_tap(jc_c - jc_d * t)) * JC_NORM * ar * dg;
+                tal[j] += (a + JC_WET * ja_tap(jc_c + jc_d * t)) * JC_NORM * (1.0f + sw) * al * dg;
+                tar[j] += (a + JC_WET * ja_tap(jc_c - jc_d * t)) * JC_NORM * (1.0f - sw) * ar * dg;
                 ja_w = (ja_w + 1u) & (JA_N - 1u);
             } else {
                 tal[j] += a * al * dg;

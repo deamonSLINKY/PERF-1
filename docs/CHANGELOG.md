@@ -26,6 +26,10 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **A dub throw, and a rotary speaker (0.17.49).**
+  - **The throw carries on.** Throw (D5 in the FX menu) and the DELAY punch-in now work like a dub mixer's send: let go and the send closes at once, but the repeats stay up for a bar, over the next downbeat, then die away over half a bar. Before, they fell back with the send. Measured with every track muted at the release, one bar on: 4-8 dB more echo left (HOUSE 8 -24.6 dB vs -28.7; HYPNO 8 -31.1 vs -39.1), fading about 3 dB a beat instead of up to 6.
+  - **ROT SLOW and ROT FAST** on the CHORUS page's Type: a rotary speaker on the pluck, the acid or both, its horn sweeping the sound side to side with a little pitch, gliding between the two speeds over about a second. Measured: the level within 0.03 dB of Off, mono as before, no clicks; the swing at 0.80 and 6.70 Hz. It uses the chorus's own delay lines: no memory.
+
 - **Fixes from an outside audit (0.17.48).** Each has a new test that fails on 0.17.47 and passes now.
   - **Keys on the beat were captured a sixteenth late.** Capture and the phrase recorder put a key on the nearest sixteenth by the time the screen saw that sixteenth begin, and they read it after the keys: a key played just after the beat (where most are) was often put on the next sixteenth. They now use the engine's own place in its sixteenth. In the test, two of three keys just after a sixteenth began were put a sixteenth late before; none are now.
   - **A quick tap became a hold to the bar's end.** A tap that began and ended in the back half of a sixteenth got a length of 255 (Capture made it a bass HOLD run or an acid tie). Both ends are now rounded alike; a key held four sixteenths is four (it was three).

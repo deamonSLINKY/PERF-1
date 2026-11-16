@@ -1547,7 +1547,7 @@ The 27 keys run from `F3` to `G5`. On the screen they're laid out in three colum
 | B4 | PHASE | A phaser on the tracks you choose (see below). |
 | C5 | M:DRUMS | Mutes all four drums while held: the classic drop-the-drums move. |
 | C#5 | Riser | A build-up: a filter and the reverb climbing. |
-| D5 | Throw | Throws the mix into the echo. |
+| D5 | Throw | Throws the mix into the echo. Let go and the send closes at once, but the repeats keep going for a bar (over the next downbeat), then die away: a dub throw. |
 | D#5 | Vinyl | Adds record crackle, hiss and pops underneath. |
 | E5 | Fill | Plays a drum fill. |
 | F5 | Low-pass | A low-pass filter that closes in, making the sound darker. |
@@ -1572,7 +1572,7 @@ page; its last knob is **Targets**:
 | Key | Settings |
 |---|---|
 | FILTER | Type (low, high, band, notch, peak), Cutoff, Reso, Targets |
-| DELAY | Send (how much goes into the echo), Repeats (how long it echoes on; it uses the piece's echo time), Targets |
+| DELAY | Send (how much goes into the echo), Repeats (how long it echoes on; it uses the piece's echo time), Targets. Like Throw, its repeats carry on for a bar after you let go. |
 | PHASE | Rate, Depth, Mix (100 is the deepest swirl), Targets |
 
 Hold two of them at once and they share their tracks: both act on everything either one is aimed at. The effect is on a
@@ -2131,7 +2131,7 @@ middle, so the low end stays mono. These are the unit's settings, the same for e
 
 | Knob | What it does |
 |---|---|
-| Type | **Off** (the default), **I** (slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), or **I+II** (a fast, shallow shimmer, close to a vibrato). |
+| Type | **Off** (the default), **I** (slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), **I+II** (a fast, shallow shimmer, close to a vibrato), or a rotary speaker's two speeds: **ROT SLOW** (about 0.8 turns a second) and **ROT FAST** (about 6.7). The rotary sways the sound from side to side with a touch of pitch, like an organ's spinning horn; going from one speed to the other, it speeds up or slows down over about a second, as the real one does. Try it on an organ DX voice on the pluck. |
 | Target | What goes through it: the **Pluck** (its plain sounds and its DX voices; it replaces the DX voices' own ensemble), the **Acid**, or **Both**. |
 
 The level stays where it was, and in mono nothing is lost. It switches off by itself when the load is very high, like the pad's chorus.

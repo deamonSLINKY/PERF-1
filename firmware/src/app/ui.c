@@ -108,7 +108,7 @@ static const char *const INTRO_NAME[6] = {"OFF", "1 MIN", "2 MIN", "4 MIN", "8 M
 static const uint16_t INTRO_S[6] = {0, 60, 120, 240, 480, 0};
 static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const char *const TILT_NAME[4] = {"OFF", "GENRE", "WARMER", "BRIGHTER"};
-static const char *const JC_NAME[4] = {"OFF", "I", "II", "I+II"};   /* the CHORUS page (0.17.44): the Juno's three */
+static const char *const JC_NAME[6] = {"OFF", "I", "II", "I+II", "ROT SLOW", "ROT FAST"};   /* the CHORUS page (0.17.44): the Juno's three; (0.17.49) a rotary's two speeds */
 static const char *const JCT_NAME[3] = {"PLUCK", "ACID", "BOTH"};
 static const char *const LKM_NAME[4] = {"OFF", "AUTO", "LEAD", "FOLLOW"};   /* the LINK page (0.17.47): AUTO, the unit that is the USB host leads */
 static const char *const LKP_NAME[5] = {"ALL", "BEAT", "TOP", "DRUMS", "NO DRUMS"};   /* what this unit plays when linked: BEAT the drums and the bass, TOP the pad, pluck and acid */
@@ -212,7 +212,7 @@ static const struct {
     {"SOUND", FX_SPARE11, 0, {{"Vintage", KN_PLAIN, EN_FXS_VINTAGE, 0, 0}, {"Polish", KN_NAME, EN_FXS_POLISH, ONOFF_NAME, 2},
                        {"Tilt", KN_NAME, EN_FXS_TILT, TILT_NAME, 4}, {"Width", KN_PLAIN, EN_FXS_WIDTH, 0, 0}}},   /* (0.17.30; a spare effect bit: nothing held) the voices' wandering pitch,
                                                     * the master's polish (the lows mono, the peaks rounded), its tilt, the width up top */
-    {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 4}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
+    {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 6}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
     {"LINK", FX_SPARE9, 0, {{"Link", KN_NAME, EN_FXS_LK_MODE, LKM_NAME, 4}, {"Plays", KN_NAME, EN_FXS_LK_PLAYS, LKP_NAME, 5},
                      {"Sections", KN_NAME, EN_FXS_LK_SEC, LKS_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.47; a spare effect bit: nothing held) two units as one band: who leads,
                                                     * what this one plays, the lead's breakdowns and drops followed */
