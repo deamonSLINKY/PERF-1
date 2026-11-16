@@ -47,7 +47,7 @@ void project_start(uint32_t seed);       /* power-on (seed 0: the first piece, e
 void project_apply(void);                /* every value to the engine (boot, a piece) */
 const char *piece_name(int i);           /* "01" .. "10" */
 void project_piece(int i);               /* the playing piece kept as it is, piece i taken up as it was left */
-void project_set_genre(int g);           /* another bank: the pieces as they were left in it (or their recipes), the same number playing */
+int project_set_genre(int g);            /* (-1: the outgoing genre's changes could not be written; it stays) another bank: the pieces as they were left in it (or their recipes), the same number playing */
 void project_piece_save(void);           /* the playing piece, as it is, into the bank */
 void project_piece_factory(void);        /* the playing piece back to its recipe, and out of the bank */
 int ui_kit_write(uint32_t sect, const uint8_t *src, uint32_t len);   /* (0.17.38) a sample kit's sector from the installer: 0 written, 3 not */

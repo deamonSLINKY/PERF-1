@@ -382,7 +382,8 @@ static void bs_load(int g)
 static int bs_save(void)
 {
     uint8_t b[BS_SIZE];
-    int n = plat_store_load(OBJ_BSTEP, b, sizeof b), i, k, diff = 0;
+    const uint16_t d = bs_dirty;                 /* (0.17.48, the audit) the pieces this write is for: cleared only once it is written */
+    int n = plat_store_load(OBJ_BSTEP, b, sizeof b), i, k, diff = 0, r;
     if (!(n >= (int)BS_HDR && rd32(b) == BS_MAGIC && b[4] == BS_LEN)) {
         memset(b, 0, sizeof b);                  /* (none yet: written only once a piece has steps) */
     } else if (n < (int)BS_SIZE) {
@@ -394,7 +395,7 @@ static int bs_save(void)
     b[5] = EN_NGENRE;
     b[6] = b[7] = 0;
     for (i = 0; i < NPIECES; i++)
-        if (bs_dirty >> i & 1u) {
+        if (d >> i & 1u) {
             uint8_t *e = b + BS_HDR + ((uint32_t)proj.genre * NPIECES + (uint32_t)i) * BS_LEN;
             for (k = 0; k < (int)BS_LEN; k++) {
                 const uint8_t v = (saved >> i & 1u) ? proj.slot[i].bs[k] : 0u;
@@ -402,8 +403,10 @@ static int bs_save(void)
                 e[k] = v;
             }
         }
-    bs_dirty = 0;
-    return diff ? plat_store_save(OBJ_BSTEP, b, BS_SIZE) : 0;
+    r = diff ? plat_store_save(OBJ_BSTEP, b, BS_SIZE) : 0;
+    if (r == 0)
+        bs_dirty &= (uint16_t)~d;                /* (a failed write keeps them for the next try: it cleared them first, and the retry had nothing to do) */
+    return r;
 }
 
 /* genre g's extras out of the object (an older or shorter one: as far as it goes; none: every slot the piece's type, FILTERS and SCREAM the
@@ -581,18 +584,20 @@ void project_piece(int i)
 /* the genres: each is its own object in flash (the pieces saved in it, the rest its recipes). A switch brings up the other bank with the
  * same piece number; the changes not saved last while you stay in a genre. (0.15.20: the original genre is like the others: its unsaved
  * changes no longer wait for it while you are in another, which freed 5.5 KB of the tight RAM.) */
-void project_set_genre(int g)
+int project_set_genre(int g)
 {
     g = ((g % EN_NGENRE) + EN_NGENRE) % EN_NGENRE;
     if (g == proj.genre)
-        return;
+        return 0;
     keep();
-    if (pending || pending_px || bs_dirty)
-        project_flush();                     /* (a piece saved but not yet written goes first) */
+    if ((pending || pending_px || bs_dirty) && project_flush() != 0)
+        return -1;                           /* (0.17.48, the audit) a piece saved but not written goes first; if it can't be, the genre stays (the
+                                              * other's image would replace it in RAM, and its changes would be lost) */
     proj.genre = (uint8_t)g;
     image_load(g);
     proj.edited = 0;
     take(proj.piece);
+    return 0;
 }
 
 void project_piece_save(void)

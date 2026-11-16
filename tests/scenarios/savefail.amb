@@ -1,0 +1,81 @@
+# A FAILED WRITE IS NOT LOST (0.17.48, the audit). storefail OBJ N fails the next N writes of a flash object (plat.h: 5 lofi's pieces, 25 the bass
+# steps). A piece's write that fails stays waiting (dirty); a genre switch with it waiting and failing again is refused (the genre stays, the
+# piece in RAM); once a write works, the switch goes on and the piece is there when back. The bass steps' write failing keeps them waiting too
+# (it cleared them first: the retry had nothing to write, and the piece came back with its old steps).
+seed 0
+wait 3000
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+turn PRESET 2
+wait 200
+expect piece 2
+tap ENV
+spin K1 -10
+wait 100
+expect par0 44
+storefail 5 2
+tap GLO
+tap SAVE
+wait 500
+expect dirty 1
+# another genre: refused, nothing lost
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+expect dirty 1
+expect par0 44
+# now the write works: the switch goes on; back, the stored piece
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 2
+expect dirty 0
+press GLO
+turn PRESET -1
+release GLO
+wait 300
+expect genre 1
+expect saved 4
+expect par0 44
+# the bass steps: a step set (Bass steps page), stored; their write fails once, then works
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+tap LFO
+wait 300
+expect view 10
+tapkey 4
+spin K1 -10
+spin K1 2
+wait 100
+expect bskind2 2
+storefail 25 1
+tap GLO
+tap SAVE
+wait 500
+expect dirty 1
+tap PLAY
+wait 3000
+expect dirty 0
+reboot
+wait 3000
+press GLO
+turn PRESET 1
+release GLO
+wait 300
+expect genre 1
+turn PRESET 2
+wait 300
+expect bskind2 2
+# the queue: commands posted faster than the engine takes them are counted (QD on the load line), not silently lost
+flood 2000
+wait 100
+expect qdrops >0
+expect playing 1

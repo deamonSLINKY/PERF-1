@@ -963,6 +963,7 @@ static int knob_get(int k);
 static void knob_range(int k, int *lo, int *hi);
 static void knob_text(int k, char *b);
 static void jam_capture(void);
+static void jam_capture_v(int vc, int bar, int selacc);
 static void gesture_key(void);
 static void acid_keep(void);
 static void scene_reset(void);
@@ -2756,7 +2757,10 @@ static void genre_step(int d)
         return;
     }
     const int g = (proj.genre + d + EN_NGENRE) % EN_NGENRE;
-    project_set_genre(g);
+    if (project_set_genre(g) != 0) {             /* (0.17.48, the audit) the outgoing genre's changes not written: it stays, nothing lost */
+        say("NOT WRITTEN", "GENRE KEPT");
+        return;
+    }
     en_genre(g);
     ui.key_on = 0;
     project_apply();
@@ -3018,7 +3022,11 @@ static void factory_all_tick(void)
     if (!fall.g || ui.store_wait)
         return;
     if (g < EN_NGENRE) {                         /* one genre a tick: loaded, its stored pieces cleared, written */
-        project_set_genre(g);
+        if (project_set_genre(g) != 0) {         /* (0.17.48) a write failed: stopped where it is */
+            fall.g = 0;
+            say("FACTORY STOPPED", "NOT WRITTEN");
+            return;
+        }
         fall.n = (uint16_t)(fall.n + project_factory_genre());
         project_flush();
         fall.g++;
@@ -6557,6 +6565,12 @@ static void cpu_line(char *c)
     }
     if (en_shed_level)
         c[n++] = ' ', c[n++] = 'S', c[n++] = (char)('0' + en_shed_level);
+    if (en_q_drops) {                            /* (0.17.48) commands the engine never got (the queue full): never seen; say if it shows */
+        c[n++] = ' ', c[n++] = 'Q', c[n++] = 'D', c[n++] = ' ';
+        itoa_u(en_q_drops > 999u ? 999u : en_q_drops, c + n);
+        while (c[n])
+            n++;
+    }
     c[n] = 0;
 }
 
@@ -9288,13 +9302,17 @@ static void gesture_key(void)                   /* FX menu, SEL + REC */
         say("GESTURE", "LET GO: THE KNOBS ARE YOURS");
     }
 }
-static uint32_t cap_st_t, cap_st_b;              /* (0.17.31) when the sixteenth playing began (Capture rounds a key to the nearest) */
-static void cap_tick(void)
+/* the sixteenth a key belongs to: the nearest (Capture's and the phrase's). (0.17.48, the audit: it was rounded by the time this frame saw the
+ * sixteenth begin, read after the keys: a key just after the beat was put a sixteenth late. Now the engine's own place in its sixteenth.) */
+static uint32_t t16_now(void)
 {
-    if (en_bars != cap_st_b) {
-        cap_st_b = en_bars;
-        cap_st_t = plat_ms();
-    }
+    uint32_t b;
+    float f;
+    do {
+        b = en_bars;
+        f = en_step_frac;
+    } while (b != en_bars);
+    return b + (f >= 0.5f ? 1u : 0u);
 }
 static void gs_shot_end(void)                   /* AUTO FX's play of the gesture is over: the knobs it still holds back where they were */
 {
@@ -9498,8 +9516,7 @@ static void jam_down_v(int i, int vc)            /* key i on voice vc (JAM's num
         en_note_v(VC[vc], ui.jam_note[i][k], (plat_buttons() >> B_SEL & 1u) ? 127 : 100);   /* SEL held: an accent (0.15.23) */
     }
     if (en_playing && n > 0 && (ph_st == 1 || (ph_st == 2 && vc == ph_vc))) {   /* (0.17.45) the phrase: the first key starts it (from its bar), each written */
-        const int tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
-        const uint32_t t16 = en_bars + (plat_ms() - cap_st_t > 7500u / (uint32_t)tempo ? 1u : 0u);
+        const uint32_t t16 = t16_now();
         if (ph_st == 1) {
             if (vc == 1) {
                 say("PHRASE", "THE ACID, PLUCK OR BASS");
@@ -9522,12 +9539,11 @@ static void jam_down_v(int i, int vc)            /* key i on voice vc (JAM's num
         }
     }
     if (en_playing) {                            /* Capture's memory: the note as heard, when (0.17.31: to the nearest sixteenth), over which chord, on which key and voice */
-        const int w = ui.cap_w & 31, tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
-        const uint32_t half = 7500u / (uint32_t)tempo;
-        ui.cap_t[w] = (uint16_t)(en_bars + (plat_ms() - cap_st_t > half ? 1u : 0u));
+        const int w = ui.cap_w & 31;
+        ui.cap_t[w] = (uint16_t)t16_now();
         ui.cap_deg[w] = en_deg;
         ui.cap_note[w] = nn[0];
-        ui.cap_kv[w] = (uint8_t)(i | vc << 5);
+        ui.cap_kv[w] = (uint8_t)(i | vc << 5 | ((plat_buttons() >> B_SEL & 1u) ? 0x80u : 0u));   /* (0.17.48: bit 7, SEL held: the phrase's accent) */
         ui.cap_len[w] = 0;
         ui.cap_w = (uint8_t)(w + 1);
     }
@@ -9539,16 +9555,18 @@ static void jam_up(int i)
         en_note(ui.jam_vc[i], ui.jam_note[i][k], 0);
     ui.jam_n[i] = 0;
     if (ph_st == 2 && ph_ks[i]) {                /* (0.17.45) the phrase: how long the key was held, to the nearest sixteenth */
-        const int tempo = proj.par[P_TEMPO] > 0 ? proj.par[P_TEMPO] : 120;
-        const uint32_t s = ph_ks[i] - 1u, t16 = en_bars + (plat_ms() - cap_st_t > 7500u / (uint32_t)tempo ? 1u : 0u), held = t16 - (ph_b0 + s);
-        en_ph_len[s] = (uint8_t)((en_ph_len[s] & 0x80u) | (held < 1u || held > 0x7FFFu ? 1u : held > 127u ? 127u : held));
+        const uint32_t s = ph_ks[i] - 1u, held = t16_now() - (ph_b0 + s);
+        if (en_ph_note[s] == ui.jam_note[i][0])  /* (0.17.48) the step's own key: one a later key took over leaves its length alone */
+            en_ph_len[s] = (uint8_t)((en_ph_len[s] & 0x80u) | (held < 1u || held > 0x7FFFu ? 1u : held > 127u ? 127u : held));
         ph_ks[i] = 0;
     }
     for (k = 1; k <= 32; k++) {                  /* Capture's memory: how long the key was held (the latest event of this key still open) */
         const int w = (ui.cap_w - k) & 31;
         if (ui.cap_note[w] && (ui.cap_kv[w] & 31) == i && !ui.cap_len[w]) {
-            const uint32_t held = en_bars - ui.cap_t[w];
-            ui.cap_len[w] = (uint8_t)(held < 1u ? 1u : held > 255u ? 255u : held);
+            const uint32_t held = (uint16_t)((uint16_t)t16_now() - ui.cap_t[w]);   /* (0.17.48, the audit: both ends rounded alike, in the 16 bits the
+                                                                                       * memory keeps; a tap in a sixteenth's back half wrapped to 255,
+                                                                                       * a hold to the bar's end) */
+            ui.cap_len[w] = (uint8_t)(held < 1u || held > 0x7FFFu ? 1u : held > 255u ? 255u : held);
             break;
         }
     }
@@ -9615,7 +9633,7 @@ static void ph_close(uint32_t len, int late)    /* the phrase handed to the engi
     for (i = 0; i < NKEYS; i++)                  /* keys still down: held to the end (one pressed after it, in the next bar: not in it) */
         if (ph_ks[i]) {
             s = ph_ks[i] - 1u;
-            if (s < len)
+            if (s < len && en_ph_note[s] == ui.jam_note[i][0])
                 en_ph_len[s] = (uint8_t)((en_ph_len[s] & 0x80u) | (len - s > 127u ? 127u : len - s));
             ph_ks[i] = 0;
         }
@@ -9624,7 +9642,8 @@ static void ph_close(uint32_t len, int late)    /* the phrase handed to the engi
     ph_st = 3;
     en_phrase(VC[ph_vc & 3], (int)len | (late ? 0x100 : 0));
     if (len == 16u) {
-        jam_capture();                           /* (one bar: kept in the line too, with the piece) */
+        jam_capture_v(ph_vc & 3, (int)(ph_b0 & 0xFFF0u), 1);   /* (one bar: kept in the line too, with the piece: 0.17.48, the audit, its own bar, voice
+                                                                * and accents, not Capture's busiest bar of the voice on the page) */
         say("PHRASE PLAYS", "AND IS KEPT IN THE LINE");
     } else {
         char t[20] = "PHRASE PLAYS: 2 BARS";
@@ -9636,9 +9655,10 @@ static void ph_close(uint32_t len, int late)    /* the phrase handed to the engi
  * next step a slide), the pluck's loop (16 slots, Deja vu at 100, the loop from the next bar) or (0.17.31) the bass steps, by the page's voice.
  * (0.17.31, "it doesn't play back as played": each note is kept with the chord it was played over, not the one at SEL + REC; a key a little early
  * counts on the step it was meant for; the acid line plays from the bar's step it was played on.) */
-static void jam_capture(void)
+static void jam_capture(void) { jam_capture_v(ui.jam_voice & 3, -1, 0); }   /* the page's voice: its keys are the ones captured */
+static void jam_capture_v(int vc, int bar, int selacc)   /* (0.17.48) bar >= 0: that bar (a phrase's), else the busiest of the last four; selacc: accents
+                                                         * as SEL gave them (the phrase's), else a key on a beat */
 {
-    const int vc = ui.jam_voice & 3;             /* the page's voice: its keys are the ones captured */
     int k, last = -1, s;
     uint32_t bar0;
     if (vc == 1) {
@@ -9647,7 +9667,7 @@ static void jam_capture(void)
     }
     for (k = 1; k <= 32; k++) {
         const int w = (ui.cap_w - k) & 31;
-        if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc) {
+        if (ui.cap_note[w] && (ui.cap_kv[w] >> 5 & 3) == vc) {
             last = w;
             break;
         }
@@ -9658,19 +9678,21 @@ static void jam_capture(void)
     }
     bar0 = (uint32_t)ui.cap_t[last] & ~15u;       /* the bar the last key fell in, or (0.17.31) of the last four bars the one with the most keys (the latest of
                                                  * equals): a last key on the next bar's one left the phrase behind it out */
-    {
+    if (bar >= 0) {
+        bar0 = (uint32_t)bar;
+    } else {
         int best = 0, j;
         for (k = 1; k <= 32; k++) {
             const int w = (ui.cap_w - k) & 31;
             uint32_t b;
             int n = 0;
-            if (!ui.cap_note[w] || (ui.cap_kv[w] >> 5) != vc)
+            if (!ui.cap_note[w] || (ui.cap_kv[w] >> 5 & 3) != vc)
                 continue;
             b = (uint32_t)ui.cap_t[w] & ~15u;
             if ((uint16_t)((uint16_t)ui.cap_t[last] - (uint16_t)b) > 63u)
                 continue;
             for (j = 0; j < 32; j++)
-                if (ui.cap_note[j] && (ui.cap_kv[j] >> 5) == vc && ((uint32_t)ui.cap_t[j] & ~15u) == b)
+                if (ui.cap_note[j] && (ui.cap_kv[j] >> 5 & 3) == vc && ((uint32_t)ui.cap_t[j] & ~15u) == b)
                     n++;
             if (n > best) {                      /* (the latest first: a later bar wins a tie) */
                 best = n;
@@ -9682,13 +9704,14 @@ static void jam_capture(void)
          * into (the 303's tie); held when SEL + REC came (length 0), it holds to the bar's end */
         int hold_to = -1, hn = -1, hd = 0;
         for (s = 0; s < 16; s++) {
-            int note = -1, len = 0, dg = 0;
+            int note = -1, len = 0, dg = 0, ac = 0;
             for (k = 1; k <= 32; k++) {          /* the first key of this voice on this step (the latest events first, so the earliest wins) */
                 const int w = (ui.cap_w - k) & 31;
-                if (ui.cap_note[w] && (ui.cap_kv[w] >> 5) == vc && (uint32_t)ui.cap_t[w] == bar0 + (uint32_t)s) {
+                if (ui.cap_note[w] && (ui.cap_kv[w] >> 5 & 3) == vc && (uint32_t)ui.cap_t[w] == bar0 + (uint32_t)s) {
                     note = ui.cap_note[w];
                     len = ui.cap_len[w];
                     dg = ui.cap_deg[w];
+                    ac = selacc ? ui.cap_kv[w] >> 7 : (s & 3) == 0;
                 }
             }
             if (note >= 0) {
@@ -9698,12 +9721,12 @@ static void jam_capture(void)
             }
             if (vc == 2) {
                 if (note >= 0 || s <= hold_to)  /* the note, or the held note again; slid into the next step while the key is still down there */
-                    en_acid_capture_d(s, hn, hd, note >= 0 && (s & 3) == 0, s < hold_to);
+                    en_acid_capture_d(s, hn, hd, note >= 0 && ac, s < hold_to);
                 else
                     en_acid_step(s, 0, 0, 0, 0, 0);
             } else if (vc == 3) {
                 if (note >= 0)
-                    en_bass_capture_d(s, note, dg, (s & 3) == 0, 0);
+                    en_bass_capture_d(s, note, dg, ac, 0);
                 else if (s <= hold_to)
                     en_bass_step(s, EN_BS_MAKE(EN_BS_HOLD, 0, 1));
                 else
@@ -10394,7 +10417,6 @@ void ui_frame(void)
     key_tick();
     glide_tick();
     gesture_tick();
-    cap_tick();
     phrase_tick();
     lk_tick();
     ci_tick();

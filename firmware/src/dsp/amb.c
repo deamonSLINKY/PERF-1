@@ -1167,11 +1167,14 @@ volatile uint8_t en_hushed;                      /* faded right out: the flash c
 #define QN 1024u                                 /* about seven times every parameter at once (project_apply, a piece, a genre): a quick flick of PRESETS filled 256 and dropped commands */
 static uint32_t q[QN];
 static volatile uint32_t q_w, q_r;
+volatile uint32_t en_q_drops;
 static void post(uint32_t c, int a, int b)
 {
     uint32_t w = q_w;
-    if (w - q_r >= QN)
-        return;                                   /* full: dropped (never, at the UI's rate) */
+    if (w - q_r >= QN) {
+        en_q_drops++;                             /* full: dropped (never seen at the UI's rate; counted since 0.17.48, the audit) */
+        return;
+    }
     q[w % QN] = c << 24 | ((uint32_t)a & 0xFFu) << 16 | ((uint32_t)b & 0xFFFFu);
     BARRIER();
     q_w = w + 1;
@@ -1268,6 +1271,7 @@ volatile uint8_t en_lane_pos[EN_NLANE];         /* and each lane's own (it may b
 volatile float en_drum_glow[EN_NDRUM];
 volatile uint8_t en_pat_now, en_pat_next;
 volatile uint32_t en_bars;
+volatile float en_step_frac;
 volatile uint8_t en_deg;                         /* (0.17.31) the chord's scale degree now (Capture keeps it with each note played) */
 static uint8_t ac_barsync;                       /* (0.17.31) a line just captured: on the next step the line's step is the bar's */
 volatile float en_arc;
@@ -4742,6 +4746,7 @@ static void tick(void)
         drift_left = (float)(hr_left + 1) * 16.0f * step_len;
     }
     sixteenth++;
+    en_step_frac = 0.0f;                         /* (0.17.48: first, so the UI never sees the new sixteenth with the old one's place) */
     en_bars = sixteenth;
 }
 
@@ -7063,6 +7068,11 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
                 cp_hl += (pl[j + i] - cp_hl) * 0.0142f;
                 cp_hr += (pr[j + i] - cp_hr) * 0.0142f;
                 d = fm_maxf(d, fm_maxf(fm_fabsf(pl[j + i] - cp_hl), fm_fabsf(pr[j + i] - cp_hr)));
+            }
+            if (!(d < 64.0f)) {                 /* (0.17.48, the audit) a sample that is not a number: the detector's filters cleared, or they would keep it
+                                                 * and the compressor would stop for good */
+                cp_hl = cp_hr = 0.0f;
+                d = 0.0f;
             }
             lv = 6.0206f * fm_log2f(d + 1e-9f) - cp_thr;
             if (lv > 3.0f)
@@ -9453,6 +9463,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     step_t += (int32_t)n;
+    en_step_frac = step_len > 1.0f ? fm_minf((float)step_t / step_len, 0.999f) : 0.0f;   /* (0.17.48) for the UI's keys */
 }
 
 /* the arc: a slow tide, minutes long, between sparse (-1) and full (+1); Motion sets how far it goes */

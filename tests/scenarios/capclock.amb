@@ -1,0 +1,50 @@
+# THE STEP CLOCK (0.17.48, the audit): a Jam key goes on the nearest sixteenth by the engine's own place in it (en_step_frac). Before, it was rounded
+# by the time the UI's frame saw the sixteenth begin, read after the keys: a key just after the beat was often put on the next sixteenth. And a tap
+# wholly in a sixteenth's back half wrapped its length to 255 (a hold to the bar's end); now both ends are rounded alike.
+seed 0
+wait 3000
+turn SELECT 36 100
+expect view 36
+spin K1 3
+wait 100
+expect jamv 3
+# just after a sixteenth begins: on that one (three times)
+waitfor stepphase <9 2000
+key 0 down
+wait 1
+expect capdelta 0
+key 0 up
+wait 300
+waitfor stepphase <9 2000
+key 2 down
+wait 1
+expect capdelta 0
+key 2 up
+wait 300
+waitfor stepphase <9 2000
+key 4 down
+wait 1
+expect capdelta 0
+key 4 up
+wait 300
+# past its middle: on the next
+waitfor stepphase >62 2000
+key 5 down
+wait 1
+expect capdelta 1
+# released before that next one comes (the same sixteenth still playing): one sixteenth long, not 255
+waitfor stepphase >85 2000
+key 5 up
+wait 1
+expect caplen 1
+wait 300
+# held about four sixteenths: four
+waitfor stepphase <9 2000
+key 7 down
+wait 1
+expect capdelta 0
+waitfor stepphase >40 2000
+wait 375
+key 7 up
+wait 1
+expect caplen 4

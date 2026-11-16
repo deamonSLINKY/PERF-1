@@ -2461,6 +2461,7 @@ On the home pages, under the drum pattern, there's a line like `CPU 41 XR 0`, wi
 | C1 | The second processor stopped after a fault, and everything runs on one until you switch off. Switching off and on again brings it back. |
 | S1 | The FM-1 is easing off to keep up. The pad's chorus is off and the DX voices are limited to four notes at once. |
 | S2 | Easing off further. The DX voices are limited to two notes. |
+| QD n | Commands the sound engine never got because too many came at once (a knob turned, a piece loaded). It has never been seen; if it shows, a setting may not have taken, so say so. |
 
 The FM-1 eases off one step when there's a dropout, or when it nearly runs out of time six times within ten seconds. It goes back one step after twenty seconds without either. With `S1` or `S2` on, the sound is a little thinner, but not broken.
 

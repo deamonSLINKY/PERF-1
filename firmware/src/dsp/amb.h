@@ -454,6 +454,9 @@ extern volatile uint32_t en_dd_changes, en_dd_mutations;   /* changes made and m
 extern volatile uint8_t en_mod[EN_NLANE][16];   /* a piece's step tricks: ratchet (bits 0-2: off, x2, x3, x4, x6, flam, swell x3, swell x4), push (3-5: n/12 of a step late), level (6-7: normal, ghost, soft, accent) */
 extern volatile uint16_t en_pats[EN_NPAT][EN_NLANE];   /* the patterns: bit s, a hit on step s (the UI edits) */
 extern volatile uint32_t en_bars;              /* sixteenths played since start (for tests) */
+extern volatile float en_step_frac;            /* (0.17.48) how far into that sixteenth the engine is (0 .. 1), at the end of its last chunk: the UI's keys
+                                                * are put on the nearest sixteenth by it (it read its own frame's clock before, a frame late) */
+extern volatile uint32_t en_q_drops;           /* (0.17.48) commands dropped with the queue full (never seen; on the load line as QD if it happens) */
 extern volatile float en_arc;                  /* the arc, -1 sparse .. +1 full (times Motion) */
 extern volatile uint8_t en_pulse_rest;         /* the pulse is out (a breakdown) */
 extern volatile uint8_t en_pad_note[EN_NPAD];  /* the note each voice sings now (MIDI) */

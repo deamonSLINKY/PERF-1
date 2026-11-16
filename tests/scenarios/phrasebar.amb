@@ -1,0 +1,60 @@
+# A ONE-BAR PHRASE SAVES WHAT IT PLAYS (0.17.48, the audit): the bar written into the line is the phrase's own bar, voice and accents (SEL held).
+# Before, it was Capture's: the busiest of the last four bars of the voice on the page, accents on the beats, so a busy bar played before the
+# phrase was saved in its place.
+seed 0
+wait 3000
+turn SELECT 36 100
+expect view 36
+spin K1 3
+wait 100
+expect jamv 3
+# a busy bar first, not recorded: six short keys
+waitfor barstep 1 3000
+key 0 down
+wait 50
+key 0 up
+wait 150
+key 2 down
+wait 50
+key 2 up
+wait 150
+key 4 down
+wait 50
+key 4 up
+wait 150
+key 5 down
+wait 50
+key 5 up
+wait 150
+key 7 down
+wait 50
+key 7 up
+wait 150
+key 9 down
+wait 50
+key 9 up
+# the phrase: REC, two keys early in a bar (the first with SEL: an accent), REC ends it with that bar
+tap REC
+expect phrase 1
+waitfor barstep 1 3000
+press SEL
+key 4 down
+wait 50
+key 4 up
+release SEL
+wait 250
+key 7 down
+wait 50
+key 7 up
+wait 100
+tap REC
+waitfor phrase 3 4000
+wait 100
+expect ph_n 16
+expect bssteps 2
+expect bsaccents 1
+# let go: the line plays what was kept
+tap REC
+wait 100
+expect phrase 0
+expect bssteps 2

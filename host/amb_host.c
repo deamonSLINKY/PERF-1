@@ -188,12 +188,17 @@ int plat_raw_write(uint32_t off, const void *src, uint32_t len)
     return 0;
 }
 const uint8_t *plat_raw_ptr(uint32_t off) { return off >= PLAT_RAW_LO && off < PLAT_RAW_HI ? raw_flash + (off - PLAT_RAW_LO) : 0; }
+static int sf_obj = -1, sf_n;                   /* (0.17.48) storefail OBJ N: the next N writes of object OBJ fail */
 int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 {
     if (obj >= OBJ_NOBJ || len > PLAT_STORE_MAX)
         return -1;
     if (store_lock)
         return -8;
+    if ((int)obj == sf_obj && sf_n > 0) {
+        sf_n--;
+        return -3;
+    }
     memcpy(store[obj], src, len);
     store_len[obj] = (int)len;
     store_writes++;
@@ -584,6 +589,26 @@ static int expect(const char *what, const char *val)
         int en_test_lk(int w);
         got = en_test_lk(what[2] == 'q' ? 0 : 1);
     }
+    else if (!strcmp(what, "capt"))              /* (0.17.48) Capture's last key: its sixteenth (16 bits), how long it was held */
+        got = ui.cap_t[(ui.cap_w - 1) & 31];
+    else if (!strcmp(what, "caplen"))
+        got = ui.cap_len[(ui.cap_w - 1) & 31];
+    else if (!strcmp(what, "capstep"))           /* its place in its bar (0..15) */
+        got = ui.cap_t[(ui.cap_w - 1) & 31] & 15;
+    else if (!strcmp(what, "capdelta"))          /* (0.17.48) Capture's last key: its sixteenth less the one playing now (0 on it, 1 the next) */
+        got = (int16_t)(uint16_t)(ui.cap_t[(ui.cap_w - 1) & 31] - (uint16_t)en_bars);
+    else if (!strcmp(what, "barstep"))           /* the sixteenth in its bar now (0..15) */
+        got = (int)(en_bars & 15u);
+    else if (!strcmp(what, "bsaccents")) {       /* (0.17.48) the bass steps that are accents (kinds 2 and 4) */
+        int s3;
+        got = 0;
+        for (s3 = 0; s3 < 16; s3++)
+            got += EN_BS_KIND(en_bs[s3]) == 2 || EN_BS_KIND(en_bs[s3]) == 4;
+    }
+    else if (!strcmp(what, "stepphase"))         /* (0.17.48) how far into its sixteenth the engine is, in hundredths */
+        got = (int)(en_step_frac * 100.0f);
+    else if (!strcmp(what, "qdrops"))            /* (0.17.48) the engine's commands dropped */
+        got = (int)en_q_drops;
     else if (!strcmp(what, "sixteenths"))
         got = (int)en_bars;
     else if (!strcmp(what, "fillq")) {           /* (0.17.16) fills asked of the engine (the song place's last bar) */
@@ -1199,6 +1224,13 @@ int main(int argc, char **argv)
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "fxpageset")) {      /* (0.17.19) fxpageset N: the effects' page N up (as the walk reaches it), for pictures */
             ui.fx_page = (uint8_t)atoi(a);
+        } else if (!strcmp(cmd, "storefail")) {      /* (0.17.48) storefail OBJ N: the next N writes of object OBJ fail (plat.h's OBJ_*) */
+            sf_obj = atoi(a);
+            sf_n = atoi(b);
+        } else if (!strcmp(cmd, "flood")) {          /* (0.17.48) flood N: N commands posted at once, no render between (the queue's 1024) */
+            int k2;
+            for (k2 = 0; k2 < atoi(a); k2++)
+                en_set(P_TEMPO, proj.par[P_TEMPO]);
         } else if (!strcmp(cmd, "midireset")) {      /* (0.17.47) the MIDI out counts from zero */
             midi_out_count = clock_out_count = noteon_out_count = 0;
             memset(cc_out_n, 0, sizeof cc_out_n);
