@@ -303,6 +303,7 @@
       <button id="lkConn">Connect my FM-1</button>
       <label class="muted"><input type="checkbox" id="lkLive" disabled> <b>Live</b>: the FM-1 plays the studio's settings and the DX voice you edit, as you change them</label>
       <label class="muted"><input type="checkbox" id="lkTog" checked disabled> <b>Play together</b>: Play and Stop on either one start and stop both, in time (the one you press leads, the other follows its clock). Keeps the USB port while ticked</label>
+      <span class="muted" id="lkDiag" style="font-size:.78rem;font-family:monospace"></span>
       <button id="lkPush" disabled>Send the piece's settings now</button>
       <button id="lkPull" disabled>Take the FM-1's settings into the piece</button>
       <button id="lkVox" disabled>Take the FM-1's DX voices</button>
@@ -3211,7 +3212,7 @@ $("saveEmu").addEventListener("click", async () => {
  * into its slot a moment after the last change. The player's own three (Tune, MIDI out, the theme) are never sent. The port is let go after 4 s quiet
  * unless Live is on (fm1idle.js: Windows gives a USB MIDI port to one program at a time). */
 var lk = { on: false, live: false, same: false, port: null, val: null, got: 0, pend: new Map(), t: 0, sT: 0, vT: 0, busy: 0, nvox: -1,
-           acks: [], slotW: null, dumpW: null, aboutW: null, vBusy: false, vAgain: false, map: new Map(), vslot: -1, tog: true, lead: "", clk: null };
+           acks: [], slotW: null, dumpW: null, aboutW: null, vBusy: false, vAgain: false, map: new Map(), vslot: -1, tog: true, lead: "", clk: null, rx: [0, 0, 0], tx: [0, 0, 0], why: "" };
 const LK_SKIP = new Set(["P_TUNE", "P_MIDI", "P_THEME"].map((k) => PE[k]).filter((p) => p !== undefined));
 const lkSay = (t, warn) => { $("lkStat").textContent = t; if (warn || !$("lkMenu").open) say(t, warn); };
 function lkShow() {
@@ -3239,7 +3240,7 @@ async function lkOpen() {
   inp.onmidimessage = (ev) => {
     const d = Array.from(ev.data);
     idleTouch();
-    if (d[0] >= 0xF8) return lkRt(d[0]);
+    if (d[0] >= 0xF8) { const j = d[0] === 0xF8 ? 1 : d[0] === 0xFC ? 2 : d[0] === 0xFA || d[0] === 0xFB ? 0 : -1; if (j >= 0) lk.rx[j]++; return lkRt(d[0]); }
     if (d[3] === 0x45 && d[0] === 0xF0 && lk.aboutW) return lk.aboutW(pcParseAbout(d));
     const r = lkParse(d);
     if (!r) return;
@@ -3400,16 +3401,19 @@ let lkWas = false;
 function lkTransport(on) {                                     // the studio's play and stop, as they happen (any way: the button, Space, the song)
   if (on === lkWas) return;
   lkWas = on;
-  if (on) { if (lk.on && lk.tog && lk.port && lk.lead !== "unit") lkClockStart(); }
+  if (on) {
+    lk.why = !lk.on ? "not connected" : !lk.tog ? "Play together is off" : "";
+    if (lk.on && lk.tog && lk.lead !== "unit") { if (lk.port) lkClockStart(); else lkOpen().then(lkClockStart, (e) => { lk.why = e.message; }); }
+  }
   else {
     if (lk.lead === "studio") lkClockStop();
-    else if (lk.lead === "unit" && lk.port && !(performance.now() - (lk.uStop || 0) < 1500)) try { lk.port.out.send([0xFC]); } catch (_) {}   // (Stop here: the unit too)
+    else if (lk.lead === "unit" && lk.port && !(performance.now() - (lk.uStop || 0) < 1500)) try { lk.port.out.send([0xFC]); lk.tx[2]++; } catch (_) {}   // (Stop here: the unit too)
     lk.lead = "";
   }
 }
 function lkClockStart() {
   const t0 = performance.now() + 10;
-  try { lk.port.out.send([0xFA], t0); } catch (e) { return lkLost(e.message); }
+  try { lk.port.out.send([0xFA], t0); lk.tx[0]++; } catch (e) { lk.why = e.message; return lkLost(e.message); }
   lk.lead = "studio";
   lk.clk = { next: t0 + 1, tm: setInterval(lkClockRun, 20) };
   lkClockRun();
@@ -3420,14 +3424,14 @@ function lkClockRun() {
   if (!lk.port) return lkClockStop(true);
   const now = performance.now(), bpm = Math.max(20, parV(PE.P_TEMPO) || 120);
   if (c.next < now - 100) c.next = now;                        // (the page held up: on from now, no burst)
-  try { while (c.next < now + 80) { lk.port.out.send([0xF8], c.next); c.next += 2500 / bpm; } } catch (e) { lkClockStop(true); lkLost(e.message); }
+  try { while (c.next < now + 80) { lk.port.out.send([0xF8], c.next); lk.tx[1]++; c.next += 2500 / bpm; } } catch (e) { lkClockStop(true); lkLost(e.message); }
   idleTouch();
 }
 function lkClockStop(quiet) {
   const c = lk.clk;
   lk.clk = null;
   if (c) clearInterval(c.tm);
-  if (!quiet && c && lk.port) try { lk.port.out.send([0xFC], performance.now() + 85); } catch (_) {}   // (after the clocks already stamped)
+  if (!quiet && c && lk.port) try { lk.port.out.send([0xFC], performance.now() + 85); lk.tx[2]++; } catch (_) {}   // (after the clocks already stamped)
 }
 idleRelease(() => lk.live || lk.busy > 0 || (lk.on && lk.tog), () => { lk.port = null; });
 $("lkConn").addEventListener("click", lkConnect);
@@ -3458,6 +3462,12 @@ $("lkTog").addEventListener("change", (e) => {
   lkShow();
 });
 $("lkMenu").addEventListener("toggle", lkShow);
+setInterval(() => {                                          // what Play together has seen and sent (start, clocks, stop): for telling where it stops
+  if (!$("lkMenu").open || !lk.on) { if ($("lkDiag").textContent) $("lkDiag").textContent = ""; return; }
+  const t = "From the FM-1: start " + lk.rx[0] + ", clock " + lk.rx[1] + ", stop " + lk.rx[2] + ". To it: start " + lk.tx[0] + ", clock " + lk.tx[1] + ", stop " + lk.tx[2] + "." +
+    (lk.lead ? " Leads: " + (lk.lead === "unit" ? "the FM-1" : "the studio") + "." : "") + (lk.why ? " Not sent: " + lk.why + "." : "") + (lk.val && lk.val[PE.P_MIDI] === 0 ? " The FM-1's MIDI out is off." : "");
+  if ($("lkDiag").textContent !== t) $("lkDiag").textContent = t;
+}, 300);
 lkShow();
 
 
