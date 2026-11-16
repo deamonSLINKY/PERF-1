@@ -454,7 +454,7 @@ columns are **KNOB1** to **KNOB4**.
 | Deja vu | **ARP** x8 | Pluck vu (0 always new notes, 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (notes jumping an octave) | Motif (0 off to 100: how often a bar reworks the phrase's first bar) |
 | Pluck steps | **ARP** x9 | Step (pick a step with a white key: rest, soft, note, accent) | Note (1-12: the chord's notes, low to high) | Octave (the pluck's, -2 to +2) | Frozen (free, frozen) |
 | Drums | **SEQ** | Level | Drive | Swing (50-75 %) | Pattern (1-6, changes on the bar) |
-| Links | **SEQ** x2 | K>Bass | S>Pad | H>Acid | P>Clock (off, clock) |
+| Links | **SEQ** x2 | K>Bass | S>Pad | H>Acid | - |
 | Kit | **SEQ** x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Drum drift | **SEQ** x4 | Change (off, next, random; off lets the Settings page's Form decide) | Every (each chord, or 4-64 bars) | Pool (patterns 1-2 up to 1-6) | Mutate (off, shift, morph) |
 | Groove | **SEQ** x5 | Lane (kick to perc) | Density (0-100; 50 plays as written) | Source (follow, or pattern 1-6) | All dens (every lane's density at once) |
@@ -1306,10 +1306,8 @@ each one on the **Links** page (press **SEQ** twice). 0 means off. They're store
 | K>Bass | Each kick opens the bass's filter, which then closes again over the beat. The bass rolls along with your kick pattern. The amount sets how far it opens and how long it takes to close. |
 | S>Pad | Each snare or clap flashes the pad's filter open and makes it a little louder, so the pad answers the backbeat. |
 | H>Acid | A hat that lands on an acid note accents it. Busier hats make a squelchier 303. |
-| P>Clock | The acid line only moves on when the perc lane hits, so the perc pattern in the sequencer becomes the acid's rhythm. In a breakdown or build, when the drums drop out, the acid runs free again. |
 
-Muting a drum with FX silences it, but its hits still drive the links. Mute the perc and it becomes a silent clock
-for the acid.
+Muting a drum with FX silences it, but its hits still drive the links.
 
 ---
 

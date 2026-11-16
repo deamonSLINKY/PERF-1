@@ -1769,8 +1769,7 @@ static float stab_env, stab_k = 0.99f;          /* the pad's stabs: the envelope
 /* ---------------------------------------------------------------- links --- */
 /* The drums patched into the voices (P_LINKS on, SEL + SEQ): each kick opens the drone's filter for a
  * moment (a rolling bass from the kick's pattern), each snare or clap flashes the pad's filter open, a
- * hat on an acid note accents it, and the perc lane can be the acid's clock (it steps only on a perc
- * hit; in a breakdown, with the drums out, it runs free again). Each by its amount (0: none). */
+ * hat on an acid note accents it. Each by its amount (0: none). (The perc lane as the acid's clock: retired in 0.17.50.) */
 static float lk_kick, lk_snare;                 /* their envelopes, 1 at a hit, falling */
 static uint8_t lk_hat;                          /* a hat on this sixteenth */
 static int links_on(void);
@@ -4724,12 +4723,9 @@ static void tick(void)
         ac_pos = st % (par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN]);
     }
     drop_imp = 0;
-    if (links_on() && par[P_LK_PERC] && sec == SEC_GROOVE) {
-        if (perc_hit)
-            acid_step(loose(sw, 6.0f));         /* the links: the perc lane is the acid's clock */
-    } else {
-        acid_step(loose(sw, 6.0f));
-    }
+    (void)perc_hit;                             /* (0.17.50: P>Clock retired, the maker: "it just removes sound"; the perc lane clocked the acid, which
+                                                 * in most pieces left it nearly still. P_LK_PERC stays in the pieces, unread.) */
+    acid_step(loose(sw, 6.0f));
     cm_step(st, sw);
     if (st == 0 && change_pending && !en_frozen) {   /* chords move on the bar */
         change_pending = 0;

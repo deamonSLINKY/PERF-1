@@ -26,6 +26,8 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 0.17.1)
 
+- **P>Clock retired (0.17.50).** "It just removes sound when I turn it on." The Links page's fourth knob made the perc lane the acid's clock: the acid stepped on only when the perc hit, and with the sparse perc of most pieces it all but stopped. It's gone (the knob turns nothing; a piece that had it on plays its acid as usual). K>Bass, S>Pad and H>Acid stay: they only add (a filter opened, an accent).
+
 - **A dub throw, and a rotary speaker (0.17.49).**
   - **The throw carries on.** Throw (D5 in the FX menu) and the DELAY punch-in now work like a dub mixer's send: let go and the send closes at once, but the repeats stay up for a bar, over the next downbeat, then die away over half a bar. Before, they fell back with the send. Measured with every track muted at the release, one bar on: 4-8 dB more echo left (HOUSE 8 -24.6 dB vs -28.7; HYPNO 8 -31.1 vs -39.1), fading about 3 dB a beat instead of up to 6.
   - **ROT SLOW and ROT FAST** on the CHORUS page's Type: a rotary speaker on the pluck, the acid or both, its horn sweeping the sound side to side with a little pitch, gliding between the two speeds over about a second. Measured: the level within 0.03 dB of Off, mono as before, no clicks; the swing at 0.80 and 6.70 Hz. It uses the chorus's own delay lines: no memory.

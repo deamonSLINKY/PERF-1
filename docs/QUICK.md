@@ -73,7 +73,7 @@
 | Deja vu | ARP x8 | Pluck vu (0 new .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Motif (develop the first bar) |
 | Pluck steps | ARP x9 | Step (rest, soft, note, accent) | Note (1-12, the chord's notes low to high) | Octave (-2 to +2) | Frozen (free, frozen) |
 | Drums | SEQ | Level | Drive | Swing (50-75 %) | Pattern (1-6, on the bar) |
-| Links | SEQ x2 | K>Bass | S>Pad | H>Acid | P>Clock (off, clock) |
+| Links | SEQ x2 | K>Bass | S>Pad | H>Acid | - |
 | Kit | SEQ x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
 | Drum drift | SEQ x4 | Change (off, next, random) | Every (the chord, 4-64 bars) | Pool (patterns 1-2 .. 1-6) | Mutate (off, shift, morph) |
 | Groove | SEQ x5 | Lane (kick .. perc) | Density (0-100; 50 as written) | Source (follow, pattern 1-6) | All dens |
@@ -280,7 +280,7 @@ KNOB1 picks the lane, a **white key** the step; the other knobs set that step. *
 
 ### Links (SEQ x2)
 
-Drum hits push the other voices, 0 to 100 each; **SEL + SEQ** turns them all on and off (`+LINK`). **K>Bass**: each kick opens the bass's filter, closing again over the beat. **S>Pad**: each snare or clap flashes the pad's filter open. **H>Acid**: a hat on an acid note accents it. **P>Clock**: the acid line steps on only when the perc hits (free again in a breakdown or build). A muted drum still drives its link, so a muted perc is a silent clock for the acid.
+Drum hits push the other voices, 0 to 100 each; **SEL + SEQ** turns them all on and off (`+LINK`). **K>Bass**: each kick opens the bass's filter, closing again over the beat. **S>Pad**: each snare or clap flashes the pad's filter open. **H>Acid**: a hat on an acid note accents it. A muted drum still drives its link.
 
 **The Drums page:** Level, Drive, Swing (50-75 %: how late the off-beats land; the acid, bass line, stabs and pluck follow it) and Pattern. Store the piece (Global, SAVE) to keep edits.
 

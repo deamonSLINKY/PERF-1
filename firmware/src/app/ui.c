@@ -264,7 +264,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {K_PSLV, K_PSNO, P_CM_OCT, P_CM_LOCK},         /* the pluck's steps, laid out as the acid's: the step chosen (a white key): its kind (rest, soft, note, accent), its note (the chord's
                                                     * tones, low to high); the pluck's octave; and whether the line is frozen (held, and stored with the piece) */
     {P_PULSE, P_DRIVE, P_SWING, P_PATTERN},
-    {P_LK_KICK, P_LK_SNARE, P_LK_HAT, P_LK_PERC},
+    {P_LK_KICK, P_LK_SNARE, P_LK_HAT, K_NONE},     /* (0.17.50: P>Clock retired) */
     {P_KIT_KICK, P_KIT_SNARE, P_KIT_HAT, P_KIT_PERC},
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {K_GRT, K_GRD, K_GRS, K_GRA},                  /* the groove: a lane chosen, its density, the pattern it plays, and all lanes' density */
@@ -307,7 +307,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Pluck vu", "Loop", "Leaps", "Motif"},
     {"Step", "Note", "Octave", "Frozen"},
     {"Level", "Drive", "Swing", "Pattern"},
-    {"K>Bass", "S>Pad", "H>Acid", "P>Clock"},
+    {"K>Bass", "S>Pad", "H>Acid", ""},
     {"Kick", "Snare", "Hats", "Perc"},
     {"Change", "Every", "Pool", "Mutate"},
     {"Lane", "Density", "Source", "All dens"},
