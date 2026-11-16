@@ -1,4 +1,4 @@
-# Capture (SEL + REC, 0.14.8; 0.17.45: pressed off the JAM page, where SEL + REC is the phrase recorder): the bar played on the Jam page becomes the pluck's loop (Deja vu at 100, 16 slots) or the acid's frozen line.
+# Capture (SEL + REC, 0.14.8; 0.17.45: pressed off the JAM page; 0.17.46: on JAM too, REC alone is the phrase recorder there): the bar played on the Jam page becomes the pluck's loop (Deja vu at 100, 16 slots) or the acid's frozen line.
 # At 128 BPM a beat is 469 ms: four keys a beat apart, twice over, so the last bar holds a key on each beat whatever the phase.
 seed 0
 wait 3000

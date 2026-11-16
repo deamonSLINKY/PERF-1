@@ -4058,7 +4058,9 @@ static void ph_release(void)                    /* the note it holds, let go */
 }
 static void ph_set(int v, int len)
 {
+    const int late = len >> 8 & 1;              /* (0.17.46) bit 8: ended a little after the bar: from the step it is on now, in its first bar */
     ph_release();
+    len &= 0xFF;
     if (v < 0 || len <= 0 || len > EN_PH_N) {
         ph_v = 0xFF;
         return;
@@ -4066,7 +4068,7 @@ static void ph_set(int v, int len)
     ph_v = (uint8_t)v;
     ph_n = (uint8_t)len;
     ph_pos = 0;
-    ph_arm = 1;                                 /* (from the next bar's first step) */
+    ph_arm = (uint8_t)(late ? 2 : 1);           /* (from the next bar's first step, or 2: the next step, where it is in the bar) */
 }
 #ifdef EN_HOST
 int en_test_ph(int w) { return w == 0 ? ph_v : w == 1 ? ph_n : ph_cur; }   /* the host tests: the phrase's voice (255 none), length, note sounding */
@@ -4077,10 +4079,10 @@ static void ph_step(int st)                     /* on every sixteenth */
     if (ph_v == 0xFF || !en_playing)
         return;
     if (ph_arm) {
-        if (st != 0)
+        if (ph_arm == 1 && st != 0)
             return;
+        ph_pos = (uint8_t)(ph_arm == 2 ? st % ph_n : 0);
         ph_arm = 0;
-        ph_pos = 0;
     }
     if (ph_left && !--ph_left)
         ph_release();
