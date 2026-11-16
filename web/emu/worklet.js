@@ -123,6 +123,8 @@ class Amb extends AudioWorkletProcessor {
         r.pageOf = Array.from({ length: 64 }, (_, b) => ex.web_st_fx_page(b));
       }
       this.port.postMessage(r);
+    } else if (this.studio && m.type === "st_clock") {            // (no answer: 24 a beat while the FM-1 plays)
+      if (this.ex.web_st_clock) this.ex.web_st_clock(m.a | 0);
     } else if (this.studio && m.type === "st_trk") {
       this.port.postMessage({ type: "st", id: m.id, ok: this.ex.web_st_trk ? this.ex.web_st_trk(m.mute | 0, m.solo | 0) : 0 });
     } else if (this.studio && (m.type === "st_open" || m.type === "st_go" || m.type === "st_put" || m.type === "st_read")) {

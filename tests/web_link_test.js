@@ -76,6 +76,15 @@ check("the pace fits the unit's ring (6 of 32 a turn)", L.LK_FLUSH_N <= 32 / 4 &
 // ---- the studio uses what it needs (it inlines this file; make_vis_site.py, make_dev_artifact.py)
 const st = fs.readFileSync(path.join(root, "web", "studio", "index.html"), "utf8");
 for (const n of ["lkSetMsg", "lkDumpMsg", "lkVoiceMsg", "lkSlotMsg", "lkParse", "lkDiff"]) check("the studio calls " + n, st.includes(n + "("));
+// ---- Play together: the unit's Start / clock / Stop drive the emulator as they drive the unit (en_clock), the studio's drive the unit; the
+// follower sends none back (amb.c: Start, clock and Stop out only on its own clock), so the two never echo each other
+const amb = fs.readFileSync(path.join(root, "firmware", "src", "dsp", "amb.c"), "utf8");
+check("amb.c sends Start / clock / Stop only on its own clock (no echo)", /if \(!en_ext\)\s+midi\(from_top \? 0xFA : 0xFB, 0, 0\);/.test(amb) && /if \(!en_ext\)\s+midi\(0xF8, 0, 0\);/.test(amb) && /if \(!en_ext\)\s+midi\(0xFC, 0, 0\);/.test(amb));
+check("amb.c: 6 clocks a step (24 a beat)", /if \(\+\+pulse >= 6\)/.test(amb));
+check("usb.c passes the real-time bytes on (clock, start, continue, stop)", /cin == 0xFu && ep1rx\[i \+ 1\] >= 0xF8u/.test(usb));
+const web = fs.readFileSync(path.join(root, "web", "emu", "amb_web.c"), "utf8"), wk = fs.readFileSync(path.join(root, "web", "emu", "worklet.js"), "utf8");
+check("the emulator takes the unit's clock (web_st_clock -> en_clock; the worklet's st_clock)", /web_st_clock\(int a\) \{ en_clock\(a\); \}/.test(web) && /m\.type === "st_clock"/.test(wk) && /web_st_clock\(m\.a \| 0\)/.test(wk));
+check("the studio: Start, a clock of 24 a beat (2500 / BPM ms), Stop", st.includes("[0xFA]") && st.includes("[0xF8]") && st.includes("[0xFC]") && st.includes("2500 / bpm") && st.includes('type: "st_clock"'));
 check("the dev page inlines fm1link.js", fs.readFileSync(path.join(root, "tools", "make_dev_artifact.py"), "utf8").includes('"fm1link.js"'));
 
 if (bad) { console.log(bad + " failed"); process.exit(1); }

@@ -326,6 +326,8 @@ __attribute__((used, visibility("default"))) int web_st_play(int on)
     return en_playing;
 }
 __attribute__((used, visibility("default"))) int web_st_playing(void) { return en_playing; }
+/* the FM-1's MIDI clock, start, continue and stop (EN_CLK_*), as its MIDI in gives them to the engine (ui.c midi_in): the studio follows the unit's Play */
+__attribute__((used, visibility("default"))) void web_st_clock(int a) { en_clock(a); }
 __attribute__((used, visibility("default"))) int web_st_par_get(int p) { return ui_param_get(p); }
 
 /* the tracks muted and soloed (a bit a track, EN_TR_*), as the FM-1's GLO and keys: heard now, not stored; a song place's parts set them again */

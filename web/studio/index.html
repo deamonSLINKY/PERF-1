@@ -167,6 +167,13 @@
   .knob .kl { font-size: .68rem; color: var(--dim); text-align: center; line-height: 1.1; max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .strip { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
   .strip .cap { height: 6px; background: var(--c); }
+  .lanepick { display: flex; flex-wrap: wrap; gap: 4px; }
+  .lanepick button { color: var(--c); background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .25em .7em; font: 700 .85rem "Chakra Petch", sans-serif; letter-spacing: .06em; }
+  .lanepick button:hover { border-color: var(--c); }
+  .lanepick button[aria-pressed=true] { background: var(--c); color: var(--bg); border-color: var(--c); }
+  .strip h3 .nm { cursor: pointer; }
+  .strip h3 .nm:hover { text-decoration: underline; }
+  .strip.on { border-color: var(--c); box-shadow: 0 0 0 1px var(--c) inset; }
   .strip h3 { font: 700 1rem "Chakra Petch", sans-serif; letter-spacing: .08em; margin: 6px 8px 2px; display: flex; justify-content: space-between; align-items: center; }
   .strip .body { padding: 4px 8px 8px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
   .fader { position: relative; height: 150px; width: 34px; margin: 4px auto; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; cursor: ns-resize; touch-action: none; outline: none; }
@@ -295,6 +302,7 @@
       <span class="muted" id="lkStat" style="font-size:.88rem">Your FM-1 on USB (Chrome or Edge): what you change here, played on the unit.</span>
       <button id="lkConn">Connect my FM-1</button>
       <label class="muted"><input type="checkbox" id="lkLive" disabled> <b>Live</b>: the FM-1 plays the studio's settings and the DX voice you edit, as you change them</label>
+      <label class="muted"><input type="checkbox" id="lkTog" checked disabled> <b>Play together</b>: Play and Stop on either one start and stop both, in time (the one you press leads, the other follows its clock). Keeps the USB port while ticked</label>
       <button id="lkPush" disabled>Send the piece's settings now</button>
       <button id="lkPull" disabled>Take the FM-1's settings into the piece</button>
       <button id="lkVox" disabled>Take the FM-1's DX voices</button>
@@ -341,7 +349,7 @@
   </section>
   <section class="lower">
     <div class="card">
-      <div class="edhead"><h2 id="edtitle">—</h2><span id="edtag" class="tag"></span>
+      <div class="edhead"><h2 id="edtitle" hidden>—</h2><span id="lanepick" class="lanepick" role="group" aria-label="The part the editor below works on"></span><span id="edtag" class="tag"></span>
         <span class="views small" role="tablist"><button role="tab" data-pane="shape" aria-selected="true">SHAPE</button><button role="tab" data-pane="sound" aria-selected="false">SOUND</button></span>
         <div id="edtools"></div></div>
       <div id="shapepane"><canvas id="ed" height="300" aria-label="The lane's shape: one bar"></canvas>
@@ -810,8 +818,16 @@ function drawLineLane(g, L, notes, X, SW) {
 $("loom").addEventListener("click", (e) => {
   const r = $("loom").getBoundingClientRect(), y = e.clientY - r.top;
   const L = layout.find((l) => y >= l.top - GAP / 2 && y < l.top + l.h + GAP / 2);
-  if (L) { sel = L.id; if (pane === "sound") soundRender(); refresh(); }
+  if (L) pickLane(L.id);
 });
+function pickLane(id) {                                       // the part the editor below works on (SHAPE and SOUND): from the Loom, the picker, a DESK strip
+  if (!LANES.some((l) => l.id === id)) return;
+  sel = id;
+  if (pane === "sound") soundRender();
+  refresh();
+}
+$("lanepick").innerHTML = LANES.map((l) => '<button data-lane="' + l.id + '" style="--c:' + l.col + '" aria-pressed="' + (l.id === sel) + '" title="Edit the ' + l.name.toLowerCase() + ' below">' + l.name + "</button>").join("");
+$("lanepick").addEventListener("click", (e) => { const b = e.target.closest("button[data-lane]"); if (b) pickLane(b.dataset.lane); });
 
 /* ======================================================================== the shape editor: one bar of the lane in hand */
 const ED = { pat: 0, brush: "hit", slot: 0 };
@@ -825,6 +841,7 @@ function drawEditor() {
   const cv = $("ed"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth;
   const L = LANES.find((l) => l.id === sel), st = laneState(sel);
   $("edtitle").textContent = L.name; $("edtitle").style.color = L.col;
+  document.querySelectorAll("#lanepick button, #desk .strip[data-lane]").forEach((b) => { const on = b.dataset.lane === sel; if (b.tagName === "BUTTON") { if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); } else b.classList.toggle("on", on); });
   $("edtag").textContent = st.tag; $("edtag").className = "tag " + (st.tag === "YOURS" ? "yours" : "dice");
   const rows = { drums: NL, bass: 24, acid: 16, pluck: 12, chords: 1, pad: 1 }[sel];
   const RH = sel === "drums" ? 34 : sel === "chords" ? 90 : sel === "pad" ? 60 : sel === "bass" ? 13 : 15;
@@ -1228,6 +1245,7 @@ setInterval(() => {                                           // the beat: four 
   document.querySelectorAll("#top .beats i").forEach((el, k) => el.classList.toggle("on", k === q));
   const t = on ? "■ Stop" : "▶ Play";
   if ($("play").textContent !== t) $("play").textContent = t;
+  lkTransport(!!on);
 }, 40);
 document.addEventListener("keydown", (e) => {                // Space: play and stop (in SONG: the song from its first place; a recording: stop it)
   if (e.code !== "Space" || !node || e.repeat || /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) || document.activeElement.isContentEditable) return;
@@ -2277,7 +2295,7 @@ setInterval(() => { if (view === "desk") deskMS(); }, 120);
 function deskRender() {
   if (view !== "desk" || !io) return;
   let h = '<div class="fadebar"><span class="lbl">FADES OVER</span>' + [1, 2, 4, 8, 16].map((b) => '<button class="small" data-fb="' + b + '" aria-pressed="' + (b === fadeBars) + '">' + b + (b === 1 ? " bar" : " bars") + "</button>").join("") +
-    '<span>FADE OUT takes a part down to nothing and mutes it; FADE IN brings it back up to its level. The piece keeps its levels.</span></div><div class="strips">' + deskStrips().map((st) => '<div class="strip" style="--c:' + st.c + '"><div class="cap"></div><h3>' + st.n +
+    '<span>FADE OUT takes a part down to nothing and mutes it; FADE IN brings it back up to its level. The piece keeps its levels.</span></div><div class="strips">' + deskStrips().map((st) => '<div class="strip' + (st.n.toLowerCase() === sel ? " on" : "") + '" data-lane="' + st.n.toLowerCase() + '" style="--c:' + st.c + '"><div class="cap"></div><h3><span class="nm" title="Edit its shape and sound below">' + st.n + "</span>" +
     (DESK_TRK[st.n] ? '<span class="ms"><button class="small mute" data-trk="' + DESK_TRK[st.n] + '" title="Mute: out now (as GLO and a key on the FM-1: not stored with the piece)">M</button>' +
       '<button class="small solo" data-trk="' + DESK_TRK[st.n] + '" title="Solo: only the soloed parts play (not stored)">S</button></span>' : "") + '</h3><div class="body">' +
     (DESK_TRK[st.n] && st.lvl >= 0 ? '<button class="small fade" data-trk="' + DESK_TRK[st.n] + '" data-p="' + st.lvl + '" title="Fade the part out over the bars set above (then it is muted, its level kept), or in from out">FADE OUT<i></i></button>' : "") +
@@ -2300,6 +2318,8 @@ function deskRender() {
   syncCtls(); drawPics();
 }
 $("desk").addEventListener("click", (e) => {
+  const nm = e.target.closest(".strip h3 .nm");
+  if (nm) return pickLane(nm.closest(".strip").dataset.lane);
   const fb = e.target.closest("button[data-fb]");
   if (fb) { fadeBars = +fb.dataset.fb; document.querySelectorAll("#desk button[data-fb]").forEach((x) => x.setAttribute("aria-pressed", String(x === fb))); return; }
   const fd = e.target.closest(".fade[data-trk]");
@@ -3191,7 +3211,7 @@ $("saveEmu").addEventListener("click", async () => {
  * into its slot a moment after the last change. The player's own three (Tune, MIDI out, the theme) are never sent. The port is let go after 4 s quiet
  * unless Live is on (fm1idle.js: Windows gives a USB MIDI port to one program at a time). */
 var lk = { on: false, live: false, same: false, port: null, val: null, got: 0, pend: new Map(), t: 0, sT: 0, vT: 0, busy: 0, nvox: -1,
-           acks: [], slotW: null, dumpW: null, aboutW: null, vBusy: false, vAgain: false, map: new Map(), vslot: -1 };
+           acks: [], slotW: null, dumpW: null, aboutW: null, vBusy: false, vAgain: false, map: new Map(), vslot: -1, tog: true, lead: "", clk: null };
 const LK_SKIP = new Set(["P_TUNE", "P_MIDI", "P_THEME"].map((k) => PE[k]).filter((p) => p !== undefined));
 const lkSay = (t, warn) => { $("lkStat").textContent = t; if (warn || !$("lkMenu").open) say(t, warn); };
 function lkShow() {
@@ -3201,10 +3221,11 @@ function lkShow() {
   $("lkConn").textContent = lk.on ? "Reconnect" : "Connect my FM-1";
   $("lkLive").disabled = !ok; $("lkLive").checked = lk.live;
   $("lkPush").disabled = $("lkPull").disabled = !ok; $("lkVox").disabled = !lk.on;
+  $("lkTog").disabled = !lk.on; $("lkTog").checked = lk.tog;
 }
 function lkLost(why) {
   const was = lk.on;
-  lk.on = lk.live = false; lk.port = null; lk.pend.clear(); lkShow();
+  lkClockStop(true); lk.lead = ""; lk.on = lk.live = false; lk.port = null; lk.pend.clear(); lkShow();
   if (was) lkSay("The FM-1 went away (" + why + "): Live is off. Connect again from the FM-1 menu.", true);
 }
 async function lkOpen() {
@@ -3218,6 +3239,7 @@ async function lkOpen() {
   inp.onmidimessage = (ev) => {
     const d = Array.from(ev.data);
     idleTouch();
+    if (d[0] >= 0xF8) return lkRt(d[0]);
     if (d[3] === 0x45 && d[0] === 0xF0 && lk.aboutW) return lk.aboutW(pcParseAbout(d));
     const r = lkParse(d);
     if (!r) return;
@@ -3270,7 +3292,7 @@ async function lkConnect() {
     const vox = lk.nvox >= 0 ? " It holds " + lk.nvox + " DX voice" + (lk.nvox === 1 ? "" : "s") + " of yours." : "";
     if (!ab) lkSay("Connected to " + lk.port.inp.name + ", but this PERF-1 is too old to say what it is (before 0.16.3): update it to send settings. DX voices work." + vox, true);
     else if (!lk.same) lkSay("Connected, but the FM-1 runs another PERF-1 (" + ab.npar + " settings, the studio's " + P.length + "): settings stay off, or one would land on another. Put the same version on both. DX voices work." + vox, true);
-    else lkSay("Connected: " + (all ? "the FM-1's " + P.length + " settings read." : "its settings did not all come (they go whole when Live starts).") + vox + " Turn Live on to play the studio on it.");
+    else lkSay("Connected: " + (all ? "the FM-1's " + P.length + " settings read." : "its settings did not all come (they go whole when Live starts).") + vox + " Turn Live on to play the studio on it; Play on either starts both." + (lk.val && lk.val[PE.P_MIDI] === 0 ? " (The FM-1's MIDI out is off: turn it on there for its Play to start the studio.)" : ""));
   } finally { lk.busy--; lkShow(); }
 }
 function lkQueue(p, v) { lk.pend.set(p, v); if (!lk.t) lk.t = setTimeout(lkFlush, LK_FLUSH_MS); }
@@ -3362,7 +3384,52 @@ async function lkTakeVoices() {                                 // the unit's DX
     lkSay("The studio's voices 1–" + got.length + " are the FM-1's now: " + dxNames.slice(0, got.length).map((s) => s.replace(/^DX /, "").trim()).join(", ") + ".");
   } finally { lk.busy--; }
 }
-idleRelease(() => lk.live || lk.busy > 0, () => { lk.port = null; });
+// Play together: Play and Stop pressed on either start and stop both. The FM-1 sends Start, 24 clocks a beat and Stop on its USB MIDI out (MIDI out on,
+// amb.c clock_pulse), and the emulator follows them as the unit follows a DAW (en_clock: web_st_clock); Play here sends Start and the clock at the
+// studio's tempo (stamped ahead, so the browser's timers do not jitter it) and the unit follows. The follower sends nothing back (amb.c: none while
+// on an outside clock), so the one pressed leads until it stops.
+function lkRt(b) {
+  const a = b === 0xF8 ? 0 : b === 0xFA ? 1 : b === 0xFB ? 2 : b === 0xFC ? 3 : -1;
+  if (a < 0 || !lk.tog || !node || lk.lead === "studio") return;
+  if (a === 0) { if (lk.lead === "unit") node.port.postMessage({ type: "st_clock", a: 0 }); return; }
+  if (a === 3) { lk.uStop = performance.now(); if (lk.lead === "unit") { node.port.postMessage({ type: "st_clock", a: 3 }); setTimeout(() => { if (lk.lead === "unit" && !(live && live.playing)) lk.lead = ""; }, 600); } return; }
+  lk.lead = "unit";                                             // (playing here already: from the top with the unit, as the unit does on a Start)
+  node.port.postMessage({ type: "st_clock", a });
+}
+let lkWas = false;
+function lkTransport(on) {                                     // the studio's play and stop, as they happen (any way: the button, Space, the song)
+  if (on === lkWas) return;
+  lkWas = on;
+  if (on) { if (lk.on && lk.tog && lk.port && lk.lead !== "unit") lkClockStart(); }
+  else {
+    if (lk.lead === "studio") lkClockStop();
+    else if (lk.lead === "unit" && lk.port && !(performance.now() - (lk.uStop || 0) < 1500)) try { lk.port.out.send([0xFC]); } catch (_) {}   // (Stop here: the unit too)
+    lk.lead = "";
+  }
+}
+function lkClockStart() {
+  const t0 = performance.now() + 10;
+  try { lk.port.out.send([0xFA], t0); } catch (e) { return lkLost(e.message); }
+  lk.lead = "studio";
+  lk.clk = { next: t0 + 1, tm: setInterval(lkClockRun, 20) };
+  lkClockRun();
+}
+function lkClockRun() {
+  const c = lk.clk;
+  if (!c) return;
+  if (!lk.port) return lkClockStop(true);
+  const now = performance.now(), bpm = Math.max(20, parV(PE.P_TEMPO) || 120);
+  if (c.next < now - 100) c.next = now;                        // (the page held up: on from now, no burst)
+  try { while (c.next < now + 80) { lk.port.out.send([0xF8], c.next); c.next += 2500 / bpm; } } catch (e) { lkClockStop(true); lkLost(e.message); }
+  idleTouch();
+}
+function lkClockStop(quiet) {
+  const c = lk.clk;
+  lk.clk = null;
+  if (c) clearInterval(c.tm);
+  if (!quiet && c && lk.port) try { lk.port.out.send([0xFC], performance.now() + 85); } catch (_) {}   // (after the clocks already stamped)
+}
+idleRelease(() => lk.live || lk.busy > 0 || (lk.on && lk.tog), () => { lk.port = null; });
 $("lkConn").addEventListener("click", lkConnect);
 $("lkLive").addEventListener("change", (e) => {
   lk.live = e.target.checked && lk.on && lk.same;
@@ -3382,6 +3449,14 @@ $("lkPull").addEventListener("click", async () => {
   } finally { lk.busy--; }
 });
 $("lkVox").addEventListener("click", lkTakeVoices);
+$("lkTog").addEventListener("change", (e) => {
+  lk.tog = e.target.checked;
+  if (!lk.tog) { if (lk.lead === "studio") lkClockStop(); lk.lead = ""; }
+  else if (lk.on && !lk.port) lkOpen().catch((er) => lkLost(er.message));
+  lkSay(lk.tog ? "Play together: Play or Stop on either one starts or stops both" + (lk.val && lk.val[PE.P_MIDI] === 0 ? ". The FM-1's MIDI out is off (its settings): its Play cannot reach the studio until it is on." : ".")
+    : "Play together off: each plays on its own. The USB port is let go after a few seconds (for the Editor, M-UPGRADE).");
+  lkShow();
+});
 $("lkMenu").addEventListener("toggle", lkShow);
 lkShow();
 
