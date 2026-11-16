@@ -56,7 +56,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 37
+#define NFXP 38
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -110,6 +110,13 @@ static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const char *const TILT_NAME[4] = {"OFF", "GENRE", "WARMER", "BRIGHTER"};
 static const char *const JC_NAME[4] = {"OFF", "I", "II", "I+II"};   /* the CHORUS page (0.17.44): the Juno's three */
 static const char *const JCT_NAME[3] = {"PLUCK", "ACID", "BOTH"};
+static const char *const LKM_NAME[4] = {"OFF", "AUTO", "LEAD", "FOLLOW"};   /* the LINK page (0.17.47): AUTO, the unit that is the USB host leads */
+static const char *const LKP_NAME[5] = {"ALL", "BEAT", "TOP", "DRUMS", "NO DRUMS"};   /* what this unit plays when linked: BEAT the drums and the bass, TOP the pad, pluck and acid */
+static const char *const LKS_NAME[2] = {"OWN", "FOLLOW"};
+static uint32_t lk_heard;                        /* (0.17.47) THE LINK (lk_tick): when the partner's hello came last (ms; 0 never) */
+static uint8_t lk_pk, lk_role, lk_lo[3];         /* its hello (the unit, + 64 if it leads); 0 alone, 1 leading, 2 following, 3 linked with no lead (or two);
+                                                  * the low bits waiting for their pair (the scale's, the chord's two) */
+static uint16_t lk_cm = 0xFFFFu;                 /* the lead's chord taken last (its notes, its root << 12) */
 static const char *const XMIX_NAME[5] = {"CUT", "4 BARS", "8 BARS", "16 BARS", "32 BARS"};       /* the SET page's Mix: how long the next piece glides to its tempo */
 static const uint8_t XMIX_BARS[5] = {0, 4, 8, 16, 32};
 static const char *const SMPM_NAME[4] = {"ALL", "DRUMS", "SYNTHS", "BY KEY"};                   /* the SAMPLE page: what a run plays, or a key a sound */
@@ -206,6 +213,9 @@ static const struct {
                        {"Tilt", KN_NAME, EN_FXS_TILT, TILT_NAME, 4}, {"Width", KN_PLAIN, EN_FXS_WIDTH, 0, 0}}},   /* (0.17.30; a spare effect bit: nothing held) the voices' wandering pitch,
                                                     * the master's polish (the lows mono, the peaks rounded), its tilt, the width up top */
     {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 4}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
+    {"LINK", FX_SPARE9, 0, {{"Link", KN_NAME, EN_FXS_LK_MODE, LKM_NAME, 4}, {"Plays", KN_NAME, EN_FXS_LK_PLAYS, LKP_NAME, 5},
+                     {"Sections", KN_NAME, EN_FXS_LK_SEC, LKS_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.47; a spare effect bit: nothing held) two units as one band: who leads,
+                                                    * what this one plays, the lead's breakdowns and drops followed */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -3154,7 +3164,7 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
 static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
+static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36, 37};   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
@@ -4172,6 +4182,91 @@ static void ci_tick(void)
     }
 }
 
+/* THE LINK (0.17.47; the messages: amb.c, lk_send). A follower takes the lead's key, mode, scale and chord (the chord as one from outside, as
+ * MIDI in's CHORDS: its own walk stops while linked) and, with Sections on FOLLOW, its breakdowns, builds and drops on the same bar. */
+static void lk_in(int n, int v)                  /* n: the CC + 82 (102 hello .. 113 the section) */
+{
+    if (n == 102) {
+        lk_heard = plat_ms() | 1u;
+        lk_pk = (uint8_t)v;
+        return;
+    }
+    if (lk_role != 2)
+        return;                                  /* (only a follower takes the lead's) */
+    switch (n) {
+    case 105:
+        if (v < 12 && proj.par[P_ROOT] != v) {
+            proj.par[P_ROOT] = (int16_t)v;
+            en_set(P_ROOT, v);
+        }
+        break;
+    case 106:
+        if (v < EN_NMODES && proj.par[P_MODE] != v) {
+            proj.par[P_MODE] = (int16_t)v;
+            en_set(P_MODE, v);
+        }
+        break;
+    case 107: case 109: case 110:
+        lk_lo[n == 107 ? 0 : n - 108] = (uint8_t)v;
+        break;
+    case 108: {
+        const uint32_t p = (uint32_t)lk_lo[0] | (uint32_t)v << 6;
+        if ((p & 1u) && pool_count(p) >= 3 && p != proj.pool) {
+            proj.pool = (uint16_t)p;
+            en_pool(p);
+        }
+        break;
+    }
+    case 111: {
+        const uint32_t m = (uint32_t)lk_lo[1] | (uint32_t)lk_lo[2] << 6;
+        if (v < 12 && m && (m | (uint32_t)v << 12) != lk_cm) {   /* (the four-bar repeat of the same chord: left alone) */
+            lk_cm = (uint16_t)(m | (uint32_t)v << 12);
+            en_ext_chord(v, -1, m | 1u << v);
+        }
+        break;
+    }
+    case 112:
+        if (v >= 1 && v <= 3 && ui.fxs[EN_FXS_LK_SEC])
+            en_section(v - 1);
+        break;
+    case 113:                                    /* the lead's section now: one missed, caught up on the next bar */
+        if (v <= 2 && ui.fxs[EN_FXS_LK_SEC] && en_playing && v != en_sec && !en_sec_req)
+            en_section(v == EN_SEC_BREAK ? EN_CMD_BREAK : v == EN_SEC_BUILD ? EN_CMD_BUILD : EN_CMD_DROP);
+        break;
+    }
+}
+static void lk_tick(void)                        /* who leads, what this one plays: to the engine when it changes */
+{
+    static const uint8_t PLAYS_MUTE[5] = {0x00u, 0xE0u, 0x1Fu, 0xF0u, 0x0Fu};   /* the tracks left to the partner (EN_TR_*: kick, hats, snare, perc, bass, acid, pad, pluck) */
+    static uint8_t q_s = 0xFFu, m_s = 0xFFu;
+    const int mode = ui.fxs[EN_FXS_LK_MODE] & 3, want = mode == 2 || (mode == 1 && ui.usb_host);
+    const int heard = mode && lk_heard && plat_ms() - lk_heard < 3500u, pl = heard && (lk_pk & 64u);
+    const int role = !heard ? 0 : want && !pl ? 1 : !want && pl ? 2 : 3;
+    uint8_t q, m;
+    if (role != lk_role) {
+        if (lk_role == 2)
+            en_ext_chord(0, -1, 0);              /* (no longer following: its own chords again, from this one) */
+        if (role == 1 || role == 2)
+            say("LINKED", role == 1 ? "THIS ONE LEADS" : "FOLLOWING THE LEAD");
+        else if (role == 3)
+            say("LINKED", want ? "TWO LEADS: SET ONE" : "NO LEAD: SET ONE");
+        else
+            say("LINK", "PARTNER GONE: ALONE");
+        lk_role = (uint8_t)role;
+        lk_cm = 0xFFFFu;
+    }
+    q = (uint8_t)(mode ? EN_LK_HELLO | (want ? EN_LK_WANT : 0) : 0);
+    if (role)
+        q |= EN_LK_ON;
+    q |= role == 1 ? EN_LK_LEAD : role == 2 ? EN_LK_FOLLOW : 0;
+    m = role ? PLAYS_MUTE[ui.fxs[EN_FXS_LK_PLAYS] % 5u] : 0u;
+    if (q != q_s || m != m_s) {
+        q_s = q;
+        m_s = m;
+        en_link(q, m);
+    }
+}
+
 /* MIDI in (USB and the TRS jack): on the channel chosen (MIDI IN page; all by default), notes add or remove their note from the scale
  * (channel 1 only, as before), or with PADS play PERF (pads_in); clock and start / stop drive the grid */
 static void midi_in(void)
@@ -4184,6 +4279,12 @@ static void midi_in(void)
             ui.min_last = pkt;
             ui.min_n++;
         }
+        if (st == 0xBFu && n >= 20u && n <= 31u && ui.fxs[EN_FXS_LK_MODE]) {   /* (0.17.47) the link's (channel 16, CC 20 .. 31) */
+            lk_in((int)n + 82, (int)v);          /* (lk_in counts them from 102) */
+            continue;
+        }
+        if (lk_role == 1 && st >= 0xF8u)         /* (leading: the tempo is this one's) */
+            continue;
         if (st < 0xF0u && mm_apply(st, n, v))   /* the player's map first (0.16.11) */
             continue;
         if (st == 0xF8u || st == 0xFAu || st == 0xFBu || st == 0xFCu)
@@ -5311,7 +5412,7 @@ static void draw_header(void)
                                (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 12 | (uint32_t)project_pending() << 16 |
                                (uint32_t)(proj.edited >> proj.piece & 1u) << 17),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)ui.theme << 8 | (uint32_t)(ui.fx_lock != 0) << 12 | (uint32_t)ui.dj_on << 13 | (uint32_t)ui.scene_q << 14 | (uint32_t)ui.key_on << 19 |
-                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)(gs_st & 3u) << 20 | (uint32_t)(gs_mask != 0) << 22 | (uint32_t)gs_shot << 23 | (uint32_t)(gs_st >> 2) << 24 | (uint32_t)ph_st << 25);
+                          (uint32_t)((ui.fxk[0] | ui.fxk[1] | ui.fxk[2] | ui.fxk[3]) != 0) << 18 | (uint32_t)(gs_st & 3u) << 20 | (uint32_t)(gs_mask != 0) << 22 | (uint32_t)gs_shot << 23 | (uint32_t)(gs_st >> 2) << 24 | (uint32_t)ph_st << 25 | (uint32_t)lk_role << 27);
     h = hash(h, (uint32_t)en_sec_bars | (uint32_t)ui.dj_n << 8 | (uint32_t)ui.dj_len << 24);
     h = hash(h, (uint32_t)(en_intro_k * 64.0f) | (uint32_t)ui.dj_round << 8 | (uint32_t)ui.dj_rounds << 12);   /* the intro's countdown, the round */
     h = hash(h, (plat_battery() >= 591u ? 3u : plat_battery() >= 561u ? 2u : plat_battery() >= 531u ? 1u : 0u) | (uint32_t)plat_usb_power() << 4 | (uint32_t)(plat_battery() != 0xFFFFFFFFu) << 5);
@@ -6075,11 +6176,24 @@ static void console_sheet(void)
         if (hi > lo)
             cv_rect(8, y + 22, (int32_t)(v - lo) * 166 / (hi - lo), 2, i == hot ? K_ACC : K_DIM);
     }
-    for (i = 0; i < ST_N; i++) {                 /* the walk (0.17.30: eleven pages, a row of 11 so the last clears the strip below) */
-        const int32_t y = 24 + i * 11;
-        caps(t, FXP[ST_ORDER[i] - 1].name, 9);
-        cv_rect(184, y, 52, 10, i == at ? K_ACC : K_PANEL);
-        cv_text(187, y - 3, &FONT_XS, t, i == at ? K_BG : K_DIM);
+    {   /* the walk: eleven rows of 11 clear the strip below; (0.17.47) more pages than that, the rows follow the page (CHORUS was hidden) */
+        const int first = ST_N <= 11 || at < 10 ? 0 : at - 10 > ST_N - 11 ? ST_N - 11 : at - 10;
+        for (i = first; i < ST_N && i < first + 11; i++) {
+            const int32_t y = 24 + (i - first) * 11;
+            caps(t, FXP[ST_ORDER[i] - 1].name, 9);
+            cv_rect(184, y, 52, 10, i == at ? K_ACC : K_PANEL);
+            cv_text(187, y - 3, &FONT_XS, t, i == at ? K_BG : K_DIM);
+        }
+    }
+    if (ui.fx_page == 37) {                      /* LINK (0.17.47): who is there, who leads */
+        const int want = ui.fxs[EN_FXS_LK_MODE] == 2 || (ui.fxs[EN_FXS_LK_MODE] == 1 && ui.usb_host);
+        int32_t x = cv_text(8, 112, &FONT_XS, "PARTNER ", K_DIM);
+        cv_text(x, 112, &FONT_XS, !ui.fxs[EN_FXS_LK_MODE] ? "LINK OFF" : !lk_role ? "NONE HEARD" : (lk_pk & 63u) == 2u ? "PERF-1 SMK" : "PERF-1 FM-1",
+                lk_role ? K_ACC : K_DIM);
+        x = cv_text(8, 126, &FONT_XS, "THIS ONE ", K_DIM);
+        cv_text(x, 126, &FONT_XS, lk_role == 1 ? "LEADS" : lk_role == 2 ? "FOLLOWS" : lk_role == 3 ? (want ? "TWO LEADS: SET ONE" : "NO LEAD: SET ONE") :
+                ui.fxs[EN_FXS_LK_MODE] == 1 ? (ui.usb_host ? "WOULD LEAD (HOST)" : "WOULD FOLLOW") : want ? "WOULD LEAD" : "-",
+                lk_role == 1 || lk_role == 2 ? K_TEXT : lk_role ? K_ACID : K_DIM);
     }
 }
 
@@ -10282,6 +10396,7 @@ void ui_frame(void)
     gesture_tick();
     cap_tick();
     phrase_tick();
+    lk_tick();
     ci_tick();
     swell_tick();
     factory_all_tick();

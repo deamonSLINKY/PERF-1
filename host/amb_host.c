@@ -99,7 +99,7 @@ void plat_play_red(int red) { (void)red; }      /* the device's PLAY colour: gre
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
 static uint32_t last_out;                        /* the last packet out, not clock: status << 16 | d1 << 8 | d2 */
-static uint32_t midi_out_count, clock_out_count;
+static uint32_t midi_out_count, clock_out_count, noteon_out_count, start_out_count;
 static uint32_t nh, nh_keep, nh_t0, nh_win, nh_arm, nh_n, nh_blk;   /* (0.17.11) the notes out as a hash: armed, from the next start (0xFA) for nh_win ms */
 int plat_midi_in(uint32_t *pkt)
 {
@@ -114,9 +114,11 @@ void plat_midi_out(uint32_t pkt)
 {
     midi_out_count++;
     if (((pkt >> 8) & 0xF0u) == 0x90u && (pkt >> 24))
-        last_vel = (int)(pkt >> 24);
+        last_vel = (int)(pkt >> 24), noteon_out_count++;
     if (((pkt >> 8) & 0xF0u) == 0xB0u)
         cc_out_n[pkt >> 16 & 0x7Fu]++;
+    if (((pkt >> 8) & 0xFFu) == 0xFAu)
+        start_out_count++;
     if (((pkt >> 8) & 0xFF) != 0xF8)
         last_out = (pkt >> 8 & 0xFFu) << 16 | (pkt >> 16 & 0xFFu) << 8 | pkt >> 24;
     if (((pkt >> 8) & 0xFF) == 0xF8) {
@@ -572,6 +574,16 @@ static int expect(const char *what, const char *val)
         got = (int)store_writes;
     else if (!strcmp(what, "clocks_out"))
         got = (int)clock_out_count;
+    else if (!strcmp(what, "noteons_out"))       /* (0.17.47) note-ons sent since the start (or midireset) */
+        got = (int)noteon_out_count;
+    else if (!strcmp(what, "starts_out"))        /* (0.17.47) MIDI Starts sent (not reset by midireset) */
+        got = (int)start_out_count;
+    else if (!strcmp(what, "lkrole"))            /* (0.17.47) the link: 0 alone, 1 leading, 2 following, 3 no lead */
+        got = lk_role;
+    else if (!strncmp(what, "lkq", 3) || !strncmp(what, "lkmute", 6)) {   /* the engine's link bits (EN_LK_*), the tracks it leaves to the partner */
+        int en_test_lk(int w);
+        got = en_test_lk(what[2] == 'q' ? 0 : 1);
+    }
     else if (!strcmp(what, "sixteenths"))
         got = (int)en_bars;
     else if (!strcmp(what, "fillq")) {           /* (0.17.16) fills asked of the engine (the song place's last bar) */
@@ -1187,6 +1199,9 @@ int main(int argc, char **argv)
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "fxpageset")) {      /* (0.17.19) fxpageset N: the effects' page N up (as the walk reaches it), for pictures */
             ui.fx_page = (uint8_t)atoi(a);
+        } else if (!strcmp(cmd, "midireset")) {      /* (0.17.47) the MIDI out counts from zero */
+            midi_out_count = clock_out_count = noteon_out_count = 0;
+            memset(cc_out_n, 0, sizeof cc_out_n);
         } else if (!strcmp(cmd, "setfxs")) {         /* (0.17.19) setfxs N V: the effects' setting N (EN_FXS_*), as its page sets it */
             ui.fxs[atoi(a)] = (uint8_t)atoi(b);
             en_fxs(atoi(a), atoi(b));

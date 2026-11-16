@@ -1,0 +1,106 @@
+# THE LINK (0.17.47): two units running PERF as one band, over USB MIDI (one the other's USB host). Each says hello on channel 16
+# (CC 20) about every second; heard, they link: the lead keeps the tempo (clock) and sends its key, mode, scale, chord and sections (CC 23 .. 31), and
+# neither sends its notes; the follower takes them, sends no clock, and plays what its Plays leaves it. The partner's hello gone 3.5 s: alone again.
+seed 0
+wait 3000
+expect playing 1
+expect lkrole 0
+# LEAD, nobody there: its hello about every second, nothing else of the link's, the notes out as ever
+setfxs 105 2
+midireset
+wait 2500
+expect ccout20 >1
+expect ccout29 0
+expect noteons_out >0
+expect lkq 3
+tap FX
+wait 100
+fxpageset 37
+wait 200
+shot link_alone.png
+tap FX
+wait 100
+# a follower's hello: linked, leading; the key, scale, chord and section sent at once, and a Start on the next bar line (it joined mid-piece; the first Start is the boot's)
+expect starts_out 1
+midi BF 14 01
+wait 2200
+midi BF 14 01
+expect starts_out 2
+expect lkrole 1
+expect lkq 15
+tap FX
+wait 100
+fxpageset 37
+wait 200
+shot link_lead.png
+tap FX
+wait 100
+expect ccout23 >0
+expect ccout26 >0
+expect ccout29 >0
+expect ccout31 >0
+# linked: no notes out, the clock still (about 48 a second)
+midireset
+wait 1500
+midi BF 14 01
+wait 1500
+midi BF 14 01
+wait 100
+expect noteons_out 0
+expect clocks_out >100
+# the partner gone: alone, the notes out again
+wait 4000
+expect lkrole 0
+midireset
+wait 1500
+expect noteons_out >0
+# FOLLOW: a lead's hello
+setfxs 105 3
+midi BF 14 41
+wait 200
+expect lkrole 2
+expect lkq 21
+midireset
+# the lead's key (G), its scale (Ionian), its chord (D major: D F# A)
+midi BF 17 07
+midi BF 19 2D
+midi BF 1A 2A
+midi BF 1B 04
+midi BF 1C 09
+midi BF 1D 02
+wait 100
+expect par71 7
+expect pool 0xAAD
+expect extch 1
+expect chordroot 2
+# the same chord again (the four-bar repeat): taken once
+midi BF 1B 04
+midi BF 1C 09
+midi BF 1D 02
+wait 100
+expect chordroot 2
+# its breakdown, on the bar
+midi BF 14 41
+midi BF 1E 01
+waitfor sec 1 3000
+midi BF 14 41
+wait 1000
+expect clocks_out 0
+expect noteons_out 0
+# Plays BEAT: the pad, pluck and acid left to the lead
+setfxs 106 1
+wait 100
+expect lkmute 224
+tap FX
+wait 100
+fxpageset 37
+wait 200
+shot link_follow.png
+tap FX
+wait 100
+# the lead gone: alone, its own chords again, everything playing
+wait 3600
+expect lkrole 0
+expect extch 0
+expect lkmute 0
+expect lkq 1

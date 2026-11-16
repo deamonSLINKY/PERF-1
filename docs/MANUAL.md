@@ -1718,6 +1718,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
+| LINK (two units as one band; section 14) | Link: off, auto, lead, follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
 | SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Look: plain, scanlines, calm, calm+scan |
@@ -2315,6 +2316,33 @@ On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its M
 - Full-speed USB MIDI 1.0 only, notes and clock: no SysEx goes to or comes from the device.
 
 This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.
+
+**The link: two units as one band.** Two units running PERF-1 (two FM-1s, or an FM-1 and a PERF-1 SMK) find each other and play together:
+one leads, the other follows.
+
+1. Connect them: turn **USB host** on one of them (the MIDI IN page) and plug the other into it, through a powered hub.
+2. Leave **Link** on **Auto** on both (the LINK settings page, the last one). They say hello about once a second; when each hears the
+   other, both say `LINKED`. On Auto the unit that is the USB host leads. **Lead** or **Follow** sets it by hand.
+3. Press **PLAY** on the lead. The follower starts with it and keeps its tempo (`EXT`).
+
+While they're linked:
+
+- **The harmony is shared.** The lead sends its key, scale and every chord change. The follower plays its own pad, bass, pluck and acid
+  over the lead's chords, so two different genres or pieces still play in the same key.
+- **The sections are shared** (Sections on **Follow**): a breakdown, build or drop on the lead happens on the follower on the same bar.
+  On **Own**, the follower keeps its own.
+- **Plays splits the band.** Each unit can leave parts to the other: **Beat** plays the drums and bass, **Top** the pad, pluck and acid,
+  **Drums** only the drums, **No drums** the rest. For example, the lead on Beat and the follower on Top, or both on All for a thicker sound.
+- **Neither sends its notes** over the link, only the clock and the link's own messages, so the follower doesn't play the lead's notes as keys.
+- **The LINK page shows** the partner (`PERF-1 FM-1` or `PERF-1 SMK`) and whether this one leads or follows. `TWO LEADS: SET ONE` or
+  `NO LEAD: SET ONE` means set one of them to Lead (or Follow).
+
+When the partner is gone for 3.5 seconds (unplugged, switched off), each says `PARTNER GONE: ALONE` and plays on by itself: its own chords
+and all its parts again. The link uses MIDI channel 16, CCs 20-31; with Link on, other gear on your MIDI out sees a CC 20 on channel 16 about
+once a second. Set Link to **Off** if that gets in the way.
+
+The link is new and hasn't been tried between two units yet. As said above, sending from the host to a device hasn't been tried either, so if
+the follower doesn't link or doesn't follow, say so.
 
 **A Model:Samples (or any Elektron Model) as a controller.** The Model:Samples sends each of its six tracks on its own channel (1-6), at whatever note that track is pitched to, so the **Pads** layout doesn't fit it. Set **Notes** to **M:S** instead, and the channel decides what a trig does, whatever its note:
 

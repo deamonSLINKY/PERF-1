@@ -300,6 +300,8 @@ enum {
                                                                           * master (the lows mono, the peaks rounded before the limiter), the tilt (0 off, 1 the genre's, 2 warmer,
                                                                           * 3 brighter) and the width above 2.5 kHz (0 .. 100: +0 .. +6 dB on the side) */
     EN_FXS_JC_TYPE, EN_FXS_JC_TGT,                                      /* (0.17.44) the CHORUS page, the unit's: a Juno-style chorus (0 off, 1 I, 2 II, 3 I+II) on the pluck (0), the acid (1) or both (2) */
+    EN_FXS_LK_MODE, EN_FXS_LK_PLAYS, EN_FXS_LK_SEC,                     /* (0.17.47) the LINK page, the unit's (the UI's alone): off, auto (the USB host leads), lead, follow; what this
+                                                                          * unit plays when linked (all, beat, top, drums, no drums); the lead's sections followed (1) or not */
     EN_NFXS
 };
 #define EN_FXS_DEFAULTS {16, 0xF0, 100, 40, 80, 55, 100, 35, 50, 50, 70, 40, 45, 40, 45, \
@@ -307,7 +309,7 @@ enum {
                          60, 25, 1, 4, 55, 50, 30, 50, 1, 30, 3, 70, 55, 0, \
                          1, 2, 0, 50, 60, 2, 1, 70, 45, 100, 2, 0, 100, 1, 70, 60, 100, 60, 60, 55, 100, 0, 1, 1, 80, \
                          12, 0, 0, 0, 0, 0, 0, 2, 50, 40, 2, 60, 60, 7, 40, 70, 60, 3, 0, 0, 0, 0, 0, 1, 2, 0, 0, \
-                         0, 2, 30, 1, 1, 30, 0, 2}
+                         0, 2, 30, 1, 1, 30, 0, 2, 1, 0, 1}
 extern const int16_t EN_FXS_DEF[EN_NFXS];
 void en_fxs(int i, int v);
 /* the punch-ins' targets (0.15.19): all, the drums, the synths, the pad, the bass, the acid, the pluck, acid and pluck, pad and pluck, bass and acid */
@@ -401,7 +403,13 @@ void en_bass_step(int s, int v);                /* a step, from the page */
 void en_bass_capture(void);                     /* none set: the bar the line played last (the page opened) */
 #define EN_PH_N 64                              /* (0.17.45) THE PHRASE: up to four bars a voice plays back (amb.c, ph_*) */
 extern uint8_t en_ph_note[EN_PH_N], en_ph_len[EN_PH_N];   /* each sixteenth: the key (0 none), how long (sixteenths; bit 7 an accent): written while none plays */
-void en_phrase(int voice, int len);             /* play them on a voice (EN_V_*) from the next bar, len sixteenths; voice < 0: none */
+void en_phrase(int voice, int len);
+/* THE LINK (0.17.47): two units playing as one band (amb.c, lk_send; ui.c, lk_tick). en_link(q, mute): q's bits, the tracks (EN_TR_*) left to
+ * the partner, muted here */
+enum { EN_LK_HELLO = 1, EN_LK_WANT = 2, EN_LK_ON = 4, EN_LK_LEAD = 8, EN_LK_FOLLOW = 16 };   /* hello sent; this unit would lead; linked (no notes,
+                                                                                         * no knob CCs out); leading (clock out, the harmony sent);
+                                                                                         * following (no clock out) */
+void en_link(int q, int mute);             /* play them on a voice (EN_V_*) from the next bar, len sixteenths; voice < 0: none */
 void en_bass_steps_set(const uint8_t *b16);     /* a piece's sixteen */
 void en_bass_steps_get(uint8_t *b16);           /* as they are */
 extern volatile uint8_t en_bs[16];

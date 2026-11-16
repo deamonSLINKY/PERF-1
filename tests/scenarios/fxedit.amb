@@ -340,11 +340,17 @@ expect fxpage 32
 spin SELECT 1
 wait 100
 expect fxpage 35
-# (0.17.44) CHORUS after SOUND, the walk's last
+# (0.17.44) CHORUS after SOUND; (0.17.47) LINK after it, the walk's last
 spin SELECT 1
 wait 100
 expect fxpage 36
 spin SELECT 1
+wait 100
+expect fxpage 37
+spin SELECT 1
+wait 100
+expect fxpage 37
+spin SELECT -1
 wait 100
 expect fxpage 36
 spin SELECT -1

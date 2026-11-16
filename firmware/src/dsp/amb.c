@@ -1159,7 +1159,7 @@ out:
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH, C_KITS, C_PHRASE };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_SECTION, C_FX, C_MUTE, C_NOTE, C_HUSH, C_FXK, C_TRK, C_GATEPAT, C_FXS, C_FILLQ, C_DJSYNC, C_FLXH, C_SHED, C_USERVOICE, C_USERCLEAR, C_ACSTEP, C_ACCAP, C_CMCAP, C_INTRO, C_CMSTEP, C_PROG, C_PROG2, C_PROGK, C_MAP, C_DTAP, C_DEG, C_BEND, C_PEDAL, C_BSSTEP, C_NEWPART, C_BSCAP, C_ACKEEP, C_EXTCH, C_KITS, C_PHRASE, C_LINK };
 static uint8_t muted;                            /* remote: no sound, no MIDI (C_MUTE, after what's queued) */
 static uint8_t hush;                             /* a store while playing: fade out, hold, fade back in (C_HUSH) */
 static float hush_g = 1.0f;                      /* its gain, 0..1 */
@@ -1350,10 +1350,13 @@ static const midimap_t MAPS[EN_NMAP] = {
 };
 static volatile uint8_t midi_map;
 static uint8_t arr_m;                            /* (the arrangement's resting tracks: THE ARRANGEMENT, below) */
+static uint8_t lk_q, lk_mute;                    /* (0.17.47) THE LINK (lk_send): EN_LK_* bits, from the UI; the tracks this unit leaves to its partner */
 static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 {
-    if (!par[P_MIDI] || muted)
+    if (muted)
         return;
+    if (st >= 0xF0u ? (lk_q & EN_LK_FOLLOW) || (!par[P_MIDI] && !(lk_q & EN_LK_LEAD)) : !par[P_MIDI] || (lk_q & EN_LK_ON))
+        return;                                  /* (linked: no notes out, the follower no clock; the lead's clock goes out even with MIDI out off) */
     if (st < 0xF0u && (st & 15u) < 4u) {         /* a part's note: its channel on the map, transposed */
         static const uint8_t TR[4] = {EN_TR_PAD, EN_TR_PLUCK, EN_TR_DRONE, EN_TR_ACID};
         const midimap_t *m = &MAPS[midi_map];
@@ -1371,7 +1374,7 @@ static void midi(uint32_t st, uint32_t d1, uint32_t d2)
 static void midi_drum(int d, uint32_t vel)      /* a drum hit: its lane's channel and note (a note-off at once: one-shots) */
 {
     const midimap_t *m = &MAPS[midi_map];
-    if (!par[P_MIDI] || muted || (unsigned)d >= (unsigned)EN_NDRUM)
+    if (!par[P_MIDI] || muted || (lk_q & EN_LK_ON) || (unsigned)d >= (unsigned)EN_NDRUM)
         return;
     en_midi_out(0x90u | m->dch[d], m->dn[d], vel < 1u ? 1u : vel > 127u ? 127u : vel);
     en_midi_out(0x80u | m->dch[d], m->dn[d], 0);
@@ -1400,7 +1403,7 @@ void en_midi_cc(uint32_t cc, uint32_t v)        /* a control change on every cha
 {
     const uint32_t used = map_channels();
     uint32_t c;
-    if (!par[P_MIDI])
+    if (!par[P_MIDI] || (lk_q & EN_LK_ON))
         return;
     for (c = 0; c < 16u; c++)
         if (used >> c & 1u)
@@ -4071,7 +4074,8 @@ static void ph_set(int v, int len)
     ph_arm = (uint8_t)(late ? 2 : 1);           /* (from the next bar's first step, or 2: the next step, where it is in the bar) */
 }
 #ifdef EN_HOST
-int en_test_ph(int w) { return w == 0 ? ph_v : w == 1 ? ph_n : ph_cur; }   /* the host tests: the phrase's voice (255 none), length, note sounding */
+int en_test_ph(int w) { return w == 0 ? ph_v : w == 1 ? ph_n : ph_cur; }
+int en_test_lk(int w);   /* the host tests: the phrase's voice (255 none), length, note sounding */
 #endif
 static void ph_step(int st)                     /* on every sixteenth */
 {
@@ -6493,15 +6497,83 @@ static void rvs_engage(void)
     bm_tgt = 0.3f + 0.007f * (float)fxs_v[EN_FXS_RV_MIX];
 }
 
+/* THE LINK (0.17.47, the maker: "like they detect same firmware and can double their efforts"). Two units running PERF (two FM-1s, an FM-1 and the
+ * SMK), one the other's USB host, find each other and play as one band: the lead keeps the tempo (MIDI clock) and sends its key, scale, chord and
+ * sections; the follower takes them (ui.c, lk_in) and plays its own lines over them; each can leave tracks to the other (Plays). All of it is control
+ * changes on channel 16 (CC 20 .. 31: undefined in MIDI; the remote has 102 .. 117), sent from here, on the block a change happens (the UI's frame would add up to a frame of lateness):
+ *   20 hello, about every second: the unit (1 FM-1, 2 SMK) + 64 if it leads     23 the root (0 .. 11)     24 the mode
+ *   25, 26 the scale's notes (6 bits each, the low first; taken on 26)         27, 28 the chord's notes (pitch classes, 6 bits each), 29 its root (taken on 29)
+ *   30 a section asked for on the next bar (EN_CMD_* + 1)                         31 the section now (EN_SEC_*)
+ * Everything is sent again every four bars, so a follower that joins late (or missed one) catches up; one that joins while the lead plays gets
+ * a Start (0xFA) on the lead's next bar line, so it plays from there, its bars the lead's. */
+#ifndef EN_LINK_KIND
+#define EN_LINK_KIND 1                           /* (the SMK's build: 2) */
+#endif
+void en_link(int q, int mute) { post(C_LINK, q, mute); }
+#ifdef EN_HOST
+int en_test_lk(int w) { return w ? lk_mute : lk_q; }
+#endif
+static void lk_cc(uint32_t cc, uint32_t v) { en_midi_out(0xBFu, cc, v & 0x7Fu); }
+static void lk_send(uint32_t n)
+{
+    static uint32_t hello, cm_s, pool_s, all_s, b16;
+    static uint8_t sync;
+    static uint8_t root_s, mode_s, cr_s, req_s, sec_s, fresh = 1, said = 0;
+    uint32_t cm = 0, i;
+    if (muted) {                                 /* (the remote's, which speaks on channel 16 itself: nothing, the hello on its second after) */
+        fresh = 1;
+        hello = 0;
+        return;
+    }
+    if (!(lk_q & EN_LK_HELLO)) {
+        fresh = 1;
+        said = 0;
+        return;
+    }
+    hello += n;
+    if (hello >= (uint32_t)EN_SR || !said || (lk_q & EN_LK_WANT ? 64u : 0u) != (said & 64u)) {   /* (at once when switched on, or the lead's bit changed) */
+        hello = 0;
+        said = (uint8_t)(0x80u | (lk_q & EN_LK_WANT ? 64u : 0u));
+        lk_cc(20, EN_LINK_KIND | (said & 64u));
+    }
+    if (!(lk_q & EN_LK_LEAD)) {
+        fresh = 1;
+        sync = 1;
+        return;
+    }
+    if (sync && en_playing && en_bars != b16 && !(en_bars & 15u)) {   /* a follower just linked: a Start on this bar line, so its bars are the lead's */
+        en_midi_out(0xFAu, 0, 0);
+        sync = 0;
+    }
+    b16 = en_bars;
+    if ((en_bars >> 6) != all_s)                 /* every four bars: all of it again */
+        all_s = en_bars >> 6, fresh = 1;
+    for (i = 0; i < (uint32_t)chord_nt && i < 4u; i++)   /* (the chord's pitch classes, root first) */
+        cm |= 1u << ((unsigned)chord_pcs[i] % 12u);
+    if (fresh || par[P_ROOT] != root_s)
+        root_s = (uint8_t)par[P_ROOT], lk_cc(23, root_s);
+    if (fresh || par[P_MODE] != mode_s)
+        mode_s = (uint8_t)par[P_MODE], lk_cc(24, mode_s);
+    if (fresh || pool != pool_s)
+        pool_s = pool, lk_cc(25, pool & 63u), lk_cc(26, pool >> 6 & 63u);
+    if (fresh || cm != cm_s || (uint8_t)chord_pcs[0] != cr_s)
+        cm_s = cm, cr_s = (uint8_t)chord_pcs[0], lk_cc(27, cm & 63u), lk_cc(28, cm >> 6 & 63u), lk_cc(29, cr_s);
+    if (en_sec_req != req_s && (req_s = en_sec_req) != 0)
+        lk_cc(30, req_s);
+    if (fresh || en_sec != sec_s)
+        sec_s = en_sec, lk_cc(31, sec_s);
+    fresh = 0;
+}
 static void fx_control(uint32_t n)              /* once a chunk: what the held effects ask for */
 {
     const uint64_t m = fx_req;
     uint32_t solo = trk_solo,
              mute = trk_mute | (uint32_t)(m >> FX_MUTE_KICK & 1u) << EN_TR_KICK | (uint32_t)(m >> FX_MUTE_HATS & 1u) << EN_TR_HATS |
                     (uint32_t)(m >> FX_MUTE_SNARE & 1u) << EN_TR_SNARE | (uint32_t)(m >> FX_MUTE_PERC & 1u) << EN_TR_PERC |
-                    (uint32_t)(m >> FX_MDRUMS & 1u) * 0x0Fu | arr_m;   /* (M:DRUMS: all four; arr_m: the arrangement's rests) */
+                    (uint32_t)(m >> FX_MDRUMS & 1u) * 0x0Fu | arr_m | lk_mute;   /* (M:DRUMS: all four; arr_m: the arrangement's rests; lk_mute: the link's partner's) */
     float dt = (float)n * (1.0f / EN_SR);
     int t, want = -1;
+    lk_send(n);
     fx_on = m;
     {   /* the pattern gate: its loop's step now, open or closed, for each track it is on (gx_pat, the settings) */
         const uint32_t len = (uint32_t)fm_clampf((float)fxs_v[EN_FXS_GX_LEN], 2.0f, 16.0f), tg = (uint32_t)fxs_v[EN_FXS_GX_TGT];
@@ -7497,6 +7569,10 @@ static void drain(void)
         case C_ACKEEP: ac_keep_answer(); break;
         case C_PHRASE:                           /* (0.17.45) a phrase to play (a voice, its length in sixteenths), or none */
             ph_set(a, b);
+            break;
+        case C_LINK:                             /* (0.17.47) the link's state (EN_LK_*), the tracks left to the partner */
+            lk_q = (uint8_t)a;
+            lk_mute = (uint8_t)b;
             break;
         case C_KITS:                             /* (0.17.38) a loaded kit came or went: each drum's kit again */
             apply(P_KIT_KICK, par[P_KIT_KICK]);
