@@ -978,13 +978,17 @@ function clickBass(s, r, right) {
   changed();
 }
 // ---- acid: sixteen scale steps above the chord, an octave a step, accent and slide
+// A free line (DICE) is the one the engine plays now, not the piece's stored one (empty, or an old one): the editor shows it, and the first edit starts
+// from it, so a click changes one step of what you hear instead of freezing that one step alone (the maker, 2026-11-15: an edit left one note a bar).
+const acidLive = () => (live && live.acOff && live.acGate ? live.acOff.map((o, s) => ({ off: o, oct: live.acOct[s], gate: (live.acGate >> s) & 1, acc: (live.acAcc >> s) & 1, slide: (live.acSlide >> s) & 1 })) : null);
+const pluckLive = () => (live && live.cmRung && live.cmLvl && live.cmLvl.some((v) => v) ? live.cmRung.map((r, s) => ({ rung: r, lvl: live.cmLvl[s] })) : null);
 function edAcid(g, W, RH, rows) {
   const frozen = par("P_AC_LOCK");
   tools('<button class="small" data-act="acap">Capture the line it plays</button><button class="small" data-act="aclear">Clear</button>' +
         '<button class="small" data-act="alock" aria-pressed="' + !!frozen + '">' + (frozen ? "Frozen" : "Free: freeze it") + "</button>");
   const G = gridBase(g, W, RH, rows, (r) => { const n = rows - 1 - r; return n === 0 ? "R" : "+" + n; }, (r) => { const n = (rows - 1 - r) % 7; return n === 0 || n === 2 || n === 4; });
   playStep(g, G, live && frozen ? live.acPos % 16 : -1);
-  const line = acidGet();
+  const line = (laneState("acid").tag === "DICE" && acidLive()) || acidGet();
   let prev = null;
   line.forEach((x, s) => {
     const xx = G.x0 + s * G.cw;
@@ -1000,6 +1004,7 @@ function edAcid(g, W, RH, rows) {
     "An edit freezes the line (it is kept with the piece and Mutate leaves it); free, the acid grows a new line of its own.";
 }
 function clickAcid(s, r, right, below) {
+  if (laneState("acid").tag === "DICE") { const l = acidLive(); if (l) acidSet(l); }
   const line = acidGet(), x = line[s];
   if (below) x.oct = (x.oct + 1) % 4;
   else {
@@ -1020,7 +1025,7 @@ function edPluck(g, W, RH, rows) {
         '<button class="small" data-act="plock" aria-pressed="' + !!frozen + '">' + (frozen ? "Frozen" : "Free: freeze it") + "</button>");
   const G = gridBase(g, W, RH, rows, (r) => "rung " + (rows - 1 - r), (r) => (rows - 1 - r) % 3 === 0);
   playStep(g, G, live && frozen ? live.cmPos % 16 : -1);
-  pluckGet().forEach((x, s) => {
+  ((laneState("pluck").tag === "DICE" && pluckLive()) || pluckGet()).forEach((x, s) => {
     if (!x.lvl) return;
     const y = G.y0 + (rows - 1 - x.rung) * RH, xx = G.x0 + s * G.cw;
     g.globalAlpha = [0, 0.45, 0.75, 1][x.lvl]; g.fillStyle = COL.pluck; g.fillRect(xx + 2, y + 1, G.cw - 4, RH - 2); g.globalAlpha = 1;
@@ -1033,6 +1038,7 @@ function freezePluck() {                                     // as ui.c ps_freez
   setPar("P_CM_RATE", 3); setPar("P_CM_LOOP", 2); setPar("P_CM_VU", 100); setPar("P_CM_LOCK", 1);
 }
 function clickPluck(s, r, right) {
+  if (laneState("pluck").tag === "DICE") { const l = pluckLive(); if (l) pluckSet(l); }
   const line = pluckGet(), x = line[s], rung = 11 - r;
   if (right) x.lvl = 0;
   else if (x.lvl && x.rung === rung) x.lvl = [0, 0, 3, 1][x.lvl];
@@ -1120,14 +1126,14 @@ $("edtools").addEventListener("click", (e) => {
     bsteps: () => { setPar("P_BL_MODE", BL_STEPS); say("The bass plays its steps."); },
     acap: () => {
       if (!live) return say("Switch on and play first.", true), false;
-      acidSet(live.acOff.map((o, s) => ({ off: o, oct: live.acOct[s], gate: (live.acGate >> s) & 1, acc: (live.acAcc >> s) & 1, slide: (live.acSlide >> s) & 1 }))); setPar("P_AC_LOCK", 1);
+      acidSet(acidLive() || acidGet()); setPar("P_AC_LOCK", 1);
       say("Captured the acid line it plays: " + acidGet().filter((x) => x.gate).length + " notes, frozen.");
     },
     aclear: () => { acidSet(acidGet().map(() => ({ off: 0, oct: 1, gate: 0, acc: 0, slide: 0 }))); setPar("P_AC_LOCK", 1); say("The acid line is cleared (frozen, all rests). Undo brings it back."); },
     alock: () => { setPar("P_AC_LOCK", par("P_AC_LOCK") ? 0 : 1); say(par("P_AC_LOCK") ? "The acid line is frozen: kept with the piece." : "The acid line is free: it grows and mutates by itself."); },
     pcap: () => {
       if (!live) return say("Switch on and play first.", true), false;
-      pluckSet(live.cmRung.map((r, s) => ({ rung: r, lvl: live.cmLvl[s] }))); freezePluck();
+      pluckSet(pluckLive() || pluckGet()); freezePluck();
       say("Captured the pluck's loop: " + pluckGet().filter((x) => x.lvl).length + " notes, frozen.");
     },
     pclear: () => { pluckSet(pluckGet().map(() => ({ rung: 0, lvl: 0 }))); freezePluck(); say("The pluck line is cleared (frozen, all rests). Undo brings it back."); },
