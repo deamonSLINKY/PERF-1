@@ -10,7 +10,7 @@ typedef struct {               /* proportional, see tools/gen_font.py */
     const uint8_t *adv;        /* advance per glyph */
     const uint8_t *bw;         /* bitmap width per glyph (starts FONT_PAD left of the pen) */
     const uint16_t *off;       /* byte offset of each glyph */
-    const uint8_t *data;
+    const uint8_t *data;       /* at off: the first inked row, the rows stored, the rows (0.17.52) */
 } felucca_font_t;
 #include "felucca_font.h"
 
@@ -228,10 +228,13 @@ static int32_t cv_text_tr(int32_t x, int32_t y, const felucca_font_t *f, const c
         w = f->bw[gi];
         bpr = (w + 1u) / 2u;
         gd = f->data + f->off[gi];
-        for (gy = 0; gy < f->h; gy++)
+        const int32_t y0 = y + gd[0] + cv_oy;
+        const uint32_t nr = gd[1];
+        gd += 2;
+        for (gy = 0; gy < nr; gy++)
             for (gx = 0; gx < w; gx++) {
                 uint32_t a = gd[gy * bpr + gx / 2u];
-                int32_t px = x - f->pad + (int32_t)gx, py = y + (int32_t)gy + cv_oy;
+                int32_t px = x - f->pad + (int32_t)gx, py = y0 + (int32_t)gy;
                 a = (gx & 1u) ? (a & 15u) : (a >> 4);
                 if (!a || (uint32_t)px >= cv_w || py < cv_y0 || py >= cv_y1)
                     continue;

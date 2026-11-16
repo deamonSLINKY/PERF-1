@@ -7,8 +7,9 @@
 
 Glyph format: per glyph an advance width, a bitmap width and an offset; the
 bitmap starts FONT_PAD pixels left of the pen position (room for side
-bearings); rows top to bottom, 2 pixels per byte (high nibble first),
-alpha 0..15.
+bearings). At the offset: the first inked row, the number of rows, then those
+rows top to bottom, 2 pixels per byte (high nibble first), alpha 0..15
+(PERF 0.17.52: blank rows above and below are not stored, about 29 KB less).
 """
 import sys
 from pathlib import Path
@@ -169,7 +170,10 @@ def main(out):
         data, offs = [], []
         for adv, bw, g in glyphs:
             offs.append(len(data))
-            for y in range(h):
+            inked = [y for y in range(h) if any(g[y * bw:(y + 1) * bw])]
+            y0, n = (inked[0], inked[-1] - inked[0] + 1) if inked else (0, 0)
+            data += [y0, n]
+            for y in range(y0, y0 + n):
                 row = g[y * bw:(y + 1) * bw] + [0]
                 for x in range(0, bw, 2):
                     data.append((row[x] << 4) | row[x + 1])

@@ -7994,16 +7994,17 @@ static void cv_text2(int32_t x, int32_t y, const felucca_font_t *f, const char *
 {
     for (; *s; s++) {
         const uint32_t gi = glyph(f, (uint8_t)*s), w = f->bw[gi], bpr = (w + 1u) / 2u;
-        const uint8_t *gd = f->data + f->off[gi];
+        const uint8_t *gd = f->data + f->off[gi] + 2;
+        const int32_t yg = y + 2 * (int32_t)gd[-2];
         uint32_t gx, gy;
-        for (gy = 0; gy < f->h; gy++)
+        for (gy = 0; gy < gd[-1]; gy++)
             for (gx = 0; gx < w; gx++) {
                 uint32_t a = gd[gy * bpr + gx / 2u];
                 int32_t px, py;
                 a = (gx & 1u) ? (a & 15u) : (a >> 4);
                 if (!a)
                     continue;
-                px = x + 2 * ((int32_t)gx - f->pad), py = y + 2 * (int32_t)gy;
+                px = x + 2 * ((int32_t)gx - f->pad), py = yg + 2 * (int32_t)gy;
                 if (a == 15u) {
                     cv_rect(px, py, 2, 2, c);
                 } else {
