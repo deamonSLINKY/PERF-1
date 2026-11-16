@@ -303,6 +303,7 @@
       <button id="lkConn">Connect my FM-1</button>
       <label class="muted"><input type="checkbox" id="lkLive" disabled> <b>Live</b>: the FM-1 plays the studio's settings and the DX voice you edit, as you change them</label>
       <label class="muted"><input type="checkbox" id="lkTog" checked disabled> <b>Play together</b>: Play and Stop on either one start and stop both, in time (the one you press leads, the other follows its clock). Keeps the USB port while ticked</label>
+      <button id="lkMidi" hidden title="The FM-1's MIDI out (its settings) is off: then its Play cannot start the studio">Turn the FM-1's MIDI out on</button>
       <span class="muted" id="lkDiag" style="font-size:.78rem;font-family:monospace"></span>
       <button id="lkPush" disabled>Send the piece's settings now</button>
       <button id="lkPull" disabled>Take the FM-1's settings into the piece</button>
@@ -3223,6 +3224,7 @@ function lkShow() {
   $("lkLive").disabled = !ok; $("lkLive").checked = lk.live;
   $("lkPush").disabled = $("lkPull").disabled = !ok; $("lkVox").disabled = !lk.on;
   $("lkTog").disabled = !lk.on; $("lkTog").checked = lk.tog;
+  $("lkMidi").hidden = !(lk.on && lk.val && lk.val[PE.P_MIDI] === 0);
 }
 function lkLost(why) {
   const was = lk.on;
@@ -3279,7 +3281,7 @@ async function lkReadAll() {                                    // the unit's se
 }
 async function lkReadSlot(i) { const p = lkWait("slotW", 1500); return (await lkSend(lkSlotMsg(i))) ? p : null; }
 async function lkConnect() {
-  lk.on = lk.live = false; lk.port = null; lk.map.clear(); lk.vslot = -1; lkShow();
+  lk.on = lk.live = false; lk.port = null; lk.map.clear(); lk.vslot = -1; lk.why = ""; lkShow();
   lkSay("Looking for the FM-1…");
   try { await lkOpen(); } catch (e) { return lkSay(e.message, true); }
   lk.busy++;
@@ -3450,7 +3452,7 @@ $("lkPull").addEventListener("click", async () => {
     for (let p = 0; p < P.length; p++) if (!LK_SKIP.has(p) && lk.val[p] !== null && parSetV(p, lk.val[p])) n++;
     if (n) changed();
     lkSay(n ? n + (n === 1 ? " setting" : " settings") + " taken from the FM-1 into the piece (↶ puts them back). Its steps and lines stay the studio's." : "The piece already has the FM-1's settings.");
-  } finally { lk.busy--; }
+  } finally { lk.busy--; lkShow(); }
 });
 $("lkVox").addEventListener("click", lkTakeVoices);
 $("lkTog").addEventListener("change", (e) => {
@@ -3460,6 +3462,12 @@ $("lkTog").addEventListener("change", (e) => {
   lkSay(lk.tog ? "Play together: Play or Stop on either one starts or stops both" + (lk.val && lk.val[PE.P_MIDI] === 0 ? ". The FM-1's MIDI out is off (its settings): its Play cannot reach the studio until it is on." : ".")
     : "Play together off: each plays on its own. The USB port is let go after a few seconds (for the Editor, M-UPGRADE).");
   lkShow();
+});
+$("lkMidi").addEventListener("click", async () => {      // (the player's own setting: never sent by Live, only by this button)
+  if (!(await lkSend(lkSetMsg(PE.P_MIDI, 1)))) return;
+  if (lk.val) lk.val[PE.P_MIDI] = 1;
+  lkShow();
+  lkSay("The FM-1's MIDI out is on: its Play and Stop now reach the studio. (It sends its notes and clock out too.)");
 });
 $("lkMenu").addEventListener("toggle", lkShow);
 setInterval(() => {                                          // what Play together has seen and sent (start, clocks, stop): for telling where it stops
