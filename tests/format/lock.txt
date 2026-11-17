@@ -1,0 +1,370 @@
+# The save formats' lock (tools/format_lock.py). Lines may be added; none may change. Made by "update".
+bs.layout magic 31515342 hdr 8 len 16
+fxs0 EN_FXS_GX_LEN
+fxs1 EN_FXS_GX_TGT
+fxs2 EN_FXS_GX_DEPTH
+fxs3 EN_FXS_PH_RATE
+fxs4 EN_FXS_PH_DEPTH
+fxs5 EN_FXS_PH_FB
+fxs6 EN_FXS_PH_MIX
+fxs7 EN_FXS_FL_RATE
+fxs8 EN_FXS_FL_DEPTH
+fxs9 EN_FXS_FL_FB
+fxs10 EN_FXS_FL_MIX
+fxs11 EN_FXS_VN_LEVEL
+fxs12 EN_FXS_VN_CRACK
+fxs13 EN_FXS_VN_HISS
+fxs14 EN_FXS_VN_TONE
+fxs15 EN_FXS_TP_WOW
+fxs16 EN_FXS_TP_FLUT
+fxs17 EN_FXS_TP_DRIVE
+fxs18 EN_FXS_TP_DULL
+fxs19 EN_FXS_RL_START
+fxs20 EN_FXS_RL_END
+fxs21 EN_FXS_RL_TIME
+fxs22 EN_FXS_RL_SWELL
+fxs23 EN_FXS_PM_DEPTH
+fxs24 EN_FXS_PM_REL
+fxs25 EN_FXS_PM_RATE
+fxs26 EN_FXS_PM_TGT
+fxs27 EN_FXS_RS_TIME
+fxs28 EN_FXS_RS_FILT
+fxs29 EN_FXS_RS_WASH
+fxs30 EN_FXS_RS_ECHO
+fxs31 EN_FXS_SC_CHAOS
+fxs32 EN_FXS_SC_REV
+fxs33 EN_FXS_SC_SIZE
+fxs34 EN_FXS_SC_LEN
+fxs35 EN_FXS_BR_TIME
+fxs36 EN_FXS_BR_BACK
+fxs37 EN_FXS_BR_RET
+fxs38 EN_FXS_BR_DULL
+fxs39 EN_FXS_HF_SPEED
+fxs40 EN_FXS_HF_SLIDE
+fxs41 EN_FXS_SW_RATE
+fxs42 EN_FXS_SW_DEPTH
+fxs43 EN_FXS_SW_RESO
+fxs44 EN_FXS_SW_TYPE
+fxs45 EN_FXS_SR_EVERY
+fxs46 EN_FXS_SR_REACH
+fxs47 EN_FXS_SR_STYLE
+fxs48 EN_FXS_FZ_SIZE
+fxs49 EN_FXS_FZ_SPREAD
+fxs50 EN_FXS_FZ_GRAINS
+fxs51 EN_FXS_RV_LEN
+fxs52 EN_FXS_RV_MIX
+fxs53 EN_FXS_RM_FREQ
+fxs54 EN_FXS_RM_MIX
+fxs55 EN_FXS_FX_QUANT
+fxs56 EN_FXS_FX_MODE
+fxs57 EN_FXS_FX_MIX
+fxs58 EN_FXS_TK_RATE
+fxs59 EN_FXS_TK_DEPTH
+fxs60 EN_FXS_TK_RESO
+fxs61 EN_FXS_TK_MIX
+fxs62 EN_FXS_WH_SENS
+fxs63 EN_FXS_WH_RANGE
+fxs64 EN_FXS_WH_RESO
+fxs65 EN_FXS_WH_MIX
+fxs66 EN_FXS_SM_MODE
+fxs67 EN_FXS_SM_LOOP
+fxs68 EN_FXS_SM_LEN
+fxs69 EN_FXS_SM_MIX
+fxs70 EN_FXS_RP_PITCH
+fxs71 EN_FXS_RP_DECAY
+fxs72 EN_FXS_RP_GATE
+fxs73 EN_FXS_RP_REFRESH
+fxs74 EN_FXS_FT_PAD
+fxs75 EN_FXS_FT_BASS
+fxs76 EN_FXS_FT_ACID
+fxs77 EN_FXS_TF_TYPE
+fxs78 EN_FXS_TF_CUT
+fxs79 EN_FXS_TF_RESO
+fxs80 EN_FXS_TF_TGT
+fxs81 EN_FXS_TD_SEND
+fxs82 EN_FXS_TD_FB
+fxs83 EN_FXS_TD_TGT
+fxs84 EN_FXS_TP_RATE
+fxs85 EN_FXS_TP_DEPTH
+fxs86 EN_FXS_TP_MIX
+fxs87 EN_FXS_TP_TGT
+fxs88 EN_FXS_SQ_DRIVE
+fxs89 EN_FXS_SQ_AMT
+fxs90 EN_FXS_SQ_WOW
+fxs91 EN_FXS_SQ_TGT
+fxs92 EN_FXS_AF_AMT
+fxs93 EN_FXS_AF_EVERY
+fxs94 EN_FXS_AF_LEN
+fxs95 EN_FXS_AF_PICK
+fxs96 EN_FXS_AC_ANS
+fxs97 EN_FXS_BA_TYPE
+fxs98 EN_FXS_BA_EVERY
+fxs99 EN_FXS_VINTAGE
+fxs100 EN_FXS_POLISH
+fxs101 EN_FXS_TILT
+fxs102 EN_FXS_WIDTH
+fxs103 EN_FXS_JC_TYPE
+fxs104 EN_FXS_JC_TGT
+fxs105 EN_FXS_LK_MODE
+fxs106 EN_FXS_LK_PLAYS
+fxs107 EN_FXS_LK_SEC
+fxs108 EN_FXS_RZ_AMT
+fxs109 EN_FXS_RZ_DEC
+fxs110 EN_FXS_RZ_REG
+fxs111 EN_FXS_RZ_TGT
+genre0 HYPNO
+genre1 LOFI
+genre2 HOUSE
+genre3 DUBSTEP
+genre4 DUB
+genre5 DNB
+genre6 BREAKS
+genre7 GARAGE
+genre8 ELECTRO
+genre9 TRAP
+genre10 DISCO
+genre11 FUNK
+genre12 REGGAE
+genre13 SYNTHWV
+genre14 AMAPI
+genre15 TRIPHOP
+genre16 INDUS
+genre17 PSY
+genre18 FOREST
+genre19 HIPHOP
+genre20 TRANCE
+genre21 AMBIENT
+glob.layout tune 4 midi 6 theme 8 rsv 10 sl 12 sl_on 28 sl_rsv 29 sl_bars 32 sl_mute 48 sl_end 64 sl_x 65 sl_pat 68 sl_mood 84
+glob.magic 4c474d50
+glob.size 100
+img.layout ver 2 hdr 16 rec 376 par 74 cml1 250 acl 256 cml2 274 mod 280 tail 3776 len 3836
+img.magic 33505948
+mm.layout magic 3150414d 3250414d size 152
+nlane 6
+npat 6
+npieces 10
+obj0 OBJ_PROJ
+obj1 OBJ_PANEL
+obj2 OBJ_SET
+obj3 OBJ_VOICES
+obj4 OBJ_GLOB
+obj5 OBJ_G1
+obj6 OBJ_G2
+obj7 OBJ_G3
+obj8 OBJ_G4
+obj9 OBJ_G5
+obj10 OBJ_G6
+obj11 OBJ_G7
+obj12 OBJ_G8
+obj13 OBJ_G9
+obj14 OBJ_G10
+obj15 OBJ_G11
+obj16 OBJ_G12
+obj17 OBJ_G13
+obj18 OBJ_G14
+obj19 OBJ_G15
+obj20 OBJ_G16
+obj21 OBJ_G17
+obj22 OBJ_G18
+obj23 OBJ_KINDS
+obj24 OBJ_MMAP
+obj25 OBJ_BSTEP
+obj26 OBJ_G19
+obj27 OBJ_G20
+obj28 OBJ_G21
+par0 Pad|0|100|45
+par1 Acid|0|100|55
+par2 Bass|0|100|65
+par3 Drums|0|100|75
+par4 Vinyl|0|100|20
+par5 Tempo|70|190|128
+par6 Evolve|0|100|40
+par7 Motion|0|100|60
+par8 Drift|0|100|60
+par9 Bright|0|100|35
+par10 Sound|0|23|1|Rhodes|Voices|Strings|Glass|Organ|Warm|Stabs|Dark|Dub|Trance|Poly|Hollow|Pings|Hits|Rave|Sine|Ooh|Wurli|Mallet|Brass|Fat|Pluck|Chapel|Air
+par11 Detune|0|100|30
+par12 Attack|0|100|45
+par13 Hold|0|100|35
+par14 Release|0|100|55
+par15 Rest|0|100|20
+par16 Rate|0|15|4|1/4|1/2|1 bar|2 bars|4 bars|8 bars|16 bars|32 bars|1/8|1/8T|1/16|1/16T|1/4T|1/8.|1/4.|1/2.
+par17 Depth|0|100|25
+par18 Shape|0|5|0|Sine|Triangle|Saw|Square|S&H|Drift
+par19 Target|0|7|0|Filter|Level|Pan|Pitch|Acid cut|Acid reso|Echo time|Punch cut
+par20 Wear|0|7|1|Mint|Clean|Light|Used|Worn|Scratched|Dusty|Trashed
+par21 Every|0|7|0|2nd|3rd|4th|5th|6th|7th|8th|Drift
+par22 Pump|0|100|60
+par23 Octave|-3|3|0
+par24 Cutoff|0|100|45
+par25 Reso|0|100|45
+par26 Trigger|0|5|0|Chord|1 bar|2 bars|4 bars|8 bars|Off
+par27 Attack|0|100|25
+par28 Decay|0|100|55
+par29 Amount|0|100|35
+par30 Rate|0|15|6|1/4|1/2|1 bar|2 bars|4 bars|8 bars|16 bars|32 bars|1/8|1/8T|1/16|1/16T|1/4T|1/8.|1/4.|1/2.
+par31 Depth|0|100|55
+par32 Shape|0|5|0|Sine|Triangle|Saw|Square|S&H|Drift
+par33 Target|0|7|0|Cutoff|Pitch|Level|Drive|Reso|Acid cut|Acid reso|Echo time
+par34 Cutoff|0|100|35
+par35 Reso|0|100|70
+par36 Env mod|0|100|55
+par37 Decay|0|100|40
+par38 Accent|0|100|50
+par39 Slide|0|100|30
+par40 Sound|0|30|0|Saw|Square|Driven|Sync|Pluck|PWM|Chip|Sub|Trance|Bleep|Fifth|Bell|Organ|Laser|Fold|Soft|Marimba|E.Piano|Kalimba|Brass|Gong|Clav|Vibes|Digital|Super|CZ|Mini|Hyper|CZ Pulse|CZ Bell|Lead
+par41 Density|0|100|60
+par42 Length|1|16|16
+par43 Range|1|3|1|1 oct|2 oct|3 oct
+par44 Mutate|0|100|25
+par45 Acid oct|-3|3|0
+par46 Drive|0|100|40
+par47 Swing|0|100|0
+par48 Pattern|0|5|0
+par49 Level|0|150|85
+par50 Tune|-50|50|0
+par51 Decay|0|100|50
+par52 Level|0|150|60
+par53 Tune|-50|50|0
+par54 Decay|0|100|45
+par55 Level|0|150|65
+par56 Tune|-50|50|0
+par57 Decay|0|100|45
+par58 Level|0|150|55
+par59 Tune|-50|50|0
+par60 Decay|0|100|35
+par61 Level|0|150|50
+par62 Tune|-50|50|0
+par63 Decay|0|100|50
+par64 Level|0|150|50
+par65 Tune|-50|50|0
+par66 Decay|0|100|40
+par67 Echo|0|100|45
+par68 Echo time|0|5|1|1/8|3/16|1/4|1/4.|1/2|1 bar
+par69 Reverb|0|100|40
+par70 Size|0|100|70
+par71 Root|0|11|9|C|C#|D|Eb|E|F|F#|G|Ab|A|Bb|B
+par72 Mode|0|13|5|Ionian|Dorian|Phrygian|Lydian|Mixolyd.|Aeolian|Pent maj|Pent min|Locrian|Harm.min|Mel.min|Phr.dom|Hung.min|Dbl.harm
+par73 Tune|-50|50|0
+par74 MIDI out|0|1|1|Off|On
+par75 Theme|0|6|0|Console|Imp|Synth|Acid|Ice|Ember|Phosphor
+par76 Sync|0|1|0|Bar|Loop
+par77 Links|0|1|0|Off|On
+par78 Kick|0|100|50
+par79 Snare|0|100|40
+par80 Hats|0|100|50
+par81 Perc|0|1|0|Off|Clock
+par82 Song oct|-3|3|0
+par83 Pad oct|-3|3|0
+par84 Sound|0|23|0|Saws|Warm|Grit|Dirty|Reese|Pulse|FM|Organ|Rumble|Sub|Square|Hoover|Fifths|Metal|Sync|Bright|Wub|Bite|Tine|Clang|Gnarl|Wide|Power|Air
+par85 Kick|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
+par86 Snare|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
+par87 Hats|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
+par88 Perc|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
+par89 Pad hand|0|1|0
+par90 Bass hand|0|1|0
+par91 Acid hand|0|1|0
+par92 Chord|0|7|0|Auto|Triads|7ths|9ths|Sus|Dub|Fourths|11ths
+par93 Voicing|0|1|0|Close|Open
+par94 Change|0|2|0|Off|Next|Random
+par95 Every|0|5|2|Chord|4 bars|8 bars|16 bars|32 bars|64 bars
+par96 Pool|2|6|4
+par97 Mutate|0|2|0|Off|Shift|Morph
+par98 Pluck|0|100|50
+par99 Sound|0|87|1
+par100 Density|0|100|45
+par101 Pluck oct|-2|2|0
+par102 Decay|0|100|45
+par103 Style|0|5|0|Up|Down|Up-down|Random|Skip|Thirds
+par104 Rate|0|3|2
+par105 Range|1|3|2
+par106 Prob|0|100|100
+par107 Prob|0|100|100
+par108 Prob|0|100|100
+par109 Prob|0|100|100
+par110 Prob|0|100|100
+par111 Prob|0|100|100
+par112 Pan|0|100|50
+par113 Pan|0|100|50
+par114 Pan|0|100|50
+par115 Pan|0|100|50
+par116 Pan|0|100|50
+par117 Send|0|100|50
+par118 Send|0|100|50
+par119 Send|0|100|50
+par120 Send|0|100|50
+par121 Send|0|100|50
+par122 Pluck hand|0|1|0
+par123 Type|0|2|0|Plate|Shimmer|Gated
+par124 Damping|0|100|47
+par125 Predelay|0|100|100
+par126 Amount|0|100|30
+par127 Chorus|0|100|0
+par128 Ratio|0|6|1|Off|1.5:1|2:1|3:1|4:1|6:1|10:1
+par129 Thresh|0|100|60
+par130 Make-up|0|100|10
+par131 Ceiling|0|100|100
+par132 Length|1|16|16
+par133 Length|1|16|16
+par134 Length|1|16|16
+par135 Length|1|16|16
+par136 Length|1|16|16
+par137 Length|1|16|16
+par138 Density|0|100|50
+par139 Density|0|100|50
+par140 Density|0|100|50
+par141 Density|0|100|50
+par142 Density|0|100|50
+par143 Density|0|100|50
+par144 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
+par145 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
+par146 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
+par147 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
+par148 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
+par149 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
+par150 Loop|0|6|0|Off|2|4|8|2 ~|4 ~|8 ~
+par151 Answer|0|44|0|Off|Off|Off|Off|Off|Oct -2|Oct -|Oct =|Oct +|Oct +2|5th -2|5th -|5th =|5th +|5th +2|3rd -2|3rd -|3rd =|3rd +|3rd +2|Mirr -2|Mirr -|Mirr =|Mirr +|Mirr +2|Rev -2|Rev -|Rev =|Rev +|Rev +2|Rot -2|Rot -|Rot =|Rot +|Rot +2|Spar -2|Spar -|Spar =|Spar +|Spar +2|Acc -2|Acc -|Acc =|Acc +|Acc +2
+par152 Mode|0|16|0|Hold|Root|Kick|Eighths|Off-beat|Walk|Riff|Octaves|Two-step|One-drop|Log drum|Skippy|Funk|Big beat|Dub|Gallop|Steps
+par153 Length|0|100|50
+par154 Move|0|100|30
+par155 Glide|0|100|0
+par156 Deja vu|0|100|0
+par157 Loop|0|3|2
+par158 Leaps|0|100|0
+par159 Mutates|0|3|0|All|Notes|Rhythm|Accents
+par160 Comp|0|8|0|Auto|Hold|Off-beat|On-beat|3-3-2|Charlesto|Syncop|Sparse|Eighths
+par161 Ghosts|0|100|0
+par162 Accents|0|100|50
+par163 Humanize|0|100|0
+par164 Chain|0|9|0|Off|12|1112|1123|1134|1213|1234|1232|1115|123456
+par165 Slice|0|9|0|Off|Halves|Stutter|Reverse|Delay|Beats|Mirror|Double|Swap|Auto
+par166 Time|0|2|0|Normal|Half|Double
+par167 Cond|0|7|0|Always|1:2|2:2|1:4|4:4|1:8|Fill|No fill
+par168 Cond|0|7|0|Always|1:2|2:2|1:4|4:4|1:8|Fill|No fill
+par169 Cond|0|7|0|Always|1:2|2:2|1:4|4:4|1:8|Fill|No fill
+par170 Cond|0|7|0|Always|1:2|2:2|1:4|4:4|1:8|Fill|No fill
+par171 Cond|0|7|0|Always|1:2|2:2|1:4|4:4|1:8|Fill|No fill
+par172 Cond|0|7|0|Always|1:2|2:2|1:4|4:4|1:8|Fill|No fill
+par173 Frozen|0|1|0|Free|Frozen
+par174 Motif|0|100|60
+par175 Frozen|0|1|0|Free|Frozen
+prg.len 6
+prk.len 3
+px.layout magic 31584350 hdr 8 len 16 flags 3 fxat 4
+pxfx0 74
+pxfx1 75
+pxfx2 76
+pxfx3 88
+pxfx4 89
+pxfx5 90
+pxfx6 91
+pxfx7 97
+pxfx8 98
+room.extras_object 312
+room.genre_object 4
+room.piece_extras 3
+room.piece_settings 0
+set.magic 31544553
+set.size 140
+set.uiv 12
+vox.layout magic 31584f56 size 2056

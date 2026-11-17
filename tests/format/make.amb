@@ -1,0 +1,104 @@
+# The save formats' fixtures (tools/format_fixture.sh runs this in a release's own host build, 0.15.2 on): pieces saved in three genres
+# with their settings changed, the player's three, then every flash object written to build/fmtfix/. Only commands every release has.
+seed 0
+wait 3000
+# the original genre: pieces 1 and 4
+setpar 0 61
+setpar 5 133
+setpar 9 77
+setpar 33 40
+setpar 34 70
+setpar 44 4
+setpar 60 2
+tap GLO
+tap SAVE
+wait 600
+expect saved 1
+tap HOME
+wait 300
+turn PRESET 3
+wait 300
+setpar 0 40
+setpar 7 20
+setpar 10 3
+setpar 21 5
+setpar 40 1
+setpar 46 3
+setpar 70 1
+setpar 80 3
+setpar 100 1
+setpar 120 1
+setpar 150 1
+setpar 158 1
+tap GLO
+tap SAVE
+wait 600
+expect saved 9
+# genre 2: piece 6
+press GLO
+turn PRESET 2
+release GLO
+wait 300
+expect genre 2
+tap HOME
+wait 300
+turn PRESET 2
+wait 300
+setpar 1 90
+setpar 5 120
+setpar 25 50
+setpar 35 30
+setpar 45 2
+setpar 75 1
+setpar 110 2
+tap GLO
+tap SAVE
+wait 600
+# the last genre this release has: piece 10
+press GLO
+turn PRESET -3
+release GLO
+wait 300
+tap HOME
+wait 300
+turn PRESET -3
+wait 300
+setpar 2 80
+setpar 15 9
+setpar 66 2
+tap GLO
+tap SAVE
+wait 600
+# the player's three: the theme and the tune (written by themselves)
+setpar 75 2
+setpar 73 3
+wait 21000
+dumpobj 0 build/fmtfix/o0.bin
+dumpobj 1 build/fmtfix/o1.bin
+dumpobj 2 build/fmtfix/o2.bin
+dumpobj 3 build/fmtfix/o3.bin
+dumpobj 4 build/fmtfix/o4.bin
+dumpobj 5 build/fmtfix/o5.bin
+dumpobj 6 build/fmtfix/o6.bin
+dumpobj 7 build/fmtfix/o7.bin
+dumpobj 8 build/fmtfix/o8.bin
+dumpobj 9 build/fmtfix/o9.bin
+dumpobj 10 build/fmtfix/o10.bin
+dumpobj 11 build/fmtfix/o11.bin
+dumpobj 12 build/fmtfix/o12.bin
+dumpobj 13 build/fmtfix/o13.bin
+dumpobj 14 build/fmtfix/o14.bin
+dumpobj 15 build/fmtfix/o15.bin
+dumpobj 16 build/fmtfix/o16.bin
+dumpobj 17 build/fmtfix/o17.bin
+dumpobj 18 build/fmtfix/o18.bin
+dumpobj 19 build/fmtfix/o19.bin
+dumpobj 20 build/fmtfix/o20.bin
+dumpobj 21 build/fmtfix/o21.bin
+dumpobj 22 build/fmtfix/o22.bin
+dumpobj 23 build/fmtfix/o23.bin
+dumpobj 24 build/fmtfix/o24.bin
+dumpobj 25 build/fmtfix/o25.bin
+dumpobj 26 build/fmtfix/o26.bin
+dumpobj 27 build/fmtfix/o27.bin
+dumpobj 28 build/fmtfix/o28.bin

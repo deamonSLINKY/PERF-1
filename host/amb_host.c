@@ -236,6 +236,198 @@ uint32_t plat_core2(void) { return 0; }
 #include "../firmware/src/app/project.c"
 #include "../firmware/src/app/ui.c"
 
+#ifndef EN_WEB
+/* (0.17.61) THE SAVE FORMATS, LOCKED FOR 1.x. fmt_dump: what this build makes of the saved objects, a "key value" a line: every genre's
+ * saved pieces as they load (only the settings the record has: those after it are the recipe's, which may change), the set list, the
+ * settings (the effect settings the record has), the MIDI map, the voices. tests/format/<release>/ keeps the objects a public release
+ * saved and this dump of them: every build must load them the same (fmtcheck). fmt_lock: the layout, for tools/format_lock.py. */
+static void fmt_dump(FILE *f)
+{
+    static uint8_t raw[PLAT_STORE_MAX];
+    const int g0 = proj.genre, p0 = proj.piece;
+    int g, i, k, l, n;
+    for (g = 0; g < EN_NGENRE; g++) {
+        uint32_t npar = 0;
+        n = plat_store_load(obj_of(g), raw, sizeof raw);
+        if (n <= 0)
+            continue;
+        if (n >= (int)IMG_HDR && rd32(raw) == IMG_MAGIC)
+            npar = rd16(raw + 6);
+        else if (n >= 10 && rd32(raw) == BANK_MAGIC)
+            npar = rd16(raw + 8);
+        proj.genre = (uint8_t)g;
+        image_load(g);
+        fprintf(f, "g%d.saved %u\n", g, (unsigned)saved);
+        for (i = 0; i < NPIECES; i++) {
+            const slot_t *s = &proj.slot[i];
+            if (!(saved >> i & 1u))
+                continue;
+            for (k = 0; k < P_NPARAMS && (uint32_t)k < npar; k++)
+                if (!(k >= P_DD_CHANGE && k <= P_DD_MUTATE && !(px[i][PX_FLAGS] & 1u)))   /* (before 0.16.28: the defaults, image_load) */
+                    fprintf(f, "g%d.p%d.par%d %d\n", g, i, k, s->par[k]);
+            fprintf(f, "g%d.p%d.pool %u\n", g, i, (unsigned)s->pool);
+            for (k = 0; k < EN_NPAT; k++) {
+                fprintf(f, "g%d.p%d.pat%d", g, i, k);
+                for (l = 0; l < EN_NLANE; l++)
+                    fprintf(f, " %u", (unsigned)s->pats[k][l]);
+                fputc('\n', f);
+            }
+            for (l = 0; l < EN_NLANE; l++) {
+                fprintf(f, "g%d.p%d.mod%d", g, i, l);
+                for (k = 0; k < 16; k++)
+                    fprintf(f, " %u", (unsigned)s->mod[l][k]);
+                fputc('\n', f);
+            }
+#define FMT_BYTES(nm, arr, len) do { fprintf(f, "g%d.p%d." nm, g, i); for (k = 0; k < (int)(len); k++) fprintf(f, " %u", (unsigned)(arr)[k]); fputc('\n', f); } while (0)
+            FMT_BYTES("acl", s->acl, 18);
+            FMT_BYTES("cml", s->cml, 12);
+            FMT_BYTES("prg", s->prg, EN_PRG_LEN);
+            FMT_BYTES("prk", s->prk, EN_PRK_LEN);
+            FMT_BYTES("bs", s->bs, 16);
+#undef FMT_BYTES
+            for (k = EN_PRK_LEN; k < (int)PX_LEN; k++)   /* the extras past the chord types, a byte a line (PX_LEN may grow) */
+                fprintf(f, "g%d.p%d.px%d %u\n", g, i, k, (unsigned)px[i][k]);
+        }
+    }
+    proj.genre = (uint8_t)g0;
+    image_load(g0);
+    proj.piece = (uint8_t)p0;
+    take(proj.piece);
+    n = plat_store_load(OBJ_GLOB, raw, sizeof raw);
+    if (n > 0) {
+        fprintf(f, "glob.tune %d\nglob.midi %d\nglob.theme %d\nglob.rsv %d\nglob.sl_on %u\nglob.sl_end %u\n", glob.tune, glob.midi, glob.theme,
+                glob.rsv, (unsigned)glob.sl_on, (unsigned)glob.sl_end);
+        for (k = 0; k < 3; k++)
+            fprintf(f, "glob.sl_rsv%d %u\nglob.sl_x%d %u\n", k, (unsigned)glob.sl_rsv[k], k, (unsigned)glob.sl_x[k]);
+        for (k = 0; k < SL_N; k++)
+            fprintf(f, "glob.place%d %u %u %u %u %u\n", k, (unsigned)glob.sl[k], (unsigned)glob.sl_bars[k], (unsigned)glob.sl_mute[k],
+                    (unsigned)glob.sl_pat[k], (unsigned)glob.sl_mood[k]);
+    }
+    n = plat_store_load(OBJ_SET, raw, sizeof raw);
+    if (n >= 8 && rd32(raw) == SET_MAGIC && set_have) {
+        const int nf = rd16(raw + 4) < EN_NFXS ? rd16(raw + 4) : EN_NFXS;
+        for (k = 0; k < nf; k++)
+            fprintf(f, "set.fxs%d %u\n", k, (unsigned)set_disk.fxs[k]);
+        for (k = 0; k < 12; k++)
+            fprintf(f, "set.uiv%d %u\n", k, (unsigned)set_disk.uiv[k]);
+        fprintf(f, "set.gx_preset %u\nset.gx_tgt %u\nset.pm_tgt %u\nset.viz %u\nset.gx_pat %u\nset.usb %u\n", (unsigned)set_disk.gx_preset,
+                (unsigned)set_disk.gx_tgt, (unsigned)set_disk.pm_tgt, (unsigned)set_disk.viz, (unsigned)set_disk.gx_pat, (unsigned)set_disk.usb);
+    }
+    if (plat_store_load(OBJ_MMAP, raw, sizeof raw) > 0) {
+        fprintf(f, "mm.n %u\n", (unsigned)mm.n);
+        for (k = 0; k < mm.n; k++)
+            fprintf(f, "mm.e%d %u %u %u\n", k, (unsigned)mm.e[k][0], (unsigned)mm.e[k][1], (unsigned)mm.e[k][2]);
+    }
+    if (plat_store_load(OBJ_VOICES, raw, sizeof raw) > 0) {
+        fprintf(f, "vox.n %d\n", en_user_count());
+        for (k = 0; k < en_user_count(); k++) {
+            uint32_t h = 2166136261u;
+            const uint8_t *v = en_user_get(k);
+            for (l = 0; l < 128; l++)
+                h = (h ^ v[l]) * 16777619u;
+            fprintf(f, "vox.v%d %08x\n", k, (unsigned)h);
+        }
+    }
+}
+static void fmt_lock(FILE *f)
+{
+    char t[16];
+    int i, v;
+    fprintf(f, "img.layout ver %u hdr %u rec %u par %u cml1 %u acl %u cml2 %u mod %u tail %u len %u\n", IMG_VER, IMG_HDR, IMG_REC,
+            (unsigned)REC_PAR, REC_CML1, (unsigned)REC_ACL, (unsigned)REC_CML2, (unsigned)REC_MOD, (unsigned)IMG_TAIL, (unsigned)IMG_LEN);
+    fprintf(f, "img.magic %08x\nnpieces %d\nnpat %d\nnlane %d\nprg.len %d\nprk.len %d\n", IMG_MAGIC, NPIECES, EN_NPAT, EN_NLANE, EN_PRG_LEN, EN_PRK_LEN);
+    fprintf(f, "room.piece_settings %d\n", (int)REC_CML1 - (int)(REC_PAR + P_NPARAMS));
+    fprintf(f, "room.piece_extras %d\n", (int)PX_LEN - (PX_FXAT + PX_NFX));
+    fprintf(f, "room.genre_object %d\n", (int)PLAT_STORE_MAX - (int)IMG_LEN);
+    fprintf(f, "room.extras_object %d\n", (int)PLAT_STORE_MAX - (int)PX_SIZE);
+    fprintf(f, "px.layout magic %08x hdr %u len %u flags %d fxat %d\n", PX_MAGIC, PX_HDR, PX_LEN, PX_FLAGS, PX_FXAT);
+    for (i = 0; i < PX_NFX; i++)
+        fprintf(f, "pxfx%d %u\n", i, (unsigned)PX_FXS[i]);
+    fprintf(f, "bs.layout magic %08x hdr %u len %u\n", BS_MAGIC, BS_HDR, BS_LEN);
+    fprintf(f, "glob.magic %08x\nglob.size %u\nglob.layout tune %u midi %u theme %u rsv %u sl %u sl_on %u sl_rsv %u sl_bars %u sl_mute %u sl_end %u "
+               "sl_x %u sl_pat %u sl_mood %u\n", GLOB_MAGIC, (unsigned)sizeof(glob_t), (unsigned)offsetof(glob_t, tune),
+            (unsigned)offsetof(glob_t, midi), (unsigned)offsetof(glob_t, theme), (unsigned)offsetof(glob_t, rsv), (unsigned)offsetof(glob_t, sl),
+            (unsigned)offsetof(glob_t, sl_on), (unsigned)offsetof(glob_t, sl_rsv), (unsigned)offsetof(glob_t, sl_bars),
+            (unsigned)offsetof(glob_t, sl_mute), (unsigned)offsetof(glob_t, sl_end), (unsigned)offsetof(glob_t, sl_x),
+            (unsigned)offsetof(glob_t, sl_pat), (unsigned)offsetof(glob_t, sl_mood));
+    fprintf(f, "set.magic %08x\nset.size %u\nset.uiv 12\n", SET_MAGIC, (unsigned)sizeof(set_t));
+    fprintf(f, "vox.layout magic %08x size %u\nmm.layout magic %08x %08x size %u\n", VOX_MAGIC, (unsigned)sizeof(vox_t), MM_MAGIC, MM_MAGIC2,
+            (unsigned)sizeof(mmap_t));
+    for (i = 0; i < EN_NGENRE; i++)
+        fprintf(f, "genre%d %s\n", i, en_genre_name(i));
+    for (i = 0; i < P_NPARAMS; i++) {
+        const en_param_t *p = en_param_info(i);
+        int named = 0;
+        fprintf(f, "par%d %s|%d|%d|%d", i, p->name, p->lo, p->hi, p->def);
+        if (p->hi - p->lo <= 80)                 /* a list (a sound, a kit, a kind): its values' names, which a saved number means */
+            for (v = p->lo; v <= p->hi && !named; v++) {
+                const char *c;
+                en_param_text(i, v, t);
+                for (c = t; *c; c++)
+                    named |= (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z');
+            }
+        if (named)
+            for (v = p->lo; v <= p->hi; v++) {
+                en_param_text(i, v, t);
+                fprintf(f, "|%s", t);
+            }
+        fputc('\n', f);
+    }
+}
+/* fmtcheck: each line of the kept dump must be in this build's, the same */
+static int fmt_check(const char *path)
+{
+    static char now[1 << 20], want[512];
+    FILE *m = fmemopen(now, sizeof now - 1, "w"), *e = fopen(path, "r");
+    int bad = 0, lines = 0;
+    if (!m || !e) {
+        printf("FAIL fmtcheck: cannot open %s\n", path);
+        if (m)
+            fclose(m);
+        if (e)
+            fclose(e);
+        return 1;
+    }
+    fmt_dump(m);
+    fclose(m);
+    while (fgets(want, sizeof want, e)) {
+        char key[64], *sp, *hit;
+        size_t kl;
+        want[strcspn(want, "\r\n")] = 0;
+        if (!want[0] || want[0] == '#')
+            continue;
+        lines++;
+        sp = strchr(want, ' ');
+        kl = sp ? (size_t)(sp - want) : strlen(want);
+        if (kl >= sizeof key)
+            kl = sizeof key - 1;
+        memcpy(key, want, kl);
+        key[kl] = 0;
+        hit = now;
+        while ((hit = strstr(hit, want)) != 0 && !((hit == now || hit[-1] == '\n') && (hit[strlen(want)] == '\n' || !hit[strlen(want)])))
+            hit++;
+        if (!hit) {
+            char *k2 = now, got[200] = "(none)";
+            while ((k2 = strstr(k2, key)) != 0 && !((k2 == now || k2[-1] == '\n') && k2[kl] == ' '))
+                k2++;
+            if (k2) {
+                size_t gl = strcspn(k2, "\n");
+                if (gl >= sizeof got)
+                    gl = sizeof got - 1;
+                memcpy(got, k2, gl);
+                got[gl] = 0;
+            }
+            if (bad < 12)
+                printf("FAIL fmtcheck %s: want \"%s\", this build: \"%s\"\n", path, want, got);
+            bad++;
+        }
+    }
+    fclose(e);
+    printf("  fmtcheck %s: %d lines, %d differ\n", path, lines, bad);
+    return bad != 0 || lines == 0;
+}
+#endif
+
 /* Kick Runner's autopilot (videos only): SELECT turned a notch at a time, as a player would, toward the
  * nearest gate and out of a wall's way */
 static int autopilot;
@@ -1300,6 +1492,21 @@ int main(int argc, char **argv)
                 printf("FAIL line %d: not a code: %s\n", lineno, *a ? a : kept);
                 fails++;
             }
+        } else if (!strcmp(cmd, "fmtdump") || !strcmp(cmd, "fmtlock")) {   /* (0.17.61) fmtdump FILE: the saved objects as this build loads them;
+                                                 * fmtlock FILE: the formats' layout (tools/format_lock.py) */
+            FILE *fo = fopen(a, "w");
+            if (!fo) {
+                printf("FAIL line %d: cannot write %s\n", lineno, a);
+                fails++;
+            } else {
+                if (cmd[3] == 'd')
+                    fmt_dump(fo);
+                else
+                    fmt_lock(fo);
+                fclose(fo);
+            }
+        } else if (!strcmp(cmd, "fmtcheck")) {       /* (0.17.61) fmtcheck FILE: a dump kept in tests/format/ (each of its lines must be in this build's) */
+            fails += fmt_check(a);
         } else if (!strcmp(cmd, "seed")) {           /* seed N: the next power-on's (reboot) */
             host_seed = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "reboot")) {

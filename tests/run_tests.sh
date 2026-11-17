@@ -87,6 +87,11 @@ else
     echo "  skip update-path tests (no build/amb.fwsc: run ./build.sh)"
 fi
 run host-build sh host/build_host.sh
+# (0.17.61) the save formats' lock: no setting, effect setting, object or genre moved, renamed or renumbered (tools/format_lock.py; the
+# releases' saved objects are checked by tests/scenarios/fmt_*.amb)
+run formatlock sh -c "mkdir -p build/scenarios/formatlock && printf 'seed 0\nwait 500\nfmtlock build/scenarios/formatlock/manifest.txt\n' > build/scenarios/formatlock/lock.amb && \
+    build/host/amb_host build/scenarios/formatlock/lock.amb build/scenarios/formatlock && \
+    python3 tools/format_lock.py check tests/format/lock.txt build/scenarios/formatlock/manifest.txt firmware/src/dsp/amb.h firmware/src/app/plat.h"
 if command -v node >/dev/null 2>&1; then run webpiece node tests/web_piece_test.js build/host/amb_host; fi
 if command -v node >/dev/null 2>&1; then run webkit node tests/web_kit_test.js build/host/amb_host; fi
 if command -v emcc >/dev/null 2>&1; then

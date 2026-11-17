@@ -1,0 +1,843 @@
+g0.saved 9
+g0.p0.par0 61
+g0.p0.par1 55
+g0.p0.par2 65
+g0.p0.par3 75
+g0.p0.par4 20
+g0.p0.par5 133
+g0.p0.par6 40
+g0.p0.par7 60
+g0.p0.par8 60
+g0.p0.par9 77
+g0.p0.par10 1
+g0.p0.par11 30
+g0.p0.par12 45
+g0.p0.par13 35
+g0.p0.par14 55
+g0.p0.par15 20
+g0.p0.par16 4
+g0.p0.par17 25
+g0.p0.par18 0
+g0.p0.par19 0
+g0.p0.par20 1
+g0.p0.par21 0
+g0.p0.par22 60
+g0.p0.par23 0
+g0.p0.par24 45
+g0.p0.par25 45
+g0.p0.par26 0
+g0.p0.par27 25
+g0.p0.par28 55
+g0.p0.par29 35
+g0.p0.par30 6
+g0.p0.par31 55
+g0.p0.par32 0
+g0.p0.par33 7
+g0.p0.par34 70
+g0.p0.par35 70
+g0.p0.par36 55
+g0.p0.par37 40
+g0.p0.par38 50
+g0.p0.par39 30
+g0.p0.par40 0
+g0.p0.par41 60
+g0.p0.par42 16
+g0.p0.par43 1
+g0.p0.par44 4
+g0.p0.par45 0
+g0.p0.par46 40
+g0.p0.par47 0
+g0.p0.par48 0
+g0.p0.par49 85
+g0.p0.par50 0
+g0.p0.par51 50
+g0.p0.par52 60
+g0.p0.par53 0
+g0.p0.par54 45
+g0.p0.par55 65
+g0.p0.par56 0
+g0.p0.par57 45
+g0.p0.par58 55
+g0.p0.par59 0
+g0.p0.par60 2
+g0.p0.par61 50
+g0.p0.par62 0
+g0.p0.par63 50
+g0.p0.par64 50
+g0.p0.par65 0
+g0.p0.par66 40
+g0.p0.par67 45
+g0.p0.par68 1
+g0.p0.par69 40
+g0.p0.par70 70
+g0.p0.par71 9
+g0.p0.par72 5
+g0.p0.par73 0
+g0.p0.par74 1
+g0.p0.par75 0
+g0.p0.par76 0
+g0.p0.par77 0
+g0.p0.par78 50
+g0.p0.par79 40
+g0.p0.par80 50
+g0.p0.par81 0
+g0.p0.par82 0
+g0.p0.par83 0
+g0.p0.par84 0
+g0.p0.par85 0
+g0.p0.par86 0
+g0.p0.par87 0
+g0.p0.par88 0
+g0.p0.par89 0
+g0.p0.par90 0
+g0.p0.par91 0
+g0.p0.par92 0
+g0.p0.par93 0
+g0.p0.par98 50
+g0.p0.par99 1
+g0.p0.par100 45
+g0.p0.par101 0
+g0.p0.par102 45
+g0.p0.par103 0
+g0.p0.par104 2
+g0.p0.par105 2
+g0.p0.par106 100
+g0.p0.par107 100
+g0.p0.par108 100
+g0.p0.par109 100
+g0.p0.par110 100
+g0.p0.par111 100
+g0.p0.par112 50
+g0.p0.par113 50
+g0.p0.par114 50
+g0.p0.par115 50
+g0.p0.par116 50
+g0.p0.par117 50
+g0.p0.par118 50
+g0.p0.par119 50
+g0.p0.par120 50
+g0.p0.par121 50
+g0.p0.par122 0
+g0.p0.par123 0
+g0.p0.par124 47
+g0.p0.par125 100
+g0.p0.par126 30
+g0.p0.par127 0
+g0.p0.par128 1
+g0.p0.par129 60
+g0.p0.par130 10
+g0.p0.par131 100
+g0.p0.par132 16
+g0.p0.par133 16
+g0.p0.par134 16
+g0.p0.par135 16
+g0.p0.par136 16
+g0.p0.par137 16
+g0.p0.par138 50
+g0.p0.par139 50
+g0.p0.par140 50
+g0.p0.par141 50
+g0.p0.par142 50
+g0.p0.par143 50
+g0.p0.par144 0
+g0.p0.par145 0
+g0.p0.par146 0
+g0.p0.par147 0
+g0.p0.par148 0
+g0.p0.par149 0
+g0.p0.par150 0
+g0.p0.par151 0
+g0.p0.par152 0
+g0.p0.par153 50
+g0.p0.par154 30
+g0.p0.par155 0
+g0.p0.par156 0
+g0.p0.par157 2
+g0.p0.par158 0
+g0.p0.par159 0
+g0.p0.par160 0
+g0.p0.par161 0
+g0.p0.par162 50
+g0.p0.par163 0
+g0.p0.par164 0
+g0.p0.par165 0
+g0.p0.par166 0
+g0.p0.par167 0
+g0.p0.par168 0
+g0.p0.par169 0
+g0.p0.par170 0
+g0.p0.par171 0
+g0.p0.par172 0
+g0.p0.par173 0
+g0.p0.par174 60
+g0.p0.par175 0
+g0.p0.pool 1453
+g0.p0.pat0 4369 0 4112 17476 0 0
+g0.p0.pat1 4369 0 4112 48059 17476 32896
+g0.p0.pat2 20753 4112 0 43690 16448 2056
+g0.p0.pat3 4369 0 4112 65535 1028 17544
+g0.p0.pat4 5193 4112 0 17476 32768 512
+g0.p0.pat5 4369 0 0 17476 0 18504
+g0.p0.mod0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.mod1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.mod2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.mod3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.mod4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.mod5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.acl 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.cml 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.prg 0 0 0 0 0 0
+g0.p0.prk 0 0 0
+g0.p0.bs 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p0.px3 0
+g0.p0.px4 0
+g0.p0.px5 0
+g0.p0.px6 0
+g0.p0.px7 0
+g0.p0.px8 0
+g0.p0.px9 0
+g0.p0.px10 0
+g0.p0.px11 0
+g0.p0.px12 0
+g0.p0.px13 0
+g0.p0.px14 0
+g0.p0.px15 0
+g0.p3.par0 40
+g0.p3.par1 45
+g0.p3.par2 60
+g0.p3.par3 75
+g0.p3.par4 15
+g0.p3.par5 138
+g0.p3.par6 40
+g0.p3.par7 20
+g0.p3.par8 60
+g0.p3.par9 60
+g0.p3.par10 3
+g0.p3.par11 30
+g0.p3.par12 45
+g0.p3.par13 35
+g0.p3.par14 55
+g0.p3.par15 20
+g0.p3.par16 4
+g0.p3.par17 40
+g0.p3.par18 0
+g0.p3.par19 0
+g0.p3.par20 0
+g0.p3.par21 5
+g0.p3.par22 60
+g0.p3.par23 0
+g0.p3.par24 45
+g0.p3.par25 45
+g0.p3.par26 0
+g0.p3.par27 25
+g0.p3.par28 55
+g0.p3.par29 35
+g0.p3.par30 6
+g0.p3.par31 55
+g0.p3.par32 0
+g0.p3.par33 0
+g0.p3.par34 35
+g0.p3.par35 70
+g0.p3.par36 55
+g0.p3.par37 40
+g0.p3.par38 50
+g0.p3.par39 30
+g0.p3.par40 1
+g0.p3.par41 60
+g0.p3.par42 12
+g0.p3.par43 1
+g0.p3.par44 25
+g0.p3.par45 0
+g0.p3.par46 3
+g0.p3.par47 0
+g0.p3.par48 1
+g0.p3.par49 85
+g0.p3.par50 0
+g0.p3.par51 50
+g0.p3.par52 60
+g0.p3.par53 0
+g0.p3.par54 45
+g0.p3.par55 70
+g0.p3.par56 0
+g0.p3.par57 45
+g0.p3.par58 55
+g0.p3.par59 0
+g0.p3.par60 35
+g0.p3.par61 60
+g0.p3.par62 0
+g0.p3.par63 50
+g0.p3.par64 50
+g0.p3.par65 0
+g0.p3.par66 40
+g0.p3.par67 45
+g0.p3.par68 1
+g0.p3.par69 55
+g0.p3.par70 1
+g0.p3.par71 7
+g0.p3.par72 5
+g0.p3.par73 0
+g0.p3.par74 1
+g0.p3.par75 0
+g0.p3.par76 0
+g0.p3.par77 0
+g0.p3.par78 50
+g0.p3.par79 40
+g0.p3.par80 3
+g0.p3.par81 0
+g0.p3.par82 0
+g0.p3.par83 0
+g0.p3.par84 0
+g0.p3.par85 0
+g0.p3.par86 0
+g0.p3.par87 0
+g0.p3.par88 0
+g0.p3.par89 0
+g0.p3.par90 0
+g0.p3.par91 0
+g0.p3.par92 0
+g0.p3.par93 0
+g0.p3.par98 50
+g0.p3.par99 13
+g0.p3.par100 1
+g0.p3.par101 0
+g0.p3.par102 45
+g0.p3.par103 0
+g0.p3.par104 2
+g0.p3.par105 2
+g0.p3.par106 100
+g0.p3.par107 100
+g0.p3.par108 100
+g0.p3.par109 100
+g0.p3.par110 100
+g0.p3.par111 100
+g0.p3.par112 50
+g0.p3.par113 50
+g0.p3.par114 50
+g0.p3.par115 50
+g0.p3.par116 50
+g0.p3.par117 50
+g0.p3.par118 50
+g0.p3.par119 50
+g0.p3.par120 1
+g0.p3.par121 50
+g0.p3.par122 0
+g0.p3.par123 0
+g0.p3.par124 47
+g0.p3.par125 100
+g0.p3.par126 30
+g0.p3.par127 0
+g0.p3.par128 1
+g0.p3.par129 60
+g0.p3.par130 10
+g0.p3.par131 100
+g0.p3.par132 16
+g0.p3.par133 16
+g0.p3.par134 16
+g0.p3.par135 16
+g0.p3.par136 16
+g0.p3.par137 16
+g0.p3.par138 50
+g0.p3.par139 50
+g0.p3.par140 50
+g0.p3.par141 50
+g0.p3.par142 50
+g0.p3.par143 50
+g0.p3.par144 0
+g0.p3.par145 0
+g0.p3.par146 0
+g0.p3.par147 0
+g0.p3.par148 0
+g0.p3.par149 0
+g0.p3.par150 1
+g0.p3.par151 0
+g0.p3.par152 0
+g0.p3.par153 50
+g0.p3.par154 30
+g0.p3.par155 0
+g0.p3.par156 0
+g0.p3.par157 2
+g0.p3.par158 1
+g0.p3.par159 0
+g0.p3.par160 0
+g0.p3.par161 0
+g0.p3.par162 50
+g0.p3.par163 0
+g0.p3.par164 0
+g0.p3.par165 0
+g0.p3.par166 0
+g0.p3.par167 0
+g0.p3.par168 0
+g0.p3.par169 0
+g0.p3.par170 0
+g0.p3.par171 0
+g0.p3.par172 0
+g0.p3.par173 0
+g0.p3.par174 60
+g0.p3.par175 0
+g0.p3.pool 1453
+g0.p3.pat0 4369 0 0 0 17476 0
+g0.p3.pat1 4369 0 4112 0 17476 0
+g0.p3.pat2 4369 0 4112 56797 17476 0
+g0.p3.pat3 4369 32768 4112 65535 17476 34952
+g0.p3.pat4 4369 65365 4112 21845 17476 0
+g0.p3.pat5 0 0 4112 21845 17476 0
+g0.p3.mod0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.mod1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.mod2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.mod3 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.mod4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.mod5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.acl 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.cml 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.prg 0 0 0 0 0 0
+g0.p3.prk 0 0 0
+g0.p3.bs 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g0.p3.px3 0
+g0.p3.px4 0
+g0.p3.px5 0
+g0.p3.px6 0
+g0.p3.px7 0
+g0.p3.px8 0
+g0.p3.px9 0
+g0.p3.px10 0
+g0.p3.px11 0
+g0.p3.px12 0
+g0.p3.px13 0
+g0.p3.px14 0
+g0.p3.px15 0
+g2.saved 32
+g2.p5.par0 52
+g2.p5.par1 90
+g2.p5.par2 70
+g2.p5.par3 80
+g2.p5.par4 20
+g2.p5.par5 120
+g2.p5.par6 45
+g2.p5.par7 50
+g2.p5.par8 60
+g2.p5.par9 40
+g2.p5.par10 0
+g2.p5.par11 30
+g2.p5.par12 45
+g2.p5.par13 35
+g2.p5.par14 55
+g2.p5.par15 20
+g2.p5.par16 4
+g2.p5.par17 25
+g2.p5.par18 0
+g2.p5.par19 0
+g2.p5.par20 1
+g2.p5.par21 0
+g2.p5.par22 60
+g2.p5.par23 0
+g2.p5.par24 40
+g2.p5.par25 50
+g2.p5.par26 0
+g2.p5.par27 25
+g2.p5.par28 55
+g2.p5.par29 35
+g2.p5.par30 6
+g2.p5.par31 55
+g2.p5.par32 0
+g2.p5.par33 0
+g2.p5.par34 45
+g2.p5.par35 30
+g2.p5.par36 40
+g2.p5.par37 40
+g2.p5.par38 50
+g2.p5.par39 30
+g2.p5.par40 8
+g2.p5.par41 45
+g2.p5.par42 16
+g2.p5.par43 1
+g2.p5.par44 25
+g2.p5.par45 2
+g2.p5.par46 35
+g2.p5.par47 12
+g2.p5.par48 0
+g2.p5.par49 90
+g2.p5.par50 0
+g2.p5.par51 50
+g2.p5.par52 60
+g2.p5.par53 0
+g2.p5.par54 45
+g2.p5.par55 72
+g2.p5.par56 0
+g2.p5.par57 45
+g2.p5.par58 50
+g2.p5.par59 0
+g2.p5.par60 35
+g2.p5.par61 55
+g2.p5.par62 0
+g2.p5.par63 50
+g2.p5.par64 45
+g2.p5.par65 0
+g2.p5.par66 40
+g2.p5.par67 30
+g2.p5.par68 3
+g2.p5.par69 30
+g2.p5.par70 50
+g2.p5.par71 11
+g2.p5.par72 5
+g2.p5.par73 0
+g2.p5.par74 1
+g2.p5.par75 1
+g2.p5.par76 0
+g2.p5.par77 0
+g2.p5.par78 50
+g2.p5.par79 40
+g2.p5.par80 50
+g2.p5.par81 0
+g2.p5.par82 0
+g2.p5.par83 0
+g2.p5.par84 12
+g2.p5.par85 10
+g2.p5.par86 10
+g2.p5.par87 1
+g2.p5.par88 11
+g2.p5.par89 0
+g2.p5.par90 0
+g2.p5.par91 0
+g2.p5.par92 3
+g2.p5.par93 0
+g2.p5.par98 50
+g2.p5.par99 27
+g2.p5.par100 45
+g2.p5.par101 0
+g2.p5.par102 45
+g2.p5.par103 0
+g2.p5.par104 2
+g2.p5.par105 2
+g2.p5.par106 100
+g2.p5.par107 100
+g2.p5.par108 100
+g2.p5.par109 100
+g2.p5.par110 2
+g2.p5.par111 100
+g2.p5.par112 50
+g2.p5.par113 50
+g2.p5.par114 58
+g2.p5.par115 36
+g2.p5.par116 50
+g2.p5.par117 50
+g2.p5.par118 50
+g2.p5.par119 50
+g2.p5.par120 50
+g2.p5.par121 50
+g2.p5.par122 0
+g2.p5.par123 0
+g2.p5.par124 30
+g2.p5.par125 60
+g2.p5.par126 30
+g2.p5.par127 35
+g2.p5.par128 3
+g2.p5.par129 45
+g2.p5.par130 35
+g2.p5.par131 100
+g2.p5.par132 16
+g2.p5.par133 16
+g2.p5.par134 16
+g2.p5.par135 16
+g2.p5.par136 16
+g2.p5.par137 16
+g2.p5.par138 50
+g2.p5.par139 50
+g2.p5.par140 50
+g2.p5.par141 50
+g2.p5.par142 50
+g2.p5.par143 50
+g2.p5.par144 0
+g2.p5.par145 0
+g2.p5.par146 0
+g2.p5.par147 0
+g2.p5.par148 0
+g2.p5.par149 0
+g2.p5.par150 2
+g2.p5.par151 0
+g2.p5.par152 4
+g2.p5.par153 40
+g2.p5.par154 25
+g2.p5.par155 0
+g2.p5.par156 60
+g2.p5.par157 1
+g2.p5.par158 0
+g2.p5.par159 0
+g2.p5.par160 0
+g2.p5.par161 25
+g2.p5.par162 50
+g2.p5.par163 10
+g2.p5.par164 0
+g2.p5.par165 0
+g2.p5.par166 0
+g2.p5.par167 0
+g2.p5.par168 0
+g2.p5.par169 0
+g2.p5.par170 0
+g2.p5.par171 0
+g2.p5.par172 0
+g2.p5.par173 0
+g2.p5.par174 60
+g2.p5.par175 0
+g2.p5.pool 1453
+g2.p5.pat0 4373 4112 4112 30583 17476 19018
+g2.p5.pat1 4369 0 4624 56797 16448 9252
+g2.p5.pat2 4433 0 20496 23901 17476 0
+g2.p5.pat3 4373 0 4112 21845 17476 2570
+g2.p5.pat4 4369 0 4112 65535 17476 10280
+g2.p5.pat5 4433 4112 4624 61166 16448 33825
+g2.p5.mod0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.mod1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.mod2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.mod3 0 128 192 128 0 128 192 128 0 128 192 128 0 128 192 128
+g2.p5.mod4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.mod5 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.acl 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.cml 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.prg 0 0 0 0 0 0
+g2.p5.prk 0 0 0
+g2.p5.bs 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g2.p5.px3 0
+g2.p5.px4 0
+g2.p5.px5 0
+g2.p5.px6 0
+g2.p5.px7 0
+g2.p5.px8 0
+g2.p5.px9 0
+g2.p5.px10 0
+g2.p5.px11 0
+g2.p5.px12 0
+g2.p5.px13 0
+g2.p5.px14 0
+g2.p5.px15 0
+g18.saved 4
+g18.p2.par0 35
+g18.p2.par1 55
+g18.p2.par2 80
+g18.p2.par3 88
+g18.p2.par4 20
+g18.p2.par5 155
+g18.p2.par6 60
+g18.p2.par7 60
+g18.p2.par8 60
+g18.p2.par9 35
+g18.p2.par10 23
+g18.p2.par11 45
+g18.p2.par12 45
+g18.p2.par13 35
+g18.p2.par14 55
+g18.p2.par15 9
+g18.p2.par16 4
+g18.p2.par17 25
+g18.p2.par18 0
+g18.p2.par19 0
+g18.p2.par20 1
+g18.p2.par21 0
+g18.p2.par22 60
+g18.p2.par23 0
+g18.p2.par24 45
+g18.p2.par25 45
+g18.p2.par26 0
+g18.p2.par27 25
+g18.p2.par28 55
+g18.p2.par29 35
+g18.p2.par30 6
+g18.p2.par31 55
+g18.p2.par32 0
+g18.p2.par33 0
+g18.p2.par34 35
+g18.p2.par35 80
+g18.p2.par36 70
+g18.p2.par37 40
+g18.p2.par38 50
+g18.p2.par39 30
+g18.p2.par40 2
+g18.p2.par41 85
+g18.p2.par42 16
+g18.p2.par43 1
+g18.p2.par44 45
+g18.p2.par45 0
+g18.p2.par46 55
+g18.p2.par47 0
+g18.p2.par48 0
+g18.p2.par49 85
+g18.p2.par50 0
+g18.p2.par51 50
+g18.p2.par52 60
+g18.p2.par53 0
+g18.p2.par54 45
+g18.p2.par55 65
+g18.p2.par56 0
+g18.p2.par57 45
+g18.p2.par58 55
+g18.p2.par59 0
+g18.p2.par60 35
+g18.p2.par61 50
+g18.p2.par62 0
+g18.p2.par63 50
+g18.p2.par64 50
+g18.p2.par65 7
+g18.p2.par66 2
+g18.p2.par67 30
+g18.p2.par68 0
+g18.p2.par69 35
+g18.p2.par70 55
+g18.p2.par71 1
+g18.p2.par72 5
+g18.p2.par73 0
+g18.p2.par74 1
+g18.p2.par75 1
+g18.p2.par76 0
+g18.p2.par77 0
+g18.p2.par78 50
+g18.p2.par79 40
+g18.p2.par80 50
+g18.p2.par81 0
+g18.p2.par82 0
+g18.p2.par83 0
+g18.p2.par84 20
+g18.p2.par85 10
+g18.p2.par86 6
+g18.p2.par87 2
+g18.p2.par88 6
+g18.p2.par89 0
+g18.p2.par90 0
+g18.p2.par91 0
+g18.p2.par92 1
+g18.p2.par93 0
+g18.p2.par98 50
+g18.p2.par99 10
+g18.p2.par100 45
+g18.p2.par101 0
+g18.p2.par102 45
+g18.p2.par103 4
+g18.p2.par104 3
+g18.p2.par105 2
+g18.p2.par106 100
+g18.p2.par107 100
+g18.p2.par108 100
+g18.p2.par109 100
+g18.p2.par110 100
+g18.p2.par111 100
+g18.p2.par112 50
+g18.p2.par113 50
+g18.p2.par114 42
+g18.p2.par115 64
+g18.p2.par116 50
+g18.p2.par117 50
+g18.p2.par118 50
+g18.p2.par119 50
+g18.p2.par120 50
+g18.p2.par121 50
+g18.p2.par122 0
+g18.p2.par123 0
+g18.p2.par124 55
+g18.p2.par125 100
+g18.p2.par126 30
+g18.p2.par127 0
+g18.p2.par128 4
+g18.p2.par129 38
+g18.p2.par130 35
+g18.p2.par131 100
+g18.p2.par132 16
+g18.p2.par133 16
+g18.p2.par134 16
+g18.p2.par135 16
+g18.p2.par136 16
+g18.p2.par137 16
+g18.p2.par138 50
+g18.p2.par139 50
+g18.p2.par140 50
+g18.p2.par141 50
+g18.p2.par142 50
+g18.p2.par143 50
+g18.p2.par144 0
+g18.p2.par145 0
+g18.p2.par146 0
+g18.p2.par147 0
+g18.p2.par148 0
+g18.p2.par149 0
+g18.p2.par150 1
+g18.p2.par151 0
+g18.p2.par152 1
+g18.p2.par153 22
+g18.p2.par154 6
+g18.p2.par155 0
+g18.p2.par156 40
+g18.p2.par157 1
+g18.p2.par158 0
+g18.p2.par159 0
+g18.p2.par160 0
+g18.p2.par161 40
+g18.p2.par162 50
+g18.p2.par163 5
+g18.p2.par164 0
+g18.p2.par165 0
+g18.p2.par166 0
+g18.p2.par167 0
+g18.p2.par168 0
+g18.p2.par169 0
+g18.p2.par170 0
+g18.p2.par171 0
+g18.p2.par172 0
+g18.p2.par173 0
+g18.p2.par174 60
+g18.p2.par175 0
+g18.p2.pool 1453
+g18.p2.pat0 4369 0 0 61166 17476 46811
+g18.p2.pat1 4369 32784 4112 43690 17476 28013
+g18.p2.pat2 4369 0 4112 65535 16448 37449
+g18.p2.pat3 4369 4114 0 61166 17476 56173
+g18.p2.pat4 4369 0 4112 61166 17476 23130
+g18.p2.pat5 4369 4112 0 65535 0 9362
+g18.p2.mod0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g18.p2.mod1 0 0 0 0 0 0 0 0 0 0 0 0 5 0 0 0
+g18.p2.mod2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g18.p2.mod3 0 0 0 0 0 0 0 0 0 0 1 0 0 0 7 0
+g18.p2.mod4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g18.p2.mod5 0 0 192 0 0 0 192 2 0 0 192 0 0 0 192 2
+g18.p2.acl 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g18.p2.cml 0 0 0 0 0 0 0 0 0 0 0 0
+g18.p2.prg 0 0 0 0 0 0
+g18.p2.prk 0 0 0
+g18.p2.bs 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+g18.p2.px3 0
+g18.p2.px4 0
+g18.p2.px5 0
+g18.p2.px6 0
+g18.p2.px7 0
+g18.p2.px8 0
+g18.p2.px9 0
+g18.p2.px10 0
+g18.p2.px11 0
+g18.p2.px12 0
+g18.p2.px13 0
+g18.p2.px14 0
+g18.p2.px15 0
+glob.tune 3
+glob.midi 1
+glob.theme 2
+glob.rsv 0
+glob.sl_on 0
+glob.sl_end 0
+glob.sl_rsv0 0
+glob.sl_x0 0
+glob.sl_rsv1 0
+glob.sl_x1 0
+glob.sl_rsv2 0
+glob.sl_x2 0
+glob.place0 0 0 0 0 0
+glob.place1 0 0 0 0 0
+glob.place2 0 0 0 0 0
+glob.place3 0 0 0 0 0
+glob.place4 0 0 0 0 0
+glob.place5 0 0 0 0 0
+glob.place6 0 0 0 0 0
+glob.place7 0 0 0 0 0
+glob.place8 0 0 0 0 0
+glob.place9 0 0 0 0 0
+glob.place10 0 0 0 0 0
+glob.place11 0 0 0 0 0
+glob.place12 0 0 0 0 0
+glob.place13 0 0 0 0 0
+glob.place14 0 0 0 0 0
+glob.place15 0 0 0 0 0

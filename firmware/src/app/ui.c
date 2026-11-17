@@ -883,9 +883,19 @@ static int sl_differs(int a, int b)             /* places a and b play something
 {
     return glob.sl[a] != glob.sl[b] || glob.sl_mute[a] != glob.sl_mute[b] || glob.sl_pat[a] != glob.sl_pat[b] || glob.sl_mood[a] != glob.sl_mood[b];
 }
+/* (0.17.61, the 1.0 list: song mode that sounds arranged) how place a hands over to place b: 2 a lift (b brings the drums in, or its energy is a good
+ * step up: a build over a's last bars, the drop on b's first), 1 a fall (b leaves the drums out: it comes in as a breakdown, the groove letting go on
+ * the one), 0 neither (a fill, as before) */
+static int sl_drums(int s) { return !(glob.sl_mute[s % SL_N] >> 4 & 1u); }
+static int sl_turn(int a, int b)
+{
+    if (sl_drums(b) && (!sl_drums(a) || (glob.sl_mood[a] && glob.sl_mood[b] >= glob.sl_mood[a] + 25)))
+        return 2;
+    return sl_drums(a) && !sl_drums(b) ? 1 : 0;
+}
 static void sl_tick(void)                       /* each frame while playing: the place's last bar asks for the next */
 {
-    static uint32_t fill_at = 0xFFFFFFFFu;      /* the bar a fill was asked in (once a place) */
+    static uint32_t fill_at = 0xFFFFFFFFu, bld_at = 0xFFFFFFFFu;   /* the bar a fill was asked in (once a place); the place a build was asked in */
     uint32_t bar;
     int n, s;
     en_arrange = (uint8_t)!sl_exact();          /* (0.17.16) a place with its own bars is arranged by the player: Song's own rests off */
@@ -898,11 +908,23 @@ static void sl_tick(void)                       /* each frame while playing: the
         return;
     bar = sl_bar_now() - sl_b0;
     n = glob.sl_bars[ui.sl_pos];
-    if ((int)bar == n - 2 && fill_at != sl_b0 + bar) {   /* (0.17.16) the bar before the last: a fill into the next place, if it changes anything */
-        const int nx = sl_step(ui.sl_pos, 1);
-        fill_at = sl_b0 + bar;
-        if (nx >= 0 && !(glob.sl_end && nx <= (int)ui.sl_pos) && sl_differs(ui.sl_pos, nx))
-            en_fill_next();
+    {
+        const int nx = sl_step(ui.sl_pos, 1), go = nx >= 0 && !(glob.sl_end && nx <= (int)ui.sl_pos) && sl_differs(ui.sl_pos, nx);
+        const int bl = n / 2 < en_build_len() ? n / 2 : en_build_len();   /* (0.17.61) the build: the genre's, at most half the place */
+        if (go && sl_turn(ui.sl_pos, nx) == 2 && bl >= 1) {
+            if ((int)bar == n - bl - 1 && bld_at != sl_b0) {   /* the bar before it: asked (it starts on the bar, and ends with the drop on the next place's first) */
+                bld_at = sl_b0;
+                en_build_bars(bl);
+            }
+            if ((int)bar >= n - bl - 1 && (ui.trk_m & SL_PARTM[4]) && ((int)bar > n - bl - 1 || en_drum_pos == EN_NSTEP - 1)) {
+                ui.trk_m &= (uint8_t)~SL_PARTM[4];   /* a place without its drums: they come in for the build (its roll is how they enter) */
+                en_trk(ui.trk_m, ui.trk_s);
+            }
+        } else if ((int)bar == n - 2 && fill_at != sl_b0 + bar) {   /* (0.17.16) the bar before the last: a fill into the next place, if it changes anything */
+            fill_at = sl_b0 + bar;
+            if (go)
+                en_fill_next();
+        }
     }
     if ((int)bar < n - 1)
         return;
@@ -5064,11 +5086,18 @@ static void input(void)
         say("SET LIST", "THE END");
     }
     if (ui.sl_q && !ui.store_wait && (!en_playing || en_drum_pos == EN_NSTEP - 1)) {   /* the bar's last step: the set list's slot */
-        const int s = ui.sl_q - 1, t0 = proj.par[P_TEMPO], pl = en_playing;
+        const int s = ui.sl_q - 1, t0 = proj.par[P_TEMPO], pl = en_playing, from = ui.sl_pos, sec_was = en_sec;
         ui.sl_q = 0;
         sl_go(s);
         if (pl)
             mix_start(t0);
+        if (pl && glob.sl_on && from < SL_N && glob.sl_bars[from]) {   /* (0.17.61) song mode: a place without the drums comes in as a breakdown (or stays
+                                                 * down); one with them gets its drop (a new piece restarts the engine's section: a build's own drop would be lost) */
+            if (!sl_drums(s) && (sl_turn(from, s) == 1 || sec_was == EN_SEC_BREAK))
+                en_section(EN_CMD_BREAK);
+            else if (sl_drums(s) && sec_was != EN_SEC_GROOVE)
+                en_drop();
+        }
     }
     if (ui.piece_q && (!en_playing || en_drum_pos == EN_NSTEP - 1)) {   /* the bar's last step: the piece */
         const int t = ui.piece_q - 1, t0 = proj.par[P_TEMPO], pl = en_playing;
@@ -9913,10 +9942,11 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
         return obj == OBJ_PROJ && (rd32(b) == BANK_MAGIC || rd32(b) == OLD_KIT_MAGIC);
     }
     if (obj == OBJ_GLOB)
-        return (len == sizeof(glob_t) || len == GLOB_V2 || len == GLOB_V1 || len == GLOB_OLD) && rd32(b) == GLOB_MAGIC;
+        return len >= GLOB_OLD && len <= sizeof(glob_t) && rd32(b) == GLOB_MAGIC;   /* (0.17.61: any older record, as glob_load takes it) */
     if (obj == OBJ_KINDS)                        /* the pieces' extras (0.16.28: PCX1), or the chord types alone (KND1, 0.16.6 .. 0.16.27); fewer genres too */
         return (len >= 4u && len <= 4u + EN_NGENRE * NPIECES * EN_PRK_LEN && (len - 4u) % (NPIECES * EN_PRK_LEN) == 0u && rd32(b) == KND_MAGIC) ||
-               (len >= PX_HDR && len <= PX_SIZE && b[4] == PX_LEN && (len - PX_HDR) % (NPIECES * PX_LEN) == 0u && rd32(b) == PX_MAGIC);   /* (0.15.21: the set list after the old record) */
+               (len >= PX_HDR && b[4] >= 4u && b[4] <= PX_LEN && len <= PX_HDR + EN_NGENRE * NPIECES * (uint32_t)b[4] &&
+                (len - PX_HDR) % (NPIECES * (uint32_t)b[4]) == 0u && rd32(b) == PX_MAGIC);   /* (0.17.61: or a shorter piece's, as px_load takes it) */   /* (0.15.21: the set list after the old record) */
     if (obj == OBJ_BSTEP)                        /* the pieces' bass steps (0.16.29): this build's, or one of fewer genres */
         return len >= BS_HDR && len <= BS_SIZE && b[4] == BS_LEN && (len - BS_HDR) % (NPIECES * BS_LEN) == 0u && rd32(b) == BS_MAGIC;
     if (obj == OBJ_MMAP)                         /* the player's MIDI map (0.16.11) */
@@ -9931,7 +9961,7 @@ int ui_restore_valid(uint32_t obj, const uint8_t *b, uint32_t len)
         nf = rd16(b + 4);
         q = 8u + nf + 12u + 4u;
         q += q & 1u;
-        return (nf == EN_NFXS && len == sizeof(set_t)) || (nf < EN_NFXS && len < sizeof(set_t) && len >= q + 4u);
+        return (nf == EN_NFXS && len == sizeof(set_t)) || (nf <= EN_NFXS && len < sizeof(set_t) && len >= q + 4u);   /* (0.17.61: as settings_load) */
     }
     return 0;                                    /* (not the panel's calibration: it is this unit's own) */
 }
@@ -10004,8 +10034,9 @@ static void settings_load(void)
     set_t s;
     uint8_t raw[sizeof(set_t)];
     int p, c, n = plat_store_load(OBJ_SET, raw, sizeof raw);
-    if (n >= 8 && n < (int)sizeof s && raw[0] == 'S' && raw[1] == 'E' && raw[2] == 'T' && raw[3] == '1' && (raw[4] | raw[5] << 8) < EN_NFXS && (raw[6] | raw[7] << 8) == 12) {
-        /* a record from before the newest effect settings (fewer fxs, 0.14.10 on): its fields by their old places, the new settings at their defaults */
+    if (n >= 8 && n < (int)sizeof s && raw[0] == 'S' && raw[1] == 'E' && raw[2] == 'T' && raw[3] == '1' && (raw[4] | raw[5] << 8) <= EN_NFXS && (raw[6] | raw[7] << 8) == 12) {
+        /* a record from before the newest effect settings (fewer fxs, 0.14.10 on): its fields by their old places, the new settings at their defaults
+         * (0.17.61, the formats locked: or as many, and a field added after usb later: shorter, that field 0) */
         const int old = raw[4] | raw[5] << 8;
         int q = 8, i;
         memset(&s, 0, sizeof s);
@@ -10463,8 +10494,10 @@ void ui_frame(void)
     swell_tick();
     factory_all_tick();
     saver_tick();
-    {   /* the load: a half that was never rendered (a real dropout) or renders that keep running past their half (the margin is gone) make the engine drop the chorus and hold
-         * the DX voices to four, then two, then give up the Echoplex and the vinyl; and it eases back a step after twenty seconds of neither. One step at a time (four seconds
+    {   /* the load: a half that was never rendered (a real dropout) or renders that keep running past their half (the margin is gone) make the engine drop the enhancers
+         * (level 1, 0.17.61: the choruses, the resonator, the pluck's taps; the maker: "the fm does sound better with all ops active"), then hold the DX voices to four,
+         * then two and give up the Echoplex and the vinyl; and it eases back a step after twenty seconds of neither. Level 1 comes early (40 late renders in ten
+         * seconds: the margin thin), before a dropout; the next ones only on a dropout or a quarter of the renders late. One step at a time (four seconds
          * after the last on a dropout, ten on the other: a step needs time to show; one overrun used to climb all three at once, the peak of the last second still reading 100 %).
          * (A single late render is not a dropout: the next one starts at once. The average CPU and the peaks were the gauge before, but they sit high in the heavy pieces.) */
         static uint32_t calm_t, step_t, last_xr, last_late, win_t, win_n, eased_t, need = 20000u;   /* (0.17.26) need: the calm an ease-back waits for */
@@ -10490,7 +10523,10 @@ void ui_frame(void)
                 win_t = now;
                 win_n = 0;
             }
-            if (lost || win_n >= 200u) {          /* (0.17.59: 200, a quarter of the renders late: since 0.17.56 a late render that lost sound is an xrun, so this is only the backstop. The
+            const int warm = lost || win_n >= 40u;   /* (0.17.61) the margin thin: level 1 (the enhancers), and no easing back from it */
+            if (warm)
+                calm_t = now;
+            if (lost || win_n >= 200u || (warm && en_shed_level == 0)) {   /* (0.17.59: 200, a quarter of the renders late: since 0.17.56 a late render that lost sound is an xrun, so this is only the backstop. The
                                                    * maker's 03:41 log: TRANCE 01 shed with the FX in use and no xrun at all. 0.17.54: 40, and 6 before that: the
                                                    * maker's TRANCE log had 62 in 14 minutes, in bursts of up to 10 in ten seconds, no dropout, and sat at level 2 (the DX at
                                                    * two voices, no chorus or resonator) 87 % of the time.) */

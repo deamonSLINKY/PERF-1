@@ -1883,6 +1883,14 @@ A set list is the pieces you want to play, in your order, from any genres. Press
 
 **A song from the set list.** Give each slot bars and parts and the list plays as a song: each slot for exactly its bars, from the bar it comes in on, with only its parts, then the next. For example: slot 1 a piece for 8 bars with only the pad and the pluck at energy 30 (an intro), slot 2 the same piece for 32 bars with everything on pattern 1, slot 3 for 16 bars without the drums (a break), slot 4 for 32 bars on pattern 3 at energy 85 (the peak), and Play on *Once*. When the next slot is the same piece, it carries on without starting again: only the parts, the pattern and the energy change, on the bar line. Press **PLAY** and it plays through and stops, with the first slot ready again. The slot playing shows how far it is with a line along its bottom.
 
+The song arranges its own changes:
+
+- **Into a slot that brings the drums in, or lifts the energy by 25 or more:** the slot before it ends with a build over its last bars. The build is the genre's length, at most half the slot, and the drums come in for it if that slot had them out. The next slot starts on the drop.
+- **Into a slot without the drums:** it comes in as a breakdown, the groove letting go on the one.
+- **Any other change:** a drum fill the bar before.
+
+In the example above: the intro builds into slot 2, slot 3 comes in as a breakdown, and slot 3 builds into the peak.
+
 With **Play** on:
 
 - **PRESETS** steps to the next or last slot in the list, across genres, instead of the next piece in the bank. With **SEL** held while the music plays, the slot waits for the next bar. The header says `SET 2/5` and the piece's title.
@@ -2483,11 +2491,12 @@ On the home pages, under the drum pattern, there's a line like `CPU 41 XR 0`, wi
 | XR n | How many dropouts there have been. Each one is a click or a stutter, where a tiny bit of sound repeats. If this number goes up, you heard a glitch. |
 | C2 nn | The FM-1's second processor is helping, and is nn % busy. |
 | C1 | The second processor stopped after a fault, and everything runs on one until you switch off. Switching off and on again brings it back. |
-| S1 | The FM-1 is easing off to keep up. The pad's chorus is off and the DX voices are limited to four notes at once. |
-| S2 | Easing off further. The DX voices are limited to two notes, and the CHORUS page, the DX voices' shimmer and the RESONATOR are off. |
+| S1 | The FM-1 is easing off to keep up. The sound enhancers are off: the pad's chorus, the CHORUS page, the DX voices' shimmer and the RESONATOR. The DX voices are untouched. |
+| S2 | Easing off further. The DX voices are also limited to four notes at once. |
+| S3 | As far as it goes. The DX voices are limited to two notes, the Echoplex and the vinyl noise are off, and the output clip is the cheaper one. |
 | QD n | Commands the sound engine never got because too many came at once (a knob turned, a piece loaded). It has never been seen; if it shows, a setting may not have taken, so say so. |
 
-The FM-1 eases off one step when there's a dropout, or when about a quarter of its renders run late within ten seconds (a load that stays too high). A late render that loses sound counts as a dropout (0.17.56); one that doesn't costs nothing, so the engine no longer eases off for those (before 0.17.54 six in ten seconds were enough, and a heavy piece sat at `S2` without ever dropping out). It goes back one step after twenty seconds without either. With `S1` or `S2` on, the sound is a little thinner, but not broken.
+The FM-1 eases off one step when there's a dropout, or when about a quarter of its renders run late within ten seconds (a load that stays too high). A late render that loses sound counts as a dropout (0.17.56); one that doesn't costs nothing in itself. `S1` comes earlier, before any dropout: at 40 late renders in ten seconds, the sign that the margin is thin. It costs only the enhancers, not the DX voices. It goes back one step after twenty seconds without either. With `S1` to `S3` on, the sound is a little thinner, but not broken.
 
 The heaviest combinations are the DX plucks with the shimmer reverb, and the fast genres (dnb, breaks). If you hear crackles there, that's the likely cause.
 

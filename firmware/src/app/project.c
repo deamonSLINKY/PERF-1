@@ -418,10 +418,12 @@ static void px_load(int g)
     int i;
     memset(px, 0, sizeof px);
     memset(pxl, 0, sizeof pxl);
-    if (n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] == PX_LEN) {
-        const uint32_t at = PX_HDR + (uint32_t)g * NPIECES * PX_LEN;
-        if ((uint32_t)n >= at + NPIECES * PX_LEN)
-            memcpy(px, b + at, sizeof px);
+    if (n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] >= 4u && b[4] <= PX_LEN) {   /* (0.17.61, the formats locked: or a shorter piece's, from before
+                                                                                  * a byte was added at its end: those bytes 0) */
+        const uint32_t L = b[4], at = PX_HDR + (uint32_t)g * NPIECES * L;
+        if ((uint32_t)n >= at + NPIECES * L)
+            for (i = 0; i < NPIECES; i++)
+                memcpy(px[i], b + at + (uint32_t)i * L, L);
     } else if (n >= 4 && rd32(b) == KND_MAGIC) {
         for (i = 0; i < NPIECES; i++) {
             const uint32_t at = 4u + ((uint32_t)g * NPIECES + (uint32_t)i) * EN_PRK_LEN;
@@ -435,7 +437,19 @@ static int px_save(void)
 {
     uint8_t b[PX_SIZE];
     int n = plat_store_load(OBJ_KINDS, b, sizeof b);
-    if (!(n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] == PX_LEN)) {
+    if (n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] >= 4u && b[4] < PX_LEN) {   /* (0.17.61) a shorter piece's: each moved to its new place, from the
+                                                                                 * end (a piece's new place is past every older one's old place) */
+        const uint32_t L = b[4];
+        int k;
+        const int kn = n > (int)PX_HDR ? (n - (int)PX_HDR) / (int)L : 0;
+        for (k = EN_NGENRE * NPIECES - 1; k >= 0; k--) {
+            uint8_t t[PX_LEN] = {0};
+            if (k < kn)
+                memcpy(t, b + PX_HDR + (uint32_t)k * L, L);
+            memcpy(b + PX_HDR + (uint32_t)k * PX_LEN, t, PX_LEN);
+        }
+        n = (int)PX_SIZE;
+    } else if (!(n >= (int)PX_HDR && rd32(b) == PX_MAGIC && b[4] == PX_LEN)) {
         const int kn = n >= 4 && rd32(b) == KND_MAGIC ? (n - 4) / (int)EN_PRK_LEN : 0;
         int k;
         for (k = EN_NGENRE * NPIECES - 1; k >= 0; k--) {   /* (from the end: a piece's new place is past every older one's old place) */
@@ -475,7 +489,8 @@ static void glob_load(void)                  /* the player's three: their object
 {
     glob_t g;
     const int n = plat_store_load(OBJ_GLOB, &g, sizeof g);
-    if ((n == (int)sizeof g || n == (int)GLOB_V2 || n == (int)GLOB_V1 || n == (int)GLOB_OLD) && g.magic == GLOB_MAGIC) {
+    if (n >= (int)GLOB_OLD && n <= (int)sizeof g && g.magic == GLOB_MAGIC) {   /* (0.17.61, the formats locked: any older record, the fields it lacks 0;
+                                              * a field added at the end later needs no new size here) */
         if (n < (int)sizeof g)
             memset((uint8_t *)&g + n, 0, sizeof g - (uint32_t)n);
         glob = g;

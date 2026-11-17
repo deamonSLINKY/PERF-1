@@ -374,8 +374,8 @@ static void fm_note_on(int note, float vel, int32_t gate)
     const uint8_t *ed = fm_ed;
     if (fm_cur < 0)
         return;
-    {   /* a free voice, unless the load has capped them (shed: 4, then 2): then the oldest is taken */
-        int cap = en_shed_level == 0 ? FM_NV : en_shed_level == 1 ? 4 : 2;
+    {   /* a free voice, unless the load has capped them (shed: 4, then 2; 0.17.61: from level 2, the enhancers go first): then the oldest is taken */
+        int cap = en_shed_level <= 1 ? FM_NV : en_shed_level == 2 ? 4 : 2;
         if (fm_cur >= 0 && FM_CAP[fm_cur] < cap)
             cap = FM_CAP[fm_cur];                /* (the patch's own: the heavy ones fewer) */
         int used = 0;

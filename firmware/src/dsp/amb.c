@@ -1195,6 +1195,8 @@ void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_new_part(int p) { post(C_NEWPART, p, 0); }
 void en_section(int cmd) { post(C_SECTION, cmd, 0); }
+void en_build_bars(int bars) { post(C_SECTION, EN_CMD_BUILD, bars); }
+void en_drop(void) { post(C_SECTION, EN_CMD_DROP, 1); }
 void en_fx(uint64_t mask)                       /* in four quarters: the queue carries 16 bits */
 {
     int q;
@@ -3144,6 +3146,8 @@ static int wub_rate(void)
 }
 int en_build_len(void) { return SECT[chord_genre].build; }
 static int sec_n = 4;                           /* the build's length in bars (from SECT when it starts) */
+static uint8_t sec_blen;                        /* (0.17.61) a build asked for with its length (song mode, en_build_bars): from the groove too; a drop asked
+                                                 * for so (en_drop): from the groove too (the next place's new piece restarted the section) */
 static float snr_rise;                          /* the snare's pitch, semitones: it climbs through a build */
 static uint8_t crash_next, fill_kind;           /* the next open hat is the drop's crash (long); this bar's fill */
 /* the fills (audit M-13): the snare's velocity on each of the bar's sixteen steps (0: none), nine is full; the second half is what a drift fill plays,
@@ -3385,11 +3389,11 @@ static void section_cmd(int c)                  /* the player's: on the bar */
         }
         sec = SEC_BREAK;
     } else if (c == EN_CMD_BUILD) {
-        if (sec == SEC_BREAK) {
+        if (sec == SEC_BREAK || (sec == SEC_GROOVE && sec_blen)) {   /* (0.17.61: song mode's builds come from the groove too, as long as the place has room) */
             sec = SEC_BUILD;
-            sec_n = sec_bars = SECT[chord_genre].build;
+            sec_n = sec_bars = sec_blen ? sec_blen : SECT[chord_genre].build;
         }
-    } else if (sec != SEC_GROOVE) {             /* the drop: at once the full groove (the breakdown's swell and the build's dip gone, not eased out), the kick, clap and open hat on the one */
+    } else if (sec != SEC_GROOVE || (sec_blen && !drop_imp)) {   /* the drop: at once the full groove (the breakdown's swell and the build's dip gone, not eased out), the kick, clap and open hat on the one */
         sec = SEC_GROOVE;
         brk = 0.0f;
         drop_imp = 1;
@@ -3404,6 +3408,7 @@ static void section_cmd(int c)                  /* the player's: on the bar */
             change_pending = 1;
         }
     }
+    sec_blen = 0;
 }
 
 static int kick_note(void) { return 28 + (par[P_ROOT] + 8) % 12; }   /* E1 .. Eb2, on the piece's root */
@@ -7609,6 +7614,7 @@ static void drain(void)
         case C_SECTION:
             if (a == EN_CMD_BREAK && sec != SEC_GROOVE && sec != SEC_BUILD)
                 break;                          /* already down */
+            sec_blen = (uint8_t)((a == EN_CMD_BUILD || a == EN_CMD_DROP) && b > 0 && b < 64 ? b : 0);
             sec_req = a + 1;
             en_sec_req = (uint8_t)sec_req;
             if (!en_playing) {                  /* resting: now */
@@ -7813,7 +7819,7 @@ static void pad_publish(uint32_t w, uint32_t n)   /* the job's pad (after the ch
 
 static void pad_chorus(uint32_t n)
 {
-    const float a = en_shed_level >= 2 ? 0.0f : (float)par[P_PL_CHO] * 0.01f * 0.55f;   /* (no chorus when the load is far too high: it runs on the pad's core, and the first level answers the first core's time) */
+    const float a = en_shed_level >= 1 ? 0.0f : (float)par[P_PL_CHO] * 0.01f * 0.55f;   /* (0.17.61: the first to go, before the DX voices) */   /* (no chorus when the load is far too high: it runs on the pad's core, and the first level answers the first core's time) */
     const float rate[3] = {0.47f / EN_SR, 0.61f / EN_SR, 0.79f / EN_SR};   /* Hz, the sweeps are slow and unequal */
     uint32_t j;
     int k;
@@ -8309,7 +8315,7 @@ static void jc_set(void)                        /* once a chunk: the type and th
 {
     static const float RATE[5] = {0.513f, 0.863f, 9.75f, 0.8f, 6.7f};
     const int t = fxs_v[EN_FXS_JC_TYPE], g = fxs_v[EN_FXS_JC_TGT];
-    const int on = t >= 1 && t <= 5 && en_shed_level < 2;
+    const int on = t >= 1 && t <= 5 && en_shed_level < 1;   /* (0.17.61: shed level 1 now: the enhancers before the DX voices) */
     float want;
     jc_pl = (uint8_t)(on && g != 1);
     jc_ac = (uint8_t)(on && g != 0);
@@ -8357,7 +8363,7 @@ static void render_fm(uint32_t n)
     const float g = cm_vol * 0.5f * FM_OUT * (fm_dy_cur && cur < EN_NFMFACT ? FM_GAIN_DY[cur] : FM_GAIN[cur]);
     uint32_t j;
     float lvl = 0.0f;
-    const float fe_to = en_shed_level >= 2 || fm_is_bass(cur) ? 0.0f : FE_AMT, fe_k = 1.0f - fm_expf(-FM_TWO_PI * 200.0f / EN_SR), ms = EN_SR * 0.001f;
+    const float fe_to = en_shed_level >= 1 || fm_is_bass(cur) ? 0.0f : FE_AMT, fe_k = 1.0f - fm_expf(-FM_TWO_PI * 200.0f / EN_SR), ms = EN_SR * 0.001f;
     if (!on) {
         for (j = 0; j < n; j++)
             fm_ol[j] = fm_or[j] = fm_rs[j] = fm_es[j] = 0.0f;
@@ -9025,7 +9031,7 @@ static RZ_FN void rz_set(void)                   /* once a control: on, the band
                                   1u << L_SNARE | 1u << L_CLAP | 1u << L_HAT | 1u << L_OHAT | 1u << L_PERC, 0x80u};
     static uint32_t key = 0xFFFFFFFFu;
     const int amt = fxs_v[EN_FXS_RZ_AMT], dec = fxs_v[EN_FXS_RZ_DEC], reg = fxs_v[EN_FXS_RZ_REG], tg = fxs_v[EN_FXS_RZ_TGT];
-    const uint8_t m = amt > 0 && en_shed_level < 2 ? TM[(unsigned)tg < 6u ? tg : 0] : 0u;
+    const uint8_t m = amt > 0 && en_shed_level < 1 ? TM[(unsigned)tg < 6u ? tg : 0] : 0u;   /* (0.17.61: level 1) */
     uint32_t k2;
     int b;
     if (!m) {

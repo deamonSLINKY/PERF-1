@@ -1,0 +1,15 @@
+# (tools/format_fixture.sh, releases from 0.17.19 on) the effect settings: the key change and the screensaver changed, as setmem.amb does
+tap HOME
+wait 300
+press HOME
+wait 900
+release HOME
+wait 100
+turn SELECT 2
+wait 100
+spin K1 2
+turn SELECT 6
+wait 100
+spin K2 1
+wait 21000
+expect keyset 2

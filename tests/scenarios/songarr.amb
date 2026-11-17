@@ -1,0 +1,72 @@
+# (0.17.61) SONG MODE THAT SOUNDS ARRANGED: a place that brings the drums in is built up to: a build over the last bars of the place before (the genre's
+# length, at most half the place; the drums of a place without them come in for it), the drop on the new place's first bar. A place that leaves the drums
+# out comes in as a breakdown. Anything else: the fill, as before.
+seed 0
+wait 3000
+tap GLO
+wait 100
+tap GLO
+wait 100
+expect view 34
+# place 1: HYPNO 01, 8 bars, no drums
+spin K2 1
+spin K3 2
+tapkey 10
+wait 100
+expect setbars0 8
+expect setmute0 16
+# place 2: HYPNO 03, 8 bars, everything
+spin K1 1
+spin K2 1
+spin K2 2
+spin K3 2
+wait 100
+expect setsl1 3
+expect setbars1 8
+expect setmute1 0
+# place 3: HYPNO 03, 4 bars, no drums
+spin K1 1
+spin K2 1
+spin K2 2
+spin K3 1
+tapkey 10
+wait 100
+expect setbars2 4
+expect setmute2 16
+# Play: Loop, from the top
+spin K4 1
+wait 100
+expect seton 1
+expect setend 0
+tap PLAY
+wait 300
+tap PLAY
+wait 200
+expect setpos 0
+expect trkmute 15
+expect sec 0
+# place 1's last four bars: the build, the drums in for it
+waitfor setbar 4 30000
+wait 300
+expect sec 2
+expect trkmute 0
+# place 2: the drop
+waitfor setpos 1 30000
+wait 600
+expect sec 0
+expect trkmute 0
+# place 3: a breakdown
+waitfor setpos 2 30000
+wait 600
+expect sec 1
+expect trkmute 15
+# round to place 1 (no drums to no drums: still down), then its build again from the breakdown, and the drop
+waitfor setpos 0 30000
+wait 600
+expect sec 1
+waitfor setbar 4 30000
+wait 300
+expect sec 2
+waitfor setpos 1 30000
+wait 600
+expect sec 0

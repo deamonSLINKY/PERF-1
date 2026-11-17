@@ -1,0 +1,11 @@
+# The save formats (tools/format_fixture.sh): what release v0.15.2 saved (tests/format/v0.15.2/) loads in this build as it did when the fixture
+# was made (tests/format/v0.15.2/state.txt; a line this build adds is fine, a line that changed is not).
+seed 0
+wait 500
+loadobj 0 tests/format/v0.15.2/o0.bin
+loadobj 19 tests/format/v0.15.2/o19.bin
+loadobj 4 tests/format/v0.15.2/o4.bin
+loadobj 6 tests/format/v0.15.2/o6.bin
+reboot
+wait 3000
+fmtcheck tests/format/v0.15.2/state.txt
