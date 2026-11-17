@@ -6967,6 +6967,7 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
 #define LKS 8                                   /* the window's sub-blocks of 8 samples */
 static float lk_l[LK], lk_r[LK], lk_gm[LK], lk_sub[LKS];
 static float lk_cur = 1.0f, lk_sum = (float)LK, lk_rs = 1.0f, cp_env;
+static float po_pk;                             /* (0.17.59) the mix's peak going into the limiter (instant up, ~0.3 s down): Polish rounds at it scaled to the Ceiling */
 static uint32_t lk_chk;
 static float cp_g = 1.0f, lk_subm = 1.0f;       /* the compressor's gain at the end of the last block; the minimum of lk_sub (it changes every 8 samples) */
 static uint32_t lk_i, lk_n, lk_si;
@@ -7120,6 +7121,18 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
             en_comp_gr = 0.0f;
         }
         gs = (g1 - g0) * INV[m];
+        float pg = 1.0f, ipg = 1.0f;
+        if (po_clip) {                          /* (0.17.59) the sub-block's peak seen first, so a hit after a quiet spell is scaled too */
+            const float gm = fm_maxf(g0, g1) * cp_make;
+            float pk = po_pk;
+            for (i = 0; i < m; i++)
+                pk = fm_maxf(pk, fm_maxf(fm_fabsf(pl[j + i]), fm_fabsf(pr[j + i])) * gm);
+            po_pk = fm_flush(pk * (1.0f - (float)m * (1.0f / (0.3f * EN_SR))));
+            if (pk > lk_ceil) {
+                pg = fm_maxf(lk_ceil / pk, 0.0625f);
+                ipg = 1.0f / pg;
+            }
+        }
         for (i = 0; i < m; i++) {
             float l, r, p, gq, avg;
             g0 += gs;
@@ -7129,9 +7142,14 @@ static void master_dyn_block(float *pl, float *pr, uint32_t n)
                 l = 0.0f;
             if (!(fm_fabsf(r) < 64.0f))
                 r = 0.0f;
-            if (po_clip) {                      /* (0.17.30) the polish: the peaks rounded before the limiter */
-                l = pclip(l);
-                r = pclip(r);
+            if (po_clip) {                      /* (0.17.30) the polish: the peaks rounded before the limiter. (0.17.59) On the mix scaled so its recent peak
+                                                 * sits at the Ceiling (pg), then scaled back: before, at the level after Make-up, so a piece with more
+                                                 * Make-up than its Ceiling ran most of its music through the tanh (the maker: "major distortion" on saved
+                                                 * pieces). What Polish adds to the mid, under the mix, piece 1 of TRANCE, HOUSE, DNB: Make-up 10 / Ceiling
+                                                 * 100 -51 .. -60 dB (unchanged); 80 / 85 -21 .. -25 dB before, -32 .. -34 now; 100 / 70 -16 .. -19 before,
+                                                 * -31 .. -32 now. (The limiter's own gain as the level did nothing: the rounding left it nothing to catch.) */
+                l = pclip(l * pg) * ipg;
+                r = pclip(r * pg) * ipg;
             }
             /* the limiter: the audio goes into the delay, the gain is figured for what is coming */
             p = fm_maxf(fm_fabsf(l), fm_fabsf(r));

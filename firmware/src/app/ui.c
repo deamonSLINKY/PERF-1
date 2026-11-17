@@ -10490,9 +10490,10 @@ void ui_frame(void)
                 win_t = now;
                 win_n = 0;
             }
-            if (lost || win_n >= 40u) {           /* (0.17.54: 6 before. A late render loses nothing, the half is written ahead of the DMA; the maker's TRANCE log had
-                                                   * 62 in 14 minutes, in bursts of up to 10 in ten seconds, and no dropout, but sat at level 2 (the DX at two voices, no
-                                                   * chorus or resonator) 87 % of the time. Forty in ten seconds is a load that stays over; a dropout still steps at once.) */
+            if (lost || win_n >= 200u) {          /* (0.17.59: 200, a quarter of the renders late: since 0.17.56 a late render that lost sound is an xrun, so this is only the backstop. The
+                                                   * maker's 03:41 log: TRANCE 01 shed with the FX in use and no xrun at all. 0.17.54: 40, and 6 before that: the
+                                                   * maker's TRANCE log had 62 in 14 minutes, in bursts of up to 10 in ten seconds, no dropout, and sat at level 2 (the DX at
+                                                   * two voices, no chorus or resonator) 87 % of the time.) */
                 calm_t = now;
                 if (en_shed_level < 3 && now - step_t > (lost ? 4000u : 10000u)) {
                     en_shed(en_shed_level + 1);
