@@ -1965,7 +1965,9 @@ The page shows a keyboard with the scale's notes lit and the keys you hold brigh
 
 A phrase of one bar is also written into the voice's line (as Capture does, below), so it's kept when you save the piece. Longer phrases play
 until you let them go, and aren't saved with the piece. The notes play as you played them: when the chords change under a long phrase, it
-doesn't follow them.
+doesn't follow them. On the **pluck**, a chord (the Jam page's **Chords** mode) comes back as the whole chord, the same notes you heard; the
+acid and the bass play one note at a time, so a chord on them is recorded as its root. (The pluck's line keeps one note a step, so a
+one-bar phrase saved into it keeps the chord's root: the phrase itself plays the chord.)
 
 **Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page (of the last
 four, the one where you played the most) and makes it that voice's own line, as you played it: each note against the chord it was played over, a

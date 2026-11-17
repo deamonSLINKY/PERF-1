@@ -9533,14 +9533,22 @@ static void jam_down_v(int i, int vc)            /* key i on voice vc (JAM's num
                 ph_endb = 0;
                 memset(en_ph_note, 0, sizeof en_ph_note);
                 memset(en_ph_len, 0, sizeof en_ph_len);
+                memset(en_ph_iv, 0, sizeof en_ph_iv);
                 memset(ph_ks, 0, sizeof ph_ks);
                 say("PHRASE: REC", "REC ENDS IT");
             }
         }
         if (ph_st == 2 && t16 >= ph_b0 && t16 - ph_b0 < EN_PH_N) {
             const uint32_t s = t16 - ph_b0;
+            uint32_t iv = 0;
             en_ph_note[s] = ui.jam_note[i][0];
             en_ph_len[s] = (uint8_t)((plat_buttons() >> B_SEL & 1u) ? 0x80u : 0u);
+            for (k = n - 1; vc == 0 && k >= 1; k--) {   /* (0.17.53) the pluck: the chord's other keys, as pressed (the page's chords: the third and fifth) */
+                const int d = ui.jam_note[i][k] - ui.jam_note[i][0];
+                if (d >= 1 && d <= 31)
+                    iv = iv << 5 | (uint32_t)d;
+            }
+            en_ph_iv[s] = (uint16_t)iv;
             ph_ks[i] = (uint8_t)(s + 1u);
         }
     }

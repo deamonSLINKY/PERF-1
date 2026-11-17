@@ -99,7 +99,8 @@ void plat_play_red(int red) { (void)red; }      /* the device's PLAY colour: gre
 static uint32_t min_q[MQ], mi_w, mi_r;
 static FILE *midi_log;
 static uint32_t last_out;                        /* the last packet out, not clock: status << 16 | d1 << 8 | d2 */
-static uint32_t midi_out_count, clock_out_count, noteon_out_count, start_out_count;
+static uint32_t midi_out_count, clock_out_count, noteon_out_count, start_out_count, cm_pcs_out;
+static int cm_now_out, cm_max_out;               /* (0.17.53) the pluck's note-ons in the block being rendered, the most in one */
 static uint32_t nh, nh_keep, nh_t0, nh_win, nh_arm, nh_n, nh_blk;   /* (0.17.11) the notes out as a hash: armed, from the next start (0xFA) for nh_win ms */
 int plat_midi_in(uint32_t *pkt)
 {
@@ -115,6 +116,11 @@ void plat_midi_out(uint32_t pkt)
     midi_out_count++;
     if (((pkt >> 8) & 0xF0u) == 0x90u && (pkt >> 24))
         last_vel = (int)(pkt >> 24), noteon_out_count++;
+    if (((pkt >> 8) & 0xFFu) == 0x91u && (pkt >> 24)) {
+        cm_pcs_out |= 1u << (pkt >> 16 & 0x7Fu) % 12u;
+        if (++cm_now_out > cm_max_out)
+            cm_max_out = cm_now_out;
+    }
     if (((pkt >> 8) & 0xF0u) == 0xB0u)
         cc_out_n[pkt >> 16 & 0x7Fu]++;
     if (((pkt >> 8) & 0xFFu) == 0xFAu)
@@ -428,6 +434,7 @@ static void run_ms(uint32_t ms)
         now_ms++;
         while (audio_due_ms <= (double)now_ms) {      /* 256-frame blocks, as the device renders them */
             double t0 = now_ns(), dt;
+            cm_now_out = 0;
             en_render(blk, 256, master);
             nh_blk++;
 #ifdef EN_WEB
@@ -581,6 +588,17 @@ static int expect(const char *what, const char *val)
         got = (int)clock_out_count;
     else if (!strcmp(what, "noteons_out"))       /* (0.17.47) note-ons sent since the start (or midireset) */
         got = (int)noteon_out_count;
+    else if (!strcmp(what, "cmpcs"))             /* (0.17.53) the pluck's notes out (channel 2) since midireset: their pitch classes (bit 0 C) */
+        got = (int)cm_pcs_out;
+    else if (!strcmp(what, "cmmax"))             /* and the most at once (in one block) */
+        got = cm_max_out;
+    else if (!strcmp(what, "phchords"))          /* the phrase's sixteenths holding a chord */
+    {
+        int s2;
+        got = 0;
+        for (s2 = 0; s2 < EN_PH_N; s2++)
+            got += en_ph_note[s2] && en_ph_iv[s2];
+    }
     else if (!strcmp(what, "starts_out"))        /* (0.17.47) MIDI Starts sent (not reset by midireset) */
         got = (int)start_out_count;
     else if (!strcmp(what, "lkrole"))            /* (0.17.47) the link: 0 alone, 1 leading, 2 following, 3 no lead */
@@ -1232,7 +1250,8 @@ int main(int argc, char **argv)
             for (k2 = 0; k2 < atoi(a); k2++)
                 en_set(P_TEMPO, proj.par[P_TEMPO]);
         } else if (!strcmp(cmd, "midireset")) {      /* (0.17.47) the MIDI out counts from zero */
-            midi_out_count = clock_out_count = noteon_out_count = 0;
+            midi_out_count = clock_out_count = noteon_out_count = cm_pcs_out = 0;
+            cm_max_out = 0;
             memset(cc_out_n, 0, sizeof cc_out_n);
         } else if (!strcmp(cmd, "setfxs")) {         /* (0.17.19) setfxs N V: the effects' setting N (EN_FXS_*), as its page sets it */
             ui.fxs[atoi(a)] = (uint8_t)atoi(b);

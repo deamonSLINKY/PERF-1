@@ -405,6 +405,7 @@ void en_bass_step(int s, int v);                /* a step, from the page */
 void en_bass_capture(void);                     /* none set: the bar the line played last (the page opened) */
 #define EN_PH_N 64                              /* (0.17.45) THE PHRASE: up to four bars a voice plays back (amb.c, ph_*) */
 extern uint8_t en_ph_note[EN_PH_N], en_ph_len[EN_PH_N];   /* each sixteenth: the key (0 none), how long (sixteenths; bit 7 an accent): written while none plays */
+extern uint16_t en_ph_iv[EN_PH_N];               /* (0.17.53) the pluck's: the chord's other keys, semitones above the key, 5 bits each (0 none), as played */
 void en_phrase(int voice, int len);
 /* THE LINK (0.17.47): two units playing as one band (amb.c, lk_send; ui.c, lk_tick). en_link(q, mute): q's bits, the tracks (EN_TR_*) left to
  * the partner, muted here */

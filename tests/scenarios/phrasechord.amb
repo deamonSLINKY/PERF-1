@@ -1,0 +1,37 @@
+# (0.17.53) A PHRASE ON THE PLUCK KEEPS THE CHORD: on JAM, Chords mode, a key plays a triad; recorded into the phrase, it comes back as the same
+# three notes at once (before: its root alone). The acid and the bass are one note at a time and stay so.
+seed 0
+wait 3000
+turn SELECT 36 100
+expect view 36
+expect jamv 0
+spin K2 1
+wait 50
+expect jamm 1
+# the chord played live: its notes out on channel 2
+midireset
+key 13 down
+wait 150
+key 13 up
+wait 50
+expect cmmax 3
+expect cmpcs 0x221
+tap REC
+expect phrase 1
+key 13 down
+wait 100
+expect phrase 2
+wait 300
+key 13 up
+wait 100
+expect phnotes 1
+expect phchords 1
+tap REC
+waitfor phrase 3 5000
+expect ph_v 4
+# played back (the pluck's own line is off meanwhile): the same three notes at once, nothing else
+midireset
+wait 4000
+expect cmmax 3
+expect cmpcs 0x221
+shot phrasechord.png

@@ -4052,6 +4052,7 @@ void en_bass_capture(void) { post(C_BSSTEP, 0x20, 0); }   /* none set: the bar t
  * through the hand's own path (note_cmd: what the page's keys do), each note let go when its length is up. The UI takes the voice's own line
  * off while it plays (its hand switch). Not stored with the piece. The UI writes en_ph_* only while no phrase plays (en_phrase(-1, 0) first). */
 uint8_t en_ph_note[EN_PH_N], en_ph_len[EN_PH_N];
+uint16_t en_ph_iv[EN_PH_N];                     /* (0.17.53) a chord on the pluck: its other keys, as played (the acid and the bass play one) */
 static uint8_t ph_v = 0xFF, ph_n, ph_pos, ph_arm, ph_cur, ph_left;
 static void note_cmd(int voice, int key, int vel);
 void en_phrase(int voice, int len) { post(C_PHRASE, voice, len); }
@@ -4098,6 +4099,12 @@ static void ph_step(int st)                     /* on every sixteenth */
     if (nt) {
         ph_release();
         note_cmd(ph_v, nt, ln & 0x80u ? 127 : 100);
+        if (ph_v == EN_V_PLUCK) {               /* (0.17.53) the chord as it was played: each key as the page sent it, the same path */
+            uint32_t iv = en_ph_iv[ph_pos];
+            for (; iv; iv >>= 5)
+                if (iv & 31u)
+                    note_cmd(ph_v, nt + (int)(iv & 31u) > 127 ? 127 : nt + (int)(iv & 31u), ln & 0x80u ? 127 : 100);
+        }
         ph_cur = nt;
         ph_left = (uint8_t)((ln & 0x7Fu) ? (ln & 0x7Fu) : 1u);
     }
