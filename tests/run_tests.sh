@@ -59,9 +59,9 @@ run palette python3 tests/host/palette_test.py
 if command -v node >/dev/null 2>&1; then
     run webvoice sh -c "$CC -O1 -std=c99 -DEN_HOST -Ifirmware/src/dsp -o $OUT/gvoice tests/host/gvoice.c firmware/src/dsp/amb.c -lm && $OUT/gvoice > $OUT/voices.json && node tests/web_voice_test.js $OUT/voices.json"
 fi
-# the update path, against the firmware package (Felucca's tests; needs ./build.sh). The newest of build/amb.fwsc and build/amb-X.fwsc:
+# the update path, against the firmware package (Felucca's tests; needs ./build.sh). The newest of build/perf1.fwsc and build/perf1-X.fwsc (amb-* before 0.17.55):
 # a release build writes only the second, so build/amb.fwsc alone could be an old one (2026-11-12: it was 0.16.x through 0.17.25)
-PKG=$(ls -t build/amb.fwsc build/amb-*.fwsc 2>/dev/null | head -1)
+PKG=$(ls -t build/perf1.fwsc build/perf1-*.fwsc build/amb.fwsc build/amb-*.fwsc 2>/dev/null | head -1)
 export PERF_PKG="$PKG"
 if [ -n "$PKG" ]; then
     echo "  update path against $PKG"

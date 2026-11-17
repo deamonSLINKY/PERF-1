@@ -14,4 +14,4 @@ if [ "$2" != "--no-tests" ]; then
 fi
 ./build.sh --release "$V"
 EN_VERSION="$V" web/emu/build_clang.sh | tail -1
-ls -la "build/amb-$V.fwsc"
+ls -la "build/perf1-$V.fwsc"

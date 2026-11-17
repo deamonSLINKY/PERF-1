@@ -6,7 +6,7 @@
   tools/build.py [--release X.Y[-suffix]]
 
 Outputs in build/: amb.bin (app), loader/ota.bin (update loader, Felucca's, unchanged),
-amb.fwsc (package). See BUILDING.md for the toolchain and the SDK.
+perf1.fwsc (package; perf1-X.Y.Z.fwsc with --release). See BUILDING.md for the toolchain and the SDK.
 
 The JieLi toolchain is Linux x86-64 only. JIELI_TOOLCHAIN points at it; on
 macOS (or with JIELI_DOCKER=1) each tool runs in a linux/amd64 container.
@@ -421,7 +421,7 @@ def main():
     ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_7XXYYZZ, version string X.Y[.Z]")
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
     a = ap.parse_args()
-    name = "amb.fwsc"
+    name = "perf1.fwsc"
     if a.release:
         # identity FM-1_7 + major, minor, patch as two digits each (0.1 -> FM-1_7000100): FM-1 is the
         # model the update tools match on; the number is ours (X0X is FM-1_9...). Digits only after the
@@ -431,7 +431,7 @@ def main():
             raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
         PRODUCT = "FM-1_7%02d%02d%02d" % (int(m[1]), int(m[2]), int(m[3] or 0))
         VERSION = a.release.upper()
-        name = f"amb-{a.release}.fwsc"
+        name = f"perf1-{a.release}.fwsc"   # (0.17.55: was amb-X.fwsc; the name is only the file, the identity is inside)
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK
         if hashlib.sha256(fm1pkg_make.sdk_file(rel)).hexdigest() != sha:

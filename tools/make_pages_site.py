@@ -23,7 +23,9 @@ args = [a for a in sys.argv[1:] if a != "--no-sharing"]
 ver = args[0] if args else sys.exit(__doc__)
 OUT = Path(args[1] if len(args) > 1 else SRC / "build" / "site")
 REPO = "https://github.com/deamonSLINKY/PERF-1"
-pkg = SRC / "build" / f"amb-{ver}.fwsc"
+pkg = SRC / "build" / f"perf1-{ver}.fwsc"
+if not pkg.exists():
+    pkg = SRC / "build" / f"amb-{ver}.fwsc"   # (before 0.17.55)
 raw = pkg.read_bytes()
 product = product_of(raw)
 if not re.fullmatch(r"FM-1_7\d{6}", product):
