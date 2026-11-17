@@ -6116,6 +6116,7 @@ typedef struct {
     int32_t spr, slpr;
     uint8_t sai, slai, slsv;
     float sx1, sx2, sph, srate;                 /* the two samples about the place, the place between them, the step (the sample's rate and the note) */
+    float ee[3], em[3];                         /* (0.17.60) its decays, stepped: each e^(-K t) now, and its step a sample (0: not started) */
 } dj_t;
 static dj_t djv[4];
 static uint32_t dj_age;
@@ -6184,6 +6185,7 @@ static void smp_note(int key, int on)
         float hz = DJS[key].hz * (oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f), r3 = 1.26f, r5 = 1.498f;
         d->on = 1;
         d->held = 1;
+        d->em[0] = d->em[1] = d->em[2] = 0.0f;   /* (0.17.60) its decays from the start */
         d->key = (uint8_t)key;
         d->type = (uint8_t)ty;
         d->hold_mode = fxs_v[EN_FXS_SM_LOOP] != 0;
@@ -6269,6 +6271,19 @@ static float dj_smp(dj_t *v)                    /* one output sample of it, betw
     }
 }
 static inline float dj_wrap(float p) { return p - (float)(int)p; }
+/* (0.17.60) e^(-K t) for a voice's decay k, stepped: the first call takes the exp, each one after (once a sample, every sample) a multiply. The snips
+ * took up to three exps a sample a voice, four voices at once: on the host, TRANCE 01 rendered 49 % slower with the bell on every beat, 32 % with the
+ * long drop, 25 % with the roll, and the maker's log had every dropout where the snips were playing. */
+static inline float dj_dec(dj_t *v, int k, float K, float t)
+{
+    if (v->em[k] == 0.0f) {
+        v->em[k] = fm_expf(-K * (1.0f / EN_SR));
+        v->ee[k] = fm_expf(-K * t);
+    } else {
+        v->ee[k] *= v->em[k];
+    }
+    return v->ee[k];
+}
 static inline float dj_pulse(float ph, float w, float inc) { return blep_saw(ph, inc) - blep_saw(dj_wrap(ph + w), inc); }
 /* one sample of a voice: its middle (returned), its side (*side: left gets + it, right - it), its own envelope (*amp); it ends itself (on = 0) */
 static float dj_voice(dj_t *v, float *amp, float *side)
@@ -6279,11 +6294,11 @@ static float dj_voice(dj_t *v, float *amp, float *side)
     case DJ_HORN: case DJ_BLAST: case DJ_RAVE: case DJ_RSTAB: case DJ_CRASH: case DJ_KICK: case DJ_SNARE: {   /* (0.17.44) the sampled ones (djsmp.h) */
         y = dj_smp(v);
         if (v->type == DJ_BLAST) {              /* a short blast of the horn: the air dying after a third of a second */
-            a = t < 0.32f ? 1.0f : fm_expf(-(t - 0.32f) * 12.0f);
+            a = t < 0.32f ? 1.0f : dj_dec(v, 0, 12.0f, t - 0.32f);
             if (t > 0.9f)
                 v->on = 0;
         } else if (v->type == DJ_RSTAB) {       /* a stab of the rave horn */
-            a = fm_expf(-t * 7.0f);
+            a = dj_dec(v, 0, 7.0f, t);
             if (t > 0.55f)
                 v->on = 0;
         } else if (v->type == DJ_CRASH || v->type == DJ_KICK || v->type == DJ_SNARE) {
@@ -6293,7 +6308,7 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         break;
     }
     case DJ_STAB: {                             /* THE CHORD STAB (0.17.24, back on a key): three saws on the chord playing, a filter closing, the third left, the fifth right */
-        const float k = 0.5f * fm_expf(-t * 6.0f) + 0.04f, r2 = v->aux > 1.0f ? v->aux : 1.189f, r3 = v->aux2 > 1.0f ? v->aux2 : 1.498f;
+        const float k = 0.5f * dj_dec(v, 0, 6.0f, t) + 0.04f, r2 = v->aux > 1.0f ? v->aux : 1.189f, r3 = v->aux2 > 1.0f ? v->aux2 : 1.498f;
         const float s1 = blep_saw(v->ph, inc), s2 = blep_saw(v->ph2, inc * r2), s3 = blep_saw(v->ph3, inc * r3);
         y = (s1 + s2 + s3 + 0.5f * blep_saw(v->ph4, inc * 0.5f)) * 0.4f;
         v->ph = dj_wrap(v->ph + inc);
@@ -6304,7 +6319,7 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         y = v->z;
         v->zs += k * ((s2 - s3) * 0.25f - v->zs);
         s = v->zs;
-        a = fm_expf(-t * 7.0f);
+        a = dj_dec(v, 1, 7.0f, t);
         if (t > 0.7f)
             v->on = 0;
         break;
@@ -6317,18 +6332,18 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         break;
     }
     case DJ_LASER:                              /* a fast fall in pitch, hard-edged */
-        v->ph = dj_wrap(v->ph + (v->hz * fm_expf(-t / v->aux) + 150.0f) * (1.0f / EN_SR));
+        v->ph = dj_wrap(v->ph + (v->hz * dj_dec(v, 0, 1.0f / v->aux, t) + 150.0f) * (1.0f / EN_SR));
         y = 0.5f * fm_tanhf(3.0f * sine(v->ph));
-        a = fm_expf(-t * 4.0f);
+        a = dj_dec(v, 1, 4.0f, t);
         if (t > 0.5f)
             v->on = 0;
         break;
     case DJ_ZAP: {                              /* noise through a band that falls */
-        const float k = 0.04f + 0.6f * fm_expf(-t / v->aux);
+        const float k = 0.04f + 0.6f * dj_dec(v, 0, 1.0f / v->aux, t);
         v->z += k * (n - v->z);
         v->z2 += k * (v->z - v->z2);
         y = (v->z - v->z2) * 3.0f;
-        a = fm_expf(-t * 7.0f / v->aux * 0.5f);
+        a = dj_dec(v, 1, 7.0f / v->aux * 0.5f, t);
         if (t > 0.5f)
             v->on = 0;
         break;
@@ -6361,9 +6376,9 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         break;
     }
     case DJ_DROP:                               /* a sine falling to the sub */
-        v->ph = dj_wrap(v->ph + (v->hz * fm_expf(-t * 3.0f) + 28.0f) * (1.0f / EN_SR));
+        v->ph = dj_wrap(v->ph + (v->hz * dj_dec(v, 0, 3.0f, t) + 28.0f) * (1.0f / EN_SR));
         y = 0.9f * sine(v->ph);
-        a = fm_expf(-t / (v->aux * 0.5f));
+        a = dj_dec(v, 1, 1.0f / (v->aux * 0.5f), t);
         if (t > v->aux * 2.0f)
             v->on = 0;
         break;
@@ -6396,8 +6411,8 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         v->ph = dj_wrap(v->ph + inc);
         v->ph2 = dj_wrap(v->ph2 + inc * 3.0f);
         v->ph3 = dj_wrap(v->ph3 + inc * 4.0f);
-        y = 0.65f * sine_any(v->ph + 1.1f * fm_expf(-t * 4.0f) * sine(v->ph2)) + 0.12f * fm_expf(-t * 6.0f) * sine(v->ph3);
-        a = fm_expf(-t * 2.2f);
+        y = 0.65f * sine_any(v->ph + 1.1f * dj_dec(v, 0, 4.0f, t) * sine(v->ph2)) + 0.12f * dj_dec(v, 1, 6.0f, t) * sine(v->ph3);
+        a = dj_dec(v, 2, 2.2f, t);
         if (t > 3.0f)
             v->on = 0;
         break;
@@ -6406,18 +6421,23 @@ static float dj_voice(dj_t *v, float *amp, float *side)
                                                  * 180 Hz) and a band of noise near 3.5 kHz, the roll getting louder; the side is the noise's own copy */
         const float u = fm_minf(t / v->aux, 1.0f), rate = 7.0f + 18.0f * u;
         float bt, ht, ne, hp, n2 = frand() * 2.0f - 1.0f;
-        v->ph3 = dj_wrap(v->ph3 + rate * (1.0f / EN_SR));
+        {
+            const float pb = v->ph3;
+            v->ph3 = dj_wrap(v->ph3 + rate * (1.0f / EN_SR));
+            if (v->ph3 < pb)                    /* (0.17.60) a new hit: its decays from it, exact */
+                v->em[0] = v->em[1] = v->em[2] = 0.0f;
+        }
         bt = v->ph3;
         ht = bt / rate;                         /* seconds into this hit */
-        v->ph = dj_wrap(v->ph + (180.0f + 150.0f * fm_expf(-ht * 40.0f)) * (1.0f / EN_SR));
+        v->ph = dj_wrap(v->ph + (180.0f + 150.0f * dj_dec(v, 0, 40.0f, ht)) * (1.0f / EN_SR));
         v->z += 0.49f * v->z2;                  /* the noise's band: a state-variable filter at ~3.5 kHz */
         hp = n - v->z - v->z2;
         v->z2 += 0.49f * hp;
         v->zs += 0.49f * v->zs2;
         hp = n2 - v->zs - v->zs2;
         v->zs2 += 0.49f * hp;
-        ne = fm_expf(-ht * 22.0f);
-        y = 0.6f * sine(v->ph) * fm_expf(-ht * 30.0f) + 1.1f * v->z2 * ne;
+        ne = dj_dec(v, 1, 22.0f, ht);
+        y = 0.6f * sine(v->ph) * dj_dec(v, 2, 30.0f, ht) + 1.1f * v->z2 * ne;
         s = 0.45f * v->zs2 * ne;
         a = 0.35f + 0.65f * u;
         break;
@@ -8224,7 +8244,7 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
             /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
             const int gate = !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
             d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : 0.00025f);
-            const float k = a * d->env * gain * TG(TR_ACID, j);
+            const float k = a * d->env * gain;   /* (0.17.60: not the acid's track gain: in song mode the arrangement's rests of the acid silenced them) */
             y *= k;
             sd *= k;
             mixl[j] += y + sd;                  /* (the side: left and right apart, nothing of it in mono) */

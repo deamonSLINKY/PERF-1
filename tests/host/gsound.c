@@ -119,6 +119,13 @@ int main(int argc, char **argv)
     while (fr < frames) {
         const int n = frames - fr < 256 ? (int)(frames - fr) : 256;
         now = fr;
+        if (getenv("SNIP")) {                    /* SNIP=k: snip k (the sampler's key) on each beat, let go half a beat later */
+            const long beat = (long)(60.0 / bpm * SR), ph = fr % beat;
+            if (ph < n)
+                en_note_v(EN_V_SAMPLE, 53 + atoi(getenv("SNIP")), 100);
+            else if (ph >= beat / 2 && ph - n < beat / 2)
+                en_note_v(EN_V_SAMPLE, 53 + atoi(getenv("SNIP")), 0);
+        }
         if (getenv("BRK")) {                     /* BRK=bar: a breakdown asked for half a bar before that bar (0-based), as SAVE would */
             const long at = (long)((atof(getenv("BRK")) - 0.5) * 4.0 * 60.0 / bpm * SR);
             if (fr <= at && fr + n > at)
