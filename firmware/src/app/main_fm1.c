@@ -122,12 +122,16 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 }
 
 static uint32_t last_half = 2u;                     /* the half rendered last (2: none yet) */
+static uint32_t half_t;                             /* (0.17.56) when the half being rendered was freed (its replay starts a half later), in ticks */
+static uint8_t was_late;
 void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_isr.S) */
 {
     uint8_t p = fm1_audio_pending();
     fm1_audio_ack_aux(p);
     if (p & FM1_AUDIO_HALF) {
-        uint32_t half = fm1_audio_free_half();
+        const uint32_t ht = (HALF_FRAMES * 1000000u / FS) * FM1_TICKS_PER_US, t_in = fm1_ticks();
+        uint32_t half = fm1_audio_free_half(), lag;
+        half_t = was_late ? half_t + ht : t_in;     /* (on time: the interrupt is the half's end; after a late render it came during it, a half after the last) */
         /* The half's flag is cleared before the render, not after it: a half that ends while this one renders raises the interrupt again, and the
          * next render follows at once. (Cleared at the end it took that one too: a render that ran past its half, 11.6 to 12.4 ms in a lofi piece at
          * 55 % load, cost the next half its render, and its buffer played a second time. The telemetry's xruns were exactly that: every one was a
@@ -137,10 +141,17 @@ void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_is
             audio_xruns++;                          /* two ends went by in one render, or the interrupts were off: a half was never rendered */
         last_half = half;
         render_block(&abuf[half * HALF_WORDS]);
-        if (fm1_audio_free_half() != half) {
-            en_dbg.late++;                         /* the DMA moved on while we rendered: the next render is due already, nothing is lost */
+        was_late = fm1_audio_free_half() != half;
+        if (was_late) {
+            en_dbg.late++;                         /* the DMA moved on while we rendered: the next render is due already */
             audio_late++;
         }
+        lag = fm1_ticks() - half_t;                /* (0.17.56) the DMA replays this half from ht on and reaches its second chunk (frames 256..511) at 1.5 ht: a render
+                                                    * done after that played that chunk stale, a dropout the half count above never saw (a run of late renders adds up).
+                                                    * Counted as an xrun (the engine eases off at once); past 2 ht the next half's count has it. The maker heard hitches
+                                                    * in 0.17.54-55 with 1,678 late renders in 17 minutes and 2 xruns counted. */
+        if (lag > ht + ht / 2u && lag <= 2u * ht)
+            audio_xruns++;
     }
 }
 extern void isr_alnk0(void);

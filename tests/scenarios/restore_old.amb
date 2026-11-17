@@ -9,7 +9,7 @@ wait 100
 turn SELECT 2
 wait 100
 spin K1 2
-wait 6000
+wait 21000
 expect keyset 2
 tap HOME
 wait 100

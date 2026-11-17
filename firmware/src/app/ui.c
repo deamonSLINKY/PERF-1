@@ -10109,7 +10109,11 @@ static void autosave(void)
     }
     if (ui.set_lazy && !en_playing)
         ui.set_dirty = 1;                        /* (stopped: a write costs the music nothing) */
-    if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: longer, each write is a dip) */
+    if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 10 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: 20 s, 0.17.56: each write
+                                                                                                                                 * stops the flash for 0.2-0.36 s, its slices
+                                                                                                                                 * hold the audio's interrupt 1.2 ms each; the
+                                                                                                                                 * maker's log: a store every 5-10 s while turning
+                                                                                                                                 * the filters, heard as hitches. Stop: 2 s) */
         ui.set_dirty = 0;
         quiet_write(1);                          /* the effects' and performing settings: a moment after the last change (playing: faded) */
         return;

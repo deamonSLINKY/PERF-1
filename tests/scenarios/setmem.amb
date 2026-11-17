@@ -15,7 +15,7 @@ turn SELECT 6
 wait 100
 expect fxpage 31
 spin K2 1
-wait 6000
+wait 21000
 expect keyset 2
 reboot
 wait 6500

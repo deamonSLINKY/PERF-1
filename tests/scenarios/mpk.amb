@@ -69,8 +69,8 @@ wait 100
 expect fxk0 2
 expect mood 54
 expect fxk2 100
-# kept
-wait 6000
+# kept (0.17.56: while playing, 20 s after the last change)
+wait 21000
 reboot
 wait 3000
 expect minpads 3

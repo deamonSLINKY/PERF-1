@@ -2189,7 +2189,7 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
-"A couple of seconds" is 2 seconds with the music stopped and 4 seconds while it plays. While it plays, the sound dips for a moment during the save, the same as when you store a piece: the music fades out, the FM-1 saves, and the music fades back in.
+"A couple of seconds" is 2 seconds with the music stopped and 4 seconds while it plays; the effects' and performing settings wait 20 seconds while it plays (0.17.56: turning the filters saved every few seconds, each save a small hitch), and are saved 2 seconds after you stop. While it plays, the sound dips for a moment during the save, the same as when you store a piece: the music fades out, the FM-1 saves, and the music fades back in.
 
 **Not kept:** the genre (the FM-1 always starts in HYPNO), anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, whether the auto-DJ is on, and edits to a piece you haven't stored. Also, each genre sets its own tape, vinyl and pump settings when you switch to it. The settings you saved while in HYPNO come back when you return to it.
 
@@ -2520,7 +2520,7 @@ The FM-1 sends nothing until it's asked, and stops ten seconds after the last as
 | Item | Detail |
 |---|---|
 | CPU nn | Share of the render's time budget the first core uses, measured inside the audio interrupt, including waiting for the second core. Screen drawing isn't counted. |
-| XR n (xruns) | Halves of audio that were never rendered; the last 11.6 ms play a second time. A render that only ran past its half isn't counted, since the next starts at once and nothing is lost. The status log counts those as `late`. |
+| XR n (xruns) | Halves of audio that were never rendered; the last 11.6 ms play a second time. Since 0.17.56 also a render so late that the second part of its half had already played (a run of late renders adds up). A render that only ran a little past its half isn't counted: the next starts at once and nothing is lost. The status log counts those as `late`. |
 | C2 nn | Percent of a chunk's time the second core spends on its job: the pad with its chorus, the DX voices, the reverb, and at times the bass and acid. The engine moves some of this work between the cores as the load changes. `C1`: the second core stopped after a fault. |
 | Shedding | S1: pad chorus off, DX voices held to four. S2: DX voices held to two. Steps up on an xrun or on forty late renders in ten seconds (six before 0.17.54), one level at a time; steps back one level after twenty seconds of neither. |
 | Audio blocks | 512 frames at a time, as two renders of 256 (11.6 ms for the pair), so a slow render borrows time from a quick one beside it. The DX plucks are rendered a chunk ahead on the second core and sound 5.8 ms later than the plain ones. |

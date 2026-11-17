@@ -59,7 +59,7 @@ expect frozen 1
 midi B0 40 00
 wait 100
 expect frozen 0
-wait 6000
+wait 21000
 reboot
 wait 3000
 expect minpads 2
