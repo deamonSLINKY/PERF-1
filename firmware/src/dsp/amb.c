@@ -9777,12 +9777,16 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     while (n) {
         uint32_t k = n > BLK ? BLK : n;
         int timed = en_playing && !en_ext;
-        if (timed) {
-            if (pulse_left <= 0.0f) {
+        if (timed) {                             /* (0.17.62) only the step's pulse cuts the chunk (its notes land on their sample). The five between are
+                                                 * the MIDI clock out alone, so one sounds at the nearer chunk edge, up to EN_MIN_CHUNK early or late
+                                                 * (2.9 ms; the grid does not drift, and a follower steps on the step's pulse, which stays exact).
+                                                 * The maker's TRANCE 01 logs: half the chunks were cut short, mostly by these pulses, and every chunk
+                                                 * costs the first core 0.8-1.3 ms whatever its length. */
+            if (pulse_left <= 0.0f || (pulse && pulse_left < (float)EN_MIN_CHUNK)) {
                 RT(34, clock_pulse());
                 pulse_left += step_len * (1.0f / 6.0f);
             }
-            if ((float)k > pulse_left)
+            if (!pulse && (float)k > pulse_left)
                 k = (uint32_t)pulse_left + 1u;
         }
         if (k > n)
