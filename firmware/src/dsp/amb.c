@@ -4935,7 +4935,8 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void),
 volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by the first core (set when it has time to spare and the other has not) */
 static int8_t bal_force = -1;                    /* tests: -1 as it decides, else the level */
 static uint8_t bal_lvl = 1;                      /* where the work runs: 1 the usual (the pad, its chorus, the reverb and the DX voices on the other core); 2 the drone and the acid on the other core as well (0, the chorus on the first core, is gone since 0.14.4) */
-static uint32_t bal_wait, bal_tot, bal_dwell, bal_block, bal_up_t, bal_back = 40u;               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
+static uint32_t bal_wait, bal_tot, bal_dwell, bal_block, bal_up_t, bal_back = 40u;
+static uint32_t bal_fr, bal_sum, bal_k, bal_hold, bal_ph, bal_c[2];   /* (0.17.57) the A/B: frames summed, the costs of a phase, its windows, the hold, trying, each level's cost */               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
 volatile uint8_t en_bass_c1;
 static void bal_apply(int l)
 {
@@ -9567,41 +9568,33 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     } else if (en_prof_clock && rv_c2) {        /* where the work runs, from how long the first core waited for the other (a quarter second's, summed) */
         bal_tot += pt0_ - bal_t0;
         bal_wait += bal_w;
+        bal_fr += n;
         if (bal_tot >= 6000000u) {
-            const uint32_t frac = bal_wait / (bal_tot / 100u);
-            if (bal_dwell)
-                bal_dwell--;
-            if (bal_block)
-                bal_block--;
-            if (en_shed_level) {                /* the engine is shedding (the chorus is off): the first core is the one short of time, so the drone and the acid go to the other
-                                                 * (its log shows 25-30 % busy in the pieces that crack); back to the default places if the first core ends up waiting for it */
-                if (bal_lvl == 2 && frac > 8u) {
-                    bal_apply(1);
-                    bal_block = bal_back;
-                } else if (bal_lvl != 2 && !bal_block) {
-                    bal_apply(2);
-                    bal_dwell = 8;
-                    bal_up_t = 1;
-                } else if (bal_lvl == 0) {
-                    bal_apply(1);
-                }
-            } else if (!bal_dwell) {
-                if (frac > 8u && bal_lvl > 0) {          /* the first core waits: the other has too much: its chorus, or the drone and acid, come back */
-                    bal_apply(bal_lvl - 1);
-                    bal_dwell = 8;                      /* (two seconds before it may move again) */
-                    if (bal_up_t && bal_up_t < 40u) {   /* it came back soon after going: do not try again for a while (10 s, then 20, up to a minute) */
-                        bal_block = bal_back;
-                        bal_back = bal_back < 120u ? bal_back * 2u : 240u;
+            /* (0.17.57) A/B, measured: the first core's time a frame, waiting for the other included, with the drone and the acid here (level 1) and
+             * there (level 2); the cheaper is kept and tried again every ten seconds. Before, they moved only when the first core never waited (under
+             * 1 %) and, back soon, were blocked for 10 s, then 20, up to a minute, for good: the maker's log through 42 pieces had them moved in 5 of
+             * them, the first core at 67-90 % and the other at 24-55 %; FOREST 10, moved all along: 69 % / 41 %, no late render. Nothing is shed. */
+            const uint32_t cost = bal_tot / (bal_fr ? bal_fr : 1u);
+            bal_sum += cost;
+            if (++bal_k >= 8u) {                /* two seconds measured at this level */
+                const uint32_t c = bal_sum / 8u;
+                bal_sum = bal_k = 0;
+                if (bal_ph == 0) {              /* holding: after ten seconds, try the other */
+                    if (++bal_hold >= 5u) {
+                        bal_hold = 0;
+                        bal_c[bal_lvl - 1u] = c;
+                        bal_apply(bal_lvl == 1 ? 2 : 1);
+                        bal_ph = 1;
                     }
-                } else if (frac < 1u && bal_lvl < 2 && !bal_block) {   /* the first core never waits: the other has room, it takes more */
-                    bal_apply(bal_lvl + 1);
-                    bal_dwell = 8;
-                    bal_up_t = 1;
+                } else {                        /* tried: keep it if it is cheaper by 2 %, else back */
+                    const uint32_t was = bal_c[bal_lvl == 1 ? 1 : 0];
+                    bal_ph = 0;
+                    if (!(c * 50u < was * 49u))
+                        bal_apply(bal_lvl == 1 ? 2 : 1);
                 }
             }
-            if (bal_up_t)
-                bal_up_t++;
-            bal_tot = bal_wait = 0;
+            bal_tot = bal_wait = bal_fr = 0;
+            (void)bal_dwell, (void)bal_block, (void)bal_up_t, (void)bal_back;
         }
     }
     step_t += (int32_t)n;
