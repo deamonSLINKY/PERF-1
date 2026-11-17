@@ -1717,7 +1717,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | RESONATOR (pitched percussion; section 13) | Amount: 0 (off)-100 | Decay: 0-100 | Register: low, mid, high | Targets: perc, hats, snare, perc+hats, drums, pluck |
-| LINK (two units as one band; section 14) | Link: off, auto, lead, follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
+| LINK (two units as one band; section 14) | Link: off, auto, lead, follow, cable lead, cable follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
 | SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Look: plain, scanlines, calm, calm+scan |
@@ -2338,9 +2338,14 @@ This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tr
 **The link: two units as one band.** Two units running PERF-1 (two FM-1s, or an FM-1 and a PERF-1 SMK) find each other and play together:
 one leads, the other follows.
 
-1. Connect them: turn **USB host** on one of them (the MIDI IN page) and plug the other into it, through a powered hub.
-2. Leave **Link** on **Auto** on both (the LINK settings page, the last one). They say hello about once a second; when each hears the
-   other, both say `LINKED`. On Auto the unit that is the USB host leads. **Lead** or **Follow** sets it by hand.
+1. Connect them, one of two ways:
+   - **The cable (simplest):** one plain USB-C to USB-C cable between the two, no hub, no computer. Set **Link** to **Cable lead** on one
+     and **Cable follow** on the other (the LINK settings page, the last one). The port then carries only the link, not USB: each unit runs
+     on its own power (battery or its own charger), and the page's third line counts the link's messages (`WIRE OUT`, `IN`, `BAD`).
+     The cable setting is never kept: after a power-off the port is plain USB again, so the installer always finds the unit.
+   - **Over USB:** turn **USB host** on one of them (the MIDI IN page) and plug the other into it, through a powered hub. Leave **Link** on
+     **Auto** on both: the unit that is the USB host leads. **Lead** or **Follow** sets it by hand.
+2. They say hello about once a second; when each hears the other, both say `LINKED`.
 3. Press **PLAY** on the lead. The follower starts with it and keeps its tempo (`EXT`).
 
 While they're linked:
@@ -2359,8 +2364,9 @@ When the partner is gone for 3.5 seconds (unplugged, switched off), each says `P
 and all its parts again. The link uses MIDI channel 16, CCs 20-31; with Link on, other gear on your MIDI out sees a CC 20 on channel 16 about
 once a second. Set Link to **Off** if that gets in the way.
 
-The link is new and hasn't been tried between two units yet. As said above, sending from the host to a device hasn't been tried either, so if
-the follower doesn't link or doesn't follow, say so.
+The cable was tried on an FM-1 leading a PERF-1 SMK for eight minutes (2026-11-16): linked the whole time, every message through, no
+measurable load on either. The link over USB hasn't been tried between two units yet, so if the follower doesn't link or doesn't follow
+that way, say so. Each unit keeps its own mood, piece and (on Own) sections: the link shares the tempo, the harmony and who plays what.
 
 **A Model:Samples (or any Elektron Model) as a controller.** The Model:Samples sends each of its six tracks on its own channel (1-6), at whatever note that track is pitched to, so the **Pads** layout doesn't fit it. Set **Notes** to **M:S** instead, and the channel decides what a trig does, whatever its note:
 

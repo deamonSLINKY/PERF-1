@@ -182,6 +182,44 @@ void plat_usb_host_diag(char *b)
         diag_put(p, STEP[uh_d.step % 7u]);
     }
 }
+static uint8_t lw_mode;                          /* the link cable (link_wire.c): 0 off, 1 this one sends on D+, 2 on D- */
+int plat_wire(int mode)
+{
+    uint32_t f;
+    if (mode == lw_mode)
+        return 0;
+    if (mode && uh.on)
+        return -1;
+    f = irq_save();
+    lw_on = 0;
+    if (mode) {
+        if (!lw_mode)
+            usb_detach();                        /* the controller off, no retry while the pins are the wire's */
+        fm1_usb_pins_init();
+        lw_start((uint32_t)mode - 1u);
+        lw_on = 1;
+    } else {
+        fm1_usb_off();
+        usb.detached = 0;
+        usb_retry_t = fm1_ms - 1000u;            /* usb_retry makes the port a device again at once */
+    }
+    irq_restore(f);
+    lw_mode = (uint8_t)mode;
+    return 0;
+}
+void plat_wire_diag(char *b)                     /* the LINK page: packets out, in, refused; pauses that sent one again */
+{
+    char *p = diag_put(b, "WIRE OUT ");
+    p = diag_num(p, lw.sent);
+    p = diag_put(p, " IN ");
+    p = diag_num(p, lw.got);
+    p = diag_put(p, " BAD ");
+    p = diag_num(p, lw.bad);
+    if (lw.gaps) {
+        p = diag_put(p, " P");
+        diag_num(p, lw.gaps);
+    }
+}
 #else
 void plat_usb_host(int on) { (void)on; }
 int plat_usb_host_msg(void) { return 0; }

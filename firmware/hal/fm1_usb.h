@@ -55,6 +55,25 @@ FM1_INLINE void fm1_usb_attach(void *ep0)
     FM1_USB_CON0 |= 0x3Cu;
 }
 
+/* THE LINK CABLE's pin test (EN_PINTEST, 2026-11-15): D+ and D- as plain pins, as the SDK's gpio.c does for its pins 148 / 149
+ * (usb_iomode: IO_CON0 |= 0x900; direction bits 2 / 3, 1 = in; outputs bits 0 / 1; pull-downs 4 / 5, pull-ups 6 / 7; digital in
+ * 9 / 10; the levels in 0x51004 bits 0 / 1). Open-drain by hand: both lines pulled up, a line pulled low only by turning its
+ * pin into an output of 0, so two units on the same line never fight. The controller is off (fm1_usb_off) while they are pins. */
+#define FM1_USB_IO_IN (*(volatile uint32_t *)0x51004u)
+FM1_INLINE void fm1_usb_pins_init(void)
+{
+    FM1_USB_CON0 = 0;
+    FM1_USB_IO_CON0 = 0x900u | 0x600u | 0xC0u | 0x0Cu;   /* GPIO mode, digital in, pulled up, both inputs (outputs 0) */
+}
+FM1_INLINE void fm1_usb_pin_low(uint32_t pin, uint32_t low)   /* pin 0 D+, 1 D-: pulled low (an output of 0), or let go */
+{
+    if (low)
+        FM1_USB_IO_CON0 &= ~(1u << (2u + (pin & 1u)));
+    else
+        FM1_USB_IO_CON0 |= 1u << (2u + (pin & 1u));
+}
+FM1_INLINE uint32_t fm1_usb_pins_read(void) { return FM1_USB_IO_IN & 3u; }   /* bit 0 D+, bit 1 D-: 1 high */
+
 FM1_INLINE void fm1_usb_off(void)
 {
     FM1_USB_CON0 = 0;

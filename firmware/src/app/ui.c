@@ -110,7 +110,8 @@ static const char *const ONOFF_NAME[2] = {"OFF", "ON"};
 static const char *const TILT_NAME[4] = {"OFF", "GENRE", "WARMER", "BRIGHTER"};
 static const char *const JC_NAME[6] = {"OFF", "I", "II", "I+II", "ROT SLOW", "ROT FAST"};   /* the CHORUS page (0.17.44): the Juno's three; (0.17.49) a rotary's two speeds */
 static const char *const JCT_NAME[3] = {"PLUCK", "ACID", "BOTH"};
-static const char *const LKM_NAME[4] = {"OFF", "AUTO", "LEAD", "FOLLOW"};   /* the LINK page (0.17.47): AUTO, the unit that is the USB host leads */
+static const char *const LKM_NAME[6] = {"OFF", "AUTO", "LEAD", "FOLLOW", "CABLE LEAD", "CABLE FOLLOW"};   /* the LINK page (0.17.47): AUTO, the unit that is the USB host
+                                                                                 * leads; CABLE (0.17.55, link_wire.c): a plain USB-C cable, no USB, the port's two wires */
 static const char *const LKP_NAME[5] = {"ALL", "BEAT", "TOP", "DRUMS", "NO DRUMS"};   /* what this unit plays when linked: BEAT the drums and the bass, TOP the pad, pluck and acid */
 static const char *const LKS_NAME[2] = {"OWN", "FOLLOW"};
 static const char *const RZR_NAME[3] = {"LOW", "MID", "HIGH"};   /* the RESONATOR page (0.17.51): the bands' register, and what goes in */
@@ -215,7 +216,7 @@ static const struct {
                        {"Tilt", KN_NAME, EN_FXS_TILT, TILT_NAME, 4}, {"Width", KN_PLAIN, EN_FXS_WIDTH, 0, 0}}},   /* (0.17.30; a spare effect bit: nothing held) the voices' wandering pitch,
                                                     * the master's polish (the lows mono, the peaks rounded), its tilt, the width up top */
     {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 6}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
-    {"LINK", FX_SPARE9, 0, {{"Link", KN_NAME, EN_FXS_LK_MODE, LKM_NAME, 4}, {"Plays", KN_NAME, EN_FXS_LK_PLAYS, LKP_NAME, 5},
+    {"LINK", FX_SPARE9, 0, {{"Link", KN_NAME, EN_FXS_LK_MODE, LKM_NAME, 6}, {"Plays", KN_NAME, EN_FXS_LK_PLAYS, LKP_NAME, 5},
                      {"Sections", KN_NAME, EN_FXS_LK_SEC, LKS_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.47; a spare effect bit: nothing held) two units as one band: who leads,
                                                     * what this one plays, the lead's breakdowns and drops followed */
     {"RESONATOR", FX_SPARE8, 0, {{"Amount", KN_PLAIN, EN_FXS_RZ_AMT, 0, 0}, {"Decay", KN_PLAIN, EN_FXS_RZ_DEC, 0, 0},
@@ -4248,11 +4249,22 @@ static void lk_in(int n, int v)                  /* n: the CC + 82 (102 hello ..
         break;
     }
 }
+static int lk_mode(void)                         /* the Link setting as OFF / AUTO / LEAD / FOLLOW (CABLE LEAD leads, CABLE FOLLOW follows) */
+{
+    const int m = ui.fxs[EN_FXS_LK_MODE];
+    return m >= 4 ? m - 2 : m;
+}
+static int lk_want(void) { return lk_mode() == 2 || (lk_mode() == 1 && ui.usb_host); }   /* this one would lead */
 static void lk_tick(void)                        /* who leads, what this one plays: to the engine when it changes */
 {
     static const uint8_t PLAYS_MUTE[5] = {0x00u, 0xE0u, 0x1Fu, 0xF0u, 0x0Fu};   /* the tracks left to the partner (EN_TR_*: kick, hats, snare, perc, bass, acid, pad, pluck) */
     static uint8_t q_s = 0xFFu, m_s = 0xFFu;
-    const int mode = ui.fxs[EN_FXS_LK_MODE] & 3, want = mode == 2 || (mode == 1 && ui.usb_host);
+    const int mode = lk_mode(), want = lk_want();
+    if (plat_wire(ui.fxs[EN_FXS_LK_MODE] >= 4 ? ui.fxs[EN_FXS_LK_MODE] - 3 : 0) < 0) {   /* (CABLE: the port's wires, the lead's D+) */
+        ui.fxs[EN_FXS_LK_MODE] = 0;
+        say("LINK CABLE", "USB HOST OFF FIRST");
+        return;
+    }
     const int heard = mode && lk_heard && plat_ms() - lk_heard < 3500u, pl = heard && (lk_pk & 64u);
     const int role = !heard ? 0 : want && !pl ? 1 : !want && pl ? 2 : 3;
     uint8_t q, m;
@@ -6199,14 +6211,20 @@ static void console_sheet(void)
         }
     }
     if (ui.fx_page == 37) {                      /* LINK (0.17.47): who is there, who leads */
-        const int want = ui.fxs[EN_FXS_LK_MODE] == 2 || (ui.fxs[EN_FXS_LK_MODE] == 1 && ui.usb_host);
-        int32_t x = cv_text(8, 112, &FONT_XS, "PARTNER ", K_DIM);
-        cv_text(x, 112, &FONT_XS, !ui.fxs[EN_FXS_LK_MODE] ? "LINK OFF" : !lk_role ? "NONE HEARD" : (lk_pk & 63u) == 2u ? "PERF-1 SMK" : "PERF-1 FM-1",
+        const int want = lk_want();
+        enum { LK_Y = 106, LK_DY = 12 };         /* (a third line: the cable's packets) */
+        int32_t x = cv_text(8, LK_Y, &FONT_XS, "PARTNER ", K_DIM);
+        cv_text(x, LK_Y, &FONT_XS, !ui.fxs[EN_FXS_LK_MODE] ? "LINK OFF" : !lk_role ? "NONE HEARD" : (lk_pk & 63u) == 2u ? "PERF-1 SMK" : "PERF-1 FM-1",
                 lk_role ? K_ACC : K_DIM);
-        x = cv_text(8, 126, &FONT_XS, "THIS ONE ", K_DIM);
-        cv_text(x, 126, &FONT_XS, lk_role == 1 ? "LEADS" : lk_role == 2 ? "FOLLOWS" : lk_role == 3 ? (want ? "TWO LEADS: SET ONE" : "NO LEAD: SET ONE") :
-                ui.fxs[EN_FXS_LK_MODE] == 1 ? (ui.usb_host ? "WOULD LEAD (HOST)" : "WOULD FOLLOW") : want ? "WOULD LEAD" : "-",
+        x = cv_text(8, LK_Y + LK_DY, &FONT_XS, "THIS ONE ", K_DIM);
+        cv_text(x, LK_Y + LK_DY, &FONT_XS, lk_role == 1 ? "LEADS" : lk_role == 2 ? "FOLLOWS" : lk_role == 3 ? (want ? "TWO LEADS: SET ONE" : "NO LEAD: SET ONE") :
+                lk_mode() == 1 ? (ui.usb_host ? "WOULD LEAD (HOST)" : "WOULD FOLLOW") : want ? "WOULD LEAD" : "-",
                 lk_role == 1 || lk_role == 2 ? K_TEXT : lk_role ? K_ACID : K_DIM);
+        if (ui.fxs[EN_FXS_LK_MODE] >= 4) {       /* the cable: packets out, in, refused */
+            char d[40];
+            plat_wire_diag(d);
+            cv_text(8, LK_Y + 2 * LK_DY, &FONT_XS, d, K_TEXT);
+        }
     }
 }
 
@@ -8602,6 +8620,8 @@ static void draw_main(void)
                                        (uint32_t)(ui.smp_t0 && plat_ms() - ui.smp_t0 < SMP_COUNT) << 12);
         if (ui.fx_page == FXP_MIDIIN + 1)         /* MIDI IN: what comes in, the host */
             h = hash(hash(h, ui.min_last ^ ui.min_n << 3), (uint32_t)plat_usb_host_state() | (uint32_t)en_ext << 4 | (uint32_t)plat_ms() / 500u << 5);
+        if (ui.fx_page == 37 && ui.fxs[EN_FXS_LK_MODE] >= 4)   /* LINK: the cable's readout (0.17.55) */
+            h = hash(h, plat_ms() / 250u);
         if (ui.fx_page > 1) {                     /* a page's drawing follows its settings, and moves */
             int j;
             h = hash(h, scope_tick());
@@ -10049,6 +10069,8 @@ static void settings_load(void)
                 fxp_set(k, s.fxs[FXP[p].c[c].idx]);
             }
         }
+    if (ui.fxs[EN_FXS_LK_MODE] >= 4)             /* (0.17.55: the link CABLE is never kept: a power-on is plain USB, so the installer always finds the unit) */
+        ui.fxs[EN_FXS_LK_MODE] = 0;
     {   /* (0.17.30) the acid answer's level is on no settings page (the loop above passed it by): it came back at its default after a power-off */
         const int a = s.fxs[EN_FXS_AC_ANS] > 3 ? 3 : s.fxs[EN_FXS_AC_ANS];
         ui.fxs[EN_FXS_AC_ANS] = (uint8_t)a;

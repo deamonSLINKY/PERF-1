@@ -176,6 +176,9 @@ static void (*volatile tm_uart_poll)(void) = uart_midi_poll;
 #define uart_midi_poll() tm_uart_poll()
 #endif
 #define usb_poll() tm_usb_poll()
+#if PERF_USB_HOST
+static void (*volatile tm_lw_tick)(uint32_t) = lw_tick;   /* the link cable's wires (link_wire.c), every tick while on */
+#endif
 __attribute__((section(".ram_hot.timer5"), noinline, used)) void fm1_timer5_irq(void)
 {
     static uint32_t sub;
@@ -185,6 +188,10 @@ __attribute__((section(".ram_hot.timer5"), noinline, used)) void fm1_timer5_irq(
     if (en_dbg.in_audio)
         en_dbg.nested++;
     fm1_input_tick();
+#if PERF_USB_HOST
+    if (lw_on)
+        tm_lw_tick(tel_t0);
+#endif
     /* 2 kHz: all USB SIE traffic lives here. This ISR now nests into the audio render (so the key
      * matrix keeps its rhythm, below); USB shares the MIDI queues with the audio ISR, so a poll that
      * falls inside the render waits for the first tick outside it, as it did before the nesting. */

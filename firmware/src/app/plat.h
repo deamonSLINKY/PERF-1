@@ -40,6 +40,8 @@ void plat_play_red(int red);           /* PLAY lights green; red (its other LED)
 /* USB MIDI, 4-byte USB-MIDI event packets (cable 0) */
 int plat_midi_in(uint32_t *pkt);       /* 1 = got one (called from the audio ISR) */
 void plat_midi_out(uint32_t pkt);      /* queue one (audio ISR or main loop) */
+int plat_wire(int mode);               /* the link cable (link_wire.c): 0 off (USB a device again), 1 this one sends on D+ (the lead), 2 on D-; -1 the USB host is on */
+void plat_wire_diag(char *b);          /* the LINK page: the wire's packets out, in, refused, pauses */
 void plat_usb_host(int on);            /* the USB port as the host of a USB-MIDI device (on), or a device again (off); never kept */
 int plat_usb_host_msg(void);           /* what the host has to say since the last call: 0 nothing, PLAT_UH_* */
 int plat_usb_host_state(void);         /* 0 off, 1 a host looking for a device, 2 a device connected, 3 a device found with no MIDI (or no answer) */

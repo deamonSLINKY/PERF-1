@@ -177,6 +177,8 @@ void plat_usb_host(int on)
 }
 void plat_usb_host_diag(char *b) { b[0] = 0; }
 int plat_usb_host_state(void) { return host_uh_want; }
+int plat_wire(int mode) { (void)mode; return 0; }   /* (the link cable: no wires on the host, nothing comes in) */
+void plat_wire_diag(char *b) { static const char S[] = "WIRE OUT 0 IN 0 BAD 0"; memcpy(b, S, sizeof S); }
 int plat_usb_host_msg(void)
 {
     const int m = host_uh_msg;

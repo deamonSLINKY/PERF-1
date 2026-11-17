@@ -140,9 +140,19 @@ static volatile uint32_t so_w, so_r;
 static uint32_t midi_in_q[MQ], midi_out_q[MQ];
 static volatile uint32_t mi_w, mi_r, mo_w, mo_r;
 static volatile uint8_t uh_out;                     /* the port is a host with an OUT endpoint (usb_host.c): MIDI out goes to the device */
+#if PERF_USB_HOST
+static volatile uint8_t lw_on;                      /* the link cable (link_wire.c): the port is two plain wires; MIDI out goes to them */
+static void lw_out(uint32_t pkt);
+#endif
 
 static void midi_out_event(uint32_t pkt)            /* from the audio ISR */
 {
+#if PERF_USB_HOST
+    if (lw_on) {
+        lw_out(pkt);
+        return;
+    }
+#endif
     if ((usb.config || uh_out) && mo_w - mo_r < MQ) {
         midi_out_q[mo_w % MQ] = pkt;
         RING_PUBLISH();
@@ -1083,11 +1093,16 @@ static void uac_service(void)
 
 static uint32_t usb_retry_t;                            /* the last retry (usb_retry; usb_host.c brings it forward) */
 #include "usb_host.c"                                   /* PERF_USB_HOST: the port as a MIDI host (the MIDI IN page's USB host) */
+#include "link_wire.c"                                  /* PERF_USB_HOST: the port as the link cable's two wires (0.17.55) */
 
 static void usb_poll(void)                              /* TIMER5 ISR, 2 kHz */
 {
     uint32_t iu, it, ir;
 #if PERF_USB_HOST
+    if (lw_on) {                                        /* the link cable: what came in over the wires */
+        lw_poll();
+        return;
+    }
     if (uh.run) {                                       /* a host: its endpoints, nothing of the device side */
         uh_poll();
         return;

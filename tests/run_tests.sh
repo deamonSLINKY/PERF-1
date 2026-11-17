@@ -26,6 +26,7 @@ run uac sh -c "$CC -O2 -w -Ifirmware/src -Ifirmware/hal -o $OUT/uac_test tests/h
 run trs sh -c "$CC -O2 -w -Ifirmware/src -Ifirmware/hal -o $OUT/trs_test tests/host/trs_test.c && $OUT/trs_test"
 run flashid sh -c "$CC -O2 -Wall -Wextra -Werror -Ifirmware/hal -o $OUT/flash_id_test tests/host/flash_id_test.c && $OUT/flash_id_test"
 run usbhost sh -c "$CC -O2 -Wall -Wextra -Werror -Ifirmware/src -o $OUT/usbhost_test tests/host/usbhost_test.c && $OUT/usbhost_test"
+run linkwire sh -c "$CC -O2 -Wall -Wextra -Werror -Ifirmware/src -o $OUT/link_wire_test tests/host/link_wire_test.c && $OUT/link_wire_test"
 run amb sh -c "$CC -O2 -ffp-contract=off -std=c99 -Wall -Wextra -Wdouble-promotion -Werror -DEN_HOST -Ifirmware/src/dsp \
     -o $OUT/amb_test tests/host/amb_test.c firmware/src/dsp/amb.c -lm && $OUT/amb_test"
 # no two pieces of a genre too alike (0.16.7: the audit's twins; gtwin prints them and their count, 0 wanted)
