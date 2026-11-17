@@ -4936,7 +4936,7 @@ volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by t
 static int8_t bal_force = -1;                    /* tests: -1 as it decides, else the level */
 static uint8_t bal_lvl = 1;                      /* where the work runs: 1 the usual (the pad, its chorus, the reverb and the DX voices on the other core); 2 the drone and the acid on the other core as well (0, the chorus on the first core, is gone since 0.14.4) */
 static uint32_t bal_wait, bal_tot, bal_dwell, bal_block, bal_up_t, bal_back = 40u;
-static uint32_t bal_fr, bal_sum, bal_k, bal_hold, bal_ph, bal_c[2];   /* (0.17.57) the A/B: frames summed, the costs of a phase, its windows, the hold, trying, each level's cost */               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
+static uint32_t bal_fr, bal_sum, bal_k, bal_hold, bal_ph, bal_c[2], bal_hmax = 4u;   /* (0.17.57) the A/B: frames summed, the costs of a phase, its windows, the hold, trying, each level's cost */               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
 volatile uint8_t en_bass_c1;
 static void bal_apply(int l)
 {
@@ -9566,6 +9566,14 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (bal_force >= 0) {
         bal_apply(bal_force);
     } else if (en_prof_clock && rv_c2) {        /* where the work runs, from how long the first core waited for the other (a quarter second's, summed) */
+        if (bal_lvl == 2 && bal_w > (pt0_ - bal_t0) / 4u) {   /* (0.17.58) the other core cannot keep up (the first waited over a quarter of this chunk): back at once.
+                                                                * The maker's 03:16 log (0.17.56): every one of its 36 xruns came in the quarter second
+                                                                * the drone and the acid were moved (TRANCE 01: the first core waiting 2.3-2.5 ms a chunk) */
+            bal_apply(1);
+            bal_ph = bal_hold = bal_sum = bal_k = 0;
+            bal_tot = bal_wait = bal_fr = 0;
+            bal_hmax = bal_hmax < 24u ? bal_hmax * 2u : 48u;   /* (the next try twice as far off: 10 s, 20, 40 .. 2 minutes) */
+        }
         bal_tot += pt0_ - bal_t0;
         bal_wait += bal_w;
         bal_fr += n;
@@ -9580,7 +9588,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                 const uint32_t c = bal_sum / 8u;
                 bal_sum = bal_k = 0;
                 if (bal_ph == 0) {              /* holding: after ten seconds, try the other */
-                    if (++bal_hold >= 5u) {
+                    if (++bal_hold >= bal_hmax) {
                         bal_hold = 0;
                         bal_c[bal_lvl - 1u] = c;
                         bal_apply(bal_lvl == 1 ? 2 : 1);
@@ -9591,6 +9599,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                     bal_ph = 0;
                     if (!(c * 50u < was * 49u))
                         bal_apply(bal_lvl == 1 ? 2 : 1);
+                    else if (bal_lvl == 2)
+                        bal_hmax = 4u;              /* (kept there: the next try soon again) */
                 }
             }
             bal_tot = bal_wait = bal_fr = 0;
