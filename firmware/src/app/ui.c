@@ -10464,7 +10464,9 @@ void ui_frame(void)
                 win_t = now;
                 win_n = 0;
             }
-            if (lost || win_n >= 6u) {
+            if (lost || win_n >= 40u) {           /* (0.17.54: 6 before. A late render loses nothing, the half is written ahead of the DMA; the maker's TRANCE log had
+                                                   * 62 in 14 minutes, in bursts of up to 10 in ten seconds, and no dropout, but sat at level 2 (the DX at two voices, no
+                                                   * chorus or resonator) 87 % of the time. Forty in ten seconds is a load that stays over; a dropout still steps at once.) */
                 calm_t = now;
                 if (en_shed_level < 3 && now - step_t > (lost ? 4000u : 10000u)) {
                     en_shed(en_shed_level + 1);

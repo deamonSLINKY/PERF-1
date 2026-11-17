@@ -119,6 +119,11 @@ int main(int argc, char **argv)
     while (fr < frames) {
         const int n = frames - fr < 256 ? (int)(frames - fr) : 256;
         now = fr;
+        if (getenv("BRK")) {                     /* BRK=bar: a breakdown asked for half a bar before that bar (0-based), as SAVE would */
+            const long at = (long)((atof(getenv("BRK")) - 0.5) * 4.0 * 60.0 / bpm * SR);
+            if (fr <= at && fr + n > at)
+                en_section(EN_CMD_BREAK);
+        }
         en_render(buf, (uint32_t)n, 4096);
         for (i = 0; i < 2 * n; i++) {
             const float x = (float)buf[i] / 8388608.0f;

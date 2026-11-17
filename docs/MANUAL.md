@@ -1754,7 +1754,7 @@ All of these settings, and the gate's pattern and targets, are kept when you pow
 
 These are the moves for playing a set live. Most of them wait for the next bar, so everything stays in time.
 
-- **Breakdown: tap SAVE.** In the bar before the breakdown, the percussion, the open hi-hat and half the hats drop out, to let the energy go. Then the drums stop on the next bar. In house, techno, dubstep and dub the kick keeps going, and in drum and bass the hats keep going. The mix gets darker, the bass filter closes and the pad gets louder. The breakdown lasts as long as you leave it.
+- **Breakdown: tap SAVE.** In the bar before the breakdown, the percussion, the open hi-hat and half the hats drop out, to let the energy go. On the next bar's first beat the groove lets go: a last kick, a crash and the bass's root, with the echo thrown so the bar before rings on into the breakdown; then the drums rest. In house, techno, dubstep and dub the kick keeps going, and in drum and bass the hats keep going. The mix gets darker, the bass filter closes and the pad gets louder. The breakdown lasts as long as you leave it.
 - **Build: tap SAVE again.** A snare roll climbs in pitch while the bass opens up. It lasts four bars (two in trap, lofi and trip-hop, eight in house). In the last bar the open hat plays every eighth note, and in the four-on-the-floor genres the kick comes back. Then comes the drop.
 - **Drop: hold SAVE.** Everything comes straight back in on the next bar. **SAVE** lights up during a breakdown or build, and blinks while it waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on. Press **REC** again to let the music move on.
@@ -2132,7 +2132,7 @@ middle, so the low end stays mono. These are the unit's settings, the same for e
 
 | Knob | What it does |
 |---|---|
-| Type | **Off** (the default), **I** (slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), **I+II** (a fast, shallow shimmer, close to a vibrato), or a rotary speaker's two speeds: **ROT SLOW** (about 0.8 turns a second) and **ROT FAST** (about 6.7). The rotary sways the sound from side to side with a touch of pitch, like an organ's spinning horn; going from one speed to the other, it speeds up or slows down over about a second, as the real one does. Try it on an organ DX voice on the pluck. |
+| Type | **Off**, **I** (the default since 0.17.54: slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), **I+II** (a fast, shallow shimmer, close to a vibrato), or a rotary speaker's two speeds: **ROT SLOW** (about 0.8 turns a second) and **ROT FAST** (about 6.7). The rotary sways the sound from side to side with a touch of pitch, like an organ's spinning horn; going from one speed to the other, it speeds up or slows down over about a second, as the real one does. Try it on an organ DX voice on the pluck. |
 | Target | What goes through it: the **Pluck** (its plain sounds and its DX voices; it replaces the DX voices' own ensemble), the **Acid**, or **Both**. |
 
 The level stays where it was, and in mono nothing is lost. It switches off by itself when the load is very high, like the pad's chorus.
@@ -2144,10 +2144,10 @@ tick or a hat comes out pitched, in the key, and the ringing follows each chord 
 
 | Knob | What it does |
 |---|---|
-| Amount | How loud the ringing is. **0** (the default) is off. |
+| Amount | How loud the ringing is: **35** by default (0.17.54), **0** is off. |
 | Decay | How long it rings: low is short and woody (a marimba, a log drum), high is long and glassy (a bell, a steel tine). The level stays about the same across the range. |
 | Register | Where the three notes sit: **Low**, **Mid** or **High**. |
-| Targets | What strikes them: the **Perc**, the **Hats**, the **Snare** (and clap), **Perc+Hats**, all the **Drums** but the kick, or the **Pluck**. |
+| Targets | What strikes them (**Perc** by default): the **Perc**, the **Hats**, the **Snare** (and clap), **Perc+Hats**, all the **Drums** but the kick, or the **Pluck**. |
 
 The ringing is about as loud whatever the piece (it follows how hard it's being struck, not how loud that track is set). The first note is in the
 middle, the second a little left, the third a little right, with some reverb. With the **Pluck**, it rings only when the pluck plays in the
@@ -2478,10 +2478,10 @@ On the home pages, under the drum pattern, there's a line like `CPU 41 XR 0`, wi
 | C2 nn | The FM-1's second processor is helping, and is nn % busy. |
 | C1 | The second processor stopped after a fault, and everything runs on one until you switch off. Switching off and on again brings it back. |
 | S1 | The FM-1 is easing off to keep up. The pad's chorus is off and the DX voices are limited to four notes at once. |
-| S2 | Easing off further. The DX voices are limited to two notes. |
+| S2 | Easing off further. The DX voices are limited to two notes, and the CHORUS page, the DX voices' shimmer and the RESONATOR are off. |
 | QD n | Commands the sound engine never got because too many came at once (a knob turned, a piece loaded). It has never been seen; if it shows, a setting may not have taken, so say so. |
 
-The FM-1 eases off one step when there's a dropout, or when it nearly runs out of time six times within ten seconds. It goes back one step after twenty seconds without either. With `S1` or `S2` on, the sound is a little thinner, but not broken.
+The FM-1 eases off one step when there's a dropout, or when it runs a little late forty times within ten seconds (a load that stays too high; a late render now and then loses nothing: before 0.17.54 six were enough, and a heavy piece sat at `S2` without ever dropping out). It goes back one step after twenty seconds without either. With `S1` or `S2` on, the sound is a little thinner, but not broken.
 
 The heaviest combinations are the DX plucks with the shimmer reverb, and the fast genres (dnb, breaks). If you hear crackles there, that's the likely cause.
 
@@ -2516,7 +2516,7 @@ The FM-1 sends nothing until it's asked, and stops ten seconds after the last as
 | CPU nn | Share of the render's time budget the first core uses, measured inside the audio interrupt, including waiting for the second core. Screen drawing isn't counted. |
 | XR n (xruns) | Halves of audio that were never rendered; the last 11.6 ms play a second time. A render that only ran past its half isn't counted, since the next starts at once and nothing is lost. The status log counts those as `late`. |
 | C2 nn | Percent of a chunk's time the second core spends on its job: the pad with its chorus, the DX voices, the reverb, and at times the bass and acid. The engine moves some of this work between the cores as the load changes. `C1`: the second core stopped after a fault. |
-| Shedding | S1: pad chorus off, DX voices held to four. S2: DX voices held to two. Steps up on an xrun or on six late renders in ten seconds, one level at a time; steps back one level after twenty seconds of neither. |
+| Shedding | S1: pad chorus off, DX voices held to four. S2: DX voices held to two. Steps up on an xrun or on forty late renders in ten seconds (six before 0.17.54), one level at a time; steps back one level after twenty seconds of neither. |
 | Audio blocks | 512 frames at a time, as two renders of 256 (11.6 ms for the pair), so a slow render borrows time from a quick one beside it. The DX plucks are rendered a chunk ahead on the second core and sound 5.8 ms later than the plain ones. |
 | Logger columns | CPU and CPU1 %, xruns, the longest render since the last frame against its budget, the longest gap between main-loop turns, the longest screen frame (a flash write or a long frame shows there), the shed level, flash writes (and how long the last one stopped the chip), crashes, the genre and piece, and the first core's time by stage. |
 | Logger events | XRUN, LATE, FLASH, OVER, GAP, SHED. |

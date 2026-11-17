@@ -3088,6 +3088,8 @@ static uint32_t bars;                           /* bars played (the drone's enve
 static uint8_t fill_hold;
 static uint8_t riser_cut;                         /* the drop: the build's riser is cut at once (its high-pass was thinning the first kick) */
 static uint8_t fill_q, fill_bar, dj_sync, drop_imp;   /* a fill asked for the next bar; this bar's; the DJ follows the chords; the drop's impact is due */
+static uint8_t brk_imp;                         /* (0.17.54) the breakdown's release is due: a last kick, a crash and the bass's root on its one, the echo thrown */
+static float brk_throw;                         /* (0.17.54) the echo's throw at a breakdown's start (fx_control takes it once) */
 /* SECTIONS by genre (audit M-13): what a breakdown keeps (the kick: house, techno, dub; the hats: drum and bass), how far the pad rises in it (percent),
  * how many bars a build takes (a trap's two, a house's eight), and whether the kick comes back for the build's last bar (the four on the floor) */
 /* each genre's sections: what the breakdown keeps (kick, hats, snare, the bass line: a dub-out keeps drums and bass), the build's bars, how far the pad
@@ -3377,6 +3379,10 @@ static void drum_publish(void)
 static void section_cmd(int c)                  /* the player's: on the bar */
 {
     if (c == EN_CMD_BREAK) {
+        if (sec == SEC_GROOVE && en_playing) {  /* (0.17.54, the maker: "the transition into the breakdown is too abrupt"): the groove lets go on the one, not cut */
+            brk_imp = 1;
+            brk_throw = 0.6f;
+        }
         sec = SEC_BREAK;
     } else if (c == EN_CMD_BUILD) {
         if (sec == SEC_BREAK) {
@@ -4261,8 +4267,8 @@ static void bl_step(int st, int32_t w)
         return;
     if (st == 0)
         bl_beat = 0;
-    if (sec == SEC_BREAK && !SECT[g].bass)
-        return;
+    if (sec == SEC_BREAK && !SECT[g].bass && !(brk_imp && st == 0))
+        return;                                 /* (its one: the release's root, 0.17.54) */
     if (mode == EN_BL_STEPS) {                  /* the player's steps */
         int v, k;
         if (!bs_set)                            /* none set: from the bar the line played last (or a root on the one, if it played none) */
@@ -4294,7 +4300,7 @@ static void bl_step(int st, int32_t w)
     case 6: hit = BL_RIFF[g].mask >> st & 1; break;
     default: hit = BL_FIG[(mode - 7) % EN_NBLFIG].mask >> st & 1; break;
     }
-    if (drop_imp && st == 0)
+    if ((drop_imp || brk_imp) && st == 0)
         hit = 1;
     root = bl_fit(36 + bass_pc() % 12 + 12 * (par[P_BASSOCT] + par[P_OCT]));
     if (!hit) {
@@ -4635,6 +4641,12 @@ static void tick(void)
             if (l == L_OHAT)
                 crash_next = 1;                 /* the open hat is a crash: it rings */
         }
+        if (brk_imp && st == 0 && (l == L_KICK || l == L_OHAT)) {   /* (0.17.54) the breakdown's release: a last kick and a crash ringing out, then the drums rest */
+            hit = 1;
+            vel = l == L_KICK ? 0.9f : 0.8f;
+            if (l == L_OHAT)
+                crash_next = 1;
+        }
         if (l == L_KICK) {
             bl_kick = (uint8_t)(hit != 0);
             if (hit)
@@ -4730,6 +4742,7 @@ static void tick(void)
         ac_pos = st % (par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN]);
     }
     drop_imp = 0;
+    brk_imp = 0;
     (void)perc_hit;                             /* (0.17.50: P>Clock retired, the maker: "it just removes sound"; the perc lane clocked the acid, which
                                                  * in most pieces left it nearly still. P_LK_PERC stays in the pieces, unread.) */
     acid_step(loose(sw, 6.0f));
@@ -6792,7 +6805,8 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
          * before, but its repeats stay up for a bar after (over the next downbeat), then die away over half a bar: the echo carries the throw.
          * Before, the repeats fell back with the send. (The THROW knob and the swell are steered by hand: not held.) */
         static float th_tail, th_hold;
-        const float th_src = fm_maxf(throw_key, tdx_m * (float)fxs_v[EN_FXS_TD_FB] * 0.0095f);
+        const float th_src = fm_maxf(fm_maxf(throw_key, tdx_m * (float)fxs_v[EN_FXS_TD_FB] * 0.0095f), brk_throw);   /* (0.17.54: a breakdown's start throws the echo: the last bar rings on into it) */
+        brk_throw = 0.0f;
         if (th_src >= th_tail) {
             th_tail = th_src;
             th_hold = 16.0f * step_len;
