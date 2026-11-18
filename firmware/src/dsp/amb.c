@@ -4959,7 +4959,14 @@ static void render_pad(uint32_t n);
 static void pad_publish(uint32_t w, uint32_t n);
 static void render_bass(uint32_t n);
 static void render_acid(uint32_t n);
-#if defined(EN_ACID_RAM) && EN_ACID_RAM && !defined(EN_HOST) && !defined(EN_WEB)
+#ifndef EN_ACID_RAM
+#define EN_ACID_RAM 1                            /* (0.17.67) the acid's render runs from RAM (.ram_hot, copied at boot; EN_ACID_RAM=0 at build: from the flash).
+                                                 * The maker's A/B (diag 0.17.65 / 0.17.66, TRANCE 01 hands off): late renders 1.48 a second from the flash,
+                                                 * 0.16 from RAM, the slowest half 12.8 to 12.2 ms; the acid 343 to 266 us a chunk, its fixed cost a chunk
+                                                 * (its code fetched from the flash every chunk) gone. Flattened (no calls) and called through a pointer:
+                                                 * a pi32v2 call cannot reach between the flash and RAM. RAMTEXT has about 512 B left after it. */
+#endif
+#if EN_ACID_RAM && !defined(EN_HOST) && !defined(EN_WEB)
 static void (*volatile acid_fn)(uint32_t) = render_acid;   /* (0.17.64) the acid in RAM: called through a pointer (a call cannot reach RAM from the flash) */
 #define RENDER_ACID(n) acid_fn(n)
 #else
@@ -8462,10 +8469,6 @@ static void render_cm(uint32_t n)
     en_cm_level = lvl;
 }
 
-#ifndef EN_ACID_RAM
-#define EN_ACID_RAM 0                            /* (0.17.64) 1: the acid's render in RAM (.ram_hot, copied at boot), to see whether the fixed cost a chunk is its
-                                                 * code fetched from the flash each chunk (an experiment: EN_ACID_RAM=1 at build) */
-#endif
 #if EN_ACID_RAM && !defined(EN_HOST) && !defined(EN_WEB)
 __attribute__((section(".ram_hot.acid"), noinline, flatten))   /* (flatten: its helpers inlined, a call from RAM cannot reach the flash) */
 #endif
