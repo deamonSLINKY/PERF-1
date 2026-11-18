@@ -1963,7 +1963,8 @@ function fxPage(pg) {
 function fxSide() {
   const el = $("fxSide"); if (!el || !fxd) return;
   const af = fxd.pages.findIndex((x) => x.name === "AUTO FX"), snd = fxd.pages.findIndex((x) => x.name === "SOUND");
-  el.innerHTML = xyHTML() + (fxSel >= 0 ? fxPage(fxSel) : '<div class="sec"><h3>SETTINGS</h3><p class="muted" style="margin:0">Tap or hold an effect: its settings come here.</p></div>') + (af >= 0 && af !== fxSel ? fxPage(af) : "") + (snd >= 0 && snd !== fxSel ? fxPage(snd) : "");
+  const ret = fxd.pages.findIndex((x) => x.name === "RETURNS");   // (0.17.72: the returns' duck)
+  el.innerHTML = xyHTML() + (fxSel >= 0 ? fxPage(fxSel) : '<div class="sec"><h3>SETTINGS</h3><p class="muted" style="margin:0">Tap or hold an effect: its settings come here.</p></div>') + (af >= 0 && af !== fxSel ? fxPage(af) : "") + (snd >= 0 && snd !== fxSel ? fxPage(snd) : "") + (ret >= 0 && ret !== fxSel ? fxPage(ret) : "");
   xyDraw();
 }
 /* the XY pad: a setting across, another up; touching it turns their effects on (off again when let go, unless Keep on), as a Kaoss pad */
@@ -2053,18 +2054,20 @@ document.addEventListener("pointerup", async () => {
   say(fxIsOn(pr.bit) ? fxd.names[pr.bit] + ": on (tap it again for off)." : fxd.names[pr.bit] + ": off.");
 });
 const fxPend = new Map();
-async function fxSetK(pg, i, v) {                              // a setting: the newest of each goes, one message at a time
+async function fxSetK(pg, i, v, queued = false) {            // a setting: the newest of each goes, one message at a time (queued: c.v holds it already, not yet sent)
   const c = fxd.pages[pg].c[i];
   v = Math.max(c.lo, Math.min(c.hi, v));
-  if (v === c.v && !fxBusy) return;
+  if (v === c.v && !fxBusy && !queued) return;
   c.v = v;
   if (fxBusy) { fxPend.set(pg + ":" + i, [pg, i, v]); return; }
   fxBusy = true;
   await fxAsk({ page: pg, i, v });
   fxBusy = false;
-  if (fxPend.size) { const n = [...fxPend.values()]; fxPend.clear(); for (const a of n) fxSetK(...a); }
-  const k = document.querySelector('.fxkn[data-page="' + pg + '"][data-i="' + i + '"]'), q = fxd.pages[pg].c[i];
-  if (k) { k.querySelector(".dial").style.setProperty("--f", (q.v - q.lo) / Math.max(1, q.hi - q.lo)); k.querySelector(".v").textContent = q.t || q.v; }
+  if (fxPend.size) { const n = [...fxPend.values()]; fxPend.clear(); for (const a of n) fxSetK(...a, true); }   // (each sent: its c.v was set when it queued)
+  const q = fxd.pages[pg].c[i];
+  for (const k of document.querySelectorAll('.fxkn[data-page="' + pg + '"][data-i="' + i + '"]')) {   // (every copy: the XY pad's settings may show it too)
+    k.querySelector(".dial").style.setProperty("--f", (q.v - q.lo) / Math.max(1, q.hi - q.lo)); k.querySelector(".v").textContent = q.t || q.v;
+  }
 }
 $("fx").addEventListener("wheel", (e) => {
   const k = e.target.closest(".fxkn"); if (!k || !fxd) return;
