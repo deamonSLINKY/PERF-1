@@ -683,18 +683,18 @@ static void tel_service(void)
     }
 #if EN_DIAG
     if (extra == 2) {                               /* the third frame (F0 7D 50 5B): the diagnostic pieces (amb.c en_diag), us and counts; EN_DIAG=1 builds only */
-        uint32_t w[36], i, o = 4;
-        uint8_t f[4 + 36 * 5 + 2], b[36 * 4];
-        _Static_assert(4 + (36 * 4 * 8 + 6) / 7 + 1 <= 4 + 36 * 5 + 2, "the frame fits its buffer");
-        for (i = 0; i < 36u; i++)
-            w[i] = i < 28u || i >= 32u ? en_diag[i] / FM1_TICKS_PER_US : en_diag[i];
-        for (i = 0; i < 36u; i++)
+        uint32_t w[40], i, o = 4;
+        uint8_t f[4 + 40 * 5 + 2], b[40 * 4];
+        _Static_assert(4 + (40 * 4 * 8 + 6) / 7 + 1 <= 4 + 40 * 5 + 2, "the frame fits its buffer");
+        for (i = 0; i < 40u; i++)
+            w[i] = i < 28u || (i >= 32u && i < 36u) ? en_diag[i] / FM1_TICKS_PER_US : en_diag[i];   /* (36-39, 0.17.64: counts) */
+        for (i = 0; i < 40u; i++)
             b[4 * i] = (uint8_t)w[i], b[4 * i + 1] = (uint8_t)(w[i] >> 8), b[4 * i + 2] = (uint8_t)(w[i] >> 16), b[4 * i + 3] = (uint8_t)(w[i] >> 24);
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x5B;
         o += ota_pack7(b, sizeof b, f + o);
         f[o++] = 0xF7;
         if (usb_sysex_try(f, o) == 0) {
-            for (i = 0; i < 36u; i++)
+            for (i = 0; i < 40u; i++)
                 en_diag[i] = 0;
             extra = 0;
         }

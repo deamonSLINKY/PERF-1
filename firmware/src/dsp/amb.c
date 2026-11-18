@@ -9257,7 +9257,7 @@ volatile uint32_t en_prof_sm[11];
 /* the diagnostic frame (0.14.3): inside the stages, fourteen pieces (ticks, all chunks: 0-13, the chunks shorter than 256 frames again: 14-27),
  * the chunk sizes (28-31: < 64, < 128, < 256, 256 frames) and the work between chunks (32-35: drain, control, the clock pulse, the hits that waited) */
 #if EN_DIAG
-volatile uint32_t en_diag[36];
+volatile uint32_t en_diag[40];
 #define DT0() do { if (en_prof_clock) dt0_ = en_prof_clock(); } while (0)
 #define DT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); ds_[i] += t1_ - dt0_; dt0_ = t1_; } } while (0)
 #define RT(i, stmt) do { if (en_prof_clock) { const uint32_t t0_ = en_prof_clock(); stmt; en_diag[i] += en_prof_clock() - t0_; } else { stmt; } } while (0)
@@ -9798,9 +9798,15 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     usb_gain *= 0.5f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
+#if EN_DIAG
+    uint32_t nch_ = 0;
+#endif
     while (n) {
         uint32_t k = n > BLK ? BLK : n;
         int timed = en_playing && !en_ext;
+#if EN_DIAG
+        nch_++;
+#endif
         if (timed) {                             /* (0.17.62) only the step's pulse cuts the chunk (its notes land on their sample). The five between are
                                                  * the MIDI clock out alone, so one goes at a chunk edge: at a chunk's start if due within EN_MIN_CHUNK of it, else at the next chunk's start, at most EN_MIN_CHUNK early or late
                                                  * (2.9 ms; the grid does not drift, and a follower steps on the step's pulse, which stays exact).
@@ -9810,8 +9816,12 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
                 RT(34, clock_pulse());
                 pulse_left += step_len * (1.0f / 6.0f);
             }
-            if (!pulse && (float)k > pulse_left)
+            if (!pulse && (float)k > pulse_left) {
                 k = (uint32_t)pulse_left + 1u;
+#if EN_DIAG
+                en_diag[36]++;                   /* (0.17.64) a chunk cut by the step's pulse */
+#endif
+            }
         }
         if (k > n)
             k = n;
@@ -9823,8 +9833,13 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
                                                  * so a 256-frame render is now at most three chunks for the hits. The clock pulse still cuts where it
                                                  * falls: the grid and the MIDI clock out keep their timing; only hits that swing or humanize (6-60 ms
                                                  * off the grid by design) may come the little later. */
-            if (w > 0 && (uint32_t)w < k)
+            if (w > 0 && (uint32_t)w < k) {
+#if EN_DIAG
+                if (k > EN_MIN_CHUNK)
+                    en_diag[37]++;               /* (0.17.64) a chunk cut by a hit that waits */
+#endif
                 k = (uint32_t)w >= EN_MIN_CHUNK ? (uint32_t)w : k < EN_MIN_CHUNK ? k : EN_MIN_CHUNK;
+            }
         }
         if (timed)
             pulse_left -= (float)k;
@@ -9846,6 +9861,11 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         out += 2 * k;
         n -= k;
     }
+#if EN_DIAG
+    en_diag[38]++;                              /* (0.17.64) renders, and those of three chunks or more */
+    if (nch_ >= 3u)
+        en_diag[39]++;
+#endif
     if (gap_on || gap_g < 1.0f) {               /* the drop gap: out in ~6 ms, back in ~1 ms (the drop's first hit whole) */
         uint32_t j;
         for (j = 0; j < n0; j++) {

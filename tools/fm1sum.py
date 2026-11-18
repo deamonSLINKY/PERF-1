@@ -153,6 +153,11 @@ def diag(path):
         rr = [sum(int(r["r_" + k]) for r in s) / n_all for k in ("drain", "control", "pulse", "hits")]
         print("           chunks by size: <64 %d  <128 %d  <256 %d  256 %d   | between chunks, us a chunk: drain %.0f control %.0f pulse %.0f hits %.0f" % (
             hc[0], hc[1], hc[2], hc[3], rr[0], rr[1], rr[2], rr[3]))
+        if "cut_step" in s[0]:                  # (0.17.64 diag builds) why chunks were cut, and how many renders (256 frames each) had three chunks or more
+            ct = [sum(int(r.get(k) or 0) for r in s) for k in ("cut_step", "cut_hit", "renders_d", "renders_3up")]
+            if ct[2]:
+                print("           cuts: at the step %d, by a hit %d  | renders %d, of 3+ chunks %d (%.1f %%), chunks a render %.2f" % (
+                    ct[0], ct[1], ct[2], ct[3], 100.0 * ct[3] / ct[2], n_all / ct[2]))
 
 
 peaks(sys.argv[1])

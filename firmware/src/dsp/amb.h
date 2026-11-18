@@ -439,7 +439,8 @@ extern volatile uint32_t en_prof_sm[11];     /* the chunks shorter than 256 fram
 #define EN_DIAG 0                              /* 1 (EN_DIAG=1 at build): the diagnostic frame below and its timers inside the stages (0.14.3's hunt for the fixed cost a chunk); off, the status log's first two frames stay */
 #endif
 #if EN_DIAG
-extern volatile uint32_t en_diag[36];        /* the diagnostic frame: fourteen pieces inside the stages (ticks; all chunks, then the short ones), four chunk sizes, four pieces between chunks */
+extern volatile uint32_t en_diag[40];        /* the diagnostic frame: fourteen pieces inside the stages (ticks; all chunks, then the short ones), four chunk sizes, four pieces between chunks;
+                                                * (0.17.64) counts: chunks cut by the step's pulse, chunks cut by a hit, renders, renders of three chunks or more */
 #endif
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */

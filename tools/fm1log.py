@@ -90,7 +90,7 @@ EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drum
 
 
 DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"]
-DIAG = ["d_" + p for p in DIAG_PIECES] + ["ds_" + p for p in DIAG_PIECES] + ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits"]
+DIAG = ["d_" + p for p in DIAG_PIECES] + ["ds_" + p for p in DIAG_PIECES] + ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits", "cut_step", "cut_hit", "renders_d", "renders_3up"]
 
 
 def decode_diag(msg):
