@@ -256,7 +256,7 @@ par80 Hats|0|100|50
 par81 Perc|0|1|0|Off|Clock
 par82 Song oct|-3|3|0
 par83 Pad oct|-3|3|0
-par84 Sound|0|23|0|Saws|Warm|Grit|Dirty|Reese|Pulse|FM|Organ|Rumble|Sub|Square|Hoover|Fifths|Metal|Sync|Bright|Wub|Bite|Tine|Clang|Gnarl|Wide|Power|Air
+par84 Sound|0|23|0|Saws|Warm|Grit|Dirty|Reese|Pulse|FM|Organ|Rumble|Sub|Square|Hoover|Fifths|Metal|Sync|Bright|Wub|Bite|Solid|Growl|Gnarl|Wide|Power|Air
 par85 Kick|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
 par86 Snare|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
 par87 Hats|0|25|0|Hypno|House|Techno|Acid|Break|Minimal|Hard|808|Dusty|Heavy|909|Electro|DnB|Trap|Boom|Ride|Snap|606|Gabber|Linn|Shaker|Machine|Boombap|Empty 1|Empty 2|Empty 3
@@ -324,7 +324,7 @@ par148 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
 par149 Source|0|6|0|Follow|Pat 1|Pat 2|Pat 3|Pat 4|Pat 5|Pat 6
 par150 Loop|0|6|0|Off|2|4|8|2 ~|4 ~|8 ~
 par151 Answer|0|44|0|Off|Off|Off|Off|Off|Oct -2|Oct -|Oct =|Oct +|Oct +2|5th -2|5th -|5th =|5th +|5th +2|3rd -2|3rd -|3rd =|3rd +|3rd +2|Mirr -2|Mirr -|Mirr =|Mirr +|Mirr +2|Rev -2|Rev -|Rev =|Rev +|Rev +2|Rot -2|Rot -|Rot =|Rot +|Rot +2|Spar -2|Spar -|Spar =|Spar +|Spar +2|Acc -2|Acc -|Acc =|Acc +|Acc +2
-par152 Mode|0|16|0|Hold|Root|Kick|Eighths|Off-beat|Walk|Riff|Octaves|Two-step|One-drop|Log drum|Skippy|Funk|Big beat|Dub|Gallop|Steps
+par152 Mode|0|20|0|Hold|Root|Kick|Eighths|Off-beat|Walk|Riff|Octaves|Two-step|One-drop|Log drum|Skippy|Funk|Big beat|Dub|Gallop|Steps|Rolling|Tresillo|Push|Bounce
 par153 Length|0|100|50
 par154 Move|0|100|30
 par155 Glide|0|100|0

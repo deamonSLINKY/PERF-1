@@ -95,7 +95,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     [P_COND] = {"Cond", 0, 7, 0},           [P_COND1] = {"Cond", 0, 7, 0},        [P_COND2] = {"Cond", 0, 7, 0},          [P_COND3] = {"Cond", 0, 7, 0},
     [P_COND4] = {"Cond", 0, 7, 0},          [P_COND5] = {"Cond", 0, 7, 0},
     [P_AC_LOCK] = {"Frozen", 0, 1, 0},
-    [P_BL_MODE] = {"Mode", 0, EN_BL_STEPS, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
+    [P_BL_MODE] = {"Mode", 0, EN_BL_STEPS + 4, 0},       [P_BL_LEN] = {"Length", 0, 100, 50},  [P_BL_MOVE] = {"Move", 0, 100, 30},  [P_BL_GLIDE] = {"Glide", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 int en_par_global(int p) { return p == P_TUNE || p == P_MIDI || p == P_THEME; }
@@ -106,8 +106,11 @@ int en_par_sticky(int p) { return en_par_global(p); }   /* (0.16.28: the drum dr
 volatile uint16_t en_pats[EN_NPAT][EN_NLANE];
 volatile uint8_t en_mod[EN_NLANE][16];          /* a piece's step tricks, a byte a lane step: ratchet (bits 0-2), push (3-5), level (6-7); 0: none (the UI edits) */
 
-#define EN_NBLFIG 9                             /* the bass line's figures by name (modes 7 ..; the table BL_FIG is with the bass line) */
-static const char *const BL_FIG_NAME[EN_NBLFIG] = {"Octaves", "Two-step", "One-drop", "Log drum", "Skippy", "Funk", "Big beat", "Dub", "Gallop"};
+#define EN_NBLFIG 13                            /* the bass line's figures by name (modes 7 .. 15, then (0.17.69) 17 .. 20 after Steps (16), so a saved
+                                                 * piece's mode keeps its meaning; the table BL_FIG is with the bass line) */
+#define BL_FIG_OF(m) ((m) < EN_BL_STEPS ? (m) - 7 : (m) - 8)   /* a figure's mode to its place in BL_FIG */
+static const char *const BL_FIG_NAME[EN_NBLFIG] = {"Octaves", "Two-step", "One-drop", "Log drum", "Skippy", "Funk", "Big beat", "Dub", "Gallop",
+                                                   "Rolling", "Tresillo", "Push", "Bounce"};
 
 /* the pieces: each the defaults above with a few changed (a parameter, its value; -1 ends), its own
  * kit's sound (the lanes) among them. Numbered on the screen; the names are for reading here. */
@@ -441,7 +444,7 @@ const char *en_piece_name_g(int g, int i)
 /* Each genre's palette of sounds, five of the pad, drone, acid and pluck (the pluck's from the plain sounds and the DX voices) and three of each drum's kit: a piece takes one of each by its number, with a
  * different stride for each (1, 2, 3, 4 of five; 1, 2 of three), so the pieces of a genre differ in sound as well as in key and tempo, and no two
  * neighbours share them. The pad, drone and acid sounds are the genres' own choices (the original genre's keep theirs). */
-static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {   /* (0.15.5: no piece starts its bass on Bite, Tine or Clang, too high and jarring for a bass; 0.17.42: nor on FM or Metal, too harsh and piercing; they stay to choose by hand) */
+static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snare[3], hat[3], perc[3]; } PALETTE[EN_NGENRE] = {   /* (0.15.5: no piece starts its bass on Bite, Tine or Clang (0.17.69: now Solid and Growl), too high and jarring for a bass; 0.17.42: nor on FM or Metal, too harsh and piercing; they stay to choose by hand) */
     {{0}, {0}, {0}, {1, 4, 13, 28, 16}, {0}, {0}, {0}, {0}},
     {{0, 17, 5, 2, 3}, {1, 9, 7, 3, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 8, 7}, {8, 8, 1}, {8, 5, 8}, {8, 5, 8}},
     {{6, 13, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
@@ -760,7 +763,7 @@ const char *const EN_PAD_SOUND[EN_NSOUND] = {"Rhodes", "Voices", "Strings", "Gla
                                              "Ooh", "Wurli", "Mallet", "Brass", "Fat", "Pluck", "Chapel", "Air"};
 const char *const EN_DRONE_SOUND[EN_NSOUND] = {"Saws", "Warm", "Grit", "Dirty", "Reese", "Pulse", "FM", "Organ",
                                                "Rumble", "Sub", "Square", "Hoover", "Fifths", "Metal", "Sync", "Bright",
-                                               "Wub", "Bite", "Tine", "Clang", "Gnarl", "Wide", "Power", "Air"};
+                                               "Wub", "Bite", "Solid", "Growl", "Gnarl", "Wide", "Power", "Air"};
 const char *const EN_ACID_SOUND[EN_NACID] = {"Saw", "Square", "Driven", "Sync", "Pluck", "PWM", "Chip", "Sub",
                                               "Trance", "Bleep", "Fifth", "Bell", "Organ", "Laser", "Fold", "Soft",
                                               "Marimba", "E.Piano", "Kalimba", "Brass", "Gong", "Clav", "Vibes", "Digital",
@@ -868,7 +871,7 @@ void en_param_text(int i, int v, char *b)
     case P_COND: case P_COND1: case P_COND2: case P_COND3: case P_COND4: case P_COND5: { static const char *const C[8] = {"Always", "1:2", "2:2", "1:4", "4:4", "1:8", "Fill", "No fill"}; s = C[(unsigned)v < 8u ? v : 0]; break; }
     case P_AC_LOCK: s = v ? "Frozen" : "Free"; break;
     case P_CM_LOCK: s = v ? "Frozen" : "Free"; break;
-    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = (unsigned)v < 7u ? M[v] : (unsigned)v < 7u + EN_NBLFIG ? BL_FIG_NAME[v - 7] : v == EN_BL_STEPS ? "Steps" : M[0]; break; }
+    case P_BL_MODE: { static const char *const M[7] = {"Hold", "Root", "Kick", "Eighths", "Off-beat", "Walk", "Riff"}; s = (unsigned)v < 7u ? M[v] : v == EN_BL_STEPS ? "Steps" : (unsigned)BL_FIG_OF(v) < (unsigned)EN_NBLFIG ? BL_FIG_NAME[BL_FIG_OF(v)] : M[0]; break; }
     case P_CH_LOOP: { static const char *const C[7] = {"Off", "2", "4", "8", "2 ~", "4 ~", "8 ~"}; s = C[(unsigned)v < 7u ? v : 0]; break; }
     case P_THEME: s = THEME_NAME[(unsigned)v < EN_NTHEME ? v : 0]; break;
     case P_LINKS: s = ONOFF[v ? 1 : 0]; break;
@@ -1683,7 +1686,7 @@ static const struct { uint8_t osc, stabs; float fc, g; } PAD_SOUND[EN_NSOUND] = 
 /* the drone's: the oscillator; the saws and sub's levels, drive, cutoff (octaves) and level */
 enum { DO_SAWS, DO_REESE, DO_PULSE, DO_FM, DO_ORGAN, DO_SINE, DO_SQUARE, DO_HOOVER, DO_FIFTHS, DO_METAL, DO_SYNC, DO_FMR };
 typedef struct { uint8_t osc; float saw, sub, drive, cut, g; } drone_snd_t;
-static const float DRONE_FR[EN_NSOUND] = {[17] = 2.0f, [18] = 3.5f, [19] = 5.19f};   /* DO_FMR's modulator ratio, by sound */
+static const float DRONE_FR[EN_NSOUND] = {[17] = 2.0f, [18] = 1.0f, [19] = 0.5f};   /* DO_FMR's modulator ratio, by sound */
 static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_SAWS, 0.4f, 0.55f, 1.0f, 0.0f, 1.0f},   {DO_SAWS, 0.3f, 0.75f, 0.8f, -0.4f, 1.0f},
     {DO_SAWS, 0.45f, 0.5f, 2.2f, -0.3f, 1.0f},  {DO_SAWS, 0.3f, 0.8f, 3.0f, -0.6f, 0.9f},
@@ -1699,8 +1702,8 @@ static const drone_snd_t DRONE_SOUND[EN_NSOUND] = {
     {DO_SAWS, 0.45f, 0.4f, 1.2f, 1.2f, 0.85f},  /* Bright: the saws, the filter open */
     {DO_SAWS, 0.35f, 0.9f, 3.5f, -0.3f, 0.9f},  /* Wub: the sub on top, hard driven, the filter low: a dubstep wobble's body */
     {DO_FMR, 0.5f, 0.45f, 1.3f, 0.4f, 0.95f},   /* Bite: FM at 2, the envelope opening it */
-    {DO_FMR, 0.45f, 0.4f, 1.1f, 0.6f, 0.9f},    /* Tine: FM at 3.5: an electric piano's bass */
-    {DO_FMR, 0.5f, 0.4f, 1.4f, 0.5f, 0.9f},    /* Clang: FM far off the harmonics */
+    {DO_FMR, 0.5f, 0.5f, 1.2f, 0.2f, 1.0f},     /* Solid: FM at 1, the DX7's solid bass: round, the envelope a punch (0.17.69, was Tine: FM at 3.5) */
+    {DO_FMR, 0.5f, 0.45f, 1.6f, 0.0f, 0.95f},   /* Growl: FM at a half, an octave's grind under the note (0.17.69, was Clang: FM at 5.19) */
     {DO_REESE, 0.55f, 0.35f, 2.6f, 0.2f, 0.9f},  /* Gnarl: the reese driven hard */
     {DO_HOOVER, 0.3f, 0.6f, 1.0f, 0.3f, 0.9f},  /* Wide: the hoover, softer, the sub up */
     {DO_FIFTHS, 0.45f, 0.6f, 1.8f, -0.2f, 0.9f},    /* Power: the root and its fifth, driven */
@@ -4011,6 +4014,10 @@ static const bl_fig_t BL_FIG[EN_NBLFIG] = {      /* the figures by name (the bas
     {0x1121, {0, 0, 12, 7}},                    /* Big beat: 1, e-of-2, 3, 4 */
     {0x0501, {0, 0, 7, 5}},                     /* Dub: 1, 3, and-of-3 */
     {0x7777, {0, 0, 0, 12}},                    /* Gallop: three sixteenths a beat, an octave moving through them */
+    {0xEEEE, {0, 0, 0, 12}},                    /* (0.17.69, modes 17 ..) Rolling: every sixteenth but the beat's, the kick's gap (rolling techno, psy) */
+    {0x4949, {0, 0, 7, 0}},                     /* Tresillo: 3 + 3 + 2 sixteenths, twice (dancehall, reggaeton, moombah) */
+    {0x8441, {0, 0, 7, 12}},                    /* Push: 1, and-of-2, and-of-3, the last sixteenth up an octave into the next bar */
+    {0x4545, {0, 12, 0, 7}},                    /* Bounce: 1, and-of-1, and-of-2, 3, and-of-3, and-of-4 (house, garage) */
 };
 /* THE BASS STEPS (0.16.29, GitHub issue #6): the bass line's mode 16 plays sixteen steps of the player's (the Bass steps page), a byte a step (amb.h
  * EN_BS_*): a rest, a note, an accent (louder, the filter opened by it as a new note), a glide (into it from the note before, legato: no new
@@ -4303,7 +4310,7 @@ static void bl_step(int st, int32_t w)
     case 4: hit = (st & 3) == 2; break;
     case 5: hit = !(st & 3); break;
     case 6: hit = BL_RIFF[g].mask >> st & 1; break;
-    default: hit = BL_FIG[(mode - 7) % EN_NBLFIG].mask >> st & 1; break;
+    default: hit = BL_FIG[BL_FIG_OF(mode) % EN_NBLFIG].mask >> st & 1; break;
     }
     if ((drop_imp || brk_imp) && st == 0)
         hit = 1;
@@ -4334,7 +4341,7 @@ static void bl_step(int st, int32_t w)
     if (mode == 6)
         iv = BL_RIFF[g].iv[bl_beat & 3];
     else if (mode > 6)
-        iv = BL_FIG[(mode - 7) % EN_NBLFIG].iv[bl_beat & 3];
+        iv = BL_FIG[BL_FIG_OF(mode) % EN_NBLFIG].iv[bl_beat & 3];
     if (frand() * 100.0f < (float)par[P_BL_MOVE]) {   /* a move: the octave, the fifth, or the note below the root */
         const float r = frand();
         iv = r < 0.5f ? 12 : r < 0.8f ? bl_fifth() : bl_below(root) - root;
@@ -5550,7 +5557,8 @@ static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 10
     } else if (voice == EN_V_DRONE) {
         if (t >= 0) {
             int m = fold_note(t - 24 + 12 * (par[P_BASSOCT] + par[P_OCT]), 24, 83);
-            if (on && !legato) {
+            if (on) {                           /* (0.17.69: a key pressed before the last let go too: its envelope had decayed, the note came out
+                                                 * nearly silent; the attack climbs from where it is, so no click) */
                 bass.env_up = 1;                /* a new press: the envelope again, at its velocity */
                 bass.vd = fm_clampf(vg, 0.3f, 1.2f) - 1.0f;
             }
@@ -5575,6 +5583,8 @@ static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 10
         acid.inc_t = mtof((float)m) * (1.0f / EN_SR);
         if (legato && acid.play && acid.amp_t > 0.0f) {
             acid.sliding = 1;                   /* legato: a slide, no new attack */
+            if (acid.env < 0.6f)                /* (0.17.69) the filter opened again part way: the envelope had closed it and a held-over key's note was */
+                acid.env = 0.6f;                /* dull and quiet (the sequencer's own slides go through acid_step, as the 303's) */
         } else {
             float dec = 0.06f * fm_exp2f((float)par[P_AC_DEC] * 0.05f);
             acid.inc = acid.inc_t;

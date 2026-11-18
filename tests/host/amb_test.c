@@ -1363,8 +1363,8 @@ int main(void)
      * Off-beat about 8, Walk about 8, and every note stays in the bass range (C1 .. B5) */
     {
         int m, blk;
-        uint32_t nn[16], kk[16], lo = 999, hi = 0;
-        for (m = 0; m < 16; m++) {
+        uint32_t nn[21], kk[21], lo = 999, hi = 0;
+        for (m = 0; m < 21; m++) {
             en_init();
             en_set(P_TEMPO, 128);
             en_set(P_MIDI, 1);
@@ -1393,8 +1393,9 @@ int main(void)
         CHECK(nn[5] >= 6u && nn[5] <= 10u, "bass line, Walk: %u notes (expected about 8)", nn[5]);
         CHECK(nn[1] > 2u && nn[6] > 2u, "bass line, Root %u and Riff %u notes", nn[1], nn[6]);
         CHECK(lo >= 24u && hi <= 83u, "bass line: notes %u .. %u outside C1 .. B5", lo, hi);
-        for (m = 7; m < 16; m++)                 /* the figures by name (0.14.15): each plays */
-            CHECK(nn[m] >= 5u && nn[m] <= 26u, "bass line, figure %d: %u notes in 4 s", m, nn[m]);
+        for (m = 7; m < 21; m++)                 /* the figures by name (0.14.15; 17 .. 20 after Steps, 0.17.69): each plays */
+            if (m != EN_BL_STEPS)
+                CHECK(nn[m] >= 5u && nn[m] <= 30u, "bass line, figure %d: %u notes in 4 s", m, nn[m]);
         CHECK(nn[7] >= 14u && nn[15] >= 20u, "bass line: Octaves %u, Gallop %u notes in 4 s", nn[7], nn[15]);
         /* the fifth (0.14.15): under a 9th chord (1 3 7 9) the Walk's fifth is the fifth above the root, not the chord's third tone (the seventh):
          * A minor 9, held: the walk plays E (and never only G) */

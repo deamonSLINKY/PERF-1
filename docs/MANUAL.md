@@ -905,8 +905,8 @@ LFO with its Target on Filter sweeps it.
 | 16 | Bright | The Saws with the filter open |
 | 17 | Wub | Saws over a clean sub: the dubstep wub (see **The wub**), in any genre |
 | 18 | Bite | A biting FM bass that the envelope opens up |
-| 19 | Tine | An electric piano's low end |
-| 20 | Clang | Even more clangy FM than Metal |
+| 19 | Solid | A round FM bass with a punch, the DX7's classic |
+| 20 | Growl | FM with a grind an octave under the note |
 | 21 | Gnarl | The Reese, driven hard |
 | 22 | Wide | A softer Hoover with more sub |
 | 23 | Power | The root and its fifth, driven |
@@ -941,6 +941,10 @@ sixteenths either side of the "and". So "and-of-2" is halfway between beats 2 an
 | Dub | 1, 3, and-of-3 |
 | Gallop | Three sixteenths a beat |
 | Steps | Your own sixteen steps, from the **Bass steps** page (below) |
+| Rolling | Every sixteenth except the ones on the beat, rolling around the kick (rolling techno, psy) |
+| Tresillo | 3 + 3 + 2 sixteenths, twice a bar (dancehall, reggaeton) |
+| Push | 1, and-of-2, and-of-3, then the last sixteenth an octave up, pushing into the next bar |
+| Bounce | 1, and-of-1, and-of-2, 3, and-of-3, and-of-4 (house, garage) |
 
 The named figures work in any genre. Each is a rhythm with up to four notes, so it sounds the same every bar.
 "The fifth" is the fifth above the root when the chord has one. A 9th, Dub or
