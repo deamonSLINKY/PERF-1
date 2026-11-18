@@ -6260,9 +6260,11 @@ static void smp_note(int key, int on)
              * L sixteenths (a beat, two, a bar) at least L away; it starts now and its time is the way there, so its peak is on the line */
             static const uint8_t LS[4] = {0, 4, 8, 16};
             const int L = LS[fxs_v[EN_FXS_SM_LAND] > 3 ? 3 : fxs_v[EN_FXS_SM_LAND]];
-            const float now = (float)(sixteenth - 1u) + fm_minf((float)step_t / step_len, 0.999f),
-                        tgt = (float)L * fm_floorf((now + (float)L) / (float)L + 0.999f);
-            d->aux = (tgt - now) * step_len * (1.0f / EN_SR);
+            const float now = (float)(sixteenth - 1u) + fm_minf((float)step_t / step_len, 0.999f), x = (now + (float)L) / (float)L;
+            float q = fm_floorf(x);
+            if (q < x)                           /* (the ceiling: floor(x + 0.999) picked a line a hair short of L away just after a line) */
+                q += 1.0f;
+            d->aux = ((float)L * q - now) * step_len * (1.0f / EN_SR);
             d->land = 1;
             d->aux2 = 0.0f;                     /* (the roll: its hits a beat, from the first beat: eighths) */
             d->ph4 = now * 0.25f;                /* (the roll: the beat it is at, for its hits on the grid) */
@@ -9570,7 +9572,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         const int morph = tfx_m > 0.0f && tf_type == TF_MORPH;
         if (morph) {                            /* (0.17.72) MORPH: equal-power between low and band, band and high; the band lifted by 1 + 0.85/k, its
                                                  * level against the others' at the same resonance (pink noise, the host: within 4 dB end to end, no dip) */
-            const float gb = 1.0f + 0.85f / tf_c[3], inv = 1.0f / (float)n;
+            const float gb = 1.0f + 0.85f / tf_c[3], inv = 1.0f / (float)n;   /* (ChatGPT's check, loud acid alone and TRANCE 01: held at BP it peaks
+                                                 * 3.5-4 dB under the plain low-pass and never moves the limiter, at reso 60 and 90; half the lift only weaker) */
             float w1[3], a;
             int q;
             const int first = tf_m < 0.0f;

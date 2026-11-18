@@ -139,6 +139,28 @@ int main(int argc, char **argv)
             if (fr <= at && fr + n > at)
                 en_section(EN_CMD_BREAK);
         }
+        if (getenv("TFILT")) {                   /* (0.17.72) TFILT=type,cutoff,reso,targets[,secs]: the punch-in FILTER held throughout; with secs, its Type
+                                                 * sweeps Morph 5 .. 25 .. 5 over that many seconds (the knob a step at a time, as a hand turns it) */
+            static int tf_on, tf_last = -1;
+            int tt = 0, tc = 50, tr = 50, tg = 0;
+            float ts = 0.0f;
+            sscanf(getenv("TFILT"), "%d,%d,%d,%d,%f", &tt, &tc, &tr, &tg, &ts);
+            if (!tf_on) {
+                en_fxs(EN_FXS_TF_CUT, tc);
+                en_fxs(EN_FXS_TF_RESO, tr);
+                en_fxs(EN_FXS_TF_TGT, tg);
+                en_fx(FXB(FX_TFILT));
+                tf_on = 1;
+            }
+            if (ts > 0.0f) {
+                const double u = fmod((double)fr / SR, (double)ts) / (double)ts;
+                tt = 5 + (int)(20.0 * (u < 0.5 ? 2.0 * u : 2.0 - 2.0 * u) + 0.5);
+            }
+            if (tt != tf_last) {
+                en_fxs(EN_FXS_TF_TYPE, tt);
+                tf_last = tt;
+            }
+        }
         en_render(buf, (uint32_t)n, 4096);
         for (i = 0; i < 2 * n; i++) {
             const float x = (float)buf[i] / 8388608.0f;
