@@ -1542,7 +1542,7 @@ The 27 keys run from `F3` to `G5`. On the screen they're laid out in three colum
 | E4 | Reverse | Plays the music backwards. |
 | F4 | Tape stop | The music slows down and stops, like a tape machine switched off. |
 | F#4 | Tape | Makes it sound like worn tape: wobbling pitch (wow and flutter) and drive. |
-| G4 | FILTER | A filter on the tracks you choose: low, high, band, notch or peak (see below). |
+| G4 | FILTER | A filter on the tracks you choose: low, high, band, notch, peak, or Morph between them (see below). |
 | G#4 | Roll | Repeats that speed up. |
 | A4 | DELAY | Sends the tracks you choose into the echo, with long repeats (see below). |
 | A#4 | Pump | Ducks the sound in a rhythm so it "pumps", the way music does when a kick is pushing it down. This is called sidechain ducking. |
@@ -1571,9 +1571,14 @@ page; its last knob is **Targets**:
 | PAD, BASS, ACID, PLUCK | That one track |
 | ACID+PLK, PAD+PLK, BASS+ACID | Those two |
 
+**Morph** (FILTER's Type, turned past PEAK): one filter that moves from low-pass (**MORPH LP**) through band-pass (**MORPH BP**, halfway)
+to high-pass (**MORPH HP**) in 5% steps, gliding between them, while Cutoff and Reso stay where they are. Park the cutoff on an acid
+line, hold FILTER and turn Type: the acid goes from full to nasal to thin without the filter sweeping. The band-pass is lifted to sit
+about as loud as the low and high ends, more so at high resonance.
+
 | Key | Settings |
 |---|---|
-| FILTER | Type (low, high, band, notch, peak), Cutoff, Reso, Targets |
+| FILTER | Type (low, high, band, notch, peak, then Morph: above), Cutoff, Reso, Targets |
 | DELAY | Send (how much goes into the echo), Repeats (how long it echoes on; it uses the piece's echo time), Targets. Like Throw, its repeats carry on for a bar after you let go. |
 | PHASE | Rate, Depth, Mix (100 is the deepest swirl), Targets |
 
@@ -1666,6 +1671,12 @@ The horns, the crash, the kick and the snare are samples, made by PERF-1's own m
 
 Up to four can sound at once. Snips play when you press the key. They don't latch.
 
+**Land** (the SNIP LAND page, after the SNIPS page): set it to **Beat**, **2 beats** or **Bar** and the RISER, REWIND and SNR ROLL time
+themselves to the next such line at least that far away. They start at once, take exactly the time to get there, and peak on it: the
+rewind pulls back into the downbeat, the riser tops out on it, the roll (on the grid: eighths, then sixteenths, then thirty-seconds) ends
+with the drop. Pressed just after a bar line with Land on Bar, it takes nearly two bars, the next line being too close. They play to the line
+even if you let go. **Now** (the default) plays them as before, in seconds. The other snips always fire the moment you press.
+
 The ones with a pitch play in key: the horns, the stabs, the rave horn and the riser start on the root of the chord playing
 (the horns play that chord), and the sirens, beeps, whoops, the dub siren and the bell take the nearest note of it. They all
 sit at about the same loudness, and the horns, sirens, stabs, crash, riser and roll are wide in stereo (in mono nothing is lost).
@@ -1717,21 +1728,23 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
 | Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any, yours (your gesture) |
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
-| Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | - | - |
+| Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | Form: Song, Few rests, No rests, Loop | Start: Last, Random |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | RESONATOR (pitched percussion; section 13) | Amount: 0 (off)-100 | Decay: 0-100 | Register: low, mid, high | Targets: perc, hats, snare, perc+hats, drums, pluck |
+| RETURNS (the echo and reverb ducked by the kick; section 13) | Duck: kit, off, custom | Depth: 0-100 (custom) | Release: 1/16, 1/8, 3/16, 1/4, 1/2, 1 bar (custom) | - |
 | LINK (two units as one band; section 14) | Link: off, auto, lead, follow, cable lead, cable follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
 | SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Look: plain, scanlines, calm, calm+scan |
 | SAMPLE (section 13) | Sounds: all, drums, synths, by key | FX: off, on | Gap: 0.5, 1, 2, 4 s | - |
-| FILTER (G4) | Type: low ... peak | Cutoff | Reso | Targets: all, drums, synths, one track, two |
+| FILTER (G4) | Type: low ... peak, then Morph LP ... BP ... HP | Cutoff | Reso | Targets: all, drums, synths, one track, two |
 | DELAY (A4) | Send | Repeats | Targets | - |
 | PHASE (B4) | Rate | Depth | Mix | Targets |
 | Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |
+| Snip land (after Snips) | Land: now, beat, 2 beats, bar | - | - | - |
 | Talk (vowel sounds) | Every: 2 bars, 1 bar, 1/2, 1/4, 1/8 | Depth | Reso | Mix |
 | Wah (auto-wah) | Sens | Range | Reso | Mix |
 
@@ -2165,6 +2178,21 @@ The ringing is about as loud whatever the piece (it follows how hard it's being 
 middle, the second a little left, the third a little right, with some reverb. With the **Pluck**, it rings only when the pluck plays in the
 Register's octave: try each one. Try Perc on an Industrial piece, or Hats at a long Decay on an ambient one. It switches off by itself when
 the load is very high.
+
+### The RETURNS page
+
+After RESONATOR: how the kick ducks the echo's and the reverb's returns (what comes back from them), so a repeat or a tail swells in between the kicks
+instead of smearing over them. Only the returns: the dry sound, what goes into the echo and the reverb, and the echo's repeats are left alone.
+These are the unit's settings, the same for every piece.
+
+| Knob | What it does |
+|---|---|
+| Duck | **Kit** (the default): as each kit has it, the same as before. **Off**: the returns stay steady. **Custom**: the two knobs below. |
+| Depth | With Custom: how far the returns dip on each kick, **60** by default. 100 is the deepest. |
+| Release | With Custom: how long they take to come back, in the tempo: **1/16** (snappy) to **1 bar** (they breathe with the bar). The kit's is about 3/16. |
+
+The kick has to be playing for it to duck anything. The returns are a small part of most pieces' sound, so the change is subtle until you
+turn up the echo or the reverb: try a dub throw (THROW, or the DELAY punch-in on the snare) over a four-on-the-floor kick with Custom, Depth 100, Release 1/2.
 
 ### Visualizers
 

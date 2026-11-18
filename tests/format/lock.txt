@@ -112,6 +112,10 @@ fxs108 EN_FXS_RZ_AMT
 fxs109 EN_FXS_RZ_DEC
 fxs110 EN_FXS_RZ_REG
 fxs111 EN_FXS_RZ_TGT
+fxs112 EN_FXS_RD_MODE
+fxs113 EN_FXS_RD_DEPTH
+fxs114 EN_FXS_RD_REL
+fxs115 EN_FXS_SM_LAND
 genre0 HYPNO
 genre1 LOFI
 genre2 HOUSE
@@ -365,6 +369,6 @@ room.genre_object 4
 room.piece_extras 3
 room.piece_settings 0
 set.magic 31544553
-set.size 140
+set.size 144
 set.uiv 12
 vox.layout magic 31584f56 size 2056

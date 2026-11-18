@@ -105,6 +105,14 @@ int main(int argc, char **argv)
         for (l = 0; l < EN_NLANE; l++)
             en_pats[p][l] = pats[p][l];
     en_song = (uint8_t)(getenv("LOOP") ? 0 : 1);
+    if (getenv("RD")) {                          /* (0.17.72) RD=mode,depth,release: the RETURNS page (0 Kit, 1 Off, 2 Custom) */
+        int rm = 0, rdp = 60, rr = 2;
+        if (sscanf(getenv("RD"), "%d,%d,%d", &rm, &rdp, &rr) >= 1) {
+            en_fxs(EN_FXS_RD_MODE, rm);
+            en_fxs(EN_FXS_RD_DEPTH, rdp);
+            en_fxs(EN_FXS_RD_REL, rr);
+        }
+    }
     en_regrow();
     en_play(1);
     bpm = par[P_TEMPO];

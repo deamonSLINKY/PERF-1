@@ -1917,6 +1917,14 @@ static inline float svf_mm(float x, const float *c, float *s, int t)   /* the mu
     s[1] = 2.0f * v2 - s[1];
     return svf_pick(x, v1, v2, c[3], t);
 }
+static inline float svf_morph(float x, const float *c, float *s, float wl, float wb, float wh)   /* (0.17.72) the SVF's low, band and high, mixed */
+{
+    float v3 = x - s[1], v1 = c[0] * s[0] + c[1] * v3, v2 = s[1] + c[1] * s[0] + c[2] * v3;
+    const float bp = c[3] * v1;
+    s[0] = 2.0f * v1 - s[0];
+    s[1] = 2.0f * v2 - s[1];
+    return wl * v2 + wb * bp + wh * (x - bp - v2);
+}
 /* a voice's two filter stages by its type: low and high are 24 dB (the second stage the same), band, notch and peak the first stage alone; the acid's
  * sixth type is the 303 ladder (FT_303, 0.17.17) */
 #define FT_TWO(t) ((t) <= 1)
@@ -2100,6 +2108,7 @@ static float bass_vol, reso_k = 1.0f;
 static const float GLIDE_K = 1.0f / (0.6f * EN_SR);
 static float brk;                               /* the sections, smoothed: +1 breakdown, -0.5 build, 0 groove */
 static float duck_env, duck_dec = 0.9997f;      /* the kick's sidechain: 1 just hit, falling */
+static float rd_env;                             /* (0.17.72) the returns' own (RETURNS: Custom), set with it */
 
 /* ------------------------------------------------------------------ acid --- */
 /* A 303-ish line, made up as it goes: a loop of LENGTH sixteenths (1 .. 16, so it can turn against the
@@ -3442,7 +3451,7 @@ static void drum_fire(int d, float vel)
         v->inc = (22050.0f / EN_SR) * fm_exp2f((lane_tune[d] + (d == L_SNARE ? snr_rise : d == L_PERC ? perc_fall : 0.0f)) * (1.0f / 12.0f));
         v->adec = dec >= 0.5f ? 1.0f : fm_expf(-6.9f / ((0.03f + 0.9f * dec) * EN_SR));
         if (d == L_KICK && lane_g[L_KICK] > 0.0f)
-            duck_env = 1.0f;
+            duck_env = rd_env = 1.0f;
         if (d == L_HAT)
             drum[L_OHAT].adec = fm_expf(-6.9f / (0.02f * EN_SR));   /* the closed chokes the open, as the synth's */
         return;
@@ -3458,7 +3467,7 @@ static void drum_fire(int d, float vel)
         v->x1 = KK->k_rumble;                    /* the rumble: a slow envelope less a fast one */
         v->x2 = KK->k_rumble;
         if (lane_g[L_KICK] > 0.0f)
-            duck_env = 1.0f;
+            duck_env = rd_env = 1.0f;
         break;
     }
     case L_SNARE:                               /* two tuned sines and noise */
@@ -5868,6 +5877,8 @@ static uint32_t bus_m;                          /* the tracks in the bus this ch
 static float tfx_m, tdx_m, tpx_m;               /* the three faded in and out (0..1) */
 static float tf_c[4], tf_s[4], tp_a[2], tp_z[2][4], tp_fb[2], tp_ph;   /* the filter's coefficients and states; the phaser's */
 static uint8_t tf_type;
+#define TF_MORPH 5                               /* (0.17.72) the punch-in FILTER's Type 5 .. 25: Morph, low (5) to band (15) to high (25), its place smoothed */
+static float tf_m = -1.0f, tf_mt, tf_w[3];      /* the place (0 low .. 1 high; -1: not yet), its target, the three outputs' weights at the last chunk's end */
 static float lp_amt_e, hp_amt_e;                 /* the filters' amounts: the key's or the knob's, the higher */
 static float cr_lv = 2048.0f, cr_wet;
 static int cr_hold = 1;
@@ -6150,7 +6161,7 @@ static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] =
 static const int8_t DJ_TRIM[27] = {-14, -12, 1, -10, -11, -11, -10, 3, -4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, -2, 10, -7, 6};   /* (0.17.44: the sampled horns, crash, kick and snare measured the same way) */
 const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
 typedef struct {
-    uint8_t on, held, key, type, hold_mode;
+    uint8_t on, held, key, type, hold_mode, land;   /* (land, 0.17.72: its time is the way to the line it lands on) */
     float hz, aux, aux2, t, ph, ph2, ph3, ph4, env, z, z2, zs, zs2, g;
     uint32_t age;
     const uint8_t *sd;                          /* (0.17.44) a sampled snip: its ADPCM, length and loop (0: none), where it is, the decoder and its state at the loop's start, */
@@ -6243,6 +6254,20 @@ static void smp_note(int key, int on)
         d->aux2 = r5;
         d->g = fm_exp2f(0.0830482f * (float)DJ_TRIM[key]);   /* (half dB: 2^(h/12.04)) */
         d->t = d->ph = d->ph2 = d->ph3 = d->ph4 = d->env = d->z = d->z2 = d->zs = d->zs2 = 0.0f;
+        d->land = 0;
+        if ((ty == DJ_RISER || ty == DJ_REWIND || ty == DJ_ROLL) && fxs_v[EN_FXS_SM_LAND] > 0 && en_playing && sixteenth > 0u && step_len > 1.0f) {
+            /* (0.17.72, ChatGPT's: "a rewind pulls into the next downbeat, a riser peaks there, and a roll ends with the drop") Land: the next line of
+             * L sixteenths (a beat, two, a bar) at least L away; it starts now and its time is the way there, so its peak is on the line */
+            static const uint8_t LS[4] = {0, 4, 8, 16};
+            const int L = LS[fxs_v[EN_FXS_SM_LAND] > 3 ? 3 : fxs_v[EN_FXS_SM_LAND]];
+            const float now = (float)(sixteenth - 1u) + fm_minf((float)step_t / step_len, 0.999f),
+                        tgt = (float)L * fm_floorf((now + (float)L) / (float)L + 0.999f);
+            d->aux = (tgt - now) * step_len * (1.0f / EN_SR);
+            d->land = 1;
+            d->aux2 = 0.0f;                     /* (the roll: its hits a beat, from the first beat: eighths) */
+            d->ph4 = now * 0.25f;                /* (the roll: the beat it is at, for its hits on the grid) */
+            d->ph2 = 1.0f / (4.0f * step_len);  /* (and beats a sample: the roll leaves ph2 unused) */
+        }
         d->age = ++dj_age;
         d->sd = 0;
         {   /* (0.17.44) the sampled ones: the horns at the chord's root (as their note against the sample's), the crash, the kick and the snare as they are */
@@ -6461,9 +6486,21 @@ static float dj_voice(dj_t *v, float *amp, float *side)
     }
     default: {                                  /* THE SNARE ROLL (0.17.24, remade: it was hiss and a hum): hits that speed up, each a body (a sine falling from about 330 to
                                                  * 180 Hz) and a band of noise near 3.5 kHz, the roll getting louder; the side is the noise's own copy */
-        const float u = fm_minf(t / v->aux, 1.0f), rate = 7.0f + 18.0f * u;
-        float bt, ht, ne, hp, n2 = frand() * 2.0f - 1.0f;
-        {
+        const float u = fm_minf(t / v->aux, 1.0f);
+        float rate = 7.0f + 18.0f * u, bt, ht, ne, hp, n2 = frand() * 2.0f - 1.0f;
+        if (v->land) {                          /* (0.17.72) Land: on the grid, eighths, then sixteenths, then thirty-seconds, each from a beat's start */
+            const float hb = v->aux2 > 0.0f ? v->aux2 : 2.0f, b0 = v->ph4 * hb;
+            float b1;
+            v->ph4 += v->ph2;
+            b1 = v->ph4 * hb;
+            if ((int)b1 != (int)b0) {           /* a hit; at a beat's start the rate for the next one */
+                v->em[0] = v->em[1] = v->em[2] = 0.0f;
+                if ((int)v->ph4 != (int)(v->ph4 - v->ph2))
+                    v->aux2 = u < 0.45f ? 2.0f : u < 0.8f ? 4.0f : 8.0f;
+            }
+            v->ph3 = b1 - (float)(int)b1;
+            rate = hb * v->ph2 * EN_SR;
+        } else {
             const float pb = v->ph3;
             v->ph3 = dj_wrap(v->ph3 + rate * (1.0f / EN_SR));
             if (v->ph3 < pb)                    /* (0.17.60) a new hit: its decays from it, exact */
@@ -6786,7 +6823,11 @@ static void fx_control(uint32_t n)              /* once a chunk: what the held e
         }
         if (tfx_m > 0.0f) {                     /* 40 Hz .. 16 kHz; resonance from none to near ringing */
             svf_coefs(tf_c, 40.0f * fm_exp2f((float)fxs_v[EN_FXS_TF_CUT] * 0.0864f + lfo_tcut), 2.0f - 0.0195f * (float)fxs_v[EN_FXS_TF_RESO]);
-            tf_type = (uint8_t)((unsigned)fxs_v[EN_FXS_TF_TYPE] < 5u ? fxs_v[EN_FXS_TF_TYPE] : 0);
+            tf_type = (uint8_t)((unsigned)fxs_v[EN_FXS_TF_TYPE] < 5u ? fxs_v[EN_FXS_TF_TYPE] : (unsigned)fxs_v[EN_FXS_TF_TYPE] <= 25u ? TF_MORPH : 0);
+            if (tf_type == TF_MORPH)
+                tf_mt = (float)(fxs_v[EN_FXS_TF_TYPE] - 5) * 0.05f;
+            else
+                tf_m = -1.0f;
         }
         if (tpx_m > 0.0f) {                     /* the phaser's sweep, as the master's: 0.08 .. 2.6 Hz, up to 4.5 octaves from 250 Hz */
             int c;
@@ -8289,8 +8330,8 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
             float a, sd, y = dj_voice(d, &a, &sd);
             const int sustained = d->type == DJ_HORN || d->type == DJ_RAVE || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
             /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
-            const int gate = !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
-            d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : 0.00025f);
+            const int gate = d->land ? d->t < d->aux * EN_SR : !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
+            d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : d->land ? 0.004f : 0.00025f);   /* (landed: out in about 6 ms, on the line) */
             const float k = a * d->env * gain;   /* (0.17.60: not the acid's track gain: in song mode the arrangement's rests of the acid silenced them) */
             y *= k;
             sd *= k;
@@ -9525,13 +9566,37 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     DT(9);
     if (bus_m) {                                /* the punch-ins' bus: the filter, the phaser, then back into the mix */
         const float pk1 = (float)fxs_v[EN_FXS_TP_MIX] * 0.005f;   /* the phaser's wet share, 0 .. 0.5 */
+        float mw0[3] = {0.0f, 0.0f, 0.0f}, mwd[3] = {0.0f, 0.0f, 0.0f};
+        const int morph = tfx_m > 0.0f && tf_type == TF_MORPH;
+        if (morph) {                            /* (0.17.72) MORPH: equal-power between low and band, band and high; the band lifted by 1 + 0.85/k, its
+                                                 * level against the others' at the same resonance (pink noise, the host: within 4 dB end to end, no dip) */
+            const float gb = 1.0f + 0.85f / tf_c[3], inv = 1.0f / (float)n;
+            float w1[3], a;
+            int q;
+            const int first = tf_m < 0.0f;
+            tf_m = first ? tf_mt : tf_m + (tf_mt - tf_m) * 0.25f;   /* (about 20 ms to its place) */
+            a = tf_m < 0.5f ? 2.0f * tf_m : 2.0f * tf_m - 1.0f;
+            {
+                const float cw = fm_sin_turns(0.25f - 0.25f * a), sw = fm_sin_turns(0.25f * a);
+                w1[0] = tf_m < 0.5f ? cw : 0.0f;
+                w1[1] = gb * (tf_m < 0.5f ? sw : cw);
+                w1[2] = tf_m < 0.5f ? 0.0f : sw;
+            }
+            for (q = 0; q < 3; q++) {
+                mw0[q] = first ? w1[q] : tf_w[q];
+                mwd[q] = (w1[q] - mw0[q]) * inv;
+                tf_w[q] = w1[q];
+            }
+        }
         for (j = 0; j < n; j++) {
             float x[2];
             int c;
             x[0] = busl[j];
             x[1] = busr[j];
             for (c = 0; c < 2; c++) {
-                if (tfx_m > 0.0f)
+                if (morph)
+                    x[c] += (svf_morph(x[c], tf_c, &tf_s[2 * c], mw0[0] + mwd[0] * (float)j, mw0[1] + mwd[1] * (float)j, mw0[2] + mwd[2] * (float)j) - x[c]) * tfx_m;
+                else if (tfx_m > 0.0f)
                     x[c] += (svf_mm(x[c], tf_c, &tf_s[2 * c], tf_type) - x[c]) * tfx_m;
                 if (tpx_m > 0.0f) {             /* four all-passes, a little feedback, mixed with the dry: as the master's phaser */
                     float y = x[c] + 0.5f * tp_fb[c], v;
@@ -9554,14 +9619,26 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     {
     const float thr = throw_amt * 0.5f, tdg = tdx_m * (float)fxs_v[EN_FXS_TD_SEND] * 0.006f;   /* (the bus is cleared each chunk, so 0 when unused) */
+    static const uint8_t RD_S[6] = {1, 2, 3, 4, 8, 16};
+    const int rdm = fxs_v[EN_FXS_RD_MODE];      /* (0.17.72) the returns' duck: the kit's (dk, as the mix), none, or its own depth and release */
+    const float rdep = rdm == 2 ? fm_minf(0.0085f * (float)fxs_v[EN_FXS_RD_DEPTH], 0.85f) * fm_minf(pulse_vol * 1.5f, 1.0f) * trk_g1[TR_KICK] : 0.0f,
+                rdd = rdm == 2 ? fm_expf(-4.0f / (step_len * (float)RD_S[(unsigned)fxs_v[EN_FXS_RD_REL] < 6u ? fxs_v[EN_FXS_RD_REL] : 2])) : 1.0f;
+    float re = rd_env;
     for (j = 0; j < n; j++) {                   /* the echoes; the reverb's input into its line; the dry part of the mix */
-        float el, er, xl, xr;
+        float el, er, xl, xr, rk;
         echoes(esend[j] * eg + thr * (mixl[j] + mixr[j]) + tdg * (busl[j] + busr[j]), &el, &er, &xl, &xr);
         push(&dl[L_PRE], (rsend[j] * rg + (el + er + xl + xr) * 0.35f * rev_send + wash_e * 0.2f * (mixl[j] + mixr[j])) * 0.8f);
-        mixl[j] = (mixl[j] + (0.75f * el + 0.15f * xl) * dk[j]) * 0.36f;
-        mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * dk[j]) * 0.36f;
-        dk[j] *= 1.3f * 0.36f;                  /* what the tank's output is scaled by */
+        if (rdm == 2) {
+            rk = 1.0f - rdep * re;
+            re *= rdd;
+        } else {
+            rk = rdm == 1 ? 1.0f : dk[j];
+        }
+        mixl[j] = (mixl[j] + (0.75f * el + 0.15f * xl) * rk) * 0.36f;
+        mixr[j] = (mixr[j] + (0.75f * er + 0.15f * xr) * rk) * 0.36f;
+        dk[j] = rk * (1.3f * 0.36f);            /* what the tank's output is scaled by */
     }
+    rd_env = fm_flush(rdm == 2 ? re : duck_env);
     }
     DT(10);
     PT(6);                                      /* the echoes, the reverb's input */

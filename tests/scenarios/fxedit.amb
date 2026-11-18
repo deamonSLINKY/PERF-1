@@ -175,6 +175,14 @@ spin SELECT 1
 wait 100
 expect fxpage 28
 shot fx_punch_filter.png
+# (0.17.72) Type past PEAK: Morph (the knob speeds up: about its band-pass)
+spin K1 15
+wait 100
+expect fxs77 >4
+shot fx_punch_morph.png
+spin K1 -30
+wait 100
+expect fxs77 0
 spin SELECT 1
 wait 100
 expect fxpage 29
@@ -204,11 +212,18 @@ spin K1 1
 wait 50
 expect smpmode 1
 spin K1 -1
-# the dial stops at the last page (the sampler's)
+# (0.17.72) SNIP LAND after it, the last: the dial stops there
 spin SELECT 1
 wait 100
+expect fxpage 40
+shot fx_snip_land.png
+spin SELECT 1
+wait 100
+expect fxpage 40
+# the dial back down two pages
+spin SELECT -1
+wait 100
 expect fxpage 20
-# the dial back down one page
 spin SELECT -1
 wait 100
 expect fxpage 19
@@ -340,7 +355,7 @@ expect fxpage 32
 spin SELECT 1
 wait 100
 expect fxpage 35
-# (0.17.44) CHORUS after SOUND; (0.17.51) RESONATOR (page 38) after it; (0.17.47) LINK, the walk's last
+# (0.17.44) CHORUS after SOUND; (0.17.51) RESONATOR (page 38) after it; (0.17.72) RETURNS (39); (0.17.47) LINK, the walk's last
 spin SELECT 1
 wait 100
 expect fxpage 36
@@ -349,10 +364,17 @@ wait 100
 expect fxpage 38
 spin SELECT 1
 wait 100
+expect fxpage 39
+shot set_returns.png
+spin SELECT 1
+wait 100
 expect fxpage 37
 spin SELECT 1
 wait 100
 expect fxpage 37
+spin SELECT -1
+wait 100
+expect fxpage 39
 spin SELECT -1
 wait 100
 expect fxpage 38

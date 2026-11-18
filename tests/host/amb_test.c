@@ -2482,6 +2482,95 @@ int main(void)
             printf("scale %s: walked clean, the pad in the scale\n", EN_MODE_NAME[m]);
         }
     }
+    /* (0.17.72) ChatGPT's three. LAND: at 120 bpm the riser, the rewind and the roll, pressed off the grid, end on the next beat, two beats or bar at
+     * least that far away (within 0.4 of a sixteenth after it: the sustained ones fade out over about 30 ms) */
+    {
+        static const int KEYS[3] = {21, 22, 26}, LS[4] = {0, 4, 8, 16};
+        int ki, ld, late = 0, early = 0, stuck = 0, blk;
+        float worst = 0.0f;
+        for (ki = 0; ki < 3; ki++)
+            for (ld = 1; ld <= 3; ld++) {
+                float now0 = 0.0f, at = -1.0f;
+                en_init();
+                en_set(P_TEMPO, 120);
+                en_set(P_PAD, 0);
+                en_set(P_BASS, 0);
+                en_set(P_ACID, 0);
+                en_set(P_PULSE, 0);
+                en_set(P_NOISE, 0);
+                en_set(P_CM_LVL, 0);
+                en_play(1);
+                en_fxs(EN_FXS_SM_MIX, 100);
+                en_fxs(EN_FXS_SM_LAND, ld);
+                run(0.37f + 0.11f * (float)ki);
+                now0 = (float)(en_bars - 1u) + en_step_frac;
+                en_note(EN_V_SAMPLE, 53 + KEYS[ki], 1);
+                en_render(buf, 64, 2048);
+                for (blk = 0; blk < 4000 && at < 0.0f; blk++) {
+                    en_render(buf, 64, 2048);
+                    if (!en_smp_active)
+                        at = (float)(en_bars - 1u) + en_step_frac;
+                }
+                en_note(EN_V_SAMPLE, 53 + KEYS[ki], 0);
+                if (at < 0.0f) {
+                    stuck++;
+                    continue;
+                }
+                {
+                    const float L = (float)LS[ld], line = L * floorf(at / L), off = at - line;
+                    if (off > 0.4f)
+                        late++;
+                    if (line - now0 < L - 0.01f)
+                        early++;
+                    if (off > worst)
+                        worst = off;
+                }
+            }
+        en_fxs(EN_FXS_SM_LAND, 0);
+        en_fxs(EN_FXS_SM_MIX, EN_FXS_DEF[EN_FXS_SM_MIX]);
+        CHECK(!stuck && !late && !early, "Land: %d stuck, %d ended off the line, %d landed short of their length (worst %.2f of a sixteenth after the line)", stuck, late, early, (double)worst);
+        printf("Land: the riser, the rewind and the roll on the beat, 2 beats and the bar: at most %.2f of a sixteenth after the line\n", (double)worst);
+    }
+    /* (RETURNS: measured as separate renders, tests/host/gsound.c RD=mode,depth,release: the engine in one process does not repeat itself
+     * sample for sample across en_init and regrow) */
+    /* MORPH: the punch-in FILTER on everything; Morph LP within 0.2 dB of the low-pass and Morph HP within 1 dB of the high-pass (the weights from the
+     * fast sine, not exactly 1 and 0); Morph BP within -6 .. +12 dB of BAND; every place sound */
+    {
+        static const int T[7] = {0, 5, 1, 25, 2, 15, 10};
+        float lv[7];
+        int t, broken = 0;
+        for (t = 0; t < 7; t++) {
+            en_init();
+            en_trk(0, 0);
+            en_test_reseed(9);
+            en_play(0);
+            en_genre(2);
+            en_fxs(EN_FXS_TF_TYPE, T[t]);
+            en_fxs(EN_FXS_TF_CUT, 60);
+            en_fxs(EN_FXS_TF_RESO, 60);
+            en_fxs(EN_FXS_TF_TGT, 0);
+            en_regrow();
+            en_play(1);
+            en_fx(FXB(FX_TFILT));
+            run(0.5f);
+            sum2 = 0.0f;
+            bad = 0;
+            run(3.0f);
+            broken += bad;
+            lv[t] = sum2;
+        }
+        en_fx(0u);
+        en_fxs(EN_FXS_TF_TYPE, EN_FXS_DEF[EN_FXS_TF_TYPE]);
+        en_fxs(EN_FXS_TF_CUT, EN_FXS_DEF[EN_FXS_TF_CUT]);
+        en_fxs(EN_FXS_TF_RESO, EN_FXS_DEF[EN_FXS_TF_RESO]);
+        en_fxs(EN_FXS_TF_TGT, EN_FXS_DEF[EN_FXS_TF_TGT]);
+        CHECK(!broken && lv[0] > 0.0f && fabsf(10.0f * log10f(lv[1] / lv[0])) < 0.2f && lv[2] > 0.0f && fabsf(10.0f * log10f(lv[3] / lv[2])) < 1.0f && lv[5] > 0.25f * lv[4] && lv[5] < 16.0f * lv[4] && lv[6] > 0.0f,
+              "MORPH: LOW %.2f / M:LP %.2f, HIGH %.2f / M:HP %.2f, BAND %.2f / M:BP %.2f, M:25 %.2f", (double)lv[0], (double)lv[1], (double)lv[2], (double)lv[3],
+              (double)lv[4], (double)lv[5], (double)lv[6]);
+        printf("MORPH: LP %+.2f dB against LOW, HP %+.2f against HIGH; BP %+.1f dB against BAND, the quarter %+.1f dB against LOW\n",
+               10.0 * log10((double)lv[1] / (double)lv[0]), 10.0 * log10((double)lv[3] / (double)lv[2]), 10.0 * log10((double)lv[5] / (double)lv[4]),
+               10.0 * log10((double)lv[6] / (double)lv[0]));
+    }
     printf(fails ? "amb: %d FAILED\n" : "amb: ok\n", fails);
     return fails != 0;
 }

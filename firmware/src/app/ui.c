@@ -56,7 +56,7 @@ enum { K_FXP = K_FXW + 1 };   /* (0.15.16: it was a fixed 230, and the Progressi
                                 * GATE page's pattern and length) */
 _Static_assert((int)K_FXP > (int)K_FXW, "the FX pages' knob codes come after every other knob code");
 enum { KN_PLAIN, KN_PRESET, KN_LEN, KN_TGT, KN_PTGT, KN_NAME, KN_SEC, KN_RANGE, KN_PAR, KN_NONE };   /* KN_RANGE: 2 .. n; KN_PAR: an engine parameter (idx), the dial pages' knob code; KN_NONE: no knob */
-#define NFXP 39
+#define NFXP 41
 #define FXP_MIDIIN 25                       /* the MIDI IN page's place in FXP (0 ..): its panel */
 #define FXP_SCREEN 30                       /* the SCREEN page (0.16.1): zoom, saver, lights, scanlines */
 #define FXP_SAMPLE 31                       /* the SAMPLE page (0.16.1): PERF's sounds one at a time, for a sampler */
@@ -128,6 +128,12 @@ static const uint16_t SMP_GAP_MS[4] = {500, 1000, 2000, 4000};
 static const char *const MIN_NAME[5] = {"KEYS", "PADS", "M:S", "MPK", "CHORDS"};   /* (KEYS was SCALE until 0.17.7: its notes changed the scale anywhere) */
 static const char *const CC_NAME[4] = {"OFF", "IN", "OUT", "IN+OUT"};
 static const char *const FT_NAME[6] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK", "303"};   /* (303: the acid's alone, 0.17.17) */
+static const char *const TF_NAME[26] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK", "MORPH LP", "MORPH 5", "MORPH 10", "MORPH 15", "MORPH 20", "MORPH 25",
+                                        "MORPH 30", "MORPH 35", "MORPH 40", "MORPH 45", "MORPH BP", "MORPH 55", "MORPH 60", "MORPH 65", "MORPH 70",
+                                        "MORPH 75", "MORPH 80", "MORPH 85", "MORPH 90", "MORPH 95", "MORPH HP"};   /* (0.17.72) the punch-in FILTER's: past PEAK, Morph from low (0) through band (50) to high (100) */
+static const char *const RDM_NAME[3] = {"KIT", "OFF", "CUSTOM"};                       /* (0.17.72) the RETURNS page: the returns' duck as the kit has it, none, or its own */
+static const char *const RDR_NAME[6] = {"1/16", "1/8", "3/16", "1/4", "1/2", "1 BAR"};  /* its release: back up in that many sixteenths (the kit's: 3/16) */
+static const char *const LAND_NAME[4] = {"NOW", "BEAT", "2 BEATS", "BAR"};             /* (0.17.72) the snips' Land: the riser, the rewind and the roll peak on the next such line */
 static const char *const SQT_NAME[3] = {"ACID", "BASS", "BOTH"};   /* SCREAM's target (0.16.4) */
 static const char *const AFA_NAME[4] = {"OFF", "GENTLE", "MEDIUM", "WILD"};   /* AUTO FX (0.16.8): how much, how often, how long, which */
 static const char *const AFE_NAME[4] = {"4 BARS", "8 BARS", "16 BARS", "32 BARS"};
@@ -197,7 +203,7 @@ static const struct {
     {"SET", 63, 0, {{"Rounds", KN_NAME, 15, ROUNDS_NAME, 4}, {"Ramp", KN_NAME, 16, RAMP_NAME, 5}, {"Intro", KN_NAME, 17, INTRO_NAME, 6}, {"Mix", KN_NAME, 24, XMIX_NAME, 5}}},   /* the set: rounds a piece, the tempo's climb, the intro; the mix into the next piece (0.16.1) */
     {"MIDI IN", 63, 0, {{"Notes", KN_NAME, 20, MIN_NAME, 5}, {"Channel", KN_NAME, 19, MCH_NAME, 17}, {"USB host", KN_NAME, 21, ONOFF_NAME, 2}, {"Knob CCs", KN_NAME, 22, CC_NAME, 4}}},   /* MIDI in's notes: the scale (as before), or PADS (a pad controller plays PERF: pads_in); the channel listened to; the USB port as the host of a USB-MIDI device (not kept: every power-on is a device) */
     {"FILTERS", FX_SPARE14, 0, {{"Pad", KN_NAME, EN_FXS_FT_PAD, FT_NAME, 5}, {"Bass", KN_NAME, EN_FXS_FT_BASS, FT_NAME, 5}, {"Acid", KN_NAME, EN_FXS_FT_ACID, FT_NAME, 6}, {"", KN_NONE, 0, 0, 0}}},   /* the synths' filter types (0.15.15; a spare effect bit: nothing held) */
-    {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, FT_NAME, 5}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
+    {"FILTER", FX_TFILT, 0, {{"Type", KN_NAME, EN_FXS_TF_TYPE, TF_NAME, 26}, {"Cutoff", KN_PLAIN, EN_FXS_TF_CUT, 0, 0}, {"Reso", KN_PLAIN, EN_FXS_TF_RESO, 0, 0},
                              {"Targets", KN_NAME, EN_FXS_TF_TGT, EN_PT_NAME, EN_NPT}}},   /* (0.15.19) the punch-ins on tracks: a multimode filter on the tracks chosen */
     {"DELAY", FX_TDELAY, 0, {{"Send", KN_PLAIN, EN_FXS_TD_SEND, 0, 0}, {"Repeats", KN_PLAIN, EN_FXS_TD_FB, 0, 0}, {"Targets", KN_NAME, EN_FXS_TD_TGT, EN_PT_NAME, EN_NPT},
                              {"", KN_NONE, 0, 0, 0}}},   /* those tracks into the echo (at the piece's echo time) */
@@ -222,6 +228,11 @@ static const struct {
     {"RESONATOR", FX_SPARE8, 0, {{"Amount", KN_PLAIN, EN_FXS_RZ_AMT, 0, 0}, {"Decay", KN_PLAIN, EN_FXS_RZ_DEC, 0, 0},
                      {"Register", KN_NAME, EN_FXS_RZ_REG, RZR_NAME, 3}, {"Targets", KN_NAME, EN_FXS_RZ_TGT, RZT_NAME, 6}}},   /* (0.17.51; a spare effect bit: nothing held)
                                                     * three bands tuned to the chord, rung by the tracks chosen */
+    {"RETURNS", FX_SPARE7, 0, {{"Duck", KN_NAME, EN_FXS_RD_MODE, RDM_NAME, 3}, {"Depth", KN_PLAIN, EN_FXS_RD_DEPTH, 0, 0},
+                     {"Release", KN_NAME, EN_FXS_RD_REL, RDR_NAME, 6}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.72, ChatGPT's; a spare effect bit: nothing held) the echo's and
+                                                    * the reverb's returns ducked by the kick: as the kit has it, not at all, or Custom: its own depth and release */
+    {"SNIP LAND", 62, 0, {{"Land", KN_NAME, EN_FXS_SM_LAND, LAND_NAME, 4}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.72, after SNIPS)
+                                                    * the riser, the rewind and the roll timed to peak on the next beat, two beats or bar */
     {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
@@ -3200,8 +3211,8 @@ static void pat_name(int i, char *t)            /* "PATTERN 3" */
 /* the order the dial and SEL + FX walk the effects' pages in (their numbers stay: the scopes and the keys use them): Talk and Wah beside the phaser and flanger.
  * The settings are a walk of their own since 0.16.1 (HOME held opens it; the dial walks it): the unit's, the auto-DJ's, the set's, USB and MIDI, the synths'
  * filters, the screen's, the sampling helper. */
-static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20};   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
-static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36, 38, 37};   /* (0.17.51: RESONATOR, page 38, after CHORUS, before LINK) */   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
+static const uint8_t FX_ORDER[] = {1, 2, 3, 21, 22, 4, 5, 6, 7, 8, 9, 10, 11, 23, 12, 13, 14, 15, 16, 28, 29, 30, 19, 20, 40};   /* (40: SNIP LAND, 0.17.72) */   /* (23: the Repeat page, with the beat effects; 28-30: the punch-ins on tracks, FILTER, DELAY, PHASE (SEL + their key opens each)) */
+static const uint8_t ST_ORDER[] = {27, 33, 18, 17, 34, 25, 24, 26, 31, 32, 35, 36, 38, 39, 37};   /* (0.17.72: RETURNS, page 39, after RESONATOR) */   /* (0.17.51: RESONATOR, page 38, after CHORUS, before LINK) */   /* FILTERS, SCREAM (first since 0.16.28: they are the piece's now, and a new piece resets them), SETTINGS, AUTO DJ, AUTO FX, SET, USB & MIDI, MIDI IN, SCREEN, SAMPLE, SOUND (0.17.30, last: the walk's places before it stay) */
 #define FX_N ((int)sizeof FX_ORDER)
 #define ST_N ((int)sizeof ST_ORDER)
 static int st_pos(int pg)                       /* where a page is in the settings' walk (0 ..), -1: not a setting */
@@ -4769,7 +4780,7 @@ static void input(void)
     ui.lock_keys &= keys;
     if (!ui.fx_menu || ui.fx_page)
         ui.fx_tap = 0;
-    if (ui.fx_menu && ((!ui.fx_page && fx_bank == 3) || ui.fx_page == 20)) {   /* the snips (their bank, and their settings page, to try them): each key down is one (let go: the note off, with the other voices' keys) */
+    if (ui.fx_menu && ((!ui.fx_page && fx_bank == 3) || ui.fx_page == 20 || ui.fx_page == 40)) {   /* the snips (their bank, and their settings page, to try them): each key down is one (let go: the note off, with the other voices' keys) */
         const uint32_t down = ch & keys & ~ui.shift_keys;
         for (i = 0; i < NKEYS; i++)
             if (down >> i & 1u) {
@@ -7130,7 +7141,8 @@ static int draw_fxscope(int p)
     case 27:                                     /* (0.17.19) the punch-in FILTER: its type at its cutoff and resonance */
         if (FXP[p].bit != FX_TFILT)
             return 0;
-        filt_curve(ui.fxs[EN_FXS_TF_TYPE] < 5 ? ui.fxs[EN_FXS_TF_TYPE] : 0, 40.0f * fm_exp2f((float)ui.fxs[EN_FXS_TF_CUT] * 0.0864f),
+        filt_curve(ui.fxs[EN_FXS_TF_TYPE] < 5 ? ui.fxs[EN_FXS_TF_TYPE] : ui.fxs[EN_FXS_TF_TYPE] < 10 ? 0 : ui.fxs[EN_FXS_TF_TYPE] < 21 ? 2 : 1,   /* (Morph: its nearest) */
+                   40.0f * fm_exp2f((float)ui.fxs[EN_FXS_TF_CUT] * 0.0864f),
                    1.0f / (2.0f - 0.0195f * (float)ui.fxs[EN_FXS_TF_RESO]), 0, H - 6);
         scope_trace(col);
         return 1;
