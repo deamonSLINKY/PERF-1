@@ -90,6 +90,36 @@ static int run_feel(int *reached)
     return bad;
 }
 
+/* (0.17.70) FORM's rests: SYNTHWV 01 in Song for 160 bars; the blocks with a part resting (Song 2, Few rests 1, No rests 0) */
+static int run_rests(int rests)
+{
+    extern int en_host_arrm(void);
+    static int32_t buf[512];
+    int16_t par[P_NPARAMS];
+    uint16_t pool, pats[EN_NPAT][EN_NLANE];
+    int p, l, b, n = 0;
+    const int g = 13, pc = 0;
+    en_init();
+    en_genre(g);
+    en_piece_g(g, pc, par, &pool);
+    en_piece_pats_g(g, pc, pats);
+    for (p = 0; p < P_NPARAMS; p++)
+        en_set(p, par[p]);
+    en_pool(pool);
+    for (p = 0; p < EN_NPAT; p++)
+        for (l = 0; l < EN_NLANE; l++)
+            en_pats[p][l] = pats[p][l];
+    en_song = 1;
+    en_rests = (uint8_t)rests;
+    en_play(1);
+    for (b = 0; b < (int)(160.0f * 4.0f * 60.0f / (float)par[P_TEMPO] * 44100.0f / 256.0f); b++) {
+        en_render(buf, 256, 4096);
+        n += en_host_arrm() != 0;
+    }
+    en_rests = 2;
+    return n;
+}
+
 int main(void)
 {
     int g, pc, multi = 0, total = 0, fails = 0, seen, n, gm = -1, pm = 0;
@@ -122,6 +152,11 @@ int main(void)
         int reached, bad = run_feel(&reached);
         printf("gsong: Song keeps its feel (SYNTHWV 02 into its half-time pattern): %s\n", !reached ? "NOT REACHED" : bad ? "WRONG" : "kick, snare, clap kept, hats moved");
         fails += !reached || bad;
+    }
+    {
+        const int r2 = run_rests(2), r1 = run_rests(1), r0 = run_rests(0);
+        printf("gsong: rests, SYNTHWV 01, 160 bars: blocks with a part resting: Song %d, Few rests %d, No rests %d\n", r2, r1, r0);
+        fails += r2 <= 0 || r1 >= r2 || r0 > 20;   /* (No rests: none from the first bar line; before it, the run before's, under a bar) */
     }
     printf(fails ? "gsong: FAILED\n" : "gsong: ok\n");
     return fails ? 1 : 0;

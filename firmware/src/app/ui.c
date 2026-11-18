@@ -88,7 +88,7 @@ static const char *const LOOK_NAME[4] = {"PLAIN", "SCANLINES", "CALM", "CALM+SCA
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
 static const char *const VOICES_NAME[2] = {"DX", "DY"};
-static const char *const FORM_NAME[2] = {"Song", "Loop"};
+static const char *const FORM_NAME[4] = {"Song", "Few rests", "No rests", "Loop"};   /* (0.17.70: Song with its rests half as often, or none) */
 static const char *const START_NAME[2] = {"Last", "Random"};                                       /* the Settings page's Start (0.16.26): power on to the piece last played, or one at random */                                          /* the Settings page's Form (0.16.26): a piece moves through its patterns, or loops its first */                                          /* the thirty built-in DX7 voices: Melodee's set, or the human-made one */
 static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0",
                                          "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "+11", "+12"};   /* the repeat's pitch, semitones reached over four beats held */
@@ -180,7 +180,7 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Voices", KN_NAME, 13, VOICES_NAME, 2}, {"Form", KN_NAME, 28, FORM_NAME, 2},
+    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Voices", KN_NAME, 13, VOICES_NAME, 2}, {"Form", KN_NAME, 28, FORM_NAME, 4},
                          {"Start", KN_NAME, 29, START_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set; Saver and Lights on SCREEN (0.16.1) */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
@@ -1126,7 +1126,7 @@ static void mix_key(int k)
         knob_set(p, on);
         say(c == 30 ? "ACID LINE" : "PLUCK LINE", on ? "FROZEN" : "FREE");
     } else if (c == 32) {                      /* the bass held on the key while the chords move (Pedal, as on the Progression page) */
-        glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ 1u) & 15u);   /* (bit 3 is Calm's, 0.17.40) */
+        glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ 1u) & 0x3Fu);   /* (bit 3 is Calm's, 0.17.40; 4-5 the rests', 0.17.70) */
         en_pedal(glob.sl_rsv[2] & 3);
         project_globals();
         say("BASS", glob.sl_rsv[2] & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
@@ -1309,9 +1309,10 @@ static void fxp_set(int k, int v)
                 glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] & ~8u) | (v & 2 ? 8u : 0u));
                 project_globals();
             }
-            else if (FXP_CTL(k).idx == 28) {     /* Form: the engine at once, the global record's bit 2 */
-                en_song = (uint8_t)!v;
-                glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] & ~4u) | (v ? 4u : 0u));
+            else if (FXP_CTL(k).idx == 28) {     /* Form: the engine at once, the global record's bit 2 (Loop) and (0.17.70) bits 4-5 (the rests) */
+                en_song = (uint8_t)(v != 3);
+                en_rests = (uint8_t)(v < 3 ? 2 - v : 2);
+                glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] & ~0x34u) | (v == 3 ? 4u : (unsigned)v << 4));
                 project_globals();
             }
             break;
@@ -4938,7 +4939,7 @@ static void input(void)
                             pg_fill(s);
                     for (s = 0; s < 2; s++)       /* white keys 9 and 10: the bass, the pad, follow the chords or hold the key (PEDAL, 0.16.21) */
                         if (WHITE_KEY[8 + s] == i) {
-                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 15u);   /* (bit 2 is Form's, bit 3 Calm's) */
+                            glob.sl_rsv[2] = (uint8_t)((glob.sl_rsv[2] ^ (1u << s)) & 0x3Fu);   /* (bit 2 is Form's, bit 3 Calm's, 4-5 the rests') */
                             en_pedal(glob.sl_rsv[2] & 3);
                             project_globals();
                             say(s ? "PAD" : "BASS", glob.sl_rsv[2] >> s & 1u ? "PEDAL: HOLDS THE KEY" : "FOLLOWS THE CHORDS");
@@ -10410,8 +10411,10 @@ void ui_init(void)
     en_pedal(glob.sl_rsv[2] & 3);                /* and the pedal (0.16.21: the global record's last spare byte) */
     ui_fx_apply();                               /* the piece's FILTERS and SCREAM over the settings' (0.16.28) */
     ui.start_rand = (uint8_t)project_start_random();
-    ui.form = (uint8_t)(glob.sl_rsv[2] >> 2 & 1u);   /* and Form (0.16.26: bit 2; 0, the records before it, is Song) */
-    en_song = (uint8_t)!ui.form;
+    ui.form = (uint8_t)(glob.sl_rsv[2] >> 2 & 1u ? 3u : (glob.sl_rsv[2] >> 4 & 3u) <= 2u ? glob.sl_rsv[2] >> 4 & 3u : 0u);   /* and Form (0.16.26: bit 2 Loop;
+                                                 * 0, the records before it, is Song; 0.17.70: bits 4-5 Few rests 1, No rests 2) */
+    en_song = (uint8_t)(ui.form != 3);
+    en_rests = (uint8_t)(ui.form < 3 ? 2 - ui.form : 2);
     ui.sl_pos = (uint8_t)sl_find();              /* the set list: the slot of the piece playing (0xFF none) */
     ui.touched = -1;
     ui.boot_t = plat_ms();

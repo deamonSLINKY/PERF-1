@@ -23,13 +23,13 @@ spin K1 -1
 spin K4 -2
 wait 2500
 expect dd_left >0
-# Form: Loop (Settings, third knob): nothing more changes
+# Form: Loop (Settings, third knob; 0.17.70: past Few rests and No rests): nothing more changes
 press HOME
 wait 800
 release HOME
 wait 200
 turn SELECT 2
 wait 100
-spin K3 1
+spin K3 3
 wait 2500
 expect dd_left -1

@@ -3226,6 +3226,8 @@ volatile uint16_t en_played[EN_NLANE];          /* each lane's steps as they sou
 static const uint8_t ARR_AMT[EN_NGENRE] = {30, 45, 60, 50, 50, 55, 55, 55, 55, 50, 55, 45, 40, 50, 55, 40, 50, 45, 40, 45, 55, 30};
 static const uint8_t ARR_BOUT[EN_NGENRE] = {0, 25, 40, 50, 35, 30, 30, 40, 30, 40, 30, 25, 30, 25, 30, 25, 30, 25, 25, 30, 40, 20};
 volatile uint8_t en_arrange = 1;
+volatile uint8_t en_rests = 2;                   /* (0.17.70, the maker: "the bass line cuts out 1 bar every so often", "the acid line cuts out a bit too much in song
+                                                 * mode") FORM's Few rests (1: half as often) and No rests (0); the seed is drawn as before, so the music is the same */
 static uint8_t arr_m, arr_k, arr_plan, arr_bout, arr_ph;   /* the tracks resting; the bar in the phrase; its plan; the bass out at its end; phrases */
 static uint32_t arr_s, arr_chg;                  /* the seed; drum drift's change count at the phrase's start */
 static uint32_t arr_rand(uint32_t n) { arr_s = arr_s * 1664525u + 1013904223u; return (arr_s >> 8) % n; }
@@ -3247,13 +3249,13 @@ static void arr_bar(int intro)                   /* at each bar line, after dd_b
         arr_plan = 0;
         if (arr_ph < 255u)
             arr_ph++;
-        if (arr_rand(100) < ARR_AMT[chord_genre]) {
+        if (arr_rand(100) < (uint32_t)ARR_AMT[chord_genre] * en_rests / 2u) {
             uint32_t r = arr_rand(100), i = 0;
             while (i < 4u && r >= W[i])
                 r -= W[i++];
             arr_plan = (uint8_t)(i + 1u);
         }
-        arr_bout = (uint8_t)(arr_rand(100) < ARR_BOUT[chord_genre]);
+        arr_bout = (uint8_t)(arr_rand(100) < (uint32_t)ARR_BOUT[chord_genre] * en_rests / 2u);
     } else if (arr_k < 255u) {
         arr_k++;
     }
@@ -3265,6 +3267,8 @@ static void arr_bar(int intro)                   /* at each bar line, after dd_b
     }
     if (arr_bout && dd_fill)
         arr_m |= 1u << EN_TR_DRONE;
+    if (!en_rests)                               /* (0.17.70) No rests, from the next bar (a phrase planned before it was chosen rests no more) */
+        arr_m = 0;
 }
 static int dd_len(void)
 {
@@ -9283,7 +9287,7 @@ volatile uint32_t en_prof_sm[11];
 /* the diagnostic frame (0.14.3): inside the stages, fourteen pieces (ticks, all chunks: 0-13, the chunks shorter than 256 frames again: 14-27),
  * the chunk sizes (28-31: < 64, < 128, < 256, 256 frames) and the work between chunks (32-35: drain, control, the clock pulse, the hits that waited) */
 #if EN_DIAG
-volatile uint32_t en_diag[40];
+volatile uint32_t en_diag[40];                   /* (0.17.70: frame 0x5C; 36 fx_control and 37 the master's and the reverb's settings, ticks; 39 control()'s calls) */
 #define DT0() do { if (en_prof_clock) dt0_ = en_prof_clock(); } while (0)
 #define DT(i) do { if (en_prof_clock) { const uint32_t t1_ = en_prof_clock(); ds_[i] += t1_ - dt0_; dt0_ = t1_; } } while (0)
 #define RT(i, stmt) do { if (en_prof_clock) { const uint32_t t0_ = en_prof_clock(); stmt; en_diag[i] += en_prof_clock() - t0_; } else { stmt; } } while (0)
@@ -9724,7 +9728,10 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     int i;
     mods_step(n);
     heads_step(n);
-    fx_control(n);
+    RT(36, fx_control(n));
+#if EN_DIAG
+    en_diag[39]++;
+#endif
     if (par[P_CM_SND] >= CM_NPLAIN)             /* the DX voices: the patch, the tune, the keys' time */
         fm_set_patch(par[P_CM_SND] - CM_NPLAIN);
     fm_tune = par[P_TUNE] * 13981;
@@ -9732,9 +9739,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         const float d = (float)par[P_CM_DEC] * 0.01f;
         fm_gates(n, (int32_t)((0.35f + 2.2f * d * d) * EN_SR));
     }
-    master_dyn_set();
-    rz_set();
-    reverb_set();
+    RT(37, { master_dyn_set(); rz_set(); reverb_set(); });
     en_lim_gr = 8.6859f * gr_hold;               /* 20 log10 of 1/(1 - x), near enough for the small ones: the limiter's reduction in dB */
     en_out_peak = pk_hold;
     if (arc_left <= n) {
@@ -9824,15 +9829,9 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
     usb_gain *= 0.5f;
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
-#if EN_DIAG
-    uint32_t nch_ = 0;
-#endif
     while (n) {
         uint32_t k = n > BLK ? BLK : n;
         int timed = en_playing && !en_ext;
-#if EN_DIAG
-        nch_++;
-#endif
         if (timed) {                             /* (0.17.62) only the step's pulse cuts the chunk (its notes land on their sample). The five between are
                                                  * the MIDI clock out alone, so one goes at a chunk edge: at a chunk's start if due within EN_MIN_CHUNK of it, else at the next chunk's start, at most EN_MIN_CHUNK early or late
                                                  * (2.9 ms; the grid does not drift, and a follower steps on the step's pulse, which stays exact).
@@ -9843,10 +9842,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
                 pulse_left += step_len * (1.0f / 6.0f);
             }
             if (!pulse && (float)k > pulse_left) {
-                k = (uint32_t)pulse_left + 1u;
-#if EN_DIAG
-                en_diag[36]++;                   /* (0.17.64) a chunk cut by the step's pulse */
-#endif
+                k = (uint32_t)pulse_left + 1u;   /* (0.17.64-0.17.69 diag builds counted these in en_diag[36]) */
             }
         }
         if (k > n)
@@ -9860,10 +9856,6 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
                                                  * falls: the grid and the MIDI clock out keep their timing; only hits that swing or humanize (6-60 ms
                                                  * off the grid by design) may come the little later. */
             if (w > 0 && (uint32_t)w < k) {
-#if EN_DIAG
-                if (k > EN_MIN_CHUNK)
-                    en_diag[37]++;               /* (0.17.64) a chunk cut by a hit that waits */
-#endif
                 k = (uint32_t)w >= EN_MIN_CHUNK ? (uint32_t)w : k < EN_MIN_CHUNK ? k : EN_MIN_CHUNK;
             }
         }
@@ -9888,9 +9880,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         n -= k;
     }
 #if EN_DIAG
-    en_diag[38]++;                              /* (0.17.64) renders, and those of three chunks or more */
-    if (nch_ >= 3u)
-        en_diag[39]++;
+    en_diag[38]++;                              /* (0.17.64) renders (0.17.70: 39 is control()'s calls, no longer those of three chunks or more) */
 #endif
     if (gap_on || gap_g < 1.0f) {               /* the drop gap: out in ~6 ms, back in ~1 ms (the drop's first hit whole) */
         uint32_t j;

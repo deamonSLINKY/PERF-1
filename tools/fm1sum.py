@@ -158,6 +158,11 @@ def diag(path):
             if ct[2]:
                 print("           cuts: at the step %d, by a hit %d  | renders %d, of 3+ chunks %d (%.1f %%), chunks a render %.2f" % (
                     ct[0], ct[1], ct[2], ct[3], 100.0 * ct[3] / ct[2], n_all / ct[2]))
+        if "c_calls" in s[0]:                   # (0.17.70 diag builds, frame 0x5C) control()'s parts, us a call, and its calls a render
+            cc = [sum(int(r.get(k) or 0) for r in s) for k in ("c_fx", "c_dyn", "c_calls", "r_control", "renders_d")]
+            if cc[2]:
+                print("           control, us a call: fx_control %.0f  master+reverb settings %.0f  the rest %.0f  (all %.0f; %.2f calls a render)" % (
+                    cc[0] / cc[2], cc[1] / cc[2], (cc[3] - cc[0] - cc[1]) / cc[2], cc[3] / cc[2], cc[2] / cc[4] if cc[4] else 0.0))
 
 
 peaks(sys.argv[1])

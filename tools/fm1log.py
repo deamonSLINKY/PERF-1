@@ -91,19 +91,22 @@ EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "pk_drum
 
 DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"]
 DIAG = ["d_" + p for p in DIAG_PIECES] + ["ds_" + p for p in DIAG_PIECES] + ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits", "cut_step", "cut_hit", "renders_d", "renders_3up"]
+DIAG_C = DIAG[:36] + ["c_fx", "c_dyn", "renders_d", "c_calls"]   # (0.17.70, frame 0x5C) control()'s parts in 36, 37 (us) and its calls in 39
+DIAG_COLS = DIAG + ["c_fx", "c_dyn", "c_calls"]
 
 
 def decode_diag(msg):
     """the third frame (0.14.3 on, F0 7D 50 5B): fourteen pieces inside the stages (us, all chunks: d_*, the chunks shorter than 256 frames again:
     ds_*), the chunk sizes (counts), and the work between chunks (us: drain, control, the clock pulse, the hits that waited)"""
     msg = list(msg)
-    if msg[:3] != [0x7D, 0x50, 0x5B]:
+    if msg[:2] != [0x7D, 0x50] or msg[2] not in (0x5B, 0x5C):
         return None
+    names = DIAG if msg[2] == 0x5B else DIAG_C
     raw = unpack7(msg[3:])
-    n = min(len(DIAG), len(raw) // 4)
+    n = min(len(names), len(raw) // 4)
     if n < 36:
         return None
-    return dict(zip(DIAG, struct.unpack("<%dI" % n, bytes(raw[:4 * n]))))
+    return dict(zip(names, struct.unpack("<%dI" % n, bytes(raw[:4 * n]))))
 
 
 def decode_extra(msg):
@@ -174,6 +177,8 @@ def selftest():
     wd = list(range(1, len(DIAG) + 1))
     dg = decode_diag(PREFIX[:2] + [0x5B] + pack7(struct.pack("<%dI" % len(wd), *wd)))
     assert dg and [dg[k] for k in DIAG] == wd, dg
+    dg = decode_diag(PREFIX[:2] + [0x5C] + pack7(struct.pack("<%dI" % len(wd), *wd)))
+    assert dg and [dg[k] for k in DIAG_C] == wd and "cut_step" not in dg, dg
     print("selftest ok:", len(msg) + 2, "bytes a frame")
 
 
@@ -221,7 +226,7 @@ def main():
     t0 = time.time()
     with open(out, "w", newline="") as f:
         cw = csv.writer(f)
-        cw.writerow(["t"] + FIELDS + ["chorus", "bass", "flash", "susp_bad", "boot"] + EXTRA + DIAG + ["event"])
+        cw.writerow(["t"] + FIELDS + ["chorus", "bass", "flash", "susp_bad", "boot"] + EXTRA + DIAG_COLS + ["event"])
         diag = {}
         try:
             while True:
@@ -262,7 +267,7 @@ def main():
                         ev.append("GAP%dms" % (d["gap_us"] // 1000))
                     prev = d
                     cw.writerow(["%.2f" % (now - t0)] + [d[k] for k in FIELDS] + [d["chorus"], d["bass"], d["flash"], d["susp_bad"], d["boot"]] + [extra.get(k, 0) for k in EXTRA] +
-                                [diag.get(k, 0) for k in DIAG] + [" ".join(ev)])
+                                [diag.get(k, 0) for k in DIAG_COLS] + [" ".join(ev)])
                     extra = {}
                     diag = {}
                     f.flush()

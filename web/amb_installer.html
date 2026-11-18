@@ -370,6 +370,8 @@ const EXTRA = ["pk_clear", "pk_bassacid", "pk_pluck", "pk_w_pad", "pk_merge", "p
 /* the third frame (F0 7D 50 5B, 0.14.3 on): fourteen pieces inside the stages (us; all chunks, then the chunks shorter than 256 frames), the chunk sizes (counts), the work between chunks (us) */
 const DIAG_PIECES = ["bass", "acid", "cm", "fm", "dj", "noise", "padmix", "side", "drums", "bassmix", "echoes", "fxm", "dyn", "clip"];
 const DIAG = DIAG_PIECES.map((p) => "d_" + p).concat(DIAG_PIECES.map((p) => "ds_" + p), ["hc_lt64", "hc_lt128", "hc_lt256", "hc_256", "r_drain", "r_control", "r_pulse", "r_hits", "cut_step", "cut_hit", "renders_d", "renders_3up"]);
+const DIAG_C = DIAG.slice(0, 36).concat(["c_fx", "c_dyn", "renders_d", "c_calls"]);   /* (0.17.70, F0 7D 50 5C) control()'s parts in words 36, 37 (us), its calls in 39 */
+const DIAG_COLS = DIAG.concat(["c_fx", "c_dyn", "c_calls"]);
 const GENRES = ["HYPNO", "LOFI", "HOUSE", "DUBSTEP", "DUB", "DNB", "BREAKS", "GARAGE", "ELECTRO", "TRAP", "DISCO", "FUNK", "REGGAE", "SYNTHWAVE", "AMAPIANO", "TRIPHOP", "INDUS", "PSY", "FOREST", "HIPHOP", "TRANCE", "AMBIENT"];
 let port = null;
 async function openPort() {
@@ -388,7 +390,7 @@ async function openPort() {
     if (d[3] === 0x57) { const w = port.waiters.shift(); if (w) w({ kind: d[4], n: d[5] }); }       /* the answer to a voice message */
     else if (d[3] === 0x46 && port.onstatus) port.onstatus(d);                                      /* a status frame */
     else if (d[3] === 0x5A && port.onextra) port.onextra(d);                                        /* the slowest chunk of the window, and the histogram of renders */
-    else if (d[3] === 0x5B && port.ondiag) port.ondiag(d);                                          /* the diagnostic pieces */
+    else if ((d[3] === 0x5B || d[3] === 0x5C) && port.ondiag) port.ondiag(d);                                          /* the diagnostic pieces */
     else if (d[3] === 0x43 && port.onframe) port.onframe(d);                                        /* a frame of an object being backed up */
     else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }   /* the answer to a chunk or a write */
   };
@@ -765,8 +767,9 @@ function onExtra(d) {                       /* the second frame follows its stat
 function onDiag(d) {                        /* the third frame follows the second: it joins the same row */
   const raw = unpack7(Array.from(d.slice(4, d.length - 1)));
   const dv = new DataView(new Uint8Array(raw).buffer), w = frames[frames.length - 1];
-  if (!w || raw.length < DIAG.length * 4) return;
-  DIAG.forEach((f, i) => { w[f] = dv.getUint32(i * 4, true); });
+  const names = d[3] === 0x5C ? DIAG_C : DIAG;
+  if (!w || raw.length < names.length * 4) return;
+  names.forEach((f, i) => { w[f] = dv.getUint32(i * 4, true); });
 }
 async function stStop() {
   clearInterval(stTimer); stTimer = null;
@@ -789,7 +792,7 @@ $("stgo").addEventListener("click", async () => {
   } catch (err) { $("ststatus").textContent = err.message; }
 });
 $("stsave").addEventListener("click", () => {
-  const cols = FIELDS.concat(EXTRA, DIAG, ["ui_view", "bl_hdr", "bl_main", "bl_knob", "bl_rows"]);
+  const cols = FIELDS.concat(EXTRA, DIAG_COLS, ["ui_view", "bl_hdr", "bl_main", "bl_knob", "bl_rows"]);
   const rows = ["t," + cols.join(",")].concat(frames.map((w) => ((w.t - frames[0].t) / 1000).toFixed(2) + "," + cols.map((f) => (w[f] === undefined ? 0 : w[f])).join(",")));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([rows.join("\n") + "\n"], { type: "text/csv" }));

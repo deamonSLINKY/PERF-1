@@ -424,6 +424,7 @@ extern volatile int8_t en_walk_next;           /* THE CIRCLE MOVES (0.16.27): th
 extern volatile uint8_t en_walk_next_root;      /* its root (pitch class; borrowed: the parallel minor's) */
 extern volatile uint8_t en_chord_alt;           /* the chord playing: 0 as the scale has it, 1 a secondary dominant (V of the next), 2 borrowed from the parallel minor */
 extern volatile uint8_t en_song;               /* FORM (0.16.26): 1 Song, a piece moves through its own patterns while Drum Drift is off; 0 Loop */
+extern volatile uint8_t en_rests;              /* (0.17.70) Song's rests (FORM): 2 as the genre has them, 1 half as often, 0 none */
 extern volatile uint8_t en_arrange;            /* (0.17.16) 1: with Song, the parts are arranged too (one rests half a phrase now and then); the UI turns it off for a set-list place with its own bars */
 extern volatile uint8_t en_usb_fixed;          /* 1: the USB audio is rendered at unity gain (the master knob is the speakers' alone) */
 extern volatile uint8_t en_fm_dy;              /* 1: the DY voices (human-made DX7 voices) stand in for the thirty DX voices */
@@ -440,7 +441,8 @@ extern volatile uint32_t en_prof_sm[11];     /* the chunks shorter than 256 fram
 #endif
 #if EN_DIAG
 extern volatile uint32_t en_diag[40];        /* the diagnostic frame: fourteen pieces inside the stages (ticks; all chunks, then the short ones), four chunk sizes, four pieces between chunks;
-                                                * (0.17.64) counts: chunks cut by the step's pulse, chunks cut by a hit, renders, renders of three chunks or more */
+                                                * (0.17.64) counts: chunks cut by the step's pulse, chunks cut by a hit, renders, renders of three chunks or more;
+                                                * (0.17.70, frame 0x5C) 36 fx_control, 37 the master's and the reverb's settings (ticks), 39 control()'s calls */
 #endif
 extern volatile uint32_t en_peak_stage[9], en_peak_total, en_peak_info;   /* the slowest chunk since cleared: its stage times, total (ticks) and info (step, size, moved work, shed, section) */
 extern volatile uint8_t en_drum_pos;           /* the step playing (0..15) */
