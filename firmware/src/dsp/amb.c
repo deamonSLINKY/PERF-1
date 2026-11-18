@@ -7107,6 +7107,7 @@ static void master_dyn_reset(void)              /* a new engine: nothing delayed
     lk_sum = (float)LK;
     lk_i = lk_n = lk_si = 0;
     cp_env = gr_hold = pk_hold = cp_hl = cp_hr = cp_avg = 0.0f;
+    po_pk = 0.0f;                               /* (0.17.62) Polish's peak too (an outside review: the last engine's carried into the new one) */
 }
 
 
@@ -8470,14 +8471,17 @@ static void render_acid(uint32_t n)
                 k2 = 1.2f * (1.0f - 0.75f * sqa), sqin = 1.0f + 3.0f * sqd,   /* the second stage follows (it held the peak down); Drive: harder into the filter */
                 vel = 0.75f + 0.5f * accamt * acid.acc, glide = acid.sliding ? 0.0012f : 1.0f;
     const float inv_n = 1.0f / (float)(n ? n : 1u);   /* (0.17.44: the LFO's glide across the chunk) */
-    float sqg = sqin;                            /* this block's drive: Wow, an accent opening the resonance and the drive further */
+    static float ac_wow, ac_sratio = 1.0f, ac_pw = 0.5f, ac_lz = 1.0f;   /* (0.17.62) the 32-sample values, kept across chunks as the count is: each chunk
+                                                 * began at the defaults (Sync's ratio 1, the PWM's width 0.5, Laser's pitch, no Wow) until the next update,
+                                                 * up to 31 samples a chunk (found by an outside review) */
+    float sqg = sqin + 2.0f * ac_wow;            /* this block's drive: Wow, an accent opening the resonance and the drive further */
     static float ans_k = 1.0f;                   /* the answer's level (EN_FXS_AC_ANS), gliding over about 20 ms as the answer comes and goes */
     {
         const int al = fxs_v[EN_FXS_AC_ANS];
         const float to = en_acid_ans && al > 0 ? fm_exp2f(0.1107309f * (float)(al > 3 ? 3 : al)) : 1.0f;   /* (2 dB a step: 2^(2 / 20 * log2 10)) */
         ans_k += (to - ans_k) * fm_minf((float)n * (1.0f / (0.02f * EN_SR)), 1.0f);
     }
-    float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, p4 = acid.p4, p5 = acid.p5, sratio = 1.0f, pw = 0.5f, lz = 1.0f;
+    float ph = acid.ph, inc = acid.inc, amp = acid.amp, lvl = 0.0f, ps = acid.ps, p3 = acid.p3, p4 = acid.p4, p5 = acid.p5, sratio = ac_sratio, pw = ac_pw, lz = ac_lz;
     if (amp < 1e-5f && acid.amp_t <= 0.0f) {
         acid.amp = 0.0f;
         en_acid_level = 0.0f;
@@ -8491,6 +8495,7 @@ static void render_acid(uint32_t n)
             float oct = base + acut_was + (lfo_acut - acut_was) * (float)j * inv_n + envmod * acid.env * (1.0f + accamt * acid.acc) + 1.2f * accamt * acid.acc * acid.env;   /* (0.17.44: the LFO gliding across the chunk from its last value: a fast one stepped, a zipper) */
             float fc = fm_clampf(60.0f * fm_exp2f(oct), 50.0f, 14000.0f);
             const float wow = sqw * acid.acc * acid.env;
+            ac_wow = wow;
             sqg = sqin + 2.0f * wow;
             if (ft_acid == FT_303) {            /* the 303: the stages' gain G, the feedback k, G^4 and 1 / (1 + k G^4) (acid.c1 holds them) */
                 const float gg = fm_tanf(FM_PI * fm_clampf(fc, 40.0f, 16000.0f) * (1.0f / EN_SR)), G = gg / (1.0f + gg), G2 = G * G,
@@ -8509,6 +8514,9 @@ static void render_acid(uint32_t n)
                 acid.lph -= 1.0f;
             pw = 0.5f + 0.38f * sine(acid.lph);
             lz = 1.0f + 7.0f * acid.env * acid.env;   /* Laser: its pitch, falling as the envelope does */
+            ac_sratio = sratio;
+            ac_pw = pw;
+            ac_lz = lz;
             acid.env *= acid.edec;
         }
         if (acid.gate_left > 0 && --acid.gate_left == 0)
