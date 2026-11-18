@@ -85,6 +85,9 @@ check("usb.c passes the real-time bytes on (clock, start, continue, stop)", /cin
 const web = fs.readFileSync(path.join(root, "web", "emu", "amb_web.c"), "utf8"), wk = fs.readFileSync(path.join(root, "web", "emu", "worklet.js"), "utf8");
 check("the emulator takes the unit's clock (web_st_clock -> en_clock; the worklet's st_clock)", /web_st_clock\(int a\) \{ en_clock\(a\); \}/.test(web) && /m\.type === "st_clock"/.test(wk) && /web_st_clock\(m\.a \| 0\)/.test(wk));
 check("the studio: Start, a clock of 24 a beat (2500 / BPM ms), Stop", st.includes("[0xFA]") && st.includes("[0xF8]") && st.includes("[0xFC]") && st.includes("2500 / bpm") && st.includes('type: "st_clock"'));
+// ---- the bass line's Steps mode found by its name (0.17.69 put four modes after it: the studio's "last mode" was Bounce from then)
+const pj = JSON.parse(fs.readFileSync(path.join(root, "build", "params.json"), "utf8"));
+check("params.json's bass modes name Steps, and the studio finds it by name", JSON.stringify(pj).includes('"Steps"') && st.includes('indexOf("Steps")') && !/BL_STEPS = P\[PE\.P_BL_MODE\]\.max;/.test(st));
 check("the dev page inlines fm1link.js", fs.readFileSync(path.join(root, "tools", "make_dev_artifact.py"), "utf8").includes('"fm1link.js"'));
 
 if (bad) { console.log(bad + " failed"); process.exit(1); }

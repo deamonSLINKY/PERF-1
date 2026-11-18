@@ -37,16 +37,36 @@
   .bar .sp { flex: 1; }
   #top { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; position: sticky; top: 0; z-index: 30; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
   #top .tsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
-  #top { gap: .35rem; }
+  #top { gap: .28rem; }
   #top select { max-width: 8.5em; }
-  @media (min-width: 1250px) { #top { flex-wrap: nowrap; } #top #pos, #top #tc { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } #top .sp { min-width: 0; } }
+  @media (min-width: 1400px) { #top { flex-wrap: nowrap; } #top .sp { min-width: 0; } }
+  #top > * { flex-shrink: 0; } #top .sp { flex-shrink: 1; }
+  #top .tgrp { display: inline-flex; align-items: center; gap: .28rem; margin-left: auto; flex: none; }
+  /* the position as the unit's screen would show it: big digits in a dark window, a small word under each */
+  .lcd { display: inline-flex; flex: none; background: #08090b; border: 1px solid var(--line); border-radius: 6px; padding: 2px 2px; box-shadow: inset 0 1px 5px rgba(0,0,0,.7); }
+  .lcd > span { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 6px; min-width: 2.9em; }
+  .lcd > span:first-child { min-width: 3.9em; }
+  .lcd > span + span { border-left: 1px solid #1b1d23; }
+  .lcd b { font: 700 1.08rem/1.15 "Chakra Petch", sans-serif; color: var(--acc); font-variant-numeric: tabular-nums; letter-spacing: .03em; text-shadow: 0 0 8px rgba(255,176,0,.45); white-space: nowrap; }
+  .lcd i { font: 600 .56rem/1 "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .14em; font-style: normal; text-transform: uppercase; white-space: nowrap; }
+  .lcd.off b { color: #4a4d57; text-shadow: none; }
+  #top .fld { display: inline-flex; flex-direction: column; gap: 1px; flex: none; }
+  #top .fld > i { font: 600 .56rem/1 "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .14em; font-style: normal; padding-left: 2px; }
+  #top .fld > span { display: inline-flex; gap: 3px; }
+  #top select, #top input { padding: .3em .45em; }
+  #top button, #top .menu summary { white-space: nowrap; }
+  .tcchip { display: inline-flex; flex: none; flex-direction: column; align-items: flex-start; gap: 1px; padding: 2px 8px !important; background: transparent; border: 1px dashed #555a66; }
+  .tcchip i { font: 600 .56rem/1 "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .14em; font-style: normal; }
+  .tcchip b { font: 700 .86rem/1.15 "Chakra Petch", sans-serif; color: var(--ink); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+  .tcchip.stale b { color: var(--dim); }
+  .tcchip:hover { border-color: var(--acc); } .tcchip.done { border-style: solid; border-color: var(--acid); }
   #top .tsep { margin: 0; }
-  #top button, #top .menu summary { padding: .4em .65em; }
+  #top button, #top .menu summary { padding: .4em .55em; }
   #sound:not([hidden]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; align-items: start; }
   #sound > .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
   #sound > .sec.dx7, #sound > .sec:has(.lanes6), #sound > p { grid-column: 1 / -1; }
-  .beats { display: inline-flex; gap: 3px; }
-  .beats i { width: 8px; height: 8px; border-radius: 2px; background: #2a2d35; }
+  .beats { display: inline-flex; gap: 3px; margin-top: 2px; }
+  .beats i { width: 7px; height: 4px; border-radius: 1px; background: #2a2d35; }
   .beats i.on { background: var(--acc); box-shadow: 0 0 6px var(--acc); }
   .beats i.on:first-child { background: #fff; box-shadow: 0 0 6px #fff; }
   .menu { position: relative; }
@@ -61,7 +81,6 @@
   #lkSum.live { color: var(--bass); }
   .menu .pop label { display: block; line-height: 1.3; }
   .menu .pop hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
-  #pos { font: 600 .95rem "Chakra Petch", sans-serif; color: var(--acc); min-width: 11em; }
   #msg { min-height: 1.5em; color: var(--dim); margin: 6px 2px; font-size: .95rem; overflow-wrap: anywhere; }
   #msg.warn { color: var(--acc); }
   .loomwrap { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
@@ -93,6 +112,8 @@
   #edtools .lbl { font: 600 .72rem "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .08em; margin-right: 4px; }
   #ed { width: 100%; display: block; background: #121318; border: 1px solid var(--line); border-radius: 6px; cursor: crosshair; touch-action: none; }
   #edhelp { color: var(--dim); font-size: .92rem; margin: 6px 0 0; }
+  .helpb { margin-left: auto; width: 2em; border-radius: 50%; padding: .25em 0 !important; color: var(--dim); }
+  .helpb[aria-expanded=true] { color: var(--acc); border-color: var(--acc); }
   #screen { width: 240px; height: 240px; image-rendering: pixelated; display: block; margin: 0 auto; border: 1px solid var(--line); border-radius: 6px; background: #000; }
   aside .muted { color: var(--dim); font-size: .85rem; text-align: center; margin: 4px 0 10px; }
   #facts { font-size: .92rem; }
@@ -273,13 +294,13 @@
     <button id="open">Open</button>
     <span class="tsep"></span>
     <button id="play" class="go" disabled title="Play / stop (Space)">▶ Play</button>
-    <span class="beats" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    <span id="pos">off</span>
+    <span id="pos" class="lcd off" title="Where it plays: the bar and beat (the lights: the beats, the bar's first white), the chord, the drum pattern"><span><b id="posBar">–.–</b><span class="beats" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span><span><b id="posChord">–</b><i id="posRn">CHORD</i></span><span><b id="posPat">–</b><i>PATTERN</i></span></span>
     <span class="tsep"></span>
-    <span class="lbl">BPM</span><input type="number" id="qTempo" min="70" max="190" style="width:4.4em" aria-label="Tempo" disabled>
-    <span class="lbl">KEY</span><select id="qRoot" aria-label="Root" disabled></select><select id="qMode" aria-label="Mode" disabled></select>
-    <span id="tc" class="tag dice" title="The code of the track playing: the same nine letters play the same track" hidden></span>
+    <label class="fld"><i>BPM</i><input type="number" id="qTempo" min="70" max="190" style="width:4.2em" aria-label="Tempo" disabled></label>
+    <span class="fld"><i>KEY</i><span><select id="qRoot" aria-label="Root" disabled></select><select id="qMode" aria-label="Mode" disabled></select></span></span>
+    <button id="tc" class="tcchip" title="The code of the track playing: the same nine letters play the same track. Click: copy it" hidden><i>TRACK</i><b id="tcCode"></b></button>
     <span class="sp"></span>
+    <span class="tgrp">                                 <!-- (the piece's actions and the menus: one group, so a narrow window wraps them together) -->
     <button id="undo" hidden>Undo the import</button>
     <button id="roll" disabled title="A new take: the engine plays its own parts anew (the DICE lanes), the piece as it is">⟳ New take</button>
     <button id="mine" disabled title="Keep what the engine plays now: its bass, acid and pluck lines and the chords it walked become the piece's own">Make it mine</button>
@@ -311,6 +332,7 @@
       <hr>
       <span class="muted" style="font-size:.82rem">Settings and voices only: the drum steps, the lines and the FILTERS go with File → Send the piece to the FM-1. SAVE on the unit keeps what you sent.</span>
     </div></details>
+    </span>
     <input type="file" id="file" accept=".piece" hidden>
     <input type="file" id="mfile" accept=".mid,.midi,.MID,audio/midi" hidden>
   </div>
@@ -353,9 +375,9 @@
     <div class="card">
       <div class="edhead"><h2 id="edtitle" hidden>—</h2><span id="lanepick" class="lanepick" role="group" aria-label="The part the editor below works on"></span><span id="edtag" class="tag"></span>
         <span class="views small" role="tablist"><button role="tab" data-pane="shape" aria-selected="true">SHAPE</button><button role="tab" data-pane="sound" aria-selected="false">SOUND</button></span>
-        <div id="edtools"></div></div>
+        <div id="edtools"></div><button id="edhelpB" class="small helpb" aria-expanded="false" title="How this editor works (shown or hidden for every part)">?</button></div>
       <div id="shapepane"><canvas id="ed" height="300" aria-label="The lane's shape: one bar"></canvas>
-      <p id="edhelp"></p></div>
+      <p id="edhelp" hidden></p></div>
       <div id="sound" hidden></div>
     </div>
     <aside class="card">
@@ -400,7 +422,7 @@ const say = (t, warn) => { $("msg").textContent = t || ""; $("msg").className = 
  * its chord types, the bass steps and the FILTERS and SCREAM after it. */
 const REC = 376, NPAT = 6, NL = 6, REC_PAR = 2 + 2 * NPAT * NL, REC_CML1 = 250, REC_MOD = REC - NL * 16, REC_ACL = REC_MOD - 24, REC_CML2 = REC_ACL + 18;
 const IO_PRG = REC, IO_PRK = IO_PRG + 6, IO_BS = IO_PRK + 3, IO_FXON = IO_BS + 16, IO_FX = IO_FXON + 1, IO_LEN = IO_FX + PC_PX_NFX;   // (0.17.30: 9 extras, the bass answer's two after the seven)
-const BL_STEPS = P[PE.P_BL_MODE].max;                       // the bass line's last mode: Steps
+const BL_STEPS = ((i) => (i >= 0 ? P[PE.P_BL_MODE].min + i : P[PE.P_BL_MODE].max))((P[PE.P_BL_MODE].t || []).indexOf("Steps"));   // the bass line's mode Steps, by its name (0.17.69 put four after it)
 let io = null;                                              // the piece in hand
 let cur = { genre: 2, piece: 0 };
 const par = (k) => { const p = PE[k]; return P[p].min + io[REC_PAR + p]; };
@@ -597,8 +619,14 @@ function onLive(b) {
       ac: live.acOff.map((o, s) => ({ off: o, oct: live.acOct[s], gate: (live.acGate >> s) & 1, acc: (live.acAcc >> s) & 1, slide: (live.acSlide >> s) & 1 })), acLen: live.acLen,
       cm: live.cmRung.map((r, s) => ({ rung: r, lvl: live.cmLvl[s] })) };
   }
-  const ch = live.playing ? NOTE[live.croot % 12] : "";
-  $("pos").textContent = live.playing ? "bar " + (lb + 1) + "." + (Math.floor(live.step / 4) + 1) + "  ·  " + ch + "  ·  P" + (live.pat + 1) : "stopped";
+  const c = live.playing ? chordName(riOfPc(live.croot)) : null;
+  posShow(live.playing ? [(lb + 1) + "." + (Math.floor(live.step / 4) + 1), c.name, "P" + (live.pat + 1), "CHORD " + c.roman] : ["–.–", "–", "P" + (par("P_PATTERN") + 1), "CHORD"], !live.playing);
+}
+let posWas = "";
+function posShow(v, off) {                                    // (only when it changes: this runs every frame)
+  const k = v.join("|") + off; if (k === posWas) return; posWas = k;
+  $("posBar").textContent = v[0]; $("posChord").textContent = v[1]; $("posPat").textContent = v[2]; $("posRn").textContent = v[3];
+  $("pos").classList.toggle("off", off);
 }
 
 /* ======================================================================== the Loom: every lane over the bars */
@@ -680,13 +708,14 @@ function laneNotes(id, nb, tl) {
       });
     }
   } else if (id === "pad") {
+    const now = loomNow(), cNow = now ? { ri: riOfPc(live.croot), nt: live.chordN === 4 ? 4 : 3 } : null;
     for (let b = 0; b < nb; b++) {
-      const c = ctxAt(b, tl);
-      if (!c.known) continue;                                // (the walk's chords: only as heard)
+      let c = ctxAt(b, tl);
+      if (!c.known) { if (!cNow || b <= now.b) continue; c = cNow; }   // (the walk's chords as heard; the bars still to come: the chord now, faint)
       for (let t = 0; t < c.nt; t++) {
         let m = base(c, 55) + rel(c, 2 * t);
         while (m > 76) m -= 12;
-        out.push({ b, s: 0, len: 16, m, ghost: true, dim: !c.known });
+        out.push({ b, s: 0, len: 16, m, ghost: true, dim: c === cNow });
       }
     }
   }
@@ -721,7 +750,9 @@ function drawLoom() {
       if (b < w0 + vis && BW > 40) { g.fillStyle = COL.grid; for (let q = 1; q < 4; q++) g.fillRect(Math.round(X(b, 4 * q)), y0, 1, h); }
       if (b < w0 + vis && SW > 14) { g.fillStyle = "#16181d"; for (let q = 1; q < 16; q++) if (q % 4) g.fillRect(Math.round(X(b, q)), y0, 1, h); }
     }
-    g.fillStyle = L.col; g.fillRect(8, y0 + 4, 4, 16);      // the label: a colour tab, the name, yours or dice
+    g.fillStyle = L.col; g.fillRect(8, y0 + 4, 4, 16);      // the label: a colour tab (a level meter while it sounds), the name, yours or dice
+    const lk = { pad: 0, bass: 1, acid: 2, pluck: 3, drums: 4 }[L.id], lvNow = live && live.playing && lk !== undefined && live.lv ? Math.sqrt(live.lv[lk] / 255) : 0;
+    if (lvNow > 0.05) { const mh = Math.min(h - 8, 16 + lvNow * (h - 24)); g.save(); g.shadowColor = L.col; g.shadowBlur = 8 * lvNow; g.fillRect(8, y0 + 4, 4, mh); g.restore(); }
     g.fillStyle = COL.ink; g.font = FONT(700, 14); g.fillText(L.name, 18, y0 + 17);
     const tw = g.measureText(L.name).width;
     if (st.tag) {
@@ -752,8 +783,11 @@ function drawLoom() {
   }
   if (loomPos >= w0 && loomPos < w0 + vis) {                // the playhead
     const x = X(loomPos, 0);
-    g.fillStyle = "rgba(255,176,0,.10)"; g.fillRect(X(Math.floor(loomPos), 0), HEAD, BW, H - HEAD - GAP);
-    g.fillStyle = COL.acc; g.fillRect(Math.round(x) - 1, HEAD - 4, 2, H - HEAD - GAP + 4);
+    g.fillStyle = "rgba(255,176,0,.07)"; g.fillRect(X(Math.floor(loomPos), 0), HEAD, BW, H - HEAD - GAP);
+    const tr = Math.min(28, x - LX), gr = g.createLinearGradient(x - tr, 0, x, 0);   // (a short glow trailing the line)
+    gr.addColorStop(0, "rgba(255,176,0,0)"); gr.addColorStop(1, "rgba(255,176,0,.22)");
+    g.fillStyle = gr; g.fillRect(x - tr, HEAD, tr, H - HEAD - GAP);
+    g.save(); g.shadowColor = COL.acc; g.shadowBlur = 8; g.fillStyle = COL.acc; g.fillRect(Math.round(x) - 1, HEAD - 4, 2, H - HEAD - GAP + 4); g.restore();
   }
 }
 function drawChordLane(g, L, tl, nb, X, BW) {
@@ -769,11 +803,23 @@ function drawChordLane(g, L, tl, nb, X, BW) {
     }
   };
   if (tl) for (const s of tl.slots) { if (s.start < nb) block(s.start, Math.min(s.bars, nb - s.start), s.deg - 1, s.kind ? P[PE.P_CHORD].t[s.kind] : "", false, s.held); }
-  else for (let b = 0; b < nb; b++) { const h = hist[b]; if (h) block(b, 1, riOfPc(h.croot), "", true, false); }
+  else {
+    const now = loomNow();
+    for (let b = 0; b < nb; b++) {
+      const hb = hist[b];
+      if (hb) { block(b, 1, riOfPc(hb.croot), "", true, false); continue; }
+      if (!now || b <= now.b) continue;                    // a bar not heard yet: the walk decides it there, so only a faint one, the chord playing now with a "?"
+      const x0 = X(b, 0) + 2, w = BW - 4, c = chordName(riOfPc(live.croot));
+      g.fillStyle = "#15141c"; g.fillRect(x0, y, w, h);
+      g.strokeStyle = "#2c2840"; g.setLineDash([3, 3]); g.strokeRect(x0 + 0.5, y + 0.5, w - 1, h - 1); g.setLineDash([]);
+      if (w > 26) { g.fillStyle = "#4b4270"; g.font = FONT(700, 13); g.fillText(c.roman + "?", x0 + 8, y + 15); }
+      if (b === now.b + 1 && w > 90) { g.fillStyle = "#5a5470"; g.font = "500 11px 'Barlow Semi Condensed', sans-serif"; g.fillText("the walk decides", x0 + 8, y + 29); }
+    }
+  }
   if (!tl && !Object.keys(hist).length) { g.fillStyle = COL.dim; g.font = "500 13px 'Barlow Semi Condensed', sans-serif"; g.fillText("the genre walks its own chords: they appear as it plays (or set a progression: click here)", X(0, 0) + 8, y + 20); }
 }
 function drawDrumLane(g, L, nb, X, SW) {
-  const rh = (L.h - 8) / NL, LV = [0.85, 0.35, 0.6, 1];
+  const rh = (L.h - 8) / NL, LV = [0.85, 0.35, 0.6, 1], now = loomNow();
   for (let b = 0; b < nb; b++) {
     const p = patAt(b);
     for (let l = 0; l < NL; l++) {
@@ -783,7 +829,8 @@ function drawDrumLane(g, L, nb, X, SW) {
         if (!((m >> k) & 1)) continue;
         const md = modGet(l, k), lvl = (md >> 6) & 3, push = ((md >> 3) & 7) / 12, rat = md & 7;
         g.globalAlpha = LV[lvl]; g.fillStyle = COL.drum;
-        g.fillRect(X(b, s + push) + 0.5, y + (lvl === 1 ? rh * 0.4 : 0), Math.max(1.5, SW * 0.55), (lvl === 1 ? rh * 0.6 : rh) - 1.5);
+        rblock(g, X(b, s + push) + 0.5, y + (lvl === 1 ? rh * 0.4 : 0), Math.max(2, SW * 0.6), (lvl === 1 ? rh * 0.6 : rh) - 1.5); g.fill();
+        if (now && now.b === b && now.s === s) { g.globalAlpha = 0.85; g.fillStyle = COL.ink; g.fill(); }   // (the hit sounding now)
         if (rat && SW > 5) { g.globalAlpha = 0.9; g.fillStyle = COL.ink; g.fillRect(X(b, s + push) + SW * 0.6, y + 1, 1, rh - 3); }
       }
     }
@@ -798,24 +845,31 @@ function drawLineLane(g, L, notes, X, SW) {
   }
   let lo = Math.min(...notes.map((n) => n.m)), hi = Math.max(...notes.map((n) => n.m));
   if (hi - lo < 12) { const c = (hi + lo) / 2; lo = c - 6; hi = c + 6; }
-  const pad = 6, Y = (m) => L.top + L.h - pad - (m - lo) / (hi - lo) * (L.h - 2 * pad);
+  const pad = 7, Y = (m) => L.top + L.h - pad - (m - lo) / (hi - lo) * (L.h - 2 * pad);
+  const th = Math.max(5, Math.min(10, (L.h - 2 * pad) / (hi - lo + 1) * 1.7)), now = loomNow();   // (a note's height: thicker when the line spans less)
   let prev = null;
-  for (const n of notes) {
-    const x = X(n.b, n.s), y = Y(n.m), w = Math.max(2, n.len * SW - 1), th = n.acc ? 5 : 4;
+  for (const n of notes) {                                  // a note a block: its length the gate, its brightness the level, an accent a halo, a slide a ramp
+    const x = X(n.b, n.s) + 0.5, y = Y(n.m), w = Math.max(3, n.len * SW - 1.5), lv = n.lvl ? [0, 0.5, 0.78, 1][n.lvl] : n.acc ? 1 : 0.78;
+    const on = now && n.b === now.b && now.s >= n.s && now.s < n.s + Math.max(1, n.len);
     if (n.link && prev && prev.b === n.b) {               // a glide or a slide: a ramp from the note before
-      g.strokeStyle = L.col; g.lineWidth = 1.6; g.globalAlpha = n.ghost ? 0.5 : 0.9;
+      g.strokeStyle = L.col; g.lineWidth = 1.6; g.globalAlpha = n.ghost ? (n.dim ? 0.25 : 0.5) : 0.9;
       g.beginPath(); g.moveTo(prev.x + prev.w, prev.y); g.bezierCurveTo(prev.x + prev.w + 4, prev.y, x - 4, y, x, y); g.stroke();
     }
+    if (n.acc && !n.dim) { g.globalAlpha = n.ghost ? 0.12 : 0.22; g.fillStyle = L.col; rblock(g, x - 2, y - th / 2 - 2, w + 4, th + 4); g.fill(); }
+    rblock(g, x, y - th / 2, w, th);
     if (n.ghost) {                                          // the engine's (dice): the same shape, hollow and fainter
-      g.globalAlpha = n.dim ? 0.18 : 0.42; g.fillStyle = L.col; g.fillRect(x, y - th / 2, w, th);
-      g.globalAlpha = n.dim ? 0.3 : 0.75; g.fillRect(x, y - th / 2, w, 1);
-    } else {
-      g.globalAlpha = n.acc ? 1 : 0.8; g.fillStyle = L.col; g.fillRect(x, y - th / 2, w, th);
-      if (n.acc) { g.fillStyle = COL.ink; g.fillRect(x, y - th / 2 - 2, Math.min(w, 4), 1.5); }
-    }
+      g.globalAlpha = (n.dim ? 0.14 : 0.32) * (0.6 + 0.4 * lv); g.fillStyle = L.col; g.fill();
+      g.globalAlpha = n.dim ? 0.32 : 0.75; g.strokeStyle = L.col; g.lineWidth = 1; g.stroke();
+    } else { g.globalAlpha = lv; g.fillStyle = L.col; g.fill(); }
+    if (on) { g.save(); g.globalAlpha = 1; g.shadowColor = L.col; g.shadowBlur = 12; g.fillStyle = COL.ink; g.fill(); g.restore(); }   // (sounding now)
+    else if (!n.ghost && n.acc) { g.globalAlpha = 0.9; g.fillStyle = COL.ink; g.fillRect(x + 1.5, y - th / 2 + 1, Math.max(1, w - 3), 1); }
     g.globalAlpha = 1;
     prev = { b: n.b, x, y, w };
   }
+}
+function rblock(g, x, y, w, h) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, Math.min(3, h / 2, w / 2)); else g.rect(x, y, w, h); }
+function loomNow() {                                          // the loom bar and step sounding now, or null
+  return live && live.playing && loomPos >= 0 ? { b: Math.floor(loomPos), s: Math.floor((loomPos % 1) * 16) } : null;
 }
 $("loom").addEventListener("click", (e) => {
   const r = $("loom").getBoundingClientRect(), y = e.clientY - r.top;
@@ -846,7 +900,7 @@ function drawEditor() {
   document.querySelectorAll("#lanepick button, #desk .strip[data-lane]").forEach((b) => { const on = b.dataset.lane === sel; if (b.tagName === "BUTTON") { if (b.getAttribute("aria-pressed") !== String(on)) b.setAttribute("aria-pressed", String(on)); } else b.classList.toggle("on", on); });
   $("edtag").textContent = st.tag; $("edtag").className = "tag " + (st.tag === "YOURS" ? "yours" : "dice");
   const rows = { drums: NL, bass: 24, acid: 16, pluck: 12, chords: 1, pad: 1 }[sel];
-  const RH = sel === "drums" ? 34 : sel === "chords" ? 90 : sel === "pad" ? 60 : sel === "bass" ? 13 : 15;
+  const RH = sel === "drums" ? 34 : sel === "chords" ? 90 : sel === "pad" ? 60 : sel === "bass" ? 16 : 17;
   const H = rows * RH + (sel === "acid" ? 30 : 0) + 22;
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
   const g = cv.getContext("2d");
@@ -854,6 +908,11 @@ function drawEditor() {
   g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
   if (!io) return;
   ({ drums: edDrums, bass: edBass, acid: edAcid, pluck: edPluck, chords: edChords, pad: edPad })[sel](g, W, RH, rows);
+}
+{                                                             // the editor's help: behind "?", remembered (this browser)
+  const show = (on) => { $("edhelp").hidden = !on; $("edhelpB").setAttribute("aria-expanded", String(on)); };
+  try { show(localStorage.getItem("perf1-studio-help") === "1"); } catch (_) { show(false); }
+  $("edhelpB").addEventListener("click", () => { const on = $("edhelp").hidden; show(on); try { localStorage.setItem("perf1-studio-help", on ? "1" : "0"); } catch (_) { /* (this page only) */ } });
 }
 function gridBase(g, W, RH, rows, labels, bright) {          // rows of a bar, the beats, the step playing
   const x0 = 56, cw = (W - x0 - 8) / 16, y0 = 4;
@@ -946,29 +1005,41 @@ function clickDrums(s, r, right) {
 }
 // ---- bass: eight scale steps above the chord's root, three octaves
 const DEG8 = ["R", "2", "3", "4", "5", "6", "7", "8"];
+// A bass in another mode than Steps plays the line its mode makes (DICE): the editor shows that (as heard, the last sixteen steps), hollow, and the first
+// click starts the steps from it, as the acid's (the stored steps are not what plays then: editing them would bring back an old or empty line).
+const bassLive = () => (live && live.bsHist && live.bsHist.some((v) => (v & 7) >= 1 && (v & 7) <= 4) ? Array.from(live.bsHist) : null);
 function edBass(g, W, RH, rows) {
-  const steps = par("P_BL_MODE") === BL_STEPS;
+  const steps = par("P_BL_MODE") === BL_STEPS, heard = !steps && bassLive();
   tools('<button class="small" data-act="bcap">Capture the bar it played</button><button class="small" data-act="bclear">Clear</button>' +
-        (steps ? "" : '<button class="small" data-act="bsteps">Play the steps</button><span class="muted">&nbsp;mode now: ' + parText("P_BL_MODE") + "</span>"));
+        (steps ? "" : '<button class="small" data-act="bsteps">Play the steps</button><span class="muted">&nbsp;mode now: ' + parText("P_BL_MODE") + (heard ? ": what it plays, hollow; a click starts the steps from it" : "") + "</span>"));
   const rowOf = (n, o) => rows - 1 - (o * 8 + n);
-  const G = gridBase(g, W, RH, rows, (r) => { const v = rows - 1 - r, o = Math.floor(v / 8), n = v % 8; return DEG8[n] + (n === 0 ? ["  ↓", "", "  ↑"][o] : ""); },
+  for (let o = 0; o < 3; o++) {                               // the three octaves as bands, a word for each
+    const y = 4 + (rows - 8 * (o + 1)) * RH;
+    if (o === 1) { g.fillStyle = "#15161b"; g.fillRect(56, y, W - 64, 8 * RH); }
+    g.fillStyle = "#6b6e78"; g.font = FONT(700, 8); g.fillText(["LOW", "MID", "HIGH"][o], 24, y + 8 * RH - 4);
+  }
+  const G = gridBase(g, W, RH, rows, (r) => { const v = rows - 1 - r, n = v % 8; return DEG8[n]; },
                      (r) => { const n = (rows - 1 - r) % 8; return n === 0 || n === 2 || n === 4 || n === 7; });
   playStep(g, G, live ? live.bsPos : -1);
-  const bs = Array.from(io.subarray(IO_BS, IO_BS + 16)).map(bsOf);
+  const bs = Array.from(heard || io.subarray(IO_BS, IO_BS + 16)).map(bsOf);
   let prev = null;
   bs.forEach((x, s) => {
-    if (x.kind < 1 || x.kind > 4) return;
+    if (x.kind < 1 || x.kind > 4) { prev = null; return; }
     const y = G.y0 + rowOf(x.note, Math.min(2, x.oct)) * RH, xx = G.x0 + s * G.cw, acc = x.kind === 2 || x.kind === 4;
-    if (x.kind >= 3 && prev) { g.strokeStyle = "#ffc2c3"; g.lineWidth = 2; g.beginPath(); g.moveTo(prev.x, prev.y); g.bezierCurveTo(prev.x + 10, prev.y, xx - 10, y + RH / 2, xx + 2, y + RH / 2); g.stroke(); }
-    g.fillStyle = acc ? COL.bass : "#c9454a"; g.fillRect(xx + 2, y + 1, G.cw - 4, RH - 2);
-    if (acc) { g.strokeStyle = "#ffc2c3"; g.lineWidth = 1.5; g.strokeRect(xx + 2, y + 1, G.cw - 4, RH - 2); }
-    g.fillStyle = COL.bg; g.font = FONT(700, 9); g.fillText(["", "", "ACC", "GLD", "A+G"][x.kind], xx + 4, y + RH - 3);
+    const on = live && live.playing && live.bsPos === s;
+    if (x.kind >= 3 && prev) { g.strokeStyle = "#ffc2c3"; g.globalAlpha = heard ? 0.6 : 1; g.lineWidth = 2; g.beginPath(); g.moveTo(prev.x, prev.y); g.bezierCurveTo(prev.x + 10, prev.y, xx - 10, y + RH / 2, xx + 2, y + RH / 2); g.stroke(); g.globalAlpha = 1; }
+    rblock(g, xx + 2, y + 1.5, G.cw - 4, RH - 3);
+    if (heard) { g.globalAlpha = acc ? 0.4 : 0.26; g.fillStyle = COL.bass; g.fill(); g.globalAlpha = 0.85; g.strokeStyle = COL.bass; g.lineWidth = 1; g.stroke(); g.globalAlpha = 1; }
+    else { g.fillStyle = acc ? COL.bass : "#c9454a"; g.fill(); if (acc) { g.strokeStyle = "#ffc2c3"; g.lineWidth = 1.5; g.stroke(); } }
+    if (on) { g.save(); g.shadowColor = COL.bass; g.shadowBlur = 12; g.fillStyle = "rgba(255,240,240,.75)"; g.fill(); g.restore(); }
+    if (G.cw > 34) { g.fillStyle = heard ? "#ffc2c3" : COL.bg; g.font = FONT(700, 9); g.fillText(["", "", "ACC", "GLD", "A+G"][x.kind], xx + 5, y + RH - 4); }
     prev = { x: xx + G.cw - 2, y: y + RH / 2 };
   });
-  $("edhelp").textContent = "Click a cell: a note on that step, that many scale steps above the chord's root (R, 2, 3 ...; the bright rows are the chord's tones). Click it again: accent, glide, accent + glide, then a rest. Right-click: a rest. " +
-    "The FM-1 plays these sixteen on every chord when the bass line's mode is Steps (an edit switches it to Steps).";
+  $("edhelp").textContent = "Click a cell: a note on that step, that many scale steps above the chord's root (R, 2, 3 ...; the bright rows are the chord's tones; LOW, MID, HIGH the octaves). Click it again: accent, glide, accent + glide, then a rest. Right-click: a rest. " +
+    "The FM-1 plays these sixteen on every chord when the bass line's mode is Steps (an edit switches it to Steps, starting from what it played).";
 }
 function clickBass(s, r, right) {
+  if (par("P_BL_MODE") !== BL_STEPS) { const l = bassLive(); if (l) io.set(l, IO_BS); }   // (from what it plays: see bassLive)
   const v = 23 - r, o = Math.floor(v / 8), n = v % 8, x = bsOf(io[IO_BS + s]);
   if (right) io[IO_BS + s] = 0;
   else if (x.kind >= 1 && x.kind <= 4 && x.note === n && Math.min(2, x.oct) === o) io[IO_BS + s] = x.kind === 4 ? 0 : bsMake(x.kind + 1, n, o);
@@ -996,7 +1067,8 @@ function edAcid(g, W, RH, rows) {
     g.fillStyle = x.oct === 1 ? "#555a66" : COL.acid; g.font = FONT(600, 10); g.fillText(["oct −", "oct", "oct +", "oct ++"][x.oct], xx + 3, G.y0 + rows * RH + 26);
     const y = G.y0 + (rows - 1 - x.off) * RH;
     if (prev && prev.slide) { g.strokeStyle = "#e4ffb0"; g.lineWidth = 2; g.beginPath(); g.moveTo(prev.x, prev.y); g.lineTo(xx + 2, y + RH / 2); g.stroke(); }
-    g.fillStyle = x.acc ? COL.acid : "#86b52a"; g.fillRect(xx + 2, y + 1, G.cw - 4, RH - 2);
+    rblock(g, xx + 2, y + 1.5, G.cw - 4, RH - 3); g.fillStyle = x.acc ? COL.acid : "#86b52a"; g.fill();
+    if (live && live.playing && live.acPos % 16 === s) { g.save(); g.shadowColor = COL.acid; g.shadowBlur = 12; g.fillStyle = "rgba(245,255,225,.7)"; g.fill(); g.restore(); }
     g.fillStyle = COL.bg; g.font = FONT(700, 9); g.fillText((x.acc ? "ACC " : "") + (x.slide ? "SL" : ""), xx + 4, y + RH - 3);
     prev = { x: xx + G.cw - 2, y: y + RH / 2, slide: x.slide };
   });
@@ -1028,7 +1100,8 @@ function edPluck(g, W, RH, rows) {
   ((laneState("pluck").tag === "DICE" && pluckLive()) || pluckGet()).forEach((x, s) => {
     if (!x.lvl) return;
     const y = G.y0 + (rows - 1 - x.rung) * RH, xx = G.x0 + s * G.cw;
-    g.globalAlpha = [0, 0.45, 0.75, 1][x.lvl]; g.fillStyle = COL.pluck; g.fillRect(xx + 2, y + 1, G.cw - 4, RH - 2); g.globalAlpha = 1;
+    rblock(g, xx + 2, y + 1.5, G.cw - 4, RH - 3); g.globalAlpha = [0, 0.45, 0.75, 1][x.lvl]; g.fillStyle = COL.pluck; g.fill(); g.globalAlpha = 1;
+    if (live && live.playing && live.cmPos % 16 === s) { g.save(); g.shadowColor = COL.pluck; g.shadowBlur = 12; g.fillStyle = "rgba(225,250,255,.7)"; g.fill(); g.restore(); }
     g.fillStyle = COL.bg; g.font = FONT(700, 9); g.fillText(["", "SOFT", "", "ACC"][x.lvl], xx + 4, y + RH - 3);
   });
   $("edhelp").textContent = "Click a cell: a note on that rung of the chord's ladder (rung 0 the root, then the chord's tones upwards; bright rows: the root's octaves). Again: accent, soft, then a rest. Right-click: a rest. " +
@@ -1421,8 +1494,17 @@ function codeDecode(text) {                                  // the code's genre
 async function codeNow() {                                   // the playing track's code, shown beside the position
   if (!node) return;
   const r = await ask({ type: "st_code_now" });
-  if (r.code) { $("tc").hidden = false; $("tc").textContent = "TRACK " + r.code; $("tc").title = r.ok ? "The code of the track playing: it gives this track exactly" : "The code of the track playing (its piece changed since: the code gives the track as it began)"; }
+  if (r.code) {
+    $("tc").hidden = false; $("tcCode").textContent = r.code; $("tc").classList.toggle("stale", !r.ok);
+    $("tc").title = (r.ok ? "The code of the track playing: it gives this track exactly" : "The code of the track playing (its piece changed since: the code gives the track as it began)") + ". Click: copy it";
+  }
 }
+$("tc").addEventListener("click", async () => {
+  const code = $("tcCode").textContent; if (!code) return;
+  try { await navigator.clipboard.writeText(code); } catch (_) { return say("Track code " + code + " (copy it from this line: the browser would not)."); }
+  $("tc").classList.add("done"); setTimeout(() => $("tc").classList.remove("done"), 900);
+  say("Track code " + code + " copied: File → Open a track code, or the FM-1's Code page, plays this track again.");
+});
 setInterval(() => { if (live && live.playing && !document.hidden) codeNow(); }, 4000);
 $("tcode").addEventListener("click", async () => {
   const t = prompt("A track code (nine letters, as the FM-1's Code page shows them):");
