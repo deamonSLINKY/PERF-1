@@ -10531,7 +10531,11 @@ void ui_frame(void)
                                                    * maker's TRANCE log had 62 in 14 minutes, in bursts of up to 10 in ten seconds, no dropout, and sat at level 2 (the DX at
                                                    * two voices, no chorus or resonator) 87 % of the time.) */
                 calm_t = now;
+#if defined(EN_DIAG) && EN_DIAG
+                if (0) {                         /* (0.17.64) the diagnostic builds never ease off: their runs compare the same work */
+#else
                 if (en_shed_level < 3 && now - step_t > (lost ? 4000u : 10000u)) {
+#endif
                     en_shed(en_shed_level + 1);
                     step_t = now;
                     win_n = 0;

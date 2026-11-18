@@ -4938,7 +4938,7 @@ void en_core2_attach(int (*submit)(void (*)(void *), void *), int (*join)(void),
     c2_alive = alive;
 }
 volatile uint8_t en_chorus_c0;                   /* the pad's chorus is run by the first core (set when it has time to spare and the other has not) */
-static int8_t bal_force = -1;                    /* tests: -1 as it decides, else the level */
+static int8_t bal_force = EN_DIAG ? 1 : -1;      /* tests: -1 as it decides, else the level (0.17.64: the diagnostic builds hold level 1, so their runs compare) */
 static uint8_t bal_lvl = 1;                      /* where the work runs: 1 the usual (the pad, its chorus, the reverb and the DX voices on the other core); 2 the drone and the acid on the other core as well (0, the chorus on the first core, is gone since 0.14.4) */
 static uint32_t bal_wait, bal_tot, bal_dwell, bal_block, bal_up_t, bal_back = 40u;
 static uint32_t bal_fr, bal_sum, bal_k, bal_hold, bal_ph, bal_c[2], bal_hmax = 4u;   /* (0.17.57) the A/B: frames summed, the costs of a phase, its windows, the hold, trying, each level's cost */               /* the first core's waiting for the other, and its chunks' time, in ticks since the last decision */
@@ -4959,6 +4959,12 @@ static void render_pad(uint32_t n);
 static void pad_publish(uint32_t w, uint32_t n);
 static void render_bass(uint32_t n);
 static void render_acid(uint32_t n);
+#if defined(EN_ACID_RAM) && EN_ACID_RAM && !defined(EN_HOST) && !defined(EN_WEB)
+static void (*volatile acid_fn)(uint32_t) = render_acid;   /* (0.17.64) the acid in RAM: called through a pointer (a call cannot reach RAM from the flash) */
+#define RENDER_ACID(n) acid_fn(n)
+#else
+#define RENDER_ACID(n) render_acid(n)
+#endif
 static void reverb_job(void *p)
 {
     const rv_job_t *c = (const rv_job_t *)p;
@@ -4993,7 +4999,7 @@ static void chunk_job(void *p)
      * pad first, the first core waited 80-390 us a chunk for the tank (0.14.4's log). */
     if (((const rv_job_t *)p)->bass) {
         render_bass((uint32_t)((const rv_job_t *)p)->n);
-        render_acid((uint32_t)((const rv_job_t *)p)->n);
+        RENDER_ACID((uint32_t)((const rv_job_t *)p)->n);
         if (c2_fence)
             c2_fence();
         stage2_done = 1;
@@ -8456,6 +8462,13 @@ static void render_cm(uint32_t n)
     en_cm_level = lvl;
 }
 
+#ifndef EN_ACID_RAM
+#define EN_ACID_RAM 0                            /* (0.17.64) 1: the acid's render in RAM (.ram_hot, copied at boot), to see whether the fixed cost a chunk is its
+                                                 * code fetched from the flash each chunk (an experiment: EN_ACID_RAM=1 at build) */
+#endif
+#if EN_ACID_RAM && !defined(EN_HOST) && !defined(EN_WEB)
+__attribute__((section(".ram_hot.acid"), noinline, flatten))   /* (flatten: its helpers inlined, a call from RAM cannot reach the flash) */
+#endif
 static void render_acid(uint32_t n)
 {
     const int ft_acid = fxs_v[EN_FXS_FT_ACID];
@@ -8474,7 +8487,8 @@ static void render_acid(uint32_t n)
     static float ac_wow, ac_sratio = 1.0f, ac_pw = 0.5f, ac_lz = 1.0f;   /* (0.17.62) the 32-sample values, kept across chunks as the count is: each chunk
                                                  * began at the defaults (Sync's ratio 1, the PWM's width 0.5, Laser's pitch, no Wow) until the next update,
                                                  * up to 31 samples a chunk (found by an outside review) */
-    float sqg = sqin + 2.0f * ac_wow;            /* this block's drive: Wow, an accent opening the resonance and the drive further */
+    float sqg = sqin + (sqw > 0.0f ? 2.0f * ac_wow : 0.0f);   /* this block's drive: Wow, an accent opening the resonance and the drive further (the held Wow
+                                                 * only while Wow is on: off takes effect at once) */
     static float ans_k = 1.0f;                   /* the answer's level (EN_FXS_AC_ANS), gliding over about 20 ms as the answer comes and goes */
     {
         const int al = fxs_v[EN_FXS_AC_ANS];
@@ -8491,7 +8505,9 @@ static void render_acid(uint32_t n)
     }
     for (j = 0; j < n; j++) {
         float x, y;
-        if (!(ac_ctl++ & 31u)) {                /* the cutoff: its knob, the envelope, an accent's push (every 32 samples, counted across chunks) */
+        if (!(ac_ctl++ & 31u) || acid.env >= 1.0f) {   /* the cutoff: its knob, the envelope, an accent's push (every 32 samples, counted across chunks;
+                                                 * 0.17.64: and at once on a new note, whose envelope is 1 until this first update: it waited up to 31
+                                                 * samples with the last note's values) */
             float oct = base + acut_was + (lfo_acut - acut_was) * (float)j * inv_n + envmod * acid.env * (1.0f + accamt * acid.acc) + 1.2f * accamt * acid.acc * acid.env;   /* (0.17.44: the LFO gliding across the chunk from its last value: a fast one stepped, a zipper) */
             float fc = fm_clampf(60.0f * fm_exp2f(oct), 50.0f, 14000.0f);
             const float wow = sqw * acid.acc * acid.env;
@@ -9293,7 +9309,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     if (!rv_job.bass) {                         /* the drone and the acid here (else the other core's: merged after the drums) */
         render_bass(n);
         DT(0);
-        render_acid(n);
+        RENDER_ACID(n);
         DT(1);
     }
     PT(1);                                      /* bass, acid */
@@ -9786,7 +9802,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         uint32_t k = n > BLK ? BLK : n;
         int timed = en_playing && !en_ext;
         if (timed) {                             /* (0.17.62) only the step's pulse cuts the chunk (its notes land on their sample). The five between are
-                                                 * the MIDI clock out alone, so one sounds at the nearer chunk edge, up to EN_MIN_CHUNK early or late
+                                                 * the MIDI clock out alone, so one goes at a chunk edge: at a chunk's start if due within EN_MIN_CHUNK of it, else at the next chunk's start, at most EN_MIN_CHUNK early or late
                                                  * (2.9 ms; the grid does not drift, and a follower steps on the step's pulse, which stays exact).
                                                  * The maker's TRANCE 01 logs: half the chunks were cut short, mostly by these pulses, and every chunk
                                                  * costs the first core 0.8-1.3 ms whatever its length. */
