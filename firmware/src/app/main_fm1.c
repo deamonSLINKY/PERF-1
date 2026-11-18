@@ -745,8 +745,8 @@ static void tel_service(void)
         w[34] = batt_raw;                           /* the battery divider's reading (0xFFFFFFFF: none yet) */
         w[35] = stk_used(STK_W(_ustack_lo), STK_W(_ustack_top));   /* the stacks' deepest (bytes): main, interrupts, CPU1's user and supervisor */
         w[36] = stk_used(STK_W(_sstack_lo), STK_W(_sstack_top));
-        w[37] = stk_used(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 4096));
-        w[38] = stk_used(STK_W(_cpu1_stacks_lo + 4096), STK_W(_cpu1_stacks_lo + 8192));
+        w[37] = stk_used(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 3072));   /* (0.17.68: 3 KB and 1 KB, app.ld) */
+        w[38] = stk_used(STK_W(_cpu1_stacks_lo + 3072), STK_W(_cpu1_stacks_lo + 4096));
         w[39] = ui.min_last;                        /* MIDI in's last message, a USB-MIDI packet (0.16.6; the drums tapped: the second frame) */
         tel_isr_in = tel_isr_out = 0;
         f[0] = 0xF0, f[1] = 0x7D, f[2] = 0x50, f[3] = 0x46;
@@ -997,7 +997,7 @@ void fm1_cstart(void)
     fm1_mailbox_clear();
     stk_paint(STK_W(_ustack_lo), STK_W(_ustack_top));   /* (CPU1 is held: its stacks are free to paint) */
     stk_paint(STK_W(_sstack_lo), STK_W(_sstack_top));
-    stk_paint(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 8192));
+    stk_paint(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 4096));
 #if EN_CORE2
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS);
     /* One core after a crash (CPU1's data can go bad where no check reaches), in safe mode, or after CPU1

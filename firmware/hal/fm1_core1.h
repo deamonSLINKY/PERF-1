@@ -185,8 +185,8 @@ __attribute__((section(".dsp_text"), noinline, noreturn, used)) static void fm1_
     }
 }
 
-/* two 4 KB stacks (user, supervisor): the pad's voices call a few levels deep */
-static uint32_t cpu1_stacks[2048] __attribute__((section(".cpu1_stacks"), aligned(32), used));
+/* two stacks (user 3 KB, supervisor 1 KB; 4 KB each until 0.17.68, when the logs' deepest were 644 B and none): the pad's voices call a few levels deep */
+static uint32_t cpu1_stacks[1024] __attribute__((section(".cpu1_stacks"), aligned(32), used));
 extern void fm1_core1_start(void);
 extern uint8_t _cpu1_stacks_lo[], _cpu1_stacks_hi[];
 /* Assembly (crt0.S) names this symbol. */

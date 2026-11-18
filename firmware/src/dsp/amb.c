@@ -4966,6 +4966,16 @@ static void render_acid(uint32_t n);
                                                  * (its code fetched from the flash every chunk) gone. Flattened (no calls) and called through a pointer:
                                                  * a pi32v2 call cannot reach between the flash and RAM. RAMTEXT has about 512 B left after it. */
 #endif
+#ifndef EN_BASS_RAM
+#define EN_BASS_RAM 1                            /* (0.17.68) the bass's render in RAM too, as the acid's (its fixed cost a chunk on the unit: about 230-250 us
+                                                 * of its 650-690); EN_BASS_RAM=0 at build: from the flash */
+#endif
+#if EN_BASS_RAM && !defined(EN_HOST) && !defined(EN_WEB)
+static void (*volatile bass_fn)(uint32_t) = render_bass;   /* (called through a pointer, as the acid) */
+#define RENDER_BASS(n) bass_fn(n)
+#else
+#define RENDER_BASS(n) render_bass(n)
+#endif
 #if EN_ACID_RAM && !defined(EN_HOST) && !defined(EN_WEB)
 static void (*volatile acid_fn)(uint32_t) = render_acid;   /* (0.17.64) the acid in RAM: called through a pointer (a call cannot reach RAM from the flash) */
 #define RENDER_ACID(n) acid_fn(n)
@@ -5005,7 +5015,7 @@ static void chunk_job(void *p)
      * the chunk), then the tank (wanted before the master, about 3 ms in), then the pad and the DX voices, which are both for the next chunk. With the
      * pad first, the first core waited 80-390 us a chunk for the tank (0.14.4's log). */
     if (((const rv_job_t *)p)->bass) {
-        render_bass((uint32_t)((const rv_job_t *)p)->n);
+        RENDER_BASS((uint32_t)((const rv_job_t *)p)->n);
         RENDER_ACID((uint32_t)((const rv_job_t *)p)->n);
         if (c2_fence)
             c2_fence();
@@ -8051,6 +8061,9 @@ static void render_pad(uint32_t n)
 /* (0.14.4 tried this in RAM, .ram_hot: on the device the bass costs about 200 us a chunk whatever the chunk's length, the most of any stage, which
  * looks like its code fetched cold from the flash each chunk. It makes 43 calls out to helpers the compiler keeps in the flash, and a pi32v2 call
  * cannot reach the flash from RAM (R_PI32V2_LONG_JUMP_23M2 truncated), so it needs those helpers inlined or in RAM with it first.) */
+#if EN_BASS_RAM && !defined(EN_HOST) && !defined(EN_WEB)
+__attribute__((section(".ram_hot.bass"), noinline, flatten))   /* (0.17.68: in RAM, its helpers inlined) */
+#endif
 static void render_bass(uint32_t n)
 {
     const int ft_bass = fxs_v[EN_FXS_FT_BASS];
@@ -9310,7 +9323,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     PT(0);                                      /* the clear, the job's start */
     DT0();
     if (!rv_job.bass) {                         /* the drone and the acid here (else the other core's: merged after the drums) */
-        render_bass(n);
+        RENDER_BASS(n);
         DT(0);
         RENDER_ACID(n);
         DT(1);

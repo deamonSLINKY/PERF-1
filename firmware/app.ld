@@ -6,7 +6,8 @@
  * ends below the commit marker's sector (flash 0x91000). 0x01C7C000..0x01C7C01F belongs to the stub (its rescue
  * word and mailbox, across warm resets): NOINIT starts after it.
  * 0x01C00000..0x01C06000 holds .ram_text (code that must run while the flash
- * is busy: the flash driver), .dsp_text (CPU1's worker loop) and CPU1's two small stacks; 0x01C06000..0x01C08000 stays for RAM-run debug.
+ * is busy: the flash driver), .dsp_text (CPU1's worker loop), .ram_hot (the timer ISR, the acid's and the bass's renders) and CPU1's two small
+ * stacks, up to 0x01C07F00 (0.17.68: the old RAM-run debug window; the stub keeps the SPL's STATUS at 0x01C07F00..).
  * RAM  : .data/.bss (96 KiB)
  * POOL : big zero-initialised buffers (FX lines, canvases), section .pool
  * STACKS with 256-byte guard bands; NOINIT survives resets and UBOOT entry.
@@ -14,7 +15,7 @@
 MEMORY
 {
     XIP    (rx)  : ORIGIN = 0x02001000, LENGTH = 0x8C000
-    RAMTEXT (rwx): ORIGIN = 0x01C00000, LENGTH = 0x6000
+    RAMTEXT (rwx): ORIGIN = 0x01C00000, LENGTH = 0x7F00   /* (0.17.68: into the old RAM-run debug window, up to the stub's STATUS at 0x01C07F00) */
     RAM    (rwx) : ORIGIN = 0x01C08000, LENGTH = 96K
     POOL   (rw)  : ORIGIN = 0x01C20000, LENGTH = 0x54000
     NOINIT (rw)  : ORIGIN = 0x01C7C020, LENGTH = 0x3D30
@@ -32,9 +33,9 @@ SECTIONS
     _rh_load = LOADADDR(.ram_hot);
     _guard_ram_end = _rh_end;
     .cpu1_stacks (NOLOAD) : { . = ALIGN(32); _cpu1_stacks_lo = .; KEEP(*(.cpu1_stacks)) _cpu1_stacks_hi = .; } > RAMTEXT
-    _cpu1_ustack_top = _cpu1_stacks_lo + 4096;
-    _cpu1_sstack_top = _cpu1_stacks_lo + 8192;
-    ASSERT(_cpu1_stacks_hi <= 0x01C06000, "RAM code and CPU1 stacks overflow RAMTEXT")
+    _cpu1_ustack_top = _cpu1_stacks_lo + 3072;   /* (0.17.68: 3 KB and 1 KB, from 4 and 4: the logs' deepest were 644 B and none) */
+    _cpu1_sstack_top = _cpu1_stacks_lo + 4096;
+    ASSERT(_cpu1_stacks_hi <= 0x01C07F00, "RAM code and CPU1 stacks overflow RAMTEXT (the stub's STATUS is at 0x01C07F00)")
     .data : { . = ALIGN(4); _data_start = .; *(.data*) *(.sdata*) . = ALIGN(4); _data_end = .; } > RAM AT > XIP
     _data_load = LOADADDR(.data);
     .bss (NOLOAD) : { _bss_start = .; *(.bss*) *(.sbss*) *(COMMON) . = ALIGN(4); _bss_end = .; } > RAM
