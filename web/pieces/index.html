@@ -34,7 +34,7 @@
   a { color: var(--ink); text-decoration-color: var(--purple); text-decoration-thickness: 2px; text-underline-offset: 3px; }
   a:hover { color: var(--purple-2); }
   button, a.btn { font-size: .95rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; background: var(--purple); color: #fff; text-decoration: none;
-           border: 1px solid var(--purple-2); border-radius: 8px; padding: .5em 1.2em; cursor: pointer; margin: 0 .4em .4em 0; display: inline-block; }
+           border: 1px solid var(--purple-2); border-radius: 2px; padding: .5em 1.2em; cursor: pointer; margin: 0 .4em .4em 0; display: inline-block; }
   button:hover:not(:disabled), a.btn:hover { background: var(--orange); border-color: var(--orange); color: #1a0c03; }
   button.alt { background: var(--card-2); border-color: var(--rule); color: var(--ink); }
   button.alt:hover:not(:disabled) { background: var(--rust); border-color: var(--purple); color: #fff; }
@@ -45,7 +45,7 @@
   progress { width: 100%; height: 6px; accent-color: var(--orange); }
   progress[value="0"] { visibility: hidden; }
   input[type=file] { font: inherit; font-size: 14px; color: var(--muted); max-width: 100%; }
-  input[type=text], input[type=search], textarea, select { font: inherit; font-size: 16px; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 6px;
+  input[type=text], input[type=search], textarea, select { font: inherit; font-size: 16px; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); border-radius: 2px;
            padding: .35em .6em; width: 100%; }
   textarea { font: 13px/1.4 ui-monospace, Consolas, monospace; min-height: 4.5em; resize: vertical; word-break: break-all; }
   select { width: auto; }
@@ -58,25 +58,25 @@
   .site nav a[aria-current] { text-decoration: none; color: var(--purple-2); }
   .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 1.2rem; border-bottom: 1px solid var(--rule); }
   .tabs a { font-weight: 700; letter-spacing: .07em; text-transform: uppercase; text-decoration: none; padding: .55em 1.1em; border: 1px solid transparent;
-            border-bottom: none; border-radius: 8px 8px 0 0; color: var(--muted); margin-bottom: -1px; }
+            border-bottom: none; border-radius: 2px 8px 0 0; color: var(--muted); margin-bottom: -1px; }
   .tabs a[aria-selected="true"] { color: var(--orange); background: var(--card); border-color: var(--rule); }
   .tabs a .n { color: var(--purple-2); font-size: .85em; margin-left: .3em; }
-  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px 18px; margin: 0 0 1rem; }
+  .card { background: var(--card); border: 1px solid var(--rule); border-radius: 2px; padding: 16px 18px; margin: 0 0 1rem; }
   .card.hot { border-color: var(--orange); }
   .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 1rem; }
   .bar input { flex: 1; min-width: 180px; width: auto; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-  .item { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; }
+  .item { background: var(--card); border: 1px solid var(--rule); border-radius: 2px; padding: 12px; display: flex; flex-direction: column; }
   .item.mine { border-color: var(--orange); }
-  .item canvas { width: 100%; height: auto; border-radius: 6px; margin: 0 0 10px; }
+  .item canvas { width: 100%; height: auto; border-radius: 2px; margin: 0 0 10px; }
   .item .tag { font-weight: 700; color: var(--horn); letter-spacing: .03em; }
   .pick { font: 700 .72rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: #1a0c03; background: var(--orange); border-radius: 4px; padding: .05em .45em; margin-left: .5em; vertical-align: 2px; }
   .item .title { color: var(--orange); }
   .item .sub { color: var(--muted); font-size: 14px; }
   .item .note { font-size: 15px; white-space: pre-wrap; margin: .3em 0 .6em; }
   .item .acts { margin-top: auto; padding-top: .4em; }
-  .empty { text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--rule); border-radius: 10px; grid-column: 1 / -1; }
-  #mine { max-height: 380px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--ground); }
+  .empty { text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--rule); border-radius: 2px; grid-column: 1 / -1; }
+  #mine { max-height: 380px; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--rule); border-radius: 2px; background: var(--ground); }
   #mine:empty { display: none; }
   #mine label { display: flex; gap: .7em; align-items: baseline; padding: 4px 12px; cursor: pointer; }
   #mine label:nth-child(odd) { background: rgba(255,255,255,.03); }
@@ -89,19 +89,45 @@
   .info .title { font-size: 1.15rem; color: var(--orange); }
   .info .note { white-space: pre-wrap; }
   .info ol { margin: .3em 0 0; padding-left: 1.6em; color: var(--muted); font-size: 15px; }
-  canvas.card-img { width: 100%; max-width: 600px; height: auto; border-radius: 8px; border: 1px solid var(--rule); display: block; margin: 0 0 12px; }
-  dialog { background: var(--card); color: var(--ink); border: 1px solid var(--orange); border-radius: 10px; max-width: 520px; padding: 18px 20px; }
+  canvas.card-img { width: 100%; max-width: 600px; height: auto; border-radius: 2px; border: 1px solid var(--rule); display: block; margin: 0 0 12px; }
+  dialog { background: var(--card); color: var(--ink); border: 1px solid var(--orange); border-radius: 2px; max-width: 520px; padding: 18px 20px; }
   dialog::backdrop { background: rgba(10, 4, 6, .7); }
   dialog h3 { font: 700 1.1rem "Chakra Petch", sans-serif; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 .6rem; color: var(--orange); }
   #dlgp { white-space: pre-wrap; }
   [hidden] { display: none !important; }
   @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--ground); } }   /* (1.0 palette: the violet frame's glow) */
+
+  /* (1.0) the banner: the maker's festival picture, PERF-1 in the boot card's letters, the lights pulsing at 128 BPM */
+  .hero { position: relative; height: clamp(220px, 27vw, 400px); margin: 0 0 1.6rem; overflow: hidden; border-radius: 2px;
+          background: #05070f 50% 60% / cover no-repeat; image-rendering: pixelated; border: 1px solid #2c3766; border-top-color: #5a47c8;
+          box-shadow: 0 0 0 1px #05070f, 0 14px 44px rgba(114,83,230,.28), inset 0 1px 0 rgba(165,139,255,.3);
+          display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: clamp(14px, 3vw, 34px); gap: .5rem; }
+  .hero.slim { height: clamp(130px, 13vw, 190px); padding-top: clamp(10px, 1.6vw, 20px); background-position: 50% 42%; }
+  .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+                  background: radial-gradient(55% 60% at 50% 30%, rgba(255,110,220,.42), transparent 70%),
+                              radial-gradient(30% 50% at 12% 20%, rgba(80,200,255,.30), transparent 70%),
+                              radial-gradient(30% 50% at 88% 20%, rgba(80,200,255,.30), transparent 70%);
+                  animation: hero-pulse .46875s ease-out infinite; }
+  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+                 background: linear-gradient(rgba(5,7,15,.55), transparent 38%, transparent 70%, rgba(11,16,34,.75)); }
+  @keyframes hero-pulse { 0% { opacity: 1; } 55%, 100% { opacity: .2; } }
+  .hero .mark { position: relative; z-index: 1; height: clamp(46px, 7.5vw, 104px); width: auto; filter: drop-shadow(0 0 14px rgba(165,139,255,.55)); }
+  .hero.slim .mark { height: clamp(34px, 4.2vw, 58px); }
+  .hero .tagline { position: relative; z-index: 1; font: 600 clamp(11px, 1.1vw, 15px) "Chakra Petch", sans-serif; letter-spacing: .32em;
+                   color: #f2efe6; text-shadow: 0 0 10px rgba(114,83,230,.9), 0 1px 0 #05070f; }
+  @media (prefers-reduced-motion: reduce) { .hero::before { animation: none; opacity: .5; } }
+  @media print { .hero { display: none; } }
+  /* (1.0) hard metal: sharp corners, a lit top edge, a dark outer line */
+  .card { border-radius: 2px; background: linear-gradient(180deg, #151f3e, #0f1630); border-color: #2c3766; border-top-color: #3d4a8a;
+          box-shadow: inset 0 1px 0 rgba(165,139,255,.10), 0 0 0 1px #05070f, 0 6px 18px rgba(0,0,0,.35); }
+  button { border-radius: 2px; }
 </style>
 </head>
 <body>
 <main>
   <p class="kofi" style="margin:0 0 .5rem;text-align:right;font-size:.88rem"><a href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener">☕ Buy me a coffee</a></p>
   <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Library &amp; pieces</a><a href="../install/">Install</a><a href="../manual/">Manual</a></nav></header>
+<div class="hero slim" style="background-image:url(../img/banner.png)"><svg class="mark" viewBox="0 0 36 8" role="img" aria-label="PERF-1" shape-rendering="crispEdges"><g fill="#ffb000"><rect x="0.5" y="0.5" width="1" height="1"/><rect x="1.5" y="0.5" width="1" height="1"/><rect x="2.5" y="0.5" width="1" height="1"/><rect x="3.5" y="0.5" width="1" height="1"/><rect x="0.5" y="1.5" width="1" height="1"/><rect x="4.5" y="1.5" width="1" height="1"/><rect x="0.5" y="2.5" width="1" height="1"/><rect x="4.5" y="2.5" width="1" height="1"/><rect x="0.5" y="3.5" width="1" height="1"/><rect x="1.5" y="3.5" width="1" height="1"/><rect x="2.5" y="3.5" width="1" height="1"/><rect x="3.5" y="3.5" width="1" height="1"/><rect x="0.5" y="4.5" width="1" height="1"/><rect x="0.5" y="5.5" width="1" height="1"/><rect x="0.5" y="6.5" width="1" height="1"/><rect x="6.5" y="0.5" width="1" height="1"/><rect x="7.5" y="0.5" width="1" height="1"/><rect x="8.5" y="0.5" width="1" height="1"/><rect x="9.5" y="0.5" width="1" height="1"/><rect x="10.5" y="0.5" width="1" height="1"/><rect x="6.5" y="1.5" width="1" height="1"/><rect x="6.5" y="2.5" width="1" height="1"/><rect x="6.5" y="3.5" width="1" height="1"/><rect x="7.5" y="3.5" width="1" height="1"/><rect x="8.5" y="3.5" width="1" height="1"/><rect x="9.5" y="3.5" width="1" height="1"/><rect x="6.5" y="4.5" width="1" height="1"/><rect x="6.5" y="5.5" width="1" height="1"/><rect x="6.5" y="6.5" width="1" height="1"/><rect x="7.5" y="6.5" width="1" height="1"/><rect x="8.5" y="6.5" width="1" height="1"/><rect x="9.5" y="6.5" width="1" height="1"/><rect x="10.5" y="6.5" width="1" height="1"/><rect x="12.5" y="0.5" width="1" height="1"/><rect x="13.5" y="0.5" width="1" height="1"/><rect x="14.5" y="0.5" width="1" height="1"/><rect x="15.5" y="0.5" width="1" height="1"/><rect x="12.5" y="1.5" width="1" height="1"/><rect x="16.5" y="1.5" width="1" height="1"/><rect x="12.5" y="2.5" width="1" height="1"/><rect x="16.5" y="2.5" width="1" height="1"/><rect x="12.5" y="3.5" width="1" height="1"/><rect x="13.5" y="3.5" width="1" height="1"/><rect x="14.5" y="3.5" width="1" height="1"/><rect x="15.5" y="3.5" width="1" height="1"/><rect x="12.5" y="4.5" width="1" height="1"/><rect x="14.5" y="4.5" width="1" height="1"/><rect x="12.5" y="5.5" width="1" height="1"/><rect x="15.5" y="5.5" width="1" height="1"/><rect x="12.5" y="6.5" width="1" height="1"/><rect x="16.5" y="6.5" width="1" height="1"/><rect x="18.5" y="0.5" width="1" height="1"/><rect x="19.5" y="0.5" width="1" height="1"/><rect x="20.5" y="0.5" width="1" height="1"/><rect x="21.5" y="0.5" width="1" height="1"/><rect x="22.5" y="0.5" width="1" height="1"/><rect x="18.5" y="1.5" width="1" height="1"/><rect x="18.5" y="2.5" width="1" height="1"/><rect x="18.5" y="3.5" width="1" height="1"/><rect x="19.5" y="3.5" width="1" height="1"/><rect x="20.5" y="3.5" width="1" height="1"/><rect x="21.5" y="3.5" width="1" height="1"/><rect x="18.5" y="4.5" width="1" height="1"/><rect x="18.5" y="5.5" width="1" height="1"/><rect x="18.5" y="6.5" width="1" height="1"/><rect x="25.5" y="3.5" width="1" height="1"/><rect x="26.5" y="3.5" width="1" height="1"/><rect x="27.5" y="3.5" width="1" height="1"/><rect x="32.5" y="0.5" width="1" height="1"/><rect x="31.5" y="1.5" width="1" height="1"/><rect x="32.5" y="1.5" width="1" height="1"/><rect x="32.5" y="2.5" width="1" height="1"/><rect x="32.5" y="3.5" width="1" height="1"/><rect x="32.5" y="4.5" width="1" height="1"/><rect x="32.5" y="5.5" width="1" height="1"/><rect x="31.5" y="6.5" width="1" height="1"/><rect x="32.5" y="6.5" width="1" height="1"/><rect x="33.5" y="6.5" width="1" height="1"/></g><g fill="#a58bff"><rect x="0" y="0" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="9" y="0" width="1" height="1"/><rect x="10" y="0" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="9" y="3" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="9" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="0" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="14" y="0" width="1" height="1"/><rect x="15" y="0" width="1" height="1"/><rect x="12" y="1" width="1" height="1"/><rect x="16" y="1" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="16" y="2" width="1" height="1"/><rect x="12" y="3" width="1" height="1"/><rect x="13" y="3" width="1" height="1"/><rect x="14" y="3" width="1" height="1"/><rect x="15" y="3" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="14" y="4" width="1" height="1"/><rect x="12" y="5" width="1" height="1"/><rect x="15" y="5" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="0" width="1" height="1"/><rect x="19" y="0" width="1" height="1"/><rect x="20" y="0" width="1" height="1"/><rect x="21" y="0" width="1" height="1"/><rect x="22" y="0" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/><rect x="18" y="2" width="1" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="19" y="3" width="1" height="1"/><rect x="20" y="3" width="1" height="1"/><rect x="21" y="3" width="1" height="1"/><rect x="18" y="4" width="1" height="1"/><rect x="18" y="5" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="25" y="3" width="1" height="1"/><rect x="26" y="3" width="1" height="1"/><rect x="27" y="3" width="1" height="1"/><rect x="32" y="0" width="1" height="1"/><rect x="31" y="1" width="1" height="1"/><rect x="32" y="1" width="1" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="31" y="6" width="1" height="1"/><rect x="32" y="6" width="1" height="1"/><rect x="33" y="6" width="1" height="1"/></g></svg><span class="tagline">GENERATIVE &nbsp;//&nbsp; LIVE &nbsp;//&nbsp; FM-1</span></div>
   <h1>Library &amp; pieces</h1>
   <nav class="tabs" role="tablist">
     <a href="#library" id="t-library" role="tab">Library<span class="n" id="libn"></span></a>
