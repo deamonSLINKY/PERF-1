@@ -1,4 +1,4 @@
-<!-- footer: PERF-1 quick manual · 0.17, 7 November 2026 · full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
+<!-- footer: PERF-1 quick manual · 1.0, November 2026 · full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
 
 # PERF-1 quick manual
 
@@ -36,7 +36,7 @@
 | **LFO** | Bass; again Bass env, Bass LFO, Bass line, Bass steps, Bass answer. | | |
 | **ARP** | Acid; again Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. | | |
 | **EDIT** | The next chord, on the next bar. | 0.4 s: the Progression page. | Stopped: starts the music by itself. |
-| **GLO** | Global (Root, Theme, Tune, Genre). SAVE here stores the piece. | 0.4 s: the mix map, the load meter. | Remote: the FM-1 plays the emulator. |
+| **GLO** | Global (Root, Theme, Tune, Genre). SAVE here stores the piece. | 0.4 s: the mix map (the load shows after a dropout). | Remote: the FM-1 plays the emulator. |
 | **HOME** | Tempo page; again Perform; again Tempo. Twice quickly: visualizers. Leaves the FX menu. | 0.7 s: the settings. | |
 | **SAVE** | Breakdown on the next bar; again a build, then the drop. On Global: store. | 0.5 s: the drop. | On Global, 1.5 s: back to factory. |
 | **SEQ** | Drums; again Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. In the sequencer: back to Drums. | 0.4 s: the sequencer. | The links on and off. |
@@ -87,7 +87,7 @@
 | Comp/Limit | dial | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
 | Mixer | dial | Track (pad .. drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
 | Global | GLO | Root | Theme (7) | Tune (+-50 cents) | Genre (the bank) |
-| Set list | GLO x2 | Slot (1-16, a white key) | Genre (on empty: the piece playing) | Piece | Play: PRESETS, auto-DJ go through it |
+| Set list | GLO x2 | Slot (1-16, a white key) | Piece (every genre's, or Empty) | Bars (Auto, 4-128) | Play (off, loop, once) |
 | Code | GLO x3 | Place | Letter | Roll (a new code; PLAY starts it) | - |
 | Jam | dial | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Sound (that voice's) |
 
@@ -189,8 +189,8 @@
 
 <div class="cols">
 
-- **Breakdown: tap SAVE.** In the bar before, the percussion, open hat and half the hats drop out. On the next bar the drums stop (house, techno, dubstep and dub keep the kick; DnB the hats), the mix darkens, the bass closes and the pad rises, for as long as you like.
-- **Build: tap SAVE again.** A snare roll climbs as the bass opens, for four bars (two in trap, lofi and trip-hop; eight in house). In the last bar the open hat plays every eighth and, in the four-on-the-floor genres, the kick comes back. Then the drop. The header counts `DROP 3`.
+- **Breakdown: tap SAVE.** In the bar before, the percussion, open hat and half the hats drop out. On the next bar the drums stop (house, techno and dub keep the kick; DnB and industrial the hats; breaks and funk the drums), the mix darkens, the bass closes and the pad rises, for as long as you like.
+- **Build: tap SAVE again.** A snare roll climbs as the bass opens, for four bars (two in lofi, trip-hop, hip-hop and ambient; eight in house, dubstep, DnB, psy and trance). In the last bar the open hat plays every eighth and, in the four-on-the-floor genres, the kick comes back. Then the drop. The header counts `DROP 3`.
 - **Drop: hold SAVE** (0.5 s). Everything is back on the next bar with a ringing crash, mostly on the home chord. SAVE is lit in a breakdown or build and blinks while it waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on until you press REC again. **Next chord: EDIT**, on the next bar.
 - **The scale: the keys on Global** (elsewhere they play a voice). Each adds or removes its note; the root stays. **ALGORITHM** there (and on Chords) picks a mode (Aeolian is plain minor, Dorian a brighter minor, Phrygian a darker one, Mixolydian major with a flat 7th; also Locrian, harmonic and melodic minor, Phrygian dominant, Hungarian minor, double harmonic). Root is on Global.
@@ -226,7 +226,7 @@ Hold **GLO** (0.4 s), or use the keys on Perform or a visualizer with FX closed.
 
 GLO + `F5` runs breakdowns and drops for you (`DJ` in the header). On the bar it plays (1) a **groove** of 8, 16, 32 or 64 bars (16 by default); (2) a **drum fill** as its last bar, if Fill is on; (3) a **breakdown**: short (4 bars), half the groove (at least 4; the default) or full; (4) a **build** of the genre's length, the riser rising and two sixteenths of silence at the end, then the **drop**; (5) the groove again. The header counts `BREAK IN 4`, then `BREAK 2`. Groove on **Sync** (its fifth setting) lasts until the chord changes (Drift sets when): the bar before is a fill, the breakdown starts with the new chord. **DJ new pieces** (GLO + `G5`) brings in the bank's next piece on the fill's bar, so the breakdown and drop are its own. SAVE by hand just moves the DJ on.
 
-The **SET** settings page (after USB & MIDI): **Rounds** a piece plays before the next (1, 2, 4, 8; `R2/4` in the header). **Ramp**: the tempo climbs +2 to +12 BPM over a piece's rounds. **Intro**: after PLAY the tracks come in one by one over 1, 2, 4 or 8 minutes, pad first, acid last; `INTRO 1:42` counts down and the DJ waits. **Break**: a piece you start or turn to begins in its breakdown (SAVE brings it in). The **Auto DJ** settings page: Scenes (at once, next bar), Groove (8, 16, 32, 64, sync), Break (short, half, full), Fill (off, on).
+The **SET** settings page (after Auto FX): **Rounds** a piece plays before the next (1, 2, 4, 8; `R2/4` in the header). **Ramp**: the tempo climbs +2 to +12 BPM over a piece's rounds. **Intro**: after PLAY the tracks come in one by one over 1, 2, 4 or 8 minutes, pad first, acid last; `INTRO 1:42` counts down and the DJ waits. **Break**: a piece you start or turn to begins in its breakdown (SAVE brings it in). The **Auto DJ** settings page: Scenes (at once, next bar), Groove (8, 16, 32, 64, sync), Break (short, half, full), Fill (off, on).
 
 ### Mood
 
@@ -238,7 +238,7 @@ Want the drums to change by themselves? **Change**: off, the next pattern, or a 
 
 ### What the screen says
 
-**Top left:** the piece's tag (`01` HYPNO, `L03` lofi ..; a dot after it means unstored changes), the root and the mode. **Top right:** the mascot, the tempo (`EXT` on an outside clock; a play triangle while stopped), then the marks: **BREAK**, **BUILD** (with `>`: waiting for the bar; `DROP 3`: bars to the drop), **KNOB** (an FX knob off home), **KEY** (the drop's key change is on), **S1>** (a scene waiting), **DJ**, **FX** (effects latched, menu closed), a small dot (a save to memory waiting).
+**Top left:** the piece's tag (`01` HYPNO, `L03` lofi ..; a dot after it means unstored changes), the root and the mode. **Top right:** the tempo (`EXT` on an outside clock; a play triangle while stopped; the imp hops in on a drop, break or build), then the marks: **BREAK**, **BUILD** (with `>`: waiting for the bar; `DROP 3`: bars to the drop), **KNOB** (an FX knob off home), **KEY** (the drop's key change is on), **S1>** (a scene waiting), **DJ**, **FX** (effects latched, menu closed), a small dot (a save to memory waiting).
 
 **Under it:** the chord (an arrow and the next root when one is coming; `HELD` while frozen) and the section, GROOVE, BREAK or BUILD, over a bar filling towards the next chord. **The strips:** pad, bass, acid, pluck and drums, each with the bar's coming notes falling to a line (the pad: its chord), a meter and its sound; a voice's own pages open its strip wide. **Above the knobs:** the page and the voice's sound, `BY HAND`, `+LINK` or `LINKS OFF`, the octave when it isn't home, then a tab for each group of pages. On a change of page the header says where you are: `DRUMS  PHRASE 8/8`.
 
@@ -291,7 +291,7 @@ Drum hits push the other voices, 0 to 100 each; **SEL + SEQ** turns them all on 
 
 ### The kits (SEQ x3)
 
-Each knob picks one drum's sound from the same twenty-three kits (new: Boom, Ride, Snap, 606, Gabber, Linn, Shaker; and two sampled, Machine and Boombap), then three slots for your own sample kits, loaded from the installer page (Your own sample kits): Kick, Snare (and clap), Hats (closed and open), Perc. **SEL + ALGORITHM** on any drums page turns all four to the next kit. Mix them freely.
+Each knob picks one drum's sound from the same twenty-three kits (the first fourteen below; then Boom, Ride, Snap, 606, Gabber, Linn, Shaker, and the sampled Machine and Boombap), then three slots for your own sample kits, loaded from the installer page (Your own sample kits): Kick, Snare (and clap), Hats (closed and open), Perc. **SEL + ALGORITHM** on any drums page turns all four to the next kit. Mix them freely.
 
 | Kit | The kick | The rest |
 |---|---|---|
@@ -334,7 +334,7 @@ The counter-melody: two plucked voices taking turns, an arpeggio of the chord on
 
 **Deja vu** (ARP x8) makes the pluck remember its last 4, 8, 16 or 32 notes (**Loop**). **Pluck vu** is the chance a note coming round is the same as last time (0 all new, 100 locked); a locked phrase still follows the chord. **Leaps**: how often a new note jumps an octave. **Motif**: the first bar of each eight-bar phrase is the idea, and the bars after develop it (moved up or down, turned upside down now and then, a new ending, back in the fifth bar). 60 by default; 0 makes up every bar fresh. Changing Loop, or a new piece, forgets the loop.
 
-**Sounds:** 12 plain (Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass), then 30 built-in DX7 voices on a six-voice, six-operator FM synth like the Yamaha DX7 (all 32 algorithms, envelopes, scaling, velocity, LFO, pitch envelope, feedback): made by people and shown under their banks' names after `DX`: DX MF EPRHOD1, WINEGLASS, SMOOTHBASS, FULL-BRASS, EASY DXPAD, FLUTEMRMBA, DRAWBARS, GITARA AKU, ROLAND BRS, SOLID BASS, TEMPLEBELL, MARIMBA, CLAVINET, SOFTSTRNGS, SHIMMERPAD, SKY SYNC, HARFA LSR, KALIMBA, FLUTE BLOW, STEEL PANS, MOOGBASS, TUBUL-BELL, PEDALSTEEL, CHOR.STRAT, GUITARDAMP, AXE, SLAPS, MFSYNBRASS, SAXOPHONE, SOLO TRPT; then (0.17.25) **thirty more** made by people, likewise under their banks' names after `DX`: WURLITZER, TF-RHODES, REAL GRAND, ARCTICKEYS, HARPSICHORD, MAGICM1ORG (house organ), ACCORDION, Farfisa1, PROPHET, JUNO 106 7, OBOE, Saw3Op, SquarePWM, Techno2, TSQR DECAY, CS 80, ANALOG 1, PAN PIPE, ANGEL VOX, Fairlt.Vox, WD SQ BASS, KOTO, CIMBALOM, Femalevibe, BANJO, DOUG22PICK, SITAR VIII, NEUTRNPLUK, ETH. STAB, SHORTHORNS. The DX voices play in stereo (a light ensemble; basses in the middle). Then up to 16 of **your own** (page 8), named `DX` and the voice's name. Heavy patches play three or four notes at most. SEL + ALGORITHM on a pluck page steps through the sounds there are.
+**Sounds:** 12 plain (Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass), then 30 built-in DX7 voices on a six-voice, six-operator FM synth like the Yamaha DX7 (all 32 algorithms, envelopes, scaling, velocity, LFO, pitch envelope, feedback): made by people and shown under their banks' names after `DX`: DX MF EPRHOD1, WINEGLASS, SMOOTHBASS, FULL-BRASS, EASY DXPAD, FLUTEMRMBA, DRAWBARS, GITARA AKU, ROLAND BRS, SOLID BASS, TEMPLEBELL, MARIMBA, CLAVINET, SOFTSTRNGS, SHIMMERPAD, SKY SYNC, HARFA LSR, KALIMBA, FLUTE BLOW, STEEL PANS, MOOGBASS, TUBUL-BELL, PEDALSTEEL, CHOR.STRAT, GUITARDAMP, AXE, SLAPS, MFSYNBRASS, SAXOPHONE, SOLO TRPT; then **thirty more** made by people, likewise under their banks' names after `DX`: WURLITZER, TF-RHODES, REAL GRAND, ARCTICKEYS, HARPSICHORD, MAGICM1ORG (house organ), ACCORDION, Farfisa1, PROPHET, JUNO 106 7, OBOE, Saw3Op, SquarePWM, Techno2, TSQR DECAY, CS 80, ANALOG 1, PAN PIPE, ANGEL VOX, Fairlt.Vox, WD SQ BASS, KOTO, CIMBALOM, Femalevibe, BANJO, DOUG22PICK, SITAR VIII, NEUTRNPLUK, ETH. STAB, SHORTHORNS. The DX voices play in stereo (a light ensemble; basses in the middle). Then up to 16 of **your own** (page 8), named `DX` and the voice's name. Heavy patches play three or four notes at most. SEL + ALGORITHM on a pluck page steps through the sounds there are.
 
 ### The bass
 
@@ -396,11 +396,11 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. First **FILTERS** and **SCREAM**: the piece's, saved with it. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); the second knob is free; **Form**, Song (a piece moves through its patterns; Few rests or No rests: the parts rest half as often, or never) or Loop; **Start**, Last piece or Random. Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Look: plain, scanlines, calm) **SAMPLE** (PERF's sounds one at a time, to sample), **SOUND** (Vintage drift, Polish, Tilt, Width), **CHORUS** (Juno I, II, I+II, rotary), **RESONATOR** (hits ringing in the chord), **RETURNS** (the echo's and reverb's duck: Kit, Off, Custom) and **LINK** (two units as one band). **Global** (GLO): Root, Theme (Console, the default; Imp, Synth, Acid, Ice, Ember, Phosphor: colour sets of the new Console layout), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. First **FILTERS** and **SCREAM**: the piece's, saved with it. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); the second knob is free; **Form**, Song (a piece moves through its patterns; Few rests or No rests: the parts rest half as often, or never) or Loop; **Start**, Last piece or Random. Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Look: plain, scanlines, calm) **SAMPLE** (PERF's sounds one at a time, to sample), **SOUND** (Vintage drift, Polish, Tilt, Width), **CHORUS** (Juno I, II, I+II, rotary), **RESONATOR** (hits ringing in the chord), **RETURNS** (the echo's and reverb's duck: Kit, Off, Custom) and **LINK** (two units as one band). **Global** (GLO): Root, Theme (Console, the default; Imp, Synth, Acid, Ice, Ember, Phosphor: colour sets of the one layout), Tune (+-50 cents), Genre.
 
 ### Visualizers
 
-**HOME twice quickly**; HOME again leaves. **SELECT** chooses (remembered): PLASMA, KALEIDO, BARS (a 24-band spectrum), FLUX, DISCO (the mascot dancing to the drums), LIFE, ORBIT (the chord drawn as a pendulum pattern), TRIP (a kaleidoscope tunnel), THEORY (circle of fifths, degree, chord, next chord), AUTO. The knobs stay the FX knobs, ALGORITHM the mood, the keys the track mix; FX opens its menu over them.
+**HOME twice quickly**; HOME again leaves. **SELECT** chooses (remembered): PLASMA, KALEIDO, BARS, FLUX, DISCO, LIFE, ORBIT, TRIP, THEORY (the circle of fifths, the chord and the next), AUTO. The knobs stay the FX knobs, ALGORITHM the mood, the keys the track mix; FX opens its menu over them.
 
 ### What is remembered across power-off
 
@@ -408,7 +408,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The load line
 
-How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under it (top right of the mix map, GLO held). **CPU**: how busy the main processor is. **XR**: dropouts, each one a click. **C2 nn**: the second processor, nn % busy (pad and chorus, DX voices, reverb); `C1`: it stopped after a fault. **S1**: saving effort, the chorus off and DX voices held to four; **S2**: to two. It goes back after twenty quiet seconds. Heaviest: DX plucks with the shimmer reverb, and the fast genres.
+How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` under it (top right of the mix map, GLO held, after a dropout or while easing off). **CPU**: how busy the main processor is. **XR**: dropouts, each one a click. **C2 nn**: the second processor, nn % busy (pad and chorus, DX voices, reverb); `C1`: it stopped after a fault. **S1**: the enhancers off (chorus, DX shimmer, RESONATOR). **S2**: DX voices held to four. **S3**: to two, and a lighter mix. It goes back after twenty quiet seconds. Heaviest: DX plucks with the shimmer reverb, and the fast genres.
 
 </div>
 
@@ -420,23 +420,23 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 
 **USB audio.** The FM-1 is a stereo USB audio input (16-bit, 44.1 kHz) carrying the master output. The USB & MIDI page's Level: KNOB (follows MASTER) or FIXED (a recording stays put when you turn the speakers down).
 
-**MIDI out** (USB): the pad on channel 1, pluck 2, bass 3, acid 4, drums 10 (General MIDI notes), and MIDI clock with start, continue and stop. **MIDI map**, **MIDI IN**: a sampler plays the drums; an MPC, M:S or MPK mini plays PERF (manual, 14). **Notes: CHORDS**: a keyboard's keys below middle C are a chord the song follows (the lowest key the bass: inversions, slash chords; one key, the scale's chord on it), held until the next; from middle C up they play the voice. **FILTERS**: pad, bass, acid low/high/band/notch/peak; the acid also **303**, a TB-303-style ladder. Notes played by hand go on their voice's channel; the DJ snips aren't sent. On and off on the USB & MIDI page.
+**MIDI out** (USB): the pad on channel 1, pluck 2, bass 3, acid 4, drums 10 (General MIDI notes), and MIDI clock with start, continue and stop. **MIDI map**, **MIDI IN**: a sampler plays the drums; an MPC, M:S or MPK mini plays PERF (manual, 14). **Notes: CHORDS**: a keyboard's keys below middle C are a chord the song follows (the lowest key the bass: inversions, slash chords; one key, the scale's chord on it), held until the next; from middle C up they play the voice. Notes played by hand go out too; the DJ snips don't.
 
-**MIDI in:** notes on channel 1 play like the keys (the page's voice, or Jam's, snapped to the scale; on Global they edit the scale). Clock and start / stop drive the tempo (`EXT`). It listens on the USB MIDI port, and the TRS input where your version has it.
+**MIDI in:** notes on channel 1 play like the keys (the page's voice, or Jam's, snapped to the scale; on Global they edit the scale). Clock and start / stop drive the tempo (`EXT`). It listens on USB and on the TRS input.
 
-**The site**, https://deamonslinky.github.io/PERF-1/: the **installer** (install, back to stock, Load DX7 voices, Back up and restore, Live status), the **emulator**, the **editor** and the **manual**.
+**The site**, https://deamonslinky.github.io/PERF-1/: the **installer**, the **emulator**, the **editor**, the **library** and the **manual**.
 
-**Backup and restore** (installer). **Save a backup** copies everything stored (pieces in every genre, settings, DX7 voices, theme, Tune, MIDI out) to a `.p1bak` file; do it before you install anything else. Unstored edits and the panel calibration aren't in it. **Restore the chosen backup** writes it back one item at a time, then the FM-1 restarts. Needs PERF-1 0.14 or later on the FM-1.
+**Backup and restore** (installer). **Save a backup** copies everything stored (pieces in every genre, settings, DX7 voices, theme, Tune, MIDI out) to a `.p1bak` file; do it before you install anything else. Unstored edits and the panel calibration aren't in it. **Restore the chosen backup** writes it back one item at a time, then the FM-1 restarts.
 
-**The editor** has two tabs. **Sound**: every setting of the piece playing, with the FM-1's page names and ranges, plus a page for the rest (lane levels, tunings, decays, chances, lengths; pans and sends; octaves; by-hand switches). Changes play at once; store the piece on the FM-1 to keep them. **DX7 voices**: read the 16 slots, edit a voice (name, algorithm, feedback, LFO, pitch envelope, each operator's level, ratio, envelope, scaling, velocity); **Live** sends each change as you make it; load `.syx` banks, save a slot or the bank as `.syx`.
+**The editor** has two tabs. **Sound**: every setting of the piece playing, grouped by voice. Changes play at once; store the piece on the FM-1 to keep them. **DX7 voices**: read the 16 slots and edit a voice, every operator included; **Live** sends each change as you make it; load and save `.syx` banks.
 
-**Your own DX7 voices**: up to 16, kept after power-off, after the Pluck page's 30 built-in DX sounds. From the installer: **Load DX7 voices**, choose `.syx` files (32-voice banks, single voices, bare 4096-byte banks), tick up to 16, press **Send the chosen voices**. **Clear the loaded voices** empties the slots. A librarian app's bank dump to the FM-1's USB MIDI port works too (the first 16; a single voice adds one). Levels aren't matched; a piece stores the slot number. Free banks: Bobby Blues' DX7 archive, Soundarchive, Yamaha Black Boxes (licences are their authors').
+**Your own DX7 voices**: up to 16, kept after power-off, after the Pluck page's 60 built-in DX voices. From the installer: **Load DX7 voices**, choose `.syx` files (32-voice banks, single voices, bare 4096-byte banks), tick up to 16, press **Send the chosen voices**. **Clear the loaded voices** empties the slots. A librarian app's bank dump to the FM-1's USB MIDI port works too (the first 16; a single voice adds one). Levels aren't matched; a piece stores the slot number. Free banks: Bobby Blues' DX7 archive and others (manual, section 7).
 
-**The emulator** runs the firmware in the browser. Drag or scroll a knob, click buttons and keys; Shift-click (or right-click) holds a button until the next click. **New start** restarts it (stored pieces stay, in that browser); **Forget stored** clears them. Keys: Space PLAY, Enter REC, Esc HOME, V / L / P ENV / LFO / ARP, M SEQ (hold it for the sequencer), O / C / N GLO / EDIT / SEL, backtick FX, B SAVE, Z / X OCT- / OCT+, Up / Down SELECT, Q-I and A-K the white keys 1-8 and 9-16, 1-0 and - the black keys 1-11.
+**The emulator** runs the firmware in the browser. Drag or scroll a knob, click buttons and keys; Shift-click (or right-click) holds a button until the next click. **New start** restarts it (stored pieces stay, in that browser); **Forget stored** clears them. The computer keys are in the manual, section 17 (Space PLAY, Q-I and A-K the white keys).
 
-**Remote:** with the FM-1 on USB and the emulator's **Connect MIDI** pressed, stop the FM-1, hold **SEL** and press **GLO**. It says REMOTE, goes quiet, and its whole panel plays the emulator, lights and all. SEL + GLO again ends it. **Stream view** (or `?stream`) is a clean 16:9 stage for OBS. **MIDI learn** maps any other controller to the emulator (kept in that browser). Remote uses USB MIDI channel 16: keys notes 48-74, buttons CC 102-115, knobs CC 85-91, MASTER CC 7.
+**Remote:** with the FM-1 on USB and the emulator's **Connect MIDI** pressed, stop the FM-1, hold **SEL** and press **GLO**. It says REMOTE, goes quiet, and its whole panel plays the emulator, lights and all. SEL + GLO again ends it. **Stream view** (or `?stream`) is a clean 16:9 stage for OBS. **MIDI learn** maps any other controller to the emulator (kept in that browser).
 
-**Live status and the logger.** The installer's **Live status** panel reads the FM-1's numbers four times a second (CPU, second processor, dropouts, late and slowest audio, what's cut back, genre and piece); **Save CSV** saves them for a bug report. Or `python tools/fm1log.py` (after `pip install mido python-rtmidi`) writes `telemetry/fm1_<time>.csv`, and `tools/fm1sum.py` sums it up by genre and piece.
+**Live status and the logger.** The installer's **Live status** panel reads the FM-1's numbers four times a second (CPU, second processor, dropouts, late and slowest audio, what's cut back, genre and piece); **Save CSV** saves them for a bug report. Or log from a computer with `python tools/fm1log.py` (manual, section 16).
 
 ### Troubleshooting
 
@@ -444,12 +444,12 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 - **A short dip when you store or change a setting:** normal. **A stored piece came back as before:** the power went off during the save. **My changes vanished:** only a stored piece (Global, SAVE) is kept.
 - **The installer doesn't find the FM-1:** Chrome or Edge, a data cable, no DAW using the port, MIDI with SysEx allowed. **It offers an old version:** hard-refresh. **An install was cut off:** run it again. **`PERF-1 SAFE MODE`:** two crashes at start; reinstall, or PLAY to retry.
 - **Buttons or knobs don't match their labels:** hold OCT- and OCT+ while switching on to calibrate.
-- **Loaded DX7 voices don't show:** they come after the 30 built-in DX sounds; check for `LOADED`.
+- **Loaded DX7 voices don't show:** they come after the 60 built-in DX voices; check for `LOADED`.
 - **Crackles or dropouts:** watch `XR` and `S1`/`S2`; send a Live status CSV with the piece.
 - **The emulator doesn't see the FM-1:** no DAW on the port, not Safari.
 
 ### Credits and licence
 
-PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1** (RedtailWorks), itself a fork of **AMB-1** by Charles Vestal. The platform layer (USB, update loader, storage, installer, the panel calibration) is **Felucca** by Leo Kuroshita (Hügelton Instruments), by way of X0X and FoMni. The six-operator FM engine, its factory voices and the second-core work are from **Melodee** by Kerem Kilic (Ellic Studio); its synthesis is after **Dexed** by Pascal Gauthier, on **MSFA** by Raph Levien (Google). The bass line modes, pad comping, ghost notes, deja vu and the motif follow ideas in **Tuna** by delirioux, written afresh for this engine. The plate reverb is Jon Dattorro's; the emulator idea is Groove OS's; the hardware knowledge is FM-1-RE's. Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Source and issues: https://github.com/deamonSLINKY/PERF-1. **Licence: GPL-3.0-only, no warranty.** M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.
+PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1** (RedtailWorks), itself a fork of **AMB-1** by Charles Vestal. The platform layer (USB, update loader, storage, installer, the panel calibration) is **Felucca** by Leo Kuroshita (Hügelton Instruments), by way of X0X and FoMni. The six-operator FM engine is **Melodee**'s, by Kerem Kilic (Ellic Studio), and so are the second-core work, the USB MIDI host and the TRS MIDI fix. The FM is after **Dexed** by Pascal Gauthier, on **MSFA** by Raph Levien (Google). The install-rescue boot stub is **ChoralRoot**'s. The bass line modes, pad comping, ghost notes, deja vu and the motif follow ideas in **Tuna** by delirioux. The plate reverb is Jon Dattorro's. The RESONATOR is after Mutable Instruments' **Rings** (MIT) and **DUB-1**. Auto FX is after **DARK-1**, the punch-ins after Caustic. The DX7 voices are public-domain patches from Bobby Blues' and Dave Benson's pages. The emulator idea is Groove OS's, the hardware knowledge FM-1-RE's, the rescue route FM-1-transporter's. Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Source and issues: https://github.com/deamonSLINKY/PERF-1. **Licence: GPL-3.0-only, no warranty.** M-VAVE and FM-1 are trademarks of their owners. PERF-1 is not affiliated with M-VAVE.
 
 </div>

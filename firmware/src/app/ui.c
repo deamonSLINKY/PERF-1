@@ -4638,12 +4638,9 @@ static void input(void)
             }
             if (i == B_SEQ)
                 ui.seq_held = 0;
-            if (i == B_HOME && (btn >> B_SEL & 1u)) {   /* shift: the sigil's middle, the eye or the imp */
-                ui.centre_imp = (uint8_t)!ui.centre_imp;
-                ui.set_lazy = 1;
+            if (i == B_HOME && (btn >> B_SEL & 1u))   /* (1.0) shift: nothing. It turned the sigil's middle (the eye or the imp), which the Console
+                                                       * layout doesn't draw (0.17.3); its bit stays in the stored settings */
                 ui.btn_used |= m | 1u << B_SEL;
-                say("SIGIL", ui.centre_imp ? "THE IMP" : "THE EYE");
-            }
 #ifndef EN_WEB
             if (i == B_GLO && (btn >> B_SEL & 1u)) {   /* shift: remote, the panel plays the browser (stopped only: it stops the music) */
                 if (en_playing) {

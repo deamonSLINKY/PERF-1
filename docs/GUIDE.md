@@ -1,4 +1,4 @@
-<!-- footer: PERF-1 for beginners · 0.17.0 · the full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
+<!-- footer: PERF-1 for beginners · 1.0 · the full manual: deamonslinky.github.io/PERF-1/manual/ · GPL-3.0-only -->
 # PERF-1 for beginners
 
 This guide is for your first hour. No music theory needed, nothing to set up. Every step is one thing to press, and what you will hear.
@@ -33,7 +33,7 @@ Only a few. The rest can wait.
 | **SAVE** | Break the beat down, then build it back up. |
 | **FX** | Effects. |
 | **HOME** | Back to the start page. Press it whenever you feel lost. |
-| **GLO** | The Global page. Hold it for the mixer. |
+| **GLO** | The Global page. Hold it for the mix map: mutes, solos and scenes. |
 
 ## Your first five minutes
 

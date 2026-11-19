@@ -6,7 +6,7 @@ You don't have to program anything to get going. You steer the music: change the
 
 If you're new, read **Start here** below first. The numbered sections after it are the full reference.
 
-PERF-1 is made by deamonSLINKY, and it's free and open source (GPL-3.0); the people whose work it builds on are in the credits (section 19). It's still young and changes often, so keep a way back to the stock firmware (section 1 explains how).
+PERF-1 is made by deamonSLINKY, and it's free and open source (GPL-3.0-only); the people whose work it builds on are in the credits (section 19). It's still young and changes often, so keep a way back to the stock firmware (section 1 explains how).
 
 ![The Tempo page, the home screen](img/perf-screen-home.png)
 
@@ -16,7 +16,7 @@ PERF-1 is made by deamonSLINKY, and it's free and open source (GPL-3.0); the peo
 
 This guide is for your first hour. No music theory needed, nothing to set up. Every step is one thing to press, and what you will hear.
 
-When you want every detail, the [quick manual](PERF-1-quick-manual.pdf) has every control on eight pages, and the rest of this manual, from section 1 on, explains everything. This part is also a [printable PDF](PERF-1-beginners-guide.pdf).
+When you want every detail, the [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) has every control on eight pages, and the rest of this manual, from section 1 on, explains everything. This part is also a [printable PDF](https://deamonslinky.github.io/PERF-1/manual/PERF-1-beginners-guide.pdf).
 
 ### What PERF-1 is
 
@@ -46,7 +46,7 @@ Only a few. The rest can wait.
 | **SAVE** | Break the beat down, then build it back up. |
 | **FX** | Effects. |
 | **HOME** | Back to the start page. Press it whenever you feel lost. |
-| **GLO** | The Global page. Hold it for the mixer. |
+| **GLO** | The Global page. Hold it for the mix map: mutes, solos and scenes. |
 
 ### Your first five minutes
 
@@ -80,7 +80,7 @@ Only a few. The rest can wait.
 - Tap the same key again to switch it off, or tap **OCT-** to switch every effect off at once.
 - Press **FX** again to leave. Try the gate, the phaser, the tape and the beat repeats.
 
-### The Perform screen
+### The Perform screen, a first look
 
 **9. Press HOME, then HOME again** (not too quickly). This is the Perform screen: the eight parts of the band, and a **mood** bar.
 
@@ -110,7 +110,7 @@ You don't need any of this to have fun, but it is there.
 - **The Jam page** (turn SELECT past Global) picks what the keys play: the pluck, the pad, the acid or the bass, single notes or whole chords, and how high. On a part's own pages (the pad's, bass's, acid's or pluck's) the keys play that part instead.
 - **Change the scale** on the **Global** page (press GLO): there, each key puts a note into the music or takes one out, and ALGORITHM picks its mode (a brighter or darker minor, a major). Everywhere else ALGORITHM is the mood.
 - **Hold HOME** for the settings.
-- **The SET page** has an **Intro** that starts with just a pad and brings the band in one part at a time over a few minutes. Great for mixing in, or for playing over. You get there by holding **SEL** and pressing **FX**, then turning SELECT.
+- **The SET page** has an **Intro** that starts with just a pad and brings the band in one part at a time over a few minutes. Great for mixing in, or for playing over. You get there by holding **HOME**, then turning **SELECT** to SET.
 
 ![The SET page: Rounds, Ramp, Intro](img/perf-screen-set.png)
 - The [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) is eight pages to print and keep beside the FM-1.
@@ -180,7 +180,7 @@ browser, with sound. Play it with the mouse, a touch screen or your computer key
 4. When the browser asks, allow MIDI with SysEx. SysEx is the kind of MIDI message the installer uses to
    send the firmware.
 5. Wait until the **Install** button isn't grey (the page is still loading the firmware). The line under it
-   names the version it will write (`PERF-1 0.15.1`, for example). If that's older than you expected, hard-refresh the
+   names the version it will write (`PERF-1 1.0.0`, for example). If that's older than you expected, hard-refresh the
    page (Ctrl+F5, or Cmd+Shift+R on a Mac) so the browser doesn't use an old saved copy.
 6. Press **Install**.
 
@@ -290,7 +290,7 @@ short version.
 1. Switch it on. The **deamonSLINKY** card shows (the slinky mascot hops twice and blinks, then the name and
    PRESENTS), then the **PERF-1** card (the version, "by deamonSLINKY", "free software, GPL-3.0"),
    with sixteen steps filling in and the white keys lighting with them. Any button or key skips the cards.
-   Then the music starts: the piece you played last, or one at random (SETTINGS, **Start**).
+   Then the music starts: the piece you played last, or a HYPNO piece at random (SETTINGS, **Start**).
 2. Turn **SELECT** to move through the pages. The four knobs under the screen change what each page shows.
 3. Press **SEQ** for the drums. Hold it for the step sequencer, and tap the white keys to change the beat.
 4. Play the keys: on a voice's page they play that voice over the music, elsewhere the Jam page's voice. Turn **PRESETS** for another piece.
@@ -300,12 +300,12 @@ short version.
    bass stops playing its own part and the keys play it instead. Press **SEL** + **ENV** again to hand it
    back. The **JAM** page (turn **SELECT** past Global) is a keyboard that never changes the scale.
 6. Tap **SAVE** for a breakdown on the next bar. Tap it again for a build and then the drop. A build lasts
-   four bars (two in trap, lofi and trip-hop, eight in house).
+   four bars. It's two in lofi, trip-hop, hip-hop and ambient, and eight in house, dubstep, DnB, psytrance and trance.
 7. Press **FX** for the effects. Tap a key to latch its effect on, or hold the key to play the effect only
    while you hold it.
 8. **HOME** goes to the Tempo page. Press **HOME** again, not too quickly, for the Perform screen. Press it
    twice quickly for the visualizers. Hold it for the settings.
-9. Like a HYPNO piece? Go to **Global** (**GLO**) and press **SAVE** to store it. Storing works in every
+9. Like a piece? Go to **Global** (**GLO**) and press **SAVE** to store it. Storing works in every
    genre: a piece you store in lofi or house stays there.
 
 ---
@@ -324,7 +324,7 @@ short version.
 | **FX** | Opens and closes the effects menu. Held: the settings of the effect you used last, from any page. |
 | **SEL** | Shift: hold it while you use another control (section 12). Tapped alone on the Perform screen or a visualizer: the **swell**, the mood, the throw and the wash lifted over a bar and let back over four (tap again on the way: straight back; a knob turned ends it where it is). With **ARP**: the acid answers on the next bar. |
 | **ENV** | The Pad page. Again: Pad env, Pad LFO, Chords, Progression. With **SEL** held: takes the voice on screen off its automatic part so you play it by hand (again: hands it back). |
-| **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line, Bass steps. |
+| **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line, Bass steps, Bass answer. |
 | **ARP** | The Acid page. Again: Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. |
 | **EDIT** | The next chord, on the next bar. Held: the Progression page, your own chords. |
 | **GLO** | The Global page: root, theme, tune, genre. Here **SAVE** stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter. Held with **PRESETS**: the genre. With **SEL** held: remote (section 17). |
@@ -373,7 +373,7 @@ The screen has five bands, top to bottom: the header, the chord, the five voices
 colour theme uses this layout (it's called Console); the themes change only its colours.
 
 **The header, left.** The piece's tag: its number, with a letter for the genre (`01` for HYPNO, `L03`, `H07`, `D02`,
-`V01` for dub, `N05` for DnB, `B04`, `G09`, `E06`, `T10`, `S03`, `F01`, `R07`, `W01`, `A05`, `P02` for the others). A mark in the tag means the piece has changes
+`V01` for dub, `N05` for DnB, `B04`, `G09`, `E06`, `T10`, `S03`, `F01`, `R07`, `W01`, `A05`, `P02`, `I04`, `Y01`, `O08`, `M06`, `U03`, `Z02` for the others; the table in section 6 has them all). A mark in the tag means the piece has changes
 you haven't stored. Next to the tag are the root and the mode.
 
 **The header, right.** The tempo. It says `EXT` while an outside MIDI clock (another device sending its tempo over
@@ -409,7 +409,7 @@ change.
 - A muted or resting voice is dimmed (red when muted).
 
 How hard the FM-1 is working isn't on the main screen. Hold **GLO** for the mix map: its corner shows `CPU` and `XR`
-after a dropout or while PERF-1 is easing off, and **SEL**'s help card always shows them. Section 16 explains them.
+after a dropout or while PERF-1 is easing off, and **GLO**'s help card (hold GLO alone for about a second) always shows them. Section 16 explains them.
 
 **The tabs.** The page's name in its voice's colour, then ten keys, one for each group of pages (Tempo, Pad, Bass,
 Acid, pLuck, dRums, Space, Mix, Global, Jam). Your group is lit, with a pip for each of its pages; the page
@@ -435,7 +435,7 @@ along it. It shows the shape, not exact milliseconds.
 
 ## 5. The pages
 
-Turn **SELECT** to move through the pages in this order. There are 33, and the dial stops at each end. The
+Turn **SELECT** to move through the pages in this order. There are 37, and the dial stops at each end. The
 voice buttons jump straight to a voice. Pressing the same button again steps through that voice's envelope
 and LFO pages (and, for the pad, the chords and the progression). On a voice's main page, **KNOB1** is its level. The a to d
 columns are **KNOB1** to **KNOB4**.
@@ -475,7 +475,7 @@ columns are **KNOB1** to **KNOB4**.
 | Reverb | **SELECT** | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | **SELECT** | Ratio (off to 10:1) | Thresh (-30 to 0 dB) | Make-up (0 to +12 dB) | Ceiling (-12 to 0 dB) |
 | Mixer | **SELECT** | Track (pad, bass, acid, pluck, drums) | Level | Pan (L100, C, R100) | Send (0-100) |
-| Global | **GLO** | Root | Theme (6) | Tune (+-50 cents) | Genre (the bank, the same as **GLO** + **PRESETS**) |
+| Global | **GLO** | Root | Theme (7) | Tune (+-50 cents) | Genre (the bank, the same as **GLO** + **PRESETS**) |
 | Set list | **GLO** x2 | Slot (1-16; or a white key) | Piece (every genre's, or Empty) | Bars (Auto, 4-128) | Play (off, loop, once) |
 | Code | **GLO** x3 | Place (1-9) | Letter | Roll (a new code) | |
 | Jam | **SELECT** | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Sound (that voice's sound) |
@@ -515,9 +515,9 @@ The chord changes on a bar line every few bars. How often depends on the genre:
 
 | Bars per chord | Genres |
 |---|---|
-| 2 | house, disco, garage, lofi, reggae, synthwave |
-| 4 | dub, DnB, breaks, electro, trap, funk, amapiano, trip-hop |
-| 8 | dubstep |
+| 2 | house, disco, garage, lofi, reggae, synthwave, industrial, hip-hop |
+| 4 | dub, DnB, breaks, electro, trap, funk, amapiano, trip-hop, trance |
+| 8 | dubstep, psytrance, dark forest, ambient |
 
 **Drift** on the Tempo page changes that pace. Below 20 the chords change four times as often, below 45
 twice as often. Above 80 they last twice as long, above 95 four times as long. The Tempo page shows the result
@@ -611,7 +611,7 @@ and Drift, or **EDIT**). The **Chords** page (**ENV** four times) sets what kind
 | Fourths | The scale's notes stacked in fourths (shown as A4ths on the home chord of a minor key), an m11 sound. Where the scale's next fourth would be a tritone it takes the note below, as in the "So What" chord. Deep, hollow and modal. |
 
 **Filter types.** The pad's saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck: on the others the page says NO FILTER), the bass and the acid each run through a resonant filter, low-pass as
-standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** past MIDI IN) changes each one's type:
+standard. The **FILTERS** settings page (hold **HOME**: it's the first one) changes each one's type:
 
 | Type | Sounds like |
 |---|---|
@@ -622,7 +622,7 @@ standard. The **FILTERS** settings page (hold **HOME**, then turn **SELECT** pas
 | Peak | The cutoff's band boosted against the rest: a vowel-like bite. |
 | 303 | The acid only: a ladder filter after the Roland TB-303's. Four stages that bend as they are driven, the resonance singing at the cutoff while the bass underneath stays full (its low end is kept out of the resonance, as on the original). Rounder and more liquid than Low, and it squeals rather than whistles when Reso and SCREAM are high. |
 
-**Making it scream.** The **SCREAM** settings page (the next one after FILTERS) pushes the acid's and the bass's filters into the raw, screaming sound of an acid line through a distortion pedal. It is for all pieces (it is kept with the settings, not with a piece), and at 0 everything sounds as it did:
+**Making it scream.** The **SCREAM** settings page (the next one after FILTERS) pushes the acid's and the bass's filters into the raw, screaming sound of an acid line through a distortion pedal. It belongs to the piece, like FILTERS: store the piece to keep it. At 0 everything sounds as it did.
 
 | Knob | What it does |
 |---|---|
@@ -635,8 +635,8 @@ Start with Scream at 60 and Drive at 40 on an acid piece, then turn the acid's C
 
 **The wub.** In DUBSTEP, and with the Wub sound in any genre, the bass LFO on the cutoff makes a wub the way a producer builds one. A clean sine sub stays underneath. The sound's own oscillator goes through a resonant low-pass that the LFO sweeps from about 70 Hz up to 3-4 kHz, with a vowel band above it (the "yoi"). It is then driven hard after the filter, so it growls more as it opens, and high-passed so the sub stays clean. On the drop the LFO's speed follows a rhythm, beat by beat over two bars (1/4, 1/8, 1/8T, 1/16, 1/2), each piece with its own and a second one every 8 bars (the Wub sound does this in any genre). DNB pieces 2 and 6 and INDUS pieces 4 and 8 come with it. Through a build it speeds up from 1/4 to 1/16. Depth sets how far it opens, Shape how it moves (Sine: closed on the beat, open between; Saw: open then closing; Square: open and shut; S&H: a level each cycle), Cutoff where it starts, Reso how much it sings. SCREAM on the bass drives it harder still. Set the Target to anything but Cutoff for the old wobble.
 
-The bass's LFO moving the cutoff (a wobble) works with every type. The setting is for every piece, kept with the
-settings. It's the MultiFilter idea from Caustic, rebuilt here.
+The bass's LFO moving the cutoff (a wobble) works with every type. The filter types belong to the piece and are
+stored with it. It's the MultiFilter idea from Caustic, rebuilt here.
 
 **Voicing** sets how the chord is spread. Close keeps the four notes together. Open drops the second-highest
 note an octave, spreading the chord out. **Chorus** makes the pad sound wider, like several players at once,
@@ -788,8 +788,6 @@ synthwave and trip-hop keep their pad; the breakbeat and percussion genres keep 
 role changes is an ordinary setting you can turn back. A piece you have stored keeps what it was stored with; the roles
 shape the factory pieces only.
 
-Disco, funk, reggae, synthwave, amapiano and trip-hop use the same drum kits as the other genres.
-
 ### Storing a piece
 
 This works in every genre. Go to **Global** and press **SAVE**. The piece is stored as it is: every page's
@@ -827,8 +825,9 @@ is playing, it fades out (the screen says `STORING`), writes, and fades back in 
 pause is a fraction of a second, and the song stays in time with itself. MIDI clock out pauses with it.
 Factory works the same way, and so does anything else PERF-1 saves (section 13).
 
-**At power-on** PERF-1 always starts in HYPNO, on a random piece. If you stored that piece, it plays as you
-stored it. If you didn't, it plays the factory piece with small random changes.
+**At power-on** PERF-1 comes back to the piece you played last, as it is stored (Settings, **Start**: Last). On
+**Random** it starts on a HYPNO piece at random. A piece you never stored plays its factory settings with small random
+changes.
 
 | HYPNO piece | Character | BPM | Key |
 |---|---|---|---|
@@ -1117,10 +1116,9 @@ The disco, funk, reggae, synthwave, amapiano and trip-hop genres use them.
 SYNTHOXICATED banks, madFame's Custom Patches (`MF EPRHOD1`, `SHIMMERPAD`), the 1980s magazine banks on Bobby Blues'
 page (the Aftertouch magazine's `SAXOPHONE`), one from Jack Deckard's collection on Dave Benson's page, and `CHOR.STRAT`
 from Jezreel's folder. Each shows its bank's own name after `DX`. Each is set to a matching loudness, so the genres' mix
-stays balanced. (Up to 0.17.74 the Settings page had a **Voices** switch to PERF-1's own first set of thirty; since
-0.17.75 these are the only ones.)
+stays balanced.
 
-**Thirty more** (0.17.25). After the first thirty on the **Sound** list come thirty more DX7 voices made by people, from
+**Thirty more.** After the first thirty on the **Sound** list come thirty more DX7 voices made by people, from
 the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's, Narfman's, Godric's and Jezreel's folders, and the
 Aftertouch, Guitares & Claviers and E&MM magazine banks). Most show `DX` and their banks' own names; the
 seven added in the 2026-11-13 audit (each one a kind of instrument the set lacked) show what they are:
@@ -1292,7 +1290,7 @@ The keys always play a voice over the music: on a voice's pages that voice, alon
 
 1. Go to any of the voice's pages: **ENV** for the pad, **LFO** for the bass, **ARP** for the acid.
 2. Hold **SEL** and press **ENV**. The voice goes quiet and the line above the knobs says `BY HAND`. (On a page that isn't a voice's, SEL + ENV just tells you so.)
-3. Play the keys. While that voice's pages are on screen (Pad, Pad env, Pad LFO or Chords; the bass's three pages; the acid's three pages), the keys play it over the rest of the song.
+3. Play the keys. While that voice's pages are on screen (any of the pad's, the bass's or the acid's pages), the keys play it over the rest of the song.
 
 How each voice plays:
 
@@ -1770,7 +1768,7 @@ What some of these mean:
 - **Gate patterns.** Euclid 5, 7 or 9 spreads 5, 7 or 9 hits as evenly as possible over the steps. Custom is a pattern you edit yourself (below).
 - **Roll.** From and To set the speed the repeats start and end at. Each sets how often a roll happens.
 - **Riser.** Time is how long it takes to climb. Filter, Wash and Echo set how much of each it builds up.
-- **Settings page.** Key is the drop's key change (section 13). The second knob does nothing since 0.17.75 (it was Voices).
+- **Settings page.** Key is the drop's key change (section 13). The second knob is free.
 - **SCREEN page.** Zoom shows a knob's name and value large as you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Look adds scanlines (every other row a quarter darker, like an old CRT TV) and Calm (the screen's small movements off).
 - **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. MIDI map chooses where the notes go (section 14).
 - **Repeat page.** Pitch makes each repeat step toward that pitch over four beats while you hold the key, which sounds like a build. Every repeat still starts on the beat grid. Decay makes each repeat quieter than the last, for a dub-style tail. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh grabs a fresh slice of the newest music every beat or bar, which DJs call a slip roll. It only works where there's enough recent music held to do it.
@@ -1787,12 +1785,12 @@ All of these settings, and the gate's pattern and targets, are kept when you pow
 
 These are the moves for playing a set live. Most of them wait for the next bar, so everything stays in time.
 
-- **Breakdown: tap SAVE.** In the bar before the breakdown, the percussion, the open hi-hat and half the hats drop out, to let the energy go. On the next bar's first beat the groove lets go: a last kick, a crash and the bass's root, with the echo thrown so the bar before rings on into the breakdown; then the drums rest. In house, techno, dubstep and dub the kick keeps going, and in drum and bass the hats keep going. The mix gets darker, the bass filter closes and the pad gets louder. The breakdown lasts as long as you leave it.
-- **Build: tap SAVE again.** A snare roll climbs in pitch while the bass opens up. It lasts four bars (two in trap, lofi and trip-hop, eight in house). In the last bar the open hat plays every eighth note, and in the four-on-the-floor genres the kick comes back. Then comes the drop.
+- **Breakdown: tap SAVE.** In the bar before the breakdown, the percussion, the open hi-hat and half the hats drop out, to let the energy go. On the next bar's first beat the groove lets go: a last kick, a crash and the bass's root, with the echo thrown so the bar before rings on into the breakdown; then the drums rest. In house, techno and dub the kick keeps going. In drum and bass and industrial the hats keep going. Breaks and funk break down to the drums alone. The mix gets darker, the bass filter closes and the pad gets louder. The breakdown lasts as long as you leave it.
+- **Build: tap SAVE again.** A snare roll climbs in pitch while the bass opens up. It lasts four bars, two in lofi, trip-hop, hip-hop and ambient, eight in house, dubstep, DnB, psytrance and trance. In the last bar the open hat plays every eighth note, and in the four-on-the-floor genres the kick comes back. Then comes the drop.
 - **Drop: hold SAVE.** Everything comes straight back in on the next bar. **SAVE** lights up during a breakdown or build, and blinks while it waits for the bar.
 - **Freeze: REC.** The chord holds and the reverb rings on. Press **REC** again to let the music move on.
 - **Next chord: EDIT.** Moves to the next chord at the next bar. With your own progression playing, it moves to the next slot.
-- **The scale: the keys on Global.** There each key adds its note to the scale or takes it away, on a keyboard picture of the scale. The root note always stays. On every other page the keys play a voice, so a stray key never changes the scale. **ALGORITHM** picks a mode (a ready-made scale) anywhere.
+- **The scale: the keys on Global.** There each key adds its note to the scale or takes it away, on a keyboard picture of the scale. The root note always stays. On every other page the keys play a voice, so a stray key never changes the scale. On Global and the Chords page, **ALGORITHM** picks a mode (a ready-made scale). Everywhere else it's the mood.
 - **Patterns.** Change the drum pattern with **KNOB4** on the Drums page, or with **SEL** + white keys 1-6. A change waits for the next bar, so if you turn the knob past several patterns, only the one you stop on plays.
 
 **Drum drift** makes the drums change by themselves as you play. Press **SEQ** four times to get to it. It's off by default. It has four settings:
@@ -1809,7 +1807,7 @@ PERF-1 doesn't save songs. To keep a performance, record the audio (or the MIDI 
 
 ### The Perform screen
 
-Press **HOME** on the Tempo page to get here. From any other page, press **HOME** twice. The screen shows:
+Press **HOME** on the Tempo page to get here. From any other page, press **HOME**, then **HOME** again (not too quickly). The screen shows:
 
 - the section you're in (GROOVE, BREAK, BUILD) and how far the auto-DJ is through it
 - the sixteen steps of the bar
@@ -1991,7 +1989,7 @@ The **Jam** page turns the 27 keys into an instrument so you can play along with
 | **KNOB1** | Voice | Which sound you play: the pluck, the pad, the acid or the bass. While the page is up, that part stops playing its own line. It gets it back when you leave. |
 | **KNOB2** | Keys | *Scale*: every key plays a note of the scale. A black key plays the scale note at or below it, so there are no wrong notes. *Chords*: every key plays a three-note chord (a triad) from the scale. *Harp*: the keys play the scale's notes in order, one per key, from C3. |
 | **KNOB3** | Octave | -2 to +2. |
-| **KNOB4** | Sound | The sound of the voice you play: the pluck's DX voice, the pad's, the acid's or the bass's. It is the same setting as on that voice's own page, saved with the piece. (Until 0.17.4 this knob was Answer.) |
+| **KNOB4** | Sound | The sound of the voice you play: the pluck's DX voice, the pad's, the acid's or the bass's. It is the same setting as on that voice's own page, saved with the piece. |
 
 The page shows a keyboard with the scale's notes lit and the keys you hold bright (orange). While the music plays, the notes of the chord playing are blue, and its name is in the top right, like `Am7`. If the pluck's level is turned almost all the way down, playing it raises it to 40 so you can hear it.
 
@@ -2121,9 +2119,9 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 ![The settings page](img/perf-screen-settings.png)
 
-To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE** and **SOUND**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
+To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **Auto FX**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE**, **SOUND**, **CHORUS**, **RESONATOR**, **RETURNS** and **LINK**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
 
-The Settings page (its second knob is free since 0.17.75, when the Voices switch went):
+The Settings page (its second knob is free):
 
 | Knob | What it does |
 |---|---|
@@ -2255,13 +2253,13 @@ While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still 
 |---|---|
 | The pieces you stored (Global, **SAVE**), in any genre, with their FILTERS and SCREAM settings, their drum drift and their chord types | Straight away (section 6). |
 | Theme, Tune, MIDI out, the set list, Zoom, the SET page's Mix | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, voices), the SCREEN page (saver, lights, look), the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, form, start), the Auto FX page, the SCREEN page (saver, lights, look), the SOUND, CHORUS, RESONATOR and RETURNS pages, the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
 | The panel calibration (if you ran it) | When you finish it. |
 
 "A couple of seconds" is 2 seconds with the music stopped and 4 seconds while it plays; the effects' and performing settings wait 20 seconds while it plays (0.17.56: turning the filters saved every few seconds, each save a small hitch), and are saved 2 seconds after you stop. While it plays, the sound dips for a moment during the save, the same as when you store a piece: the music fades out, the FM-1 saves, and the music fades back in.
 
-**Not kept:** the genre (the FM-1 always starts in HYPNO), anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, whether the auto-DJ is on, and edits to a piece you haven't stored. Also, each genre sets its own tape, vinyl and pump settings when you switch to it. The settings you saved while in HYPNO come back when you return to it.
+**Not kept:** anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, whether the auto-DJ is on, and edits to a piece you haven't stored. With Start on Random, the genre isn't kept either. Each genre sets its own tape, vinyl and pump settings when you switch to it.
 
 ### Backing up and restoring
 
@@ -2328,7 +2326,7 @@ MIDI out and the USB audio level are on the **USB & MIDI** settings page. Hold *
 
 Each voice keeps one colour everywhere in a theme. In Imp, the pad is bone white, the bass crimson, the acid lime, the pluck ice-teal and the drums pink; Phosphor is all one green. The accent colour marks whatever is happening right now. A piece waiting for the next bar shows as `>08` beside the key and mode.
 
-Hold **SEL** and the tabs are replaced by a one-line hint of what shift does on this page. The **SCREEN** settings page has **Look**: plain, scanlines, calm (the small movements off) or calm with scanlines.
+Hold **SEL** alone and a card lists what shift does on this page. The **SCREEN** settings page has **Look**: plain, scanlines, calm (the small movements off) or calm with scanlines.
 
 The theme, Tune and MIDI out apply to all pieces.
 
@@ -2399,7 +2397,7 @@ On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its M
 - **What it says:** `ON: PLUG IN A DEVICE`, then `DEVICE CONNECTED` when it finds one. `NO MIDI DEVICE` means it found something without USB MIDI, or nothing answered: the MIDI IN page then shows what it found (`NO ANSWER` with its codes, `HUB INSIDE` for a dock with a hub behind its hub, or the device and the step it stopped at). The page also shows the last MIDI message that came in and whether a clock is coming in, from any input. Low-speed devices (some old keyboards) aren't supported. `DEVICE LOST: LOOKING` means it came unplugged; it reconnects by itself.
 - Full-speed USB MIDI 1.0 only, notes and clock: no SysEx goes to or comes from the device.
 
-This is Melodee's USB host (by Kerem Kilic). Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.
+This is Melodee's USB host, by Kerem Kilic, with host code by recursivefieldinstruments. Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.
 
 **The link: two units as one band.** Two units running PERF-1 (two FM-1s, or an FM-1 and a PERF-1 SMK) find each other and play together:
 one leads, the other follows.
@@ -2485,7 +2483,7 @@ What the FM-1 can't do here: its TRS jack is an input, so nothing goes back to t
 
 ## 15. Your own DX7 voices
 
-The DX7 was Yamaha's classic FM synth, and thousands of its sounds (voices) are free online as `.syx` files. PERF-1 can hold **16 of your own DX7 voices** and plays them on the pluck. They stay stored when you switch off. On the Pluck page they come after the 22 built-in DX sounds: use the Sound knob, or **SEL** + **ALGORITHM** on a pluck page. Each shows as `DX` and the voice's own name (ten characters).
+The DX7 was Yamaha's classic FM synth, and thousands of its sounds (voices) are free online as `.syx` files. PERF-1 can hold **16 of your own DX7 voices** and plays them on the pluck. They stay stored when you switch off. On the Pluck page they come after the 60 built-in DX voices: use the Sound knob, or **SEL** + **ALGORITHM** on a pluck page. Each shows as `DX` and the voice's own name (ten characters).
 
 ### Loading them from the installer page
 
@@ -2520,7 +2518,7 @@ Both are checked against the DX7's checksum, so a damaged file is rejected. The 
 
 The [editor](../editor/) lets you change sounds and DX7 voices from a computer. Use Chrome or Edge, with the FM-1 on USB, MIDI with SysEx allowed, and nothing else using the FM-1's MIDI port. It has two tabs.
 
-**Sound** has every setting from the FM-1's own pages (Tempo, Pad, Pad env, Pad LFO, Chords, Bass, Bass env, Bass LFO, Acid, Acid env, Acid line, Pluck, Pluck 2, Drums, Links, Kit, Drum drift, Space, Reverb, Comp/Limit, Mixer, Global), with the same names, ranges and values. A last page has the rest: each drum lane's level, tune, decay, probability and length, each layer's pan and send, the noise, the octaves and the by-hand switches.
+**Sound** has every setting of the piece, grouped by voice (Tempo & global, Pad, Bass, Acid, Pluck, Drums, Space & master, Mixer), with the FM-1's names, ranges and values. A last page has the rest: each drum lane's level, tune, decay, probability and length, each layer's pan and send, the noise, the octaves and the by-hand switches.
 
 Moving a control changes the piece that's playing, just like turning the knob. **To keep the change, store the piece on the FM-1 itself** (GLO page, **SAVE**). The page reads the FM-1's values when it connects, and again when you press **Read everything from the FM-1**, so what you see is what the FM-1 holds. The **↺** button puts a setting back to its default.
 
@@ -2543,7 +2541,7 @@ Read this if the sound crackles or stutters, or if you want to report a problem.
 
 ### The load line on screen
 
-Hold **GLO** for the mix map: after a dropout, or while the FM-1 is easing off, its top right shows a line like `CPU 41 XR 0`, with `C2 38` and `S1` below it and the auto-DJ's phase beneath. **SEL**'s help card always shows it.
+Hold **GLO** for the mix map: after a dropout, or while the FM-1 is easing off, its top right shows a line like `CPU 41 XR 0`, with `C2 38` and `S1` below it and the auto-DJ's phase beneath. **GLO**'s help card (hold GLO alone for about a second) always shows it.
 
 | You see | It means |
 |---|---|
@@ -2591,7 +2589,7 @@ The FM-1 sends nothing until it's asked, and stops ten seconds after the last as
 | CPU nn | Share of the render's time budget the first core uses, measured inside the audio interrupt, including waiting for the second core. Screen drawing isn't counted. |
 | XR n (xruns) | Halves of audio that were never rendered; the last 11.6 ms play a second time. Since 0.17.56 also a render so late that the second part of its half had already played (a run of late renders adds up). A render that only ran a little past its half isn't counted: the next starts at once and nothing is lost. The status log counts those as `late`. |
 | C2 nn | Percent of a chunk's time the second core spends on its job: the pad with its chorus, the DX voices, the reverb, and at times the bass and acid. The engine moves some of this work between the cores as the load changes. `C1`: the second core stopped after a fault. |
-| Shedding | S1: pad chorus off, DX voices held to four. S2: DX voices held to two. Steps up on an xrun (a late render that lost sound included, 0.17.56) or on 200 late renders in ten seconds (six before 0.17.54, forty in 0.17.54-58), one level at a time; steps back one level after twenty seconds of neither. |
+| Shedding | S1: the enhancers off (the pad's chorus, CHORUS, the DX shimmer, the RESONATOR). S2: DX voices held to four. S3: held to two, with the Echoplex, the vinyl noise and the exact clip off. Steps up on an xrun (a late render that lost sound included) or on 200 late renders in ten seconds, one level at a time. S1 also comes at 40. Steps back one level after twenty seconds of neither. |
 | Audio blocks | 512 frames at a time, as two renders of 256 (11.6 ms for the pair), so a slow render borrows time from a quick one beside it. The DX plucks are rendered a chunk ahead on the second core and sound 5.8 ms later than the plain ones. |
 | Logger columns | CPU and CPU1 %, xruns, the longest render since the last frame against its budget, the longest gap between main-loop turns, the longest screen frame (a flash write or a long frame shows there), the shed level, flash writes (and how long the last one stopped the chip), crashes, the genre and piece, and the first core's time by stage. |
 | Logger events | XRUN, LATE, FLASH, OVER, GAP, SHED. |
@@ -2671,7 +2669,7 @@ Nothing learns? Some controllers keep their pads off MIDI until you turn it on. 
 
 ### A knob on each setting (MIDI CC to settings)
 
-*New in 0.16.18, experimental. Tell us how it goes with your controller.*
+*Experimental. Tell us how it goes with your controller.*
 
 A learned panel knob turns whatever the page on screen shows. A learned **setting** is different: a knob or fader on your controller is tied to one setting (the acid's Cutoff, the reverb, the swing) and sets it on any page, even while the screen shows something else. A controller with 32 knobs and faders can hold 32 settings at once, with no computer in between.
 
@@ -2764,7 +2762,7 @@ You were holding **OCT-** and **OCT+** together. Let go before the countdown end
 Run the **hardware calibration** (a Felucca feature). Hold **OCT-** and **OCT+** while you switch the FM-1 on. It asks you to press each button and turn each knob in turn, and saves the result. If you don't touch anything for 30 seconds it gives up and changes nothing.
 
 **The DX7 voices I loaded don't show up.**
-Use the pluck's Sound knob, or **SEL** + **ALGORITHM** on a Pluck page. Your voices come after the 30 built-in DX7 voices. Check that the page said they were sent and the header showed `DX7 VOICES n LOADED`, that the pluck's Level isn't 0, and that the FM-1 runs PERF-1 0.11 or later. A bank must pass the DX7 checksum.
+Use the pluck's Sound knob, or **SEL** + **ALGORITHM** on a Pluck page. Your voices come after the 60 built-in DX7 voices. Check that the page said they were sent and the header showed `DX7 VOICES n LOADED`, and that the pluck's Level isn't 0. A bank must pass the DX7 checksum.
 
 **Crackles or dropouts.**
 Look at the load line (section 16). `XR` goes up by one with each click. `S1` or `S2` mean the FM-1 is already easing off to keep up. Heavy DX plucks, a shimmer reverb and the fast genres push it hardest. Record a status log for a minute (Live status on the installer page, or `fm1log.py`) and send the CSV to deamonSLINKY, with the piece, its sounds and the tempo.
@@ -2781,19 +2779,24 @@ Since 0.17.7 they only do on the Global page, as the FM-1's own keys do; on ever
 
 **Feedback and contributing.** Comments, ideas and bug reports are welcome, and anyone is invited to help: [open an issue on GitHub](https://github.com/deamonSLINKY/PERF-1/issues/new/choose). The source is at <https://github.com/deamonSLINKY/PERF-1>. A bug report helps most when it includes the version (shown on the boot card), the genre and piece, and, for anything about load or crackles, a status log (section 16).
 
-PERF-1 is by **deamonSLINKY**: the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1**, a [RedtailWorks](https://www.redtail.works) project, which is itself a fork of [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal.
+PERF-1 is by **deamonSLINKY**. That covers the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1**, a [RedtailWorks](https://www.redtail.works) project. HYP-1 is a fork of [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal.
 
-The platform (USB, update loader, storage, installer) is [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic), Hügelton Instruments. It reaches PERF-1 by way of X0X and FoMni. The panel calibration is Felucca's. The boot guard, knob acceleration, help cards and anti-aliased drawing came from X0X.
+The platform (USB, update loader, storage, installer, panel calibration) is [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic), Hügelton Instruments. It reaches PERF-1 by way of X0X and FoMni. The boot guard, knob acceleration, help cards and anti-aliased drawing came from X0X.
 
-The six-operator FM that plays the DX7 voices, the factory voices, the second-core work (the reverb, the pad and the DX voices on the FM-1's other processor core) and the safe core hold are from **Melodee** by Kerem Kilic (Ellic Studio, GPL-3.0). The FM itself is after **Dexed** by Pascal Gauthier, on MSFA by Raph Levien (Google; Apache 2.0 / GPL-3.0).
+The six-operator FM engine that plays the DX7 voices is **Melodee**'s, by Kerem Kilic (Ellic Studio, GPL-3.0). From Melodee also come the second-core work (the reverb, the pad and the DX voices on the FM-1's other processor core) and the safe core hold. So do the USB MIDI host, with host code by recursivefieldinstruments, and the fix for the TRS MIDI input. The FM engine is after **Dexed** by Pascal Gauthier (GPL-3.0), on **MSFA** by Raph Levien (Google, Apache 2.0). The boot stub that brings back a cut-off install is **ChoralRoot FM-1**'s, as Melodee ships it.
 
-The idea of running FM-1 firmware in the browser comes from [Groove OS](https://www.groove-os.com/)'s emulator. What is known about the FM-1's hardware comes largely from the [FM-1-RE](https://github.com/AL-255/FM-1-RE) reverse-engineering work. The rescue route uses [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter)'s protocol and JieLi's flash loader from kagaimiq's jl-uboot-tool.
+The plate reverb is Jon Dattorro's design ("Effect Design, Part 1", 1997), by way of FoMni. The RESONATOR is modelled on **Rings** by Mutable Instruments (Emilie Gillet, MIT). The idea of a resonator, and the Progression page's chord slots, came from **DUB-1**. Auto FX follows an idea from **DARK-1** by Polystellarflow. The punch-in effects and the filter types follow Caustic's per-machine effects (Single Cell Software). Each is written afresh for PERF-1.
 
 The bass modes, the pad's comping rhythms, the ghost notes and accents of the genres, and the deja vu loop in the pluck follow ideas in **Tuna** by delirioux ([github.com/delirioux/tuna](https://github.com/delirioux/tuna), GPL-3.0), a generative firmware for the FM-1 on Felucca. Tuna's random section is a port of **Marbles** by Emilie Gillet (Mutable Instruments, MIT). PERF-1's versions are written for its own engine.
 
-Screen and page fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). Licence: GPL-3.0, no warranty.
+The sixty built-in DX7 voices are patches made by people, from banks published as public domain. Most are from [Bobby Blues' DX7 page](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html): Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the folders of Clyde Jones, Toby, Frank Carvalho, Narfman, Godric and Jezreel, and the Aftertouch, Keyboards, Guitares & Claviers, E&MM and Keyboard magazine banks. One is from Jack Deckard's collection on [Dave Benson's DX7 page](https://homepages.abdn.ac.uk/d.j.benson/pages/html/dx7.html). No voice from Yamaha's own banks is used.
 
+The idea of running FM-1 firmware in the browser comes from [Groove OS](https://www.groove-os.com/)'s emulator. What is known about the FM-1's hardware comes largely from the [FM-1-RE](https://github.com/AL-255/FM-1-RE) reverse-engineering work. The rescue route uses [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter)'s protocol and JieLi's flash loader from kagaimiq's jl-uboot-tool.
 
-M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.
+Screen and page fonts: Chakra Petch (Cadson Demak) and Barlow Semi Condensed (The Barlow Project Authors), SIL Open Font License 1.1.
+
+Licence: GPL-3.0-only, no warranty. The source is at <https://github.com/deamonSLINKY/PERF-1>, and its LICENSING.md says where each part comes from.
+
+M-VAVE and FM-1 are trademarks of their owners. PERF-1 is independent firmware, not affiliated with or endorsed by them. Other product names in this manual are trademarks of their owners, used only to describe sounds and gear.
 
 Runners: hold shift and edit the beat.
