@@ -12,13 +12,15 @@
 <title>PERF-1 studio</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
 <style>
-  /* the Console theme's palette (firmware/src/app/ui.c THEMES[0]): a desk's charcoal, amber for now, a colour a part */
-  :root { --bg: #0e0f12; --panel: #181a1f; --panel-2: #22252c; --line: #2e313a; --dim: #8b8e98; --ink: #f2efe6; --acc: #ffb000;
+  /* the sites' palette (2026-11-18): SAMPERF's filter and instrument pages (deep navy panels in a purple frame), the boot screen's and the Console
+   * theme's accents: amber for now and values, violet buttons, lavender headings and links; cyan curves with amber handles; a colour a part */
+  :root { --bg: #0b1022; --panel: #121a33; --panel-2: #1a2446; --line: #2c3766; --dim: #9aa3c7; --ink: #f2efe6; --acc: #ffb000;
+          --violet: #7253e6; --lav: #a58bff; --frame: #3e2a8c; --curve: #3fd8ff; --well: #0e1530;
           --pad: #a58bff; --acid: #b8f53a; --bass: #ff5a5f; --drum: #ff9a3c; --pluck: #3fd8ff; color-scheme: dark; }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.45 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
-  main { max-width: 1500px; margin: 0 auto; padding: 14px 16px 48px; }
+  body { margin: 0; background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--bg); color: var(--ink); font: 400 16px/1.45 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 2400px; margin: 0 auto; padding: 14px clamp(16px, 2vw, 32px) 48px; }
   h1, h2, button, select, .tag, .site nav a { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
   .site { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem 1.2rem; margin: 0 0 .8rem; padding-bottom: .6rem; border-bottom: 1px solid var(--line); }
   .site .home { font: 700 1.25rem "Chakra Petch", sans-serif; letter-spacing: .08em; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .6rem; }
@@ -27,15 +29,17 @@
   .site nav a { color: var(--ink); text-decoration: none; }
   .site nav a[aria-current] { color: var(--acc); }
   button, select { font-size: .85rem; font-weight: 600; letter-spacing: .05em; border-radius: 6px; padding: .4em .9em; cursor: pointer;
-                   background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
-  button:hover:not(:disabled) { border-color: var(--acc); }
+                   background: var(--panel-2); color: var(--ink); border: 1px solid color-mix(in srgb, var(--violet) 55%, var(--line)); }
+  button:hover:not(:disabled) { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 22%, var(--panel-2)); }
+  select:hover:not(:disabled) { border-color: var(--violet); }
+  a { color: var(--lav); }
   button:disabled { opacity: .4; cursor: default; }
-  button.go { background: var(--acc); color: #0e0f12; border-color: var(--acc); font-weight: 700; }
-  button[aria-pressed=true] { background: var(--acc); color: #0e0f12; border-color: var(--acc); }
+  button.go { background: var(--acc); color: #0b1022; border-color: var(--acc); font-weight: 700; }
+  button[aria-pressed=true] { background: var(--acc); color: #0b1022; border-color: var(--acc); }
   button.small { font-size: .75rem; padding: .25em .6em; }
   .bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
   .bar .sp { flex: 1; }
-  #top { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; position: sticky; top: 0; z-index: 30; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
+  #top { background: var(--panel); border: 1px solid var(--frame); border-radius: 8px; padding: 8px 10px; position: sticky; top: 0; z-index: 30; box-shadow: 0 6px 14px rgba(0,0,0,.35); }
   #top .tsep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px; }
   #top { gap: .28rem; }
   #top select { max-width: 8.5em; }
@@ -43,19 +47,19 @@
   #top > * { flex-shrink: 0; } #top .sp { flex-shrink: 1; }
   #top .tgrp { display: inline-flex; align-items: center; gap: .28rem; margin-left: auto; flex: none; }
   /* the position as the unit's screen would show it: big digits in a dark window, a small word under each */
-  .lcd { display: inline-flex; flex: none; background: #08090b; border: 1px solid var(--line); border-radius: 6px; padding: 2px 2px; box-shadow: inset 0 1px 5px rgba(0,0,0,.7); }
+  .lcd { display: inline-flex; flex: none; background: #070b1a; border: 1px solid var(--line); border-radius: 6px; padding: 2px 2px; box-shadow: inset 0 1px 5px rgba(0,0,0,.7); }
   .lcd > span { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 6px; min-width: 2.9em; }
   .lcd > span:first-child { min-width: 3.9em; }
   .lcd > span + span { border-left: 1px solid #1b1d23; }
   .lcd b { font: 700 1.08rem/1.15 "Chakra Petch", sans-serif; color: var(--acc); font-variant-numeric: tabular-nums; letter-spacing: .03em; text-shadow: 0 0 8px rgba(255,176,0,.45); white-space: nowrap; }
   .lcd i { font: 600 .56rem/1 "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .14em; font-style: normal; text-transform: uppercase; white-space: nowrap; }
-  .lcd.off b { color: #4a4d57; text-shadow: none; }
+  .lcd.off b { color: #4a5590; text-shadow: none; }
   #top .fld { display: inline-flex; flex-direction: column; gap: 1px; flex: none; }
   #top .fld > i { font: 600 .56rem/1 "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .14em; font-style: normal; padding-left: 2px; }
   #top .fld > span { display: inline-flex; gap: 3px; }
   #top select, #top input { padding: .3em .45em; }
   #top button, #top .menu summary { white-space: nowrap; }
-  .tcchip { display: inline-flex; flex: none; flex-direction: column; align-items: flex-start; gap: 1px; padding: 2px 8px !important; background: transparent; border: 1px dashed #555a66; }
+  .tcchip { display: inline-flex; flex: none; flex-direction: column; align-items: flex-start; gap: 1px; padding: 2px 8px !important; background: transparent; border: 1px dashed #5b6596; }
   .tcchip i { font: 600 .56rem/1 "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .14em; font-style: normal; }
   .tcchip b { font: 700 .86rem/1.15 "Chakra Petch", sans-serif; color: var(--ink); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
   .tcchip.stale b { color: var(--dim); }
@@ -67,7 +71,7 @@
   #sound > .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
   #sound > .sec.dx7, #sound > .sec:has(.lanes6), #sound > p { grid-column: 1 / -1; }
   .beats { display: inline-flex; gap: 3px; margin-top: 2px; }
-  .beats i { width: 7px; height: 4px; border-radius: 1px; background: #2a2d35; }
+  .beats i { width: 7px; height: 4px; border-radius: 1px; background: #243058; }
   .beats i.on { background: var(--acc); box-shadow: 0 0 6px var(--acc); }
   .beats i.on:first-child { background: #fff; box-shadow: 0 0 6px #fff; }
   .menu { position: relative; }
@@ -84,7 +88,7 @@
   .menu .pop hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
   #msg { min-height: 1.5em; color: var(--dim); margin: 6px 2px; font-size: .95rem; overflow-wrap: anywhere; }
   #msg.warn { color: var(--acc); }
-  .loomwrap { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+  .loomwrap { position: relative; background: var(--panel); border: 1px solid var(--frame); border-radius: 8px; padding: 6px; }
   #loom { width: 100%; display: block; cursor: pointer; }
   #start { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem;
            background: rgba(14, 15, 18, .86); border-radius: 8px; text-align: center; padding: 1rem; }
@@ -92,12 +96,12 @@
   #start p { max-width: 36em; color: var(--dim); margin: 0; font-size: .85rem; }
   #impBig { width: 92px; height: 112px; image-rendering: pixelated; cursor: pointer;
              background: radial-gradient(ellipse 46% 40% at 50% 52%, rgba(156,29,58,.55), rgba(156,29,58,0) 100%); }
-  .sitefoot { max-width: 1468px; margin: -24px auto 26px; padding: 12px 16px 0; border-top: 1px solid var(--line); text-align: center; color: var(--dim); font-size: .78rem; }
-  .sitefoot p { margin: 2px 0; } .sitefoot a { color: var(--ink); }
+  .sitefoot { max-width: 2400px; margin: -24px clamp(16px, 2vw, 32px) 26px; padding: 12px 16px 0; border-top: 1px solid var(--line); text-align: center; color: var(--dim); font-size: .78rem; }
+  .sitefoot p { margin: 2px 0; } .sitefoot a { color: var(--lav); }
   #start .vibeq { font: 700 1.6rem "Chakra Petch", sans-serif; letter-spacing: .04em; margin: 0 0 4px; }
   .vibes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: min(900px, 96%); }
   @media (max-width: 760px) { .vibes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  .vibe { padding: 16px 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #1d2026; text-align: center; transition: transform .12s, border-color .12s; }
+  .vibe { padding: 16px 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: #172042; text-align: center; transition: transform .12s, border-color .12s; }
   .vibe:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--acc); }
   .vibe b { display: block; font: 700 1.1rem "Chakra Petch", sans-serif; margin-bottom: 4px; }
   .vibe span { font-size: .72rem; color: var(--dim); }
@@ -106,16 +110,16 @@
   .doors { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
   .lower { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; margin-top: 12px; }
   @media (max-width: 980px) { .lower { grid-template-columns: 1fr; } }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .card { background: var(--panel); border: 1px solid var(--frame); border-radius: 8px; padding: 10px 12px; }
   .edhead { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; margin-bottom: 8px; }
   .edhead h2 { margin: 0; font-size: 1.15rem; letter-spacing: .08em; }
   .tag { font-size: .7rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; letter-spacing: .06em; }
-  .tag.yours { background: var(--acc); color: #0e0f12; }
-  .tag.dice { color: var(--dim); border: 1px dashed #555a66; }
+  .tag.yours { background: var(--acc); color: #0b1022; }
+  .tag.dice { color: var(--dim); border: 1px dashed #5b6596; }
   #edtools { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
   #edtools .grp { display: inline-flex; gap: 2px; align-items: center; margin-right: .5rem; }
   #edtools .lbl { font: 600 .72rem "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .08em; margin-right: 4px; }
-  #ed { width: 100%; display: block; background: #121318; border: 1px solid var(--line); border-radius: 6px; cursor: crosshair; touch-action: none; }
+  #ed { width: 100%; display: block; background: #0e1530; border: 1px solid var(--line); border-radius: 6px; cursor: crosshair; touch-action: none; }
   #edhelp { color: var(--dim); font-size: .92rem; margin: 6px 0 0; }
   .helpb { margin-left: auto; width: 2em; border-radius: 50%; padding: .25em 0 !important; color: var(--dim); }
   .helpb[aria-expanded=true] { color: var(--acc); border-color: var(--acc); }
@@ -145,19 +149,19 @@
   .views .hintsb { border-radius: 4px; border-bottom: 1px solid var(--line); padding: .15em .65em; font: 600 .66rem "Chakra Petch", sans-serif; letter-spacing: .1em; align-self: center; margin-right: 10px; }
   body.nohints .hint, body.nohints #edhelp, body.nohints #edhelpB { display: none !important; }
   .views.small button { border-radius: 4px; border-bottom: 1px solid var(--line); padding: .2em .7em; font-size: .75rem; }
-  #scope { width: 100%; display: block; margin-top: 6px; border-radius: 6px; background: #121318; }
-  .songempty { border: 1px dashed #3a3e4a; border-radius: 10px; padding: 22px 18px 18px; margin: 10px 0; text-align: center; background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%), var(--bg); }
+  #scope { width: 100%; display: block; margin-top: 6px; border-radius: 6px; background: #0e1530; }
+  .songempty { border: 1px dashed #34407a; border-radius: 10px; padding: 22px 18px 18px; margin: 10px 0; text-align: center; background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%), var(--bg); }
   .songempty h2 { font: 700 1.25rem "Chakra Petch", sans-serif; letter-spacing: .12em; margin: 0 0 4px; }
   .songempty .go { font-size: 1rem; padding: .55em 1.3em; }
   .songplan { display: flex; gap: 3px; align-items: flex-end; height: 70px; max-width: 560px; margin: 14px auto 14px; }
   .songplan div { background: linear-gradient(to top, color-mix(in srgb, var(--c) 35%, transparent), color-mix(in srgb, var(--c) 80%, transparent)); border-radius: 5px 5px 2px 2px; min-width: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
-  .songplan span { font: 600 .6rem "Chakra Petch", sans-serif; letter-spacing: .06em; color: #0e0f12; padding-bottom: 3px; white-space: nowrap; }
+  .songplan span { font: 600 .6rem "Chakra Petch", sans-serif; letter-spacing: .06em; color: #0b1022; padding-bottom: 3px; white-space: nowrap; }
   #song.dragging #songline, #song.dragging .place, #song.dragging .songempty { outline: 2px dashed rgba(255,176,0,.4); outline-offset: 2px; }
   #song.dragging .over { outline: 2px solid var(--acc); background-color: rgba(255,176,0,.07); }
   /* a control: a label, its value, a bar to drag (or a list) */
   .ctls { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 12px; }
   .sec { margin: 0 0 12px; }
-  .sec h3 { font: 600 .75rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: var(--dim); margin: 0 0 6px; text-transform: uppercase; }
+  .sec h3 { font: 600 .75rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: var(--lav); margin: 0 0 6px; text-transform: uppercase; }
   .ctl { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px 6px; user-select: none; touch-action: none; cursor: ew-resize; outline: none; }
   .ctl:focus-visible { border-color: var(--acc); }
   .ctl .top { display: flex; justify-content: space-between; gap: 6px; font-size: .8rem; color: var(--dim); }
@@ -186,7 +190,7 @@
   @media (max-width: 760px) { .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .strip .mix { display: flex; justify-content: center; align-items: stretch; gap: 8px; margin: 2px 0 0; }
   .strip .mix .fader { margin: 0; height: 132px; }
-  .strip .meter.v { width: 10px; height: 132px; position: relative; border-radius: 3px; background: repeating-linear-gradient(to top, #22252c 0 5px, #121318 5px 7px); }
+  .strip .meter.v { width: 10px; height: 132px; position: relative; border-radius: 3px; background: repeating-linear-gradient(to top, #1a2446 0 5px, #0e1530 5px 7px); }
   .strip .meter.v i { position: absolute; left: 0; right: 0; bottom: 0; width: auto; height: 0; transition: height .06s linear;
                       background: linear-gradient(to top, var(--c) 0 70%, #ffd447 85%, #ff5a5f 100%); background-size: 100% 132px; background-position: bottom;
                       -webkit-mask: repeating-linear-gradient(to top, #000 0 5px, transparent 5px 7px); mask: repeating-linear-gradient(to top, #000 0 5px, transparent 5px 7px); }
@@ -204,8 +208,8 @@
   .knob { background: none; border: 0; padding: 2px 2px 4px; width: 74px; display: flex; flex-direction: column; align-items: center; gap: 1px; cursor: ns-resize; }
   .knob:focus-visible .dial { box-shadow: 0 0 0 2px var(--acc); }
   .knob .dial { --f: 0; width: 44px; height: 44px; border-radius: 50%; position: relative;
-                    background: conic-gradient(from 225deg, var(--c, var(--acc)) calc(var(--f) * 270deg), #2a2d35 0 270deg, transparent 0); }
-  .knob .dial::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #2e3139, #181a1f 70%); box-shadow: 0 2px 4px rgba(0,0,0,.6); }
+                    background: conic-gradient(from 225deg, var(--c, var(--acc)) calc(var(--f) * 270deg), #243058 0 270deg, transparent 0); }
+  .knob .dial::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #26305e, #121a33 70%); box-shadow: 0 2px 4px rgba(0,0,0,.6); }
   .knob .dial i { position: absolute; left: calc(50% - 1.5px); top: 8px; width: 3px; height: 12px; border-radius: 2px; background: var(--ink); z-index: 1;
                       transform-origin: 50% 14px; transform: rotate(calc(-135deg + var(--f) * 270deg)); }
   .knob .v { font: 700 .78rem "Chakra Petch", sans-serif; max-width: 72px; text-align: center; }
@@ -226,11 +230,11 @@
   .fader i { position: absolute; left: 3px; right: 3px; bottom: 3px; border-radius: 4px; background: var(--c); opacity: .85; }
   .fader b { position: absolute; left: -6px; right: -6px; height: 8px; margin-bottom: -4px; background: var(--ink); border-radius: 2px; }
   .strip .lv { text-align: center; font: 700 1.3rem "Chakra Petch", sans-serif; color: var(--c); }
-  .strip .mute[aria-pressed=true] { background: #555a66; color: #fff; border-color: #6a6f7c; text-decoration: line-through; }
-  .strip .solo[aria-pressed=true] { background: var(--ink); color: #0e0f12; border-color: var(--ink); }
+  .strip .mute[aria-pressed=true] { background: #5b6596; color: #fff; border-color: #6a6f7c; text-decoration: line-through; }
+  .strip .solo[aria-pressed=true] { background: var(--ink); color: #0b1022; border-color: var(--ink); }
   .strip .ms { display: inline-flex; gap: 3px; }
   .strip.out .body, .strip.out .cap { opacity: .35; }
-  canvas.pic { width: 100%; display: block; border-radius: 6px; margin: 0 0 8px; background: #121318; border: 1px solid var(--line); touch-action: none; }
+  canvas.pic { width: 100%; display: block; border-radius: 6px; margin: 0 0 8px; background: #0e1530; border: 1px solid var(--line); touch-action: none; }
   .meter { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
   .meter i { display: block; height: 100%; width: 0; background: var(--c); transition: width .06s linear; }
   /* the song: the set list's sixteen places as blocks */
@@ -242,7 +246,7 @@
   @media (max-width: 700px) { .partkey { display: none; } }
   .dx7 .dxgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 14px; margin-bottom: 8px; }
   @media (max-width: 900px) { .dx7 .dxgrid { grid-template-columns: minmax(0, 1fr); } }
-  .dx7 canvas { width: 100%; display: block; border-radius: 6px; background: #121318; border: 1px solid var(--line); touch-action: none; }
+  .dx7 canvas { width: 100%; display: block; border-radius: 6px; background: #0e1530; border: 1px solid var(--line); touch-action: none; }
   .dxr { display: grid; grid-template-columns: 7.6em minmax(0, 1fr) 3em; align-items: center; gap: 6px; font-size: .8rem; color: var(--dim); margin: 2px 0; }
   .dxr input[type=range] { width: 100%; accent-color: var(--pluck); }
   .dxr b { color: var(--ink); text-align: right; font: 600 .8rem "Chakra Petch", sans-serif; }
@@ -281,11 +285,11 @@
   @media (max-width: 1100px) { #fx:not([hidden]) { grid-template-columns: minmax(0, 1fr); } }
   .fxbank { margin: 0 0 12px; }
   .fxkeys { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 5px; }
-  .fxk { position: relative; text-align: left; padding: 7px 8px 6px; min-height: 52px; border-radius: 6px; border: 1px solid var(--line); background: #1d2026; border-top: 3px solid var(--c, #555a66); }
-  .fxk.blk { background: #121318; }
+  .fxk { position: relative; text-align: left; padding: 7px 8px 6px; min-height: 52px; border-radius: 6px; border: 1px solid var(--line); background: #172042; border-top: 3px solid var(--c, #5b6596); }
+  .fxk.blk { background: #0e1530; }
   .fxk b { display: block; font: 700 .78rem "Chakra Petch", sans-serif; letter-spacing: .03em; }
   .fxk span { font-size: .65rem; color: var(--dim); }
-  .fxk[aria-pressed=true] { background: var(--c); color: #0e0f12; border-color: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
+  .fxk[aria-pressed=true] { background: var(--c); color: #0b1022; border-color: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
   .fxk[aria-pressed=true] span { color: rgba(0,0,0,.55); }
   .fxk.held, .fxk.hold[aria-pressed=true] { animation: fxpulse .55s ease-in-out infinite alternate; }
   @keyframes fxpulse { from { box-shadow: 0 0 4px color-mix(in srgb, var(--c) 40%, transparent); } to { box-shadow: 0 0 20px var(--c), 0 0 0 2px var(--c); } }
@@ -306,7 +310,7 @@
   .fxknobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; align-items: stretch; margin-top: 4px; }
   .fxknobs .sec, .fxpad .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
   .fxknobs .fxnone { display: flex; flex-direction: column; }
-  .fxknobs .fxnone p { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 12px; border: 1px dashed #2a2d35; border-radius: 6px; }
+  .fxknobs .fxnone p { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px 12px; border: 1px dashed #243058; border-radius: 6px; }
   .fxknobs .ctls.kn { gap: 6px 0; justify-content: space-between; }
   .fxknobs .knob { width: 56px; } .fxknobs .knob .v, .fxknobs .knob .kl { max-width: 56px; }
   .fxpad { display: flex; flex-direction: column; min-width: 0; }
@@ -319,7 +323,7 @@
   .shapes { display: flex; gap: 3px; flex-wrap: wrap; }
   .shapes button { padding: 3px 5px; line-height: 0; }
   .shapes svg { width: 30px; height: 16px; }
-  .shapes button[aria-pressed=true] svg path { stroke: #0e0f12; }
+  .shapes button[aria-pressed=true] svg path { stroke: #0b1022; }
   .sec h3 .dice { float: right; padding: 0 .45em; font-size: .85rem; line-height: 1.4; }
   .knob.locked::after { content: "🔒"; font-size: .6rem; position: absolute; margin: -2px 0 0 34px; }
   .knob { position: relative; }
@@ -344,7 +348,7 @@
   @media (max-width: 900px) { .places { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .place { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px 8px; min-height: 108px; cursor: pointer; position: relative; }
   .place.sel { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
-  .place.empty { border-style: dashed; color: #555a66; }
+  .place.empty { border-style: dashed; color: #5b6596; }
   .place.now::after { content: "▶"; position: absolute; right: 8px; top: 6px; color: var(--acc); font-size: .8rem; }
   .place .n { font: 600 .7rem "Chakra Petch", sans-serif; color: var(--dim); }
   .place .g { font: 700 .9rem "Chakra Petch", sans-serif; letter-spacing: .05em; border-left: 3px solid var(--c, var(--line)); padding-left: 5px; margin-top: 2px; }
@@ -485,7 +489,7 @@ const $ = (id) => document.getElementById(id);
 const D = JSON.parse($("pdata").textContent), PE = JSON.parse($("edata").textContent);
 const S = shareNames(D), P = D.params, N = D.names;
 const NOTE = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
-const COL = { bg: "#0e0f12", panel: "#181a1f", panel2: "#22252c", line: "#2e313a", grid: "#1c1e24", dim: "#8b8e98", ink: "#f2efe6", acc: "#ffb000",
+const COL = { bg: "#0b1022", panel: "#121a33", panel2: "#1a2446", line: "#2c3766", grid: "#161f3d", dim: "#9aa3c7", ink: "#f2efe6", acc: "#ffb000", curve: "#3fd8ff", lav: "#a58bff", violet: "#7253e6",
               pad: "#a58bff", padT: "#2a2440", acid: "#b8f53a", bass: "#ff5a5f", drum: "#ff9a3c", pluck: "#3fd8ff" };
 const FONT = (w, px) => w + " " + px + "px 'Chakra Petch', sans-serif";
 const say = (t, warn) => { $("msg").textContent = t || ""; $("msg").className = warn ? "warn" : ""; };
@@ -818,10 +822,10 @@ function drawLoom() {
   }
   for (const L of layout) {
     const st = laneState(L.id), y0 = L.top, h = L.h;
-    g.fillStyle = "#121318"; g.fillRect(LX, y0, RX - LX, h);
+    g.fillStyle = "#0e1530"; g.fillRect(LX, y0, RX - LX, h);
     if (sel === L.id) { g.strokeStyle = COL.acc; g.lineWidth = 2; g.strokeRect(LX - 1, y0 - 1, RX - LX + 2, h + 2); }
     for (let b = w0; b <= w0 + vis; b++) {                  // bars, beats (sixteenths too, zoomed in)
-      g.fillStyle = b % 4 === 0 ? "#3a3e4a" : "#262932"; g.fillRect(Math.round(X(b, 0)), y0, 1, h);
+      g.fillStyle = b % 4 === 0 ? "#34407a" : "#1f2950"; g.fillRect(Math.round(X(b, 0)), y0, 1, h);
       if (b < w0 + vis && BW > 40) { g.fillStyle = COL.grid; for (let q = 1; q < 4; q++) g.fillRect(Math.round(X(b, 4 * q)), y0, 1, h); }
       if (b < w0 + vis && SW > 14) { g.fillStyle = "#16181d"; for (let q = 1; q < 16; q++) if (q % 4) g.fillRect(Math.round(X(b, q)), y0, 1, h); }
     }
@@ -834,7 +838,7 @@ function drawLoom() {
       g.font = FONT(700, 10);
       const bw = g.measureText(st.tag).width + 10;
       if (st.tag === "YOURS") { g.fillStyle = COL.acc; g.fillRect(24 + tw, y0 + 6, bw, 14); g.fillStyle = COL.bg; }
-      else { g.strokeStyle = "#555a66"; g.setLineDash([3, 2]); g.strokeRect(24.5 + tw, y0 + 6.5, bw, 13); g.setLineDash([]); g.fillStyle = COL.dim; }
+      else { g.strokeStyle = "#5b6596"; g.setLineDash([3, 2]); g.strokeRect(24.5 + tw, y0 + 6.5, bw, 13); g.setLineDash([]); g.fillStyle = COL.dim; }
       g.fillText(st.tag, 29 + tw, y0 + 17);
     }
     g.fillStyle = COL.dim; g.font = "500 12px 'Barlow Semi Condensed', sans-serif"; g.fillText(st.sub, 18, y0 + 34);
@@ -849,11 +853,11 @@ function drawLoom() {
     const m = LANE_TRK[L.id];
     if (!m) continue;
     if ((outM & m) === m) {
-      g.fillStyle = "rgba(14,15,18,.62)"; g.fillRect(LX, L.top, RX - LX, L.h); g.fillRect(0, L.top, LX - 2, L.h);
-      g.fillStyle = "#8b8e98"; g.font = FONT(700, 11); g.fillText("MUTED", LX + 8, L.top + Math.min(L.h - 6, 18));
+      g.fillStyle = "rgba(11,16,34,.62)"; g.fillRect(LX, L.top, RX - LX, L.h); g.fillRect(0, L.top, LX - 2, L.h);
+      g.fillStyle = "#9aa3c7"; g.font = FONT(700, 11); g.fillText("MUTED", LX + 8, L.top + Math.min(L.h - 6, 18));
     } else if ((restM & m) === m) {
-      g.fillStyle = "rgba(14,15,18,.35)"; g.fillRect(LX, L.top, RX - LX, L.h);
-      g.fillStyle = "#8b8e98"; g.font = FONT(700, 11); g.fillText("RESTING (THE ARRANGEMENT)", LX + 8, L.top + Math.min(L.h - 6, 18));
+      g.fillStyle = "rgba(11,16,34,.35)"; g.fillRect(LX, L.top, RX - LX, L.h);
+      g.fillStyle = "#9aa3c7"; g.font = FONT(700, 11); g.fillText("RESTING (THE ARRANGEMENT)", LX + 8, L.top + Math.min(L.h - 6, 18));
     }
   }
   if (loomPos >= w0 && loomPos < w0 + vis) {                // the playhead
@@ -981,7 +985,7 @@ function drawEditor() {
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
   const g = cv.getContext("2d");
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
   if (!io) return;
   ({ drums: edDrums, bass: edBass, acid: edAcid, pluck: edPluck, chords: edChords, pad: edPad })[sel](g, W, RH, rows);
 }
@@ -1001,10 +1005,10 @@ function gridBase(g, W, RH, rows, labels, bright) {          // rows of a bar, t
   for (let r = 0; r < rows; r++) {
     if (bright && bright(r)) { g.fillStyle = "#1b1d24"; g.fillRect(x0, y0 + r * RH, 16 * cw, RH); }
     g.fillStyle = "#1a1c22"; g.fillRect(x0, y0 + r * RH, 16 * cw, 1);
-    g.fillStyle = bright && bright(r) ? COL.ink : "#6b6e78"; g.font = FONT(600, 11);
+    g.fillStyle = bright && bright(r) ? COL.ink : "#7a84b4"; g.font = FONT(600, 11);
     g.fillText(labels(r), 6, y0 + r * RH + RH / 2 + 4);
   }
-  for (let c = 0; c <= 16; c++) { g.fillStyle = c % 4 === 0 ? "#3a3e4a" : "#22252c"; g.fillRect(Math.round(x0 + c * cw), y0, 1, rows * RH); }
+  for (let c = 0; c <= 16; c++) { g.fillStyle = c % 4 === 0 ? "#34407a" : "#1a2446"; g.fillRect(Math.round(x0 + c * cw), y0, 1, rows * RH); }
   g.font = FONT(600, 10); g.fillStyle = COL.dim;
   for (let c = 0; c < 16; c++) g.fillText(String(c + 1), x0 + c * cw + 3, y0 + rows * RH + 14);
   edGrid = { x0, y0, cw, RH, rows };
@@ -1037,7 +1041,7 @@ function edDrums(g, W, RH, rows) {
       const md = modGet(l, s), lvl = (md >> 6) & 3, push = (md >> 3) & 7, rat = md & 7;
       const x = G.x0 + s * G.cw, y = G.y0 + l * RH;
       if (!((m >> s) & 1)) {
-        if (md) { g.fillStyle = "#3a3e4a"; g.fillRect(x + G.cw / 2 - 1, y + RH / 2 - 1, 3, 3); }
+        if (md) { g.fillStyle = "#34407a"; g.fillRect(x + G.cw / 2 - 1, y + RH / 2 - 1, 3, 3); }
         continue;
       }
       const hh = [0.62, 0.3, 0.45, 0.8][lvl] * RH, px = push / 12 * G.cw;
@@ -1097,8 +1101,8 @@ function edBass(g, W, RH, rows) {
   const rowOf = (n, o) => rows - 1 - (o * 8 + n);
   for (let o = 0; o < 3; o++) {                               // the three octaves as bands, a word for each
     const y = 4 + (rows - 8 * (o + 1)) * RH;
-    if (o === 1) { g.fillStyle = "#15161b"; g.fillRect(56, y, W - 64, 8 * RH); }
-    g.fillStyle = "#6b6e78"; g.font = FONT(700, 8); g.fillText(["LOW", "MID", "HIGH"][o], 24, y + 8 * RH - 4);
+    if (o === 1) { g.fillStyle = "#131b38"; g.fillRect(56, y, W - 64, 8 * RH); }
+    g.fillStyle = "#7a84b4"; g.font = FONT(700, 8); g.fillText(["LOW", "MID", "HIGH"][o], 24, y + 8 * RH - 4);
   }
   const G = gridBase(g, W, RH, rows, (r) => { const v = rows - 1 - r, n = v % 8; return DEG8[n]; },
                      (r) => { const n = (rows - 1 - r) % 8; return n === 0 || n === 2 || n === 4 || n === 7; });
@@ -1151,7 +1155,7 @@ function edAcid(g, W, RH, rows) {
   line.forEach((x, s) => {
     const xx = G.x0 + s * G.cw;
     if (!x.gate) { prev = null; return; }
-    g.fillStyle = x.oct === 0 ? "#555a66" : COL.acid; g.font = FONT(600, 10); g.fillText(["oct", "oct +1", "oct +2", "oct +3"][x.oct], xx + 3, G.y0 + rows * RH + 26);
+    g.fillStyle = x.oct === 0 ? "#5b6596" : COL.acid; g.font = FONT(600, 10); g.fillText(["oct", "oct +1", "oct +2", "oct +3"][x.oct], xx + 3, G.y0 + rows * RH + 26);
     const y = G.y0 + (rows - 1 - x.off) * RH;
     if (prev && prev.slide) { g.strokeStyle = "#e4ffb0"; g.lineWidth = 2; g.beginPath(); g.moveTo(prev.x, prev.y); g.lineTo(xx + 2, y + RH / 2); g.stroke(); }
     rblock(g, xx + 2, y + 1.5, G.cw - 4, RH - 3); g.fillStyle = x.acc ? COL.acid : "#86b52a"; g.fill();
@@ -1223,11 +1227,11 @@ function edChords(g, W, RH) {
   for (let s = 0; s < 8; s++) {
     const q = slotGet(s), w = q.bars * u, c = q.deg ? chordName(q.deg - 1) : null;
     g.fillStyle = q.deg ? COL.padT : "#16171c"; g.fillRect(x + 2, y0, w - 4, RH);
-    g.fillStyle = q.deg ? COL.pad : "#3a3e4a"; g.fillRect(x + 2, y0, 3, RH);
+    g.fillStyle = q.deg ? COL.pad : "#34407a"; g.fillRect(x + 2, y0, 3, RH);
     if (s === ED.slot) { g.strokeStyle = COL.acc; g.lineWidth = 2; g.strokeRect(x + 2, y0, w - 4, RH); }
     if (live && live.playing && live.prog === s) { g.fillStyle = COL.acc; g.fillRect(x + 2, y0 + RH - 4, w - 4, 4); }
     g.fillStyle = COL.dim; g.font = FONT(600, 10); g.fillText("SLOT " + (s + 1) + " · " + q.bars + (q.bars > 1 ? " BARS" : " BAR"), x + 10, y0 + 14);
-    g.fillStyle = q.deg ? COL.ink : "#555a66"; g.font = FONT(700, w > 70 ? 22 : 14); g.fillText(c ? c.roman : "—", x + 10, y0 + 44);
+    g.fillStyle = q.deg ? COL.ink : "#5b6596"; g.font = FONT(700, w > 70 ? 22 : 14); g.fillText(c ? c.roman : "—", x + 10, y0 + 44);
     if (c && w > 60) { g.fillStyle = "#c9beff"; g.font = "500 15px 'Barlow Semi Condensed', sans-serif"; g.fillText(c.name, x + 10, y0 + 64); }
     if (q.kind && w > 60) { g.fillStyle = COL.dim; g.font = "500 13px 'Barlow Semi Condensed', sans-serif"; g.fillText(P[PE.P_CHORD].t[q.kind], x + 10, y0 + 82); }
     out.push([x, w]);
@@ -2046,7 +2050,7 @@ function dxCanvas(id, H) {
   const dpr = window.devicePixelRatio || 1, W = cv.clientWidth;
   if (!W) return null;
   if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
-  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
   return { g, W, H };
 }
 function dxDrawAlg() {                                        // the operators in their stacks: a box as big as its level, a line as thick as what it sends,
@@ -2060,7 +2064,7 @@ function dxDrawAlg() {                                        // the operators i
   const off = dxOff(), t = dxNoteT >= 0 ? (performance.now() - dxNoteT) / 1000 : -1, OL = (n) => dxv[(6 - n) * FP.OP + FP.OL] / 99;
   const heardBy = dxSolo ? new Set(dxReach(gr, dxSolo)) : null;
   for (const [a, b] of gr.edges) {
-    g.strokeStyle = off.has(a) ? "#33363f" : hexA(COL.ink, 0.25 + 0.55 * OL(a)); g.lineWidth = 0.8 + 4 * OL(a);
+    g.strokeStyle = off.has(a) ? "#2a3460" : hexA(COL.ink, 0.25 + 0.55 * OL(a)); g.lineWidth = 0.8 + 4 * OL(a);
     g.beginPath(); g.moveTo(pos[a].x, pos[a].y + 10); g.lineTo(pos[b].x, pos[b].y - 10); g.stroke();
   }
   g.fillStyle = COL.pluck; g.fillRect(W / 2 - 90, H - 8, 180, 3);   // the out
@@ -2069,13 +2073,13 @@ function dxDrawAlg() {                                        // the operators i
     const p = pos[n], sel = n === dxOp, ol = OL(n), k = 0.72 + 0.28 * ol, bw = 42 * k, bh = 28 * k, x = p.x - bw / 2, y = p.y - bh / 2, muted = off.has(n), col = gr.carrier[n] ? COL.pluck : COL.ink;
     if (gr.carrier[n]) { g.strokeStyle = hexA(COL.pluck, muted ? 0.15 : 0.5); g.lineWidth = 1 + 2 * ol; g.beginPath(); g.moveTo(p.x, p.y + bh / 2); g.lineTo(p.x, H - 8); g.stroke(); }
     g.globalAlpha = muted ? 0.4 : 1;
-    rblock(g, x, y, bw, bh); g.fillStyle = sel ? "#3a2c10" : "#22252c"; g.fill();
+    rblock(g, x, y, bw, bh); g.fillStyle = sel ? "#3a2c10" : "#1a2446"; g.fill();
     g.fillStyle = hexA(col, 0.3); g.fillRect(x, y + bh - bh * ol, bw, bh * ol);
     if (t >= 0 && !muted) {                                   // (its envelope now, times its level)
       const e = dxEnvAt((6 - n) * FP.OP, t) * ol;
       if (e > 0.02) { g.save(); g.shadowColor = col; g.shadowBlur = 22 * e; rblock(g, x, y, bw, bh); g.fillStyle = hexA(col, 0.12 + 0.55 * e); g.fill(); g.restore(); }
     }
-    rblock(g, x, y, bw, bh); g.strokeStyle = sel ? COL.acc : col === COL.pluck ? COL.pluck : "#6b6e78"; g.lineWidth = sel ? 2.5 : 1.5;
+    rblock(g, x, y, bw, bh); g.strokeStyle = sel ? COL.acc : col === COL.pluck ? COL.pluck : "#7a84b4"; g.lineWidth = sel ? 2.5 : 1.5;
     if (muted) g.setLineDash([3, 3]); g.stroke(); g.setLineDash([]);
     if (heardBy && heardBy.has(n) || dxSolo === n) { g.strokeStyle = COL.acc; g.lineWidth = 1; rblock(g, x - 4, y - 4, bw + 8, bh + 8); g.stroke(); }
     g.globalAlpha = 1;
@@ -2095,15 +2099,15 @@ function dxDrawEG(id, rB, lB, pitch) {                        // an envelope: le
   const sx = drag ? drag.sx : (W - 2 * pad) / (seg[0] + seg[1] + seg[2] + hold + seg[3]), y = (l) => H - pad - (l / 99) * (H - 2 * pad - 6);
   const xs = [pad]; xs.push(xs[0] + seg[0] * sx, 0, 0, 0, 0); xs[2] = xs[1] + seg[1] * sx; xs[3] = xs[2] + seg[2] * sx; xs[4] = xs[3] + hold * sx; xs[5] = xs[4] + seg[3] * sx;
   const pts = [[xs[0], y(L[3])], [xs[1], y(L[0])], [xs[2], y(L[1])], [xs[3], y(L[2])], [xs[4], y(L[2])], [xs[5], y(L[3])]], base = pitch ? y(50) : H - pad;
-  g.strokeStyle = "#262932"; g.lineWidth = 1; for (let q = 1; q < 4; q++) { g.beginPath(); g.moveTo(pad, y(q * 33)); g.lineTo(W - pad, y(q * 33)); g.stroke(); }
-  if (pitch) { g.strokeStyle = "#4a4d57"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(pad, base); g.lineTo(W - pad, base); g.stroke(); g.setLineDash([]); g.fillStyle = "#555a66"; g.font = FONT(600, 8); g.fillText("UP", W - pad - 14, y(92)); g.fillText("DOWN", W - pad - 26, y(6)); }
+  g.strokeStyle = "#1f2950"; g.lineWidth = 1; for (let q = 1; q < 4; q++) { g.beginPath(); g.moveTo(pad, y(q * 33)); g.lineTo(W - pad, y(q * 33)); g.stroke(); }
+  if (pitch) { g.strokeStyle = "#4a5590"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(pad, base); g.lineTo(W - pad, base); g.stroke(); g.setLineDash([]); g.fillStyle = "#5b6596"; g.font = FONT(600, 8); g.fillText("UP", W - pad - 14, y(92)); g.fillText("DOWN", W - pad - 26, y(6)); }
   g.fillStyle = COL.dim; g.font = FONT(600, 9); g.fillText("KEY ON", xs[0] + 2, 11); g.fillText("KEY OFF", xs[4] + 2, 11);
-  g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(xs[4], 14); g.lineTo(xs[4], H - pad); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = "#34407a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(xs[4], 14); g.lineTo(xs[4], H - pad); g.stroke(); g.setLineDash([]);
   g.beginPath(); g.moveTo(pts[0][0], base); pts.forEach(([px, py]) => g.lineTo(px, py)); g.lineTo(pts[5][0], base); g.closePath(); g.fillStyle = hexA(col, 0.16); g.fill();
   g.beginPath(); pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.strokeStyle = col; g.lineWidth = 2; g.stroke();
   const hp = [[1, 0], [2, 1], [3, 2], [5, 3]];               // the handles: the end of segment k (its level k, its rate k)
   dxEG[id] = { hp: hp.map(([pi, k]) => ({ x: pts[pi][0], y: pts[pi][1], k, x0: pi === 5 ? xs[4] : xs[pi - 1] })), sx, pad, H, rB, lB };
-  for (const h of dxEG[id].hp) { g.fillStyle = drag && drag.k === h.k ? COL.acc : COL.ink; g.beginPath(); g.arc(h.x, h.y, 5, 0, 7); g.fill(); g.fillStyle = COL.dim; g.font = FONT(600, 9); g.fillText(String(h.k + 1), h.x + 7, h.y - 6); }
+  for (const h of dxEG[id].hp) { g.fillStyle = COL.acc; g.beginPath(); g.arc(h.x, h.y, 5, 0, 7); g.fill(); g.fillStyle = COL.dim; g.font = FONT(600, 9); g.fillText(String(h.k + 1), h.x + 7, h.y - 6); }
 }
 // the frequency: a ratio on a ladder of harmonics (0.5 .. 31, by octaves), the other operators' ratios marked above; fixed, in Hz (1 .. 9772)
 const DX_RUNGS = [0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 31], DX_RLAB = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24, 31];
@@ -2113,13 +2117,13 @@ function dxDrawFreq() {
   const c = dxCanvas("dxFreq", 66); if (!c || !dxv) return;
   const { g, W, H } = c, d = (6 - dxOp) * FP.OP, fixed = dxv[d + FP.MODE], pad = 14, w = W - 2 * pad, base = H - 16;
   const X = fixed ? (f) => pad + Math.log10(Math.max(1, f)) / 4 * w : (r) => pad + Math.log2(Math.max(0.5, r) / 0.5) / 6 * w;
-  g.strokeStyle = "#2a2d35"; g.lineWidth = 1; g.beginPath(); g.moveTo(pad, base); g.lineTo(W - pad, base); g.stroke();
+  g.strokeStyle = "#243058"; g.lineWidth = 1; g.beginPath(); g.moveTo(pad, base); g.lineTo(W - pad, base); g.stroke();
   g.font = FONT(600, 9); g.textAlign = "center";
-  if (!fixed) for (const r of DX_RUNGS) { const x = X(r), h = r <= 8 && r === Math.round(r) ? 12 : 7; g.fillStyle = r <= 8 ? "#6b6e78" : "#3a3e4a"; g.fillRect(Math.round(x), base - h, 1, h); if (DX_RLAB.includes(r)) { g.fillStyle = "#6b6e78"; g.fillText(String(r), x, base + 11); } }
-  else for (let e = 0; e < 4; e++) for (const m of [1, 2, 5]) { const f = m * Math.pow(10, e), x = X(f); if (f > 9772) continue; g.fillStyle = m === 1 ? "#6b6e78" : "#3a3e4a"; g.fillRect(Math.round(x), base - (m === 1 ? 12 : 7), 1, m === 1 ? 12 : 7); if (m === 1) { g.fillStyle = "#6b6e78"; g.fillText(f >= 1000 ? f / 1000 + "k Hz" : f + " Hz", x, base + 11); } }
+  if (!fixed) for (const r of DX_RUNGS) { const x = X(r), h = r <= 8 && r === Math.round(r) ? 12 : 7; g.fillStyle = r <= 8 ? "#7a84b4" : "#34407a"; g.fillRect(Math.round(x), base - h, 1, h); if (DX_RLAB.includes(r)) { g.fillStyle = "#7a84b4"; g.fillText(String(r), x, base + 11); } }
+  else for (let e = 0; e < 4; e++) for (const m of [1, 2, 5]) { const f = m * Math.pow(10, e), x = X(f); if (f > 9772) continue; g.fillStyle = m === 1 ? "#7a84b4" : "#34407a"; g.fillRect(Math.round(x), base - (m === 1 ? 12 : 7), 1, m === 1 ? 12 : 7); if (m === 1) { g.fillStyle = "#7a84b4"; g.fillText(f >= 1000 ? f / 1000 + "k Hz" : f + " Hz", x, base + 11); } }
   for (let n = 1; n <= 6; n++) {                              // (the others: where they sit)
     const e = (6 - n) * FP.OP; if (n === dxOp || dxv[e + FP.MODE] !== fixed) continue;
-    const x = X(fixed ? dxHzOf(e) : dxRatioOf(e)); g.fillStyle = "#4a4d57"; g.beginPath(); g.arc(x, 12, 6, 0, 7); g.fill(); g.fillStyle = COL.ink; g.font = FONT(700, 8); g.fillText(String(n), x, 15);
+    const x = X(fixed ? dxHzOf(e) : dxRatioOf(e)); g.fillStyle = "#4a5590"; g.beginPath(); g.arc(x, 12, 6, 0, 7); g.fill(); g.fillStyle = COL.ink; g.font = FONT(700, 8); g.fillText(String(n), x, 15);
   }
   const v = fixed ? dxHzOf(d) : dxRatioOf(d), x = X(v);
   g.strokeStyle = COL.pluck; g.lineWidth = 2; g.beginPath(); g.moveTo(x, 20); g.lineTo(x, base); g.stroke();
@@ -2143,15 +2147,15 @@ const dxNote = (bp) => NOTE[(bp + 9) % 12] + (Math.floor((bp + 9) / 12) - 1);
 function dxDrawKs() {
   const c = dxCanvas("dxKs", 84); if (!c || !dxv) return;
   const { g, W, H } = c, d = (6 - dxOp) * FP.OP, pad = 10, w = W - 2 * pad, kb = 12, mid = (H - kb) / 2, amp = mid - 8, X = (bp) => pad + bp / 99 * w;
-  for (let k = 0; k <= 99; k++) { const black = [1, 3, 6, 8, 10].includes((k + 9) % 12); g.fillStyle = black ? "#1d2026" : "#3a3e4a"; g.fillRect(X(k) - w / 200, H - kb + (black ? 0 : 3), Math.max(1, w / 100 - 1), black ? kb - 3 : kb - 3); }
-  g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad, mid); g.lineTo(W - pad, mid); g.stroke(); g.setLineDash([]);
+  for (let k = 0; k <= 99; k++) { const black = [1, 3, 6, 8, 10].includes((k + 9) % 12); g.fillStyle = black ? "#172042" : "#34407a"; g.fillRect(X(k) - w / 200, H - kb + (black ? 0 : 3), Math.max(1, w / 100 - 1), black ? kb - 3 : kb - 3); }
+  g.strokeStyle = "#34407a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad, mid); g.lineTo(W - pad, mid); g.stroke(); g.setLineDash([]);
   const bp = dxv[d + FP.BP], bx = X(bp), side = (dep, cv, u) => (cv >= 2 ? 1 : -1) * dep / 99 * amp * (cv === 1 || cv === 2 ? u * u * u : u);
   const ly = mid - side(dxv[d + FP.LD], dxv[d + FP.LC], 1), ry = mid - side(dxv[d + FP.RD], dxv[d + FP.RC], 1);
   g.beginPath();
   for (let x = pad; x <= W - pad; x += 2) { const left = x < bx, u = left ? (bx - x) / Math.max(1, bx - pad) : (x - bx) / Math.max(1, W - pad - bx), yy = mid - (left ? side(dxv[d + FP.LD], dxv[d + FP.LC], u) : side(dxv[d + FP.RD], dxv[d + FP.RC], u)); x === pad ? g.moveTo(x, yy) : g.lineTo(x, yy); }
   g.strokeStyle = COL.pluck; g.lineWidth = 2; g.stroke();
   g.strokeStyle = COL.acc; g.lineWidth = 1; g.beginPath(); g.moveTo(bx, 4); g.lineTo(bx, H - kb); g.stroke();
-  for (const [x, y2] of [[pad + 4, ly], [W - pad - 4, ry], [bx, mid]]) { g.fillStyle = dxKsDrag && dxKsDrag.x === x ? COL.acc : COL.ink; g.beginPath(); g.arc(x, y2, 5, 0, 7); g.fill(); }
+  for (const [x, y2] of [[pad + 4, ly], [W - pad - 4, ry], [bx, mid]]) { g.fillStyle = COL.acc; g.beginPath(); g.arc(x, y2, 5, 0, 7); g.fill(); }
   g.font = FONT(600, 9); g.fillStyle = COL.dim; g.fillText(CURVE[dxv[d + FP.LC]] + " " + dxv[d + FP.LD], pad + 12, 11);
   g.textAlign = "right"; g.fillText(CURVE[dxv[d + FP.RC]] + " " + dxv[d + FP.RD], W - pad - 12, 11); g.textAlign = "center"; g.fillStyle = COL.acc; g.fillText(dxNote(bp), bx, H - kb - 3); g.textAlign = "left";
   dxKsG = { pad, w, mid, amp, ends: [[pad + 4, ly, "L"], [W - pad - 4, ry, "R"], [bx, mid, "B"]] };
@@ -2169,14 +2173,14 @@ function dxDrawLfo() {
   let seed = 3; const sh = []; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
   const val = (ph) => { const f = ph - Math.floor(ph); switch (wave) { case 0: return f < 0.5 ? 4 * f - 1 : 3 - 4 * f; case 1: return 1 - 2 * f; case 2: return 2 * f - 1; case 3: return f < 0.5 ? 1 : -1; case 4: return Math.sin(f * 2 * Math.PI); default: { const k = Math.floor(ph); while (sh.length <= k) sh.push(rnd()); return sh[k]; } } };
   const env = (u) => (del <= 0 ? 1 : u < del / 2 ? 0 : Math.min(1, (u - del / 2) / (del / 2)));
-  g.strokeStyle = "#2a2d35"; g.beginPath(); g.moveTo(pad, mid); g.lineTo(W - pad, mid); g.stroke();
-  for (const [dep, col] of [[dxv[FP.LAMD] / 99, "#6b6e78"], [dxv[FP.LPMD] / 99, COL.pluck]]) {
+  g.strokeStyle = "#243058"; g.beginPath(); g.moveTo(pad, mid); g.lineTo(W - pad, mid); g.stroke();
+  for (const [dep, col] of [[dxv[FP.LAMD] / 99, "#7a84b4"], [dxv[FP.LPMD] / 99, COL.pluck]]) {
     g.beginPath(); for (let x = 0; x <= w; x += 1.5) { const u = x / w, yy = mid - val(u * cyc) * A * dep * env(u); x ? g.lineTo(pad + x, yy) : g.moveTo(pad + x, yy); }
     g.strokeStyle = col; g.lineWidth = col === COL.pluck ? 2 : 1.5; g.stroke();
   }
   if (del > 0) { g.fillStyle = "rgba(255,176,0,.08)"; g.fillRect(pad, 16, w * del / 2, H - 22); }
   g.font = FONT(600, 9); g.fillStyle = COL.dim; g.fillText(LFOW[wave].toUpperCase() + " · SPEED " + dxv[FP.LFS] + (del > 0 ? " · DELAY " + dxv[FP.LFD] : ""), pad, 11);
-  g.textAlign = "right"; g.fillStyle = COL.pluck; g.fillText("PITCH " + dxv[FP.LPMD], W - pad - 52, 11); g.fillStyle = "#8b8e98"; g.fillText("AMP " + dxv[FP.LAMD], W - pad, 11); g.textAlign = "left";
+  g.textAlign = "right"; g.fillStyle = COL.pluck; g.fillText("PITCH " + dxv[FP.LPMD], W - pad - 52, 11); g.fillStyle = "#9aa3c7"; g.fillText("AMP " + dxv[FP.LAMD], W - pad, 11); g.textAlign = "left";
 }
 function dxSet(i, v) {                                        // a byte of the voice changed by hand: drawn, heard; the feel starts again from here
   v = Math.max(0, Math.min(vmax(i), Math.round(v)));
@@ -2336,7 +2340,7 @@ let fxd = null, fxSel = -1, fxBusy = false, fxNext = null;
 const FX_NOTE = ["F3", "F#3", "G3", "G#3", "A3", "A#3", "B3", "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5"];
 const FX_KIND = [[[0, 1, 2, 3, 4, 5, 33, 34, 26, 27, 28, 29, 31], "#ff6fb5"], [[12, 13, 30, 38, 39, 40, 52, 53, 34], "#7f8ea3"],   // (a colour a kind: repeats and
   [[14, 15, 16, 23, 37, 17], "#d8c39a"], [[19, 20, 21, 25, 35, 32, 6, 7], "#b5838d"], [[8, 9, 10, 11, 41, 18, 22, 24, 54, 55, 56, 57, 58], "#e6e6e6"]];   // time, filters, rhythm, colour, drums)
-const fxCol = (bit) => (FX_KIND.find(([bs]) => bs.includes(bit)) || [0, "#555a66"])[1];
+const fxCol = (bit) => (FX_KIND.find(([bs]) => bs.includes(bit)) || [0, "#5b6596"])[1];
 const fxIsOn = (bit) => !!fxd && !!(bit < 32 ? (fxd.lo >>> bit) & 1 : (fxd.hi >>> (bit - 32)) & 1);
 async function fxAsk(m) {
   const r = await ask({ type: "st_fx", ...m, light: m.all ? 0 : 1 });
@@ -2403,7 +2407,7 @@ function xyHTML() {
   const sel = (id, v) => '<select id="' + id + '">' + o.map(([k, t]) => '<option value="' + k + '"' + (k === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select>";
   return '<div class="sec"><h3>XY PAD · DRAG ON IT: ITS EFFECTS PLAY WHILE YOU TOUCH</h3><div class="bar" style="margin-bottom:6px"><span class="lbl">↔</span>' + sel("xyA", xyA) + '<span class="lbl">↕</span>' + sel("xyB", xyB) +
     '<label class="muted"><input type="checkbox" id="xyKeep"' + (xyKeep ? " checked" : "") + "> keep on</label></div>" +
-    '<canvas id="xyPad" height="260" style="width:100%;display:block;border-radius:6px;background:#121318;border:1px solid var(--line);touch-action:none;cursor:crosshair"></canvas>' + xyRest() + "</div>";
+    '<canvas id="xyPad" height="260" style="width:100%;display:block;border-radius:6px;background:#0e1530;border:1px solid var(--line);touch-action:none;cursor:crosshair"></canvas>' + xyRest() + "</div>";
 }
 function xyRest() {                                           // the X and Y effects' other settings (the FILTER's type and targets, say), under the pad
   const A = xyGet(xyA), B = xyGet(xyB), seen = new Set([xyA, xyB]), ks = [];
@@ -2419,8 +2423,8 @@ function xyDraw() {
   if (!W || !H) return;
   if (!cv.dataset.ro) { cv.dataset.ro = "1"; xyRO.observe(cv); }
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
-  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
-  g.strokeStyle = "#22252c"; g.lineWidth = 1; for (let q = 1; q < 8; q++) { g.beginPath(); g.moveTo(q * W / 8, 0); g.lineTo(q * W / 8, H); g.stroke(); g.beginPath(); g.moveTo(0, q * H / 8); g.lineTo(W, q * H / 8); g.stroke(); }
+  const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
+  g.strokeStyle = "#1a2446"; g.lineWidth = 1; for (let q = 1; q < 8; q++) { g.beginPath(); g.moveTo(q * W / 8, 0); g.lineTo(q * W / 8, H); g.stroke(); g.beginPath(); g.moveTo(0, q * H / 8); g.lineTo(W, q * H / 8); g.stroke(); }
   const A = xyGet(xyA), B = xyGet(xyB), fa = (A.c.v - A.c.lo) / Math.max(1, A.c.hi - A.c.lo), fb = (B.c.v - B.c.lo) / Math.max(1, B.c.hi - B.c.lo), x = 8 + fa * (W - 16), y = H - 8 - fb * (H - 16);
   const col = A.P0.bit < 63 ? fxCol(A.P0.bit) : COL.acc;
   if (xyTouch) { const gr = g.createRadialGradient(x, y, 0, x, y, 60); gr.addColorStop(0, hexA(col, 0.45)); gr.addColorStop(1, hexA(col, 0)); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
@@ -2910,18 +2914,18 @@ function scopeStart() {
     if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
     const g = cv.getContext("2d");
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
     const LW = 74, X0 = LW + 10, SW = W - X0 - 4;
     for (let k = 0; k < 5; k++) {                             // the parts' levels
       const v = live ? Math.min(1, Math.sqrt((live.lv[k] || 0) / 255) * 1.3) : 0;
       lvs[k] = v > lvs[k] ? v : lvs[k] * 0.86;
       const x = 6 + k * 13.5, h = Math.max(2, lvs[k] * (H - 14));
-      g.fillStyle = "#1d2026"; rblock(g, x, 6, 9, H - 14); g.fill();
+      g.fillStyle = "#172042"; rblock(g, x, 6, 9, H - 14); g.fill();
       g.fillStyle = PARTCOL[k]; g.globalAlpha = 0.35 + 0.65 * lvs[k]; rblock(g, x, H - 8 - h, 9, h); g.fill(); g.globalAlpha = 1;
     }
-    g.fillStyle = "#2a2d35"; g.fillRect(LW, 6, 1, H - 12);
+    g.fillStyle = "#243058"; g.fillRect(LW, 6, 1, H - 12);
     idle = quiet;
-    if (quiet) { g.fillStyle = "#4a4d57"; g.font = FONT(600, 9); g.fillText("SILENT", X0 + 4, H / 2 + 3); g.fillStyle = "#22252c"; g.fillRect(X0 + 52, H / 2, SW - 56, 1); return; }
+    if (quiet) { g.fillStyle = "#4a5590"; g.font = FONT(600, 9); g.fillText("SILENT", X0 + 4, H / 2 + 3); g.fillStyle = "#1a2446"; g.fillRect(X0 + 52, H / 2, SW - 56, 1); return; }
     analyser.getByteFrequencyData(spec);
     const bw = SW / NB;
     for (let i = 0; i < NB; i++) {                            // bands on a log scale, 30 Hz .. 16 kHz
@@ -3015,7 +3019,7 @@ async function songPlay(from) {                             // the song from its
 // an empty song: one button makes one from the open piece, six places as a set goes (its parts left out: bit k of PARTS; energy stored + 1)
 const SONG_PLAN = [["Intro", 8, 0b01100, 21], ["Build", 16, 0b01000, 41], ["Main", 32, 0, 71], ["Break", 8, 0b10010, 31], ["Drop", 32, 0, 101], ["Outro", 8, 0b01100, 21]];
 function songEmptyHTML() {
-  const pn = cur ? S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) : "", col = cur ? GENRE_COL[cur.genre % 5] : "#555a66";
+  const pn = cur ? S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) : "", col = cur ? GENRE_COL[cur.genre % 5] : "#5b6596";
   return '<div class="songempty" style="--c:' + col + '"><h2>NO SONG YET</h2><p class="muted">A song is a row of places: each plays a piece for its bars, with the parts it leaves out and its energy.</p>' +
     '<div class="songplan" aria-hidden="true">' + SONG_PLAN.map(([n, b, m, e]) => '<div style="flex:' + b + ";height:" + (30 + 0.7 * (e - 1)) + '%" title="' + n + ", " + b + ' bars"><span>' + n + "</span></div>").join("") + "</div>" +
     '<button id="slMake" class="go"' + (cur ? "" : " disabled") + ">Make a song from " + pn + "</button>" +
@@ -3059,10 +3063,10 @@ function songRender() {
     const cv = $("song").querySelector('canvas[data-mini="' + i + '"]');
     if (!cv) return;
     const pq = pcSetPlaces([x])[0], bank = bankOf(pq.genre), g = cv.getContext("2d");
-    g.fillStyle = "#121318"; g.fillRect(0, 0, 160, 36);
+    g.fillStyle = "#0e1530"; g.fillRect(0, 0, 160, 36);
     let pc = null;
     try { pc = pcFromBank(bank, pq.genre, pq.slot); } catch { pc = null; }
-    if (!pc) { g.fillStyle = "#3a3e4a"; g.font = "600 10px 'Chakra Petch', sans-serif"; g.fillText("as the genre makes it", 6, 22); return; }
+    if (!pc) { g.fillStyle = "#34407a"; g.font = "600 10px 'Chakra Petch', sans-serif"; g.fillText("as the genre makes it", 6, 22); return; }
     const pat = song.pats[i] ? song.pats[i] - 1 : Math.max(0, Math.min(5, pcGet(pc, PE.P_PATTERN, 0) || 0));   // (the place's pattern when it sets one)
     for (let l = 0; l < 6; l++) {
       const m = pc.rec[2 + 2 * (pat * 6 + l)] | (pc.rec[3 + 2 * (pat * 6 + l)] << 8);
@@ -3084,11 +3088,11 @@ function songLine() {                                         // the song as a t
   if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
   const g = cv.getContext("2d");
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
   const used = song.places.map((x, i) => (x ? i : -1)).filter((i) => i >= 0), LX = 60, top = SL_TOP, eH = SL_EH, eTop = H - eH - 6 - SL_MV, lh = (eTop - top - 4) / 5;
   PARTS.forEach(([n, c], k) => { g.fillStyle = c; g.fillRect(6, top + k * lh + 3, 3, lh - 6); g.font = FONT(700, 10); g.fillStyle = COL.dim; g.fillText(n, 13, top + k * lh + lh / 2 + 4); });
   g.fillStyle = COL.ink; g.fillRect(6, eTop + 3, 3, eH - 6); g.font = FONT(700, 10); g.fillStyle = COL.dim; g.fillText("ENERGY", 13, eTop + eH / 2 + 4);
-  g.fillStyle = mvRec ? "#ff5a5f" : "#555a66"; g.font = FONT(700, 10); g.fillText(mvRec ? "● REC FX" : "FX", 13, eTop + eH + 20); g.fillStyle = mvRec ? "#ff5a5f" : "#555a66"; g.fillText("FADES", 13, eTop + eH + 42);
+  g.fillStyle = mvRec ? "#ff5a5f" : "#5b6596"; g.font = FONT(700, 10); g.fillText(mvRec ? "● REC FX" : "FX", 13, eTop + eH + 20); g.fillStyle = mvRec ? "#ff5a5f" : "#5b6596"; g.fillText("FADES", 13, eTop + eH + 42);
   songHit = [];
   songGeo = { LX, top, lh, eTop, eH, W, H, bw: 0 };
   if (!used.length) { g.fillStyle = COL.dim; g.font = "500 14px 'Barlow Semi Condensed', sans-serif"; g.fillText("No places yet: drag a piece from PIECES (below) onto here.", LX, H / 2); return; }
@@ -3098,7 +3102,7 @@ function songLine() {                                         // the song as a t
   for (const i of used) {
     const pq = pcSetPlaces([song.places[i]])[0], b = slBarsOf(i), w = b * bw, auto = !song.bars[i] && !(tl && tl.kind === "bars" && tl.i === i), gc = GENRE_COL[pq.genre % 5];
     const now = !!(live && live.playing && song.on && live.slPos === i), bar = now ? Math.min(b, (live.slBar === 255 ? 0 : live.slBar) + (live.step || 0) / 16) : 0;
-    g.fillStyle = i === setSel ? "#2a2416" : now ? "#1b2119" : "#181a1f"; g.fillRect(x + 1, 2, w - 2, H - 4);
+    g.fillStyle = i === setSel ? "#2a2416" : now ? "#1b2119" : "#121a33"; g.fillRect(x + 1, 2, w - 2, H - 4);
     if (now) { g.fillStyle = hexA(COL.acc, 0.08); g.fillRect(x + 1, 2, bar * bw, H - 4); }   // the part of it played
     g.fillStyle = gc; g.fillRect(x + 1, 2, w - 2, 3);
     g.save(); g.beginPath(); g.rect(x + 1, 0, w - 2, H); g.clip();
@@ -3108,20 +3112,20 @@ function songLine() {                                         // the song as a t
       (now && !auto ? "  · " + Math.max(0, Math.ceil(b - bar)) + " left" : ""), x + 19, 17);
     PARTS.forEach(([n, c], k) => {                            // a part's lane: lit where it plays, an outline where it is left out
       const ly = top + k * lh;
-      if ((song.mutes[i] >> k) & 1) { g.strokeStyle = "#3a3e4a"; g.lineWidth = 1; g.setLineDash([2, 3]); g.strokeRect(x + 3.5, ly + 3.5, w - 7, lh - 7); g.setLineDash([]);
-        if (w > 70) { g.fillStyle = "#4a4e5a"; g.font = FONT(600, 9); g.fillText("out", x + 8, ly + lh / 2 + 3); } return; }
+      if ((song.mutes[i] >> k) & 1) { g.strokeStyle = "#34407a"; g.lineWidth = 1; g.setLineDash([2, 3]); g.strokeRect(x + 3.5, ly + 3.5, w - 7, lh - 7); g.setLineDash([]);
+        if (w > 70) { g.fillStyle = "#4a5590"; g.font = FONT(600, 9); g.fillText("out", x + 8, ly + lh / 2 + 3); } return; }
       g.fillStyle = hexA(c, auto ? 0.28 : now ? 0.7 : 0.55); g.fillRect(x + 3, ly + 3, w - 6, lh - 6);
       if (auto) { g.strokeStyle = hexA(c, 0.5); g.lineWidth = 1; for (let hx = x + 3; hx < x + w - 6; hx += 8) { g.beginPath(); g.moveTo(hx, ly + lh - 3); g.lineTo(hx + 6, ly + 3); g.stroke(); } }
     });
     const m = slMoodOf(i);                                     // its energy: a bar from the floor, chill .. peak
     g.fillStyle = "#14161b"; g.fillRect(x + 3, eTop + 2, w - 6, eH - 4);
-    if (!song.full2) { g.fillStyle = "#4a4e5a"; g.font = FONT(600, 9); if (w > 60) g.fillText("needs 0.17.14", x + 7, eTop + eH / 2 + 3); }
+    if (!song.full2) { g.fillStyle = "#4a5590"; g.font = FONT(600, 9); if (w > 60) g.fillText("needs 0.17.14", x + 7, eTop + eH / 2 + 3); }
     else if (m) {
       const eh = Math.max(2, (m - 1) / 100 * (eH - 6));
       g.fillStyle = hexA(COL.ink, i === setSel || (tl && tl.i === i) ? 0.55 : 0.32); g.fillRect(x + 3, eTop + eH - 3 - eh, w - 6, eh);
       g.fillStyle = COL.ink; g.fillRect(x + 3, eTop + eH - 3 - eh, w - 6, 2);
       g.font = FONT(700, 10); g.fillText(String(m - 1), x + 7, Math.max(eTop + 12, eTop + eH - 6 - eh));
-    } else { g.fillStyle = "#4a4e5a"; g.font = FONT(600, 9); if (w > 40) g.fillText("as is", x + 7, eTop + eH / 2 + 3); }
+    } else { g.fillStyle = "#4a5590"; g.font = FONT(600, 9); if (w > 40) g.fillText("as is", x + 7, eTop + eH / 2 + 3); }
     g.restore();
     if (i === setSel) { g.strokeStyle = COL.acc; g.lineWidth = 2; g.strokeRect(x + 1, 1, w - 2, H - 2);
       g.fillStyle = COL.acc; g.fillRect(x + w - 5, top + lh * 2, 3, lh);   // the grip: drag the edge for the bars
@@ -3132,8 +3136,8 @@ function songLine() {                                         // the song as a t
   }
   songMovesDraw(g, eTop + eH + 4, W);
   if (x < W - 60 && used.length < 16) {                        // the room after the song: a piece dropped here takes the next empty place
-    g.strokeStyle = "#2e313a"; g.lineWidth = 1; g.setLineDash([4, 4]); g.strokeRect(x + 6.5, 6.5, W - x - 14, H - 13); g.setLineDash([]);
-    g.fillStyle = "#4a4e5a"; g.font = FONT(600, 11); g.fillText("+ drop a piece here", x + 16, H / 2 + 4);
+    g.strokeStyle = "#2c3766"; g.lineWidth = 1; g.setLineDash([4, 4]); g.strokeRect(x + 6.5, 6.5, W - x - 14, H - 13); g.setLineDash([]);
+    g.fillStyle = "#4a5590"; g.font = FONT(600, 11); g.fillText("+ drop a piece here", x + 16, H / 2 + 4);
   }
   if (tl && tl.moved && tl.kind === "move" && tl.to !== undefined && tl.to !== tl.i) {   // where the moved place lands
     const h = songHit.find(([, , j]) => j === tl.to);
@@ -3168,7 +3172,7 @@ function songMovesDraw(g, y0, W) {                           // the moves under 
   spans.forEach(([b, x0, x1], k) => {
     const row = k % 2, y = y0 + 2 + row * 10, c = fxd && fxd.names ? fxCol(b) : COL.acc;
     g.fillStyle = hexA(c, 0.7); g.fillRect(x0, y, Math.max(3, x1 - x0), 8);
-    if (x1 - x0 > 40 && fxd && fxd.names) { g.fillStyle = "#0e0f12"; g.font = FONT(700, 8); g.fillText(fxd.names[b].toUpperCase(), x0 + 3, y + 7); }
+    if (x1 - x0 > 40 && fxd && fxd.names) { g.fillStyle = "#0b1022"; g.font = FONT(700, 8); g.fillText(fxd.names[b].toUpperCase(), x0 + 3, y + 7); }
   });
   for (const e of moves) {
     if (e.k !== "fade") continue;
@@ -4016,8 +4020,8 @@ function drawPic(cv) {
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const g = cv.getContext("2d"), ps = cv.dataset.ps.split(",").map((x) => (x === "x" ? NaN : +x)), col = cv.dataset.col;
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
-  g.strokeStyle = "#1c1e24"; g.lineWidth = 1;                // the screen's grid (as the unit's picture pages: 8 by 4)
+  g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
+  g.strokeStyle = "#161f3d"; g.lineWidth = 1;                // the screen's grid (as the unit's picture pages: 8 by 4)
   for (let i = 1; i < 8; i++) { g.beginPath(); g.moveTo(Math.round(i * W / 8) + 0.5, 0); g.lineTo(Math.round(i * W / 8) + 0.5, H); g.stroke(); }
   for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(0, Math.round(i * H / 4) + 0.5); g.lineTo(W, Math.round(i * H / 4) + 0.5); g.stroke(); }
   const hs = (PICS[cv.dataset.pic] || (() => []))(g, W, H, ps, col) || [];
@@ -4025,23 +4029,26 @@ function drawPic(cv) {
   for (const h of hs) {                                        // the handles: a ring, amber when in hand or hovered
     const hot = cv._hot === h.name;
     g.beginPath(); g.arc(h.x, h.y, hot ? 7 : 5.5, 0, Math.PI * 2);
-    g.fillStyle = hot ? COL.acc : COL.bg; g.fill(); g.lineWidth = 2; g.strokeStyle = hot ? COL.acc : COL.ink; g.stroke();
+    g.fillStyle = hot ? COL.acc : COL.bg; g.fill(); g.lineWidth = 2; g.strokeStyle = COL.acc; g.stroke();
   }
   const hot = hs.find((h) => h.name === cv._hot);
   if (hot) {                                                   // what the handle in hand is, and its values
     const t = hot.name + "  " + [hot.px, hot.py].filter((p) => Number.isFinite(p)).map((p) => valText(p, parV(p))).join(" · ");
     g.font = FONT(700, 12); const tw = g.measureText(t).width;
-    g.fillStyle = "rgba(14,15,18,.85)"; g.fillRect(W - tw - 14, 4, tw + 10, 18); g.fillStyle = COL.acc; g.fillText(t, W - tw - 9, 17);
+    g.fillStyle = "rgba(11,16,34,.85)"; g.fillRect(W - tw - 14, 4, tw + 10, 18); g.fillStyle = COL.acc; g.fillText(t, W - tw - 9, 17);
   }
 }
 const drawPics = () => document.querySelectorAll("canvas.pic").forEach(drawPic);
 function label(g, t, x, y, c) { g.font = "600 10px 'Chakra Petch', sans-serif"; g.fillStyle = c || COL.dim; g.fillText(t, x, y); }
 function curve(g, pts, col, fillTo) {                          // a line through the points, a faint fill under it
+  col = curveCol(col);
   g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
   if (fillTo !== undefined) { g.save(); g.lineTo(pts[pts.length - 1][0], fillTo); g.lineTo(pts[0][0], fillTo); g.closePath(); g.fillStyle = hexA(col, 0.16); g.fill(); g.restore();
     g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); }
   g.strokeStyle = col; g.lineWidth = 2; g.stroke();
 }
+// (the sites' look: a picture's curve is cyan whatever the part; a reference line drawn in ink stays ink)
+const curveCol = (col) => (col === COL.ink ? col : COL.curve);
 // the pad's breath: attack up, hold, release down, rest
 PICS.env4 = (g, W, H, [A, Hd, R, Rs], col) => {
   const pad = 12, seg = (W - 2 * pad) / 4.3, top = 26, base = H - 16;
@@ -4086,7 +4093,7 @@ PICS.filt = (g, W, H, [C, Q, Ty, Em], col) => {
   const pts = [];
   for (let x = pad; x <= pad + w; x += 2) pts.push([x, ydb(resp((x - xc) / w * 7))]);
   curve(g, pts, col, base);
-  g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad, ydb(0)); g.lineTo(pad + w, ydb(0)); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = "#34407a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad, ydb(0)); g.lineTo(pad + w, ydb(0)); g.stroke(); g.setLineDash([]);
   label(g, (["LOW-PASS", "HIGH-PASS (ITS CORNER AT ×" + Math.pow(2, hpOff).toFixed(2).replace(/0$/, "") + " THE CUTOFF)", "BAND-PASS", "NOTCH", "PEAK", "303 LADDER"][type] || "") + "  ·  LOW ← FREQUENCY → HIGH", pad, 14);
   const hs = [{ name: "Cutoff · resonance", x: xc, y: ydb(resp(0)), px: C, ax: [pad, pad + w], py: Q, ay: [ydb(0), ydb(13)] }];
   if (Number.isFinite(Em)) {                                   // the envelope opens it this far on each note
@@ -4136,10 +4143,10 @@ PICS.lfo = (g, W, H, [Dp, Sh, Tg, Rt], col) => {
   const win = Math.max(2, Math.min(32, Math.ceil(1 / Math.max(cpb, 1 / 32) - 1e-6))), cyc = cpb * win;   // (at least a whole cycle drawn: 2 bars, or as many as one takes)
   for (let b = 0; b <= win; b++) {                            // the bars along the foot (the LFOs are locked to the bar)
     const x = pad + b / win * w;
-    g.fillStyle = b % 4 === 0 ? "#3a3e4a" : "#262932"; g.fillRect(Math.round(x), H - 8, 1, 6);
-    if (win <= 8 || b % 4 === 0) { g.fillStyle = "#555a66"; g.font = FONT(600, 8); if (b < win) g.fillText(String(b + 1), x + 2, H - 1); }
+    g.fillStyle = b % 4 === 0 ? "#34407a" : "#1f2950"; g.fillRect(Math.round(x), H - 8, 1, 6);
+    if (win <= 8 || b % 4 === 0) { g.fillStyle = "#5b6596"; g.font = FONT(600, 8); if (b < win) g.fillText(String(b + 1), x + 2, H - 1); }
   }
-  g.strokeStyle = "#2a2d35"; g.beginPath(); g.moveTo(pad, mid); g.lineTo(pad + w, mid); g.stroke();
+  g.strokeStyle = "#243058"; g.beginPath(); g.moveTo(pad, mid); g.lineTo(pad + w, mid); g.stroke();
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1, steps = [];
   const val = (ph) => {
@@ -4165,7 +4172,7 @@ PICS.lfo = (g, W, H, [Dp, Sh, Tg, Rt], col) => {
   const q = meta(Rt), ord = Array.from({ length: q.max - q.min + 1 }, (_, k) => q.min + k).sort((a, b) => cyclesPerBar(valText(Rt, b)) - cyclesPerBar(valText(Rt, a)));   // (fast to slow)
   const ax = [pad + 0.05 * w, pad + 0.95 * w], xr = ax[0] + Math.max(0, ord.indexOf(parV(Rt))) / Math.max(1, ord.length - 1) * (ax[1] - ax[0]);   // the point: sideways the rate (left fast, right slow), up the depth
   g.font = FONT(700, 9); g.fillStyle = COL.ink; g.fillText(String(valText(Rt, parV(Rt))) + " · " + parV(Dp), Math.min(xr + 8, pad + w - 60), Math.max(26, mid - amp - 6));
-  g.fillStyle = "#555a66"; g.fillText("← FASTER   SLOWER →", pad + w - 104, H - 12);
+  g.fillStyle = "#5b6596"; g.fillText("← FASTER   SLOWER →", pad + w - 104, H - 12);
   return [{ name: "Rate · depth", x: xr, y: mid - amp, px: Rt, ax, ord, py: Dp, ay: [mid - 0.05 * (H / 2 - 18), mid - (H / 2 - 18)], click: Sh }];
 };
 // the master bus: in against out (the compressor's ratio over its threshold, the make-up, the limiter's ceiling); its reduction now beside
@@ -4173,7 +4180,7 @@ PICS.comp = (g, W, H, [Ra, Th, Mk, Ce], col) => {
   const pad = 14, sz = Math.min(W - 60, H - 24), x0 = pad, y0 = H - 10, X = (db) => x0 + (db + 48) / 48 * sz, Y = (db) => y0 - (db + 48) / 48 * sz;
   const r = (() => { const t = String(valText(Ra, parV(Ra))); const m = /^([\d.]+):1$/.exec(t); return m ? +m[1] : 1; })();
   const T = -30 + pf(Th) * 30, M = pf(Mk) * 12, C = -12 + pf(Ce) * 12;   // (amb.c: threshold -30 .. 0 dB, make-up 0 .. +12, ceiling -12 .. 0)
-  g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(-48), Y(-48)); g.lineTo(X(0), Y(0)); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = "#34407a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(-48), Y(-48)); g.lineTo(X(0), Y(0)); g.stroke(); g.setLineDash([]);
   const pts = [];
   for (let i = -48; i <= 0; i += 1) { let o = i < T ? i : T + (i - T) / r; o = Math.min(C, o + M); pts.push([X(i), Y(Math.max(-48, o))]); }
   curve(g, pts, col, y0);
@@ -4181,8 +4188,8 @@ PICS.comp = (g, W, H, [Ra, Th, Mk, Ce], col) => {
   label(g, "IN → OUT · " + valText(Ra, parV(Ra)), x0, 14); label(g, "CEILING", X(-48) + 4, Y(C) - 4, COL.acc);
   if (live) {                                                  // the reduction now (dB) and the output's peak
     const gr = (live.gr || 0) / 8, gx = x0 + sz + 18;
-    g.fillStyle = "#22252c"; g.fillRect(gx, y0 - sz, 10, sz); g.fillStyle = COL.acc; g.fillRect(gx, y0 - sz, 10, Math.min(sz, gr / 12 * sz));
-    g.fillStyle = "#22252c"; g.fillRect(gx + 16, y0 - sz, 10, sz); g.fillStyle = COL.ink; const pk = (live.peak || 0) / 255 * sz; g.fillRect(gx + 16, y0 - pk, 10, pk);
+    g.fillStyle = "#1a2446"; g.fillRect(gx, y0 - sz, 10, sz); g.fillStyle = COL.acc; g.fillRect(gx, y0 - sz, 10, Math.min(sz, gr / 12 * sz));
+    g.fillStyle = "#1a2446"; g.fillRect(gx + 16, y0 - sz, 10, sz); g.fillStyle = COL.ink; const pk = (live.peak || 0) / 255 * sz; g.fillRect(gx + 16, y0 - pk, 10, pk);
     label(g, "GR", gx - 1, y0 + 9); label(g, "OUT", gx + 13, y0 + 9);
   }
   const ok = (y) => Math.max(y0 - sz, Math.min(y0, y));
@@ -4215,7 +4222,7 @@ PICS.space = (g, W, H, [Ec, Et, Rv, Sz, Dm, Pd], col) => {
 // the desk's stereo map: each part a dot, left to right its place (pan), up its send to the echo and the reverb
 PICS.stereo = (g, W, H, ps) => {
   const pad = 18, w = W - 2 * pad, top = 20, base = H - 16, names = ["PAD", "BASS", "ACID", "PLUCK", "DRUMS"], cols = [COL.pad, COL.bass, COL.acid, COL.pluck, COL.drum];
-  g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad + w / 2, top); g.lineTo(pad + w / 2, base); g.stroke(); g.setLineDash([]);
+  g.strokeStyle = "#34407a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad + w / 2, top); g.lineTo(pad + w / 2, base); g.stroke(); g.setLineDash([]);
   label(g, "LEFT", pad, base + 12); label(g, "RIGHT", pad + w - 28, base + 12); label(g, "↑ SEND (ECHO, REVERB)", pad, 14);
   const hs = [];
   for (let i = 0; i < 5; i++) {
