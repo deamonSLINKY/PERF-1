@@ -90,6 +90,8 @@
            background: rgba(14, 15, 18, .86); border-radius: 8px; text-align: center; padding: 1rem; }
   #start[hidden] { display: none; }
   #start p { max-width: 36em; color: var(--dim); margin: 0; font-size: .85rem; }
+  #impBig { width: 92px; height: 112px; image-rendering: pixelated; cursor: pointer;
+             background: radial-gradient(ellipse 46% 40% at 50% 52%, rgba(156,29,58,.55), rgba(156,29,58,0) 100%); }
   #start .vibeq { font: 700 1.6rem "Chakra Petch", sans-serif; letter-spacing: .04em; margin: 0 0 4px; }
   .vibes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: min(900px, 96%); }
   @media (max-width: 760px) { .vibes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -244,6 +246,30 @@
   .dxr b { color: var(--ink); text-align: right; font: 600 .8rem "Chakra Petch", sans-serif; }
   .dxr select { font-size: .8rem; }
   .dxops { display: flex; gap: 4px; margin: 0 0 6px; flex-wrap: wrap; }
+  .dxops button.mute { opacity: .5; text-decoration: line-through; } .dxops button.solo { box-shadow: 0 0 0 2px var(--acc) inset; }
+  .dxfeelrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px;
+               background: linear-gradient(90deg, color-mix(in srgb, var(--pluck) 12%, transparent), transparent 70%); }
+  .dxfeels { display: flex; flex-wrap: wrap; gap: 2px; }
+  .dxfeelrow .hint { flex: 1 1 240px; font-size: .78rem; margin: 0; }
+  .dx7 .knob.big { width: 96px; } .dx7 .knob.big .dial { width: 66px; height: 66px; } .dx7 .knob.big .dial i { top: 10px; height: 19px; transform-origin: 50% 23px; }
+  .dx7 .knob.big .v { font-size: 1rem; } .dx7 .knob.big .kl { color: var(--pluck); font-weight: 700; letter-spacing: .08em; }
+  .dxcard { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); display: flex; flex-direction: column; gap: 6px; min-width: 0; container-type: inline-size; }
+  .dx7 { container-type: inline-size; }
+  @container (max-width: 760px) { .dx7 .dxgrid { grid-template-columns: minmax(0, 1fr); } .dx7 .dxtwo.dxmore { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+  @container (max-width: 560px) { .dxcrow2 { grid-template-columns: minmax(0, 1fr); } .dxsmall { grid-template-columns: repeat(4, auto); justify-content: start; } }
+  @container (max-width: 420px) { .dxcrow { grid-template-columns: minmax(0, 1fr); justify-items: start; } }
+  .dxchead { display: flex; gap: 10px; align-items: baseline; } .dxchead b { font: 700 1.05rem "Chakra Petch", sans-serif; color: var(--pluck); letter-spacing: .06em; }
+  .dxcrow { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; }
+  .dxcrow2 { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+  .dxsmall { display: grid !important; grid-template-columns: repeat(2, auto); gap: 2px 0; }
+  .dxfnote { font-size: .72rem; }
+  .dxglob { align-items: center; } .dxtip { font-size: .75rem; margin: 6px 0 0; }
+  .dxmore { margin-top: 10px; } .dxpanel { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); min-width: 0; }
+  .dxpanel h4 { font: 600 .66rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: var(--dim); margin: 0 0 6px; }
+  .dxwaves { display: flex; flex-wrap: wrap; gap: 3px; margin: 0 0 6px; }
+  .dx7 .ctls.kn > button { align-self: center; height: auto; }
+  .dx7 .dxtwo.dxmore { gap: 10px; }
+  @media (max-width: 700px) { .dxcrow, .dxcrow2 { grid-template-columns: minmax(0, 1fr); } }
   .dxops button { position: relative; overflow: hidden; min-width: 3.6em; }
   .dxops button i { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--pluck); }
   .dxops button.car { border-bottom: 2px solid var(--pluck); }
@@ -329,7 +355,7 @@
 <main>
   <header class="site"><a class="home" href="../">PERF-1</a><nav><a href="../emu/">Emulator</a><a href="../install/">Install</a><a href="../editor/">Editor</a><a href="./" aria-current="page">Studio</a><a href="../pieces/">Library &amp; pieces</a><a href="../manual/">Manual</a></nav></header>
   <div class="bar" id="top">
-    <canvas id="imp" width="23" height="30" title="The imp (the FM-1's). Click him."></canvas>
+    <canvas id="impLogo" width="23" height="30" title="The imp (the FM-1's). Click him."></canvas>
     <select id="genre" aria-label="Genre"></select>
     <select id="piece" aria-label="Piece"></select>
     <button id="open">Open</button>
@@ -399,6 +425,7 @@
     <div id="fx" hidden></div>
     <canvas id="scope" height="64" aria-label="What comes out: each part's level (left, in its colour), the spectrum and the waveform" title="What comes out: each part's level (left: pad, bass, acid, pluck, drums), the spectrum (low to high) and the waveform"></canvas>
     <div id="start">
+      <canvas id="impBig" width="92" height="112" aria-hidden="true" title="The imp"></canvas>
       <h2 class="vibeq">What do you feel like?</h2>
       <div class="vibes">
         <button class="vibe" data-vibe="calm"><b>Calm</b><span>lofi · trip-hop · ambient · dub</span></button>
@@ -1319,11 +1346,13 @@ $("open").addEventListener("click", async () => {
 $("power").addEventListener("click", switchOn);
 /* the imp: the FM-1's mascot (ui.c MASCOT, draw_mascot, mascot_step): a hop on the beat (the head lags, the coils part as he rises, a squash on
  * landing), a squash on the backbeat, a bigger jump at the top of each eight bars; asleep (eyes shut) when the music stops. Click him. */
-const IMP = ["..K............K.......", ".KHK..........KHK......", "..KHK........KHK.......", "..KhK.KKKKKK.KhK.......", "...KhKRRRRRRKhK........", "..KRLLRRRRRRRRRK.......",
-  ".KRLRKKRRRRKKRRRK......", ".KRRRYYRRRRYYRRRK......", ".KRRRKRRRRRRKRRRK......", ".KrrrKHKKKKHKrrrK...K..", "..KKKKKKKKKKKKKK...KRK.", "..KRLLRKKKKrrrrK..KRLRK",
-  "..KrrrrRLRRKKKK...KKKKK", "...KKKKrrrrRRRRK....T..", "..KRLLRKKKKrrrrK....T..", "..KrrrrRLRRKKKK.....T..", "...KKKKrrrrRRRRK...T...", "..KRLLRKKKKrrrrK..T....",
-  "..KrrrrRLRRKKKK...T....", "...KKKKrrrrRRRRKTT.....", "..KRLLRKKKKrrrrK.......", "..KrrrrRLRRKKKKK.......", "...KKKKKKKKKKKK........"];
-const IMP_COL = { K: "#8b8e98", T: "#8b8e98", H: "#f2e6c4", h: "#c4ad7e", Y: "#ffd447", R: "#e0344f", r: "#9c1d3a", L: "#ff8f8f" };
+const IMP = ["..g............g.......", ".gEg..........gEg......", "..gHg........gHg.......", "..ghg.kkkkkk.ghg.......", "...ghkWLLRRrkhg........", "..kLWLRRRRRRRRAk.......",
+  ".kLRRKKRRRRKKRrAk......", ".kLRREYRRRrEYrrAk......", ".kRRrKRRRRRrKrrAk......", ".kDrrKHKKKKHKrDAk...k..", "..kKKKKKKKKKKKKk...kLk.", "..kWLLRKKKKDDDDk..kLRrk",
+  "..kDDDDLRRrKKKK...kkkkk", "...kKKKDDDDRRrAk....T..", "..kWLLRKKKKDDDDk....T..", "..kDDDDLRRrKKKK.....T..", "...kKKKDDDDRRrAk...T...", "..kWLLRKKKKDDDDk..T....",
+  "..kDDDDLRRrKKKK...T....", "...kKKKDDDDRRrAkTT.....", "..kWLLRKKKKDDDDk.......", "..kDDDDLRRrKKKKk.......", "...kkkkkkkkkkkk........"];   // (0.17.39's art: ui.c MASCOT)
+const IMP_COL = { K: "#1b1022", k: "#48102e", D: "#701842", r: "#a62042", R: "#e2384e", L: "#ff766a", W: "#ffc098", T: "#781a3a", g: "#624842", h: "#bea078",
+  H: "#f2e6c4", E: "#fffcee", Y: "#ffd447", A: "#ffb000" };   // (mascot_color; A the theme's accent, the rim light)
+const impCh = (ch, r, awake) => (!awake && r > 4 && (ch === "Y" || ch === "E") ? "K" : ch);   // (asleep, or a blink: the eyes shut)
 const imp = { dh: 0, dhv: 0, lift: 0, lv: 0, t: 0, step: -1 };
 function impHop(big) { if (imp.lift <= 0) { imp.lv = big ? 52 : 36; imp.lift = 0.01; imp.dhv -= big ? 40 : 32; } }
 function impTick() {
@@ -1343,22 +1372,35 @@ function impTick() {
     imp.dhv += (-300 * (imp.dh - tg) - 10 * imp.dhv) * h; imp.dh += imp.dhv * h;
   }
   imp.dh = Math.max(-3, Math.min(4, imp.dh)); imp.lift = Math.max(0, Math.min(3, imp.lift));
-  const cv = $("imp"); if (!cv) return;
+  const cv = $("impLogo"); if (!cv) return;
   const g = cv.getContext("2d"); g.clearRect(0, 0, 23, 30);
   for (let r = 0; r < 23; r++) {
     const grp = r <= 10 ? 0 : Math.floor((r - 8) / 3), dy0 = Math.round(imp.lift + imp.dh * (4 - grp) * 0.25);
     for (let c = 0; c < 23; c++) {
       let ch = IMP[r][c]; if (ch === ".") continue;
-      if (ch === "Y" && !play) ch = "K";                       // (asleep)
+      ch = impCh(ch, r, play);
       const dy = grp > 0 && c < 16 ? Math.round(imp.lift + imp.dh * ((4 - grp) - Math.max(0, Math.min(1, (c - 2) / 13))) * 0.25) : dy0;
       g.fillStyle = IMP_COL[ch]; g.fillRect(c, r - dy + 6, 1, 1);
     }
   }
 }
 setInterval(impTick, 33);
+const impBig = { hop: 0, v: 0, blink: 0, t: 0 };
+function impBigTick() {                                       // the start card's imp: 4 px a pixel, a hop every few seconds, a blink now and then
+  const cv = $("impBig"); if (!cv || $("start").hidden || !cv.offsetParent) return;
+  const now = performance.now(), dt = Math.min(0.1, (now - (impBig.t || now)) / 1000); impBig.t = now;
+  if (impBig.hop <= 0 && impBig.v <= 0 && Math.random() < dt / 2.6) impBig.v = 46;
+  if (impBig.hop > 0 || impBig.v > 0) { impBig.v -= 260 * dt; impBig.hop = Math.max(0, impBig.hop + impBig.v * dt); if (impBig.hop === 0) impBig.v = 0; }
+  if (impBig.blink > 0) impBig.blink -= dt; else if (Math.random() < dt / 3.5) impBig.blink = 0.14;
+  const g = cv.getContext("2d"), y0 = 16 - Math.round(impBig.hop);
+  g.clearRect(0, 0, 92, 112);
+  for (let r = 0; r < 23; r++) for (let c = 0; c < 23; c++) { const ch = IMP[r][c]; if (ch === ".") continue; g.fillStyle = IMP_COL[impCh(ch, r, impBig.blink <= 0)]; g.fillRect(c * 4, y0 + r * 4, 4, 4); }
+}
+setInterval(impBigTick, 40);
+$("impBig").addEventListener("click", () => { impBig.v = 60; say("👹 " + IMP_SAYS[Math.floor(Math.random() * IMP_SAYS.length)]); });
 const IMP_SAYS = ["These go to eleven.", "Imp approved.", "Louder. No, the other louder.", "Turn it up, it's a groovebox not a library.", "I live in the FM-1. Rent is one coil a month.",
   "Hold a key in FX for a moment of chaos.", "Right-click a knob: I'll guard it 🔒.", "Every nine letters is a whole track. Write them down."];
-$("imp").addEventListener("click", () => { imp.lift = 0; impHop(true); say("👹 " + IMP_SAYS[Math.floor(Math.random() * IMP_SAYS.length)]); });
+$("impLogo").addEventListener("click", () => { imp.lift = 0; impHop(true); say("👹 " + IMP_SAYS[Math.floor(Math.random() * IMP_SAYS.length)]); });
 const VIBE_GENRES = { calm: ["LOFI", "TRIPHOP", "AMAPI", "DUB", "REGGAE", "AMBIENT"], groovy: ["HOUSE", "DISCO", "FUNK", "GARAGE", "HIPHOP"], dark: ["HYPNO", "INDUS", "FOREST", "ELECTRO", "SYNTHWV"],
   peak: ["DNB", "PSY", "DUBSTEP", "BREAKS", "TRAP", "TRANCE"] };
 let startDoor = "jam";
@@ -1829,11 +1871,77 @@ function dxFmt(i, v) {
   if (i === FP.TRNSP) return NOTE[v % 12] + (Math.floor(v / 12) + 1);
   return String(v);
 }
-function dxRow(label, i, opts) {
+function dxKnob(i, label, title, big) {                       // a byte of the voice as a knob (drag, wheel, arrows), kept in step by dxSyncKnobs
   const v = dxv[i];
-  if (opts) return '<label class="dxr"><span>' + label + '</span><select data-dx="' + i + '">' + opts.map((t, k) => '<option value="' + k + '"' + (k === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select><b></b></label>";
-  return '<label class="dxr"><span>' + label + '</span><input type="range" min="0" max="' + vmax(i) + '" value="' + v + '" data-dx="' + i + '"><b>' + dxFmt(i, v) + "</b></label>";
+  return '<div class="knob dxk' + (big ? " big" : "") + '" tabindex="0" role="slider" aria-label="' + label + '" aria-valuemin="0" aria-valuemax="' + vmax(i) + '" aria-valuenow="' + v + '" data-dx="' + i + '" title="' + (title || label) +
+    ': drag up or down (Shift: finer), the wheel, the arrow keys"><div class="dial" style="--f:' + v / vmax(i) + ';--c:var(--pluck)"><i></i></div><span class="v">' + dxFmt(i, v) + '</span><span class="kl">' + label + "</span></div>";
 }
+function dxTog(i, label, title) { return '<button class="small" data-dxtog="' + i + '" aria-pressed="' + !!dxv[i] + '" title="' + title + '">' + label + "</button>"; }
+function dxSyncKnobs() {                                      // every knob and switch of the editor to the voice as it is now
+  document.querySelectorAll("#sound .dxk[data-dx]").forEach((k) => {
+    const i = +k.dataset.dx, v = dxv[i], t = dxFmt(i, v), s = k.querySelector(".v");
+    k.querySelector(".dial").style.setProperty("--f", v / vmax(i)); if (s.textContent !== t) s.textContent = t; k.setAttribute("aria-valuenow", v);
+  });
+  document.querySelectorAll("#sound .dxfeel").forEach((k) => { const n = +k.dataset.feel; k.querySelector(".dial").style.setProperty("--f", dxFeel[n]); k.querySelector(".v").textContent = dxFeelText(n); });
+  document.querySelectorAll("#sound [data-dxtog]").forEach((b) => b.setAttribute("aria-pressed", String(!!dxv[+b.dataset.dxtog])));
+  document.querySelectorAll("#sound [data-dxlfw]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.dxlfw === dxv[FP.LFW])));
+  const d = (6 - dxOp) * FP.OP; document.querySelectorAll("#sound [data-dxmode]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.dxmode === dxv[d + FP.MODE])));
+}
+/* the feel: five knobs that each move many bytes at once, from the voice as it was when the first of them was turned (dxBase); any knob below starts
+ * them again from what it set. Brightness is the modulators' levels (and a little feedback); Attack and Release every operator's first and last rates;
+ * Tone the ratio operators' fine tuning (onto whole harmonics, or off them by a different amount each) and detune; Bite the velocity sensitivity. */
+const DX_FEEL = [["BRIGHT", "mellow", "buzzy", "How much the modulators feed in (the operators that colour the sound, not the ones you hear)"],
+  ["ATTACK", "snappy", "slow", "Every operator's attack: snappy to a slow swell"], ["RELEASE", "short", "long", "Every operator's release: a short end to a long tail"],
+  ["TONE", "pure", "metal", "The frequencies: onto whole-number harmonics (clean, in tune) or off them (bells, clangs)"], ["BITE", "even", "bites", "How much playing harder (an accent) brightens and lifts it"]];
+let dxBase = null, dxFeel = [0.5, 0.5, 0.5, 0.5, 0.5], dxMute = new Set(), dxSolo = 0, dxNoteT = -1, dxLastPos = -1, dxAnimOn = false;
+function dxFeelText(n) { const a = dxFeel[n] - 0.5; return Math.abs(a) < 0.03 ? "as is" : DX_FEEL[n][a < 0 ? 1 : 2] + " " + Math.round(Math.abs(a) * 200); }
+function dxFeelApply() {
+  if (!dxBase) return;
+  const B = dxBase, v = Uint8Array.from(B), g = vGraph(B[FP.ALG]), a = dxFeel.map((f) => (f - 0.5) * 2), mix = (x, t, u) => x + (t - x) * u;
+  const INH = [0, 37, 13, 71, 23, 53], put = (i, x) => { v[i] = Math.max(0, Math.min(vmax(i), Math.round(x))); };
+  for (let n = 1; n <= 6; n++) {
+    const d = (6 - n) * FP.OP, car = g.carrier[n];
+    if (!car && B[d + FP.OL] > 0) put(d + FP.OL, B[d + FP.OL] + a[0] * 22);
+    put(d, a[1] > 0 ? mix(B[d], 28, a[1]) : mix(B[d], 99, -a[1]));
+    put(d + 3, a[2] > 0 ? mix(B[d + 3], 10, a[2]) : mix(B[d + 3], 99, -a[2]));
+    if (!B[d + FP.MODE]) {
+      if (a[3] < 0) { put(d + FP.FF, mix(B[d + FP.FF], 0, -a[3])); put(d + FP.DET, mix(B[d + FP.DET], 7, -a[3])); }
+      else { if (!car) put(d + FP.FF, B[d + FP.FF] + a[3] * INH[n - 1]); put(d + FP.DET, B[d + FP.DET] + a[3] * (n % 2 ? 3 : -3)); }
+    }
+    put(d + FP.KVS, B[d + FP.KVS] + a[4] * (car ? 4 : 7));
+  }
+  put(FP.FB, B[FP.FB] + Math.max(0, a[0]) * 2);
+  dxv.set(v.subarray(0, FP.NAME));
+  dxEdit();
+}
+// mute and solo: what is heard, never what is kept (the voice put to the emulator with those operators' levels at 0; not stored while they last)
+function dxReach(g, n, seen = new Set()) { if (seen.has(n)) return []; seen.add(n); return g.carrier[n] ? [n] : g.edges.filter((e) => e[0] === n).flatMap((e) => dxReach(g, e[1], seen)); }
+function dxOff() {
+  const g = vGraph(dxv[FP.ALG]), off = new Set(dxMute);
+  if (dxSolo) { const keep = new Set(dxReach(g, dxSolo)); for (let n = 1; n <= 6; n++) if (g.carrier[n] && !keep.has(n)) off.add(n); }
+  return off;
+}
+function dxHeard() { const off = dxOff(); if (!off.size) return dxv; const v = Uint8Array.from(dxv); for (const n of off) v[(6 - n) * FP.OP + FP.OL] = 0; return v; }
+function dxAudition(n, solo) {
+  if (solo) dxSolo = dxSolo === n ? 0 : n; else if (dxMute.has(n)) dxMute.delete(n); else dxMute.add(n);
+  dxPut(!dxOff().size); dxOpFill(); dxDraw();
+  say(dxSolo ? "Heard alone: OP " + dxSolo + "'s stack (S, or Alt-click it again, for all)." : dxMute.size ? "Muted: OP " + [...dxMute].sort().join(", ") + " (M, or Shift-click it again, to bring it back). Only what you hear: the voice keeps them." : "Every operator heard again.");
+}
+setInterval(() => { if ((dxMute.size || dxSolo) && !(pane === "sound" && sel === "pluck" && $("dxAlg"))) { dxMute.clear(); dxSolo = 0; dxPut(true); } }, 500);
+// the glow: each operator lit by its envelope after each pluck note (worked out here from its rates and levels, near enough to see; key off after 0.22 s)
+const dxSegT = (r) => Math.min(20, 0.003 * Math.pow(2, (99 - r) / 6.2));
+function dxEnvAt(d, t) {
+  const R = [0, 1, 2, 3].map((k) => dxv[d + k]), L = [0, 1, 2, 3].map((k) => dxv[d + 4 + k] / 99), G = 0.22;
+  const on = (u) => { let x = L[3]; for (let k = 0; k < 3; k++) { const T = dxSegT(R[k]); if (u < T) return x + (L[k] - x) * u / T; u -= T; x = L[k]; } return L[2]; };
+  if (t <= G) return on(t);
+  const l = on(G); return l + (L[3] - l) * Math.min(1, (t - G) / dxSegT(R[3]));
+}
+function dxAnim() {
+  if (!$("dxAlg") || pane !== "sound" || sel !== "pluck") { dxAnimOn = false; return; }
+  if (live && live.playing && live.cmPos !== dxLastPos) { dxLastPos = live.cmPos; if (live.cmLvl && live.cmLvl[live.cmPos & 15] > 0) dxNoteT = performance.now(); }
+  if (live && live.playing) { dxDrawAlg(); requestAnimationFrame(dxAnim); } else { dxAnimOn = false; dxNoteT = -1; dxDrawAlg(); }
+}
+setInterval(() => { if (!dxAnimOn && live && live.playing && $("dxAlg") && pane === "sound" && sel === "pluck") { dxAnimOn = true; requestAnimationFrame(dxAnim); } }, 300);
 function dxRatio(d) {
   return dxv[d + FP.MODE] ? "fixed " + Math.pow(10, (dxv[d + FP.FC] & 3) + dxv[d + FP.FF] / 100).toFixed(1) + " Hz" : "× " + ((dxv[d + FP.FC] || 0.5) * (1 + dxv[d + FP.FF] / 100)).toFixed(2);
 }
@@ -1847,11 +1955,17 @@ function dxHTML() {                                           // (the rows are f
     '<option value="i">Init voice (a plain sine)</option></select>' +
     '<button class="small" id="dxLoad" title="DX7 banks (32 voices) or single voices, from any librarian">Open .syx…</button><input type="file" id="dxFileIn" accept=".syx,.SYX" hidden>' +
     '<button class="small" id="dxSave">Save .syx</button><button class="small" id="dxUnit" title="This voice into one of your FM-1\'s 16 slots (FM-1 menu: connect first; with Live on, every change goes)">To my FM-1</button></div>' +
-    '<div class="dxgrid"><div><canvas id="dxAlg" height="200" aria-label="The algorithm: click an operator"></canvas>' +
+    '<div class="dxfeelrow"><span class="lbl">FEEL</span><div class="dxfeels">' + DX_FEEL.map(([n, , , t], k) => '<div class="knob dxfeel" tabindex="0" role="slider" aria-label="' + n + '" data-feel="' + k + '" title="' + t +
+      '. Drag up or down; double-click: as is"><div class="dial" style="--f:' + dxFeel[k] + ';--c:var(--pluck)"><i></i></div><span class="v">' + dxFeelText(k) + '</span><span class="kl">' + n + "</span></div>").join("") + "</div>" +
+    '<button class="small dice" id="dxDice" title="Roll the feel: each of the five somewhere new (double-click a knob for as is)">🎲</button>' +
+    '<span class="muted hint">Start here: each knob moves many of the voice\'s settings at once, from the voice as it is. The controls below set one thing each, and the feel starts again from there.</span></div>' +
+    '<div class="dxgrid"><div class="dxleft"><canvas id="dxAlg" height="230" aria-label="The algorithm: click an operator; Shift-click mutes it, Alt-click hears its stack alone"></canvas>' +
     '<div class="bar" style="margin:6px 0"><button class="small" id="dxAlgP" aria-label="Algorithm before">◀</button><b id="dxAlgN" style="min-width:4.5em;text-align:center"></b><button class="small" id="dxAlgX" aria-label="Algorithm after">▶</button>' +
-    '<span class="lbl">&nbsp;NAME</span><input id="dxName" maxlength="10" size="11" aria-label="The voice name"></div><div id="dxGlob"></div></div>' +
-    '<div><div class="dxops" id="dxOps"></div><canvas id="dxEnv" height="150" aria-label="The operator envelope: drag a point (up: its level; sideways: its rate)"></canvas></div></div><div id="dxOpRows"></div>' +
-    '<details><summary>PITCH ENVELOPE AND LFO</summary><div class="dxtwo" id="dxMore"></div></details></div>';
+    '<span class="lbl">&nbsp;NAME</span><input id="dxName" maxlength="10" size="11" aria-label="The voice name"></div><div id="dxGlob" class="ctls kn dxglob"></div>' +
+    '<p class="muted hint dxtip">Click an operator to edit it · Shift-click: mute it · Alt-click: hear its stack alone. Muting is for listening: the voice keeps every operator.</p></div>' +
+    '<div class="dxcard"><div class="dxops" id="dxOps"></div><div id="dxCard"></div></div></div>' +
+    '<div class="dxtwo dxmore"><div class="dxpanel"><h4>PITCH ENVELOPE · THE NOTE BENDS UP OR DOWN AS IT PLAYS (DRAG A POINT)</h4><canvas id="dxPeg" height="110" aria-label="The pitch envelope: drag a point (up or down: its pitch; sideways: its time)"></canvas></div>' +
+    '<div class="dxpanel"><h4>LFO · A WOBBLE IN THE PITCH OR THE LEVEL (CLICK THE PICTURE: THE NEXT WAVE)</h4><div id="dxLfoW" class="dxwaves"></div><canvas id="dxLfo" height="90" aria-label="The LFO: click for the next wave"></canvas><div id="dxLfoK" class="ctls kn"></div></div></div></div>';
 }
 async function dxMount() {
   if (!$("dxFrom")) return;
@@ -1878,7 +1992,7 @@ async function dxPick(key, quiet) {                           // a voice into th
   if (k === "d") { const r = await ask({ type: "st_vox", op: "dx", idx: i }); if (!r.ok) return; dxv = r.ok === 2 ? vSanitize(r.vox.slice(0, FP.SIZE)) : vUnpack(r.vox.subarray(0, 128)); dxSlot = -1; dxDx = i; if (!quiet) dxPlay(dxSndOf(i)); }
   else if (k === "u") { const r = await ask({ type: "st_vox", op: "get", slot: i }); if (!r.ok) return; dxv = vUnpack(r.vox.subarray(0, 128)); dxSlot = i; dxDx = -1; if (!quiet) dxPlay(DXB() + i); }
   else { dxv = k === "f" ? Uint8Array.from(dxFile[i]) : vInit(); dxSlot = -1; dxDx = -1; await dxPut(true); }
-  dxOp = 1;
+  dxOp = 1; dxBase = null; dxFeel.fill(0.5); dxMute.clear(); dxSolo = 0;
   if (!quiet) { dxFill(); say(k === "d" ? "The pluck plays " + dxSndNames()[dxSndOf(i)] + ". Edit it: your changes go into a voice slot of your own, the built-in stays." :
     k === "u" ? "The pluck plays your voice " + (i + 1) + ". Edits go straight into it." : "In a voice slot of your own, and the pluck plays it."); }
 }
@@ -1897,20 +2011,30 @@ function dxFill() {                                           // the editor draw
   if (!dxv || !$("dxGlob")) return;
   $("dxName").value = vName(dxv);
   $("dxAlgN").textContent = "ALG " + (dxv[FP.ALG] + 1);
-  $("dxGlob").innerHTML = dxRow("Feedback", FP.FB) + dxRow("Transpose", FP.TRNSP) + dxRow("Oscillator sync", FP.OKS, ["Off", "On"]);
-  $("dxMore").innerHTML = "<div>" + [1, 2, 3, 4].map((n) => dxRow("Pitch rate " + n, FP.PR1 + n - 1)).join("") + [1, 2, 3, 4].map((n) => dxRow("Pitch level " + n, FP.PL1 + n - 1)).join("") + "</div><div>" +
-    dxRow("LFO wave", FP.LFW, LFOW) + dxRow("LFO speed", FP.LFS) + dxRow("LFO delay", FP.LFD) + dxRow("LFO pitch depth", FP.LPMD) + dxRow("LFO amp depth", FP.LAMD) + dxRow("LFO pitch sens", FP.LPMS) + dxRow("LFO key sync", FP.LKS, ["Off", "On"]) + "</div>";
+  $("dxGlob").innerHTML = dxKnob(FP.FB, "Feedback", "How much the top operator feeds itself: from pure to noisy") + dxKnob(FP.TRNSP, "Transpose", "The whole voice up or down (C3: as written)") +
+    dxTog(FP.OKS, "Osc sync", "Oscillator sync: every note starts its waves at the same point (a steadier attack)");
+  $("dxLfoW").innerHTML = LFOW.map((t, k) => '<button class="small" data-dxlfw="' + k + '" aria-pressed="' + (k === dxv[FP.LFW]) + '">' + t + "</button>").join("");
+  $("dxLfoK").innerHTML = dxKnob(FP.LFS, "Speed") + dxKnob(FP.LFD, "Delay", "How long after the note the wobble comes in") + dxKnob(FP.LPMD, "Pitch", "How much it wobbles the pitch (with Pitch sens)") +
+    dxKnob(FP.LAMD, "Amp", "How much it wobbles the level (on the operators with LFO amp)") + dxKnob(FP.LPMS, "Pitch sens", "How far the pitch wobble reaches") + dxTog(FP.LKS, "Restart", "LFO key sync: the wobble starts again on each note");
   dxOpFill(); dxWhat(); dxDraw();
 }
-function dxOpFill() {
-  const d = (6 - dxOp) * FP.OP, g = vGraph(dxv[FP.ALG]);
-  $("dxOps").innerHTML = [1, 2, 3, 4, 5, 6].map((n) => '<button class="small' + (g.carrier[n] ? " car" : "") + '" data-dxop="' + n + '" aria-pressed="' + (n === dxOp) + '" title="' + (g.carrier[n] ? "A carrier: heard" : "A modulator: colours the ones below it") + '">OP' + n +
-    '<i style="width:' + Math.round(dxv[(6 - n) * FP.OP + FP.OL] / 99 * 100) + '%"></i></button>').join("") + '<span class="muted" style="align-self:center">&nbsp;' + (g.carrier[dxOp] ? "carrier" : "modulator") + " · " + dxRatio(d) + "</span>";
-  $("dxOpRows").innerHTML = '<div class="dxtwo"><div>' + dxRow("Level", d + FP.OL) + dxRow("Frequency", d + FP.MODE, ["Ratio", "Fixed"]) + dxRow("Coarse", d + FP.FC) + dxRow("Fine", d + FP.FF) + dxRow("Detune", d + FP.DET) +
-    dxRow("Velocity sens", d + FP.KVS) + dxRow("Amp mod sens", d + FP.AMS) + "</div><div>" + [1, 2, 3, 4].map((n) => dxRow("Rate " + n, d + n - 1)).join("") + [1, 2, 3, 4].map((n) => dxRow("Level " + n, d + 3 + n)).join("") + "</div></div>" +
-    "<details><summary>KEY SCALING</summary><div class=\"dxtwo\"><div>" + dxRow("Break point", d + FP.BP) + dxRow("Left depth", d + FP.LD) + dxRow("Left curve", d + FP.LC, CURVE) + "</div><div>" + dxRow("Rate scaling", d + FP.RS) + dxRow("Right depth", d + FP.RD) + dxRow("Right curve", d + FP.RC, CURVE) + "</div></div></details>";
+function dxOpFill() {                                         // the operator chosen as one card: its level (what it does), its frequency, envelope, key scaling
+  const d = (6 - dxOp) * FP.OP, g = vGraph(dxv[FP.ALG]), car = g.carrier[dxOp], tgt = g.edges.filter((e) => e[0] === dxOp).map((e) => e[1]), fixed = dxv[d + FP.MODE];
+  $("dxOps").innerHTML = [1, 2, 3, 4, 5, 6].map((n) => '<button class="small' + (g.carrier[n] ? " car" : "") + (dxMute.has(n) ? " mute" : "") + (dxSolo === n ? " solo" : "") + '" data-dxop="' + n + '" aria-pressed="' + (n === dxOp) + '" title="' +
+    (g.carrier[n] ? "A carrier: you hear it" : "A modulator: it colours the ones below it") + '">OP' + n + '<i style="width:' + Math.round(dxv[(6 - n) * FP.OP + FP.OL] / 99 * 100) + '%"></i></button>').join("") +
+    '<span class="sp" style="flex:1"></span><button class="small" data-dxm aria-pressed="' + dxMute.has(dxOp) + '" title="Mute this operator while you listen (Shift-click on the picture too); the voice keeps it">M</button>' +
+    '<button class="small" data-dxs aria-pressed="' + (dxSolo === dxOp) + '" title="Hear this operator\'s stack alone (Alt-click on the picture too)">S</button>';
+  $("dxCard").innerHTML = '<div class="dxchead"><b>OP ' + dxOp + "</b><span class=\"muted\">" + (car ? "a carrier: you hear it" : "a modulator: it colours OP " + tgt.join(" and ")) + "</span></div>" +
+    '<div class="dxcrow">' + dxKnob(d + FP.OL, car ? "LOUDNESS" : "BRIGHTNESS", car ? "Its level: how loud it is in the sound" : "Its level: how much it bends the operator it feeds (more: brighter, buzzier)", true) +
+    '<div class="dxfreq"><div class="bar"><span class="lbl">FREQUENCY</span><button class="small" data-dxmode="0" aria-pressed="' + !fixed + '">RATIO</button><button class="small" data-dxmode="1" aria-pressed="' + !!fixed + '">FIXED</button>' +
+    '<span class="muted dxfnote">' + (fixed ? "the same pitch on every key" : "a multiple of the note: click a harmonic, drag between them for metal (Shift: no snap)") + "</span></div>" +
+    '<canvas id="dxFreq" height="66" aria-label="The frequency: click or drag"></canvas></div></div>' +
+    '<div><span class="lbl" title="Drag a point: up, its level; sideways, its time">ENVELOPE · DRAG A POINT</span><canvas id="dxEnv" height="150" aria-label="The operator envelope: drag a point (up: its level; sideways: its rate)"></canvas></div>' +
+    '<div class="dxcrow2"><div><span class="lbl" title="Louder or softer across the keyboard: drag the break point or an end (up: louder, down: softer); double-click an end: curved or straight">KEY SCALING · LOUDER OR SOFTER ACROSS THE KEYS</span><canvas id="dxKs" height="84" aria-label="Key scaling: drag the break point or an end"></canvas></div>' +
+    '<div class="ctls kn dxsmall">' + dxKnob(d + FP.DET, "Detune") + dxKnob(d + FP.KVS, "Velocity", "How much playing harder raises it") +
+    dxKnob(d + FP.RS, "Key speed", "Rate scaling: higher notes run its envelope faster") + dxKnob(d + FP.AMS, "LFO amp", "How much the LFO moves its level") + "</div></div>";
 }
-function dxDraw() { dxDrawAlg(); dxDrawEnv(); }
+function dxDraw() { dxDrawAlg(); dxDrawEG("dxEnv", (6 - dxOp) * FP.OP, (6 - dxOp) * FP.OP + 4, false); dxDrawFreq(); dxDrawKs(); dxDrawEG("dxPeg", FP.PR1, FP.PL1, true); dxDrawLfo(); }
 function dxCanvas(id, H) {
   const cv = $(id); if (!cv) return null;
   const dpr = window.devicePixelRatio || 1, W = cv.clientWidth;
@@ -1919,60 +2043,146 @@ function dxCanvas(id, H) {
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
   return { g, W, H };
 }
-function dxDrawAlg() {                                        // the operators as boxes in their stacks (a level a row), lines to what they modulate,
-  const c = dxCanvas("dxAlg", 200); if (!c || !dxv) return;     //  a carrier's base in the pluck's colour, its level as a fill, a curl for feedback
+function dxDrawAlg() {                                        // the operators in their stacks: a box as big as its level, a line as thick as what it sends,
+  const c = dxCanvas("dxAlg", 230); if (!c || !dxv) return;    //  lit by its envelope after each pluck note; muted ones dashed, the solo's stack ringed
   const { g, W, H } = c, gr = vGraph(dxv[FP.ALG]), level = {}, tg = (n) => gr.edges.filter((e) => e[0] === n).map((e) => e[1]);
   const lv = (n) => { if (level[n] !== undefined) return level[n]; const t = tg(n); level[n] = t.length ? 1 + Math.max(...t.map(lv)) : 0; return level[n]; };
   for (let n = 1; n <= 6; n++) lv(n);
   const by = {}; for (let n = 1; n <= 6; n++) (by[level[n]] = by[level[n]] || []).push(n);
-  const maxl = Math.max(...Object.values(level)), rowH = Math.min(42, (H - 40) / Math.max(1, maxl)), pos = {};
-  for (const l of Object.keys(by)) by[l].forEach((n, i) => { pos[n] = { x: W / 2 + (i - (by[l].length - 1) / 2) * Math.min(70, W / 6.5), y: H - 26 - l * rowH }; });
-  g.strokeStyle = "#8b8e98"; g.lineWidth = 2;
-  for (const [a, b] of gr.edges) { g.beginPath(); g.moveTo(pos[a].x, pos[a].y + 12); g.lineTo(pos[b].x, pos[b].y - 12); g.stroke(); }
+  const maxl = Math.max(...Object.values(level)), rowH = Math.min(46, (H - 44) / Math.max(1, maxl)), pos = {};
+  for (const l of Object.keys(by)) by[l].forEach((n, i) => { pos[n] = { x: W / 2 + (i - (by[l].length - 1) / 2) * Math.min(72, W / 6.5), y: H - 28 - l * rowH }; });
+  const off = dxOff(), t = dxNoteT >= 0 ? (performance.now() - dxNoteT) / 1000 : -1, OL = (n) => dxv[(6 - n) * FP.OP + FP.OL] / 99;
+  const heardBy = dxSolo ? new Set(dxReach(gr, dxSolo)) : null;
+  for (const [a, b] of gr.edges) {
+    g.strokeStyle = off.has(a) ? "#33363f" : hexA(COL.ink, 0.25 + 0.55 * OL(a)); g.lineWidth = 0.8 + 4 * OL(a);
+    g.beginPath(); g.moveTo(pos[a].x, pos[a].y + 10); g.lineTo(pos[b].x, pos[b].y - 10); g.stroke();
+  }
   g.fillStyle = COL.pluck; g.fillRect(W / 2 - 90, H - 8, 180, 3);   // the out
   dxAlgHit = [];
   for (let n = 1; n <= 6; n++) {
-    const p = pos[n], sel = n === dxOp, ol = dxv[(6 - n) * FP.OP + FP.OL] / 99;
-    if (gr.carrier[n]) { g.strokeStyle = hexA(COL.pluck, 0.5); g.lineWidth = 1; g.beginPath(); g.moveTo(p.x, p.y + 12); g.lineTo(p.x, H - 8); g.stroke(); }
-    g.fillStyle = sel ? "#3a2c10" : "#22252c"; g.fillRect(p.x - 19, p.y - 12, 38, 24);
-    g.fillStyle = hexA(gr.carrier[n] ? COL.pluck : COL.ink, 0.35); g.fillRect(p.x - 19, p.y + 12 - 24 * ol, 38, 24 * ol);
-    g.strokeStyle = sel ? COL.acc : gr.carrier[n] ? COL.pluck : "#555a66"; g.lineWidth = 2; g.strokeRect(p.x - 19, p.y - 12, 38, 24);
-    g.fillStyle = COL.ink; g.font = FONT(700, 12); g.textAlign = "center"; g.fillText(String(n), p.x, p.y + 4); g.textAlign = "left";
-    if (gr.fb[n]) { g.strokeStyle = COL.acc; g.lineWidth = 2; g.beginPath(); g.moveTo(p.x + 19, p.y - 4); g.quadraticCurveTo(p.x + 34, p.y - 8, p.x + 30, p.y - 18); g.quadraticCurveTo(p.x + 24, p.y - 24, p.x + 12, p.y - 12); g.stroke(); }
-    dxAlgHit.push([p.x - 22, p.y - 15, 44, 30, n]);
+    const p = pos[n], sel = n === dxOp, ol = OL(n), k = 0.72 + 0.28 * ol, bw = 42 * k, bh = 28 * k, x = p.x - bw / 2, y = p.y - bh / 2, muted = off.has(n), col = gr.carrier[n] ? COL.pluck : COL.ink;
+    if (gr.carrier[n]) { g.strokeStyle = hexA(COL.pluck, muted ? 0.15 : 0.5); g.lineWidth = 1 + 2 * ol; g.beginPath(); g.moveTo(p.x, p.y + bh / 2); g.lineTo(p.x, H - 8); g.stroke(); }
+    g.globalAlpha = muted ? 0.4 : 1;
+    rblock(g, x, y, bw, bh); g.fillStyle = sel ? "#3a2c10" : "#22252c"; g.fill();
+    g.fillStyle = hexA(col, 0.3); g.fillRect(x, y + bh - bh * ol, bw, bh * ol);
+    if (t >= 0 && !muted) {                                   // (its envelope now, times its level)
+      const e = dxEnvAt((6 - n) * FP.OP, t) * ol;
+      if (e > 0.02) { g.save(); g.shadowColor = col; g.shadowBlur = 22 * e; rblock(g, x, y, bw, bh); g.fillStyle = hexA(col, 0.12 + 0.55 * e); g.fill(); g.restore(); }
+    }
+    rblock(g, x, y, bw, bh); g.strokeStyle = sel ? COL.acc : col === COL.pluck ? COL.pluck : "#6b6e78"; g.lineWidth = sel ? 2.5 : 1.5;
+    if (muted) g.setLineDash([3, 3]); g.stroke(); g.setLineDash([]);
+    if (heardBy && heardBy.has(n) || dxSolo === n) { g.strokeStyle = COL.acc; g.lineWidth = 1; rblock(g, x - 4, y - 4, bw + 8, bh + 8); g.stroke(); }
+    g.globalAlpha = 1;
+    g.fillStyle = COL.ink; g.font = FONT(700, 12); g.textAlign = "center"; g.fillText(muted ? n + " ✕" : String(n), p.x, p.y + 4); g.textAlign = "left";
+    if (gr.fb[n]) { const fb = dxv[FP.FB] / 7; g.strokeStyle = hexA(COL.acc, 0.35 + 0.65 * fb); g.lineWidth = 1 + 2.5 * fb; g.beginPath(); g.moveTo(p.x + bw / 2, p.y - 4); g.quadraticCurveTo(p.x + bw / 2 + 15, p.y - 8, p.x + bw / 2 + 11, p.y - 18); g.quadraticCurveTo(p.x + bw / 2 + 5, p.y - 24, p.x + bw / 2 - 7, p.y - bh / 2); g.stroke(); }
+    dxAlgHit.push([p.x - 23, p.y - 16, 46, 32, n]);
   }
   g.fillStyle = COL.dim; g.font = FONT(600, 10); g.fillText("FEEDBACK " + dxv[FP.FB], 8, 14);
+  if (dxMute.size || dxSolo) { g.fillStyle = COL.acc; g.fillText(dxSolo ? "SOLO OP " + dxSolo : "MUTED " + [...dxMute].sort().join(" "), W - 90, 14); }
 }
-let dxEnvG = null;
-function dxDrawEnv() {                                        // the operator's envelope: levels up, each segment as wide as its rate is slow; the points drag
-  const c = dxCanvas("dxEnv", 150); if (!c || !dxv) return;
-  const { g, W, H } = c, d = (6 - dxOp) * FP.OP, pad = 10, R = [0, 1, 2, 3].map((k) => dxv[d + k]), L = [0, 1, 2, 3].map((k) => dxv[d + 4 + k]);
-  const seg = R.map((r) => 8 + Math.pow((99 - r) / 99, 1.6) * 80), hold = 30;
-  const sx = dxEnvDrag ? dxEnvDrag.sx : (W - 2 * pad) / (seg[0] + seg[1] + seg[2] + hold + seg[3]), y = (l) => H - pad - (l / 99) * (H - 2 * pad - 6);
+const dxEG = {};
+let dxEgDrag = null;
+function dxDrawEG(id, rB, lB, pitch) {                        // an envelope: levels up, each segment as wide as its rate is slow; the points drag (pitch: 50 the note itself)
+  const c = dxCanvas(id, pitch ? 110 : 150); if (!c || !dxv) return;
+  const { g, W, H } = c, pad = 10, R = [0, 1, 2, 3].map((k) => dxv[rB + k]), L = [0, 1, 2, 3].map((k) => dxv[lB + k]), col = pitch ? COL.acc : COL.pluck;
+  const seg = R.map((r) => 8 + Math.pow((99 - r) / 99, 1.6) * 80), hold = 30, drag = dxEgDrag && dxEgDrag.id === id ? dxEgDrag : null;
+  const sx = drag ? drag.sx : (W - 2 * pad) / (seg[0] + seg[1] + seg[2] + hold + seg[3]), y = (l) => H - pad - (l / 99) * (H - 2 * pad - 6);
   const xs = [pad]; xs.push(xs[0] + seg[0] * sx, 0, 0, 0, 0); xs[2] = xs[1] + seg[1] * sx; xs[3] = xs[2] + seg[2] * sx; xs[4] = xs[3] + hold * sx; xs[5] = xs[4] + seg[3] * sx;
-  const pts = [[xs[0], y(L[3])], [xs[1], y(L[0])], [xs[2], y(L[1])], [xs[3], y(L[2])], [xs[4], y(L[2])], [xs[5], y(L[3])]];
+  const pts = [[xs[0], y(L[3])], [xs[1], y(L[0])], [xs[2], y(L[1])], [xs[3], y(L[2])], [xs[4], y(L[2])], [xs[5], y(L[3])]], base = pitch ? y(50) : H - pad;
   g.strokeStyle = "#262932"; g.lineWidth = 1; for (let q = 1; q < 4; q++) { g.beginPath(); g.moveTo(pad, y(q * 33)); g.lineTo(W - pad, y(q * 33)); g.stroke(); }
+  if (pitch) { g.strokeStyle = "#4a4d57"; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(pad, base); g.lineTo(W - pad, base); g.stroke(); g.setLineDash([]); g.fillStyle = "#555a66"; g.font = FONT(600, 8); g.fillText("UP", W - pad - 14, y(92)); g.fillText("DOWN", W - pad - 26, y(6)); }
   g.fillStyle = COL.dim; g.font = FONT(600, 9); g.fillText("KEY ON", xs[0] + 2, 11); g.fillText("KEY OFF", xs[4] + 2, 11);
   g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(xs[4], 14); g.lineTo(xs[4], H - pad); g.stroke(); g.setLineDash([]);
-  g.beginPath(); g.moveTo(pts[0][0], H - pad); pts.forEach(([px, py]) => g.lineTo(px, py)); g.lineTo(pts[5][0], H - pad); g.closePath(); g.fillStyle = hexA(COL.pluck, 0.18); g.fill();
-  g.beginPath(); pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.strokeStyle = COL.pluck; g.lineWidth = 2; g.stroke();
+  g.beginPath(); g.moveTo(pts[0][0], base); pts.forEach(([px, py]) => g.lineTo(px, py)); g.lineTo(pts[5][0], base); g.closePath(); g.fillStyle = hexA(col, 0.16); g.fill();
+  g.beginPath(); pts.forEach(([px, py], i) => (i ? g.lineTo(px, py) : g.moveTo(px, py))); g.strokeStyle = col; g.lineWidth = 2; g.stroke();
   const hp = [[1, 0], [2, 1], [3, 2], [5, 3]];               // the handles: the end of segment k (its level k, its rate k)
-  dxEnvG = { hp: hp.map(([pi, k]) => ({ x: pts[pi][0], y: pts[pi][1], k, x0: pi === 5 ? xs[4] : xs[pi - 1] })), sx, pad, H, y };
-  for (const h of dxEnvG.hp) { g.fillStyle = dxEnvDrag && dxEnvDrag.k === h.k ? COL.acc : COL.ink; g.beginPath(); g.arc(h.x, h.y, 5, 0, 7); g.fill(); g.fillStyle = COL.dim; g.font = FONT(600, 9); g.fillText(String(h.k + 1), h.x + 7, h.y - 6); }
+  dxEG[id] = { hp: hp.map(([pi, k]) => ({ x: pts[pi][0], y: pts[pi][1], k, x0: pi === 5 ? xs[4] : xs[pi - 1] })), sx, pad, H, rB, lB };
+  for (const h of dxEG[id].hp) { g.fillStyle = drag && drag.k === h.k ? COL.acc : COL.ink; g.beginPath(); g.arc(h.x, h.y, 5, 0, 7); g.fill(); g.fillStyle = COL.dim; g.font = FONT(600, 9); g.fillText(String(h.k + 1), h.x + 7, h.y - 6); }
 }
-function dxSet(i, v, quiet) {                                 // a byte of the voice changed: drawn, heard
+// the frequency: a ratio on a ladder of harmonics (0.5 .. 31, by octaves), the other operators' ratios marked above; fixed, in Hz (1 .. 9772)
+const DX_RUNGS = [0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 30, 31], DX_RLAB = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 24, 31];
+const dxRatioOf = (d) => (dxv[d + FP.FC] || 0.5) * (1 + dxv[d + FP.FF] / 100), dxHzOf = (d) => Math.pow(10, (dxv[d + FP.FC] & 3) + dxv[d + FP.FF] / 100);
+let dxFreqG = null, dxFreqDrag = false;
+function dxDrawFreq() {
+  const c = dxCanvas("dxFreq", 66); if (!c || !dxv) return;
+  const { g, W, H } = c, d = (6 - dxOp) * FP.OP, fixed = dxv[d + FP.MODE], pad = 14, w = W - 2 * pad, base = H - 16;
+  const X = fixed ? (f) => pad + Math.log10(Math.max(1, f)) / 4 * w : (r) => pad + Math.log2(Math.max(0.5, r) / 0.5) / 6 * w;
+  g.strokeStyle = "#2a2d35"; g.lineWidth = 1; g.beginPath(); g.moveTo(pad, base); g.lineTo(W - pad, base); g.stroke();
+  g.font = FONT(600, 9); g.textAlign = "center";
+  if (!fixed) for (const r of DX_RUNGS) { const x = X(r), h = r <= 8 && r === Math.round(r) ? 12 : 7; g.fillStyle = r <= 8 ? "#6b6e78" : "#3a3e4a"; g.fillRect(Math.round(x), base - h, 1, h); if (DX_RLAB.includes(r)) { g.fillStyle = "#6b6e78"; g.fillText(String(r), x, base + 11); } }
+  else for (let e = 0; e < 4; e++) for (const m of [1, 2, 5]) { const f = m * Math.pow(10, e), x = X(f); if (f > 9772) continue; g.fillStyle = m === 1 ? "#6b6e78" : "#3a3e4a"; g.fillRect(Math.round(x), base - (m === 1 ? 12 : 7), 1, m === 1 ? 12 : 7); if (m === 1) { g.fillStyle = "#6b6e78"; g.fillText(f >= 1000 ? f / 1000 + "k Hz" : f + " Hz", x, base + 11); } }
+  for (let n = 1; n <= 6; n++) {                              // (the others: where they sit)
+    const e = (6 - n) * FP.OP; if (n === dxOp || dxv[e + FP.MODE] !== fixed) continue;
+    const x = X(fixed ? dxHzOf(e) : dxRatioOf(e)); g.fillStyle = "#4a4d57"; g.beginPath(); g.arc(x, 12, 6, 0, 7); g.fill(); g.fillStyle = COL.ink; g.font = FONT(700, 8); g.fillText(String(n), x, 15);
+  }
+  const v = fixed ? dxHzOf(d) : dxRatioOf(d), x = X(v);
+  g.strokeStyle = COL.pluck; g.lineWidth = 2; g.beginPath(); g.moveTo(x, 20); g.lineTo(x, base); g.stroke();
+  g.fillStyle = COL.pluck; g.beginPath(); g.moveTo(x - 6, base); g.lineTo(x + 6, base); g.lineTo(x, base - 9); g.closePath(); g.fill();
+  g.font = FONT(700, 13); g.fillStyle = COL.ink; g.textAlign = x > W - 80 ? "right" : "left";
+  g.fillText(fixed ? (v >= 1000 ? (v / 1000).toFixed(2) + " kHz" : v.toFixed(1) + " Hz") : "× " + v.toFixed(2), x + (x > W - 80 ? -8 : 8), 32);
+  g.textAlign = "left";
+  dxFreqG = { fixed, pad, w };
+}
+function dxFreqAt(x, snap) {
+  const G = dxFreqG, d = (6 - dxOp) * FP.OP, u = Math.max(0, Math.min(1, (x - G.pad) / G.w));
+  if (G.fixed) { const L = Math.min(3.99, u * 4), c = Math.min(3, Math.floor(L)); dxSet(d + FP.FC, c); dxSet(d + FP.FF, Math.round((L - c) * 100)); return; }
+  let r = Math.min(31, 0.5 * Math.pow(2, u * 6));
+  if (snap) { const near = DX_RUNGS.reduce((a, q) => (Math.abs(Math.log(q / r)) < Math.abs(Math.log(a / r)) ? q : a), 1); if (Math.abs(Math.log(near / r)) < 0.06) r = near; }
+  const fc = r < 1 ? 0 : Math.floor(r), ff = Math.min(99, Math.round((r / (fc || 0.5) - 1) * 100));
+  dxSet(d + FP.FC, fc); dxSet(d + FP.FF, ff);
+}
+// key scaling: the keyboard (A-1 .. C8, the break point's 0 .. 99), the operator louder (up) or softer (down) away from the break point on each side
+let dxKsG = null, dxKsDrag = null;
+const dxNote = (bp) => NOTE[(bp + 9) % 12] + (Math.floor((bp + 9) / 12) - 1);
+function dxDrawKs() {
+  const c = dxCanvas("dxKs", 84); if (!c || !dxv) return;
+  const { g, W, H } = c, d = (6 - dxOp) * FP.OP, pad = 10, w = W - 2 * pad, kb = 12, mid = (H - kb) / 2, amp = mid - 8, X = (bp) => pad + bp / 99 * w;
+  for (let k = 0; k <= 99; k++) { const black = [1, 3, 6, 8, 10].includes((k + 9) % 12); g.fillStyle = black ? "#1d2026" : "#3a3e4a"; g.fillRect(X(k) - w / 200, H - kb + (black ? 0 : 3), Math.max(1, w / 100 - 1), black ? kb - 3 : kb - 3); }
+  g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(pad, mid); g.lineTo(W - pad, mid); g.stroke(); g.setLineDash([]);
+  const bp = dxv[d + FP.BP], bx = X(bp), side = (dep, cv, u) => (cv >= 2 ? 1 : -1) * dep / 99 * amp * (cv === 1 || cv === 2 ? u * u * u : u);
+  const ly = mid - side(dxv[d + FP.LD], dxv[d + FP.LC], 1), ry = mid - side(dxv[d + FP.RD], dxv[d + FP.RC], 1);
+  g.beginPath();
+  for (let x = pad; x <= W - pad; x += 2) { const left = x < bx, u = left ? (bx - x) / Math.max(1, bx - pad) : (x - bx) / Math.max(1, W - pad - bx), yy = mid - (left ? side(dxv[d + FP.LD], dxv[d + FP.LC], u) : side(dxv[d + FP.RD], dxv[d + FP.RC], u)); x === pad ? g.moveTo(x, yy) : g.lineTo(x, yy); }
+  g.strokeStyle = COL.pluck; g.lineWidth = 2; g.stroke();
+  g.strokeStyle = COL.acc; g.lineWidth = 1; g.beginPath(); g.moveTo(bx, 4); g.lineTo(bx, H - kb); g.stroke();
+  for (const [x, y2] of [[pad + 4, ly], [W - pad - 4, ry], [bx, mid]]) { g.fillStyle = dxKsDrag && dxKsDrag.x === x ? COL.acc : COL.ink; g.beginPath(); g.arc(x, y2, 5, 0, 7); g.fill(); }
+  g.font = FONT(600, 9); g.fillStyle = COL.dim; g.fillText(CURVE[dxv[d + FP.LC]] + " " + dxv[d + FP.LD], pad + 12, 11);
+  g.textAlign = "right"; g.fillText(CURVE[dxv[d + FP.RC]] + " " + dxv[d + FP.RD], W - pad - 12, 11); g.textAlign = "center"; g.fillStyle = COL.acc; g.fillText(dxNote(bp), bx, H - kb - 3); g.textAlign = "left";
+  dxKsG = { pad, w, mid, amp, ends: [[pad + 4, ly, "L"], [W - pad - 4, ry, "R"], [bx, mid, "B"]] };
+}
+function dxKsSet(which, x, y) {
+  const G = dxKsG, d = (6 - dxOp) * FP.OP;
+  if (which === "B") return dxSet(d + FP.BP, (x - G.pad) / G.w * 99);
+  const dep = d + (which === "L" ? FP.LD : FP.RD), cv = d + (which === "L" ? FP.LC : FP.RC), dy = G.mid - y, exp = dxv[cv] === 1 || dxv[cv] === 2;
+  dxSet(dep, Math.min(99, Math.abs(dy) / G.amp * 99)); dxSet(cv, dy >= 0 ? (exp ? 2 : 3) : (exp ? 1 : 0));
+}
+// the LFO: its wave over a few cycles (faster: more), the delay as a fade-in, the pitch wobble (pluck) and the level wobble (grey) at their depths
+function dxDrawLfo() {
+  const c = dxCanvas("dxLfo", 90); if (!c || !dxv) return;
+  const { g, W, H } = c, pad = 10, w = W - 2 * pad, mid = H / 2 + 6, A = H / 2 - 14, cyc = 1 + dxv[FP.LFS] / 99 * 9, del = dxv[FP.LFD] / 99 * 0.7, wave = dxv[FP.LFW];
+  let seed = 3; const sh = []; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  const val = (ph) => { const f = ph - Math.floor(ph); switch (wave) { case 0: return f < 0.5 ? 4 * f - 1 : 3 - 4 * f; case 1: return 1 - 2 * f; case 2: return 2 * f - 1; case 3: return f < 0.5 ? 1 : -1; case 4: return Math.sin(f * 2 * Math.PI); default: { const k = Math.floor(ph); while (sh.length <= k) sh.push(rnd()); return sh[k]; } } };
+  const env = (u) => (del <= 0 ? 1 : u < del / 2 ? 0 : Math.min(1, (u - del / 2) / (del / 2)));
+  g.strokeStyle = "#2a2d35"; g.beginPath(); g.moveTo(pad, mid); g.lineTo(W - pad, mid); g.stroke();
+  for (const [dep, col] of [[dxv[FP.LAMD] / 99, "#6b6e78"], [dxv[FP.LPMD] / 99, COL.pluck]]) {
+    g.beginPath(); for (let x = 0; x <= w; x += 1.5) { const u = x / w, yy = mid - val(u * cyc) * A * dep * env(u); x ? g.lineTo(pad + x, yy) : g.moveTo(pad + x, yy); }
+    g.strokeStyle = col; g.lineWidth = col === COL.pluck ? 2 : 1.5; g.stroke();
+  }
+  if (del > 0) { g.fillStyle = "rgba(255,176,0,.08)"; g.fillRect(pad, 16, w * del / 2, H - 22); }
+  g.font = FONT(600, 9); g.fillStyle = COL.dim; g.fillText(LFOW[wave].toUpperCase() + " · SPEED " + dxv[FP.LFS] + (del > 0 ? " · DELAY " + dxv[FP.LFD] : ""), pad, 11);
+  g.textAlign = "right"; g.fillStyle = COL.pluck; g.fillText("PITCH " + dxv[FP.LPMD], W - pad - 52, 11); g.fillStyle = "#8b8e98"; g.fillText("AMP " + dxv[FP.LAMD], W - pad, 11); g.textAlign = "left";
+}
+function dxSet(i, v) {                                        // a byte of the voice changed by hand: drawn, heard; the feel starts again from here
   v = Math.max(0, Math.min(vmax(i), Math.round(v)));
   if (dxv[i] === v) return;
-  dxv[i] = v;
-  const el = document.querySelector('#sound [data-dx="' + i + '"]');
-  if (el && !quiet) { el.value = v; const b = el.parentElement.querySelector("b"); if (b && el.type === "range") b.textContent = dxFmt(i, v); }
+  dxv[i] = v; dxBase = null; dxFeel.fill(0.5);
   dxEdit();
 }
 function dxEdit() {                                           // into the emulator (the newest, one at a time); kept a moment after the last change
   clearTimeout(dxPutT); dxPutT = setTimeout(() => dxPut(false), 40);
   clearTimeout(dxKeepT); dxKeepT = setTimeout(() => dxPut(true), 900);
   if (lk && lk.live) { clearTimeout(lk.vT); lk.vT = setTimeout(lkVoxSend, 250); }
-  dxDraw();
+  dxDraw(); dxSyncKnobs();
   if (document.querySelector("#dxOps")) { const g = vGraph(dxv[FP.ALG]); document.querySelectorAll("#dxOps button[data-dxop]").forEach((b) => { const n = +b.dataset.dxop; b.querySelector("i").style.width = Math.round(dxv[(6 - n) * FP.OP + FP.OL] / 99 * 100) + "%"; b.classList.toggle("car", !!g.carrier[n]); }); }
 }
 async function dxPut(keep) {
@@ -1984,7 +2194,7 @@ async function dxPut(keep) {
     dxAgain = false;
     const first = dxSlot < 0;
     if (first && dxN >= 16) say("All 16 voice slots are in use: this edit replaces voice 16.", true);
-    const r = await ask({ type: "st_vox", op: "put", slot: first ? dxN : dxSlot, keep, vox: vPack(dxv) });
+    const heard = dxHeard(), r = await ask({ type: "st_vox", op: "put", slot: first ? dxN : dxSlot, keep: keep && heard === dxv, vox: vPack(heard) });   // (muted or soloed: heard, not kept)
     if (r.ok < 0 && ++tries < 30) { await new Promise((res) => setTimeout(res, 30)); continue; }
     if (r.ok >= 0) {
       dxSlot = r.ok; dxDx = -1; dxN = Math.max(dxN, r.ok + 1);
@@ -2026,7 +2236,13 @@ $("sound").addEventListener("change", async (e) => {
 $("sound").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b || !dxv) return;
   if (b.dataset.dxop) { dxOp = +b.dataset.dxop; dxOpFill(); dxDraw(); return; }
-  if (b.id === "dxAlgP" || b.id === "dxAlgX") { dxSet(FP.ALG, (dxv[FP.ALG] + (b.id === "dxAlgP" ? 31 : 1)) % 32); $("dxAlgN").textContent = "ALG " + (dxv[FP.ALG] + 1); dxOpFill(); return; }
+  if (b.dataset.dxm !== undefined) return dxAudition(dxOp, false);
+  if (b.dataset.dxs !== undefined) return dxAudition(dxOp, true);
+  if (b.dataset.dxmode !== undefined) { dxSet((6 - dxOp) * FP.OP + FP.MODE, +b.dataset.dxmode); dxOpFill(); dxDraw(); return; }
+  if (b.dataset.dxlfw !== undefined) return dxSet(FP.LFW, +b.dataset.dxlfw);
+  if (b.dataset.dxtog !== undefined) return dxSet(+b.dataset.dxtog, dxv[+b.dataset.dxtog] ? 0 : 1);
+  if (b.id === "dxDice") { if (!dxBase) dxBase = Uint8Array.from(dxv); dxFeel = dxFeel.map(() => 0.2 + Math.random() * 0.6); dxFeelApply(); return say("🎲 A new feel for “" + vName(dxv) + "”. Double-click a feel knob to put it back as it was."); }
+  if (b.id === "dxAlgP" || b.id === "dxAlgX") { dxSet(FP.ALG, (dxv[FP.ALG] + (b.id === "dxAlgP" ? 31 : 1)) % 32); $("dxAlgN").textContent = "ALG " + (dxv[FP.ALG] + 1); dxOpFill(); dxDraw(); return; }
   if (b.id === "dxLoad") return $("dxFileIn").click();
   if (b.id === "dxUnit") { if (!lk.on) { $("lkMenu").open = true; return say("Connect your FM-1 first (the FM-1 menu at the top).", true); } return lkVoxSend(); }
   if (b.id === "dxSave") {
@@ -2036,26 +2252,75 @@ $("sound").addEventListener("click", (e) => {
     say("Saved “" + vName(v) + "” as a DX7 single voice (.syx): any DX7 librarian, Dexed, or the FM-1 takes it.");
   }
 });
+let dxKDrag = null;
+const dxAt = (cv, e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
 $("sound").addEventListener("pointerdown", (e) => {
   if (!dxv) return;
-  const cv = e.target;
-  if (cv.id === "dxAlg") { const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, h = dxAlgHit.find(([hx, hy, w, hh]) => x >= hx && x < hx + w && y >= hy && y < hy + hh); if (h) { dxOp = h[4]; dxOpFill(); dxDraw(); } return; }
-  if (cv.id !== "dxEnv" || !dxEnvG) return;
-  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-  const h = dxEnvG.hp.reduce((a, q) => (Math.hypot(q.x - x, q.y - y) < (a ? Math.hypot(a.x - x, a.y - y) : 18) ? q : a), null);
+  const k = e.target.closest(".dxk, .dxfeel");
+  if (k) {                                                    // a knob: up turns it up, 150 px the whole way
+    e.preventDefault(); k.setPointerCapture(e.pointerId); k.focus();
+    if (k.classList.contains("dxfeel")) { if (!dxBase) dxBase = Uint8Array.from(dxv); dxKDrag = { k, feel: +k.dataset.feel, y: e.clientY, f0: dxFeel[+k.dataset.feel] }; }
+    else dxKDrag = { k, i: +k.dataset.dx, y: e.clientY, v0: dxv[+k.dataset.dx] };
+    return;
+  }
+  const cv = e.target, [x, y] = dxAt(cv, e);
+  if (cv.id === "dxAlg") {
+    const h = dxAlgHit.find(([hx, hy, w, hh]) => x >= hx && x < hx + w && y >= hy && y < hy + hh); if (!h) return;
+    if (e.shiftKey || e.altKey) { e.preventDefault(); return dxAudition(h[4], e.altKey); }
+    dxOp = h[4]; dxOpFill(); dxDraw(); return;
+  }
+  if (cv.id === "dxLfo") return dxSet(FP.LFW, (dxv[FP.LFW] + 1) % 6);
+  if (cv.id === "dxFreq" && dxFreqG) { e.preventDefault(); cv.setPointerCapture(e.pointerId); dxFreqDrag = true; return dxFreqAt(x, !e.shiftKey); }
+  if (cv.id === "dxKs" && dxKsG) {
+    const h = dxKsG.ends.reduce((a, q) => (Math.hypot(q[0] - x, q[1] - y) < (a ? Math.hypot(a[0] - x, a[1] - y) : 22) ? q : a), null);
+    if (!h) return; e.preventDefault(); cv.setPointerCapture(e.pointerId); dxKsDrag = { which: h[2], x: h[0] }; return;
+  }
+  const G = dxEG[cv.id]; if (!G) return;
+  const h = G.hp.reduce((a, q) => (Math.hypot(q.x - x, q.y - y) < (a ? Math.hypot(a.x - x, a.y - y) : 18) ? q : a), null);
   if (!h) return;
   e.preventDefault(); cv.setPointerCapture(e.pointerId);
-  dxEnvDrag = { k: h.k, x0: h.x0, sx: dxEnvG.sx }; dxDrawEnv();
+  dxEgDrag = { id: cv.id, k: h.k, x0: h.x0, sx: G.sx }; dxDraw();
 });
 $("sound").addEventListener("pointermove", (e) => {
-  if (!dxEnvDrag || e.target.id !== "dxEnv" || !dxv) return;
-  const r = e.target.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, G = dxEnvG, d = (6 - dxOp) * FP.OP, k = dxEnvDrag.k;
-  dxSet(d + 4 + k, (G.H - G.pad - y) / (G.H - 2 * G.pad - 6) * 99);
-  const segU = Math.max(8, (x - dxEnvDrag.x0) / dxEnvDrag.sx);   // the segment's width back to its rate (8 + ((99 - r) / 99)^1.6 * 80)
-  dxSet(d + k, 99 - 99 * Math.pow(Math.min(1, (segU - 8) / 80), 1 / 1.6));
-  dxOpFill();
+  if (!dxv) return;
+  if (dxKDrag) {
+    const dy = (dxKDrag.y - e.clientY) / 150 * (e.shiftKey ? 0.2 : 1);
+    if (dxKDrag.feel !== undefined) { dxFeel[dxKDrag.feel] = Math.max(0, Math.min(1, dxKDrag.f0 + dy)); dxFeelApply(); }
+    else { dxSet(dxKDrag.i, dxKDrag.v0 + dy * vmax(dxKDrag.i)); if (dxKDrag.i % 21 === FP.OL && dxKDrag.i < 126) dxDrawAlg(); }
+    return;
+  }
+  const cv = e.target, [x, y] = dxAt(cv, e);
+  if (dxFreqDrag && cv.id === "dxFreq") return dxFreqAt(x, !e.shiftKey);
+  if (dxKsDrag && cv.id === "dxKs") { dxKsSet(dxKsDrag.which, x, y); return; }
+  if (!dxEgDrag || cv.id !== dxEgDrag.id) return;
+  const G = dxEG[dxEgDrag.id], k = dxEgDrag.k;
+  dxSet(G.lB + k, (G.H - G.pad - y) / (G.H - 2 * G.pad - 6) * 99);
+  const segU = Math.max(8, (x - dxEgDrag.x0) / dxEgDrag.sx);   // the segment's width back to its rate (8 + ((99 - r) / 99)^1.6 * 80)
+  dxSet(G.rB + k, 99 - 99 * Math.pow(Math.min(1, (segU - 8) / 80), 1 / 1.6));
 });
-$("sound").addEventListener("pointerup", () => { if (dxEnvDrag) { dxEnvDrag = null; dxDrawEnv(); } });
+$("sound").addEventListener("pointerup", () => { if (dxKDrag || dxFreqDrag || dxKsDrag || dxEgDrag) { dxKDrag = null; dxFreqDrag = false; dxKsDrag = null; dxEgDrag = null; if (dxv) dxDraw(); } });
+$("sound").addEventListener("dblclick", (e) => {
+  if (!dxv) return;
+  const f = e.target.closest(".dxfeel");
+  if (f) { dxFeel[+f.dataset.feel] = 0.5; if (dxBase) dxFeelApply(); else dxSyncKnobs(); return; }
+  if (e.target.id === "dxKs" && dxKsG) {                      // an end: curved or straight
+    const [x, y] = dxAt(e.target, e), h = dxKsG.ends.find((q) => q[2] !== "B" && Math.hypot(q[0] - x, q[1] - y) < 22); if (!h) return;
+    const cv = (6 - dxOp) * FP.OP + (h[2] === "L" ? FP.LC : FP.RC); dxSet(cv, [1, 0, 3, 2][dxv[cv]]);
+  }
+});
+$("sound").addEventListener("wheel", (e) => {
+  const k = e.target.closest(".dxk, .dxfeel"); if (!k || !dxv) return;
+  e.preventDefault();
+  if (k.classList.contains("dxfeel")) { const n = +k.dataset.feel; if (!dxBase) dxBase = Uint8Array.from(dxv); dxFeel[n] = Math.max(0, Math.min(1, dxFeel[n] + (e.deltaY < 0 ? 0.02 : -0.02))); dxFeelApply(); }
+  else { const i = +k.dataset.dx; dxSet(i, dxv[i] + (e.deltaY < 0 ? 1 : -1)); }
+}, { passive: false });
+$("sound").addEventListener("keydown", (e) => {
+  const k = e.target.closest && e.target.closest(".dxk, .dxfeel"); if (!k || !dxv) return;
+  const s = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key]; if (!s) return;
+  e.preventDefault();
+  if (k.classList.contains("dxfeel")) { const n = +k.dataset.feel; if (!dxBase) dxBase = Uint8Array.from(dxv); dxFeel[n] = Math.max(0, Math.min(1, dxFeel[n] + s * (e.shiftKey ? 0.1 : 0.02))); dxFeelApply(); }
+  else { const i = +k.dataset.dx; dxSet(i, dxv[i] + s * (e.shiftKey ? 10 : 1)); }
+});
 window.addEventListener("resize", () => { if (pane === "sound" && sel === "pluck") dxDraw(); });
 
 /* ======================================================================== FX: the FX menu's effects, played and set from the studio (the unit's own
