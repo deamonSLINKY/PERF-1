@@ -12,9 +12,9 @@
    ember yellow for what is live, cream. (The names below are inherited from AMB-1: paper the ground, sheet the
    cards, river the crimson, ink the text.) */
 :root {
-  --paper: #130a0e; --sheet: #211219; --green-1: #2e1822; --green-3: #9c1d3a;
-  --river: #e0344f; --river-2: #ff8f8f; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
-  --orange: #ffd447; --cream: #f2e6c4; --rust: #9c1d3a;
+  --paper: #0b1022; --sheet: #121a33; --green-1: #1a2446; --green-3: #3e2a8c;
+  --river: #7253e6; --river-2: #a58bff; --ink: #f2efe6; --muted: #9aa3c7; --rule: #2c3766;
+  --orange: #ffb000; --cream: #f2efe6; --rust: #3e2a8c;
   color-scheme: dark;
 }
 body {
@@ -22,7 +22,8 @@ body {
   font: 400 18px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding-inline: 16px; padding-block: 32px 64px;
 }
-main { max-width: 48rem; margin: 0 auto; }
+@media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--paper); } }
+main { max-width: 68rem; margin: 0 auto; }
 h1, h2, h3, th, .site .home { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
 h1, h2, h3 { text-wrap: balance; line-height: 1.2; }
 h1 { font-size: 2.1rem; font-weight: 700; margin: 0 0 .6rem; letter-spacing: .05em; text-transform: uppercase; display: flex; align-items: center; gap: .7rem; }
@@ -31,7 +32,7 @@ h2 { font-size: 1.3rem; font-weight: 400; margin: 3rem 0 .8rem; padding-top: .8r
      text-transform: uppercase; letter-spacing: .04em; }
 h2 .num { color: var(--orange); margin-right: .5em; font-variant-numeric: tabular-nums; }
 h3 { font-size: 1.1rem; font-weight: 600; margin: 2rem 0 .5rem; color: var(--cream); }
-p, li { max-width: 65ch; }
+p, li { max-width: 78ch; }
 p { margin: 0 0 1rem; }
 ul, ol { padding-left: 1.3rem; margin: 0 0 1rem; }
 li { margin: .2rem 0; }

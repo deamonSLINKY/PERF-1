@@ -11,11 +11,11 @@
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABXElEQVR42mNgGAWjAAeQFlD6Tw89OA369OzIf1IMJEcP1QykxHIWfJKXju8iGLxPP9xjRFdLCmAk5LOVc2MYwpOXMBxV0cWqxvrOZQaYGphjqOIAaQGl/0dVdBnkox0YGBgYGB4uPUDQMOs7l0l2BCMhyx8uPcBgfecyAwMDA0YoYBMn1RFM+CRhvn5yRJXhyRFVDHlc4qQAJmIUydjcZniYwIHpwAQOBhmb2xQ5AGcu2PPyNQpfaFMpg6ZWHIrY9WuLGBi04jDUokcnvihhpHaphmwZLC3hSxd4ywH0XABLdDDQyCuBwq///AJrQj66lIHB+g4D1pDAGwLoFriIi8JzBnIuwOV7fKFDdEGEz8cu4qIEywFCaYCFlIII3cfUAHjTwJ6XrxkY+lZjpAliooBqdQElUUAo+GkaBcRYPjyjgFTHUD0KqFIdk1sQUdUB5NQH5KSBUTAKBhwAAK4G8263HIhkAAAAAElFTkSuQmCC">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
 <style>
-  :root { --ground: #130a0e; --card: #211219; --card-2: #2e1822; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
-          --purple: #e0344f; --purple-2: #ff8f8f; --orange: #ffd447; --rust: #9c1d3a; --horn: #f2e6c4; color-scheme: dark; }
+  :root { --ground: #0b1022; --card: #121a33; --card-2: #1a2446; --ink: #f2efe6; --muted: #9aa3c7; --rule: #2c3766;
+          --purple: #7253e6; --purple-2: #a58bff; --orange: #ffb000; --rust: #3e2a8c; --horn: #f2efe6; color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--ground); color: var(--ink); font: 400 16px/1.5 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
-  main { max-width: 1100px; margin: 0 auto; padding: 22px 16px 56px; }
+  main { max-width: 1400px; margin: 0 auto; padding: 22px 16px 56px; }
   h1, h2, h3, button, .tabs a { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
   h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1rem; display: flex; align-items: center; gap: .7rem; }
   h1::before { content: ""; width: 34px; height: 5px; background: linear-gradient(90deg, var(--orange) 0 38%, var(--purple) 38%); }
@@ -87,6 +87,7 @@
   #msg { min-height: 1.4em; color: var(--purple-2); margin: 6px 0; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 22px; }
   @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--ground); } }   /* (1.0 palette: the violet frame's glow) */
 </style>
 </head>
 <body>
@@ -524,13 +525,13 @@ function algLayout(g) {
 function drawAlg() {
   const a = voice[FP.ALG], g = algGraph(a), L = algLayout(g), svg = $("algsvg");
   let s = "";
-  for (const [from, to] of g.edges) s += `<line x1="${L.pos[from].x}" y1="${L.pos[from].y + 12}" x2="${L.pos[to].x}" y2="${L.pos[to].y - 12}" stroke="#bba79a" stroke-width="2"/>`;
+  for (const [from, to] of g.edges) s += `<line x1="${L.pos[from].x}" y1="${L.pos[from].y + 12}" x2="${L.pos[to].x}" y2="${L.pos[to].y - 12}" stroke="#9aa3c7" stroke-width="2"/>`;
   for (let n = 1; n <= 6; n++) {
     const p = L.pos[n], sel = n === opSel;
-    s += `<g data-op="${n}" style="cursor:pointer"><rect x="${p.x - 17}" y="${p.y - 12}" width="34" height="24" rx="4" fill="${sel ? "#e0344f" : "#2e1822"}" stroke="${sel ? "#ff8f8f" : "#4a2a35"}" stroke-width="2"/>`;
-    if (g.carrier[n]) s += `<rect x="${p.x - 17}" y="${p.y + 8}" width="34" height="4" fill="#ffd447"/>`;
+    s += `<g data-op="${n}" style="cursor:pointer"><rect x="${p.x - 17}" y="${p.y - 12}" width="34" height="24" rx="4" fill="${sel ? "#7253e6" : "#1a2446"}" stroke="${sel ? "#a58bff" : "#2c3766"}" stroke-width="2"/>`;
+    if (g.carrier[n]) s += `<rect x="${p.x - 17}" y="${p.y + 8}" width="34" height="4" fill="#ffb000"/>`;
     s += `<text x="${p.x}" y="${p.y + 4}" text-anchor="middle">${n}</text>`;
-    if (g.fb[n]) s += `<path d="M ${p.x + 17} ${p.y - 4} q 12 -2 12 -10 q 0 -10 -12 -8" fill="none" stroke="#ffd447" stroke-width="2"/>`;
+    if (g.fb[n]) s += `<path d="M ${p.x + 17} ${p.y - 4} q 12 -2 12 -10 q 0 -10 -12 -8" fill="none" stroke="#ffb000" stroke-width="2"/>`;
     s += `</g>`;
   }
   svg.innerHTML = s;
@@ -641,8 +642,8 @@ function drawEnv() {                             /* the operator's envelope: lev
   x += seg[2] * sx; pts.push([x, y(L[2])]);
   x += hold * sx; pts.push([x, y(L[2])]);
   x += seg[3] * sx; pts.push([x, y(L[3])]);
-  $("envsvg").innerHTML = `<polyline fill="rgba(224,52,79,.25)" stroke="#ff8f8f" stroke-width="2" points="${pts.map((p) => p.join(",")).join(" ")} ${pts[pts.length - 1][0]},${H - pad} ${pad},${H - pad}"/>` +
-    pts.slice(1).map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#ffd447"/>`).join("");
+  $("envsvg").innerHTML = `<polyline fill="rgba(114,83,230,.25)" stroke="#a58bff" stroke-width="2" points="${pts.map((p) => p.join(",")).join(" ")} ${pts[pts.length - 1][0]},${H - pad} ${pad},${H - pad}"/>` +
+    pts.slice(1).map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#ffb000"/>`).join("");
 }
 function changed() { slots_dirty = true; }
 let slots_dirty = false;

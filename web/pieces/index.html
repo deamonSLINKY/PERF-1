@@ -19,13 +19,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">
 <style>
-  :root { --ground: #130a0e; --card: #211219; --card-2: #2e1822; --ink: #f6ece0; --muted: #bba79a; --rule: #4a2a35;
-          --purple: #e0344f; --purple-2: #ff8f8f; --orange: #ffd447; --rust: #9c1d3a; --horn: #f2e6c4; color-scheme: dark; }
+  :root { --ground: #0b1022; --card: #121a33; --card-2: #1a2446; --ink: #f2efe6; --muted: #9aa3c7; --rule: #2c3766;
+          --purple: #7253e6; --purple-2: #a58bff; --orange: #ffb000; --rust: #3e2a8c; --horn: #f2efe6; color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--ground); color: var(--ink);
          font: 400 17px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
-  main { max-width: 1040px; margin: 0 auto; padding: 28px 16px 56px; }
-  .narrow { max-width: 820px; }
+  main { max-width: 1360px; margin: 0 auto; padding: 28px 16px 56px; }
+  .narrow { max-width: 1100px; }
   h1, h2, .site .home, button, a.btn, .tag, .tabs a { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif; }
   h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 0 0 1rem;
        display: flex; align-items: center; gap: .7rem; }
@@ -95,6 +95,7 @@
   dialog h3 { font: 700 1.1rem "Chakra Petch", sans-serif; text-transform: uppercase; letter-spacing: .05em; margin: 0 0 .6rem; color: var(--orange); }
   #dlgp { white-space: pre-wrap; }
   [hidden] { display: none !important; }
+  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--ground); } }   /* (1.0 palette: the violet frame's glow) */
 </style>
 </head>
 <body>

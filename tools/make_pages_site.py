@@ -85,10 +85,10 @@ for img in [*(SRC / "docs" / "img").glob("perf-screen-*.png"), *(SRC / "docs" / 
 <title>PERF-1</title><link rel="icon" href="img/favicon.png">
 <meta name="description" content="PERF-1: live-performance firmware for the M-VAVE FM-1: twenty-two genres of generative pieces, an auto-DJ, effects, a web editor and DX7 voices.">
 <style>
-:root{{--bg:#140e0c;--panel:#2a1e1b;--line:#4e3831;--text:#f4e8c8;--dim:#a68c7e;--acc:#ffd447;--red:#e0344f}}
-@media (prefers-color-scheme:light){{:root{{--bg:#f6efe2;--panel:#ebe0cc;--line:#cdbb9f;--text:#2a1c16;--dim:#7a6657;--acc:#a86b00;--red:#b3203a}}}}
-*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,"Segoe UI",sans-serif}}
-main{{max-width:760px;margin:0 auto;padding:40px 16px 56px}}
+:root{{--bg:#0b1022;--panel:#121a33;--line:#2c3766;--text:#f2efe6;--dim:#9aa3c7;--acc:#ffb000;--red:#a58bff}}
+@media (prefers-color-scheme:light){{:root{{--bg:#f3f5fa;--panel:#ffffff;--line:#d9deec;--text:#121833;--dim:#5a6388;--acc:#b76a00;--red:#5b3fd0}}}}
+*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);}}@media (prefers-color-scheme:dark){{body{{background:radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed,var(--bg)}}}}body{{color:var(--text);font:16px/1.55 system-ui,"Segoe UI",sans-serif}}
+main{{max-width:1100px;margin:0 auto;padding:40px 16px 56px}}
 img.logo{{width:96px;height:auto;display:block;margin:0 0 12px}}h1{{margin:0;font-size:2.4rem;letter-spacing:.02em}}h1 span{{color:var(--red)}}
 .tag{{color:var(--dim);margin:.2rem 0 1.6rem}}.v{{color:var(--acc);font-weight:600}}
 .grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0 0 28px}}

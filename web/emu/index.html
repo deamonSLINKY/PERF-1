@@ -12,12 +12,12 @@
 <style>
 /* HYP-1's colours, as its screen: a charcoal ground, a cyberpunk purple (the primary), orange for what
  * is live; one dark look, whatever the viewer's theme. The FM-1 itself keeps its grey. */
-:root { --ground: #130a0e; --ink: #f6ece0; --muted: #bba79a; --orange: #ffd447; --rule: #4a2a35; --accent: #ffd447; --river: #e0344f; --river-2: #ff8f8f;
-        --green-1: #9c1d3a; --card: #2a161f; color-scheme: dark; }
+:root { --ground: #0b1022; --ink: #f2efe6; --muted: #9aa3c7; --orange: #ffb000; --rule: #2c3766; --accent: #ffb000; --river: #7253e6; --river-2: #a58bff;
+        --green-1: #3e2a8c; --card: #121a33; color-scheme: dark; }
 body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
        font: 400 17px/1.55 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
 h1, h2, h3, .start button, kbd { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif !important; }
-main { max-width: 1040px; margin: 0 auto; }
+main { max-width: 1360px; margin: 0 auto; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
 h1 { font-size: 1.6rem; font-weight: 700; line-height: 1.1; letter-spacing: .06em; margin: 0; }
 h1 a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
@@ -40,9 +40,9 @@ a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-th
 .ctl { cursor: pointer; }
 .ctl.knob { cursor: ns-resize; }
 .btnface { transition: fill .06s; }
-.lit .btnface { fill: #ffd447; }
+.lit .btnface { fill: #ffb000; }
 .lit text.btn { fill: #241005; }
-.held .btnface, .held .keyface { stroke: #ffd447; stroke-width: 3; }
+.held .btnface, .held .keyface { stroke: #ffb000; stroke-width: 3; }
 .latched .btnface { stroke: #b46cff; stroke-width: 3; }
 .keyface { transition: fill .06s; }
 .lit .keyface.white { fill: #c99cff; }
@@ -137,6 +137,7 @@ body.stream .held .btnface { stroke: #ff9a3c; stroke-width: 6; filter: drop-shad
 body.stream .held .keyface { stroke: #ff9a3c; stroke-width: 6; filter: drop-shadow(0 0 8px #ff9a3c); }
 body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-width: 6; filter: drop-shadow(0 0 8px #ff9a3c); }
 /* stream view css: end */
+  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--ground); } }   /* (1.0 palette: the violet frame's glow) */
 </style>
 </head>
 <body>
