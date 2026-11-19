@@ -358,7 +358,7 @@
   /* (1.0) the banner: the maker's festival picture, PERF-1 in the boot card's letters, the lights pulsing at 128 BPM */
   .hero { position: relative; height: clamp(220px, 27vw, 400px); margin: 0 0 1.6rem; overflow: hidden; border-radius: 2px;
           background: #05070f 50% 60% / cover no-repeat; image-rendering: pixelated; border: 1px solid #2c3766; border-top-color: #5a47c8;
-          box-shadow: 0 0 0 1px #05070f, 0 14px 44px rgba(114,83,230,.28), inset 0 1px 0 rgba(165,139,255,.3);
+          box-shadow: 0 0 0 1px #05070f, 0 0 0 7px #161d3a, 0 0 0 8px #3d4a8a, 0 0 0 9px #05070f, 0 16px 48px rgba(114,83,230,.32), inset 0 1px 0 rgba(165,139,255,.3);
           display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: clamp(14px, 3vw, 34px); gap: .5rem; }
   .hero.slim { height: clamp(130px, 13vw, 190px); padding-top: clamp(10px, 1.6vw, 20px); background-position: 50% 42%; }
   .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
@@ -380,6 +380,10 @@
                            box-shadow: inset 0 1px 0 rgba(165,139,255,.10), 0 0 0 1px #05070f, 0 6px 18px rgba(0,0,0,.35); }
   button, select, input, .menu summary, .menu .pop, .lcd, .chip, .tag, .sec, .strip, .place, .songempty, .dxcard, .dxpanel, .dxfeelrow, .fxside .sec, .vibe, canvas { border-radius: 2px; }
   .views button { border-radius: 2px 2px 0 0; }
+  /* (1.0) metal as a texture, as the other pages: grain and brushed lines on the page, a screw in each big panel's corner */
+  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px), var(--ground); } }
+  .card, .loomwrap, #top { border-radius: 2px; background: radial-gradient(circle at 13px 13px, #d4d8f6 0 .9px, #8a90c4 1.6px, #565c94 2.8px, #2a3162 3.8px, #05070f 4.6px, rgba(5,7,15,.6) 5.2px, transparent 6px), radial-gradient(circle at calc(100% - 13px) 13px, #d4d8f6 0 .9px, #8a90c4 1.6px, #565c94 2.8px, #2a3162 3.8px, #05070f 4.6px, rgba(5,7,15,.6) 5.2px, transparent 6px), radial-gradient(circle at 13px calc(100% - 13px), #d4d8f6 0 .9px, #8a90c4 1.6px, #565c94 2.8px, #2a3162 3.8px, #05070f 4.6px, rgba(5,7,15,.6) 5.2px, transparent 6px), radial-gradient(circle at calc(100% - 13px) calc(100% - 13px), #d4d8f6 0 .9px, #8a90c4 1.6px, #565c94 2.8px, #2a3162 3.8px, #05070f 4.6px, rgba(5,7,15,.6) 5.2px, transparent 6px), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, rgba(0,0,0,.05) 1px 2px, transparent 2px 4px), linear-gradient(180deg, #17213f, #0e152e); border-color: #2c3766; border-top-color: #3d4a8a;
+          box-shadow: inset 0 1px 0 rgba(165,139,255,.10), 0 0 0 1px #05070f, 0 6px 18px rgba(0,0,0,.35); }
 </style>
 </head>
 <body>
