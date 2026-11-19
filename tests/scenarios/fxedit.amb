@@ -359,9 +359,11 @@ expect fxpage 35
 spin SELECT 1
 wait 100
 expect fxpage 36
+shot set_chorus.png
 spin SELECT 1
 wait 100
 expect fxpage 38
+shot set_resonator.png
 spin SELECT 1
 wait 100
 expect fxpage 39
@@ -369,6 +371,7 @@ shot set_returns.png
 spin SELECT 1
 wait 100
 expect fxpage 37
+shot set_link.png
 spin SELECT 1
 wait 100
 expect fxpage 37

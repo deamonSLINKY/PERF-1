@@ -39,7 +39,7 @@ Only a few. The rest can wait.
 
 **1. Switch it on and listen.** After a short animation, a piece starts playing on its own. Turn **MASTER** to a comfortable level. Nothing you press in this guide can break anything.
 
-![The home screen: the five parts' levels on the left, the circle shows the chord, the drum pattern on the right](img/perf-screen-home.png)
+![The home screen: the chord at the top, then a strip for each of the five parts with the notes coming up and how loud it is](img/perf-screen-home.png)
 
 **2. Tap EDIT.** At the start of the next bar the chord changes. The whole band follows: the bass, the pad and the melodies all move to fit. Tap it a few more times.
 
@@ -53,7 +53,7 @@ Only a few. The rest can wait.
 
 **6. Tap SAVE: a breakdown.** At the next bar the drums drop out and the music gets softer and dreamier.
 
-![A breakdown: the circle thins out and the eye closes](img/perf-screen-breakdown.png)
+![A breakdown: the top of the screen says BREAK](img/perf-screen-breakdown.png)
 
 **7. Tap SAVE again: the build and the drop.** The drums come back climbing for a few bars, there is a short silence, and then everything hits at once. This is the moment DJs live for. Tap SAVE, wait, tap SAVE, and you have done it.
 
@@ -121,7 +121,7 @@ You don't need any of this to have fun, but it is there.
 | Word | Means |
 |---|---|
 | **Piece** | One song: its key, tempo, sounds and drum patterns. Ten in each style. |
-| **Genre** | A style of music, with its own drums, sounds and habits. Nineteen of them. |
+| **Genre** | A style of music, with its own drums, sounds and habits. Twenty-two of them. |
 | **Pad** | The soft, long chords in the background. |
 | **Bass** | The low notes. |
 | **Acid** | The squelchy, twisting line, after the classic Roland TB-303. |

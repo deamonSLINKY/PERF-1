@@ -2,7 +2,7 @@
 
 # PERF-1 quick manual
 
-<p class="lead">Eight pages of what to press. The full manual, with screenshots and more detail, is at <b>https://deamonslinky.github.io/PERF-1/manual/</b>; if the two disagree, trust the full manual. The 27 keys run from <code>F3</code> to <code>G5</code>: sixteen white, eleven black.</p>
+<p class="lead">Eight pages of what to press. The full manual, with screenshots and more detail, is at <b>https://deamonslinky.github.io/PERF-1/manual/</b>. If the two disagree, trust the full manual. The 27 keys run from <code>F3</code> to <code>G5</code>: sixteen white, eleven black.</p>
 
 <div class="cols">
 
@@ -25,19 +25,19 @@
 | Control | Tap / turn | Hold | With SEL held |
 |---|---|---|---|
 | **MASTER** | Volume. | | |
-| **SELECT** | The pages, in order (31, stops at the ends). FX menu: the bank. Settings: the next page. Visualizers: the next one. | With **HOME** held: the tempo. | |
+| **SELECT** | The pages, in order (37, stops at the ends). FX menu: the bank. Settings: the next page. Visualizers: the next one. | With **HOME** held: the tempo. | |
 | **PRESETS** | The piece, 1-10 (wraps). | With **GLO** held: the genre. | The piece, on the next bar. |
 | **ALGORITHM** | The mood. Chords and Global: the mode of the scale. | | The voice's sound (drum pages: the kit). |
 | **KNOB1-4** | The page's values a, b, c, d. FX menu, Perform, visualizers: Filter, Crush, Throw, Wash. | | Sequencer: Euclid, rotate, chance, length. |
 | **OCT-** / **OCT+** | An octave down / up: on a voice's pages that voice, elsewhere the song. Sequencer: the drum. FX menu: OCT- turns all off. | Both 5 s: update mode. | Sequencer: clear the lane / the piece's own lane back. |
-| **FX** | The FX menu on and off. Twice quickly: the last effect's settings. | | Steps through the effect settings, then back. |
+| **FX** | The FX menu on and off. Held: the last effect's settings. | | Steps through the effect settings, then back. |
 | **SEL** | Shift: hold it with another control. | Alone 0.4 s: what shift does here. | |
 | **ENV** | Pad; again Pad env, Pad LFO, Chords, Progression. | Any page button 0.9 s: its help card. | On a voice's page: play it by hand; again, back. |
 | **LFO** | Bass; again Bass env, Bass LFO, Bass line, Bass steps, Bass answer. | | |
 | **ARP** | Acid; again Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. | | |
 | **EDIT** | The next chord, on the next bar. | 0.4 s: the Progression page. | Stopped: starts the music by itself. |
 | **GLO** | Global (Root, Theme, Tune, Genre). SAVE here stores the piece. | 0.4 s: the mix map, the load meter. | Remote: the FM-1 plays the emulator. |
-| **HOME** | Tempo page; again Perform; again Tempo. Twice quickly: visualizers. Leaves the FX menu. | 0.7 s: the settings. | The sigil's middle: eye or imp. |
+| **HOME** | Tempo page; again Perform; again Tempo. Twice quickly: visualizers. Leaves the FX menu. | 0.7 s: the settings. | |
 | **SAVE** | Breakdown on the next bar; again a build, then the drop. On Global: store. | 0.5 s: the drop. | On Global, 1.5 s: back to factory. |
 | **SEQ** | Drums; again Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. In the sequencer: back to Drums. | 0.4 s: the sequencer. | The links on and off. |
 | **PLAY** | Play and stop: each start a fresh track and its code (`PLAYING DZBT-4DTT9`). | | |
@@ -49,7 +49,7 @@
 
 ## The pages on the SELECT dial
 
-**SELECT** steps through 34 pages in this order. The buttons (**ENV**, **LFO**, **ARP**, **SEQ**, **GLO**, **HOME**) jump to their group and step through it; from elsewhere, a button returns to the page you last used in its group. Columns a-d are **KNOB1**-**KNOB4**; on a voice's main page KNOB1 is its level. Pages that shape a sound draw it. Off the dial: the **sequencer** (hold SEQ), **Perform** (HOME on Tempo), the **visualizers** (HOME twice quickly).
+**SELECT** steps through 37 pages in this order. The buttons (**ENV**, **LFO**, **ARP**, **SEQ**, **GLO**, **HOME**) jump to their group and step through it; from elsewhere, a button returns to the page you last used in its group. Columns a-d are **KNOB1**-**KNOB4**; on a voice's main page KNOB1 is its level. Pages that shape a sound draw it. Off the dial: the **sequencer** (hold SEQ), **Perform** (HOME on Tempo), the **visualizers** (HOME twice quickly).
 
 | Page | Button | a | b | c | d |
 |---|---|---|---|---|---|
@@ -62,13 +62,15 @@
 | Bass | LFO | Level | Sound (24) | Cutoff | Reso |
 | Bass env | LFO x2 | Trigger (chord; 1-8 bars; off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
 | Bass LFO | LFO x3 | Rate | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive) |
-| Bass line | LFO x4 | Mode (Hold, 6 modes, 9 figures; page 6) | Length (how long a note holds) | Move (octaves, fifths ..) | Glide |
+| Bass line | LFO x4 | Mode (Hold, 6 modes, 13 figures, Steps) | Length (how long a note holds) | Move (octaves, fifths ..) | Glide |
+| Bass steps | LFO x5 | Step (rest, note, accent, glide, hold) | Note (root .. octave in the scale) | Octave | Mode |
+| Bass answer | LFO x6 | Answer (octave, fifth, run, busy, sparse, slide) | Every (2-8 bars, drift, with or after the acid) | Acid ans | Mode |
 | Acid | ARP | Level | Cutoff | Reso | Env mod |
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate (SEL + knob: what it changes) |
 | Acid answer | ARP x4 | Answer (off, 8 kinds, page 6) | Every (2-8 bars, drift; 2-8 loops, drift) | Direction (down 2 .. up 2) | Level (same .. +6 dB) |
 | Acid steps | ARP x5 | Step (rest, note, accent, slide) | Note (0-11 scale steps) | Octave (0-3) | Frozen (free, frozen) |
-| Pluck | ARP x6 | Level | Sound (12 + 30 DX + yours) | Density | Octave (-2 to +2) |
+| Pluck | ARP x6 | Level | Sound (12 + 60 DX + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | **ARP** x7 | Decay | Style (up, down, up-down ..) | Rate (1/4, 3/16, 1/8, 1/16) | Range (1-3 oct) |
 | Deja vu | ARP x8 | Pluck vu (0 new .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Motif (develop the first bar) |
 | Pluck steps | ARP x9 | Step (rest, soft, note, accent) | Note (1-12, the chord's notes low to high) | Octave (-2 to +2) | Frozen (free, frozen) |
@@ -84,8 +86,9 @@
 | Reverb | dial | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
 | Comp/Limit | dial | Ratio (off - 10:1) | Thresh (-30 - 0 dB) | Make-up (0 - +12 dB) | Ceiling (-12 - 0 dB) |
 | Mixer | dial | Track (pad .. drums) | Level | Pan (L100 - C - R100) | Send (0-100) |
-| Global | GLO | Root | Theme (6) | Tune (+-50 cents) | Genre (the bank) |
+| Global | GLO | Root | Theme (7) | Tune (+-50 cents) | Genre (the bank) |
 | Set list | GLO x2 | Slot (1-16, a white key) | Genre (on empty: the piece playing) | Piece | Play: PRESETS, auto-DJ go through it |
+| Code | GLO x3 | Place | Letter | Roll (a new code; PLAY starts it) | - |
 | Jam | dial | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Sound (that voice's) |
 
 <div class="cols">
@@ -118,7 +121,7 @@
 
 **Latched effects keep going after you close the menu.** The **FX** button blinks, `FX` shows by the tempo, and the keys play a voice again. **OCT-** in the menu turns everything off: effects, FX knobs, mutes and solos (GLO + `B3` undoes it). The FX knobs Filter, Crush, Throw and Wash are the knobs here, on Perform and on the visualizers (page 4).
 
-**Settings pages.** Each effect with settings has a page that draws it: **SEL + a key** in the menu (that key's effect), **hold FX**, from any page (the last one used), **SEL + FX** (all 23 in turn). **SELECT** moves between them and **FX** closes. The effect plays while its page is up, so you hear what you change (a few need a key held). All kept across power-off. The knobs on each page: Gate: Pattern (3-3-3, tres, offbeat, Euclid 5/7/9, waltz, chop, sparse, dense, dotted, 5/10, or your own from its white keys), Length, Targets, Depth (Gate 16 and 8 share it). Phaser and Flanger: Rate, Depth, Feedback, Mix. Vinyl: Level, Crackle, Hiss, Tone. Tape: Wow, Flutter, Drive, Dull. Roll: From, To, Each, Swell. Pump: Depth, Release, Every (1/2 .. 1/16 or KICK), Targets. Riser: Time, Filter, Wash, Echo. Scatter: Chaos, Reverse, Slice, Slices. Brake: Time, Spin back, Return, Dull. Half time: Speed, Slide. Sweep: Every, Depth, Reso, Type. Scratch: Every, Reach, Style. Freeze: Size, Spread, Grains. Rv swell: Length, Mix. Ring mod: Tone, Mix. Talk: Every, Depth, Reso, Mix. Wah: Sens, Range, Reso, Mix. Flex: Quant (off, beat, bar: when it starts), Mode (one shot, or loop until you let go or tap it off), Mix. FILTER, DELAY, PHASE: each has Targets. Snips: Pitch (normal, an octave up or down), Play (while held, or one shot of about a second), Echo (dry, some, lots), Level. Auto DJ, Settings, USB & MIDI: pages 4 and 7.
+**Settings pages.** Each effect with settings has a page that draws it: **SEL + a key** in the menu (that key's effect), **hold FX**, from any page (the last one used), **SEL + FX** (all 25 in turn). **SELECT** moves between them and **FX** closes. The effect plays while its page is up, so you hear what you change (a few need a key held). All kept across power-off. The knobs on each page: Gate: Pattern (3-3-3, tres, offbeat, Euclid 5/7/9, waltz, chop, sparse, dense, dotted, 5/10, or your own from its white keys), Length, Targets, Depth (Gate 16 and 8 share it). Phaser and Flanger: Rate, Depth, Feedback, Mix. Vinyl: Level, Crackle, Hiss, Tone. Tape: Wow, Flutter, Drive, Dull. Roll: From, To, Each, Swell. Pump: Depth, Release, Every (1/2 .. 1/16 or KICK), Targets. Riser: Time, Filter, Wash, Echo. Scatter: Chaos, Reverse, Slice, Slices. Brake: Time, Spin back, Return, Dull. Half time: Speed, Slide. Sweep: Every, Depth, Reso, Type. Scratch: Every, Reach, Style. Freeze: Size, Spread, Grains. Rv swell: Length, Mix. Ring mod: Tone, Mix. Talk: Every, Depth, Reso, Mix. Wah: Sens, Range, Reso, Mix. Flex: Quant (off, beat, bar: when it starts), Mode (one shot, or loop until you let go or tap it off), Mix. FILTER, DELAY, PHASE: each has Targets; FILTER's Type runs on into MORPH, low-pass through band-pass to high-pass. Snips: Pitch (normal, an octave up or down), Play (while held, or one shot of about a second), Echo (dry, some, lots), Level. Snip land: Now, Beat, 2 beats, Bar (the riser, rewind and roll end on that line). Auto DJ, Settings, USB & MIDI: pages 4 and 7.
 
 ### Bank 2: BEAT FX
 
@@ -235,9 +238,9 @@ Want the drums to change by themselves? **Change**: off, the next pattern, or a 
 
 ### What the screen says
 
-**Top left:** the piece's tag (`01` HYPNO, `L03` lofi ..; a mark on it means unstored changes), the root and the mode. **Top right:** the mascot, the tempo (`EXT` on an outside clock; a play triangle while stopped), then the marks: **BREAK**, **BUILD** (with `>`: waiting for the bar; `DROP 3`: bars to the drop), **KNOB** (an FX knob off home), **KEY** (the drop's key change is on), **S1>** (a scene waiting), **DJ**, **FX** (effects latched, menu closed), a small dot (a save to memory waiting).
+**Top left:** the piece's tag (`01` HYPNO, `L03` lofi ..; a dot after it means unstored changes), the root and the mode. **Top right:** the mascot, the tempo (`EXT` on an outside clock; a play triangle while stopped), then the marks: **BREAK**, **BUILD** (with `>`: waiting for the bar; `DROP 3`: bars to the drop), **KNOB** (an FX knob off home), **KEY** (the drop's key change is on), **S1>** (a scene waiting), **DJ**, **FX** (effects latched, menu closed), a small dot (a save to memory waiting).
 
-**Left:** the levels of pad (P), bass (D), acid (A), pluck (C) and kit (K). **Middle:** the **sigil**, turned so the chord's root is at the top. The scale's notes are lit and the chord's notes are joined into a shape (a triad is a triangle, a seventh chord four-sided), with its name under the eye. Around it run the 4-bar phrase and the bar's 16 steps. The eye is half open in a groove, shut in a breakdown, wide in a build. **Right:** the pattern playing (`PAT 1`; `> 3` when one waits) and the load line (page 7). **Above the knobs:** the voice's sound, `BY HAND`, `+LINK` or `LINKS OFF`, the octave when it isn't home, the page's name and dots. On a change of page the header says where you are: `DRUMS  PHRASE 8/8`.
+**Under it:** the chord (an arrow and the next root when one is coming; `HELD` while frozen) and the section, GROOVE, BREAK or BUILD, over a bar filling towards the next chord. **The strips:** pad, bass, acid, pluck and drums, each with the bar's coming notes falling to a line (the pad: its chord), a meter and its sound; a voice's own pages open its strip wide. **Above the knobs:** the page and the voice's sound, `BY HAND`, `+LINK` or `LINKS OFF`, the octave when it isn't home, then a tab for each group of pages. On a change of page the header says where you are: `DRUMS  PHRASE 8/8`.
 
 </div>
 
@@ -357,7 +360,7 @@ The 27 keys become an instrument (they only edit the scale on Global); Voice, Ke
 
 ## Genres, pieces and what is kept
 
-Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through the bank (01-10, wraps round); **GLO** held + **PRESETS**, or Global's Genre knob, changes bank. The piece number stays, and the genre's own effects come with it (lofi latches vinyl and tape, house the pump; switching first clears latched vinyl, tape, pump and phaser). Each piece has its own settings, six patterns and drum sounds, a set of sounds by its number and a made-up title (`VELVET RAIN`); each genre its own compressor, reverb, stab rhythm, ghost notes, chord habits and section lengths. Power-on always starts in HYPNO on a random piece.
+Twenty-two **genres**, each a bank of ten **pieces**. **PRESETS** steps through the bank (01-10, wraps round); **GLO** held + **PRESETS**, or Global's Genre knob, changes bank. The piece number stays, and the genre's own effects come with it (lofi latches vinyl and tape, house the pump; switching first clears latched vinyl, tape, pump and phaser). Each piece has its own settings, six patterns and drum sounds, a set of sounds by its number and a made-up title (`VELVET RAIN`); each genre its own compressor, reverb, stab rhythm, ghost notes, chord habits and section lengths.
 
 | Genre | Tag | BPM | What it is |
 |---|---|---|---|
@@ -384,13 +387,6 @@ Nineteen **genres**, each a bank of ten **pieces**. **PRESETS** steps through th
 | TRANCE | U01 | 132-140 | Classic trance: supersaw, long breakdowns. |
 | AMBIENT | Z01 | 70-88 | Beatless or nearly: pads, shimmer. |
 
-| HYPNO | Character | BPM | Key | HYPNO | Character | BPM | Key |
-|---|---|---|---|---|---|---|---|
-| 01 | Hypnotic four on the floor | 128 | A Aeolian | 06 | Dub techno: chord stabs, sparse, swung | 120 | F Pent minor |
-| 02 | Deep and dubby: rims, shakers | 124 | D Dorian | 07 | Minimal glitch: threes on fours | 134 | B Pent major |
-| 03 | Pounding: rumble kick, claps | 132 | E Phrygian | 08 | Rolling, tom-like percussion | 126 | Bb Mixolydian |
-| 04 | Trance: offbeat opens, rolls | 138 | G Aeolian | 09 | Warehouse: hard, rides, rumble (Techno kit) | 136 | C Phrygian |
-| 05 | Acid electro: cowbells, breaks | 130 | A Dorian | 10 | Deep field: half time, breaks | 118 | Eb Aeolian |
 
 <div class="cols">
 
@@ -400,7 +396,7 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### The settings pages
 
-**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. First **FILTERS** and **SCREAM**: the piece's, saved with it. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default) or DX; **Form**, Song (a piece moves through its patterns; Few rests or No rests: the parts rest half as often, or never) or Loop; **Start**, Last piece or Random. Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Scanlines) and **SAMPLE**: PERF's sounds one at a time, to sample. **Global** (GLO): Root, Theme (Console, the default; Imp, Synth, Acid, Ice, Ember, Phosphor: colour sets of the new Console layout), Tune (+-50 cents), Genre.
+**Hold HOME** (0.7 s) for the settings; **SELECT** walks them, FX leaves. First **FILTERS** and **SCREAM**: the piece's, saved with it. **Settings**: **Key**, the drop's key change (same, +2, +3, +5, +7 semitones; `KEY` in the header); **Voices**, DY (the default) or DX; **Form**, Song (a piece moves through its patterns; Few rests or No rests: the parts rest half as often, or never) or Loop; **Start**, Last piece or Random. Then **Auto DJ**, **Auto FX**, **SET** (Rounds, Ramp, Intro, **Mix**: the next piece glides from the old tempo to its own over 4-32 bars), **USB & MIDI** (USB level, MIDI out, MIDI map), **MIDI IN**, **SCREEN** (**Zoom**: a knob turned shows large; Saver, the screensaver; Lights; Look: plain, scanlines, calm) **SAMPLE** (PERF's sounds one at a time, to sample), **SOUND** (Vintage drift, Polish, Tilt, Width), **CHORUS** (Juno I, II, I+II, rotary), **RESONATOR** (hits ringing in the chord), **RETURNS** (the echo's and reverb's duck: Kit, Off, Custom) and **LINK** (two units as one band). **Global** (GLO): Root, Theme (Console, the default; Imp, Synth, Acid, Ice, Ember, Phosphor: colour sets of the new Console layout), Tune (+-50 cents), Genre.
 
 ### Visualizers
 
@@ -408,11 +404,11 @@ Go to **Global** (GLO) and press **SAVE**. The piece is stored as it is (every p
 
 ### What is remembered across power-off
 
-**Kept:** the pieces you stored, in any genre (written at once); theme, Tune and MIDI out; every effect's settings, the gate's pattern and targets; the Auto DJ, SET, Settings, USB & MIDI and Jam pages; the visualizer; your DX7 voices; the panel calibration. Settings are written a couple of seconds after you stop changing them (2 s stopped, 4 s playing), with a short dip in the music. **Not kept:** the genre (HYPNO at power-on), anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, a running auto-DJ, unstored edits. A genre sets its own tape, vinyl and pump settings when you switch to it.
+**Kept:** the pieces you stored, in any genre (written at once); theme, Tune and MIDI out; every effect's settings, the gate's pattern and targets; the Auto DJ, SET, Settings, USB & MIDI and Jam pages; the visualizer; your DX7 voices; the panel calibration. Settings are written a couple of seconds after you stop changing them (2 s stopped, 20 s playing), with a short dip in the music. **Not kept:** anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, a running auto-DJ, unstored edits. A genre sets its own tape, vinyl and pump settings when you switch to it.
 
 ### The load line
 
-How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under it (home pages; top right of the mix map). **CPU**: how busy the main processor is. **XR**: dropouts, each one a click. **C2 nn**: the second processor, nn % busy (pad and chorus, DX voices, reverb); `C1`: it stopped after a fault. **S1**: saving effort, the chorus off and DX voices held to four; **S2**: to two. It goes back after twenty quiet seconds. Heaviest: DX plucks with the shimmer reverb, and the fast genres.
+How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under it (top right of the mix map, GLO held). **CPU**: how busy the main processor is. **XR**: dropouts, each one a click. **C2 nn**: the second processor, nn % busy (pad and chorus, DX voices, reverb); `C1`: it stopped after a fault. **S1**: saving effort, the chorus off and DX voices held to four; **S2**: to two. It goes back after twenty quiet seconds. Heaviest: DX plucks with the shimmer reverb, and the fast genres.
 
 </div>
 
@@ -422,7 +418,7 @@ How hard the FM-1 is working: `CPU 41 XR 0`, with `C2 38` and `S1` or `S2` under
 
 <div class="cols">
 
-**USB audio.** The FM-1 is a stereo USB audio input (16-bit, 44.1 kHz) carrying the master output. The USB & MIDI page's Level: KNOB (follows MASTER) or FIXED (a recording stays put when you turn the speakers down). Its third knob, **Scanlines**, darkens every other row of the screen, like a CRT.
+**USB audio.** The FM-1 is a stereo USB audio input (16-bit, 44.1 kHz) carrying the master output. The USB & MIDI page's Level: KNOB (follows MASTER) or FIXED (a recording stays put when you turn the speakers down).
 
 **MIDI out** (USB): the pad on channel 1, pluck 2, bass 3, acid 4, drums 10 (General MIDI notes), and MIDI clock with start, continue and stop. **MIDI map**, **MIDI IN**: a sampler plays the drums; an MPC, M:S or MPK mini plays PERF (manual, 14). **Notes: CHORDS**: a keyboard's keys below middle C are a chord the song follows (the lowest key the bass: inversions, slash chords; one key, the scale's chord on it), held until the next; from middle C up they play the voice. **FILTERS**: pad, bass, acid low/high/band/notch/peak; the acid also **303**, a TB-303-style ladder. Notes played by hand go on their voice's channel; the DJ snips aren't sent. On and off on the USB & MIDI page.
 

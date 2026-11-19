@@ -28,7 +28,7 @@ IMG_BASE = None                                     # the Markdown file's folder
 
 CSS = """
 @page { size: A4; margin: 12mm 12mm 13mm; @bottom-center { content: var(--foot); } }   /* (filled in by convert(): the running footer and the page number) */
-html { font-size: 9pt; }
+html { font-size: 8.6pt; }                          /* (0.17.73: 9pt ran onto a ninth page) */
 body { margin: 0; color: #000; background: #fff; line-height: 1.22;
        font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -244,7 +244,7 @@ def main(argv):
     IMG_BASE = md_path.resolve().parent
     html_text = convert(md_path.read_text(encoding="utf-8"))
     if font:                                        # (another sheet, e.g. the beginner's guide, in a larger type)
-        html_text = html_text.replace("html { font-size: 9pt; }", "html { font-size: %s; }" % font, 1)
+        html_text = html_text.replace("html { font-size: 8.6pt; }", "html { font-size: %s; }" % font, 1)
     html_path.write_text(html_text, encoding="utf-8", newline="\n")
     print("wrote", html_path, "(%d bytes)" % html_path.stat().st_size)
     if html_only:

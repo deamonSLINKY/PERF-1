@@ -26,6 +26,10 @@ MANUAL = {                                  # docs/img/perf-screen-NAME.png: sce
     "remote": "remote/remote_link", "saver": "stage/saver", "help": "help/help_lfo", "viz-disco": "viz/viz_disco",
     "viz-kaleido": "viz/viz_kaleido", "groove": "arrange/groove", "acid-answer": "answer/answer_page", "steps": "steps/steps", "acsteps": "acsteps/acsteps", "phrase": "phrase/phrase", "feel": "feel/feel", "bassline": "bassline/bassline", "dejavu": "dejavu/dejavu",
     "pluck-steps": "plucksteps/plucksteps_play", "set": "setpage/set_page_on", "home-synth": "look/home_synth", "intro": "setpage/intro_header", "setlist": "setlist/setlist",
+    "bass-steps": "basssteps/basssteps", "bass-answer": "bassanswer/bass_answer_page", "gesture": "gesture/gesture_loop",
+    "snip-land": "fxedit/fx_snip_land", "auto-fx": "autofx/autofx_page", "code": "codes/code_page", "screen": "look/settings_scan",
+    "sample": "samplehelp/sample_page", "sound": "bassanswer/sound_page", "chorus": "fxedit/set_chorus",
+    "resonator": "fxedit/set_resonator", "returns": "fxedit/set_returns", "link": "fxedit/set_link",
 }
 BG = (20, 14, 12)
 
