@@ -3038,6 +3038,11 @@ static void acid_step(int32_t wait)             /* a sixteenth of the acid line 
 {
     const int len = par[P_AC_LEN], st = ac_pos;
     int v, type;
+    if (acid.note && !acid.play && acid.gate_left == 0 && acid.amp_t == 0.0f) {   /* (0.17.74) the gate has closed: its MIDI note let go here.
+                                                 * It waited for the next note, so a part resting for bars (the arrangement, a breakdown) held it on outside gear */
+        midi(0x83, acid.note, 0);
+        acid.note = 0;
+    }
     if (st == 0 && ac_resync_loop) {            /* the answer's settings changed: its count starts at this loop */
         ac_loop0 = ac_loop;
         ac_resync_loop = 0;
@@ -5621,6 +5626,7 @@ static void note_cmd(int voice, int key, int vel)   /* vel 0: the key let go; 10
         acid.sliding = 0;
         if (acid.note)
             midi(0x83, acid.note, 0);
+        acid.note = 0;
     }
 }
 

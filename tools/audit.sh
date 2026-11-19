@@ -6,8 +6,8 @@ SECS=${1:-180}
 mkdir -p build/audit
 gcc -O2 -ffp-contract=off -std=c99 -DEN_HOST -Ifirmware/src/dsp -o build/audit/gaudit tests/host/gaudit.c firmware/src/dsp/amb.c -lm
 cd build/audit
-for g in $(seq 0 18); do ./gaudit "$SECS" "$g" > "g$g.csv" & done
+for g in $(seq 0 21); do ./gaudit "$SECS" "$g" > "g$g.csv" & done
 wait
 head -1 g0.csv > audit.csv
-for g in $(seq 0 18); do tail -n +2 "g$g.csv" >> audit.csv; done
+for g in $(seq 0 21); do tail -n +2 "g$g.csv" >> audit.csv; done
 echo "build/audit/audit.csv: $(($(wc -l < audit.csv) - 1)) pieces"
