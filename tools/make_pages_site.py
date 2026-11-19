@@ -113,7 +113,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <a class="card" href="{REPO}"><b>Source code</b><span>Free and open source (GPL-3.0), on GitHub.</span></a>
 </div>
 <p class="small">Installing firmware is at your own risk. If something goes wrong, the installer can put the original firmware back, and an FM-1 that fails to start twice in a row starts in a safe mode the installer can reach. Section 1 of the manual explains it all.</p>
-<p class="small">PERF-1 is a fork of HYP-1 by <a href="https://www.redtail.works">RedtailWorks</a>, itself a fork of AMB-1 by Charles Vestal, built on Felucca by Leo Kuroshita (Hügelton Instruments); the six-operator FM engine is Melodee's by Kerem Kilic (Ellic Studio), after Dexed. GPL-3.0-only; see LICENSING.md in the repository. "M-VAVE" and "FM-1" are trademarks of their owners: PERF-1 is independent firmware, not affiliated with or endorsed by them.</p>
+<p class="small">PERF-1 by deamonSLINKY builds on the work of others, named in the manual's <a href="manual/#s19">credits</a>. GPL-3.0-only; see LICENSING.md in the repository. "M-VAVE" and "FM-1" are trademarks of their owners: PERF-1 is independent firmware, not affiliated with or endorsed by them.</p>
 </main></body></html>
 ''', encoding="utf-8", newline="\n")
 if not SHARING:                                 # the menus and the landing page without them

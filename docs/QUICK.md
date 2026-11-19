@@ -6,7 +6,7 @@
 
 <div class="cols">
 
-**What it is.** PERF-1 turns the M-VAVE FM-1 into a groovebox that makes up music as it plays. Five tracks start when you switch it on: a slow pad, a bass, a 303-style acid line, a plucked counter-melody and drums you can program, all written on the spot from the key, scale and chord, in twenty-two genres of ten pieces. You steer: break it down, build it, drop it, mute and solo, throw effects, edit the drums, play along, store what you like, and record it over the same USB cable (the FM-1 is a USB audio and MIDI device). By deamonSLINKY; a fork of HYP-1 (RedtailWorks), itself a fork of AMB-1 (Charles Vestal). GPL-3.0-only, no warranty. It's still in development and can crash.
+**What it is.** PERF-1 turns the M-VAVE FM-1 into a groovebox that makes up music as it plays. Five tracks start when you switch it on: a slow pad, a bass, a 303-style acid line, a plucked counter-melody and drums you can program, all written on the spot from the key, scale and chord, in twenty-two genres of ten pieces. You steer: break it down, build it, drop it, mute and solo, throw effects, edit the drums, play along, store what you like, and record it over the same USB cable (the FM-1 is a USB audio and MIDI device). By deamonSLINKY (credits at the end). GPL-3.0-only, no warranty. It's still in development and can crash.
 
 ## Install in five steps
 

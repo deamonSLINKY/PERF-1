@@ -6,7 +6,7 @@ You don't have to program anything to get going. You steer the music: change the
 
 If you're new, read **Start here** below first. The numbered sections after it are the full reference.
 
-This manual is for **PERF-1 0.15**. PERF-1 is made by deamonSLINKY, based on [HYP-1](https://www.redtail.works) by RedtailWorks, and it's free and open source (GPL-3.0). It's still young and changes often, so keep a way back to the stock firmware (section 1 explains how).
+PERF-1 is made by deamonSLINKY, and it's free and open source (GPL-3.0); the people whose work it builds on are in the credits (section 19). It's still young and changes often, so keep a way back to the stock firmware (section 1 explains how).
 
 ![The Tempo page, the home screen](img/perf-screen-home.png)
 
@@ -263,8 +263,16 @@ in and the power on until it's done. Installing the stock firmware or another fi
   power cut. No hardware way in (test pads, a strap, a key combination) has been found for this chip. An
   FM-1 that fails like that may be gone for good.
 
-If the FM-1 won't start but still reaches the chip's own update mode (it shows up on USB as 4C4A:8057,
-`UBOOT`), the PERF-1 source has a rescue tool, `tools/fm1_rescue.py` (and its wrapper `fm1_rescue.sh`). It
+If the FM-1 won't start but still reaches the chip's own update mode (one long flash; it shows up on USB as
+4C4A:8057, `UBOOT`), the easiest way back on any computer is **Melodee's recovery tool**: download `fm1-recover`
+for Windows, Linux or Mac from the [Melodee 1.4.0 release](https://github.com/keremimo/melodee/releases) (no
+Python needed). It puts M-VAVE's own V15 back (`FM-1.fwsc` from M-VAVE: the tool accepts only the unmodified
+file); then install PERF-1 again from the web installer. On Windows it needs the WinUSB driver for that one device
+(4C4A:8057), installed once with [Zadig](https://zadig.akeo.ie/); don't change the driver of the FM-1's normal
+MIDI and audio device. Run `fm1-recover --info` first: it only looks. The tool keeps a full backup of the memory
+before it writes. It is Kerem Kilic's (Ellic Studio), from the Melodee project, and is not part of PERF-1.
+
+On a Mac, the PERF-1 source also has its own rescue tool, `tools/fm1_rescue.py` (and its wrapper `fm1_rescue.sh`). It
 puts the stock V15 back from a Mac, using sudo, `pyusb` and `libusb-package`. It backs up the whole memory
 first, writes only the 4 KiB sectors between 0x4000 and 0x93000 that differ from V15, reads everything back
 to check, and accepts only the exact V15 file. It was written for an FM-1 stuck crashing at start-up, and it
@@ -280,9 +288,9 @@ New to PERF-1? **Start here**, at the top of this manual, walks you through your
 short version.
 
 1. Switch it on. The **deamonSLINKY** card shows (the slinky mascot hops twice and blinks, then the name and
-   PRESENTS), then the **PERF-1** card (the version, "by deamonSLINKY", "based on HYP-1 by RedtailWorks"),
+   PRESENTS), then the **PERF-1** card (the version, "by deamonSLINKY", "free software, GPL-3.0"),
    with sixteen steps filling in and the white keys lighting with them. Any button or key skips the cards.
-   Then a random piece from the HYPNO bank starts playing.
+   Then the music starts: the piece you played last, or one at random (SETTINGS, **Start**).
 2. Turn **SELECT** to move through the pages. The four knobs under the screen change what each page shows.
 3. Press **SEQ** for the drums. Hold it for the step sequencer, and tap the white keys to change the beat.
 4. Play the keys: on a voice's page they play that voice over the music, elsewhere the Jam page's voice. Turn **PRESETS** for another piece.

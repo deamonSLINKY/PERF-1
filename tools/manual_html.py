@@ -274,7 +274,7 @@ def main():
     body = convert(md)
     FAVICON = data_uri(WEB_IMG / "favicon.png")
     page = (f"<title>{html.escape(title)}</title>\n"
-            f'<meta name="description" content="{html.escape(what)} for {NAME}, live-performance firmware for the M-VAVE FM-1 (a fork of HYP-1).">\n'
+            f'<meta name="description" content="{html.escape(what)} for {NAME}, live-performance firmware for the M-VAVE FM-1.">\n'
             '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600&display=swap">\n'
             f'<link rel="icon" type="image/png" href="{FAVICON}">\n'
             f"<style>{CSS}</style>\n<main>\n{body}\n</main>\n")

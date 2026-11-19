@@ -10169,7 +10169,7 @@ static void autosave(void)
 
 /* THE BOOT CARDS. First deamonSLINKY (the maker): its mascot, a slinky with demon horns (a 23 x 20 sprite, 4 px a pixel; the Hellfire
  * colorway of the logo concept), the name in two colours, a ringed bar and "PRESENTS". Then PERF-1 in big pixel letters, what it is,
- * and the credit (a fork of HYP-1 by RedtailWorks), with sixteen steps filling in (the white keys lighting with them) until the
+ * and the licence (free software, GPL-3.0), with sixteen steps filling in (the white keys lighting with them) until the
  * music starts. Any button or key: straight to the music.
  * Sprite letters: K outline, H horn, h horn shade, Y eye, R body, r body shade, L highlight, T tail, . nothing. */
 static const char *const MASCOT[23] = {   /* (0.17.39 re-art: lit from the top left; k its own dark outline, D r R L W the body's ramp (shade to light, hue-shifted),
@@ -10291,7 +10291,7 @@ static void draw_hyp(void)
     cv_begin(240, 52, K_BG);                     /* (a canvas is at most 144 rows) */
     text_c(120, 0, &FONT_XS, EN_VERSION[0] == 'D' ? "FM-1 CUSTOM FIRMWARE" : "FM-1 CUSTOM FIRMWARE  //  " EN_VERSION, K_TEXT);
     text_c(120, 16, &FONT_XS, "BY DEAMONSLINKY", RGB(255, 143, 143));
-    text_c(120, 32, &FONT_XS, "BASED ON HYP-1 BY REDTAILWORKS", K_DIM);
+    text_c(120, 32, &FONT_XS, "FREE SOFTWARE  //  GPL-3.0", K_DIM);   /* (1.0: the credits are in the manual) */
     cv_blit(0, 120);
     for (c = 0; c < 16; c++)
         lcd_fill(8 + c * 14, SPLASH_STEP_Y, 11, 11, K_PANEL);
