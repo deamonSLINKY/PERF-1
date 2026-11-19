@@ -76,7 +76,8 @@ check("bass: a glide into the third on 12", (bs[11].k === 3 || bs[11].k === 4) &
 check("bass: rests elsewhere", [1, 2, 3, 4, 5, 7, 9, 12, 13, 14, 15].every((s) => bs[s].k === 0));
 check("acid: the root accented, a third, a fifth sliding into the seventh", R.acid[0].gate && R.acid[0].acc && R.acid[0].off === 0 && R.acid[2].off === 2 && R.acid[4].off === 4 && R.acid[4].slide && R.acid[5].off === 6 && !R.acid[5].slide);
 check("acid: F# (out of the scale) snapped to a scale step", R.acid[12].gate && (R.acid[12].off === 5 || R.acid[12].off === 4) && R.report.some((l) => /outside the scale/.test(l)));
-check("pluck: the triad's rungs up (root, third, fifth, root+octave)", [0, 4, 8, 12].map((s) => R.pluck[s].rung).join() === "0,1,2,3");
+check("pluck: the triad's rungs from C up, as the engine's ladder counts them (Am: C E A; A4 C5 E5 A5 = rungs 2 3 4 5)", [0, 4, 8, 12].map((s) => R.pluck[s].rung).join() === "2,3,4,5");
+check("pluck: the notes as written go with it (the studio puts them on the piece's own ladder)", R.pluckKeys && [0, 4, 8, 12].map((s) => R.pluckKeys[s].key).join() === "69,72,76,81");
 check("pluck: levels from velocity (accent, note, soft, accent)", [0, 4, 8, 12].map((s) => R.pluck[s].lvl).join() === "2,2,1,3" || [0, 4, 8, 12].map((s) => R.pluck[s].lvl).join() === "3,2,1,3");
 check("drums: two different bars, as P1..P6 in turn", R.pats && R.pats[0] !== R.pats[1] && R.pats[2] === R.pats[0] && R.pats[3] === R.pats[1]);
 check("drums: kick 0 4 8 12, snare 4 12 15, hats on the eighths", R.pats[0][0] === 0x1111 && R.pats[0][1] === (0x1010 | 0x8000) && R.pats[0][3] === 0x5555);

@@ -19,6 +19,7 @@ export function midiParse(buf) {
   const u32 = (o) => ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0, u16 = (o) => (b[o] << 8) | b[o + 1];
   if (b.length < 14 || str(0) !== "MThd") throw new Error("not a MIDI file");
   const ntrk = u16(10), div = u16(12);
+  if (!div) throw new Error("a MIDI file with no ticks a beat in its header");
   if (div & 0x8000) throw new Error("a MIDI file timed in SMPTE frames: save it with beats (PPQ) instead");
   const out = { format: u16(8), ppq: div, bpm: 120, sig: [4, 4], tracks: [] };
   let p = 8 + u32(4), seenTempo = false, seenSig = false;
@@ -63,7 +64,8 @@ export function midiParse(buf) {
     for (const n of all.notes) { if (!by.has(n.ch)) by.set(n.ch, { name: (all.name ? all.name + " " : "") + "ch " + (n.ch + 1), notes: [], chans: new Set([n.ch]) }); by.get(n.ch).notes.push(n); }
     out.tracks = [...by.values()];
   }
-  const last = Math.max(0, ...out.tracks.flatMap((tr) => tr.notes.map((n) => n.t + n.dur)));
+  let last = 0;
+  for (const tr of out.tracks) for (const n of tr.notes) if (n.t + n.dur > last) last = n.t + n.dur;
   out.stepTicks = out.ppq / 4;
   out.bars = Math.max(1, Math.ceil(last / (out.ppq * 4)));
   return out;
@@ -72,7 +74,7 @@ export function midiParse(buf) {
 // a track's facts, and the part it most likely is
 export function midiGuess(tr) {
   const n = tr.notes.length, keys = tr.notes.map((x) => x.key);
-  const lo = Math.min(...keys), hi = Math.max(...keys), avg = keys.reduce((a, k) => a + k, 0) / n;
+  const lo = keys.reduce((a, k) => Math.min(a, k), 127), hi = keys.reduce((a, k) => Math.max(a, k), 0), avg = keys.reduce((a, k) => a + k, 0) / n;
   let poly = 0;                                               // notes sounding with another
   tr.notes.forEach((x, i) => { const y = tr.notes[i + 1]; if (y && y.t < x.t + x.dur * 0.5) poly++; });
   const name = (tr.name || "").toLowerCase(), polyShare = poly / n;
@@ -244,8 +246,10 @@ export function midiToPiece(file, opts) {
     report.push("Acid: bar " + (b0 + A.b + 1) + ", " + A.n + " notes" + (A.m.dropped ? ", " + A.m.dropped + " left out (one a step)" : "") + ".");
   }
   const Pl = lineFrom("pluck", false);
-  if (Pl) {                                                  // pluck: the nearest rung of the chord's ladder (its triad's tones, up)
-    const rungs = Pl.ds.map((d) => { if (d === null) return null; const k = Math.floor(d / N), r = d - k * N, t = r < 1 ? 0 : r < 3 ? 1 : r < 5 ? 2 : 3; return 3 * k + t; });
+  if (Pl) {                                                  // pluck: the nearest rung of the chord's ladder (its triad's tones from C up, as amb.c cm_ladder counts them)
+    const pcs = [0, 2, 4].map((k) => (root + scl[(Pl.ri + k) % N]) % 12).sort((a, c) => a - c);
+    const rungOf = (key) => { let best = 0, bd = 99; for (let o = Math.floor(key / 12) - 1; o <= Math.floor(key / 12) + 1; o++) pcs.forEach((pc, i) => { const d = Math.abs(12 * o + pc - key); if (d < bd) { bd = d; best = 3 * o + i; } }); return best; };
+    const rungs = Pl.m.steps.map((n) => (n ? rungOf(n.key) : null));
     const live = rungs.filter((r) => r !== null), lo = Math.min(...live), hi = Math.max(...live), sh = -3 * Math.floor(lo / 3) - (hi - 3 * Math.floor(lo / 3) > 11 ? 3 * Math.ceil((hi - 3 * Math.floor(lo / 3) - 11) / 3) : 0);   // the lowest note's octave at rung 0
     out.pluck = Pl.m.steps.map((n, s) => {
       if (!n) return { rung: 0, lvl: 0 };
@@ -253,6 +257,8 @@ export function midiToPiece(file, opts) {
       if (r < 0 || r > 11) { fold++; r = Math.max(0, Math.min(11, r)); }
       return { rung: r, lvl: n.vel >= Pl.loud ? 3 : n.vel < 60 ? 1 : 2 };
     });
+    out.pluckKeys = Pl.m.steps.map((n) => (n ? { key: n.key, lvl: n.vel >= Pl.loud ? 3 : n.vel < 60 ? 1 : 2 } : null));   // (the notes as written: the studio puts them on the piece's own ladder)
+    out.pluckRi = Pl.ri;
     report.push("Pluck: bar " + (b0 + Pl.b + 1) + ", " + Pl.n + " notes on the chord's ladder (its tones only: notes between them move to the nearest).");
   }
 

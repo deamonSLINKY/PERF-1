@@ -19,6 +19,14 @@ class Amb extends AudioWorkletProcessor {
   }
 
   async onMessage(m) {
+    try { await this.handle(m); }
+    catch (err) {                                     // (a failed load says so, a failed request answers: the page never waits for ever)
+      if (m && m.type === "load") this.port.postMessage({ type: "ready", error: "the emulator would not load: " + (err && err.message || err) });
+      else if (m && m.id) this.port.postMessage({ type: "st", id: m.id, ok: 0, error: String(err && err.message || err) });
+    }
+  }
+
+  async handle(m) {
     if (m.type === "load") {
       const now = () => BigInt(Math.round(currentTime * 1e9));
       const wasi = {
@@ -136,6 +144,8 @@ class Amb extends AudioWorkletProcessor {
       else if (m.type === "st_put") { io().set(new Uint8Array(m.io).subarray(0, this.ex.web_st_io_len())); ok = this.ex.web_st_put(); }
       else ok = this.ex.web_st_read();
       this.port.postMessage({ type: "st", id: m.id, ok, io: io().slice() });
+    } else if (this.studio && m.id && typeof m.type === "string" && m.type.startsWith("st")) {
+      this.port.postMessage({ type: "st", id: m.id, ok: 0, error: "not in this emulator build: " + m.type });
     }
   }
 

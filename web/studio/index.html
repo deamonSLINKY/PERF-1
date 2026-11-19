@@ -45,7 +45,7 @@
   #top select { max-width: 8.5em; }
   @media (min-width: 1400px) { #top { flex-wrap: nowrap; } #top .sp { min-width: 0; } }
   #top > * { flex-shrink: 0; } #top .sp { flex-shrink: 1; }
-  #top .tgrp { display: inline-flex; align-items: center; gap: .28rem; margin-left: auto; flex: none; }
+  #top .tgrp { display: inline-flex; align-items: center; gap: .28rem; margin-left: auto; flex: none; flex-wrap: wrap; max-width: 100%; }   /* (a phone: the group wraps in itself, not past the window) */
   /* the position as the unit's screen would show it: big digits in a dark window, a small word under each */
   .lcd { display: inline-flex; flex: none; background: #070b1a; border: 1px solid var(--line); border-radius: 6px; padding: 2px 2px; box-shadow: inset 0 1px 5px rgba(0,0,0,.7); }
   .lcd > span { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 6px; min-width: 2.9em; }
@@ -66,7 +66,7 @@
   .tcchip:hover { border-color: var(--acc); } .tcchip.done { border-style: solid; border-color: var(--acid); }
   #top .tsep { margin: 0; }
   #top button, #top .menu summary { padding: .4em .55em; }
-  #sound:not([hidden]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; align-items: start; }
+  #sound:not([hidden]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); gap: 10px; align-items: start; }
   .masonry { grid-auto-rows: 4px; row-gap: 0 !important; grid-auto-flow: row dense; }   /* (cards packed down their columns: masonry() sets each one's rows) */
   #sound > .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
   #sound > .sec.dx7, #sound > .sec:has(.lanes6), #sound > p { grid-column: 1 / -1; }
@@ -109,7 +109,7 @@
   .vibe[data-vibe="dark"] { border-top: 3px solid var(--pad); } .vibe[data-vibe="peak"] { border-top: 3px solid var(--bass); } .vibe[data-vibe="any"] { border-top: 3px solid var(--acid); }
   .doors { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; }
   .lower { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 12px; margin-top: 12px; }
-  @media (max-width: 980px) { .lower { grid-template-columns: 1fr; } }
+  @media (max-width: 980px) { .lower { grid-template-columns: minmax(0, 1fr); } }
   .card { background: var(--panel); border: 1px solid var(--frame); border-radius: 8px; padding: 10px 12px; }
   .edhead { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; margin-bottom: 8px; }
   .edhead h2 { margin: 0; font-size: 1.15rem; letter-spacing: .08em; }
@@ -142,7 +142,7 @@
   .muted { color: var(--dim); }
   .lbl { font: 600 .72rem "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .08em; }
   #top select, #top input { font-size: .85rem; }
-  .views { display: flex; gap: 2px; margin: 0 0 6px; }
+  .views { display: flex; flex-wrap: wrap; row-gap: 4px; gap: 2px; margin: 0 0 6px; }   /* (a phone: the switch, the key and the zoom wrap under the tabs) */
   .views button { border-radius: 6px 6px 0 0; border-bottom: 0; padding: .35em 1.2em; color: var(--dim); }
   .views button[aria-selected=true] { background: var(--panel); color: var(--acc); border-color: var(--line); }
   .views.small { margin: 0; }
@@ -200,7 +200,7 @@
   .strips .strip { align-self: start; min-height: 100%; }
   .strip .ctl.list { padding: 3px 6px 5px; }
   .strip .ctl.list .top { font-size: .7rem; }
-  .deskbelow { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; align-items: start; }
+  .deskbelow { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(270px, 100%), 1fr)); gap: 10px; align-items: start; }
   .deskbelow .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
   .deskbelow .sec.wide { grid-column: span 2; }
   @media (max-width: 640px) { .deskbelow .sec.wide { grid-column: auto; } }
@@ -333,9 +333,10 @@
   .vibecard .knob { width: 104px; }
   .vibecard .knob .dial { width: 54px; height: 54px; }
   .vibecard .knob .dial i { transform-origin: 50% 19px; height: 15px; }
-  #imp { width: 34px; height: 44px; image-rendering: pixelated; cursor: pointer; flex: none; }
+  #impLogo { width: 34px; height: 44px; image-rendering: pixelated; cursor: pointer; flex: none; }
+  .fxk, #xyPad { touch-action: none; -webkit-touch-callout: none; user-select: none; }
   #mixcheck .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 10px 0 0; }
-  .mixrows { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 6px 14px; }
+  .mixrows { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 6px 14px; }
   .mixrow { display: grid; grid-template-columns: 14px 8.5em 5.2em minmax(0, 1fr); gap: 6px; align-items: baseline; font-size: .82rem; }
   .mixrow i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: #6fd39a; }
   .mixrow.warn i { background: var(--acc); } .mixrow.fail i { background: #ff5a5f; }
@@ -381,7 +382,7 @@
   button, select, input, .menu summary, .menu .pop, .lcd, .chip, .tag, .sec, .strip, .place, .songempty, .dxcard, .dxpanel, .dxfeelrow, .fxside .sec, .vibe, canvas { border-radius: 2px; }
   .views button { border-radius: 2px 2px 0 0; }
   /* (1.0) metal as a texture, as the other pages: grain and brushed lines on the page and the big panels (no corner screws here: they sat under the studio's canvases) */
-  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px), var(--ground); } }
+  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px), var(--bg); } }
   .card, .loomwrap, #top { border-radius: 2px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 1px, rgba(0,0,0,.05) 1px 2px, transparent 2px 4px), linear-gradient(180deg, #17213f, #0e152e); border-color: #2c3766; border-top-color: #3d4a8a;
           box-shadow: inset 0 1px 0 rgba(165,139,255,.10), 0 0 0 1px #05070f, 0 6px 18px rgba(0,0,0,.35); }
 </style>
@@ -504,7 +505,7 @@
   </details>
 </main>
 <footer class="sitefoot">
-  <p>PERF-1 by deamonSLINKY (GPL-3.0) · <a href="https://deamonslinky.github.io/PERF-1/manual/#s19" target="_blank" rel="noopener">Credits</a> · <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a></p>
+  <p>PERF-1 by deamonSLINKY (GPL-3.0-only) · <a href="https://deamonslinky.github.io/PERF-1/manual/#s19" target="_blank" rel="noopener">Credits</a> · <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a> · <a href="https://github.com/deamonSLINKY/PERF-1/issues/new/choose" target="_blank" rel="noopener">Ideas and bug reports</a></p>
   <p>M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.</p>
 </footer>
 <script type="application/json" id="pdata">/*PARAMS*/</script>
@@ -586,6 +587,27 @@ function scale() {
   return st.length >= 3 ? st : [0, 2, 3, 5, 7, 8, 10];
 }
 const semis = (st, idx) => 12 * Math.floor(idx / st.length) + st[((idx % st.length) + st.length) % st.length];
+const CH_OFF = [[0, 2, 4, 6, 1, 3, 5], [0, 2, 6, 1, 4, 3, 5], [0, 3, 4, 6, 1, 2, 5], [0, 6, 1, 3, 2, 4, 5], [0, 1, 4, 6, 2, 3, 5]];   // (thirds, ninths, sus, elevenths, sus2)
+function chordPcs(ri, kind) {                                 // the chord on scale index ri, of a kind (P_CHORD's: 0 as the scale has it .. 7 elevenths): its pitch classes
+  const st = scale(), m = st.length, root = par("P_ROOT"), deg = ((ri % m) + m) % m, pcs = [];
+  if (kind === 5) return [0, 3, 10, 14].map((x) => (root + st[deg] + x) % 12);   // (dub: a minor 9 shape on the degree)
+  if (kind === 6) {                                           // (fourths: the scale's own, a step less where that is a tritone)
+    const k = Math.floor((m * 5 + 6) / 12); let d = deg;
+    pcs.push((root + st[deg]) % 12);
+    for (let i = 1; i < 4; i++) { let e = d + k; if (k > 1 && (st[e % m] - st[d % m] + 12) % 12 === 6) e--; pcs.push((root + st[e % m]) % 12); d = e; }
+    return pcs;
+  }
+  const want = kind === 1 ? 3 : kind === 0 ? (m >= 6 ? 4 : 3) : 4;
+  const off = kind === 3 ? CH_OFF[1] : kind === 4 ? (m === 7 && (st[(deg + 3) % m] - st[deg] + 12) % 12 === 6 ? CH_OFF[4] : CH_OFF[2]) : kind === 7 ? CH_OFF[3] : CH_OFF[0];
+  for (let i = 0; i < 7 && pcs.length < want; i++) { const pc = (root + st[(deg + off[i]) % m]) % 12; if (!pcs.includes(pc)) pcs.push(pc); }
+  return pcs;
+}
+function ladder(c) {                                          // the pluck's ladder on chord c: its tones over Range octaves from the song's and the pluck's octave, low to high
+  const range = Math.max(1, Math.min(3, par("P_CM_RANGE"))), base = 60 + 12 * (par("P_OCT") + par("P_CM_OCT")), L = [];
+  for (let o = 0; o < range; o++) for (const pc of c.pcs) if (L.length < 12) L.push(base + pc + 12 * o);
+  return L.sort((a, b) => a - b);
+}
+const rungNote = (c, r) => { const L = ladder(c); let n = L[r % L.length]; while (n > 100) n -= 12; while (n < 36) n += 12; return n; };   // (amb.c: idx % n, kept in 36..100)
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
 function chordName(ri) {                                     // the scale's chord on index ri: its name and numeral
   const st = scale(), root = par("P_ROOT"), r = semis(st, ri), third = semis(st, ri + 2) - r, fifth = semis(st, ri + 4) - r;
@@ -620,24 +642,47 @@ const STORE_KEY = "hyp1-emu-store";
 let node = null, ac = null, reqId = 0;
 const pending = new Map();
 let live = null;
-function loadStore() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"), out = {};
-    for (const [o, b64] of Object.entries(raw)) out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
-    return out;
-  } catch { return {}; }
+const storeSeen = {};                                         // (each object as this page last read or wrote it: only the ones the emulator changed are written,
+function loadStore() {                                        //  so a save made in another tab, the Emulator or the Library page, stays)
+  let raw = {};
+  try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}; } catch { return {}; }
+  const out = {};
+  for (const [o, b64] of Object.entries(raw)) {
+    try { out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer; storeSeen[o] = b64; } catch { /* (a bad entry: left out, and left as it is) */ }
+  }
+  return out;
 }
+let storeFailSaid = false;
 function saveStore(store) {
   try {
-    const raw = {};
-    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); }
+    const ch = {};
+    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); const b = btoa(s); if (b !== storeSeen[o]) ch[o] = b; }
+    if (!Object.keys(ch).length) return true;
+    let raw = {};
+    try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}; } catch { raw = {}; }
+    Object.assign(raw, ch);
     localStorage.setItem(STORE_KEY, JSON.stringify(raw));
-  } catch { /* storage unavailable: this session only */ }
+    Object.assign(storeSeen, ch);
+    return true;
+  } catch {
+    if (!storeFailSaid) { storeFailSaid = true; say("This browser would not keep the emulator's saves (storage full or blocked): they last until the page closes. Download .piece keeps a copy.", true); }
+    return false;
+  }
 }
-function ask(m) {
-  return new Promise((res) => { const id = ++reqId; pending.set(id, res); node.port.postMessage({ ...m, id }); });
+function ask(m, ms = 8000) {                                  // (an answer, or after ms a failed one: a request a build lacks no longer waits for ever)
+  return new Promise((res) => {
+    const id = ++reqId;
+    const t = setTimeout(() => { if (pending.delete(id)) res({ type: "st", id, ok: 0, timeout: true }); }, ms);
+    pending.set(id, (m2) => { clearTimeout(t); res(m2); });
+    node.port.postMessage({ ...m, id });
+  });
 }
-async function switchOn() {
+let lastFb = null;                                            // (the unit's screen is not drawn in a hidden tab: drawn again when it is seen)
+document.addEventListener("visibilitychange", () => { if (!document.hidden && lastFb) drawScreen(lastFb); });
+let booting = null;                                           // (one start: a second click while it loads waits for the first)
+function switchOn() { return (booting ||= bootOnce().then((ok) => { if (!ok) booting = null; return ok; })); }
+async function bootOnce() {
+  if (!window.isSecureContext || !window.AudioWorkletNode) { say("The studio needs a browser with AudioWorklet, on https or localhost: open it in Chrome, Edge, Firefox or Safari from the PERF-1 site.", true); return false; }
   $("power").disabled = true; $("power").textContent = "Starting...";
   try {
     ac = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
@@ -648,14 +693,14 @@ async function switchOn() {
     const ready = new Promise((res, rej) => {
       node.port.onmessage = (e) => {
         const m = e.data;
-        if (m.type === "ready") m.studio ? res() : rej(new Error("this emulator build has no studio hooks: rebuild it (web/emu/build_clang.sh)"));
+        if (m.type === "ready") m.error ? rej(new Error(m.error)) : m.studio ? res() : rej(new Error("this emulator build has no studio hooks: rebuild it (web/emu/build_clang.sh)"));
         else if (m.type === "st") { const f = pending.get(m.id); pending.delete(m.id); if (f) f(m); }
         else if (m.type === "frame") {
-          if (m.fb) drawScreen(m.fb);
-          if (m.live) onLive(m.live);
-          if (m.store) saveStore(m.store);
+          if (m.store) saveStore(m.store);                    // (first: a draw that throws must not lose a flash write, sent once)
+          try { if (m.fb) { lastFb = m.fb; if (!document.hidden) drawScreen(m.fb); } if (m.live) onLive(m.live); } catch (err) { console.error(err); }
         }
       };
+      setTimeout(() => rej(new Error("the emulator did not start in 20 s (amb.wasm not loaded?)")), 20000);
     });
     node.port.postMessage({ type: "load", wasm, store: loadStore(), master: 2800, seed: (Math.random() * 4294967295) >>> 0 || 1, studio: true }, [wasm]);
     await ready;
@@ -664,33 +709,50 @@ async function switchOn() {
     $("play").disabled = false;
     await new Promise((r) => setTimeout(r, 900));          // (the boot card)
     await openPiece(cur.genre, cur.piece);
+    return true;
   } catch (err) {
+    try { if (node) node.disconnect(); if (ac) ac.close(); } catch { /* (already gone) */ }
+    node = null; ac = null;
     $("power").disabled = false; $("power").textContent = "Switch on";
     say("Could not start: " + (err && err.message || err), true);
+    return false;
   }
 }
+document.addEventListener("pointerdown", () => { if (ac && ac.state === "suspended") ac.resume().catch(() => {}); }, true);   // (a browser that suspended the sound: the next touch brings it back)
 function press(bit) {                                        // a panel button, pressed and let go
   node.port.postMessage({ type: "buttons", mask: 1 << bit });
   setTimeout(() => node.port.postMessage({ type: "buttons", mask: 0 }), 90);
 }
 const BTN_PLAY = 10;
+let opening = 0;                                              // (the studio opening a piece itself: the engine is on it before cur says so)
 async function openPiece(g, i, place) {                     // (place: the set list's place, as the unit's PRESETS knob with the song on: its parts too)
+  opening++;
   const r = await ask(place === undefined ? { type: "st_open", genre: g, piece: i } : { type: "st_go", place });
-  if (!r.ok) { say("The emulator is busy writing; try again.", true); return; }
-  cur = { genre: g, piece: i }; $("undo").hidden = true;
-  io = new Uint8Array(r.io);
+  opening--;
+  if (!r.ok || r.timeout) { say("The emulator is busy writing; try again.", true); return false; }
+  takeUp(g, i, r.io);
+  if (place === undefined) say("Opened " + S.genreName(g) + " " + S.pieceName(g, i) + ". Click a lane to edit it; it plays as you change it.");
+  refresh();
+  if (typeof codeNow === "function") setTimeout(codeNow, 300);
+  return true;
+}
+let putTimer = 0;
+function takeUp(g, i, bytes) {                                // the piece in hand is now this one (its bytes as the engine has them): nothing of the last carried over
+  clearTimeout(putTimer);
+  cur = { genre: g, piece: i }; $("undo").hidden = true; impPrev = null;
+  io = new Uint8Array(bytes);
   dxv = null;                                                 // (the DX7 editor reads the new piece's pluck voice when it is next shown)
   resetHistory();
   $("genre").value = g; fillPieces(); $("piece").value = i;
   ["save", "code"].forEach((id) => { $(id).disabled = false; });
   undoReset(); soundRender(); deskRender();
-  if (place === undefined) say("Opened " + S.genreName(g) + " " + S.pieceName(g, i) + ". Click a lane to edit it; it plays as you change it.");
-  refresh();
-  if (typeof codeNow === "function") setTimeout(codeNow, 300);
+  dirty = false;
 }
-let putTimer = 0;
+let dirty = false, following = false;                          // (edits not saved: the page asks before it is left)
+window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 function changed(quiet) {                                    // the piece in hand edited: draw it, and into the emulator a moment later
   if (!quiet) undoNote();
+  dirty = true;
   refresh();
   clearTimeout(putTimer);
   putTimer = setTimeout(() => { if (node && io) node.port.postMessage({ type: "st_put", io: io.slice(), id: ++reqId }); }, 60);
@@ -712,6 +774,17 @@ function onLive(b) {
   live = parseLive(b);
   deskMeters();
   if (!io) return;
+  if (cur && !following && !opening && live.playing && (live.genre !== cur.genre || live.piece !== cur.piece) && live.genre < N.genres.length) {
+    following = true;
+    ask({ type: "st_read" }).then((r) => {
+      following = false;
+      if (!r.ok || r.timeout || !live || opening) return;
+      const was = S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece);
+      takeUp(live.genre, live.piece, r.io);
+      say("The song moved on: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " plays, and edits go into it now (" + was + " as it was saved).");
+      refresh();
+    });
+  }
   const tl = timeline(), nb = loomBars(tl), bar = Math.floor(live.t / 16), frac = (live.t % 16) / 16;
   let lb;
   if (tl && live.prog >= 0) {
@@ -758,7 +831,7 @@ function laneState(id) {
     case "drums": return { tag: "YOURS", sub: "plays P" + (par("P_PATTERN") + 1) + (off("P_PULSE") ? " · level 0" : "") };
     case "bass": return par("P_BL_MODE") === BL_STEPS ? { tag: "YOURS", sub: "steps" + (off("P_BASS") ? " · level 0" : "") } : { tag: "DICE", sub: "mode: " + parText("P_BL_MODE") + (off("P_BASS") ? " · level 0" : "") };
     case "acid": return par("P_AC_LOCK") && io.subarray(REC_ACL, REC_ACL + 18).some((v) => v) ? { tag: "YOURS", sub: "frozen line" + (off("P_ACID") ? " · level 0" : "") } : { tag: "DICE", sub: "free: it grows" + (off("P_ACID") ? " · level 0" : "") };
-    case "pluck": return par("P_CM_LOCK") && pluckGet().some((s) => s.lvl) ? { tag: "YOURS", sub: "frozen line" + (off("P_CM_LVL") ? " · level 0" : "") } : { tag: "DICE", sub: "deja vu's loop" + (off("P_CM_LVL") ? " · level 0" : "") };
+    case "pluck": return par("P_CM_LOCK") && (io.subarray(REC_CML1, REC_CML1 + 6).some((v) => v) || io.subarray(REC_CML2, REC_CML2 + 6).some((v) => v)) ? { tag: "YOURS", sub: "frozen line" + (off("P_CM_LVL") ? " · level 0" : "") } : { tag: "DICE", sub: "deja vu's loop" + (off("P_CM_LVL") ? " · level 0" : "") };
     default: return { tag: "DICE", sub: "voices the chords" + (off("P_PAD") ? " · level 0" : "") };
   }
 }
@@ -766,11 +839,13 @@ function laneState(id) {
 function ctxAt(b, tl) {
   if (tl) {
     const s = tl.slots.find((x) => b >= x.start && b < x.start + x.bars) || tl.slots[tl.slots.length - 1];
-    const k = s.kind || par("P_CHORD");
-    return { ri: s.deg - 1, nt: k >= 2 && k !== 4 && k !== 5 && k !== 6 ? 4 : 3, known: true };
+    const k = s.kind || par("P_CHORD"), pcs = chordPcs(s.deg - 1, k);
+    return { ri: s.deg - 1, nt: pcs.length, pcs, known: true };
   }
   const h = hist[b];
-  return h ? { ri: riOfPc(h.croot), nt: h.chordN === 4 ? 4 : 3, known: true } : { ri: 0, nt: 3, known: false };
+  if (h) { const ri = riOfPc(h.croot), pcs = chordPcs(ri, par("P_CHORD")); return { ri, nt: pcs.length, pcs, known: true }; }
+  const pcs = chordPcs(0, par("P_CHORD"));
+  return { ri: 0, nt: pcs.length, pcs, known: false };
 }
 // a lane's notes over nb bars: {b, s, len, m, acc, link (slide or glide into it), ghost}
 function laneNotes(id, nb, tl) {
@@ -812,8 +887,7 @@ function laneNotes(id, nb, tl) {
       if (!line) continue;
       line.forEach((x, s) => {
         if (!x.lvl) return;
-        const t = x.rung % c.nt;
-        out.push({ b, s, len: 0.8, m: base(c, 60) + rel(c, 2 * t) + 12 * Math.floor(x.rung / c.nt) - 12, acc: x.lvl === 3, lvl: x.lvl, ghost: dice || !c.known, dim: dice && !hd });
+        out.push({ b, s, len: 0.8, m: rungNote(c, x.rung), acc: x.lvl === 3, lvl: x.lvl, ghost: dice || !c.known, dim: dice && !hd });
       });
     }
   } else if (id === "pad") {
@@ -1099,7 +1173,7 @@ function hearStep(id, x) {                                    // a placed note, 
   let voice, m;
   if (id === "bass") { voice = 1; m = base(36) + rel(x.note) + 12 * (x.oct - 1); }
   else if (id === "acid") { voice = 2; m = base(48) + rel(x.off) + 12 * (x.oct - 1); }
-  else { voice = 4; m = base(60) + rel(2 * (x.rung % c.nt)) + 12 * Math.floor(x.rung / c.nt) - 12; }
+  else { voice = 4; m = rungNote(c, x.rung); }
   node.port.postMessage({ type: "st_note", voice, note: m, vel: x.acc ? 120 : 92 });
   setTimeout(() => node && node.port.postMessage({ type: "st_note", voice, note: m, vel: 0 }), 240);
 }
@@ -1216,8 +1290,8 @@ function edPluck(g, W, RH, rows) {
   const frozen = par("P_CM_LOCK");
   tools('<button class="small" data-act="pcap">Capture the loop it plays</button><button class="small" data-act="pclear">Clear</button>' +
         '<button class="small" data-act="plock" aria-pressed="' + !!frozen + '">' + (frozen ? "Frozen" : "Free: freeze it") + "</button>");
-  const nt = Math.max(3, Math.min(4, (live && live.chordN) || 3));   // (the ladder: the chord's tones a rung each, so the root comes back every 3 rungs on a triad, every 4 on a 7th and up)
-  const G = gridBase(g, W, RH, rows, (r) => "rung " + (rows - 1 - r), (r) => (rows - 1 - r) % nt === 0);
+  const c = ctxAt(loomPos >= 0 ? Math.floor(loomPos) : 0, timeline()), L = ladder(c);   // (the ladder on the chord now: low to high from C, as amb.c cm_ladder; past its top it starts again)
+  const G = gridBase(g, W, RH, rows, (r) => { const n = rungNote(c, rows - 1 - r); return NOTE[n % 12] + (Math.floor(n / 12) - 1); }, (r) => rungNote(c, rows - 1 - r) % 12 === c.pcs[0]);
   playStep(g, G, live && frozen ? live.cmPos % 16 : -1);
   ((laneState("pluck").tag === "DICE" && pluckLive()) || pluckGet()).forEach((x, s) => {
     if (!x.lvl) return;
@@ -1226,8 +1300,12 @@ function edPluck(g, W, RH, rows) {
     if (live && live.playing && live.cmPos % 16 === s) { g.save(); g.shadowColor = COL.pluck; g.shadowBlur = 12; g.fillStyle = "rgba(225,250,255,.7)"; g.fill(); g.restore(); }
     g.fillStyle = COL.bg; g.font = FONT(700, 9); g.fillText(["", "SOFT", "", "ACC"][x.lvl], xx + 4, y + RH - 3);
   });
-  $("edhelp").textContent = "Click a cell: a note on that rung of the chord's ladder (rung 0 the root, then the chord's tones upwards; bright rows: the root's octaves). Again: accent, soft, then a rest. Right-click: a rest. " +
+  $("edhelp").textContent = "Click a cell: a note on that rung of the chord's ladder (the chord's tones from the pluck's octave up, as the chord changes the notes follow; each row shows its note on the chord now, bright rows the root; past the Range's top the ladder starts again). Again: accent, soft, then a rest. Right-click: a rest. " +
     "An edit freezes the line as the FM-1's Pluck steps page does (deja vu's loop at sixteen sixteenths).";
+}
+function lockKeep(id) {                                       // a lock going on: the line as it plays now into the piece first (Capture's, without its message)
+  if (id === "acid" && !par("P_AC_LOCK")) { const l = acidLive(); if (l) acidSet(l); }
+  if (id === "pluck" && !par("P_CM_LOCK")) { const l = pluckLive(); if (l) pluckSet(l); }
 }
 function freezePluck() {                                     // as ui.c ps_freeze: the loop at sixteen sixteenths, every note the same next time
   setPar("P_CM_RATE", 3); setPar("P_CM_LOOP", 2); setPar("P_CM_VU", 100); setPar("P_CM_LOCK", 1);
@@ -1326,14 +1404,14 @@ $("edtools").addEventListener("click", (e) => {
     },
     // (Clear: one rest keeps a note or a rung, as an all-0 frozen line is not loaded: project.c; the bass's BS_REST likewise)
     aclear: () => { acidSet(acidGet().map((_, k) => ({ off: k ? 0 : 1, oct: 0, gate: 0, acc: 0, slide: 0 }))); setPar("P_AC_LOCK", 1); say("The acid line is cleared (frozen, all rests). Undo brings it back."); },
-    alock: () => { setPar("P_AC_LOCK", par("P_AC_LOCK") ? 0 : 1); say(par("P_AC_LOCK") ? "The acid line is frozen: kept with the piece." : "The acid line is free: it grows and mutates by itself."); },
+    alock: () => { lockKeep("acid"); setPar("P_AC_LOCK", par("P_AC_LOCK") ? 0 : 1); say(par("P_AC_LOCK") ? "The acid line is frozen: kept with the piece." : "The acid line is free: it grows and mutates by itself."); },
     pcap: () => {
       if (!live) return say("Switch on and play first.", true), false;
       pluckSet(pluckLive() || pluckGet()); freezePluck();
       say("Captured the pluck's loop: " + pluckGet().filter((x) => x.lvl).length + " notes, frozen.");
     },
     pclear: () => { pluckSet(pluckGet().map((_, k) => ({ rung: k ? 0 : 1, lvl: 0 }))); freezePluck(); say("The pluck line is cleared (frozen, all rests). Undo brings it back."); },
-    plock: () => { if (par("P_CM_LOCK")) setPar("P_CM_LOCK", 0); else freezePluck(); say(par("P_CM_LOCK") ? "The pluck line is frozen: kept with the piece." : "The pluck is free: deja vu's loop comes and goes."); },
+    plock: () => { if (par("P_CM_LOCK")) setPar("P_CM_LOCK", 0); else { lockKeep("pluck"); freezePluck(); } say(par("P_CM_LOCK") ? "The pluck line is frozen: kept with the piece." : "The pluck is free: deja vu's loop comes and goes."); },
     pplay: () => { bitPut(prg(), 40, 1, progPlay() ? 0 : 1); say(progPlay() ? "The chords play the slots in turn." : "The chords follow the genre's walk."); },
   }[d.act];
   if (A && A() !== false) changed();
@@ -1347,8 +1425,9 @@ $("edtools").addEventListener("change", (e) => {
 });
 
 /* ======================================================================== the unit's screen, the facts, the page */
+let scrImg = null;
 function drawScreen(fb) {
-  const g = $("screen").getContext("2d"), img = g.createImageData(240, 240), d = img.data;
+  const g = $("screen").getContext("2d"), img = scrImg || (scrImg = g.createImageData(240, 240)), d = img.data;
   for (let i = 0; i < 240 * 240; i++) {
     const c = ((fb[i] >> 8) | (fb[i] << 8)) & 0xFFFF;         // (the panel's byte order)
     d[4 * i] = ((c >> 11) & 31) * 255 / 31; d[4 * i + 1] = ((c >> 5) & 63) * 255 / 63; d[4 * i + 2] = (c & 31) * 255 / 31; d[4 * i + 3] = 255;
@@ -1453,7 +1532,7 @@ $("start").addEventListener("click", async (e) => {
   const g = pool[Math.floor(Math.random() * pool.length)], np = (N.pieces[g] || []).length || 10;
   cur = { genre: g, piece: Math.floor(Math.random() * np) };
   document.querySelectorAll("#start .vibe").forEach((x) => { x.disabled = true; });
-  await switchOn();
+  if (!(await switchOn())) { document.querySelectorAll("#start .vibe").forEach((x) => { x.disabled = false; }); return; }
   if (startDoor === "song") document.querySelector('.views button[data-view="song"]').click();
   if (startDoor === "sound") { sel = "pluck"; document.querySelector('.edhead .views button[data-pane="sound"]').click(); document.querySelector("section.lower").scrollIntoView({ behavior: "smooth" }); }
   say(v.querySelector("b").textContent + ": " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + "." + (startDoor === "jam" ? " Tap New take for another, or click a lane to change it." :
@@ -1478,30 +1557,47 @@ document.addEventListener("keydown", (e) => {                // Space: play and 
 document.addEventListener("keyup", (e) => { if (e.code === "Space" && document.activeElement.tagName === "BUTTON") e.preventDefault(); });   // (not the focused button's click)
 
 /* ---- a piece as a file or a code (fm1piece.js): out, and in (to its genre and place, put into play) */
-function pieceOut() {
-  return { genre: cur.genre, slot: cur.piece, npar: P.length, rec: io.slice(0, REC), prg: io.slice(IO_PRG, IO_PRG + 6), voice: null,
+async function pieceOut() {
+  const pc = { genre: cur.genre, slot: cur.piece, npar: P.length, rec: io.slice(0, REC), prg: io.slice(IO_PRG, IO_PRG + 6), voice: null,
            kinds: io.slice(IO_PRK, IO_PRK + 3), fx: io[IO_FXON] ? io.slice(IO_FX, IO_FX + PC_PX_NFX) : null, bass: io.slice(IO_BS, IO_BS + 16), meta: { t: S.tagOf({ genre: cur.genre, slot: cur.piece }) + " (studio)" } };
+  const k = S.userSlot(pc);                                   // (the pluck on a voice of the player's own: that voice goes with it, as the engine has it now)
+  if (k >= 0) {
+    const r = node ? await ask({ type: "st_vox", op: "get", slot: k }) : null;
+    pc.voice = r && r.ok > 0 && r.vox ? Uint8Array.from(r.vox.subarray(0, 128)) : pcVoices(storeObj(S.OBJ_VOICES))[k] || null;
+  }
+  return pc;
 }
-$("save").addEventListener("click", () => {
+$("save").addEventListener("click", async () => {
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([pcEncode(pieceOut())], { type: "application/octet-stream" }));
+  a.href = URL.createObjectURL(new Blob([pcEncode(await pieceOut())], { type: "application/octet-stream" }));
   a.download = "perf1-" + S.genreName(cur.genre).toLowerCase() + "-" + S.pieceName(cur.genre, cur.piece).toLowerCase() + ".piece";
   a.click();
   say("Saved. To put it on the FM-1: the Library & pieces page, Add a code, choose this file, then Add to my FM-1.");
 });
 $("code").addEventListener("click", async () => {
-  const c = await pcToCode(pieceOut());
+  const c = await pcToCode(await pieceOut());
   try { await navigator.clipboard.writeText(c); say("The piece's code is copied (" + c.length + " characters): paste it on the Library & pieces page, or to a friend."); }
   catch { say(c); }
 });
 async function pieceIn(pc) {
   if (pc.kind === "set") return say("That is a set: open it on the Library & pieces page.", true);
-  if (!node) { cur = { genre: pc.genre, piece: pc.slot }; await switchOn(); }
-  await openPiece(pc.genre, pc.slot);
+  if (!(pc.genre < N.genres.length && pc.slot >= 0 && pc.slot < ((N.pieces[pc.genre] || []).length || 10))) return say("That piece is for a genre or place this PERF-1 does not have (a newer version?).", true);
+  if (!node) { cur = { genre: pc.genre, piece: pc.slot }; if (!(await switchOn())) return; }
+  if (!(await openPiece(pc.genre, pc.slot))) return;
   const rec = pc.rec.slice();
-  for (let p = 0; p < P.length; p++) if (p >= pc.npar || rec[REC_PAR + p] === 0xFF) rec[REC_PAR + p] = io[REC_PAR + p];   // settings the piece predates: as they are
+  for (let p = 0; p < P.length; p++) {
+    if (p >= pc.npar || rec[REC_PAR + p] === 0xFF) rec[REC_PAR + p] = io[REC_PAR + p];   // settings the piece predates: as they are
+    else rec[REC_PAR + p] = Math.min(rec[REC_PAR + p], P[p].max - P[p].min);           // (and none past its range)
+  }
   io.set(rec, 0); io.set(pc.prg, IO_PRG); io.set(pc.kinds || new Uint8Array(3), IO_PRK); io.set(pc.bass || new Uint8Array(16), IO_BS);
   if (pc.fx) { io[IO_FXON] = 1; io.set(pc.fx, IO_FX); }
+  if (pc.voice && S.userSlot(pc) >= 0) {                      // its own DX7 voice: into a slot here (the one holding it already, or the next), the pluck on it
+    const vx = await ask({ type: "st_vox", op: "get", slot: 0 }), n = vx.n || 0;
+    let slot = -1;
+    for (let k = 0; k < n && slot < 0; k++) { const q = k ? await ask({ type: "st_vox", op: "get", slot: k }) : vx; if (q.ok > 0 && q.vox && q.vox.subarray(0, 128).every((b, j) => b === pc.voice[j])) slot = k; }
+    if (slot < 0) { const r = await ask({ type: "st_vox", op: "put", slot: Math.min(n, 15), keep: true, vox: pc.voice }); if (r.ok >= 0) slot = r.ok; }
+    if (slot >= 0) { io[REC_PAR + PE.P_CM_SND] = DXB() + slot - P[PE.P_CM_SND].min; dxN = Math.max(dxN, slot + 1); }
+  }
   changed();
   say("Opened " + (pc.meta && pc.meta.t ? "“" + pc.meta.t + "”" : "the piece") + " into " + S.genreName(pc.genre) + " " + S.pieceName(pc.genre, pc.slot) + " (in the emulator; your bank is not changed).");
 }
@@ -1583,7 +1679,7 @@ $("imptracks").addEventListener("change", (e) => { const t = e.target.closest("s
 $("impBar").addEventListener("change", () => { impLines(); impPreview(); });
 $("impcancel").addEventListener("click", () => { $("imp").hidden = true; mf = null; });
 $("impgo").addEventListener("click", async () => {
-  if (!node) await switchOn();
+  if (!node && !(await switchOn())) return;
   if (!io) return;
   const R = impPreview(), o = impOpts();
   impPrev = { genre: cur.genre, piece: cur.piece, io: io.slice() };   // (Undo the import: this piece as it was)
@@ -1597,6 +1693,7 @@ $("impgo").addEventListener("click", async () => {
   if (R.bass) { io.set(R.bass, IO_BS); setPar("P_BL_MODE", BL_STEPS); lift("P_BASS"); }
   if (R.acid) { acidSet(R.acid); setPar("P_AC_LOCK", 1); lift("P_ACID"); }
   if (R.pluck) { pluckSet(R.pluck); freezePluck(); lift("P_CM_LVL"); }
+  const pluckKeys = R.pluckKeys;                                // (mapped below, once the key and the progression are the piece's: the nearest rung of the engine's own ladder)
   if (R.prog) {
     const unit = bitGet(prg(), 41, 2);
     prg().fill(0); prk().fill(0);
@@ -1605,6 +1702,16 @@ $("impgo").addEventListener("click", async () => {
   }
   if ($("impKey").checked) { setPar("P_ROOT", o.root); setPar("P_MODE", o.mode); const pool = midiPool(o.mode); io[0] = pool & 255; io[1] = pool >> 8; }
   if ($("impTempo").checked) setPar("P_TEMPO", R.tempo);
+  if (R.pluck && pluckKeys) {                                   // the file's pluck notes onto the ladder: the pluck's octave and range to fit them, each note its nearest rung
+    const ks = pluckKeys.filter((x) => x), cc = { pcs: chordPcs(R.pluckRi || 0, par("P_CHORD")) };   // (the chord of the bar the line came from)
+    if (ks.length) {
+      const lo = Math.min(...ks.map((x) => x.key)), hi = Math.max(...ks.map((x) => x.key)), oc = Math.floor(lo / 12) - 5 - par("P_OCT");
+      setPar("P_CM_OCT", Math.max(P[PE.P_CM_OCT].min, Math.min(P[PE.P_CM_OCT].max, oc)));
+      setPar("P_CM_RANGE", Math.max(1, Math.min(3, Math.floor((hi - 12 * Math.floor(lo / 12)) / 12) + 1)));
+      const L = ladder(cc);
+      pluckSet(pluckKeys.map((x) => { if (!x) return { rung: 0, lvl: 0 }; let best = 0; for (let i = 1; i < Math.min(12, L.length); i++) if (Math.abs(L[i] - x.key) < Math.abs(L[best] - x.key)) best = i; return { rung: best, lvl: x.lvl }; }));
+    }
+  }
   resetHistory();
   changed();
   $("imp").hidden = true; $("undo").hidden = false;
@@ -1653,22 +1760,18 @@ $("tcode").addEventListener("click", async () => {
   if (t === null || !t.trim()) return;
   const d = codeDecode(t);
   if (!d) return say("Not a track code: check the letters (nine of 0-9 and A-Z, without I, L, O, U).", true);
-  if (!node) { cur = { genre: d.genre, piece: d.piece }; await switchOn(); }
-  if (!node) return;
+  if (!node) { cur = { genre: d.genre, piece: d.piece }; if (!(await switchOn())) return; }
+  opening++;
   const r = await ask({ type: "st_code", text: d.text });
-  if (r.ok < 0) return say("The emulator did not take that code (a code from another PERF-1 version?).", true);
-  cur = { genre: d.genre, piece: d.piece };
-  io = new Uint8Array(r.io);
-  resetHistory();
-  $("genre").value = d.genre; fillPieces(); $("piece").value = d.piece;
-  ["save", "code"].forEach((id) => { $(id).disabled = false; });
-  undoReset(); soundRender(); deskRender();
+  opening--;
+  if (r.ok < 0 || r.timeout) return say("The emulator did not take that code (a code from another PERF-1 version?).", true);
+  takeUp(d.genre, d.piece, r.io);
   say("Track " + d.text + ": " + S.genreName(d.genre) + " " + S.pieceName(d.genre, d.piece) + " · " + NOTE[d.root] + " " + P[PE.P_MODE].t[d.mode].toLowerCase() + " · " + d.tempo + " BPM, the same notes as on the FM-1. Edit it here; Download .piece keeps your version.");
   refresh();
   codeNow();
 });
 let impPrev = null;
-$("undo").addEventListener("click", () => {                   // the piece as it was before the import (an undo step itself: Redo puts the import back)
+$("undo").addEventListener("click", () => {                   // the piece as it was before the import (an undo step itself: Undo puts the import back)
   $("undo").hidden = true;
   if (!impPrev || !io || !cur || cur.genre !== impPrev.genre || cur.piece !== impPrev.piece) { impPrev = null; return say("That import was in another piece: open it, then use Undo.", true); }
   io.set(impPrev.io); impPrev = null; resetHistory(); changed();
@@ -1760,14 +1863,41 @@ function syncCtls() {                                         // every control o
   document.querySelectorAll(".mute[data-p]").forEach((b) => b.setAttribute("aria-pressed", String(parV(+b.dataset.p) === 0)));
   document.querySelectorAll("[data-shape]").forEach((el) => { const p = +el.dataset.shape, v = parV(p); el.querySelector(".v").textContent = valText(p, v); el.querySelectorAll("button[data-shp]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.v === v))); });
 }
-function setFromCtl(p, v) { if (io && parSetV(p, v)) (p >= 0 ? changedPar(p) : changed()); }
+function setFromCtl(p, v) {
+  if (!io) return;
+  const lockOn = (p === PE.P_AC_LOCK || p === PE.P_CM_LOCK) && v >= 1 ? (p === PE.P_AC_LOCK ? "acid" : "pluck") : null;
+  if (lockOn) lockKeep(lockOn);                               // (the Frozen knob: as the freeze buttons, the line heard kept)
+  const toSteps = p === PE.P_BL_MODE && Math.round(v) === BL_STEPS && par("P_BL_MODE") !== BL_STEPS && !io.subarray(IO_BS, IO_BS + 16).some((x) => x);
+  if (toSteps) { const l = bassLive(); if (l) io.set(l, IO_BS); }   // (Steps with none set: the bar it played last, as the bass editor's first click takes it, not a line the unit makes up)
+  if (!parSetV(p, v) && !lockOn) return;
+  if (p === PE.P_CM_SND) { dxv = null; lkPar(p, parV(p)); changed(); soundRender(); return; }   // (the pluck's sound: the whole piece put, as the engine's knob reads a list place; the DX editor follows it)
+  (p >= 0 && !lockOn && !toSteps ? changedPar(p) : changed());
+}
 const parSend = new Map();
 let parTimer = 0;
 function changedPar(p) {                                      // (the piece's copy here has it; the engine gets that one setting; SAVE stores it as the unit's does)
   undoNote(); refresh();
+  dirty = true;
   parSend.set(p, parV(p)); lkPar(p, parV(p));
   if (!parTimer) parTimer = setTimeout(() => { parTimer = 0; if (node) for (const [q, v] of parSend) node.port.postMessage({ type: "st_par", p: q, v, id: ++reqId }); parSend.clear(); }, 15);
 }
+let downAt = null;                                           // (a press in progress: where it began)
+document.addEventListener("pointerdown", (e) => { downAt = e.target; }, true);
+document.addEventListener("pointerup", () => { downAt = null; }, true);
+function lostUp(e) {
+  const t = downAt; if (!t) return;
+  downAt = null;
+  if (t.closest && t.closest("#song")) return;                // (the song's own drags cancel on pointercancel)
+  (t.isConnected ? t : document).dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: e.pointerId || 1, pointerType: e.pointerType || "mouse" }));
+}
+document.addEventListener("pointercancel", lostUp, true);
+document.addEventListener("pointermove", (e) => { if (downAt && e.pointerType === "mouse" && e.buttons === 0) lostUp(e); }, true);
+window.addEventListener("blur", () => lostUp({}));
+// the wheel turns a knob once the pointer has rested on it (or it has the focus), so scrolling the page past knobs leaves them; a sideways swipe never
+let hoverEl = null, hoverT = 0;
+document.addEventListener("pointerover", (e) => { const k = e.target.closest(".ctl, .fader, .dxk, .dxfeel, .fxkn"); if (k !== hoverEl) { hoverEl = k; hoverT = performance.now(); } });
+document.addEventListener("scroll", () => { hoverT = performance.now(); }, true);
+const wheelOk = (el, e) => e.deltaY !== 0 && (document.activeElement === el || (hoverEl === el && performance.now() - hoverT > 350));
 let drag = null;
 document.addEventListener("pointerdown", (e) => {
   const el = e.target.closest(".ctl:not(.list), .fader");
@@ -1792,7 +1922,7 @@ document.addEventListener("pointerup", () => {
 document.addEventListener("dblclick", (e) => { const el = e.target.closest(".ctl:not(.list), .fader"); if (el && io) setFromCtl(+el.dataset.p, meta(+el.dataset.p).def); });
 document.addEventListener("wheel", (e) => {
   const el = e.target.closest(".ctl:not(.list), .fader");
-  if (!el || !io) return;
+  if (!el || !io || !wheelOk(el, e)) return;
   e.preventDefault();
   setFromCtl(+el.dataset.p, parV(+el.dataset.p) + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 10 : 1));
 }, { passive: false });
@@ -1991,7 +2121,7 @@ function dxHTML() {                                           // (the rows are f
     '<div class="bar" style="margin-bottom:8px"><span class="lbl">EDIT</span><select id="dxFrom" aria-label="The DX voice to edit">' +
     '<optgroup label="The built-in DX sounds">' + Array.from({ length: N.nfmfact + NDXX() }, (_, k) => '<option value="d' + k + '">' + nm[dxSndOf(k)] + "</option>").join("") + "</optgroup>" +
     '<optgroup label="Your voices (the 16 slots)">' + Array.from({ length: 16 }, (_, k) => '<option value="u' + k + '"' + (k >= dxN ? " disabled" : "") + ">" + (k + 1) + " · " + (k < dxN ? dxNames[k] || nm[b + k] : k === dxN ? "(the next free: your next new voice)" : "(empty)") + "</option>").join("") + "</optgroup>" +
-    (dxFile.length ? '<optgroup label="From the .syx file">' + dxFile.map((v, k) => '<option value="f' + k + '">' + (vName(v) || "(no name)") + "</option>").join("") + "</optgroup>" : "") +
+    (dxFile.length ? '<optgroup label="From the .syx file">' + dxFile.map((v, k) => '<option value="f' + k + '">' + (vName(v) || "(no name)").replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</option>").join("") + "</optgroup>" : "") +
     '<option value="i">Init voice (a plain sine)</option></select>' +
     '<button class="small" id="dxLoad" title="DX7 banks (32 voices) or single voices, from any librarian">Open .syx…</button><input type="file" id="dxFileIn" accept=".syx,.SYX" hidden>' +
     '<button class="small" id="dxSave">Save .syx</button><button class="small" id="dxUnit" title="This voice into one of your FM-1\'s 16 slots (FM-1 menu: connect first; with Live on, every change goes)">To my FM-1</button></div>' +
@@ -2235,10 +2365,12 @@ async function dxPut(keep) {
     const first = dxSlot < 0;
     if (first && dxN >= 16) say("All 16 voice slots are in use: this edit replaces voice 16.", true);
     const heard = dxHeard(), r = await ask({ type: "st_vox", op: "put", slot: first ? dxN : dxSlot, keep: keep && heard === dxv, vox: vPack(heard) });   // (muted or soloed: heard, not kept)
+    if (r.timeout) { say("The emulator did not answer: the voice edit is not in.", true); break; }
     if (r.ok < 0 && ++tries < 30) { await new Promise((res) => setTimeout(res, 30)); continue; }
     if (r.ok >= 0) {
       dxSlot = r.ok; dxDx = -1; dxN = Math.max(dxN, r.ok + 1);
       dxNames[dxSlot] = "DX " + vName(dxv); dxSndNames()[DXB() + dxSlot] = dxNames[dxSlot];
+      if (!first && parV(PE.P_CM_SND) !== DXB() + dxSlot) dxPlay(DXB() + dxSlot);
       if (first) { dxPlay(DXB() + dxSlot); dxWhat(); say("Your voice " + (dxSlot + 1) + " (“" + vName(dxv) + "”): the pluck plays it. Every change is heard as you make it, and kept in the emulator's voices (this browser)."); }
       if (keep || first) dxWhat();
     }
@@ -2349,7 +2481,7 @@ $("sound").addEventListener("dblclick", (e) => {
   }
 });
 $("sound").addEventListener("wheel", (e) => {
-  const k = e.target.closest(".dxk, .dxfeel"); if (!k || !dxv) return;
+  const k = e.target.closest(".dxk, .dxfeel"); if (!k || !dxv || !wheelOk(k, e)) return;
   e.preventDefault();
   if (k.classList.contains("dxfeel")) { const n = +k.dataset.feel; if (!dxBase) dxBase = Uint8Array.from(dxv); dxFeel[n] = Math.max(0, Math.min(1, dxFeel[n] + (e.deltaY < 0 ? 0.02 : -0.02))); dxFeelApply(); }
   else { const i = +k.dataset.dx; dxSet(i, dxv[i] + (e.deltaY < 0 ? 1 : -1)); }
@@ -2451,7 +2583,7 @@ function xyDraw() {
   const cv = $("xyPad"); if (!cv || !fxd) return;
   const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
   if (!W || !H) return;
-  if (!cv.dataset.ro) { cv.dataset.ro = "1"; xyRO.observe(cv); }
+  if (!cv.dataset.ro) { cv.dataset.ro = "1"; xyRO.disconnect(); xyRO.observe(cv); }
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#0e1530"; g.fillRect(0, 0, W, H);
   g.strokeStyle = "#1a2446"; g.lineWidth = 1; for (let q = 1; q < 8; q++) { g.beginPath(); g.moveTo(q * W / 8, 0); g.lineTo(q * W / 8, H); g.stroke(); g.beginPath(); g.moveTo(0, q * H / 8); g.lineTo(W, q * H / 8); g.stroke(); }
@@ -2500,6 +2632,7 @@ $("fx").addEventListener("pointermove", (e) => {
   if (Math.abs(d) > 2) fxPress.moved = true;
   if (fxPress.moved) fxSetK(+k.dataset.page, +k.dataset.i, Math.round(fxPress.v0 + d / 150 * (c.hi - c.lo) * (e.shiftKey ? 0.2 : 1)));
 });
+$("fx").addEventListener("contextmenu", (e) => { if (e.target.closest(".fxk, #xyPad")) e.preventDefault(); });
 document.addEventListener("pointerup", async () => {
   if (xyTouch) { const t = xyTouch; xyTouch = null; if (!xyKeep) for (const b of t.bits) await fxLock(b, false); xyDraw(); fxSide(); return; }
   const pr = fxPress; fxPress = null;
@@ -2530,7 +2663,7 @@ async function fxSetK(pg, i, v, queued = false) {            // a setting: the n
   }
 }
 $("fx").addEventListener("wheel", (e) => {
-  const k = e.target.closest(".fxkn"); if (!k || !fxd) return;
+  const k = e.target.closest(".fxkn"); if (!k || !fxd || !wheelOk(k, e)) return;
   e.preventDefault();
   const c = fxd.pages[+k.dataset.page].c[+k.dataset.i];
   fxSetK(+k.dataset.page, +k.dataset.i, c.v + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 10 : 1));
@@ -2915,7 +3048,7 @@ $("mine").addEventListener("click", () => {
 });
 $("send").addEventListener("click", async () => {
   if (!io) return;
-  const c = await pcToCode(pieceOut());
+  const c = await pcToCode(await pieceOut());
   window.open("../pieces/#p=" + c, "_blank", "noopener");
   say("The piece is on the Library & pieces page (a new tab): connect the FM-1 there and add it to a place.");
 });
@@ -3721,11 +3854,11 @@ let dragFrom = -1, dragPiece = null;
 $("song").addEventListener("dragstart", (e) => {
   const ch = e.target.closest(".chip");
   if (ch) { dragPiece = { g: +ch.dataset.g, p: +ch.dataset.p }; dragFrom = -1; e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/plain", ch.textContent); $("song").classList.add("dragging"); return; }
-  const pl = e.target.closest(".place"); if (pl) { dragFrom = +pl.dataset.i; dragPiece = null; e.dataTransfer.effectAllowed = "move"; }
+  const pl = e.target.closest(".place"); if (pl) { dragFrom = +pl.dataset.i; dragPiece = null; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", "place " + (dragFrom + 1)); }
 });
 let dropOver = null;
 function dropMark(el) { if (el === dropOver) return; if (dropOver) dropOver.classList.remove("over"); dropOver = el; if (el) el.classList.add("over"); }
-$("song").addEventListener("dragend", () => { dragPiece = null; $("song").classList.remove("dragging"); dropMark(null); });
+$("song").addEventListener("dragend", () => { dragPiece = null; dragFrom = -1; $("song").classList.remove("dragging"); dropMark(null); });
 $("song").addEventListener("dragover", (e) => {
   const tgt = e.target.id === "songline" ? e.target : e.target.closest(".place, .songempty");
   if (dragPiece) dropMark(tgt);
@@ -3756,6 +3889,7 @@ $("saveEmu").addEventListener("click", async () => {
   node.port.postMessage({ type: "st_put", io: io.slice(), id: ++reqId });      // (the last edit in first: the engine takes its lines and steps at
   await new Promise((res) => setTimeout(res, 120));                             //  its next blocks, and SAVE reads them back from it)
   const r = await ask({ type: "st_save" });
+  if (r.ok) dirty = false;
   say(r.ok ? "Saved: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " is in the emulator's bank (this browser). The Library & pieces page can send it to the FM-1." : "The emulator is writing; try again in a moment.", !r.ok);
   if (view === "song") songRender();
 });
@@ -4003,7 +4137,13 @@ $("lkPull").addEventListener("click", async () => {
   try {
     if (!(await lkReadAll())) return lkSay("The FM-1 did not send all its settings.", true);
     let n = 0;
-    for (let p = 0; p < P.length; p++) if (!LK_SKIP.has(p) && lk.val[p] !== null && parSetV(p, lk.val[p])) n++;
+    const userSnd = (v) => v >= DXB() && v < DXB() + 16;
+    if (lk.val[PE.P_AC_LOCK]) lockKeep("acid");
+    if (lk.val[PE.P_CM_LOCK]) lockKeep("pluck");
+    for (let p = 0; p < P.length; p++) {
+      if (LK_SKIP.has(p) || lk.val[p] === null || (p === PE.P_CM_SND && userSnd(lk.val[p]))) continue;
+      if (parSetV(p, lk.val[p])) { n++; if (p === PE.P_MODE) { const pool = midiPool(lk.val[p]); io[0] = pool & 255; io[1] = pool >> 8; } }
+    }
     if (n) changed();
     lkSay(n ? n + (n === 1 ? " setting" : " settings") + " taken from the FM-1 into the piece (↶ puts them back). Its steps and lines stay the studio's." : "The piece already has the FM-1's settings.");
   } finally { lk.busy--; lkShow(); }
