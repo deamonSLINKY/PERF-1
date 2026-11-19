@@ -717,18 +717,27 @@ if (navigator.permissions && navigator.requestMIDIAccess)                       
   navigator.permissions.query({ name: "midi" }).then((p) => { if (p.state === "granted") midiConnect(true); }).catch(() => {});
 
 // ---------------------------------------------------------------- storage
-function loadStore() {
+const storeSeen = {};          // (1.0) each object as this page last read or wrote it: only the ones the emulator changed are written, so a save
+function loadStore() {          // made meanwhile in another tab (the studio, the Library page, a second emulator) stays (as web/studio's saveStore)
   try {
-    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"), out = {};
-    for (const [o, b64] of Object.entries(raw)) out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}, out = {};
+    for (const [o, b64] of Object.entries(raw)) {
+      try { out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer; storeSeen[o] = b64; } catch { /* (a bad entry: left out, and left as it is) */ }
+    }
     return out;
   } catch { return {}; }
 }
 function saveStore(store) {
   try {
-    const raw = {};
-    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); }
+    const ch = {}, gone = Object.keys(storeSeen).filter((o) => !(o in store));   // (an object this page knew that the emulator dropped: dropped here too)
+    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); const b = btoa(s); if (b !== storeSeen[o]) ch[o] = b; }
+    if (!Object.keys(ch).length && !gone.length) return;
+    let raw = {};
+    try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}; } catch { raw = {}; }
+    Object.assign(raw, ch);
+    for (const o of gone) { delete raw[o]; delete storeSeen[o]; }
     localStorage.setItem(STORE_KEY, JSON.stringify(raw));
+    Object.assign(storeSeen, ch);
   } catch { /* storage unavailable: this session only */ }
 }
 

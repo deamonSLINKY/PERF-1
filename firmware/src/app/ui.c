@@ -1658,7 +1658,7 @@ static void knob_range(int k, int *lo, int *hi)
     }
     if (k == K_ASTY || k == K_ASNO || k == K_ASOC) {
         *lo = 0;
-        *hi = k == K_ASTY ? 4 : k == K_ASNO ? 11 : 3;
+        *hi = k == K_ASTY ? 4 : k == K_ASNO ? 15 : 3;   /* (0.17.78: the note 0 .. 15 scale steps, as the engine and the studio take it; was 11) */
         return;
     }
     if (k == K_PSNO || k == K_PSLV) {
@@ -2164,7 +2164,7 @@ static void knob_set(int k, int v)
         if (k == K_ASTY)
             kind = v < 0 ? 0 : v > 4 ? 4 : v;
         else if (k == K_ASNO)
-            note = v < 0 ? 0 : v > 11 ? 11 : v;
+            note = v < 0 ? 0 : v > 15 ? 15 : v;
         else
             oct = v < 0 ? 0 : v > 3 ? 3 : v;
         as_put(s, note, oct, kind);
@@ -9979,7 +9979,9 @@ void ui_param_set(int p, int v)               /* the editor (main_fm1.c px_servi
                                                   * mode's number and left the scale as it was) */
             set_mode(v);
         else
-            knob_set(p, v);
+            knob_set(p, p == P_CM_SND ? en_cm_snd_pos(v) : v);   /* (0.17.78: the pluck's sound comes as its number, as ui_param_get gives it;
+                                                  * the knob takes a place on its list: from 42 up the two differ, and the Editor and the
+                                                  * link's sounds landed on another voice) */
         ui.act_t = plat_ms();
     }
 }

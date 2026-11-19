@@ -729,7 +729,7 @@ async function readSlots() {
 }
 function syncPluckNames() {                      /* the pluck's Sound lists the loaded voices by name */
   const q = P[D.enum.P_CM_SND];
-  for (let i = 0; i < 16; i++) q.t[12 + 22 + i] = slots[i] ? "DX " + nameOf(slots[i]) : "(empty)";
+  for (let i = 0; i < 16; i++) q.t[42 + i] = slots[i] ? "DX " + nameOf(slots[i]) : "(empty)";
   renderRows();
 }
 
@@ -796,7 +796,7 @@ $("vsend").addEventListener("click", () => { say(""); sendVoice(); });
 $("vread").addEventListener("click", readSlots);
 $("vplay").addEventListener("click", () => {
   const p = D.enum.P_CM_SND;
-  setParam(p, 12 + 22 + slot);
+  setParam(p, 42 + slot);   /* (the player's slots: sounds 42 .. 57, after the twelve plain and thirty DX) */
   if (val[D.enum.P_CM_LVL] < 40) setParam(D.enum.P_CM_LVL, 60);
   renderRows();
   say("The pluck now plays slot " + (slot + 1) + ".");

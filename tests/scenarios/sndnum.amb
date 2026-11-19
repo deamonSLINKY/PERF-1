@@ -1,0 +1,19 @@
+# The pluck's sound set by number (the Editor's and the link's way, 0.17.78): from 42 up a sound's number and its place on the knob's list differ
+# (the player's slots 42 .. 57 come after the thirty more in number, before them on the list). Set by number, it is that sound.
+seed 0
+wait 500
+setpar 99 30
+wait 100
+expect par99 30
+setpar 99 58
+wait 100
+expect par99 58
+setpar 99 87
+wait 100
+expect par99 87
+setpar 99 71
+wait 100
+expect par99 71
+peakreset
+wait 3000
+expect peak_db_min -40

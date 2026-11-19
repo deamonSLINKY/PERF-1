@@ -69,7 +69,7 @@
 | Acid env | ARP x2 | Decay | Accent | Slide | Sound (31) |
 | Acid line | ARP x3 | Density | Length (1-16) | Range (1-3 oct) | Mutate (SEL + knob: what it changes) |
 | Acid answer | ARP x4 | Answer (off, 8 kinds, page 6) | Every (2-8 bars, drift; 2-8 loops, drift) | Direction (down 2 .. up 2) | Level (same .. +6 dB) |
-| Acid steps | ARP x5 | Step (rest, note, accent, slide) | Note (0-11 scale steps) | Octave (0-3) | Frozen (free, frozen) |
+| Acid steps | ARP x5 | Step (rest, note, accent, slide) | Note (0-15 scale steps) | Octave (0-3) | Frozen (free, frozen) |
 | Pluck | ARP x6 | Level | Sound (12 + 60 DX + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | **ARP** x7 | Decay | Style (up, down, up-down ..) | Rate (1/4, 3/16, 1/8, 1/16) | Range (1-3 oct) |
 | Deja vu | ARP x8 | Pluck vu (0 new .. 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (an octave away) | Motif (develop the first bar) |
@@ -322,7 +322,7 @@ Each knob picks one drum's sound from the same twenty-three kits (the first four
 
 **Acid answer** (ARP x4): call and response. **Answer**, how the line changes: Octave, Fifth, Third (two scale steps, so it stays in key), Mirror (the shape upside down round the line's middle), Reverse, Rotate (moved a beat), Sparse (even steps only), Accents (accented notes only). **Every**: 2 to 8 bars, or Drift (the bar before the drums change); further on, 2 to 8 loops and Drift lp (counting times round the line, the answer the whole line; for lines that aren't 16 steps). **Direction**: down 2, down, same, up, up 2. **Level**: same, +2, +4, +6 dB (the unit's setting). Off by default; the rest stored with the piece.
 
-**Acid steps** (ARP x5): the line as sixteen steps you can edit. A **white key** picks a step. **Step**: Rest, Note, Accent, Slide (glides into the next), Acc+Slide. **Note**: 0-11 scale steps above the chord. **Octave**: 0-3 up. **Frozen**: Free (it keeps changing; each piece grows a new one) or Frozen (held as it is, Mutate leaves it alone, **stored with the piece**). Any edit freezes it. Steps past Length are dim and silent. The answer and the Acid octave still work on a frozen line.
+**Acid steps** (ARP x5): the line as sixteen steps you can edit. A **white key** picks a step. **Step**: Rest, Note, Accent, Slide (glides into the next), Acc+Slide. **Note**: 0-15 scale steps above the chord. **Octave**: 0-3 up. **Frozen**: Free (it keeps changing; each piece grows a new one) or Frozen (held as it is, Mutate leaves it alone, **stored with the piece**). Any edit freezes it. Steps past Length are dim and silent. The answer and the Acid octave still work on a frozen line.
 
 **Pluck steps** (ARP x9): the Deja vu loop as sixteen steps you can edit. Laid out like Acid steps. A **white key** picks a step. **Step**: Rest, Soft, Note, Accent. **Note**: 1-12, the chord's notes from low to high. **Octave**: the whole pluck's. **Frozen** holds the loop (setting Loop 16, Rate 1/16, Pluck vu 100) and **stores it with the piece**; any edit freezes it. Left free, a new piece forgets the loop.
 
