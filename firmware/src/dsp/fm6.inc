@@ -14,19 +14,9 @@
 static inline int32_t clamp(int32_t v, int32_t lo, int32_t hi) { return v < lo ? lo : v > hi ? hi : v; }
 #include "fm6_tables.h"
 #include "fm6_core.inc"
-#include "fm6_patches.h"         /* FM6_NFACTORY, FM6_FACTORY[8][128] */
-
-/* a Melodee factory voice: OP1..OP6 in patch order within an operator (DET 0..14, 7 = none), ALG 0..31, TRNSP 24 = none */
-typedef struct {
-    uint8_t op[6][FP_OP];
-    uint8_t pr[4], pl[4], alg, fb, oks, lfs, lfd, lpmd, lamd, lfks, lfw, lpms, trnsp;
-    char name[11];
-} fm6_rom_t;
-#include "fm6_rom.h"             /* FM6_ROM[]: sixteen more */
 #include "fm6_dy.h"              /* FM6_DY[]: the DY set, a human-made voice for each DX one (tools/gen_fm6_dy.py) */
-volatile uint8_t en_fm_dy = 1;                   /* the DY voices always (0.17.75: the Settings page's Voices switch is gone; they keep the DX names) */
-static uint8_t fm_dy_cur;                        /* the set the loaded patch came from */
-#define FM6_NPATCH (FM6_NFACTORY + FM6_NROM)
+volatile uint8_t en_fm_dy = 1;                   /* the DY voices always (0.17.75: the Settings page's Voices switch is gone; they keep the DX names;
+                                                    0.17.77: Melodee's factory voices, unplayed since, left the build) */
 #define FM6_PACKED 128u
 
 static uint32_t fm6_max(uint32_t i)             /* the highest value of each byte of the 155-byte voice */
@@ -84,32 +74,6 @@ static void fm6_unpack(const uint8_t *b, uint8_t *v)   /* 128-byte packed record
     v[FP_TRNSP] = b[117] & 0x7Fu;
     for (i = 0; i < 10u; i++)
         v[FP_NAME + i] = b[118 + i] & 0x7Fu;
-    fm6_sanitize(v);
-}
-
-static void fm6_rom_patch(const fm6_rom_t *r, uint8_t *v)   /* a Melodee factory voice -> 155-byte voice */
-{
-    uint32_t n, i;
-    for (n = 1; n <= 6u; n++)
-        for (i = 0; i < FP_OP; i++)
-            v[(6u - n) * FP_OP + i] = r->op[n - 1u][i];
-    for (i = 0; i < 4u; i++) {
-        v[FP_PR1 + i] = r->pr[i];
-        v[FP_PL1 + i] = r->pl[i];
-    }
-    v[FP_ALG] = r->alg;
-    v[FP_FB] = r->fb;
-    v[FP_OKS] = r->oks;
-    v[FP_LFS] = r->lfs;
-    v[FP_LFD] = r->lfd;
-    v[FP_LPMD] = r->lpmd;
-    v[FP_LAMD] = r->lamd;
-    v[FP_LKS] = r->lfks;
-    v[FP_LFW] = r->lfw;
-    v[FP_LPMS] = r->lpms;
-    v[FP_TRNSP] = r->trnsp;
-    for (i = 0; i < 10u; i++)
-        v[FP_NAME + i] = (uint8_t)(r->name[i] ? r->name[i] : ' ');
     fm6_sanitize(v);
 }
 
@@ -229,9 +193,6 @@ static void fm_reset(void)                       /* a new engine: no voices, no 
     fm_age = 0;
 }
 
-/* the 24 voices of Melodee's sets, less the two that were the same sound again (a second Tine EP and a second Drawbars): the patch numbers the pluck
- * knows (0 ..) and where they are in those sets */
-static const uint8_t FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 /* the voices a patch may use at once: the heaviest (six operators ringing, bells, strings, pads) three; the middle four or five; the rest all six */
 static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 3, 3, 4, 6, 6, 4, 6, 5, 3, 6, 6, 6, 4, 6, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,   /* (a loaded voice: four) */
                                         /* (0.17.25) the thirty more: the organs, the pads and the voices (sustaining) three, the rest four */
@@ -328,24 +289,14 @@ static void fm_set_patch(int idx)                /* between chunks: a new patch 
         idx = 0;
     if (idx >= EN_NFMFACT && idx < EN_NFMFACT + EN_NUSER && idx - EN_NFMFACT >= (int)fm_user_n)
         idx = 0;                                 /* a loaded voice that is not there: the first */
-    if (fm_dy_cur != en_fm_dy) {
-        fm_dy_cur = en_fm_dy;                    /* the set changed: load the patch again from the other */
-        fm_cur = -1;
-    }
     if (idx == fm_cur)
         return;
     if (idx >= EN_NFMFACT + EN_NUSER) {
-        fm6_unpack(FM6_DY[idx - EN_NUSER], fm_ed);   /* (the thirty more: the DY set's 30 .., in either set) */
+        fm6_unpack(FM6_DY[idx - EN_NUSER], fm_ed);   /* (the thirty more: the DY set's 30 ..) */
     } else if (idx >= EN_NFMFACT) {
         fm6_unpack(fm_user[idx - EN_NFMFACT], fm_ed);
-    } else if (fm_dy_cur) {
-        fm6_unpack(FM6_DY[idx], fm_ed);
     } else {
-        const int src = FM_MAP[idx];
-        if (src < (int)FM6_NFACTORY)
-            fm6_unpack(FM6_FACTORY[src], fm_ed);
-        else
-            fm6_rom_patch(&FM6_ROM[src - (int)FM6_NFACTORY], fm_ed);
+        fm6_unpack(FM6_DY[idx], fm_ed);
     }
     fm_cur = idx;
     for (k = 0; k < FM_NV; k++) {

@@ -173,20 +173,8 @@ __attribute__((used, visibility("default"))) int web_st_open(int g, int i)
 }
 /* place s of the set list now (as the PRESETS knob does with the song on): its genre and piece, its parts; then st_io as web_st_open */
 /* ---- the DX7 voice editor (web/studio, the pluck's SOUND): the player's voice slots read and written as the FM-1's SysEx does (main_fm1.c
- * dx_service: en_user_voice, ui_voices_changed), and the thirty built-in DX sounds to start from (fm6.inc's sources, copied here: FM_MAP, the
- * Melodee voice -> 155-byte voice of fm6_rom_patch) */
-#ifndef FP_OP
-#define FP_OP 21u
-#endif
-typedef struct {
-    uint8_t op[6][FP_OP];
-    uint8_t pr[4], pl[4], alg, fb, oks, lfs, lfd, lpmd, lamd, lfks, lfw, lpms, trnsp;
-    char name[11];
-} fm6_rom_t;
-#include "../../firmware/src/dsp/fm6_patches.h"
-#include "../../firmware/src/dsp/fm6_rom.h"
+ * dx_service: en_user_voice, ui_voices_changed), and the sixty built-in DX sounds to start from (fm6_dy.h, as fm6.inc plays them) */
 #include "../../firmware/src/dsp/fm6_dy.h"
-static const uint8_t ST_FM_MAP[EN_NFMFACT] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};   /* (fm6.inc FM_MAP) */
 static uint8_t st_vox[160];
 __attribute__((used, visibility("default"))) uint8_t *web_st_vox(void) { return st_vox; }
 __attribute__((used, visibility("default"))) int web_st_vox_n(void) { return en_user_count(); }
@@ -211,39 +199,13 @@ __attribute__((used, visibility("default"))) int web_st_vox_put(int slot, int ke
         ui_voices_changed(1, 3);
     return slot;
 }
-/* the pluck's built-in DX sound idx (0..59: the first thirty of the set in use, then the thirty more) into st_vox: 1 as 128 packed bytes, 2 as the 155-byte voice; 0 none */
+/* the pluck's built-in DX sound idx (0..59) into st_vox as 128 packed bytes: 1; 0 none */
 __attribute__((used, visibility("default"))) int web_st_vox_dx(int idx)
 {
-    const fm6_rom_t *r;
-    int n, i, src;
     if ((unsigned)idx >= EN_NFMFACT + EN_NFMX)
         return 0;
-    if (idx >= EN_NFMFACT) {                     /* (0.17.25) the thirty more: the DY set's 30 .., in either set (fm6.inc fm_set_patch) */
-        memcpy(st_vox, FM6_DY[idx], 128);
-        return 1;
-    }
-    if (en_fm_dy) {
-        memcpy(st_vox, FM6_DY[idx], 128);
-        return 1;
-    }
-    src = ST_FM_MAP[idx];
-    if (src < FM6_NFACTORY) {
-        memcpy(st_vox, FM6_FACTORY[src], 128);
-        return 1;
-    }
-    r = &FM6_ROM[src - FM6_NFACTORY];
-    for (n = 1; n <= 6; n++)
-        for (i = 0; i < (int)FP_OP; i++)
-            st_vox[(6 - n) * FP_OP + i] = r->op[n - 1][i];
-    for (i = 0; i < 4; i++) {
-        st_vox[126 + i] = r->pr[i];
-        st_vox[130 + i] = r->pl[i];
-    }
-    st_vox[134] = r->alg; st_vox[135] = r->fb; st_vox[136] = r->oks; st_vox[137] = r->lfs; st_vox[138] = r->lfd; st_vox[139] = r->lpmd;
-    st_vox[140] = r->lamd; st_vox[141] = r->lfks; st_vox[142] = r->lfw; st_vox[143] = r->lpms; st_vox[144] = r->trnsp;
-    for (i = 0; i < 10; i++)
-        st_vox[145 + i] = (uint8_t)(r->name[i] ? r->name[i] : ' ');
-    return 2;
+    memcpy(st_vox, FM6_DY[idx], 128);            /* (as fm6.inc fm_set_patch: the DY voices, since 0.17.75 always) */
+    return 1;
 }
 
 /* ---- the FX menu (web/studio's FX view): the effects latched (ui.fx_lock, as a tap on the FX menu's key latches one: the UI sends the mask every frame),

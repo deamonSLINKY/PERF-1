@@ -8448,7 +8448,7 @@ static void render_fm(uint32_t n)
 {
     const int on = par[P_CM_SND] >= CM_NPLAIN && cm_vol > 0.0f;
     const int cur = on && fm_cur >= 0 ? fm_cur : 0;   /* (the voice that is loaded: an empty user slot plays the first built-in one, at its own gain) */
-    const float g = cm_vol * 0.5f * FM_OUT * (fm_dy_cur && cur < EN_NFMFACT ? FM_GAIN_DY[cur] : FM_GAIN[cur]);
+    const float g = cm_vol * 0.5f * FM_OUT * (cur < EN_NFMFACT ? FM_GAIN_DY[cur] : FM_GAIN[cur]);
     uint32_t j;
     float lvl = 0.0f;
     const float fe_to = en_shed_level >= 1 || fm_is_bass(cur) ? 0.0f : FE_AMT, fe_k = 1.0f - fm_expf(-FM_TWO_PI * 200.0f / EN_SR), ms = EN_SR * 0.001f;
