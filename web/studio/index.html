@@ -137,8 +137,18 @@
   .views button { border-radius: 6px 6px 0 0; border-bottom: 0; padding: .35em 1.2em; color: var(--dim); }
   .views button[aria-selected=true] { background: var(--panel); color: var(--acc); border-color: var(--line); }
   .views.small { margin: 0; }
+  .views .hintsb { border-radius: 4px; border-bottom: 1px solid var(--line); padding: .15em .65em; font: 600 .66rem "Chakra Petch", sans-serif; letter-spacing: .1em; align-self: center; margin-right: 10px; }
+  body.nohints .hint, body.nohints #edhelp, body.nohints #edhelpB { display: none !important; }
   .views.small button { border-radius: 4px; border-bottom: 1px solid var(--line); padding: .2em .7em; font-size: .75rem; }
   #scope { width: 100%; display: block; margin-top: 6px; border-radius: 6px; background: #121318; }
+  .songempty { border: 1px dashed #3a3e4a; border-radius: 10px; padding: 22px 18px 18px; margin: 10px 0; text-align: center; background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--c) 10%, transparent), transparent 70%), var(--bg); }
+  .songempty h2 { font: 700 1.25rem "Chakra Petch", sans-serif; letter-spacing: .12em; margin: 0 0 4px; }
+  .songempty .go { font-size: 1rem; padding: .55em 1.3em; }
+  .songplan { display: flex; gap: 3px; align-items: flex-end; height: 70px; max-width: 560px; margin: 14px auto 14px; }
+  .songplan div { background: linear-gradient(to top, color-mix(in srgb, var(--c) 35%, transparent), color-mix(in srgb, var(--c) 80%, transparent)); border-radius: 5px 5px 2px 2px; min-width: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+  .songplan span { font: 600 .6rem "Chakra Petch", sans-serif; letter-spacing: .06em; color: #0e0f12; padding-bottom: 3px; white-space: nowrap; }
+  #song.dragging #songline, #song.dragging .place, #song.dragging .songempty { outline: 2px dashed rgba(255,176,0,.4); outline-offset: 2px; }
+  #song.dragging .over { outline: 2px solid var(--acc); background-color: rgba(255,176,0,.07); }
   /* a control: a label, its value, a bar to drag (or a list) */
   .ctls { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px 12px; }
   .sec { margin: 0 0 12px; }
@@ -158,7 +168,16 @@
   .lanes6 .ctl .top span:first-child { display: none; }
   /* the desk: a strip a part */
   #desk { display: flex; flex-direction: column; gap: 10px; }
-  .strips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .strips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) minmax(0, .85fr); gap: 6px; }
+  .strip .meter.v b { position: absolute; left: -2px; right: -2px; bottom: 0; height: 2px; border-radius: 1px; background: var(--ink); box-shadow: 0 0 5px var(--c); opacity: 0; pointer-events: none; }
+  .strip .meter.v.gr i { top: 0; bottom: auto; background: linear-gradient(to bottom, var(--acc), #ff7a2f); background-size: auto; }
+  .strip.master { background: linear-gradient(180deg, #17191f, var(--bg)); }
+  .strip.master .mix { gap: 10px; }
+  .strip.master .meter.v { width: 14px; }
+  .strip .mcol { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .strip .mcol > span { font: 600 .56rem "Chakra Petch", sans-serif; letter-spacing: .1em; color: var(--dim); }
+  .strip .mread { text-align: center; font: 600 .68rem "Chakra Petch", sans-serif; color: var(--dim); letter-spacing: .04em; }
+  #mOut.hot { color: #ff5a5f; }
   @media (max-width: 760px) { .strips { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .strip .mix { display: flex; justify-content: center; align-items: stretch; gap: 8px; margin: 2px 0 0; }
   .strip .mix .fader { margin: 0; height: 132px; }
@@ -229,7 +248,7 @@
   .dxops button.car { border-bottom: 2px solid var(--pluck); }
   .dx7 details summary { cursor: pointer; color: var(--dim); font: 600 .8rem "Chakra Petch", sans-serif; margin: 8px 0 4px; }
   .dx7 .dxtwo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 14px; }
-  #fx:not([hidden]) { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 12px; align-items: start; }
+  #fx:not([hidden]) { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 1.3fr); gap: 12px; align-items: start; }
   @media (max-width: 900px) { #fx:not([hidden]) { grid-template-columns: minmax(0, 1fr); } }
   .fxbank { margin: 0 0 12px; }
   .fxkeys { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 5px; }
@@ -237,8 +256,20 @@
   .fxk.blk { background: #121318; }
   .fxk b { display: block; font: 700 .78rem "Chakra Petch", sans-serif; letter-spacing: .03em; }
   .fxk span { font-size: .65rem; color: var(--dim); }
-  .fxk[aria-pressed=true] { background: var(--acc); color: #0e0f12; border-color: var(--acc); box-shadow: 0 0 10px rgba(255,176,0,.45); }
-  .fxk[aria-pressed=true] span { color: #3a2a00; }
+  .fxk[aria-pressed=true] { background: var(--c); color: #0e0f12; border-color: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 55%, transparent); }
+  .fxk[aria-pressed=true] span { color: rgba(0,0,0,.55); }
+  .fxk.held, .fxk.hold[aria-pressed=true] { animation: fxpulse .55s ease-in-out infinite alternate; }
+  @keyframes fxpulse { from { box-shadow: 0 0 4px color-mix(in srgb, var(--c) 40%, transparent); } to { box-shadow: 0 0 20px var(--c), 0 0 0 2px var(--c); } }
+  @media (prefers-reduced-motion: reduce) { .fxk.held, .fxk.hold[aria-pressed=true] { animation: none; } }
+  .fxbank { container-type: inline-size; }
+  .fxkeys.kb { grid-template-columns: repeat(32, minmax(0, 1fr)); gap: 4px 3px; }
+  .fxkeys.kb > .fxk { grid-column: var(--gc); grid-row: var(--gr); min-width: 0; padding: 6px 5px 5px; }
+  .fxkeys.kb > .fxk b { font-size: .64rem; letter-spacing: 0; line-height: 1.15; }
+  .fxkeys.kb > .fxk:not(.blk) { min-height: 64px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 3px 3px 7px 7px; }
+  .fxkeys.kb > .fxk.blk { min-height: 50px; margin: 0 2px; box-shadow: 0 3px 0 #0a0b0e; }
+  .fxkeys.kb > .fxk.none { opacity: .18; }
+  .fxkeys.kb > .fxk.hold::after { content: "HOLD"; right: 4px; top: auto; bottom: 5px; font-size: .5rem; }
+  @container (max-width: 820px) { .fxkeys.kb { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); } .fxkeys.kb > .fxk { grid-column: auto; grid-row: auto; margin: 0; } .fxkeys.kb > .fxk.none { display: none; } }
   .fxk.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
   .fxk.hold::after { content: "HOLD"; position: absolute; right: 5px; top: 4px; font: 700 .55rem "Chakra Petch", sans-serif; color: var(--dim); }
   .fxk[aria-pressed=true].hold::after { color: #3a2a00; }
@@ -350,13 +381,13 @@
     <p id="impreport"></p>
     <div class="bar"><button id="impgo" class="go">Put it in the piece</button><button id="impcancel">Cancel</button></div>
   </section>
-  <div class="views" role="tablist"><button role="tab" data-view="loom" aria-selected="true">LOOM</button><button role="tab" data-view="desk" aria-selected="false">DESK</button><button role="tab" data-view="song" aria-selected="false">SONG</button><button role="tab" data-view="fx" aria-selected="false">FX</button><span class="partkey" aria-label="The parts' colours, the same in every view"><i style="--c:var(--pad)">PAD</i><i style="--c:var(--bass)">BASS</i><i style="--c:var(--acid)">ACID</i><i style="--c:var(--pluck)">PLUCK</i><i style="--c:var(--drum)">DRUMS</i></span><span class="sp" style="flex:1"></span><span class="lbl" style="align-self:center">SHOW&nbsp;</span><select id="zoom" aria-label="How many bars the Loom shows"><option value="0">every bar</option><option value="8">8 bars</option><option value="4">4 bars</option><option value="2">2 bars</option></select></div>
+  <div class="views" role="tablist"><button role="tab" data-view="loom" aria-selected="true">LOOM</button><button role="tab" data-view="desk" aria-selected="false">DESK</button><button role="tab" data-view="song" aria-selected="false">SONG</button><button role="tab" data-view="fx" aria-selected="false">FX</button><span class="partkey" aria-label="The parts' colours, the same in every view"><i style="--c:var(--pad)">PAD</i><i style="--c:var(--bass)">BASS</i><i style="--c:var(--acid)">ACID</i><i style="--c:var(--pluck)">PLUCK</i><i style="--c:var(--drum)">DRUMS</i></span><span class="sp" style="flex:1"></span><button id="hintsB" class="hintsb" aria-pressed="true" title="The grey help lines in every view: shown, or hidden once you know the studio">HINTS</button><span class="lbl" style="align-self:center">SHOW&nbsp;</span><select id="zoom" aria-label="How many bars the Loom shows"><option value="0">every bar</option><option value="8">8 bars</option><option value="4">4 bars</option><option value="2">2 bars</option></select></div>
   <section class="loomwrap">
     <canvas id="loom" height="560" aria-label="The Loom: every lane of the piece over its bars"></canvas>
     <div id="desk" hidden></div>
     <div id="song" hidden></div>
     <div id="fx" hidden></div>
-    <canvas id="scope" height="64" aria-label="What comes out: the waveform and the spectrum"></canvas>
+    <canvas id="scope" height="64" aria-label="What comes out: each part's level (left, in its colour), the spectrum and the waveform" title="What comes out: each part's level (left: pad, bass, acid, pluck, drums), the spectrum (low to high) and the waveform"></canvas>
     <div id="start">
       <h2 class="vibeq">What do you feel like?</h2>
       <div class="vibes">
@@ -368,7 +399,7 @@
       </div>
       <div class="doors"><span class="lbl">THEN</span><button class="door" data-door="jam" aria-pressed="true">Jam</button><button class="door" data-door="song" aria-pressed="false">Make a song</button><button class="door" data-door="sound" aria-pressed="false">Shape a sound</button>
         <span class="muted">or</span><button id="power">Just switch on</button></div>
-      <p>The studio reads and plays pieces through the emulator (the whole PERF-1 firmware, in this browser). It keeps its pieces where the Emulator page does, so a piece saved there is here too. Nothing reaches your FM-1 until you send it from the Library &amp; pieces page.</p>
+      <p class="hint">The studio reads and plays pieces through the emulator (the whole PERF-1 firmware, in this browser). It keeps its pieces where the Emulator page does, so a piece saved there is here too. Nothing reaches your FM-1 until you send it from the Library &amp; pieces page.</p>
     </div>
   </section>
   <section class="lower">
@@ -594,14 +625,14 @@ function parseLive(b) {
            bsHist: sl(16, 16), bsPos: s8(b[32]), acLen: b[33] || 16, acPos: b[34], acGate: u16(35), acAcc: u16(37), acSlide: u16(39),
            acOff: sl(41, 16), acOct: sl(57, 16), cmRung: sl(73, 16), cmLvl: sl(89, 16), cmPos: b[105], laneSrc: sl(106, 6), playing: b[112],
            genre: b[113], piece: b[114], chordN: b[115], lanePos: sl(116, 6), pool: u16(122), root: b[124], blMode: b[125],
-           lv: b.length > 134 ? sl(128, 5) : [0, 0, 0, 0, 0], gr: b[133] || 0, peak: b[134] || 0, slPos: b.length > 136 ? b[135] : 255, slBar: b.length > 136 ? b[136] : 255, trk: b.length > 137 ? b[137] : 0, rest: b.length > 138 ? b[138] : 0, padf: b.length > 139 ? b[139] : 1 };
+           lv: b.length > 134 ? sl(128, 5) : [0, 0, 0, 0, 0], gr: b[133] || 0, peak: b[134] || 0, slPos: b.length > 136 ? b[135] : 255, slBar: b.length > 136 ? b[136] : 255, trk: b.length > 137 ? b[137] : 0, rest: b.length > 138 ? b[138] : 0, padf: b.length > 139 ? b[139] : 1, lgr: b.length > 140 ? b[140] : 0 };
 }
 let hist = {}, slotT = 0, slotNow = -2, lastBar = -1;
 function resetHistory() { hist = {}; slotT = 0; slotNow = -2; lastBar = -1; }
 let loomPos = -1;                                            // the playhead: a loom bar and its fraction
 function onLive(b) {
   live = parseLive(b);
-  document.querySelectorAll("#desk .meter[data-k]").forEach((m) => { m.firstChild.style[m.classList.contains("v") ? "height" : "width"] = Math.min(100, Math.sqrt(live.lv[+m.dataset.k] / 255) * 130) + "%"; });
+  deskMeters();
   if (!io) return;
   const tl = timeline(), nb = loomBars(tl), bar = Math.floor(live.t / 16), frac = (live.t % 16) / 16;
   let lb;
@@ -913,6 +944,12 @@ function drawEditor() {
   const show = (on) => { $("edhelp").hidden = !on; $("edhelpB").setAttribute("aria-expanded", String(on)); };
   try { show(localStorage.getItem("perf1-studio-help") === "1"); } catch (_) { show(false); }
   $("edhelpB").addEventListener("click", () => { const on = $("edhelp").hidden; show(on); try { localStorage.setItem("perf1-studio-help", on ? "1" : "0"); } catch (_) { /* (this page only) */ } });
+}
+{                                                             // HINTS: every view's grey help lines (class hint) and the editor's "?", shown or hidden (this browser)
+  const set = (on) => { document.body.classList.toggle("nohints", !on); $("hintsB").setAttribute("aria-pressed", String(on)); };
+  try { set(localStorage.getItem("perf1-studio-hints") !== "0"); } catch (_) { set(true); }
+  $("hintsB").addEventListener("click", () => { const on = document.body.classList.contains("nohints"); set(on); try { localStorage.setItem("perf1-studio-hints", on ? "1" : "0"); } catch (_) { /* (this page only) */ }
+    say(on ? "Hints on: the grey help lines are back." : "Hints off: the help lines are hidden in every view (HINTS brings them back)."); });
 }
 function gridBase(g, W, RH, rows, labels, bright) {          // rows of a bar, the beats, the step playing
   const x0 = 56, cw = (W - x0 - 8) / 16, y0 = 4;
@@ -1688,7 +1725,7 @@ function soundRender() {
   if (sel === "bass") h += '<div class="sec"><h3>THE ANSWER (the bass answers in its own bars, kept with the piece: 0.17.30)</h3><div class="ctls kn">' + [-8, -9].map((q) => knobHTML(q, null, col)).join("") + "</div></div>";
   if (sel === "pluck") h += dxHTML();
   h = vibeHTML(col) + h;
-  $("sound").innerHTML = h + '<p class="muted">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece.</p>';
+  $("sound").innerHTML = h + '<p class="muted hint">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece.</p>';
   syncCtls(); drawPics();
   if (sel === "pluck") dxMount();
 }
@@ -2021,12 +2058,14 @@ function fxLock(bit, on) {
 }
 function fxRender() {
   if (!fxd || !fxd.keys) return;
-  const bank = (b) => '<div class="fxbank"><h3 class="lbl">BANK ' + (b + 1) + (b ? " · REPEATS, MOTION AND DRUMS" : " · FILTERS, COLOUR AND SPACE") + '</h3><div class="fxkeys">' + fxd.keys[b].map((bit, k) => {
-    if (bit === 63) return '<div class="fxk blk" style="opacity:.25" aria-hidden="true"></div>';
+  const at = (k) => { const w = FX_NOTE.slice(0, k).filter((n) => !n.includes("#")).length, blk = FX_NOTE[k].includes("#");   // (a key's place on the keyboard:
+    return "--gc:" + (blk ? 2 * w : 2 * w + 1) + " / span 2;--gr:" + (blk ? 1 : 2); };                                          //  a white two columns, a black between)
+  const bank = (b) => '<div class="fxbank"><h3 class="lbl">BANK ' + (b + 1) + (b ? " · REPEATS, MOTION AND DRUMS" : " · FILTERS, COLOUR AND SPACE") + '</h3><div class="fxkeys kb">' + fxd.keys[b].map((bit, k) => {
+    if (bit === 63) return '<div class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + ' none" style="' + at(k) + '" aria-hidden="true"></div>';
     const pg = fxd.pageOf[bit];
-    return '<button class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + (pg >= 0 && fxd.pages[pg].hold ? " hold" : "") + '" data-bit="' + bit + '" style="--c:' + fxCol(bit) + '" title="Tap: on until tapped again · hold: on while held' + (pg >= 0 ? " · its settings on the right" : "") + '"><b>' + fxd.names[bit] + "</b><span>" + FX_NOTE[k] + "</span></button>";
+    return '<button class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + (pg >= 0 && fxd.pages[pg].hold ? " hold" : "") + '" data-bit="' + bit + '" style="--c:' + fxCol(bit) + ";" + at(k) + '" title="' + fxd.names[bit] + " (" + FX_NOTE[k] + "): tap: on until tapped again · hold: on while held" + (pg >= 0 ? " · its settings on the right" : "") + '"><b>' + fxd.names[bit] + "</b><span>" + FX_NOTE[k] + "</span></button>";
   }).join("") + "</div></div>";
-  $("fx").innerHTML = '<div><div class="bar" style="margin-bottom:8px"><button id="fxOff">All off</button><span class="muted">The FM-1&#39;s FX menu: tap an effect to latch it, hold it to play it while you hold. The effects and their settings are the player&#39;s, not the piece&#39;s (as on the unit).</span></div>' +
+  $("fx").innerHTML = '<div><div class="bar" style="margin-bottom:8px"><button id="fxOff">All off</button><span class="muted hint">The FM-1&#39;s FX menu: tap an effect to latch it, hold it to play it while you hold. The effects and their settings are the player&#39;s, not the piece&#39;s (as on the unit).</span></div>' +
     bank(0) + bank(1) + '</div><div class="fxside" id="fxSide"></div>';
   fxPaint(); fxSide();
 }
@@ -2108,7 +2147,7 @@ $("fx").addEventListener("pointerdown", async (e) => {
   if (b && fxd) {
     e.preventDefault();
     const bit = +b.dataset.bit, was = fxIsOn(bit);
-    fxPress = { bit, was, t: performance.now(), p: null };
+    fxPress = { bit, was, t: performance.now(), p: null, el: b }; b.classList.add("held");
     if (fxd.pageOf[bit] >= 0) { fxSel = fxd.pageOf[bit]; fxSide(); }
     if (!was) { fxPress.p = fxLock(bit, true); await fxPress.p; }
     return;
@@ -2126,6 +2165,7 @@ $("fx").addEventListener("pointermove", (e) => {
 document.addEventListener("pointerup", async () => {
   if (xyTouch) { const t = xyTouch; xyTouch = null; if (!xyKeep) for (const b of t.bits) await fxLock(b, false); xyDraw(); fxSide(); return; }
   const pr = fxPress; fxPress = null;
+  if (pr && pr.el) pr.el.classList.remove("held");
   if (!pr || !fxd) return;
   if (pr.knob) { if (!pr.moved) { const c = fxd.pages[+pr.knob.dataset.page].c[+pr.knob.dataset.i]; if (c.hi - c.lo === 1) fxSetK(+pr.knob.dataset.page, +pr.knob.dataset.i, c.v === c.lo ? c.hi : c.lo); } return; }
   const held = performance.now() - pr.t > 300;
@@ -2274,7 +2314,7 @@ function vibeHTML(col) {
   const pos = vibePos[sel] || (vibePos[sel] = vs.map(() => 0.5));
   return '<div class="sec vibecard"><h3>VIBE · ' + (LANES.find((l) => l.id === sel) || { name: sel }).name + diceBtn(Object.values(LANE_PARAMS()), "Roll this whole sound: new values near the defaults; locked knobs stay") +
     '</h3><div class="ctls kn">' + vs.map(([a, b], k) => '<div class="knob vibek" tabindex="0" role="slider" aria-label="' + a + " to " + b + '" data-vk="' + k + '" title="' + a + " ↔ " + b + ': drag up or down; it turns several settings at once"><div class="dial" style="--f:' + pos[k] + ";--c:" + col + '"><i></i></div><span class="v">' + vibeText(k, pos[k]) + '</span><span class="kl">' + a + " ↔ " + b + "</span></div>").join("") +
-    '</div><p class="muted" style="margin:4px 0 0;font-size:.75rem">🎲 rolls a card (or the whole sound) · right-click a knob to lock it 🔒 · Ctrl+Z undoes</p></div>';
+    '</div><p class="muted hint" style="margin:4px 0 0;font-size:.75rem">🎲 rolls a card (or the whole sound) · right-click a knob to lock it 🔒 · Ctrl+Z undoes</p></div>';
 }
 function vibeText(k, f) {
   const [a, b] = VIBES[sel][k], d = Math.round((f - 0.5) * 200);
@@ -2373,6 +2413,23 @@ function deskStrips() {
 const LANE_TRK = { drums: 0x0F, bass: 0x10, acid: 0x20, pluck: 0x80, pad: 0x40 };
 const DESK_TRK = { PAD: 0x40, BASS: 0x10, ACID: 0x20, PLUCK: 0x80, DRUMS: 0x0F };   // (a strip's tracks: ui.c SL_PARTM)
 let deskSolo = 0;
+const mHold = new Array(6).fill(0), mHoldT = new Array(6).fill(0);
+let mLast = 0;
+function deskMeters() {                                       // the desk's meters: a part's level now, its peak held a second then falling; the master's out (dB) and reduction
+  if (view !== "desk" || !live) return;
+  const now = performance.now(), dt = Math.min(200, now - (mLast || now)); mLast = now;
+  const pkDb = live.peak ? 20 * Math.log10(live.peak / 255) : -99;
+  document.querySelectorAll("#desk .meter[data-k]").forEach((m) => {
+    const k = +m.dataset.k, f = k < 5 ? Math.min(100, Math.sqrt(live.lv[k] / 255) * 130) : Math.max(0, Math.min(100, (pkDb + 48) / 48 * 100));
+    if (f >= mHold[k]) { mHold[k] = f; mHoldT[k] = now; } else if (now - mHoldT[k] > 1000) mHold[k] = Math.max(f, mHold[k] - dt * 0.05);
+    m.firstChild.style[m.classList.contains("v") ? "height" : "width"] = f + "%";
+    const pk = m.querySelector("b"); if (pk) { pk.style.bottom = Math.min(98.5, mHold[k]) + "%"; pk.style.opacity = mHold[k] > 1 ? 1 : 0; }
+  });
+  document.querySelectorAll("#desk .meter[data-g]").forEach((m) => { const db = (m.dataset.g === "l" ? live.lgr : live.gr) / 8; m.firstChild.style.height = Math.min(100, db / 12 * 100) + "%"; });
+  const o = $("mOut"), r = $("mGr");
+  if (o) { const t = live.playing && live.peak ? (pkDb > -0.05 ? "0.0" : pkDb.toFixed(1)) : "–"; if (o.textContent !== t) o.textContent = t; o.classList.toggle("hot", pkDb > -0.3); }
+  if (r) { const t = "COMP " + (live.gr / 8).toFixed(1) + " · LIMIT " + (live.lgr / 8).toFixed(1) + " dB"; if (r.textContent !== t) r.textContent = t; }
+}
 async function deskTrk(mute, solo) {
   const r = await ask({ type: "st_trk", mute, solo });
   if (!r.ok) say("This emulator build has no track mutes: rebuild it (web/emu/build_clang.sh).", true);
@@ -2388,15 +2445,20 @@ setInterval(() => { if (view === "desk") deskMS(); }, 120);
 function deskRender() {
   if (view !== "desk" || !io) return;
   let h = '<div class="fadebar"><span class="lbl">FADES OVER</span>' + [1, 2, 4, 8, 16].map((b) => '<button class="small" data-fb="' + b + '" aria-pressed="' + (b === fadeBars) + '">' + b + (b === 1 ? " bar" : " bars") + "</button>").join("") +
-    '<span>FADE OUT takes a part down to nothing and mutes it; FADE IN brings it back up to its level. The piece keeps its levels.</span></div><div class="strips">' + deskStrips().map((st) => '<div class="strip' + (st.n.toLowerCase() === sel ? " on" : "") + '" data-lane="' + st.n.toLowerCase() + '" style="--c:' + st.c + '"><div class="cap"></div><h3><span class="nm" title="Edit its shape and sound below">' + st.n + "</span>" +
+    '<span class="hint">FADE OUT takes a part down to nothing and mutes it; FADE IN brings it back up to its level. The piece keeps its levels.</span></div><div class="strips">' + deskStrips().map((st) => '<div class="strip' + (st.n.toLowerCase() === sel ? " on" : "") + '" data-lane="' + st.n.toLowerCase() + '" style="--c:' + st.c + '"><div class="cap"></div><h3><span class="nm" title="Edit its shape and sound below">' + st.n + "</span>" +
     (DESK_TRK[st.n] ? '<span class="ms"><button class="small mute" data-trk="' + DESK_TRK[st.n] + '" title="Mute: out now (as GLO and a key on the FM-1: not stored with the piece)">M</button>' +
       '<button class="small solo" data-trk="' + DESK_TRK[st.n] + '" title="Solo: only the soloed parts play (not stored)">S</button></span>' : "") + '</h3><div class="body">' +
     (DESK_TRK[st.n] && st.lvl >= 0 ? '<button class="small fade" data-trk="' + DESK_TRK[st.n] + '" data-p="' + st.lvl + '" title="Fade the part out over the bars set above (then it is muted, its level kept), or in from out">FADE OUT<i></i></button>' : "") +
     '<div class="mix">' + (st.lvl >= 0 ? '<div class="fader" tabindex="0" role="slider" aria-label="' + st.n + ' level" data-p="' + st.lvl + '"><i></i><b></b></div>' : "") +
-    (st.k >= 0 ? '<div class="meter v" data-k="' + st.k + '" title="What it plays now"><i></i></div>' : "") + "</div>" + (st.lvl >= 0 ? '<div class="lv"></div>' : "") +
+    (st.k >= 0 ? '<div class="meter v" data-k="' + st.k + '" title="What it plays now (the line: its loudest in the last second)"><i></i><b></b></div>' : "") + "</div>" + (st.lvl >= 0 ? '<div class="lv"></div>' : "") +
     '<div class="knobs">' + (st.pan >= 0 ? knobHTML(st.pan, "Pan", st.c) : "") + (st.send >= 0 ? knobHTML(st.send, "Send", st.c) : "") + "</div>" +
     ((ls) => (ls.length ? '<div class="lists">' + ls.map(([p, l]) => ctlHTML(p, l, st.c)).join("") + "</div>" : ""))(st.extra.filter(([p]) => isList(p))) +
-    ((ks) => (ks.length ? '<div class="knobs">' + ks.map(([p, l]) => knobHTML(p, l, st.c)).join("") + "</div>" : ""))(st.extra.filter(([p]) => !isList(p))) + "</div></div>").join("") + "</div>";
+    ((ks) => (ks.length ? '<div class="knobs">' + ks.map(([p, l]) => knobHTML(p, l, st.c)).join("") + "</div>" : ""))(st.extra.filter(([p]) => !isList(p))) + "</div></div>").join("") +
+    '<div class="strip master" style="--c:var(--ink)"><div class="cap"></div><h3><span>MASTER</span></h3><div class="body"><div class="mix">' +
+    '<div class="mcol"><div class="meter v" data-k="5" title="What comes out: its peak, -48 to 0 dB (the line: the loudest in the last second)"><i></i><b></b></div><span>OUT</span></div>' +
+    '<div class="mcol"><div class="meter v gr" data-g="c" title="The compressor: how much it turns the mix down now (0 to 12 dB, from the top)"><i></i></div><span>COMP</span></div>' +
+    '<div class="mcol"><div class="meter v gr" data-g="l" title="The limiter: how much it holds the peaks down now (0 to 12 dB, from the top)"><i></i></div><span>LIMIT</span></div></div>' +
+    '<div class="lv" id="mOut" title="The output\'s peak now, dB under full scale">–</div><div class="mread" id="mGr"></div><div class="mread hint">Its settings: Master bus, below</div></div></div></div>';
   const sp = tabOf("Space & master"), tg = tabOf("Tempo & global"), skip = new Set([PE.P_THEME, PE.P_MIDI, PE.P_TUNE, PE.P_TEMPO, PE.P_ROOT, PE.P_MODE].filter((x) => x !== undefined));   // (tempo and key: on the top bar)
   const all = sp.sections.flatMap((x) => x.knobs), kk = (re, secRe) => { for (const x of sp.sections) if (!secRe || secRe.test(x.name)) { const q = x.knobs.find((y) => re.test(y.label)); if (q) return q.p; } return NaN; };
   const strips = deskStrips().slice(0, 5);
@@ -2502,35 +2564,60 @@ $("send").addEventListener("click", async () => {
   say("The piece is on the Library & pieces page (a new tab): connect the FM-1 there and add it to a place.");
 });
 
-/* ---- the scope: what comes out, its waveform over its spectrum in the parts' colours (low: bass, drums; up: acid, pluck, pad) */
+/* ---- the scope: what comes out. Left, each part's level in its colour (the desk's meters, small); right, the spectrum (low: bass, drums; up: acid,
+ * pluck, pad) with its peaks falling, the waveform over it. Silent and stopped: one quiet frame, then nothing drawn until sound comes back. */
 let analyser = null;
 function scopeStart() {
   if (analyser || !ac || !node) return;
   analyser = ac.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.7;
+  analyser.minDecibels = -90; analyser.maxDecibels = -6;     // (the default -100 .. -30 fills every band to the top on a loud mix)
   node.connect(analyser);
   const wave = new Uint8Array(analyser.fftSize), spec = new Uint8Array(analyser.frequencyBinCount);
-  const BANDCOL = [COL.bass, COL.drum, COL.acid, COL.pluck, COL.pad];
+  const BANDCOL = [COL.bass, COL.drum, COL.acid, COL.pluck, COL.pad], PARTCOL = [COL.pad, COL.bass, COL.acid, COL.pluck, COL.drum];
+  const NB = 72, caps = new Float32Array(NB), lvs = new Float32Array(5);
+  let idle = false;
   (function draw() {
     requestAnimationFrame(draw);
     const cv = $("scope"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = 64;
     if (!W) return;
+    analyser.getByteTimeDomainData(wave);
+    let wpk = 0; for (let k = 0; k < wave.length; k += 4) { const d = Math.abs(wave[k] - 128); if (d > wpk) wpk = d; }
+    const quiet = wpk <= 1 && !(live && live.playing);            // (stopped, and nothing the waveform would show: under about -40 dB; a tail may hiss below)
+    if (quiet && idle && cv.width === Math.round(W * dpr)) return;   // (nothing new to draw)
+    if (quiet) { lvs.fill(0); caps.fill(0); }
     if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
     const g = cv.getContext("2d");
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
-    analyser.getByteFrequencyData(spec); analyser.getByteTimeDomainData(wave);
-    const NB = 72, bw = W / NB;
+    const LW = 74, X0 = LW + 10, SW = W - X0 - 4;
+    for (let k = 0; k < 5; k++) {                             // the parts' levels
+      const v = live ? Math.min(1, Math.sqrt((live.lv[k] || 0) / 255) * 1.3) : 0;
+      lvs[k] = v > lvs[k] ? v : lvs[k] * 0.86;
+      const x = 6 + k * 13.5, h = Math.max(2, lvs[k] * (H - 14));
+      g.fillStyle = "#1d2026"; rblock(g, x, 6, 9, H - 14); g.fill();
+      g.fillStyle = PARTCOL[k]; g.globalAlpha = 0.35 + 0.65 * lvs[k]; rblock(g, x, H - 8 - h, 9, h); g.fill(); g.globalAlpha = 1;
+    }
+    g.fillStyle = "#2a2d35"; g.fillRect(LW, 6, 1, H - 12);
+    idle = quiet;
+    if (quiet) { g.fillStyle = "#4a4d57"; g.font = FONT(600, 9); g.fillText("SILENT", X0 + 4, H / 2 + 3); g.fillStyle = "#22252c"; g.fillRect(X0 + 52, H / 2, SW - 56, 1); return; }
+    analyser.getByteFrequencyData(spec);
+    const bw = SW / NB;
     for (let i = 0; i < NB; i++) {                            // bands on a log scale, 30 Hz .. 16 kHz
       const f0 = 30 * Math.pow(16000 / 30, i / NB), f1 = 30 * Math.pow(16000 / 30, (i + 1) / NB);
       const k0 = Math.floor(f0 / (ac.sampleRate / 2) * spec.length), k1 = Math.max(k0 + 1, Math.floor(f1 / (ac.sampleRate / 2) * spec.length));
       let m = 0; for (let k = k0; k < k1 && k < spec.length; k++) m = Math.max(m, spec[k]);
-      const h = (m / 255) * (H - 4);
-      g.globalAlpha = 0.55; g.fillStyle = BANDCOL[Math.min(4, Math.floor(i / NB * 5))];
-      g.fillRect(i * bw + 1, H - h, bw - 2, h);
+      const h = (m / 255) * (H - 8), x = X0 + i * bw, c = BANDCOL[Math.min(4, Math.floor(i / NB * 5))];
+      caps[i] = h > caps[i] ? h : Math.max(0, caps[i] - 0.6);
+      if (h > 0.5) { g.fillStyle = c; g.globalAlpha = 0.28 + 0.5 * (m / 255); rblock(g, x + 0.5, H - 2 - h, bw - 1.5, h); g.fill(); }
+      if (caps[i] > 1) { g.globalAlpha = 0.9; g.fillRect(x + 0.5, H - 3 - caps[i], bw - 1.5, 1.5); }
     }
-    g.globalAlpha = 1; g.strokeStyle = COL.acc; g.lineWidth = 1.5; g.beginPath();
-    for (let x = 0; x < W; x++) { const v = wave[Math.floor(x / W * wave.length)] / 128 - 1, y = H / 2 - v * (H / 2 - 4); x ? g.lineTo(x, y) : g.moveTo(x, y); }
-    g.stroke();
+    g.globalAlpha = 1;
+    const wy = (x) => { const v = wave[Math.floor((x - X0) / SW * wave.length)] / 128 - 1; return H / 2 - v * (H / 2 - 6); };
+    for (const [lw, a] of [[4, 0.12], [1.25, 0.85]]) {        // the waveform: a soft glow under a thin line
+      g.strokeStyle = a < 0.5 ? "rgba(255,176,0," + a + ")" : COL.acc; g.lineWidth = lw; g.beginPath();
+      for (let x = X0; x < X0 + SW; x += 1) { const y = wy(x); x > X0 ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke();
+    }
   })();
 }
 setInterval(() => { if (ac && node && !analyser) scopeStart(); }, 500);
@@ -2603,6 +2690,15 @@ async function songPlay(from) {                             // the song from its
   say("The song plays from place " + (s + 1) + ": " + S.genreName(pq.genre) + " " + S.pieceName(pq.genre, pq.slot) + (song.mutes[s] ? ", without " + PARTS.filter((_, k) => (song.mutes[s] >> k) & 1).map(([n]) => n.toLowerCase()).join(", ") : "") +
     (song.bars[s] ? ", " + song.bars[s] + " bars" : ", Auto") + ". " + (song.end ? "Once: it stops after the last place." : "Loop: round again after the last place."));
 }
+// an empty song: one button makes one from the open piece, six places as a set goes (its parts left out: bit k of PARTS; energy stored + 1)
+const SONG_PLAN = [["Intro", 8, 0b01100, 21], ["Build", 16, 0b01000, 41], ["Main", 32, 0, 71], ["Break", 8, 0b10010, 31], ["Drop", 32, 0, 101], ["Outro", 8, 0b01100, 21]];
+function songEmptyHTML() {
+  const pn = cur ? S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) : "", col = cur ? GENRE_COL[cur.genre % 5] : "#555a66";
+  return '<div class="songempty" style="--c:' + col + '"><h2>NO SONG YET</h2><p class="muted">A song is a row of places: each plays a piece for its bars, with the parts it leaves out and its energy.</p>' +
+    '<div class="songplan" aria-hidden="true">' + SONG_PLAN.map(([n, b, m, e]) => '<div style="flex:' + b + ";height:" + (30 + 0.7 * (e - 1)) + '%" title="' + n + ", " + b + ' bars"><span>' + n + "</span></div>").join("") + "</div>" +
+    '<button id="slMake" class="go"' + (cur ? "" : " disabled") + ">Make a song from " + pn + "</button>" +
+    '<p class="muted hint" style="margin:8px 0 0">Intro, build, main, break, drop, outro: 104 bars, played once, each place its parts and energy; change any of it after. Or drag pieces from below onto this box.</p></div>';
+}
 const placeBars = (i) => song.bars[i] || 16;                  // (an Auto place drawn as sixteen bars, hatched: the auto-DJ decides)
 function songRender() {
   if (!song) return;
@@ -2611,13 +2707,14 @@ function songRender() {
   let h = '<div class="bar"><button id="mvRec" aria-pressed="' + mvRec + '" title="While the song plays: the effects you tap (FX) and the fades (DESK) are kept where they happen, and play back with the song and its WAV">' + (mvRec ? "● Recording moves" : "● Rec moves") + "</button>" +
     (moves.some((e) => e.k !== "base") ? '<button id="mvClear" title="Forget every recorded move">Clear moves (' + moves.filter((e) => e.k !== "base").length + ")</button>" : "") + '<button id="slWav"' + (used.length || rec ? "" : " disabled") + ' title="Plays the song once from its first place and records it: a WAV (44.1 kHz, 16-bit stereo) to download">' + (rec ? "■ Stop recording" : exp ? "■ Cancel export" : "● Song to WAV") + '</button><button id="slStems"' + (used.length && !rec && !exp ? "" : " disabled") + ' title="The song as one WAV a part (pad, bass, acid, pluck, drums) and the mix, in a .zip: rendered fast, the same take in each, for a DAW">⧉ Stems</button><button id="slSend"' + (used.length ? "" : " disabled") + ' title="Opens the Library &amp; pieces page with this song as a set: connect the FM-1 there and add it">Send the song to the FM-1</button><button id="slPlay"' + (used.length ? "" : " disabled") + '>' + (live && live.playing && song.on ? "■ Stop" : "▶ Play the song") + '</button><button id="slFrom"' + (q ? "" : " disabled") + ">▶ From place " + (sel + 1) + "</button>" +
     '<span class="lbl">&nbsp;SONG</span>' + ["Off", "Loop", "Once"].map((t, k) => '<button class="small" data-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + t + "</button>").join("") +
-    '<span class="muted">' + used.length + " places · " + total + " bars" + (autos ? " + " + autos + " on Auto" : "") + (song.full ? song.full2 ? "" : " · patterns and energy need 0.17.14" : " · this firmware has no song mode (bars and parts need 0.17.13)") + "</span></div>" +
-    '<canvas id="songline" height="' + SLH + '" aria-label="The song: a block a place, as long as its bars, a lane a part, its energy"></canvas><div id="songnow" class="muted" style="margin-top:4px"></div>' +
-    '<div id="mixcheck">' + mixHTML() + "</div>" +
-    '<div class="muted" style="margin-top:2px;font-size:.8rem">On the song: click a lane to take that part out or bring it back · drag a block\'s right edge for its bars · drag up or down in ENERGY (right-click: as is) · drag a block\'s name to move it · ▶ on a block plays from there.</div>' +
-    '<div class="bar chips" style="margin-top:8px"><span class="lbl">PIECES</span><select id="slGenre" aria-label="Genre of the pieces to add">' + N.genres.map((n, g) => '<option value="' + g + '"' + (g === slGenre ? " selected" : "") + ">" + n + "</option>").join("") + "</select>" +
+    '<span class="muted">' + used.length + " places · " + total + " bars" + (autos ? " + " + autos + " on Auto" : "") + (song.full ? song.full2 ? "" : " · patterns and energy need 0.17.14" : " · this firmware has no song mode (bars and parts need 0.17.13)") + "</span></div>";
+  const chips = '<div class="bar chips" style="margin-top:8px"><span class="lbl">PIECES</span><select id="slGenre" aria-label="Genre of the pieces to add">' + N.genres.map((n, g) => '<option value="' + g + '"' + (g === slGenre ? " selected" : "") + ">" + n + "</option>").join("") + "</select>" +
     (N.pieces[slGenre] || []).map((n, k) => '<button class="small chip" draggable="true" data-g="' + slGenre + '" data-p="' + k + '" style="--c:' + GENRE_COL[slGenre % 5] + '" title="Drag onto the song, or click: into place ' + (sel + 1) + '">' + n + "</button>").join("") +
-    '<span class="muted">drag one onto the song, or click: into place ' + (sel + 1) + "</span></div>" +
+    '<span class="muted hint">drag one onto the song, or click: into place ' + (sel + 1) + "</span></div>";
+  if (!used.length) { $("song").innerHTML = h + songEmptyHTML() + chips; return; }
+  h += '<canvas id="songline" height="' + SLH + '" aria-label="The song: a block a place, as long as its bars, a lane a part, its energy"></canvas><div id="songnow" class="muted" style="margin-top:4px"></div>' +
+    '<div id="mixcheck">' + mixHTML() + "</div>" +
+    '<div class="muted hint" style="margin-top:2px;font-size:.8rem">On the song: click a lane to take that part out or bring it back · drag a block\'s right edge for its bars · drag up or down in ENERGY (right-click: as is) · drag a block\'s name to move it · ▶ on a block plays from there.</div>' + chips +
     '<div class="bar" style="margin-top:8px"><span class="lbl">PLACE ' + (sel + 1) + "</span>" + (q ? "<b>" + S.genreName(q.genre) + " " + S.pieceName(q.genre, q.slot) + "</b>" : '<span class="muted">empty</span>') +
     '<span class="lbl">&nbsp;BARS</span><select id="slBars" aria-label="Place ' + (sel + 1) + ' bars"' + (q ? "" : " disabled") + ">" + SONG_BARS.map((b) => '<option value="' + b + '"' + (song.bars[sel] === b ? " selected" : "") + ">" + (b ? b + " bars" : "Auto") + "</option>").join("") + "</select>" +
     '<span class="lbl">&nbsp;PARTS</span>' + PARTS.map(([n], k) => '<button class="small" data-part="' + k + '" aria-pressed="' + !((song.mutes[sel] >> k) & 1) + '"' + (q ? "" : " disabled") + ">" + n + "</button>").join("") +
@@ -2625,7 +2722,7 @@ function songRender() {
     '<span class="lbl">&nbsp;ENERGY</span><select id="slMood" aria-label="Place ' + (sel + 1) + ' energy"' + (q && song.full2 ? "" : " disabled") + ">" + (SONG_MOODS.includes(song.moods[sel]) ? SONG_MOODS : [...SONG_MOODS, song.moods[sel]].sort((a, b) => a - b)).map((v) => '<option value="' + v + '"' + (song.moods[sel] === v ? " selected" : "") + ">" + (v ? v - 1 + (v === 1 ? " chill" : v === 101 ? " peak" : "") : "As is") + "</option>").join("") + "</select></div>" +
     '<div class="bar"><button id="slPut">Put the open piece in place ' + (sel + 1) + '</button><button id="slOpen"' + (q ? "" : " disabled") + ">Open it</button>" +
     '<button id="slLeft">◀ Move</button><button id="slRight">Move ▶</button><button id="slClear">Clear place ' + (sel + 1) + "</button>" +
-    '<span class="muted">Click a place to pick it; drag the places to reorder.</span></div><div class="places">';
+    '<span class="muted hint">Click a place to pick it; drag the places to reorder.</span></div><div class="places">';
   song.places.forEach((x, i) => {
     const pq = x ? pcSetPlaces([x])[0] : null, now = live && live.playing && live.slPos === i;
     if (!pq) { h += '<div class="place empty' + (i === sel ? " sel" : "") + '" data-i="' + i + '" draggable="true"><div class="n">' + (i + 1) + "</div><div>empty</div></div>"; return; }
@@ -3189,7 +3286,7 @@ function mixHTML() {
   return '<div class="sec"><h3>MIX CHECK · the last export (' + mmss(m.secs) + ") judged as " + m.gname + " (the sound-check skill's " + m.key.replace(/_/g, " ") + " targets, " + m.profile + " profile)</h3>" +
     '<p style="margin:0 0 8px">' + (bad ? bad + (bad === 1 ? " thing" : " things") + " to look at, the rest is in shape." : "All in shape for the genre.") + "</p><div class=\"mixrows\">" +
     m.rows.map((r) => '<div class="mixrow ' + r.st + '"><i></i><span style="color:var(--ink)">' + MIX_NAME[r.k][0] + "</span><b>" + MIX_NAME[r.k][1](r.v) + "</b><span>" + r.say + "</span></div>").join("") +
-    '</div><p class="muted" style="margin:8px 0 0;font-size:.75rem">The perf-sound-check skill\'s measures (BS.1770 loudness, PSR after Ian Shepherd, 4× true peak, the bands, the low end\'s mono). PERF has a master knob: loudness is a gain hint, not a fault.</p></div>';
+    '</div><p class="muted hint" style="margin:8px 0 0;font-size:.75rem">The perf-sound-check skill\'s measures (BS.1770 loudness, PSR after Ian Shepherd, 4× true peak, the bands, the low end\'s mono). PERF has a master knob: loudness is a gain hint, not a fault.</p></div>';
 }
 async function slPutPiece(i, gq, pq) {                        // a piece into place i (an empty place starts at 16 bars, all parts)
   if (i < 0 || i > 15) return;
@@ -3240,6 +3337,12 @@ $("song").addEventListener("click", async (e) => {
       "Moves kept: " + moves.filter((e) => e.k !== "base").length + ". They play back each time the song comes to them (the studio only: the FM-1's song does not keep them).");
   }
   if (id === "mvClear") { if (!confirm("Forget all " + moves.length + " recorded moves?")) return; moves = []; mvSave(); songRender(); return say("The moves are cleared."); }
+  if (id === "slMake") {
+    if (!cur) return;
+    SONG_PLAN.forEach(([, b, m, e], i) => { song.places[i] = cur.genre * 10 + cur.piece + 1; song.bars[i] = song.full ? b : 0; song.mutes[i] = song.full ? m : 0; song.pats[i] = 0; song.moods[i] = song.full2 ? e : 0; });
+    song.on = 1; song.end = 1; setSel = 0;
+    return songWrite("A song from " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + ": " + SONG_PLAN.map(([n]) => n.toLowerCase()).join(", ") + ", " + (song.full ? "104 bars" : "each on Auto") + ", once. ▶ Play the song; it plays the piece as saved (Save keeps your edits).");
+  }
   if (id === "slPut") { if (!io) return; song.places[setSel] = cur.genre * 10 + cur.piece + 1; await songWrite("Place " + (setSel + 1) + ": " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + ". It plays as saved: Save in the emulator keeps your edits."); }
   else if (id === "slClear") { for (const a of SONG_ARRS(song)) a[setSel] = 0; await songWrite(); }
   else if (id === "slLeft" || id === "slRight") {
@@ -3261,21 +3364,25 @@ $("song").addEventListener("change", (e) => {
 let dragFrom = -1, dragPiece = null;
 $("song").addEventListener("dragstart", (e) => {
   const ch = e.target.closest(".chip");
-  if (ch) { dragPiece = { g: +ch.dataset.g, p: +ch.dataset.p }; dragFrom = -1; e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/plain", ch.textContent); return; }
+  if (ch) { dragPiece = { g: +ch.dataset.g, p: +ch.dataset.p }; dragFrom = -1; e.dataTransfer.effectAllowed = "copy"; e.dataTransfer.setData("text/plain", ch.textContent); $("song").classList.add("dragging"); return; }
   const pl = e.target.closest(".place"); if (pl) { dragFrom = +pl.dataset.i; dragPiece = null; e.dataTransfer.effectAllowed = "move"; }
 });
-$("song").addEventListener("dragend", () => { dragPiece = null; });
+let dropOver = null;
+function dropMark(el) { if (el === dropOver) return; if (dropOver) dropOver.classList.remove("over"); dropOver = el; if (el) el.classList.add("over"); }
+$("song").addEventListener("dragend", () => { dragPiece = null; $("song").classList.remove("dragging"); dropMark(null); });
 $("song").addEventListener("dragover", (e) => {
-  if (dragPiece && (e.target.id === "songline" || e.target.closest(".place"))) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; return; }
+  const tgt = e.target.id === "songline" ? e.target : e.target.closest(".place, .songempty");
+  if (dragPiece) dropMark(tgt);
+  if (dragPiece && tgt) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; return; }
   if (dragFrom >= 0 && e.target.closest(".place")) e.preventDefault();
 });
 $("song").addEventListener("drop", async (e) => {
   if (dragPiece && song) {
     e.preventDefault();
-    const d = dragPiece; dragPiece = null;
+    const d = dragPiece; dragPiece = null; $("song").classList.remove("dragging"); dropMark(null);
     let to = -1;
     if (e.target.id === "songline") { const p = slAt(e); to = p.hit ? p.hit[2] : song.places.findIndex((x) => !x); }
-    else { const c = e.target.closest(".place"); if (c) to = +c.dataset.i; }
+    else { const c = e.target.closest(".place"); if (c) to = +c.dataset.i; else if (e.target.closest(".songempty")) to = song.places.findIndex((x) => !x); }
     if (to < 0) return say("All sixteen places are full: drop it on a block to replace that place.", true);
     return slPutPiece(to, d.g, d.p);
   }

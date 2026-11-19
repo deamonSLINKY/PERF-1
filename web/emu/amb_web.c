@@ -425,6 +425,7 @@ __attribute__((used, visibility("default"))) uint8_t *web_st_live(void)
             extern int en_host_arrm(void);
             b[138] = (uint8_t)en_host_arrm();   /* (0.17.16) the tracks Form Song's arrangement rests now (not mutes: they come back by themselves) */
             b[139] = (uint8_t)en_pad_filtered();   /* (0.17.18) the pad's sound has a filter (its saw sounds) */
+            b[140] = (uint8_t)(en_lim_gr * 8.0f < 0.0f ? 0.0f : en_lim_gr * 8.0f > 255.0f ? 255.0f : en_lim_gr * 8.0f);   /* (0.17.73) the limiter's reduction (dB x 8): the desk's master strip */
         }
     }
     return b;

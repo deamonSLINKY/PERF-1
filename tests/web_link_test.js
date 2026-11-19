@@ -88,6 +88,8 @@ check("the studio: Start, a clock of 24 a beat (2500 / BPM ms), Stop", st.includ
 // ---- the bass line's Steps mode found by its name (0.17.69 put four modes after it: the studio's "last mode" was Bounce from then)
 const pj = JSON.parse(fs.readFileSync(path.join(root, "build", "params.json"), "utf8"));
 check("params.json's bass modes name Steps, and the studio finds it by name", JSON.stringify(pj).includes('"Steps"') && st.includes('indexOf("Steps")') && !/BL_STEPS = P\[PE\.P_BL_MODE\]\.max;/.test(st));
+// ---- the desk's master strip: the limiter's reduction at byte 140 of the live view, read by the worklet and the studio
+check("the live view carries the limiter's reduction (amb_web.c b[140], the worklet reads 141 bytes, the studio's lgr)", /b\[140\] = \(uint8_t\)\(en_lim_gr \* 8\.0f/.test(web) && /web_st_live\(\), 141\)/.test(wk) && st.includes("lgr: b.length > 140 ? b[140] : 0") && /static uint8_t st_lv\[(\d+)\]/.exec(web)[1] > 140);
 check("the dev page inlines fm1link.js", fs.readFileSync(path.join(root, "tools", "make_dev_artifact.py"), "utf8").includes('"fm1link.js"'));
 
 if (bad) { console.log(bad + " failed"); process.exit(1); }
