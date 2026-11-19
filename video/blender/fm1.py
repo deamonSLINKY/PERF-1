@@ -133,7 +133,7 @@ except Exception: pass
 nt = M_LCD.node_tree; nt.nodes.clear()
 out = nt.nodes.new("ShaderNodeOutputMaterial"); em = nt.nodes.new("ShaderNodeEmission"); gl = nt.nodes.new("ShaderNodeBsdfGlossy"); add = nt.nodes.new("ShaderNodeAddShader")
 LCD_TEX = nt.nodes.new("ShaderNodeTexImage"); LCD_TEX.interpolation = "Closest"
-gl.inputs["Roughness"].default_value = 0.05; gl.inputs["Color"].default_value = (0.04, 0.04, 0.045, 1)
+gl.inputs["Roughness"].default_value = 0.05; gl.inputs["Color"].default_value = (0.015, 0.015, 0.017, 1)
 em.inputs["Strength"].default_value = 1.15
 nt.links.new(LCD_TEX.outputs["Color"], em.inputs["Color"]); nt.links.new(em.outputs[0], add.inputs[0]); nt.links.new(gl.outputs[0], add.inputs[1]); nt.links.new(add.outputs[0], out.inputs[0])
 LCD.data.materials.append(M_LCD)
@@ -189,9 +189,10 @@ def area(name, loc, size, power, col, aim=(0, 0, 0)):
     o = link(bpy.data.objects.new(name, ld)); o.location = loc
     o.rotation_euler = (Vector(aim) - Vector(loc)).to_track_quat("-Z", "Y").to_euler()
     o.visible_camera = False
+    if name == "rim": o.visible_glossy = False         # warm edges on the case, but no orange glare on the screen
     return o
 area("key", (-0.35, -0.2, 0.55), 0.6, 9, "#fff4ea")
-area("rim", (0.26, 0.30, 0.16), 0.10, 1.4, "#ff8a2a", aim=(0.02, 0.0, 0.025))
+area("rim", (0.10, 0.34, 0.22), 0.10, 0.9, "#ff8a2a", aim=(0.0, 0.06, 0.03))
 area("fill", (0.5, -0.4, 0.25), 0.5, 1.5, "#9fdcff")
 
 # ---------- camera ----------
@@ -255,6 +256,34 @@ if A["anim"]:
             CAM.location = key["loc"]; tgt.location = key["tgt"]
             CAM.keyframe_insert("location", frame=key["f"]); tgt.keyframe_insert("location", frame=key["f"])
             if "lens" in key: cam_d.lens = key["lens"]; cam_d.keyframe_insert("lens", frame=key["f"])
+    fly = J.get("flyin")
+    if fly:                                                # a fly-in that ends straight down on the LCD: {"end": n, "lcd_px": 1054, "lcd_top": 25}
+        from mathutils import Quaternion
+        CAM.constraints.clear(); CAM.rotation_mode = "QUATERNION"
+        endf = fly.get("end", n); lens0, lens1 = fly.get("lens", [38, 50])
+        lc = Vector((*P(418, 162), Z_TOP + 0.92 * MM))     # the LCD's centre
+        view_h = 50 * MM * rh / fly.get("lcd_px", rh)          # the view's height at the LCD: the LCD is lcd_px tall in the frame
+        off_px = (fly.get("lcd_top", 0) + fly.get("lcd_px", rh) / 2) - rh / 2     # how far below the frame's centre its centre sits
+        sens_h = 36.0 * rh / rw
+        p2 = lc + Vector((0, off_px / fly.get("lcd_px", rh) * 50 * MM, view_h * lens1 / sens_h))
+        # an orbit round the LCD: the tilt from straight down (th), the heading (ps) and the distance ease from the start to straight down,
+        # so the screen stays centred all the way in; the camera's rotation is Euler (th, 0, ps): ps 0 = from the front, image-up = the panel's top
+        p0 = Vector(fly.get("start", [-0.30, -0.44, 0.30])); v0 = lc - p0; d0 = v0.length; v0.normalize()
+        th0 = math.acos(-v0.z); ps0 = math.atan2(-v0.x, v0.y)
+        d1 = (p2 - lc).z; off = Vector((0, (p2 - lc).y, 0))
+        sm = lambda x: 0.0 if x <= 0 else 1.0 if x >= 1 else x * x * x * (x * (6 * x - 15) + 10)
+        CAM.rotation_mode = "XYZ"
+        from mathutils import Euler
+        for fi in range(1, n + 1):
+            u = sm((fi - 1) / max(1, endf - 1))
+            th = th0 * (1 - sm(u ** 0.8)); ps = ps0 * (1 - u); d = d0 * (d1 / d0) ** u
+            rot = Euler((th, 0.0, ps), "XYZ"); view = rot.to_matrix() @ Vector((0, 0, -1))
+            CAM.location = lc - d * view + off * u; CAM.rotation_euler = rot; cam_d.lens = lens0 + (lens1 - lens0) * u
+            tgt.location = lc
+            CAM.keyframe_insert("rotation_euler", frame=fi)
+            CAM.keyframe_insert("location", frame=fi); cam_d.keyframe_insert("lens", frame=fi)
+        cam_d.dof.aperture_fstop = fly.get("fstop", 4.0)
+    if "lcd_emit" in J: em.inputs["Strength"].default_value = J["lcd_emit"]
     if A["frames"]: a, b = map(int, A["frames"].split("-")); sc.frame_start, sc.frame_end = a, b
     sc.render.filepath = os.path.abspath(A["out"]).rstrip("\\/") + os.sep + "f_"
     if A["save"]: bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(A["save"]))
