@@ -5,7 +5,7 @@
   python3 tools/make_pages_site.py VERSION OUTDIR      (after tools/release.sh VERSION)
 
 OUTDIR gets index.html (the landing page), install/ (the web installer with the package in it),
-emu/ (the browser emulator), editor/ (the parameter and DX7 voice editor), pieces/ and library/ (sharing), manual/ and firmware/perf1-VERSION.fwsc.
+emu/ (the browser emulator), studio/ (a piece over its bars, played in the emulator), editor/ (the parameter and DX7 voice editor), pieces/ and library/ (sharing), manual/ and firmware/perf1-VERSION.fwsc.
   --no-sharing   leaves out pieces/ and library/ and their links (a release whose sharing pages are not ready: 0.16.1)
 All links are relative, so it works at any path (https://USER.github.io/PERF-1/ and a local server alike)."""
 import json
@@ -64,6 +64,14 @@ if params.exists():
         (OUT / d).mkdir(exist_ok=True)
         pg = (SRC / "web" / d / "index.html").read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8")).replace("/*LIB*/", plib)
         (OUT / d / "index.html").write_text(pg.replace("/*LIBRARY*/", lib_json).replace("/*RELAY*/", relay_json), encoding="utf-8", newline="\n")
+    studio = SRC / "web" / "studio" / "index.html"
+    if studio.exists():                           # (1.0) the studio: a piece over its bars, edited, played in the emulator (../emu/); a static page, no special headers
+        sys.path.insert(0, str(SRC / "tools"))
+        from make_params import param_enum       # noqa: E402  (every P_ name: the studio reads a piece's settings by name)
+        (OUT / "studio").mkdir(exist_ok=True)
+        slib = plib + "\n" + "\n".join(strip_module((SRC / "web" / f).read_text(encoding="utf-8")) for f in ("fm1midi.js", "fm1link.js"))
+        pg = studio.read_text(encoding="utf-8").replace("/*PARAMS*/", params.read_text(encoding="utf-8")).replace("/*LIB*/", slib)
+        (OUT / "studio" / "index.html").write_text(pg.replace("/*PENUM*/", json.dumps(param_enum())), encoding="utf-8", newline="\n")
 shutil.copy(SRC / "docs" / "manual.html", OUT / "manual" / "index.html")
 (OUT / "manual" / "maps").mkdir(exist_ok=True)         # ready MIDI maps the manual links (0.16.18: the Launch Control XL 3's)
 for f in (SRC / "docs" / "maps").glob("*.perfmap"):
@@ -105,6 +113,7 @@ p.small{{color:var(--dim);font-size:.88rem}}a{{color:var(--acc)}}
 <div class="grid">
 <a class="card" href="install/"><b>Install</b><span>Install it from this website in Chrome or Edge, with the FM-1 plugged in. You can go back to the original firmware the same way.</span></a>
 <a class="card" href="emu/"><b>Try it in your browser</b><span>Play with PERF-1 on screen, with sound, before you install anything.</span></a>
+<a class="card" href="studio/"><b>Studio</b><span>See a piece laid out over its bars, change it, and hear it play in your browser or on your FM-1.</span></a>
 <a class="card" href="editor/"><b>Editor</b><span>Change any setting from your computer, and make your own DX7 sounds and hear them on the FM-1.</span></a>
 <a class="card" href="pieces/"><b>Library &amp; pieces</b><span>Pieces and sets made by players: hear them in your browser and add them to your FM-1. Submit your own, one or many at once.</span></a>
 <a class="card" href="manual/"><b>Manual</b><span>Starts with a beginner's guide, then explains every button and page.</span></a>
