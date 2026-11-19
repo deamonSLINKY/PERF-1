@@ -92,6 +92,8 @@
   #start p { max-width: 36em; color: var(--dim); margin: 0; font-size: .85rem; }
   #impBig { width: 92px; height: 112px; image-rendering: pixelated; cursor: pointer;
              background: radial-gradient(ellipse 46% 40% at 50% 52%, rgba(156,29,58,.55), rgba(156,29,58,0) 100%); }
+  .sitefoot { max-width: 1468px; margin: -24px auto 26px; padding: 12px 16px 0; border-top: 1px solid var(--line); text-align: center; color: var(--dim); font-size: .78rem; }
+  .sitefoot p { margin: 2px 0; } .sitefoot a { color: var(--ink); }
   #start .vibeq { font: 700 1.6rem "Chakra Petch", sans-serif; letter-spacing: .04em; margin: 0 0 4px; }
   .vibes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; width: min(900px, 96%); }
   @media (max-width: 760px) { .vibes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -467,6 +469,10 @@
     <p class="muted">The firmware would need new stored fields for: lines longer than one bar (bass, acid, pluck are one-bar shapes that follow the chords); step tricks for each pattern (now one set a lane, shared by all six); the pad's own notes or voicings for each chord; automation of a setting over time; an order of patterns of your own (Song walks the piece's patterns by itself). A MIDI file's longer parts will be cut to these shapes until then.</p>
   </details>
 </main>
+<footer class="sitefoot">
+  <p>PERF-1 by deamonSLINKY (GPL-3.0) · <a href="https://deamonslinky.github.io/PERF-1/manual/#s19" target="_blank" rel="noopener">Credits</a> · <a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source</a></p>
+  <p>M-VAVE and FM-1 are trademarks of their owners; PERF-1 is not affiliated with M-VAVE.</p>
+</footer>
 <script type="application/json" id="pdata">/*PARAMS*/</script>
 <script type="application/json" id="edata">/*PENUM*/</script>
 <!-- the mix check's targets: .claude/skills/perf-sound-check/references/targets.json and tools/soundcheck_genres.json, copied in (the perf-sound-check
