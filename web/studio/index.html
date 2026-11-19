@@ -899,7 +899,7 @@ function drawLineLane(g, L, notes, X, SW) {
     prev = { b: n.b, x, y, w };
   }
 }
-function rblock(g, x, y, w, h) { g.beginPath(); if (g.roundRect) g.roundRect(x, y, w, h, Math.min(3, h / 2, w / 2)); else g.rect(x, y, w, h); }
+function rblock(g, x, y, w, h) { g.beginPath(); if (!(w > 0 && h > 0)) return; if (g.roundRect) g.roundRect(x, y, w, h, Math.min(3, h / 2, w / 2)); else g.rect(x, y, w, h); }   // (an empty one: nothing; roundRect throws on a negative radius)
 function loomNow() {                                          // the loom bar and step sounding now, or null
   return live && live.playing && loomPos >= 0 ? { b: Math.floor(loomPos), s: Math.floor((loomPos % 1) * 16) } : null;
 }
@@ -934,6 +934,7 @@ function drawEditor() {
   const rows = { drums: NL, bass: 24, acid: 16, pluck: 12, chords: 1, pad: 1 }[sel];
   const RH = sel === "drums" ? 34 : sel === "chords" ? 90 : sel === "pad" ? 60 : sel === "bass" ? 16 : 17;
   const H = rows * RH + (sel === "acid" ? 30 : 0) + 22;
+  if (!W) return;                                             // (SOUND open: the step editor is hidden, nothing to draw)
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
   const g = cv.getContext("2d");
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1279,7 +1280,10 @@ function drawFacts() {
   if ($("facts").dataset.h !== fh) { $("facts").innerHTML = fh; $("facts").dataset.h = fh; }
 }
 let raf = 0;
-function refresh() { lkSyncSoon(); if (!raf) raf = requestAnimationFrame(() => { raf = 0; if (view === "loom") drawLoom(); drawEditor(); drawFacts(); syncCtls(); syncQuick(); drawPics(); }); }
+function refresh() {                                           // (each part on its own: one that fails no longer stops the knobs and the rest from showing)
+  lkSyncSoon();
+  if (!raf) raf = requestAnimationFrame(() => { raf = 0; for (const f of [view === "loom" ? drawLoom : null, drawEditor, drawFacts, syncCtls, syncQuick, drawPics]) if (f) try { f(); } catch (err) { console.error(err); } });
+}
 setInterval(() => { if (live && live.playing) refresh(); }, 66);
 window.addEventListener("resize", refresh);
 
