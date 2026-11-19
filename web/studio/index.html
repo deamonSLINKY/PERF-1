@@ -249,8 +249,7 @@
   .dxops button.car { border-bottom: 2px solid var(--pluck); }
   .dx7 details summary { cursor: pointer; color: var(--dim); font: 600 .8rem "Chakra Petch", sans-serif; margin: 8px 0 4px; }
   .dx7 .dxtwo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 14px; }
-  #fx:not([hidden]) { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 1.3fr); gap: 12px; align-items: start; }
-  @media (max-width: 900px) { #fx:not([hidden]) { grid-template-columns: minmax(0, 1fr); } }
+  #fx:not([hidden]) { display: block; }                    /* (the keys across the whole width; under them the pad, the effect's settings, the menu's pages) */
   .fxbank { margin: 0 0 12px; }
   .fxkeys { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 5px; }
   .fxk { position: relative; text-align: left; padding: 7px 8px 6px; min-height: 52px; border-radius: 6px; border: 1px solid var(--line); background: #1d2026; border-top: 3px solid var(--c, #555a66); }
@@ -274,6 +273,15 @@
   .fxk.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
   .fxk.hold::after { content: "HOLD"; position: absolute; right: 5px; top: 4px; font: 700 .55rem "Chakra Petch", sans-serif; color: var(--dim); }
   .fxk[aria-pressed=true].hold::after { color: #3a2a00; }
+  .fxleft { container-type: inline-size; min-width: 0; }
+  .fxbelow { display: grid; grid-template-columns: minmax(0, 2.6fr) minmax(270px, 1fr); gap: 10px; align-items: start; margin-top: 4px; }
+  .fxmain { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(250px, 1fr); gap: 10px; align-items: stretch; }
+  .fxside .sec:last-child { margin-bottom: 0; }
+  .fxmain .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
+  .fxmain .fxnone { min-height: 120px; display: flex; flex-direction: column; }
+  .fxmain .fxnone p { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 12px; border: 1px dashed #2a2d35; border-radius: 6px; }
+  @container (max-width: 1000px) { .fxbelow { grid-template-columns: minmax(0, 1fr); } }
+  @container (max-width: 640px) { .fxmain { grid-template-columns: minmax(0, 1fr); } }
   .fxside .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 10px; }
   .fxkn { cursor: ns-resize; }
   .fadebar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--dim); font-size: .85rem; }
@@ -2071,8 +2079,8 @@ function fxRender() {
     const pg = fxd.pageOf[bit];
     return '<button class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + (pg >= 0 && fxd.pages[pg].hold ? " hold" : "") + '" data-bit="' + bit + '" style="--c:' + fxCol(bit) + ";" + at(k) + '" title="' + fxd.names[bit] + " (" + FX_NOTE[k] + "): tap: on until tapped again · hold: on while held" + (pg >= 0 ? " · its settings on the right" : "") + '"><b>' + fxd.names[bit] + "</b><span>" + FX_NOTE[k] + "</span></button>";
   }).join("") + "</div></div>";
-  $("fx").innerHTML = '<div><div class="bar" style="margin-bottom:8px"><button id="fxOff">All off</button><span class="muted hint">The FM-1&#39;s FX menu: tap an effect to latch it, hold it to play it while you hold. The effects and their settings are the player&#39;s, not the piece&#39;s (as on the unit).</span></div>' +
-    bank(0) + bank(1) + '</div><div class="fxside" id="fxSide"></div>';
+  $("fx").innerHTML = '<div class="fxleft"><div class="bar" style="margin-bottom:8px"><button id="fxOff">All off</button><span class="muted hint">The FM-1&#39;s FX menu: tap an effect to latch it, hold it to play it while you hold. The effects and their settings are the player&#39;s, not the piece&#39;s (as on the unit).</span></div>' +
+    bank(0) + bank(1) + '<div class="fxbelow"><div class="fxmain" id="fxMain"></div><div class="fxside" id="fxSide"></div></div></div>';
   fxPaint(); fxSide();
 }
 function fxPaint() {
@@ -2088,10 +2096,11 @@ function fxPage(pg) {
   return '<div class="sec"><h3>' + P0.name + (P0.bit < 63 && fxIsOn(P0.bit) ? " · ON" : "") + '</h3><div class="ctls kn">' + P0.c.map((c, i) => (c && c.label ? fxKnob(pg, i, c, col) : "")).join("") + "</div></div>";
 }
 function fxSide() {
-  const el = $("fxSide"); if (!el || !fxd) return;
+  const el = $("fxSide"), mn = $("fxMain"); if (!el || !mn || !fxd) return;   // (under the keys: the XY pad and the effect tapped; beside: the menu's own pages)
   const af = fxd.pages.findIndex((x) => x.name === "AUTO FX"), snd = fxd.pages.findIndex((x) => x.name === "SOUND");
   const ret = fxd.pages.findIndex((x) => x.name === "RETURNS");   // (0.17.72: the returns' duck)
-  el.innerHTML = xyHTML() + (fxSel >= 0 ? fxPage(fxSel) : '<div class="sec"><h3>SETTINGS</h3><p class="muted" style="margin:0">Tap or hold an effect: its settings come here.</p></div>') + (af >= 0 && af !== fxSel ? fxPage(af) : "") + (snd >= 0 && snd !== fxSel ? fxPage(snd) : "") + (ret >= 0 && ret !== fxSel ? fxPage(ret) : "");
+  mn.innerHTML = xyHTML() + (fxSel >= 0 ? fxPage(fxSel) : '<div class="sec fxnone"><h3>SETTINGS</h3><p class="muted" style="margin:0">Tap or hold an effect: its settings come here.</p></div>');
+  el.innerHTML = (af >= 0 && af !== fxSel ? fxPage(af) : "") + (snd >= 0 && snd !== fxSel ? fxPage(snd) : "") + (ret >= 0 && ret !== fxSel ? fxPage(ret) : "");
   xyDraw();
 }
 /* the XY pad: a setting across, another up; touching it turns their effects on (off again when let go, unless Keep on), as a Kaoss pad */
@@ -2107,7 +2116,7 @@ function xyHTML() {
   const sel = (id, v) => '<select id="' + id + '">' + o.map(([k, t]) => '<option value="' + k + '"' + (k === v ? " selected" : "") + ">" + t + "</option>").join("") + "</select>";
   return '<div class="sec"><h3>XY PAD · DRAG ON IT: ITS EFFECTS PLAY WHILE YOU TOUCH</h3><div class="bar" style="margin-bottom:6px"><span class="lbl">↔</span>' + sel("xyA", xyA) + '<span class="lbl">↕</span>' + sel("xyB", xyB) +
     '<label class="muted"><input type="checkbox" id="xyKeep"' + (xyKeep ? " checked" : "") + "> keep on</label></div>" +
-    '<canvas id="xyPad" height="210" style="width:100%;display:block;border-radius:6px;background:#121318;border:1px solid var(--line);touch-action:none;cursor:crosshair"></canvas>' + xyRest() + "</div>";
+    '<canvas id="xyPad" height="' + XY_H + '" style="width:100%;display:block;border-radius:6px;background:#121318;border:1px solid var(--line);touch-action:none;cursor:crosshair"></canvas>' + xyRest() + "</div>";
 }
 function xyRest() {                                           // the X and Y effects' other settings (the FILTER's type and targets, say), under the pad
   const A = xyGet(xyA), B = xyGet(xyB), seen = new Set([xyA, xyB]), ks = [];
@@ -2115,10 +2124,11 @@ function xyRest() {                                           // the X and Y eff
   return ks.length ? '<div class="ctls kn" style="margin-top:6px">' + ks.join("") + "</div>" : "";
 }
 let xyKeep = false;
+const XY_H = 270;                                             // (the pad's height: under the keys it has the room)
 const xyGet = (k) => { const [pg, i] = k.split(":").map(Number); return { pg, i, c: fxd.pages[pg].c[i], P0: fxd.pages[pg] }; };
 function xyDraw() {
   const cv = $("xyPad"); if (!cv || !fxd) return;
-  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = 210;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = XY_H;
   if (!W) return;
   if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.height = H + "px"; }
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = "#121318"; g.fillRect(0, 0, W, H);
