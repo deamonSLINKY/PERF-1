@@ -35,12 +35,12 @@ body {
   font: 400 18px/1.6 "Barlow Semi Condensed", "Helvetica Neue", Helvetica, Arial, sans-serif;
   padding-inline: 16px; padding-block: 32px 64px;
 }
-@media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, var(--paper); } }
+@media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px), var(--paper); } }
 
 /* (1.0) the banner: the maker's festival picture, PERF-1 in the boot card's letters, the lights pulsing at 128 BPM */
 .hero { position: relative; height: clamp(220px, 27vw, 400px); margin: 0 0 1.6rem; overflow: hidden; border-radius: 2px;
         background: #05070f 50% 60% / cover no-repeat; image-rendering: pixelated; border: 1px solid #2c3766; border-top-color: #5a47c8;
-        box-shadow: 0 0 0 1px #05070f, 0 14px 44px rgba(114,83,230,.28), inset 0 1px 0 rgba(165,139,255,.3);
+        box-shadow: 0 0 0 1px #05070f, 0 0 0 7px #161d3a, 0 0 0 8px #3d4a8a, 0 0 0 9px #05070f, 0 16px 48px rgba(114,83,230,.32), inset 0 1px 0 rgba(165,139,255,.3);
         display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: clamp(14px, 3vw, 34px); gap: .5rem; }
 .hero.slim { height: clamp(130px, 13vw, 190px); padding-top: clamp(10px, 1.6vw, 20px); background-position: 50% 42%; }
 .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
@@ -66,7 +66,7 @@ h2 { font-size: 1.3rem; font-weight: 400; margin: 3rem 0 .8rem; padding-top: .8r
      text-transform: uppercase; letter-spacing: .04em; }
 h2 .num { color: var(--orange); margin-right: .5em; font-variant-numeric: tabular-nums; }
 h3 { font-size: 1.1rem; font-weight: 600; margin: 2rem 0 .5rem; color: var(--cream); }
-p, li { max-width: 78ch; }
+p, li { max-width: none; }
 p { margin: 0 0 1rem; }
 ul, ol { padding-left: 1.3rem; margin: 0 0 1rem; }
 li { margin: .2rem 0; }
