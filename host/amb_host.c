@@ -1012,7 +1012,7 @@ static int expect(const char *what, const char *val)
         got = ui.saver;
     else if (!strcmp(what, "saveron"))
         got = ui.saver_on;
-    else if (!strcmp(what, "dyvoices"))           /* the Settings page's Voices: 1, the DY set */
+    else if (!strcmp(what, "dyvoices"))           /* the DY set in use: always 1 since 0.17.75 */
         got = en_fm_dy;
     else if (!strcmp(what, "lights"))
         got = ui.lights;

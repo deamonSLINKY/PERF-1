@@ -87,7 +87,6 @@ static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};   
 static const char *const LOOK_NAME[4] = {"PLAIN", "SCANLINES", "CALM", "CALM+SCAN"};     /* (0.17.40) SCREEN's Look: the scanlines; Calm, the screen's small motion off (no imp up top, no knob tick, no page fade) */
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
-static const char *const VOICES_NAME[2] = {"DX", "DY"};
 static const char *const FORM_NAME[4] = {"Song", "Few rests", "No rests", "Loop"};   /* (0.17.70: Song with its rests half as often, or none) */
 static const char *const START_NAME[2] = {"Last", "Random"};                                       /* the Settings page's Start (0.16.26): power on to the piece last played, or one at random */                                          /* the Settings page's Form (0.16.26): a piece moves through its patterns, or loops its first */                                          /* the thirty built-in DX7 voices: Melodee's set, or the human-made one */
 static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0",
@@ -186,8 +185,8 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Voices", KN_NAME, 13, VOICES_NAME, 2}, {"Form", KN_NAME, 28, FORM_NAME, 4},
-                         {"Start", KN_NAME, 29, START_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); Voices: the DX or the DY set; Saver and Lights on SCREEN (0.16.1) */
+    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"", KN_NONE, 0, 0, 0}, {"Form", KN_NAME, 28, FORM_NAME, 4},
+                         {"Start", KN_NAME, 29, START_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); (0.17.75: Voices gone, the DY set always); Saver and Lights on SCREEN (0.16.1) */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
     {"SNIPS", 62, 0, {{"Pitch", KN_NAME, EN_FXS_SM_MODE, SMM_NAME, 3}, {"Play", KN_NAME, EN_FXS_SM_LOOP, SML_NAME, 2},
@@ -550,7 +549,7 @@ static struct {
     uint8_t usb_fixed;                           /* the USB page: 1, the USB audio at a fixed level, not the master knob's */
     uint8_t form;
     uint8_t start_rand;                          /* the Settings page's Start: 0 Last, 1 Random (the global record's rsv, bit 8: 0.16.26) */                                /* the Settings page's Form: 0 Song, 1 Loop (kept in the global record's last byte, bit 2: 0.16.26) */
-    uint8_t fm_dy;                               /* the Settings page's Voices: 1, the DY set stands in for the DX voices (kept in set_t.usb's bit 1) */
+    uint8_t fm_dy;                               /* (the Settings page's Voices until 0.17.75: kept for uiv(13)'s place, nothing reads it) */
     uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
     uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); 2, a Model:Samples' channels do (ms_in;
@@ -1310,8 +1309,6 @@ static void fxp_set(int k, int v)
             *uiv(FXP_CTL(k).idx) = (uint8_t)v;
             if (FXP_CTL(k).idx == 12)
                 en_usb_fixed = (uint8_t)v;       /* the engine renders the USB audio at unity when a computer is recording */
-            else if (FXP_CTL(k).idx == 13)
-                en_fm_set_dy(v);                 /* the DX or the DY voices: the names change at once, the patch at the next chunk */
             else if (FXP_CTL(k).idx == 23 || FXP_CTL(k).idx == 24)
                 project_globals();               /* (zoom and the mix: the global record, stored at once) */
             else if (FXP_CTL(k).idx == 29)
@@ -10034,7 +10031,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | (!ui.fm_dy) << 1 | (ui.scan & 1) << 2 |   /* (bit 1: the DX set chosen; DY is the default since 0.14.21, so older settings read as DY) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
+    s.usb = (uint16_t)(ui.usb_fixed | (ui.scan & 1) << 2 |   /* (bit 1 was the DX set chosen: written 0 and not read since 0.17.75, the DY set always) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
     s.viz = (uint8_t)((ui.viz >= VZ_TRIP ? 7u : ui.viz) | (ui.min_pads == 2 || ui.min_pads == 4) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -10413,8 +10410,7 @@ void ui_init(void)
         ui.dj_fillon = 1;
         ui.mood = 50;                          /* the mood macro: the middle leaves the piece as it is */
         ui.jam_oct = 2;                        /* the JAM page: octave 0 */
-        ui.fm_dy = 1;                          /* the DY voices (0.14.21): the human-made set by default */
-        en_fm_set_dy(1);
+        ui.fm_dy = 1;                          /* the DY voices (0.14.21; always since 0.17.75: only its bit in the stored settings is left) */
     }
     settings_load();                             /* the effects' and performing settings as you left them */
     voices_load();                               /* and the player's DX7 voices */

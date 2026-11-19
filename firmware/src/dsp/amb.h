@@ -432,8 +432,7 @@ extern volatile uint8_t en_song;               /* FORM (0.16.26): 1 Song, a piec
 extern volatile uint8_t en_rests;              /* (0.17.70) Song's rests (FORM): 2 as the genre has them, 1 half as often, 0 none */
 extern volatile uint8_t en_arrange;            /* (0.17.16) 1: with Song, the parts are arranged too (one rests half a phrase now and then); the UI turns it off for a set-list place with its own bars */
 extern volatile uint8_t en_usb_fixed;          /* 1: the USB audio is rendered at unity gain (the master knob is the speakers' alone) */
-extern volatile uint8_t en_fm_dy;              /* 1: the DY voices (human-made DX7 voices) stand in for the thirty DX voices */
-void en_fm_set_dy(int on);                     /* sets it, and the sound names (the engine reloads the patch between chunks) */
+extern volatile uint8_t en_fm_dy;              /* 1: the DY voices (human-made DX7 voices) play the thirty DX sounds (always, 0.17.75) */
 extern int16_t *en_usb_out;                    /* where en_render writes that second output (stereo 16-bit frames, the USB stream's scale), or NULL for none this render */
 extern volatile uint8_t en_chorus_c0;          /* 1: the pad's chorus runs on the first core (it decides, from its waits); */
 void en_fm_float_path(int v);                  /* tests: the DX voices' MARK I on float buses (1), or integer (0, as the firmware runs it) */

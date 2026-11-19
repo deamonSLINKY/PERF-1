@@ -1087,39 +1087,37 @@ It sits under the other parts by default (Level 50, Density 45). Turn Level to 0
 The pluck has three groups of sounds:
 
 - **Plain (12):** Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass. All are FM except Bleep, which is a plain sine.
-- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" after the DY set). DX Tine EP, DX Glass Bell, DX Round Bass, DX Brass Sect, DX Soft Pad, DX Wood Bars, DX Drawbars, DX Nylon Pick, DX Brass 2, DX Solid Bass, DX Bells, DX Marimba, DX Clavinet, DX Strings, DX Glass Pad, DX Sync Lead, DX Harp, DX Kalimba, DX Flute, DX Steel Drum, DX Saw Bass, DX Tubular, and the eight described below. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
+- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" below). DX MF EPRHOD1 (an electric piano), DX WINEGLASS (a glass bell), DX SMOOTHBASS, DX FULL-BRASS, DX EASY DXPAD (a soft pad), DX FLUTEMRMBA (wooden bars), DX DRAWBARS, DX GITARA AKU (a nylon guitar), DX ROLAND BRS (brass), DX SOLID BASS, DX TEMPLEBELL, DX MARIMBA, DX CLAVINET, DX SOFTSTRNGS (strings), DX SHIMMERPAD (a glass pad), DX SKY SYNC (a sync lead), DX HARFA LSR (a harp), DX KALIMBA, DX FLUTE BLOW, DX STEEL PANS, DX MOOGBASS (a saw bass), DX TUBUL-BELL, and the eight described below. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
 - **Yours (up to 16):** DX7 voices you load yourself come after the built-in ones, named `DX` plus the voice's own name (section 15).
 
 The last eight built-in DX voices are guitars, a bass and brass:
 
 | Voice | What it is |
 |---|---|
-| Steel Gtr | A strummed steel string with a long ring |
-| Clean Gtr | An electric guitar that holds, with a little chorus |
-| Muted Gtr | The funk "chank", over in a tenth of a second |
-| Drive Gtr | A distorted guitar, held |
-| Slap Bass | A slapped bass |
-| Synth Brass | A swell, with the bite coming up |
-| Sax | A reed with a vibrato that comes in late |
-| Mute Trumpet | The thin, nasal sound of a muted trumpet |
+| DX PEDALSTEEL | A pedal steel guitar |
+| DX CHOR.STRAT | A clean electric guitar, chorused |
+| DX GUITARDAMP | A muted guitar, the funk "chank" |
+| DX AXE | A distorted guitar |
+| DX SLAPS | A slapped bass |
+| DX MFSYNBRASS | Synth brass |
+| DX SAXOPHONE | A saxophone |
+| DX SOLO TRPT | A solo trumpet |
 
-These eight are first drafts, written for PERF-1 and tuned by numbers rather than by ear. The disco, funk, reggae,
-synthwave, amapiano and trip-hop genres use them. Tell the maker what you think of them.
+The disco, funk, reggae, synthwave, amapiano and trip-hop genres use them.
 
-**The DY set.** On the Settings page, **Voices** chooses between two sets. **DY** (the default) swaps all thirty
-built-in voices for DX7 patches made by people, of the same kind, chosen by name from public-domain banks:
-Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the 1980s magazine banks on Bobby Blues' page, one from
-Jack Deckard's collection on Dave Benson's page, and the Clean Gtr (`CHOR.STRAT`) from Jezreel's folder. **DX** puts the built-in set back. Each DY voice shows its bank's
-own name. For example, madFame's `MF EPRHOD1` stands in for the Tine EP and the Aftertouch magazine's `SAXOPHONE`
-for the Sax. The full list is in the PERF-1 source. The names on the screen change with the switch. Each DY voice is
-set to the same loudness as the DX voice it replaces, so the genres' mix stays balanced.
+**Who made them.** The thirty are DX7 patches made by people, chosen by kind from public-domain banks: Pafreak's
+SYNTHOXICATED banks, madFame's Custom Patches (`MF EPRHOD1`, `SHIMMERPAD`), the 1980s magazine banks on Bobby Blues'
+page (the Aftertouch magazine's `SAXOPHONE`), one from Jack Deckard's collection on Dave Benson's page, and `CHOR.STRAT`
+from Jezreel's folder. Each shows its bank's own name after `DX`. Each is set to a matching loudness, so the genres' mix
+stays balanced. (Up to 0.17.74 the Settings page had a **Voices** switch to PERF-1's own first set of thirty; since
+0.17.75 these are the only ones.)
 
 **Thirty more** (0.17.25). After the first thirty on the **Sound** list come thirty more DX7 voices made by people, from
 the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's, Narfman's, Godric's and Jezreel's folders, and the
-Aftertouch, Guitares & Claviers and E&MM magazine banks). They play in either set. Most show their banks' own names; the
+Aftertouch, Guitares & Claviers and E&MM magazine banks). Most show `DX` and their banks' own names; the
 seven added in the 2026-11-13 audit (each one a kind of instrument the set lacked) show what they are:
 
-| On the screen | What it is | On the screen | What it is |
+| On the screen (after DX) | What it is | On the screen (after DX) | What it is |
 |---|---|---|---|
 | WURLITZER | Wurlitzer electric piano | TSQR DECAY | Sequencer pluck |
 | TF-RHODES | Bright Rhodes | CS 80 | Warm poly (CS-80 style) |
@@ -1738,7 +1736,7 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
 | Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any, yours (your gesture) |
 | SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
-| Settings | Key: same, +2, +3, +5, +7 | Voices: DX, DY | Form: Song, Few rests, No rests, Loop | Start: Last, Random |
+| Settings | Key: same, +2, +3, +5, +7 | (none) | Form: Song, Few rests, No rests, Loop | Start: Last, Random |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
 | RESONATOR (pitched percussion; section 13) | Amount: 0 (off)-100 | Decay: 0-100 | Register: low, mid, high | Targets: perc, hats, snare, perc+hats, drums, pluck |
@@ -1764,7 +1762,7 @@ What some of these mean:
 - **Gate patterns.** Euclid 5, 7 or 9 spreads 5, 7 or 9 hits as evenly as possible over the steps. Custom is a pattern you edit yourself (below).
 - **Roll.** From and To set the speed the repeats start and end at. Each sets how often a roll happens.
 - **Riser.** Time is how long it takes to climb. Filter, Wash and Echo set how much of each it builds up.
-- **Settings page.** Key is the drop's key change (section 13). Voices chooses which set of thirty built-in DX7 voices the pluck's `DX` sounds use (section 7).
+- **Settings page.** Key is the drop's key change (section 13). The second knob does nothing since 0.17.75 (it was Voices).
 - **SCREEN page.** Zoom shows a knob's name and value large as you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Look adds scanlines (every other row a quarter darker, like an old CRT TV) and Calm (the screen's small movements off).
 - **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. MIDI map chooses where the notes go (section 14).
 - **Repeat page.** Pitch makes each repeat step toward that pitch over four beats while you hold the key, which sounds like a build. Every repeat still starts on the beat grid. Decay makes each repeat quieter than the last, for a dub-style tail. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh grabs a fresh slice of the newest music every beat or bar, which DJs call a slip roll. It only works where there's enough recent music held to do it.
@@ -2117,12 +2115,11 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE** and **SOUND**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
 
-The Settings page:
+The Settings page (its second knob is free since 0.17.75, when the Voices switch went):
 
 | Knob | What it does |
 |---|---|
 | Key | A key change for the drop: same, +2, +3, +5 or +7 semitones. When a breakdown or build ends and the groove comes back in, the whole piece moves up by this much for that round. The next breakdown, a stop or another piece moves it back. `KEY` shows in the header while it's on. |
-| Voices | Which set of DX7 voices the pluck uses: **DY**, thirty human-made voices from public-domain banks (the default), or **DX**, the thirty built-in ones. |
 | Form | **Song** (the default): a piece moves through its own drum patterns, a new one every 8 bars (16 in the slower genres), with a fill just before each change, so it plays like a track. Song also arranges the parts: now and then a phrase rests the pluck or the acid (or both) for half of it, and the bass may sit out the fill bar and land on the change. The pad always plays. A set-list slot with its own bars leaves the arranging to you. **Few rests** is Song with those rests half as often, and **No rests** is Song with none: every part plays every bar. **Loop**: it stays on its first pattern, for when you want to steer it yourself. If you set Drum drift (**SEQ** x4), yours plays instead, in either. Song keeps the beat's feel: when it moves to a pattern with another feel (half time after four on the floor, say), the kick, snare and clap stay as they were and only the hats and perc move on. |
 | Start | **Last** (the default): the FM-1 switches on to the piece you last played, as it is saved (unsaved changes are not kept: save with **GLO**, then **SAVE**). **Random**: a piece of HYPNO at random, the old way. |
 

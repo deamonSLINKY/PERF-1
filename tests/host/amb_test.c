@@ -892,7 +892,7 @@ int main(void)
               "more voices: the list's places %d %d %d", en_cm_snd_at(12 + EN_NFMFACT), en_cm_snd_pos(EN_CM_X0), en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX - 1));
         CHECK(en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX) == 0 && en_cm_snd_pos(12 + EN_NFMFACT) == 0, "more voices: an empty slot is on the list (%d, %d)",
               en_cm_snd_at(12 + EN_NFMFACT + EN_NFMX), en_cm_snd_pos(12 + EN_NFMFACT));
-        CHECK(!strcmp(EN_CM_SOUND[EN_CM_X0], "WURLITZER") && !strcmp(EN_CM_SOUND[EN_NCMSND - 1], "SHORTHORNS"), "more voices: named '%s' .. '%s'", EN_CM_SOUND[EN_CM_X0],
+        CHECK(!strcmp(EN_CM_SOUND[EN_CM_X0], "DX WURLITZER") && !strcmp(EN_CM_SOUND[EN_NCMSND - 1], "DX SHORTHORNS") && !strcmp(EN_CM_SOUND[12 + 14], "DX SHIMMERPAD"),   /* (0.17.75: DX and the voice's own name, all sixty) */ "more voices: named '%s' .. '%s'", EN_CM_SOUND[EN_CM_X0],
               EN_CM_SOUND[EN_NCMSND - 1]);
         CHECK(!en_user_voice(1, b), "user voices: a slot past the end was taken");
         CHECK(en_user_voice(0, b), "user voices: slot 0 was not taken");
