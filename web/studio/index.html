@@ -409,7 +409,7 @@
       </div>
       <div class="doors"><span class="lbl">THEN</span><button class="door" data-door="jam" aria-pressed="true">Jam</button><button class="door" data-door="song" aria-pressed="false">Make a song</button><button class="door" data-door="sound" aria-pressed="false">Shape a sound</button>
         <span class="muted">or</span><button id="power">Just switch on</button></div>
-      <p class="hint">The studio reads and plays pieces through the emulator (the whole PERF-1 firmware, in this browser). It keeps its pieces where the Emulator page does, so a piece saved there is here too. Nothing reaches your FM-1 until you send it from the Library &amp; pieces page.</p>
+      <p class="hint">The studio reads and plays pieces through the emulator (the whole PERF-1 firmware, in this browser). It keeps its pieces where the Emulator page does, so a piece saved there is here too. Nothing reaches your FM-1 until you send it: whole pieces from the Library &amp; pieces page, settings and DX voices from the FM-1 menu.</p>
     </div>
   </section>
   <section class="lower">
@@ -432,7 +432,7 @@
     <p class="muted">The studio edits only what the FM-1 keeps with a piece, so nothing is lost on the way to the unit:</p>
     <ul>
       <li><b>Drums</b>: six patterns of six lanes, sixteen steps; each lane's step tricks (ratchet, push, level), one set a lane.</li>
-      <li><b>Bass</b>: sixteen steps (rest, note, accent, glide), each a scale step above the chord's root and an octave; played when the bass line's mode is Steps.</li>
+      <li><b>Bass</b>: sixteen steps (rest, note, accent, glide, hold: the note before goes on), each a scale step above the chord's root and an octave; played when the bass line's mode is Steps.</li>
       <li><b>Acid</b> and <b>pluck</b>: a sixteen-step line each, kept when frozen (acid: scale steps above the chord with octave, accent, slide; pluck: rungs of the chord's ladder and a level).</li>
       <li><b>Chords</b>: eight progression slots (a degree, 1, 2, 4 or 8 bars, a chord type each), played in turn, or the genre's walk.</li>
       <li>Every setting of the piece (tempo, key, mode, levels, sounds, the FILTERS and SCREAM pages).</li>
@@ -502,6 +502,7 @@ function pluckSet(st) {
   io.set(b.subarray(0, 6), REC_CML1); io.set(b.subarray(6), REC_CML2);
 }
 const bsOf = (v) => ({ kind: v & 7, note: (v >> 3) & 7, oct: (v >> 6) & 3 });
+const BS_REST = 1 << 3;                                       // (a rest the player set: kind 0 with a note, so not 0: sixteen 0s mean "no steps", and Steps then plays the bar heard, amb.c bs_set)
 const bsMake = (kind, note, oct) => (kind & 7) | (note & 7) << 3 | (oct & 3) << 6;
 // the progression (amb.h EN_PRG_*): slot s's degree at bits 3s (0 empty: the chord before goes on), its bars at 24 + 2s (1, 2, 4, 8), Play at 40
 const bitGet = (b, bit, n) => { let v = 0; for (let k = 0; k < n; k++) v |= ((b[(bit + k) >> 3] >> ((bit + k) & 7)) & 1) << k; return v; };
@@ -609,7 +610,7 @@ const BTN_PLAY = 10;
 async function openPiece(g, i, place) {                     // (place: the set list's place, as the unit's PRESETS knob with the song on: its parts too)
   const r = await ask(place === undefined ? { type: "st_open", genre: g, piece: i } : { type: "st_go", place });
   if (!r.ok) { say("The emulator is busy writing; try again.", true); return; }
-  cur = { genre: g, piece: i };
+  cur = { genre: g, piece: i }; $("undo").hidden = true;
   io = new Uint8Array(r.io);
   dxv = null;                                                 // (the DX7 editor reads the new piece's pluck voice when it is next shown)
   resetHistory();
@@ -1072,6 +1073,11 @@ function edBass(g, W, RH, rows) {
   const bs = Array.from(heard || io.subarray(IO_BS, IO_BS + 16)).map(bsOf);
   let prev = null;
   bs.forEach((x, s) => {
+    if (x.kind === 5 && prev) {                               // a hold: the note before goes on through this step, drawn on its row
+      const xx = G.x0 + s * G.cw; rblock(g, xx - 2, prev.top, G.cw, RH - 3); g.globalAlpha = heard ? 0.3 : 0.55; g.fillStyle = COL.bass; g.fill(); g.globalAlpha = 1;
+      if (G.cw > 34) { g.fillStyle = "#ffc2c3"; g.font = FONT(700, 9); g.fillText("HOLD", xx + 3, prev.top + RH - 5.5); }
+      prev.x = xx + G.cw - 2; return;
+    }
     if (x.kind < 1 || x.kind > 4) { prev = null; return; }
     const y = G.y0 + rowOf(x.note, Math.min(2, x.oct)) * RH, xx = G.x0 + s * G.cw, acc = x.kind === 2 || x.kind === 4;
     const on = live && live.playing && live.bsPos === s;
@@ -1081,7 +1087,7 @@ function edBass(g, W, RH, rows) {
     else { g.fillStyle = acc ? COL.bass : "#c9454a"; g.fill(); if (acc) { g.strokeStyle = "#ffc2c3"; g.lineWidth = 1.5; g.stroke(); } }
     if (on) { g.save(); g.shadowColor = COL.bass; g.shadowBlur = 12; g.fillStyle = "rgba(255,240,240,.75)"; g.fill(); g.restore(); }
     if (G.cw > 34) { g.fillStyle = heard ? "#ffc2c3" : COL.bg; g.font = FONT(700, 9); g.fillText(["", "", "ACC", "GLD", "A+G"][x.kind], xx + 5, y + RH - 4); }
-    prev = { x: xx + G.cw - 2, y: y + RH / 2 };
+    prev = { x: xx + G.cw - 2, y: y + RH / 2, top: y + 1.5 };
   });
   $("edhelp").textContent = "Click a cell: a note on that step, that many scale steps above the chord's root (R, 2, 3 ...; the bright rows are the chord's tones; LOW, MID, HIGH the octaves). Click it again: accent, glide, accent + glide, then a rest. Right-click: a rest. " +
     "The FM-1 plays these sixteen on every chord when the bass line's mode is Steps (an edit switches it to Steps, starting from what it played).";
@@ -1089,8 +1095,8 @@ function edBass(g, W, RH, rows) {
 function clickBass(s, r, right) {
   if (par("P_BL_MODE") !== BL_STEPS) { const l = bassLive(); if (l) io.set(l, IO_BS); }   // (from what it plays: see bassLive)
   const v = 23 - r, o = Math.floor(v / 8), n = v % 8, x = bsOf(io[IO_BS + s]);
-  if (right) io[IO_BS + s] = 0;
-  else if (x.kind >= 1 && x.kind <= 4 && x.note === n && Math.min(2, x.oct) === o) io[IO_BS + s] = x.kind === 4 ? 0 : bsMake(x.kind + 1, n, o);
+  if (right) io[IO_BS + s] = BS_REST;
+  else if (x.kind >= 1 && x.kind <= 4 && x.note === n && Math.min(2, x.oct) === o) io[IO_BS + s] = x.kind === 4 ? BS_REST : bsMake(x.kind + 1, n, o);
   else io[IO_BS + s] = bsMake(1, n, o);
   if (par("P_BL_MODE") !== BL_STEPS) { setPar("P_BL_MODE", BL_STEPS); say("The bass line now plays its steps (mode: Steps)."); }
   { const y = bsOf(io[IO_BS + s]); if (y.kind >= 1 && y.kind <= 4) hearStep("bass", { note: y.note, oct: y.oct, acc: y.kind === 2 || y.kind === 4 }); }
@@ -1112,7 +1118,7 @@ function edAcid(g, W, RH, rows) {
   line.forEach((x, s) => {
     const xx = G.x0 + s * G.cw;
     if (!x.gate) { prev = null; return; }
-    g.fillStyle = x.oct === 1 ? "#555a66" : COL.acid; g.font = FONT(600, 10); g.fillText(["oct −", "oct", "oct +", "oct ++"][x.oct], xx + 3, G.y0 + rows * RH + 26);
+    g.fillStyle = x.oct === 0 ? "#555a66" : COL.acid; g.font = FONT(600, 10); g.fillText(["oct", "oct +1", "oct +2", "oct +3"][x.oct], xx + 3, G.y0 + rows * RH + 26);
     const y = G.y0 + (rows - 1 - x.off) * RH;
     if (prev && prev.slide) { g.strokeStyle = "#e4ffb0"; g.lineWidth = 2; g.beginPath(); g.moveTo(prev.x, prev.y); g.lineTo(xx + 2, y + RH / 2); g.stroke(); }
     rblock(g, xx + 2, y + 1.5, G.cw - 4, RH - 3); g.fillStyle = x.acc ? COL.acid : "#86b52a"; g.fill();
@@ -1131,7 +1137,7 @@ function clickAcid(s, r, right, below) {
     const off = 15 - r;
     if (right) x.gate = 0;
     else if (x.gate && x.off === off) { const k = x.acc + 2 * x.slide + 1; if (k > 3) x.gate = x.acc = x.slide = 0; else { x.acc = k & 1; x.slide = k >> 1; } }
-    else { x.gate = 1; x.off = off; x.acc = 0; x.slide = 0; if (!x.oct) x.oct = 1; }
+    else { x.gate = 1; x.off = off; x.acc = 0; x.slide = 0; x.oct = 0; }   // (a new note in the line's own octave: under it, click for +1 .. +3)
   }
   acidSet(line);
   if (!par("P_AC_LOCK")) setPar("P_AC_LOCK", 1);
@@ -1143,7 +1149,8 @@ function edPluck(g, W, RH, rows) {
   const frozen = par("P_CM_LOCK");
   tools('<button class="small" data-act="pcap">Capture the loop it plays</button><button class="small" data-act="pclear">Clear</button>' +
         '<button class="small" data-act="plock" aria-pressed="' + !!frozen + '">' + (frozen ? "Frozen" : "Free: freeze it") + "</button>");
-  const G = gridBase(g, W, RH, rows, (r) => "rung " + (rows - 1 - r), (r) => (rows - 1 - r) % 3 === 0);
+  const nt = Math.max(3, Math.min(4, (live && live.chordN) || 3));   // (the ladder: the chord's tones a rung each, so the root comes back every 3 rungs on a triad, every 4 on a 7th and up)
+  const G = gridBase(g, W, RH, rows, (r) => "rung " + (rows - 1 - r), (r) => (rows - 1 - r) % nt === 0);
   playStep(g, G, live && frozen ? live.cmPos % 16 : -1);
   ((laneState("pluck").tag === "DICE" && pluckLive()) || pluckGet()).forEach((x, s) => {
     if (!x.lvl) return;
@@ -1243,21 +1250,22 @@ $("edtools").addEventListener("click", (e) => {
       io.set(ln.bsHist || ln.bs, IO_BS); setPar("P_BL_MODE", BL_STEPS);
       say("Captured the bar the bass played: " + Array.from(io.subarray(IO_BS, IO_BS + 16)).filter((v) => (v & 7) >= 1 && (v & 7) <= 4).length + " notes, now its steps.");
     },
-    bclear: () => { io.fill(0, IO_BS, IO_BS + 16); say("The bass steps are cleared (all rests). Undo brings them back."); },
+    bclear: () => { io.fill(0, IO_BS, IO_BS + 16); io[IO_BS] = BS_REST; say("The bass steps are cleared (all rests). Undo brings them back."); },
     bsteps: () => { setPar("P_BL_MODE", BL_STEPS); say("The bass plays its steps."); },
     acap: () => {
       if (!live) return say("Switch on and play first.", true), false;
       acidSet(acidLive() || acidGet()); setPar("P_AC_LOCK", 1);
       say("Captured the acid line it plays: " + acidGet().filter((x) => x.gate).length + " notes, frozen.");
     },
-    aclear: () => { acidSet(acidGet().map(() => ({ off: 0, oct: 1, gate: 0, acc: 0, slide: 0 }))); setPar("P_AC_LOCK", 1); say("The acid line is cleared (frozen, all rests). Undo brings it back."); },
+    // (Clear: one rest keeps a note or a rung, as an all-0 frozen line is not loaded: project.c; the bass's BS_REST likewise)
+    aclear: () => { acidSet(acidGet().map((_, k) => ({ off: k ? 0 : 1, oct: 0, gate: 0, acc: 0, slide: 0 }))); setPar("P_AC_LOCK", 1); say("The acid line is cleared (frozen, all rests). Undo brings it back."); },
     alock: () => { setPar("P_AC_LOCK", par("P_AC_LOCK") ? 0 : 1); say(par("P_AC_LOCK") ? "The acid line is frozen: kept with the piece." : "The acid line is free: it grows and mutates by itself."); },
     pcap: () => {
       if (!live) return say("Switch on and play first.", true), false;
       pluckSet(pluckLive() || pluckGet()); freezePluck();
       say("Captured the pluck's loop: " + pluckGet().filter((x) => x.lvl).length + " notes, frozen.");
     },
-    pclear: () => { pluckSet(pluckGet().map(() => ({ rung: 0, lvl: 0 }))); freezePluck(); say("The pluck line is cleared (frozen, all rests). Undo brings it back."); },
+    pclear: () => { pluckSet(pluckGet().map((_, k) => ({ rung: k ? 0 : 1, lvl: 0 }))); freezePluck(); say("The pluck line is cleared (frozen, all rests). Undo brings it back."); },
     plock: () => { if (par("P_CM_LOCK")) setPar("P_CM_LOCK", 0); else freezePluck(); say(par("P_CM_LOCK") ? "The pluck line is frozen: kept with the piece." : "The pluck is free: deja vu's loop comes and goes."); },
     pplay: () => { bitPut(prg(), 40, 1, progPlay() ? 0 : 1); say(progPlay() ? "The chords play the slots in turn." : "The chords follow the genre's walk."); },
   }[d.act];
@@ -1397,7 +1405,7 @@ $("save").addEventListener("click", () => {
   a.href = URL.createObjectURL(new Blob([pcEncode(pieceOut())], { type: "application/octet-stream" }));
   a.download = "perf1-" + S.genreName(cur.genre).toLowerCase() + "-" + S.pieceName(cur.genre, cur.piece).toLowerCase() + ".piece";
   a.click();
-  say("Saved. To put it on the FM-1: the Library & pieces page, Add (the file), then send it.");
+  say("Saved. To put it on the FM-1: the Library & pieces page, Add a code, choose this file, then Add to my FM-1.");
 });
 $("code").addEventListener("click", async () => {
   const c = await pcToCode(pieceOut());
@@ -1496,6 +1504,7 @@ $("impgo").addEventListener("click", async () => {
   if (!node) await switchOn();
   if (!io) return;
   const R = impPreview(), o = impOpts();
+  impPrev = { genre: cur.genre, piece: cur.piece, io: io.slice() };   // (Undo the import: this piece as it was)
   undoBase = io.slice(); undoT = 0;
   const lift = (k) => { if (par(k) === 0) setPar(k, P[PE[k]].def || 50); };   // a part written into a silent layer: its level up
   if (R.pats) {
@@ -1540,7 +1549,7 @@ function codeDecode(text) {                                  // the code's genre
   const f = (sh, m) => Number((v >> BigInt(sh)) & BigInt(m));
   const t = { genre: f(0, 31), piece: f(5, 15), seed: f(9, 0xFFFF), root: f(25, 15), mode: f(29, 15), tempo: f(33, 127) + 70,
               text: g.slice(0, 4).map((k) => CODE_ABC[k]).join("") + "-" + g.slice(4).map((k) => CODE_ABC[k]).join("") };
-  return t.genre < N.genres.length && t.piece < 10 && t.root < 12 && t.mode < 8 && t.tempo <= 190 ? t : null;
+  return t.genre < N.genres.length && t.piece < 10 && t.root < 12 && t.mode <= P[PE.P_MODE].max && t.tempo <= 190 ? t : null;
 }
 async function codeNow() {                                   // the playing track's code, shown beside the position
   if (!node) return;
@@ -1576,7 +1585,13 @@ $("tcode").addEventListener("click", async () => {
   refresh();
   codeNow();
 });
-$("undo").addEventListener("click", () => { undo(); $("undo").hidden = true; say("The import is undone."); });
+let impPrev = null;
+$("undo").addEventListener("click", () => {                   // the piece as it was before the import (an undo step itself: Redo puts the import back)
+  $("undo").hidden = true;
+  if (!impPrev || !io || !cur || cur.genre !== impPrev.genre || cur.piece !== impPrev.piece) { impPrev = null; return say("That import was in another piece: open it, then use Undo.", true); }
+  io.set(impPrev.io); impPrev = null; resetHistory(); changed();
+  say("The import is undone: the piece is as it was before it.");
+});
 
 /* ======================================================================== undo and redo: every change to the piece (a drag is one step) */
 let undoStack = [], redoStack = [], undoBase = null, undoT = 0, view = "loom", pane = "shape";
@@ -1674,7 +1689,7 @@ function changedPar(p) {                                      // (the piece's co
 let drag = null;
 document.addEventListener("pointerdown", (e) => {
   const el = e.target.closest(".ctl:not(.list), .fader");
-  if (!el || !io) return;
+  if (!el || !io || e.button !== 0 || e.altKey) return;      // (right-click and Alt-click: the lock, nothing else)
   const p = +el.dataset.p, r = el.getBoundingClientRect();
   drag = { el, p, x: e.clientX, y: e.clientY, v0: parV(p), moved: false, fader: el.classList.contains("fader"), knob: el.classList.contains("knob"), r };
   el.setPointerCapture(e.pointerId); el.focus(); e.preventDefault();
@@ -1739,7 +1754,7 @@ function soundRender() {
   if (sel === "bass") h += '<div class="sec"><h3>THE ANSWER (the bass answers in its own bars, kept with the piece: 0.17.30)</h3><div class="ctls kn">' + [-8, -9].map((q) => knobHTML(q, null, col)).join("") + "</div></div>";
   if (sel === "pluck") h += dxHTML();
   h = vibeHTML(col) + h;
-  $("sound").innerHTML = h + '<p class="muted hint">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece.</p>';
+  $("sound").innerHTML = h + '<p class="muted hint">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece' + (h.includes('class="sec dx7') ? ', except the DX7 voice: it goes into your voice slots (the FM-1 keeps those apart from the pieces)' : "") + ".</p>";
   masonry($("sound"));
   syncCtls(); drawPics();
   if (sel === "pluck") dxMount();
@@ -1820,14 +1835,14 @@ function dxRow(label, i, opts) {
   return '<label class="dxr"><span>' + label + '</span><input type="range" min="0" max="' + vmax(i) + '" value="' + v + '" data-dx="' + i + '"><b>' + dxFmt(i, v) + "</b></label>";
 }
 function dxRatio(d) {
-  return dxv[d + FP.MODE] ? "fixed " + (Math.pow(10, dxv[d + FP.FC] & 3) * (1 + dxv[d + FP.FF] / 100 * 8.772)).toFixed(1) + " Hz" : "× " + ((dxv[d + FP.FC] || 0.5) * (1 + dxv[d + FP.FF] / 100)).toFixed(2);
+  return dxv[d + FP.MODE] ? "fixed " + Math.pow(10, (dxv[d + FP.FC] & 3) + dxv[d + FP.FF] / 100).toFixed(1) + " Hz" : "× " + ((dxv[d + FP.FC] || 0.5) * (1 + dxv[d + FP.FF] / 100)).toFixed(2);
 }
 function dxHTML() {                                           // (the rows are filled by dxMount once the voice is read)
   const nm = dxSndNames(), b = DXB();
   return '<div class="sec dx7"><h3>DX7 VOICE <span class="muted" id="dxWhat" style="font-weight:500;letter-spacing:0"></span></h3>' +
     '<div class="bar" style="margin-bottom:8px"><span class="lbl">EDIT</span><select id="dxFrom" aria-label="The DX voice to edit">' +
     '<optgroup label="The built-in DX sounds">' + Array.from({ length: N.nfmfact + NDXX() }, (_, k) => '<option value="d' + k + '">' + nm[dxSndOf(k)] + "</option>").join("") + "</optgroup>" +
-    '<optgroup label="Your voices (the 16 slots)">' + Array.from({ length: 16 }, (_, k) => '<option value="u' + k + '"' + (k > dxN ? " disabled" : "") + ">" + (k + 1) + " · " + (k < dxN ? dxNames[k] || nm[b + k] : k === dxN ? "(the next free)" : "(empty)") + "</option>").join("") + "</optgroup>" +
+    '<optgroup label="Your voices (the 16 slots)">' + Array.from({ length: 16 }, (_, k) => '<option value="u' + k + '"' + (k >= dxN ? " disabled" : "") + ">" + (k + 1) + " · " + (k < dxN ? dxNames[k] || nm[b + k] : k === dxN ? "(the next free: your next new voice)" : "(empty)") + "</option>").join("") + "</optgroup>" +
     (dxFile.length ? '<optgroup label="From the .syx file">' + dxFile.map((v, k) => '<option value="f' + k + '">' + (vName(v) || "(no name)") + "</option>").join("") + "</optgroup>" : "") +
     '<option value="i">Init voice (a plain sine)</option></select>' +
     '<button class="small" id="dxLoad" title="DX7 banks (32 voices) or single voices, from any librarian">Open .syx…</button><input type="file" id="dxFileIn" accept=".syx,.SYX" hidden>' +
@@ -1873,7 +1888,7 @@ function dxWhat() {
   if (el) el.textContent = dxSlot >= 0 ? "· your voice " + (dxSlot + 1) + " · the pluck plays it" : dxDx >= 0 ? "· built-in: the first edit makes it a voice of your own" : "";
   const f = $("dxFrom"), nm = dxSndNames();
   if (f) {                                                    // (the slots' names as they are now, here and in every Sound list)
-    for (let k = 0; k < 16; k++) { const o = f.querySelector('option[value="u' + k + '"]'); if (o) { o.textContent = (k + 1) + " · " + (k < dxN ? dxNames[k] || nm[DXB() + k] : k === dxN ? "(the next free)" : "(empty)"); o.disabled = k > dxN; } }
+    for (let k = 0; k < 16; k++) { const o = f.querySelector('option[value="u' + k + '"]'); if (o) { o.textContent = (k + 1) + " · " + (k < dxN ? dxNames[k] || nm[DXB() + k] : k === dxN ? "(the next free: your next new voice)" : "(empty)"); o.disabled = k >= dxN; } }
     f.value = dxSlot >= 0 ? "u" + dxSlot : dxDx >= 0 ? "d" + dxDx : f.value;
   }
   document.querySelectorAll('select[data-p="' + PE.P_CM_SND + '"]').forEach((sl) => { for (let k = 0; k < 16; k++) { const o = sl.options[DXB() + k]; if (o) o.textContent = nm[DXB() + k]; } });
@@ -2078,9 +2093,9 @@ function fxRender() {
   const bank = (b) => '<div class="fxbank"><h3 class="lbl">BANK ' + (b + 1) + (b ? " · REPEATS, MOTION AND DRUMS" : " · FILTERS, COLOUR AND SPACE") + '</h3><div class="fxkeys kb">' + fxd.keys[b].map((bit, k) => {
     if (bit === 63) return '<div class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + ' none" style="' + at(k) + '" aria-hidden="true"></div>';
     const pg = fxd.pageOf[bit];
-    return '<button class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + (pg >= 0 && fxd.pages[pg].hold ? " hold" : "") + '" data-bit="' + bit + '" style="--c:' + fxCol(bit) + ";" + at(k) + '" title="' + fxd.names[bit] + " (" + FX_NOTE[k] + "): tap: on until tapped again · hold: on while held" + (pg >= 0 ? " · its settings on the right" : "") + '"><b>' + fxd.names[bit] + "</b><span>" + FX_NOTE[k] + "</span></button>";
+    return '<button class="fxk' + (FX_NOTE[k].includes("#") ? " blk" : "") + (pg >= 0 && fxd.pages[pg].hold ? " hold" : "") + '" data-bit="' + bit + '" style="--c:' + fxCol(bit) + ";" + at(k) + '" title="' + fxd.names[bit] + " (" + FX_NOTE[k] + "): tap: on until tapped again · hold: on while held" + (pg >= 0 ? " · its settings under the keys" : "") + '"><b>' + fxd.names[bit] + "</b><span>" + FX_NOTE[k] + "</span></button>";
   }).join("") + "</div></div>";
-  $("fx").innerHTML = '<div class="fxleft"><div class="bar" style="margin-bottom:8px"><button id="fxOff">All off</button><span class="muted hint">The FM-1&#39;s FX menu: tap an effect to latch it, hold it to play it while you hold. The effects and their settings are the player&#39;s, not the piece&#39;s (as on the unit).</span></div>' +
+  $("fx").innerHTML = '<div class="fxleft"><div class="bar" style="margin-bottom:8px"><button id="fxOff">All off</button><span class="muted hint">The FM-1&#39;s FX menu: tap an effect to latch it, hold it to play it while you hold. The effects and their settings are the player&#39;s, not the piece&#39;s (as on the unit), except FILTERS and SCREAM: those are the piece&#39;s (its SOUND page).</span></div>' +
     bank(0) + bank(1) + '<div class="fxknobs" id="fxSide"></div></div><div class="fxpad" id="fxMain"></div>';
   fxPaint(); fxSide();
 }
@@ -2186,7 +2201,7 @@ document.addEventListener("pointerup", async () => {
   if (pr && pr.el) pr.el.classList.remove("held");
   if (!pr || !fxd) return;
   if (pr.knob) { if (!pr.moved) { const c = fxd.pages[+pr.knob.dataset.page].c[+pr.knob.dataset.i]; if (c.hi - c.lo === 1) fxSetK(+pr.knob.dataset.page, +pr.knob.dataset.i, c.v === c.lo ? c.hi : c.lo); } return; }
-  const held = performance.now() - pr.t > 300;
+  const held = performance.now() - pr.t > 250;                // (as the unit: ui.c TAP_MS)
   if (pr.p) await pr.p;                                       // (its switch-on first)
   if (pr.was) await fxLock(pr.bit, false);                    // a tap on one that was on: off
   else if (held) await fxLock(pr.bit, false);                 // held: only while held
@@ -2330,7 +2345,7 @@ const lockSave = () => { try { localStorage.setItem("perf1-studio-locks", JSON.s
 function vibeHTML(col) {
   const vs = VIBES[sel]; if (!vs) return "";
   const pos = vibePos[sel] || (vibePos[sel] = vs.map(() => 0.5));
-  return '<div class="sec vibecard"><h3>VIBE · ' + (LANES.find((l) => l.id === sel) || { name: sel }).name + diceBtn(Object.values(LANE_PARAMS()), "Roll this whole sound: new values near the defaults; locked knobs stay") +
+  return '<div class="sec vibecard"><h3>VIBE · ' + (LANES.find((l) => l.id === sel) || { name: sel }).name + diceBtn(Object.values(LANE_PARAMS()), "Roll this whole sound: numbers near their defaults, lists anywhere; locked knobs stay") +
     '</h3><div class="ctls kn">' + vs.map(([a, b], k) => '<div class="knob vibek" tabindex="0" role="slider" aria-label="' + a + " to " + b + '" data-vk="' + k + '" title="' + a + " ↔ " + b + ': drag up or down; it turns several settings at once"><div class="dial" style="--f:' + pos[k] + ";--c:" + col + '"><i></i></div><span class="v">' + vibeText(k, pos[k]) + '</span><span class="kl">' + a + " ↔ " + b + "</span></div>").join("") +
     '</div><p class="muted hint" style="margin:4px 0 0;font-size:.75rem">🎲 rolls a card (or the whole sound) · right-click a knob to lock it 🔒 · Ctrl+Z undoes</p></div>';
 }
@@ -2339,7 +2354,7 @@ function vibeText(k, f) {
   return f >= 0.999 && b === "WILD" ? "11" : d === 0 ? "·" : d < 0 ? a + " " + -d : b + " " + d;
 }
 const LANE_PARAMS = () => { const tab = D.tabs.find((t) => t.name === LANE_TAB[sel]); const o = {}; (tab ? tab.sections : []).forEach((x) => x.knobs.forEach((k) => { o[k.p] = k.p; })); return o; };
-function diceBtn(ps, title) { return '<button class="small dice" data-dice="' + ps.join(",") + '" title="' + (title || "Roll these: new values near the defaults; locked knobs stay") + '">🎲</button>'; }
+function diceBtn(ps, title) { return '<button class="small dice" data-dice="' + ps.join(",") + '" title="' + (title || "Roll these: numbers near their defaults, lists anywhere; locked knobs stay") + '">🎲</button>'; }
 const NO_ROLL = new Set([0, 1, 2, 3, 98, PE.P_CM_SND, PE.P_TEMPO, PE.P_ROOT, PE.P_MODE].filter((x) => x !== undefined));   // (levels, the pluck's voice, tempo and key: never)
 function diceRoll(ps) {
   let n = 0;
@@ -2591,7 +2606,7 @@ $("mine").addEventListener("click", () => {
   }
   if (!done.length) return say("Nothing to keep: every lane is yours already (or nothing has played yet).");
   resetHistory(); changed();
-  say("Yours now: " + done.join(", ") + ". They are stored with the piece and play the same every time.");
+  say("Yours now: " + done.join(", ") + ". They are the piece's own now and play the same every time (Save keeps them).");
 });
 $("send").addEventListener("click", async () => {
   if (!io) return;
@@ -2741,9 +2756,9 @@ function songRender() {
   const sel = setSel, q = song.places[sel] ? pcSetPlaces([song.places[sel]])[0] : null, mode = !song.on ? 0 : song.end ? 2 : 1;
   const used = song.places.map((x, i) => (x ? i : -1)).filter((i) => i >= 0), total = used.reduce((a, i) => a + (song.bars[i] || 0), 0), autos = used.filter((i) => !song.bars[i]).length;
   let h = '<div class="bar"><button id="mvRec" aria-pressed="' + mvRec + '" title="While the song plays: the effects you tap (FX) and the fades (DESK) are kept where they happen, and play back with the song and its WAV">' + (mvRec ? "● Recording moves" : "● Rec moves") + "</button>" +
-    (moves.some((e) => e.k !== "base") ? '<button id="mvClear" title="Forget every recorded move">Clear moves (' + moves.filter((e) => e.k !== "base").length + ")</button>" : "") + '<button id="slWav"' + (used.length || rec ? "" : " disabled") + ' title="Plays the song once from its first place and records it: a WAV (44.1 kHz, 16-bit stereo) to download">' + (rec ? "■ Stop recording" : exp ? "■ Cancel export" : "● Song to WAV") + '</button><button id="slStems"' + (used.length && !rec && !exp ? "" : " disabled") + ' title="The song as one WAV a part (pad, bass, acid, pluck, drums) and the mix, in a .zip: rendered fast, the same take in each, for a DAW">⧉ Stems</button><button id="slSend"' + (used.length ? "" : " disabled") + ' title="Opens the Library &amp; pieces page with this song as a set: connect the FM-1 there and add it">Send the song to the FM-1</button><button id="slPlay"' + (used.length ? "" : " disabled") + '>' + (live && live.playing && song.on ? "■ Stop" : "▶ Play the song") + '</button><button id="slFrom"' + (q ? "" : " disabled") + ">▶ From place " + (sel + 1) + "</button>" +
+    (moves.some((e) => e.k !== "base") ? '<button id="mvClear" title="Forget every recorded move">Clear moves (' + moves.filter((e) => e.k !== "base").length + ")</button>" : "") + '<button id="slWav"' + (used.length || rec ? "" : " disabled") + ' title="Renders the song once from its first place, faster than it plays (with your recorded moves): a WAV (44.1 kHz, 16-bit stereo) to download, and the mix check under the song">' + (rec ? "■ Stop recording" : exp ? "■ Cancel export" : "● Song to WAV") + '</button><button id="slStems"' + (used.length && !rec && !exp ? "" : " disabled") + ' title="The song as one WAV a part (pad, bass, acid, pluck, drums) and the mix, in a .zip: rendered fast, the same take in each, for a DAW">⧉ Stems</button><button id="slSend"' + (used.length ? "" : " disabled") + ' title="Opens the Library &amp; pieces page with this song as a set: connect the FM-1 there and add it">Send the song to the FM-1</button><button id="slPlay"' + (used.length ? "" : " disabled") + '>' + (live && live.playing && song.on ? "■ Stop" : "▶ Play the song") + '</button><button id="slFrom"' + (q ? "" : " disabled") + ">▶ From place " + (sel + 1) + "</button>" +
     '<span class="lbl">&nbsp;SONG</span>' + ["Off", "Loop", "Once"].map((t, k) => '<button class="small" data-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + t + "</button>").join("") +
-    '<span class="muted">' + used.length + " places · " + total + " bars" + (autos ? " + " + autos + " on Auto" : "") + (song.full ? song.full2 ? "" : " · patterns and energy need 0.17.14" : " · this firmware has no song mode (bars and parts need 0.17.13)") + "</span></div>";
+    '<span class="muted">' + used.length + (used.length === 1 ? " place · " : " places · ") + total + " bars" + (autos ? " + " + autos + " on Auto" : "") + (song.full ? song.full2 ? "" : " · patterns and energy need 0.17.14" : " · this firmware has no song mode (bars and parts need 0.17.13)") + "</span></div>";
   const chips = '<div class="bar chips" style="margin-top:8px"><span class="lbl">PIECES</span><select id="slGenre" aria-label="Genre of the pieces to add">' + N.genres.map((n, g) => '<option value="' + g + '"' + (g === slGenre ? " selected" : "") + ">" + n + "</option>").join("") + "</select>" +
     (N.pieces[slGenre] || []).map((n, k) => '<button class="small chip" draggable="true" data-g="' + slGenre + '" data-p="' + k + '" style="--c:' + GENRE_COL[slGenre % 5] + '" title="Drag onto the song, or click: into place ' + (sel + 1) + '">' + n + "</button>").join("") +
     '<span class="muted hint">drag one onto the song, or click: into place ' + (sel + 1) + "</span></div>";
@@ -3372,7 +3387,7 @@ $("song").addEventListener("click", async (e) => {
     return say(mvRec ? "Recording moves: play the song, then tap effects in FX and fade parts on the DESK; each is kept where it happens and plays back with the song. Press again to stop recording." :
       "Moves kept: " + moves.filter((e) => e.k !== "base").length + ". They play back each time the song comes to them (the studio only: the FM-1's song does not keep them).");
   }
-  if (id === "mvClear") { if (!confirm("Forget all " + moves.length + " recorded moves?")) return; moves = []; mvSave(); songRender(); return say("The moves are cleared."); }
+  if (id === "mvClear") { const nm = moves.filter((e) => e.k !== "base").length; if (!confirm(nm === 1 ? "Forget the recorded move?" : "Forget the " + nm + " recorded moves?")) return; moves = []; mvSave(); songRender(); return say("The moves are cleared."); }
   if (id === "slMake") {
     if (!cur) return;
     SONG_PLAN.forEach(([, b, m, e], i) => { song.places[i] = cur.genre * 10 + cur.piece + 1; song.bars[i] = song.full ? b : 0; song.mutes[i] = song.full ? m : 0; song.pats[i] = 0; song.moods[i] = song.full2 ? e : 0; });
@@ -3694,7 +3709,7 @@ $("lkTog").addEventListener("change", (e) => {
   if (!lk.tog) { if (lk.lead === "studio") lkClockStop(); lk.lead = ""; }
   else if (lk.on && !lk.port) lkOpen().catch((er) => lkLost(er.message));
   lkSay(lk.tog ? "Play together: Play or Stop on either one starts or stops both" + (lk.val && lk.val[PE.P_MIDI] === 0 ? ". The FM-1's MIDI out is off (its settings): its Play cannot reach the studio until it is on." : ".")
-    : "Play together off: each plays on its own. The USB port is let go after a few seconds (for the Editor, M-UPGRADE).");
+    : "Play together off: each plays on its own. The USB port is let go after a few seconds (for the Editor, M-UPGRADE), unless Live is on.");
   lkShow();
 });
 $("lkMidi").addEventListener("click", async () => {      // (the player's own setting: never sent by Live, only by this button)
@@ -3776,7 +3791,8 @@ PICS.env3 = (g, W, H, [T, A, Dc, Am], col) => {
   const pts = [[pad, base], [xa, yp]];
   for (let i = 1; i <= 20; i++) { const t = i / 20; pts.push([xa + (xd - xa) * t, yp + (base - yp) * (1 - Math.exp(-3.2 * t)) / (1 - Math.exp(-3.2))]); }
   curve(g, pts, col, base);
-  label(g, "THE FILTER'S ENVELOPE · AGAIN ON EACH " + String(valText(T, parV(T))).toUpperCase(), pad, 14);
+  const tt = String(valText(T, parV(T))).toUpperCase();
+  label(g, "THE FILTER'S ENVELOPE · " + (tt === "OFF" ? "NOT STARTED AGAIN (TRIGGER OFF)" : "AGAIN ON EACH " + tt), pad, 14);
   return [{ name: "Attack · amount", x: xa, y: yp, px: A, ax: [pad, pad + seg * 0.6], py: Am, ay: [base - 0.1 * (base - top), top] },
           { name: "Decay", x: xd, y: base, px: Dc, ax: [xa + 0.08 * seg, xa + 1.08 * seg] }];
 };
@@ -3875,22 +3891,23 @@ PICS.lfo = (g, W, H, [Dp, Sh, Tg, Rt], col) => {
     g.strokeStyle = hexA(COL.ink, 0.25); g.beginPath(); g.moveTo(x, 18); g.lineTo(x, H - 8); g.stroke();
     g.fillStyle = COL.ink; g.beginPath(); g.arc(x, y, 4.5, 0, 7); g.fill(); g.fillStyle = col; g.beginPath(); g.arc(x, y, 2.5, 0, 7); g.fill();
   }
-  const ax = [pad + 0.05 * w, pad + 0.95 * w], xr = ax[0] + pf(Rt) * (ax[1] - ax[0]);   // the point: sideways the rate (left fast, right slow), up the depth
+  const q = meta(Rt), ord = Array.from({ length: q.max - q.min + 1 }, (_, k) => q.min + k).sort((a, b) => cyclesPerBar(valText(Rt, b)) - cyclesPerBar(valText(Rt, a)));   // (fast to slow)
+  const ax = [pad + 0.05 * w, pad + 0.95 * w], xr = ax[0] + Math.max(0, ord.indexOf(parV(Rt))) / Math.max(1, ord.length - 1) * (ax[1] - ax[0]);   // the point: sideways the rate (left fast, right slow), up the depth
   g.font = FONT(700, 9); g.fillStyle = COL.ink; g.fillText(String(valText(Rt, parV(Rt))) + " · " + parV(Dp), Math.min(xr + 8, pad + w - 60), Math.max(26, mid - amp - 6));
   g.fillStyle = "#555a66"; g.fillText("← FASTER   SLOWER →", pad + w - 104, H - 12);
-  return [{ name: "Rate · depth", x: xr, y: mid - amp, px: Rt, ax, py: Dp, ay: [mid - 0.05 * (H / 2 - 18), mid - (H / 2 - 18)], click: Sh }];
+  return [{ name: "Rate · depth", x: xr, y: mid - amp, px: Rt, ax, ord, py: Dp, ay: [mid - 0.05 * (H / 2 - 18), mid - (H / 2 - 18)], click: Sh }];
 };
 // the master bus: in against out (the compressor's ratio over its threshold, the make-up, the limiter's ceiling); its reduction now beside
 PICS.comp = (g, W, H, [Ra, Th, Mk, Ce], col) => {
   const pad = 14, sz = Math.min(W - 60, H - 24), x0 = pad, y0 = H - 10, X = (db) => x0 + (db + 48) / 48 * sz, Y = (db) => y0 - (db + 48) / 48 * sz;
   const r = (() => { const t = String(valText(Ra, parV(Ra))); const m = /^([\d.]+):1$/.exec(t); return m ? +m[1] : 1; })();
-  const T = -40 + pf(Th) * 40, M = pf(Mk) * 12, C = -12 + pf(Ce) * 12;
+  const T = -30 + pf(Th) * 30, M = pf(Mk) * 12, C = -12 + pf(Ce) * 12;   // (amb.c: threshold -30 .. 0 dB, make-up 0 .. +12, ceiling -12 .. 0)
   g.strokeStyle = "#3a3e4a"; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(X(-48), Y(-48)); g.lineTo(X(0), Y(0)); g.stroke(); g.setLineDash([]);
   const pts = [];
   for (let i = -48; i <= 0; i += 1) { let o = i < T ? i : T + (i - T) / r; o = Math.min(C, o + M); pts.push([X(i), Y(Math.max(-48, o))]); }
   curve(g, pts, col, y0);
   g.strokeStyle = COL.acc; g.beginPath(); g.moveTo(X(-48), Y(C)); g.lineTo(X(0), Y(C)); g.stroke();
-  label(g, "IN → OUT · " + valText(Ra, parV(Ra)) + (r === 1 ? " (OFF)" : ""), x0, 14); label(g, "CEILING", X(-48) + 4, Y(C) - 4, COL.acc);
+  label(g, "IN → OUT · " + valText(Ra, parV(Ra)), x0, 14); label(g, "CEILING", X(-48) + 4, Y(C) - 4, COL.acc);
   if (live) {                                                  // the reduction now (dB) and the output's peak
     const gr = (live.gr || 0) / 8, gx = x0 + sz + 18;
     g.fillStyle = "#22252c"; g.fillRect(gx, y0 - sz, 10, sz); g.fillStyle = COL.acc; g.fillRect(gx, y0 - sz, 10, Math.min(sz, gr / 12 * sz));
@@ -3898,7 +3915,7 @@ PICS.comp = (g, W, H, [Ra, Th, Mk, Ce], col) => {
     label(g, "GR", gx - 1, y0 + 9); label(g, "OUT", gx + 13, y0 + 9);
   }
   const ok = (y) => Math.max(y0 - sz, Math.min(y0, y));
-  return [{ name: "Threshold", x: X(T), y: ok(Y(Math.min(C, T + M))), px: Th, ax: [X(-40), X(0)] },
+  return [{ name: "Threshold", x: X(T), y: ok(Y(Math.min(C, T + M))), px: Th, ax: [X(-30), X(0)] },
           { name: "Make-up", x: X(0) - 4, y: ok(Y(Math.min(C, T + (0 - T) / r + M))), py: Mk, ay: [Y(Math.min(C, T + (0 - T) / r)), Y(Math.min(C, T + (0 - T) / r + 12))] },
           { name: "Ceiling", x: X(-30), y: Y(C), py: Ce, ay: [Y(-12), Y(0)] }];
 };
@@ -3978,7 +3995,7 @@ document.addEventListener("pointermove", (e) => {
   if (!pdrag) { const h = nearest(cv, x, y), n = h ? h.name : null; if (cv._hot !== n) { cv._hot = n; drawPic(cv); } cv.style.cursor = h ? "grab" : "default"; return; }
   const h = pdrag.h;
   let ch = false;
-  if (Number.isFinite(h.px)) ch = parSetV(h.px, fromSpan(h.px, x, h.ax)) || ch;
+  if (Number.isFinite(h.px)) ch = parSetV(h.px, h.ord ? h.ord[Math.round(Math.max(0, Math.min(1, (x - h.ax[0]) / (h.ax[1] - h.ax[0] || 1))) * (h.ord.length - 1))] : fromSpan(h.px, x, h.ax)) || ch;   // (ord: a list's values in the picture's order)
   if (Number.isFinite(h.py)) ch = parSetV(h.py, fromSpan(h.py, y, h.ay)) || ch;
   if (ch) { const ps = [h.px, h.py].filter(Number.isFinite); if (ps.every((q) => q >= 0)) ps.forEach(changedPar); else changed(); }   // (a piece setting: the engine alone; FILTERS/SCREAM's: the piece put)
 });
