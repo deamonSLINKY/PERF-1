@@ -63,6 +63,7 @@
   #top .tsep { margin: 0; }
   #top button, #top .menu summary { padding: .4em .55em; }
   #sound:not([hidden]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; align-items: start; }
+  .masonry { grid-auto-rows: 4px; row-gap: 0 !important; grid-auto-flow: row dense; }   /* (cards packed down their columns: masonry() sets each one's rows) */
   #sound > .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0; }
   #sound > .sec.dx7, #sound > .sec:has(.lanes6), #sound > p { grid-column: 1 / -1; }
   .beats { display: inline-flex; gap: 3px; margin-top: 2px; }
@@ -1726,6 +1727,7 @@ function soundRender() {
   if (sel === "pluck") h += dxHTML();
   h = vibeHTML(col) + h;
   $("sound").innerHTML = h + '<p class="muted hint">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece.</p>';
+  masonry($("sound"));
   syncCtls(); drawPics();
   if (sel === "pluck") dxMount();
 }
@@ -2442,6 +2444,23 @@ function deskMS() {                                           // M lit from what
     el.classList.toggle("out", (out & m) === m || (deskSolo && !(deskSolo & m))); });
 }
 setInterval(() => { if (view === "desk") deskMS(); }, 120);
+/* a grid of cards of different heights, packed: each card spans as many 4 px rows as it is tall (+ the 10 px gap), so a short card no longer
+ * leaves a hole the height of the tallest one in its row; kept up as the cards or the window change size */
+const MAS_ROW = 4, MAS_GAP = 10, masBoxes = new WeakSet();
+function masonry(box) {
+  if (!box || masBoxes.has(box)) return;
+  masBoxes.add(box); box.classList.add("masonry");
+  const seen = new WeakSet(), ro = new ResizeObserver(() => pack());
+  function pack() {                                           // (from the observers: before the frame is painted, so a new card never shows unpacked)
+    for (const c of box.children) {
+      if (!seen.has(c)) { seen.add(c); ro.observe(c); }
+      const h = c.getClientRects().length ? c.getBoundingClientRect().height : 0, n = "span " + Math.max(1, Math.ceil((h + MAS_GAP) / MAS_ROW));
+      if (c.style.gridRowEnd !== n) c.style.gridRowEnd = n;
+    }
+  }
+  new MutationObserver(pack).observe(box, { childList: true });
+  ro.observe(box); pack();
+}
 function deskRender() {
   if (view !== "desk" || !io) return;
   let h = '<div class="fadebar"><span class="lbl">FADES OVER</span>' + [1, 2, 4, 8, 16].map((b) => '<button class="small" data-fb="' + b + '" aria-pressed="' + (b === fadeBars) + '">' + b + (b === 1 ? " bar" : " bars") + "</button>").join("") +
@@ -2470,6 +2489,7 @@ function deskRender() {
     return ks.length ? '<div class="sec"><h3>' + shortLabel(x.name) + "</h3>" + pic + '<div class="ctls kn">' + ks.map((k) => knobHTML(k.p, k.label)).join("") + "</div></div>" : "";
   }).join("") + "</div>";
   $("desk").innerHTML = h;
+  masonry(document.querySelector("#desk .deskbelow"));
   syncCtls(); drawPics();
 }
 $("desk").addEventListener("click", (e) => {
