@@ -1705,9 +1705,18 @@ static void knob_range(int k, int *lo, int *hi)
     *lo = p >= 0 ? en_param_info(p)->lo : 0;
     *hi = p >= 0 ? en_param_info(p)->hi : 0;
 }
+/* (0.17.83, the maker's Easter egg: "these go to eleven") a knob that runs 0-100 and shows a plain 100 has one more notch: it reads 11, in
+ * red. The setting stays 100 (nothing is louder: it only says so); a notch down is 100 again, and anything that moves the value lets go of it. */
+#define K_ELEVEN RGB(255, 40, 40)
+static int eleven_k = -1;
+static int eleven_on(int k) { return k >= 0 && k == eleven_k && knob_get(k) == 100; }
 static void knob_text(int k, char *b)
 {
     int p = knob_par(k);
+    if (eleven_on(k)) {
+        b[0] = '1', b[1] = '1', b[2] = 0;
+        return;
+    }
     if (k == K_MXT) {
         const char *s = MXT_NAME[ui.mix_trk % 5u];
         int n = 0;
@@ -2240,6 +2249,21 @@ static void turn(int role, int k, int32_t e)
     if (!e || k == K_NONE)
         return;
     knob_range(k, &lo, &hi);
+    if (eleven_on(k)) {                          /* (0.17.83) at eleven: up stays; the first notch down is 100 again, the rest turn on from there */
+        if (e > 0)
+            return;
+        eleven_k = -1;
+        if (!++e)
+            return;
+    }
+    if (e > 0 && lo == 0 && hi == 100 && knob_get(k) == 100) {   /* one past 100, on a plain number (not a name, nor a value with a unit) */
+        char t[16];
+        knob_text(k, t);
+        if (t[0] == '1' && t[1] == '0' && t[2] == '0' && !t[3]) {
+            eleven_k = k;
+            return;
+        }
+    }
     knob_set(k, knob_get(k) + accel(role, e, hi - lo));
 }
 
@@ -6231,7 +6255,7 @@ static void console_sheet(void)
         caps(t, t, sizeof t);
         cv_rect(4, y, 174, 27, i == hot ? K_PANEL : mix(K_BG, K_PANEL, 9));
         cv_text(8, y - 1, &FONT_XS, u, i == hot ? K_TEXT : K_DIM);
-        cv_text(174 - text_w(&FONT_B, t), y + 3, &FONT_B, t, i == hot ? K_ACC : K_TEXT);
+        cv_text(174 - text_w(&FONT_B, t), y + 3, &FONT_B, t, eleven_on(k) ? K_ELEVEN : i == hot ? K_ACC : K_TEXT);
         cv_rect(8, y + 22, 166, 2, K_LINE);
         if (hi > lo)
             cv_rect(8, y + 22, (int32_t)(v - lo) * 166 / (hi - lo), 2, i == hot ? K_ACC : K_DIM);
@@ -9201,7 +9225,7 @@ static void draw_knobs(void)
             caps(t, view_label((int)i), sizeof t);
             cv_text(x + 5, 24, &FONT_XS, t, hot ? K_TEXT : K_DIM);
             kv_split(k, vt, vu);
-            xe = cv_text_fit(x + 5, KV_Y[vfi[kv_num(vt)]], KV_F[vfi[kv_num(vt)]], vt, hot ? acc : K_TEXT, vu[0] ? 52 - 2 - text_w(&FONT_XS, vu) : 52, 0);
+            xe = cv_text_fit(x + 5, KV_Y[vfi[kv_num(vt)]], KV_F[vfi[kv_num(vt)]], vt, eleven_on(k) ? K_ELEVEN : hot ? acc : K_TEXT, vu[0] ? 52 - 2 - text_w(&FONT_XS, vu) : 52, 0);
             if (vu[0])                           /* the unit: small, after the number, on its baseline */
                 cv_text(xe + 2, 42, &FONT_XS, vu, hot ? K_TEXT : K_DIM);
             cp = hi > lo ? (int32_t)(v - lo) * 45 / (hi - lo) : 0;
@@ -9241,7 +9265,7 @@ static void draw_knobs(void)
                     vf = &FONT_S, vy = 39;
                 if (text_w(vf, vt) > 56)
                     vf = &FONT_XS, vy = 41;
-                text_c(cx, vy, vf, vt, hot ? K_ACC : K_TEXT);
+                text_c(cx, vy, vf, vt, eleven_on(k) ? K_ELEVEN : hot ? K_ACC : K_TEXT);
             }
             cv_rect(cx - 24, 63, 48, 3, hot ? K_BG : K_LINE);
             if (hi > lo) {

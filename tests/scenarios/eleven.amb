@@ -1,0 +1,37 @@
+# These go to eleven (0.17.83): a knob that runs 0-100 and shows a plain 100 has one more notch, reading 11 in red. The setting stays 100;
+# a notch down is 100 again. A knob with a unit or a name (or another range) stops at its top as before.
+seed 0
+wait 3000
+tap ENV
+wait 200
+expect view 1
+spin K1 120
+wait 100
+expect par0 100
+spin K1 1
+wait 100
+expect par0 100
+expect eleven 0
+shot eleven.png
+spin K1 3
+wait 100
+expect eleven 0
+expect par0 100
+spin K1 -1
+wait 100
+expect eleven -1
+expect par0 100
+spin K1 -1
+wait 100
+expect par0 99
+# Bright (also 0-100, a plain number): the same
+spin K2 120
+spin K2 1
+wait 100
+expect eleven 9
+expect par9 100
+# turning another knob up to its top moves the eleven there; a value moved some other way lets go of it
+spin K2 -5
+wait 100
+expect eleven -1
+expect par9 96

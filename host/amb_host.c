@@ -663,6 +663,8 @@ static int expect(const char *what, const char *val)
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
         got = proj.pool;
+    else if (!strcmp(what, "eleven"))             /* (0.17.83) the knob at eleven (its knob id: a parameter, or a K_ code), -1 none */
+        got = eleven_k;
     else if (!strcmp(what, "touched"))            /* (0.16.18) the page's knob lit by the last turn (or a learned setting), -1 none; a message on screen */
         got = (int32_t)(ui.touch_until - plat_ms()) > 0 ? ui.touched : -1;
     else if (!strcmp(what, "msgon"))

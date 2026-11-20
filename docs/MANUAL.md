@@ -438,7 +438,7 @@ along it. It shows the shape, not exact milliseconds.
 Turn **SELECT** to move through the pages in this order. There are 37, and the dial stops at each end. The
 voice buttons jump straight to a voice. Pressing the same button again steps through that voice's envelope
 and LFO pages (and, for the pad, the chords and the progression). On a voice's main page, **KNOB1** is its level. The a to d
-columns are **KNOB1** to **KNOB4**.
+columns are **KNOB1** to **KNOB4**. And yes: a knob that runs 0-100 goes to eleven (one more notch past 100 reads **11**, in red; it is still 100).
 
 | Page | Reach it | a | b | c | d |
 |---|---|---|---|---|---|
