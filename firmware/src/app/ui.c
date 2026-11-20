@@ -88,6 +88,7 @@ static const char *const LOOK_NAME[4] = {"PLAIN", "SCANLINES", "CALM", "CALM+SCA
 static const char *const LIGHTS_NAME[2] = {"OFF", "SHOW"};                                       /* the keys' lights on the visualizers */
 static const char *const USBL_NAME[2] = {"KNOB", "FIXED"};
 static const char *const FORM_NAME[4] = {"Song", "Few rests", "No rests", "Loop"};   /* (0.17.70: Song with its rests half as often, or none) */
+static const char *const SAVE_NAME[2] = {"Anytime", "At stop"};   /* (0.17.82) the Settings page's Save: a store while playing written at once (faded), or kept until the music stops */
 static const char *const START_NAME[2] = {"Last", "Random"};                                       /* the Settings page's Start (0.16.26): power on to the piece last played, or one at random */                                          /* the Settings page's Form (0.16.26): a piece moves through its patterns, or loops its first */                                          /* the thirty built-in DX7 voices: Melodee's set, or the human-made one */
 static const char *const RPP_NAME[25] = {"-12", "-11", "-10", "-9", "-8", "-7", "-6", "-5", "-4", "-3", "-2", "-1", "0",
                                          "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8", "+9", "+10", "+11", "+12"};   /* the repeat's pitch, semitones reached over four beats held */
@@ -185,7 +186,7 @@ static const struct {
     /* the performing settings: no effect on this page (31), and the settings are the UI's (uiv) */
     {"AUTO DJ", 63, 0, {{"Scenes", KN_NAME, 0, SCQ_NAME, 2}, {"Groove", KN_NAME, 1, DJG_NAME, 5},
                         {"Break", KN_NAME, 2, DJB_NAME, 3}, {"Fill", KN_NAME, 3, ONOFF_NAME, 2}}},
-    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"", KN_NONE, 0, 0, 0}, {"Form", KN_NAME, 28, FORM_NAME, 4},
+    {"SETTINGS", 63, 0, {{"Key", KN_NAME, 4, KEYSET_NAME, 5}, {"Save", KN_NAME, 13, SAVE_NAME, 2}, {"Form", KN_NAME, 28, FORM_NAME, 4},
                          {"Start", KN_NAME, 29, START_NAME, 2}}},   /* (the genre moved to Global's fourth knob in 0.14.7); (0.17.75: Voices gone, the DY set always); Saver and Lights on SCREEN (0.16.1) */
     {"FLEX", 62, 0, {{"Quant", KN_NAME, EN_FXS_FX_QUANT, FXQ_NAME, 3}, {"Mode", KN_NAME, EN_FXS_FX_MODE, FXM_NAME, 2},
                      {"Mix", KN_PLAIN, EN_FXS_FX_MIX, 0, 0}, {"", KN_NONE, 0, 0, 0}}},
@@ -220,7 +221,7 @@ static const struct {
     {"SOUND", FX_SPARE11, 0, {{"Vintage", KN_PLAIN, EN_FXS_VINTAGE, 0, 0}, {"Polish", KN_NAME, EN_FXS_POLISH, ONOFF_NAME, 2},
                        {"Tilt", KN_NAME, EN_FXS_TILT, TILT_NAME, 4}, {"Width", KN_PLAIN, EN_FXS_WIDTH, 0, 0}}},   /* (0.17.30; a spare effect bit: nothing held) the voices' wandering pitch,
                                                     * the master's polish (the lows mono, the peaks rounded), its tilt, the width up top */
-    {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 6}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
+    {"CHORUS", FX_SPARE10, 0, {{"Type", KN_NAME, EN_FXS_JC_TYPE, JC_NAME, 6}, {"Target", KN_NAME, EN_FXS_JC_TGT, JCT_NAME, 3}, {"Pad", KN_PAR, P_PL_CHO, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.82: the pad's own chorus, from the Chords page) */   /* (0.17.44; a spare effect bit: nothing held) the Juno-style chorus: off, I, II, I+II, on the pluck, the acid or both */
     {"LINK", FX_SPARE9, 0, {{"Link", KN_NAME, EN_FXS_LK_MODE, LKM_NAME, 6}, {"Plays", KN_NAME, EN_FXS_LK_PLAYS, LKP_NAME, 5},
                      {"Sections", KN_NAME, EN_FXS_LK_SEC, LKS_NAME, 2}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.47; a spare effect bit: nothing held) two units as one band: who leads,
                                                     * what this one plays, the lead's breakdowns and drops followed */
@@ -257,7 +258,8 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_PAD, P_BRIGHT, P_PADTONE, P_DETUNE},
     {P_PE_ATK, P_PE_HOLD, P_PE_REL, P_PE_REST},
     {K_PLRT, P_PL_DEPTH, P_PL_SHAPE, P_PL_DEST},
-    {P_CHORD, P_VOICING, P_PL_CHO, P_CH_LOOP},     /* the harmony together, the pad's chorus, and how many chords repeat (Root is on Global, Drift on Tempo) */
+    {P_CHORD, P_VOICING, P_PAD_COMP, P_CH_LOOP},   /* the harmony together, how the pad plays it (its comping: 0.17.82, from the Feel page, the maker: "it doesn't make sense on the drum page";
+                                                    * the pad's chorus moved to the CHORUS page), and how many chords repeat (Root is on Global, Drift on Tempo) */
     {K_PGCH, K_PGTY, K_PGBR, K_PGPL},              /* the progression by hand (0.15.6, after DUB-1's Chords page): the slot chosen on the white keys, its chord (a degree of
                                                     * the scale, or none: the chord before holds), its type (0.16.6: the piece's or a kind of its own; the slot knob gave
                                                     * way, the keys choose it), its bars, and Play: the genre's walk or the slots in turn */
@@ -285,7 +287,7 @@ static const uint8_t VIEW_KNOB[NVIEWS][4] = {
     {P_DD_CHANGE, P_DD_EVERY, P_DD_POOL, P_DD_MUTATE},
     {K_GRT, K_GRD, K_GRS, K_GRA},                  /* the groove: a lane chosen, its density, the pattern it plays, and all lanes' density */
     {K_GRT, K_STR, K_STP, K_STV},                  /* the steps: the lane, and the step chosen (a white key): its ratchet, its push, its level */
-    {P_GHOST, P_ACCENT, P_PAD_COMP, P_HUMAN},      /* the feel: the genre's ghost notes, how much accents and ghosts count, the pad's comping rhythm, looseness */
+    {P_GHOST, P_ACCENT, K_NONE, P_HUMAN},          /* the feel: the genre's ghost notes, how much accents and ghosts count, looseness (the pad's comping moved to Chords, 0.17.82) */
     {P_CHAIN, P_SLICE, P_TIME, K_PCOND},           /* the phrase: a chain of patterns, a slice permutation, half or double time, and the lane chosen's condition */
     {P_ECHO, P_ETIME, P_REVERB, P_SIZE},
     {P_RV_TYPE, P_RV_DAMP, P_RV_PRE, P_RV_X},       /* the reverb's own page: its type, damping, predelay, and the type's amount */
@@ -305,7 +307,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Bright", "Sound", "Detune"},
     {"Attack", "Hold", "Release", "Rest"},
     {"Rate", "Depth", "Shape", "Target"},
-    {"Chord", "Voicing", "Chorus", "Loop"},
+    {"Chord", "Voicing", "Comp", "Loop"},          /* (0.17.82: Comp in the chorus's place) */
     {"Chord", "Type", "Bars", "Play"},
     {"Level", "Sound", "Cutoff", "Reso"},
     {"Trigger", "Attack", "Decay", "Amount"},
@@ -328,7 +330,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Change", "Every", "Pool", "Mutate"},
     {"Lane", "Density", "Source", "All dens"},
     {"Lane", "Ratchet", "Push", "Level"},
-    {"Ghosts", "Accents", "Pad comp", "Humanize"},
+    {"Ghosts", "Accents", "", "Humanize"},
     {"Chain", "Slice", "Time", "Cond"},
     {"Echo", "Echo time", "Reverb", "Size"},
     {"Type", "Damping", "Predelay", "Amount"},
@@ -549,7 +551,7 @@ static struct {
     uint8_t usb_fixed;                           /* the USB page: 1, the USB audio at a fixed level, not the master knob's */
     uint8_t form;
     uint8_t start_rand;                          /* the Settings page's Start: 0 Last, 1 Random (the global record's rsv, bit 8: 0.16.26) */                                /* the Settings page's Form: 0 Song, 1 Loop (kept in the global record's last byte, bit 2: 0.16.26) */
-    uint8_t fm_dy;                               /* (the Settings page's Voices until 0.17.75: kept for uiv(13)'s place, nothing reads it) */
+    uint8_t save_stop;                           /* (0.17.82) the Settings page's Save: 0 Anytime, 1 At stop (a store while playing is kept and written when the music stops; set_t.usb's bit 1, the old Voices') */
     uint8_t scan;                                /* Scanlines: every other screen row darker (set_t.usb's bit 2) */
     uint8_t midi_map;                            /* MIDI out's map (EN_MAP_*: GM, Model:Samples, MPC Sample, SP-404; set_t.usb's bits 12-14) */
     uint8_t min_pads, min_ch;                    /* MIDI in: 1, a pad controller's notes play PERF (pads_in; set_t.usb's bit 15); 2, a Model:Samples' channels do (ms_in;
@@ -1243,7 +1245,7 @@ static uint8_t *uiv(int i)                     /* the PERFORM page's settings (t
 {
     return i == 0 ? &ui.scene_quant : i == 1 ? &ui.dj_len : i == 2 ? &ui.dj_break : i == 3 ? &ui.dj_fillon : i == 4 ? &ui.key_set :
            i == 5 ? &ui.saver : i == 6 ? &ui.lights : i == 7 ? &ui.jam_voice : i == 8 ? &ui.jam_mode : i == 9 ? &ui.jam_oct : i == 10 ? &ui.jam_ans :
-           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.fm_dy : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
+           i == 12 ? &ui.usb_fixed : i == 13 ? &ui.save_stop : i == 14 ? &ui.scan : i == 15 ? &ui.dj_rounds : i == 16 ? &ui.dj_ramp : i == 17 ? &ui.intro :
            i == 18 ? &ui.midi_map : i == 19 ? &ui.min_ch : i == 20 ? &ui.min_pads : i == 21 ? &ui.usb_host : i == 22 ? &ui.cc_mode :
            i == 23 ? &glob.sl_rsv[0] : i == 24 ? &glob.sl_rsv[1] : i == 25 ? &ui.smp_mode : i == 26 ? &ui.smp_fx : i == 27 ? &ui.smp_gap : i == 28 ? &ui.form : i == 29 ? &ui.start_rand : &proj.genre;   /* 23 zoom, 24 the mix (0.16.1: the global record's spare bytes) */   /* 11: the genre (proj's own); 12: the USB audio's level, 13: the voice set, 14: scanlines, 15-17 the SET page, 18 the MIDI map (kept in set_t.usb) */
 }
@@ -2792,6 +2794,7 @@ static void genre_fx(int g)
     }
 #undef SET
 }
+static void store_now(const char *done);
 static void genre_step(int d)
 {
     if (ui.store_wait) {                         /* a store is being written (the fade): the genre's object is the one it goes to */
@@ -2799,6 +2802,11 @@ static void genre_step(int d)
         return;
     }
     const int g = (proj.genre + d + EN_NGENRE) % EN_NGENRE;
+    if (en_playing && ui.save_stop && project_pending_pieces() && !plat_store_seamless()) {   /* (0.17.82) a store kept for the stop (Save: At stop) goes first, faded, as any store */
+        store_now("");
+        say("STORING", "TURN AGAIN");
+        return;
+    }
     if (project_set_genre(g) != 0) {             /* (0.17.48, the audit) the outgoing genre's changes not written: it stays, nothing lost */
         say("NOT WRITTEN", "GENRE KEPT");
         return;
@@ -2931,6 +2939,10 @@ static void store_now(const char *done)
     int i;
     if (ui.store_wait && ui.store_kind == 4) {   /* a restore is waiting for its fade: a store here would take its place and wedge it */
         say("RESTORING", "ONE MOMENT");
+        return;
+    }
+    if (done[0] && en_playing && ui.save_stop && !plat_store_seamless()) {   /* (0.17.82, Settings > Save: At stop) kept in the bank, written once the music stops: no fade */
+        say(done, "WRITTEN AT STOP");
         return;
     }
     for (i = 0; done[i] && i < (int)sizeof ui.store_msg - 1; i++)
@@ -10077,7 +10089,7 @@ static void settings_save(void)
     s.gx_tgt = ui.gx_tgt;
     s.pm_tgt = ui.pm_tgt;
     s.gx_pat = ui.gx_pat;
-    s.usb = (uint16_t)(ui.usb_fixed | (ui.scan & 1) << 2 |   /* (bit 1 was the DX set chosen: written 0 and not read since 0.17.75, the DY set always) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
+    s.usb = (uint16_t)(ui.usb_fixed | (ui.save_stop & 1) << 1 | (ui.scan & 1) << 2 |   /* (bit 1: Save, 0.17.82; the DX set chosen until 0.17.75) */ (ui.dj_rounds & 7) << 3 | (ui.dj_ramp & 7) << 6 | (ui.intro & 7) << 9 | (ui.midi_map & 7) << 12 | (ui.min_pads == 1 || ui.min_pads == 4) << 15);
     s.viz = (uint8_t)((ui.viz >= VZ_TRIP ? 7u : ui.viz) | (ui.min_pads == 2 || ui.min_pads == 4) << 3 | (ui.cc_mode & 3) << 4 | (ui.min_pads == 3) << 6 | ui.centre_imp << 7);   /* (bits 3-6 free before 0.15.22: older records read 0) */
     if (plat_store_save(OBJ_SET, &s, sizeof s) == 0) {
         set_disk = s;
@@ -10135,7 +10147,7 @@ static void settings_load(void)
                 else if (FXP[p].c[c].idx == 12)
                     fxp_set(k, s.usb & 1);
                 else if (FXP[p].c[c].idx == 13)
-                    fxp_set(k, !(s.usb >> 1 & 1));
+                    fxp_set(k, s.usb >> 1 & 1);   /* (0.17.82 Save; the bit was the DX set before 0.17.75, 0 the usual) */
                 else if (FXP[p].c[c].idx == 14)
                     fxp_set(k, (s.usb >> 2 & 1) | (glob.sl_rsv[2] >> 3 & 1u) << 1);   /* (Look: the scanlines here, Calm the global record's bit 3, 0.17.40) */
                 else if (FXP[p].c[c].idx >= 15 && FXP[p].c[c].idx <= 17)
@@ -10189,14 +10201,14 @@ static void autosave(void)
         } else if (pl != project_place() && now - pl_t >= 20000u && (!en_playing || plat_store_seamless()))
             project_place_set(pl);
     }
-    if (ui.vox_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {
+    if (ui.vox_dirty && !(en_playing && ui.save_stop) && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET)) {
         ui.vox_dirty = 0;
         quiet_write(3);                          /* the player's DX7 voices: kept (playing: faded) */
         return;
     }
     if (ui.set_lazy && !en_playing)
         ui.set_dirty = 1;                        /* (stopped: a write costs the music nothing) */
-    if (ui.set_dirty && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 10 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: 20 s, 0.17.56: each write
+    if (ui.set_dirty && !(en_playing && ui.save_stop) && !ui.btn && !ui.keys && !ui.store_wait && now - ui.act_t >= (en_playing ? 10 * GLOB_QUIET : GLOB_QUIET)) {   /* (playing: 20 s, 0.17.56: each write
                                                                                                                                  * stops the flash for 0.2-0.36 s, its slices
                                                                                                                                  * hold the audio's interrupt 1.2 ms each; the
                                                                                                                                  * maker's log: a store every 5-10 s while turning
@@ -10209,7 +10221,7 @@ static void autosave(void)
         return;
     if (!en_playing && now - ui.act_t >= KIT_QUIET)
         project_flush();                         /* stopped: all of it */
-    else if (project_pending_globals() && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET))
+    else if (project_pending_globals() && !ui.save_stop && now - ui.act_t >= (en_playing ? 2 * GLOB_QUIET : GLOB_QUIET))
         quiet_write(2);                          /* playing: the theme, Tune, MIDI out (faded) */
 }
 
@@ -10469,7 +10481,7 @@ void ui_init(void)
         ui.dj_fillon = 1;
         ui.mood = 50;                          /* the mood macro: the middle leaves the piece as it is */
         ui.jam_oct = 2;                        /* the JAM page: octave 0 */
-        ui.fm_dy = 1;                          /* the DY voices (0.14.21; always since 0.17.75: only its bit in the stored settings is left) */
+        ui.save_stop = 0;                      /* (0.17.82) Save: Anytime, as before */
     }
     settings_load();                             /* the effects' and performing settings as you left them */
     voices_load();                               /* and the player's DX7 voices */

@@ -807,6 +807,7 @@ void project_globals(void)
 int project_saved(int i) { return (unsigned)i < NPIECES && (saved >> i & 1u); }
 int project_pending(void) { return pending || pending_glob || pending_px || bs_dirty; }
 int project_pending_globals(void) { return pending_glob; }
+int project_pending_pieces(void) { return pending || pending_px || bs_dirty; }   /* (0.17.82) a piece stored, not yet written (what a genre change writes first) */
 
 int project_flush(void)
 {

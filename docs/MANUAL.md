@@ -446,7 +446,7 @@ columns are **KNOB1** to **KNOB4**.
 | Pad | **ENV** | Level | Bright | Sound (24) | Detune |
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
 | Pad LFO | **ENV** x3 | Rate, slow to fast as you turn left: 32 bars down to a 1/16T, with dotted and triplet values between (1/2., 1/4., 1/8., 1/4T, 1/8T). Playing, the LFO is locked to the bar. | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
-| Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Chorus (0-100) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
+| Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Comp: how the pad plays the chords (auto, hold, 7 stab rhythms) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
 | Progression | **ENV** x5, or hold **EDIT** | Chord (a chord of the scale, or Hold) | Type (Piece's, Triad, 7th, 9th, Sus, Dub, Fourths, 11th) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
@@ -469,7 +469,7 @@ columns are **KNOB1** to **KNOB4**.
 | Drum drift | **SEQ** x4 | Change (off, next, random; off lets the Settings page's Form decide) | Every (each chord, or 4-64 bars) | Pool (patterns 1-2 up to 1-6) | Mutate (off, shift, morph) |
 | Groove | **SEQ** x5 | Lane (kick to perc) | Density (0-100; 50 plays as written) | Source (follow, or pattern 1-6) | All dens (every lane's density at once) |
 | Steps | **SEQ** x6 | Lane | Ratchet (off, x2, x3, x4, x6, flam, swell 3, swell 4) | Push (0-7 twelfths of a step late) | Level (normal, ghost, soft, accent) |
-| Feel | **SEQ** x7 | Ghosts (0-100) | Accents (0-100; 50 as marked) | Pad comp (auto, hold, 7 rhythms) | Humanize (0-100) |
+| Feel | **SEQ** x7 | Ghosts (0-100) | Accents (0-100; 50 as marked) | - | Humanize (0-100) |
 | Phrase | **SEQ** x8 | Chain (off, or 9 chains of patterns) | Slice (off, 8 reorderings, auto) | Time (normal, half, double) | Cond (for the chosen lane: always, 1:2 ...) |
 | Space | **SELECT** | Echo | Echo time (1/8, 3/16, 1/4, dotted 1/4, 1/2, 1 bar) | Reverb | Size |
 | Reverb | **SELECT** | Type (plate, shimmer, gated) | Damping | Predelay (6-30 ms) | Amount |
@@ -639,9 +639,10 @@ The bass's LFO moving the cutoff (a wobble) works with every type. The filter ty
 stored with it. It's the MultiFilter idea from Caustic, rebuilt here.
 
 **Voicing** sets how the chord is spread. Close keeps the four notes together. Open drops the second-highest
-note an octave, spreading the chord out. **Chorus** makes the pad sound wider, like several players at once,
-without an obvious pulsing. 0 is off. The genres set it between 20 and 50. The page also has **Root**, the
-same as on Global.
+note an octave, spreading the chord out. **Comp** is how the pad plays the chords: **Auto** uses the genre's
+own rhythm for the stab sounds, **Hold** never stabs (a stab sound plays as a held pad, like a drone), and the
+other seven force stabs on any pad sound (section 8, Feel, describes them). The pad's **Chorus**, which makes it
+sound wider, is on the CHORUS settings page since 0.17.82. The song's **Root** is on Global.
 
 For dub techno, set Chord to Dub, pick the pad's Dub sound (dark chord stabs) and turn the echo up. HYPNO
 piece 06 is set up that way.
@@ -1418,7 +1419,7 @@ The **Feel** page (press **SEQ** seven times) holds the things that make a groov
 |---|---|
 | Ghosts (0-100) | Adds the genre's **ghost notes**, very soft hits between the main ones: soft snares, plus soft kicks in lofi, breaks, funk and trip-hop. They go on steps the pattern doesn't have. At 100, about six in ten of those steps sound. Lofi, house, DnB, breaks, garage, funk and trip-hop have ghost steps. The other genres don't change. |
 | Accents (0-100) | How much the accents and ghosts from the Steps page count. 50 plays them as marked, 0 plays every level the same, 100 exaggerates them. |
-| Pad comp | The rhythm of the pad's stabs (comping is the rhythm a keyboard player chops chords in). It affects the stab sounds: Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass and Pluck. **Auto** uses the genre's own rhythm. **Hold** never stabs, so a stab sound plays as a held pad. The other choices force stabs on any pad sound: **Off-beat**, **On-beat**, **3-3-2** (eighths grouped 3+3+2), **Charleston** (the old jazz "long-short" rhythm), **Syncopated**, **Sparse** and **Eighths**. |
+| Pad comp (on the Pad's **Chords** page, **ENV** x4, since 0.17.82; the knob here is empty) | The rhythm of the pad's stabs (comping is the rhythm a keyboard player chops chords in). It affects the stab sounds: Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass and Pluck. **Auto** uses the genre's own rhythm. **Hold** never stabs, so a stab sound plays as a held pad. The other choices force stabs on any pad sound: **Off-beat**, **On-beat**, **3-3-2** (eighths grouped 3+3+2), **Charleston** (the old jazz "long-short" rhythm), **Syncopated**, **Sparse** and **Eighths**. |
 | Humanize (0-100) | A little looseness. Each hit lands a touch softer and a touch late. |
 
 ### Phrase: chains, slices, half and double time, conditions
@@ -2123,10 +2124,11 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **Auto FX**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE**, **SOUND**, **CHORUS**, **RESONATOR**, **RETURNS** and **LINK**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
 
-The Settings page (its second knob is free):
+The Settings page:
 
 | Knob | What it does |
 |---|---|
+| Save | When a store while the music plays is written to memory. **Anytime** (the default): at once. Writing pauses the FM-1 for a moment, so the music fades out and back in around it. **At stop**: the piece is stored straight away (it plays and shows as stored) but is only written when you stop the music, so nothing fades. The effects' and other settings wait for the stop too. Stop before you switch off, or the store is lost. Changing genre while a store is waiting writes it first, with the usual fade. |
 | Key | A key change for the drop: same, +2, +3, +5 or +7 semitones. When a breakdown or build ends and the groove comes back in, the whole piece moves up by this much for that round. The next breakdown, a stop or another piece moves it back. `KEY` shows in the header while it's on. |
 | Form | **Song** (the default): a piece moves through its own drum patterns, a new one every 8 bars (16 in the slower genres), with a fill just before each change, so it plays like a track. Song also arranges the parts: now and then a phrase rests the pluck or the acid (or both) for half of it, and the bass may sit out the fill bar and land on the change. The pad always plays. A set-list slot with its own bars leaves the arranging to you. **Few rests** is Song with those rests half as often, and **No rests** is Song with none: every part plays every bar. **Loop**: it stays on its first pattern, for when you want to steer it yourself. If you set Drum drift (**SEQ** x4), yours plays instead, in either. Song keeps the beat's feel: when it moves to a pattern with another feel (half time after four on the floor, say), the kick, snare and clap stay as they were and only the hats and perc move on. |
 | Start | **Last** (the default): the FM-1 switches on to the piece you last played, as it is saved (unsaved changes are not kept: save with **GLO**, then **SAVE**). **Random**: a piece of HYPNO at random, the old way. |
@@ -2185,6 +2187,7 @@ middle, so the low end stays mono. These are the unit's settings, the same for e
 |---|---|
 | Type | **Off**, **I** (the default since 0.17.54: slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), **I+II** (a fast, shallow shimmer, close to a vibrato), or a rotary speaker's two speeds: **ROT SLOW** (about 0.8 turns a second) and **ROT FAST** (about 6.7). The rotary sways the sound from side to side with a touch of pitch, like an organ's spinning horn; going from one speed to the other, it speeds up or slows down over about a second, as the real one does. Try it on an organ DX voice on the pluck. |
 | Target | What goes through it: the **Pluck** (its plain sounds and its DX voices; it replaces the DX voices' own ensemble), the **Acid**, or **Both**. |
+| Pad | The pad's own ensemble chorus (0-100), the one the genres set between 20 and 50: it makes the pad wider, like several players at once. It belongs to the piece and is stored with it (it was on the Pad's Chords page before 0.17.82). |
 
 The level stays where it was, and in mono nothing is lost. It switches off by itself when the load is very high, like the pad's chorus.
 

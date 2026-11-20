@@ -1,5 +1,6 @@
-# The Feel page (the SEQ button's seventh page, after Steps): the genre's ghost notes, how much the accents and ghosts count (50 as marked), the pad's
-# comping rhythm (auto, hold, off-beat .. eighths) and a little looseness.
+# The Feel page (the SEQ button's seventh page, after Steps): the genre's ghost notes, how much the accents and ghosts count (50 as marked), and a
+# little looseness; its third knob is empty since 0.17.82. The pad's comping rhythm (auto, hold, off-beat .. eighths) is on the Pad's Chords page
+# (ENV x4, view 4) now, in the third place; the pad's chorus moved to the CHORUS settings page.
 seed 0
 wait 3000
 turn SELECT 27 100
@@ -14,11 +15,17 @@ wait 100
 expect par162 60
 spin K3 2
 wait 100
-expect par160 2
+expect par160 0
 spin K4 30
 wait 100
 expect par163 30
 shot feel.png
+turn SELECT -23 100
+expect view 4
+spin K3 2
+wait 100
+expect par160 2
+shot chords_comp.png
 spin K3 20
 wait 100
 expect par160 8

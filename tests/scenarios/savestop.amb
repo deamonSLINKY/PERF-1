@@ -1,0 +1,68 @@
+# Save: At stop (0.17.82, the Settings page's second knob). A store while playing is kept (the piece reads as stored) but not written: no fade.
+# Stopping writes it. A genre change with it waiting writes it first (faded), and turning again then changes the genre. Anytime is as before.
+seed 0
+wait 3000
+expect playing 1
+# the settings walk: HOLD HOME opens it; SELECT 2 is the Settings page; its second knob, Save: At stop
+press HOME
+wait 800
+release HOME
+wait 200
+turn SELECT 2
+wait 100
+spin K2 1
+wait 300
+shot savestop_settings.png
+tap FX
+wait 300
+# piece 01 stored while playing: kept, no fade
+tap GLO
+wait 200
+turn K1 10
+wait 200
+press SAVE
+wait 200
+release SAVE
+wait 400
+expect storewait 0
+expect hushed 0
+expect saved 1
+expect dirty 1
+expect playing 1
+# a genre change: the waiting store goes first (faded), the genre stays this turn
+press GLO
+wait 100
+turn PRESET 1
+wait 200
+release GLO
+wait 600
+expect genre 0
+expect dirty 0
+press GLO
+wait 100
+turn PRESET 1
+wait 200
+release GLO
+wait 300
+expect genre 1
+# back, store again, then stop: written at the stop
+press GLO
+turn PRESET -1
+release GLO
+wait 300
+expect genre 0
+turn K1 -10
+wait 200
+shot savestop_2.png
+wait 200
+press SAVE
+wait 200
+release SAVE
+wait 400
+expect hushed 0
+expect dirty 1
+tap PLAY
+wait 3000
+expect playing 0
+expect dirty 0
+expect saved 1

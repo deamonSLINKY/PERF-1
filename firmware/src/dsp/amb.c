@@ -653,6 +653,26 @@ void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
         par[P_EVOLVE] = 35;
         par[P_BASS] = 68;                       /* (0.16.6: held, at 85 it was as loud as the whole mix) */
     }
+    {   /* (0.17.82) the maker's listening pass on the weakest pieces: a few settings changed by ear, piece by piece */
+        static const struct { uint8_t g, i, p, v; } TWEAK[] = {
+            {21, 8, P_PADTONE, 23}, {21, 8, P_PAD_COMP, 1},                    /* AMBIENT 09: the Air pad, held (no stabs) */
+            {0, 9, P_CM_SND, 17}, {0, 9, P_ACID, 60},                          /* HYPNO 10: the pluck on FLUTEMRMBA, the acid up */
+            {17, 4, P_CM_SND, 32}, {17, 4, P_AC_RANGE, 2},                     /* PSY 05: MOOGBASS under the Laser acid, two octaves */
+            {3, 7, P_MODE, 7}, {3, 7, P_CHORD, 2}, {3, 7, P_PAD, 75}, {3, 7, P_PADTONE, 14}, {3, 7, P_BRIGHT, 50}, {3, 7, P_DETUNE, 0},
+            {3, 7, P_AC_WAVE, 6}, {3, 7, P_CM_SND, 13}, {3, 7, P_CM_LVL, 65}, {3, 7, P_CM_DENS, 75},   /* DUBSTEP 08: Pent min, 7ths (in the scale),
+                                                                                 * the Rave pad up, the Chip acid, WINEGLASS */
+            {16, 5, P_CM_SND, 63},                                             /* INDUS 06: MAGICM1ORG */
+            {4, 4, P_AC_DENS, 46}, {4, 4, P_AC_RANGE, 2},                      /* DUB 05 */
+            {17, 9, P_CM_SND, 83}, {17, 9, P_AC_WAVE, 12},                     /* PSY 10: DOUG22PICK, the Organ acid */
+            {21, 2, P_ACID, 40}, {21, 2, P_AC_WAVE, 6},                        /* AMBIENT 03: the Chip acid at 40 */
+            {0, 5, P_DETUNE, 0},                                               /* HYPNO 06 */
+            {4, 8, P_AC_WAVE, 1},                                              /* DUB 09: the Square acid (the Pluck acid sat on the pluck; Organ would twin DUB 03) */
+        };
+        unsigned k;
+        for (k = 0; k < sizeof TWEAK / sizeof TWEAK[0]; k++)
+            if (TWEAK[k].g == g && TWEAK[k].i == i)
+                par[TWEAK[k].p] = TWEAK[k].v;
+    }
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
 void en_piece(int i, int16_t *par, uint16_t *pool) { en_piece_g(0, i, par, pool); }

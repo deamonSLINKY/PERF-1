@@ -70,6 +70,7 @@ int project_start_random(void);          /* the Settings page's Start: 1 Random 
 void project_start_random_set(int on);
 void project_globals(void);              /* the theme, Tune or MIDI out changed: into the bank */
 int project_saved(int i);                /* piece i is in the bank */
+int project_pending_pieces(void);        /* (0.17.82) a stored piece not yet in flash */
 int project_pending(void);               /* the bank has changes not yet in flash */
 int project_flush(void);                 /* and into flash (call while stopped): 0 = written */
 int project_pending_globals(void);       /* the theme, Tune or MIDI out changed, not yet in flash */
