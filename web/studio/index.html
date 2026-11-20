@@ -335,6 +335,7 @@
   .vibecard .knob .dial i { transform-origin: 50% 19px; height: 15px; }
   #impLogo { width: 34px; height: 44px; image-rendering: pixelated; cursor: pointer; flex: none; }
   .fxk, #xyPad { touch-action: none; -webkit-touch-callout: none; user-select: none; }
+  #ed, .ctl:not(.list), .dxk, .fxkn { touch-action: pan-y; }   /* (a finger's swipe up or down scrolls: a tap, a short hold or a sideways drag edits, see touchGate) */
   #mixcheck .sec { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 10px 0 0; }
   .mixrows { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 6px 14px; }
   .mixrow { display: grid; grid-template-columns: 14px 8.5em 5.2em minmax(0, 1fr); gap: 6px; align-items: baseline; font-size: .82rem; }
@@ -653,6 +654,8 @@ function loadStore() {                                        //  so a save made
   return out;
 }
 let storeFailSaid = false;
+const storeWait = [];                                         // (Save waits for the browser's write of the flash it made: true kept, false refused)
+const storeAck = (ms) => new Promise((res) => { const f = (k) => { clearTimeout(t); res(k); }, t = setTimeout(() => { const i = storeWait.indexOf(f); if (i >= 0) storeWait.splice(i, 1); res(null); }, ms); storeWait.push(f); });
 function saveStore(store) {
   try {
     const ch = {};
@@ -696,7 +699,7 @@ async function bootOnce() {
         if (m.type === "ready") m.error ? rej(new Error(m.error)) : m.studio ? res() : rej(new Error("this emulator build has no studio hooks: rebuild it (web/emu/build_clang.sh)"));
         else if (m.type === "st") { const f = pending.get(m.id); pending.delete(m.id); if (f) f(m); }
         else if (m.type === "frame") {
-          if (m.store) saveStore(m.store);                    // (first: a draw that throws must not lose a flash write, sent once)
+          if (m.store) { const kept = saveStore(m.store); storeWait.splice(0).forEach((f) => f(kept)); }   // (first: a draw that throws must not lose a flash write, sent once)
           try { if (m.fb) { lastFb = m.fb; if (!document.hidden) drawScreen(m.fb); } if (m.live) onLive(m.live); } catch (err) { console.error(err); }
         }
       };
@@ -719,43 +722,67 @@ async function bootOnce() {
   }
 }
 document.addEventListener("pointerdown", () => { if (ac && ac.state === "suspended") ac.resume().catch(() => {}); }, true);   // (a browser that suspended the sound: the next touch brings it back)
+let lastInput = performance.now(), idleSusp = false;           // (idle: hidden, or two minutes untouched, and nothing playing, recording or linked: the emulator rests)
+function idleCheck() {
+  if (!ac || !node || booting === null) return;
+  const quiet = !(live && live.playing) && !(typeof rec !== "undefined" && rec) && !(lk && (lk.on || lk.clk));
+  const want = quiet && (document.hidden || performance.now() - lastInput > 120000);
+  if (want && ac.state === "running") { idleSusp = true; ac.suspend().catch(() => {}); }
+  else if (!want && idleSusp && ac.state === "suspended") { idleSusp = false; ac.resume().catch(() => {}); }
+}
+["pointerdown", "keydown", "wheel"].forEach((ev) => document.addEventListener(ev, () => { lastInput = performance.now(); if (idleSusp) idleCheck(); }, { capture: true, passive: true }));
+document.addEventListener("visibilitychange", () => { if (!document.hidden) lastInput = performance.now(); idleCheck(); });
+setInterval(idleCheck, 2000);
 function press(bit) {                                        // a panel button, pressed and let go
   node.port.postMessage({ type: "buttons", mask: 1 << bit });
   setTimeout(() => node.port.postMessage({ type: "buttons", mask: 0 }), 90);
 }
 const BTN_PLAY = 10;
 let opening = 0;                                              // (the studio opening a piece itself: the engine is on it before cur says so)
-async function openPiece(g, i, place) {                     // (place: the set list's place, as the unit's PRESETS knob with the song on: its parts too)
+async function openPiece(g, i, place, fresh) {              // (place: the set list's place, as the unit's PRESETS knob with the song on: its parts too; fresh: no draft back)
   opening++;
   const r = await ask(place === undefined ? { type: "st_open", genre: g, piece: i } : { type: "st_go", place });
   opening--;
   if (!r.ok || r.timeout) { say("The emulator is busy writing; try again.", true); return false; }
-  takeUp(g, i, r.io);
-  if (place === undefined) say("Opened " + S.genreName(g) + " " + S.pieceName(g, i) + ". Click a lane to edit it; it plays as you change it.");
+  const back = takeUp(g, i, r.io, !fresh);
+  if (back) say("Opened " + S.genreName(g) + " " + S.pieceName(g, i) + " with your unsaved edits back: Save keeps them.");
+  else if (place === undefined) say("Opened " + S.genreName(g) + " " + S.pieceName(g, i) + ". Click a lane to edit it; it plays as you change it.");
   refresh();
   if (typeof codeNow === "function") setTimeout(codeNow, 300);
   return true;
 }
-let putTimer = 0;
-function takeUp(g, i, bytes) {                                // the piece in hand is now this one (its bytes as the engine has them): nothing of the last carried over
-  clearTimeout(putTimer);
-  cur = { genre: g, piece: i }; $("undo").hidden = true; impPrev = null;
-  io = new Uint8Array(bytes);
+let putTimer = 0, ioOf = null;                                 // (ioOf: the piece the bytes in hand are, {g, p}: every put and Save names it, and the emulator refuses it for another)
+const drafts = new Map();                                     // (unsaved edits of a piece left, the song moving on or another opened: genre * 100 + piece -> its bytes; back when it is opened again)
+function takeUp(g, i, bytes, restore) {                       // the piece in hand is now this one (its bytes as the engine has them): nothing of the last carried over
+  clearTimeout(putTimer); clearTimeout(parTimer); parTimer = 0; parSend.clear(); fadeGen++;
+  if (dirty && io && ioOf && (ioOf.g !== g || ioOf.p !== i)) drafts.set(ioOf.g * 100 + ioOf.p, io.slice());
+  const d = restore ? drafts.get(g * 100 + i) : null;
+  drafts.delete(g * 100 + i);
+  cur = { genre: g, piece: i }; ioOf = { g, p: i }; $("undo").hidden = true; impPrev = null;
+  io = new Uint8Array(d || bytes);
   dxv = null;                                                 // (the DX7 editor reads the new piece's pluck voice when it is next shown)
   resetHistory();
   $("genre").value = g; fillPieces(); $("piece").value = i;
   ["save", "code"].forEach((id) => { $(id).disabled = false; });
   undoReset(); soundRender(); deskRender();
-  dirty = false;
+  dirty = !!d;
+  if (d) putNow();
+  return !!d;
 }
 let dirty = false, following = false;                          // (edits not saved: the page asks before it is left)
-window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+window.addEventListener("beforeunload", (e) => { if (dirty || drafts.size) { e.preventDefault(); e.returnValue = ""; } });
+function putNow() {                                           // the bytes in hand into the emulator, for their piece only (the song moved on first: kept as its draft)
+  if (!node || !io || !ioOf) return;
+  const { g, p } = ioOf, b = io.slice(), id = ++reqId;
+  pending.set(id, (m) => { if (m.moved && !(ioOf && ioOf.g === g && ioOf.p === p)) drafts.set(g * 100 + p, b); });
+  node.port.postMessage({ type: "st_put", io: b, g, p, id });
+}
 function changed(quiet) {                                    // the piece in hand edited: draw it, and into the emulator a moment later
   if (!quiet) undoNote();
   dirty = true;
   refresh();
   clearTimeout(putTimer);
-  putTimer = setTimeout(() => { if (node && io) node.port.postMessage({ type: "st_put", io: io.slice(), id: ++reqId }); }, 60);
+  putTimer = setTimeout(putNow, 60);
 }
 
 /* ---- what plays: the bar, the chord, the lines the engine makes up (amb_web.c web_st_live) */
@@ -779,9 +806,10 @@ function onLive(b) {
     ask({ type: "st_read" }).then((r) => {
       following = false;
       if (!r.ok || r.timeout || !live || opening) return;
-      const was = S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece);
-      takeUp(live.genre, live.piece, r.io);
-      say("The song moved on: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " plays, and edits go into it now (" + was + " as it was saved).");
+      const was = S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece), kept = dirty;
+      const back = takeUp(live.genre, live.piece, r.io, true);
+      say("The song moved on: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " plays, and edits go into it now" + (back ? ", with your unsaved edits to it back" : "") +
+          (kept ? ". Your unsaved edits to " + was + " are kept: open it again (or let the song come back to it) and Save." : " (" + was + " as it was saved)."));
       refresh();
     });
   }
@@ -1583,7 +1611,7 @@ async function pieceIn(pc) {
   if (pc.kind === "set") return say("That is a set: open it on the Library & pieces page.", true);
   if (!(pc.genre < N.genres.length && pc.slot >= 0 && pc.slot < ((N.pieces[pc.genre] || []).length || 10))) return say("That piece is for a genre or place this PERF-1 does not have (a newer version?).", true);
   if (!node) { cur = { genre: pc.genre, piece: pc.slot }; if (!(await switchOn())) return; }
-  if (!(await openPiece(pc.genre, pc.slot))) return;
+  if (!(await openPiece(pc.genre, pc.slot, undefined, true))) return;
   const rec = pc.rec.slice();
   for (let p = 0; p < P.length; p++) {
     if (p >= pc.npar || rec[REC_PAR + p] === 0xFF) rec[REC_PAR + p] = io[REC_PAR + p];   // settings the piece predates: as they are
@@ -1593,10 +1621,19 @@ async function pieceIn(pc) {
   if (pc.fx) { io[IO_FXON] = 1; io.set(pc.fx, IO_FX); }
   if (pc.voice && S.userSlot(pc) >= 0) {                      // its own DX7 voice: into a slot here (the one holding it already, or the next), the pluck on it
     const vx = await ask({ type: "st_vox", op: "get", slot: 0 }), n = vx.n || 0;
-    let slot = -1;
-    for (let k = 0; k < n && slot < 0; k++) { const q = k ? await ask({ type: "st_vox", op: "get", slot: k }) : vx; if (q.ok > 0 && q.vox && q.vox.subarray(0, 128).every((b, j) => b === pc.voice[j])) slot = k; }
-    if (slot < 0) { const r = await ask({ type: "st_vox", op: "put", slot: Math.min(n, 15), keep: true, vox: pc.voice }); if (r.ok >= 0) slot = r.ok; }
-    if (slot >= 0) { io[REC_PAR + PE.P_CM_SND] = DXB() + slot - P[PE.P_CM_SND].min; dxN = Math.max(dxN, slot + 1); }
+    let slot = -1, to = n;
+    const names = [];
+    for (let k = 0; k < n && slot < 0; k++) { const q = k ? await ask({ type: "st_vox", op: "get", slot: k }) : vx; if (q.ok > 0 && q.vox) { names[k] = vName(vUnpack(q.vox.subarray(0, 128))).trim(); if (q.vox.subarray(0, 128).every((b, j) => b === pc.voice[j])) slot = k; } }
+    if (slot < 0 && n >= 16) {                                  // (all sixteen slots hold a voice: the player picks the one to replace, or none)
+      const its = vName(vUnpack(pc.voice)).trim() || "its voice";
+      const a = prompt("The piece brings its own DX7 voice, “" + its + "”, and your 16 voice slots are full:\n" + names.map((x, k) => (k + 1) + " " + (x || "?")).join(",  ") +
+                       "\n\nType the slot (1-16) to replace with it, or Cancel to keep your voices (the pluck then plays the slot the piece names, with your voice in it).", "");
+      const k = a === null ? -1 : parseInt(a, 10) - 1;
+      to = k >= 0 && k < 16 ? k : -1;
+      if (to < 0) say("Your voices are kept: the pluck plays your slot's voice, not the piece's own.", true);
+    }
+    if (slot < 0 && to >= 0) { const r = await ask({ type: "st_vox", op: "put", slot: to, keep: true, vox: pc.voice }); if (r.ok >= 0) slot = r.ok; }
+    if (slot >= 0) { io[REC_PAR + PE.P_CM_SND] = DXB() + slot - P[PE.P_CM_SND].min; dxN = Math.max(dxN, slot + 1); dxv = null; }
   }
   changed();
   say("Opened " + (pc.meta && pc.meta.t ? "“" + pc.meta.t + "”" : "the piece") + " into " + S.genreName(pc.genre) + " " + S.pieceName(pc.genre, pc.slot) + " (in the emulator; your bank is not changed).");
@@ -1879,7 +1916,7 @@ function changedPar(p) {                                      // (the piece's co
   undoNote(); refresh();
   dirty = true;
   parSend.set(p, parV(p)); lkPar(p, parV(p));
-  if (!parTimer) parTimer = setTimeout(() => { parTimer = 0; if (node) for (const [q, v] of parSend) node.port.postMessage({ type: "st_par", p: q, v, id: ++reqId }); parSend.clear(); }, 15);
+  if (!parTimer) parTimer = setTimeout(() => { parTimer = 0; if (node && ioOf) for (const [q, v] of parSend) node.port.postMessage({ type: "st_par", p: q, v, g: ioOf.g, pc: ioOf.p, id: ++reqId }); parSend.clear(); }, 15);
 }
 let downAt = null;                                           // (a press in progress: where it began)
 document.addEventListener("pointerdown", (e) => { downAt = e.target; }, true);
@@ -1898,13 +1935,49 @@ let hoverEl = null, hoverT = 0;
 document.addEventListener("pointerover", (e) => { const k = e.target.closest(".ctl, .fader, .dxk, .dxfeel, .fxkn"); if (k !== hoverEl) { hoverEl = k; hoverT = performance.now(); } });
 document.addEventListener("scroll", () => { hoverT = performance.now(); }, true);
 const wheelOk = (el, e) => e.deltaY !== 0 && (document.activeElement === el || (hoverEl === el && performance.now() - hoverT > 350));
+/* touch: a swipe that starts on a knob or the step editor scrolls the page, as a phone's would. The press reaches the page only as a tap (let go
+ * where it began), a hold (still for 180 ms: then the finger turns it and the page holds still) or, on a slider, a sideways drag */
+const TOUCH_GATED = "#ed, .ctl:not(.list), .dxk, .fxkn";
+let tg = null;
+function tgGo() {                                             // the press, held back, given to the page now
+  if (!tg || tg.done) return;
+  tg.done = true; clearTimeout(tg.tm);
+  const { target, x, y, id } = tg;
+  if (target.isConnected) target.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, pointerId: id, pointerType: "touch", isPrimary: true, button: 0, buttons: 1 }));
+}
+document.addEventListener("pointerdown", (e) => {
+  if (!e.isTrusted || e.pointerType !== "touch") return;
+  const el = e.target.closest && e.target.closest(TOUCH_GATED);
+  tg = null;
+  if (!el) return;
+  e.stopImmediatePropagation();
+  const slider = el.matches(".ctl:not(.knob)");
+  tg = { target: e.target, x: e.clientX, y: e.clientY, id: e.pointerId, t0: performance.now(), done: false, dead: false, slider, ed: el.id === "ed" };
+  if (!tg.ed) tg.tm = setTimeout(tgGo, 180);                  // (the step editor: a tap, its rows too close for a hold to be anything but a scroll)
+}, true);
+document.addEventListener("pointermove", (e) => {
+  if (!tg || !e.isTrusted || e.pointerId !== tg.id || tg.done || tg.dead) return;
+  const dx = e.clientX - tg.x, dy = e.clientY - tg.y;
+  if (Math.hypot(dx, dy) < 8) return;
+  if (tg.slider && Math.abs(dx) > Math.abs(dy)) tgGo();       // (a slider drawn sideways: it turns, from where the finger came down)
+  else { tg.dead = true; clearTimeout(tg.tm); }              // (a scroll: nothing edited)
+  e.stopImmediatePropagation();
+}, true);
+document.addEventListener("touchmove", (e) => { if (tg && tg.done && !tg.dead) e.preventDefault(); }, { passive: false, capture: true });   // (held: the page stays still under the finger)
+document.addEventListener("pointerup", (e) => {
+  if (!tg || e.pointerId !== tg.id) return;
+  if (!e.isTrusted || tg.dead) { clearTimeout(tg.tm); tg = null; return; }   // (a lost or cancelled press: nothing)
+  if (!tg.done) tgGo();                                       // (a tap: the press, then this let-go)
+  setTimeout(() => { tg = null; }, 0);
+}, true);
+document.addEventListener("pointercancel", (e) => { if (tg && e.pointerId === tg.id) { tg.dead = true; clearTimeout(tg.tm); } }, true);
 let drag = null;
 document.addEventListener("pointerdown", (e) => {
   const el = e.target.closest(".ctl:not(.list), .fader");
   if (!el || !io || e.button !== 0 || e.altKey) return;      // (right-click and Alt-click: the lock, nothing else)
   const p = +el.dataset.p, r = el.getBoundingClientRect();
   drag = { el, p, x: e.clientX, y: e.clientY, v0: parV(p), moved: false, fader: el.classList.contains("fader"), knob: el.classList.contains("knob"), r };
-  el.setPointerCapture(e.pointerId); el.focus(); e.preventDefault();
+  try { el.setPointerCapture(e.pointerId); } catch { /* (a press given late, its finger already up: a tap) */ } el.focus(); e.preventDefault();
   if (drag.fader) setFromCtl(p, meta(p).min + (r.bottom - e.clientY) / r.height * (meta(p).max - meta(p).min));
 });
 document.addEventListener("pointermove", (e) => {
@@ -2714,36 +2787,42 @@ setInterval(() => {                                           // the song's move
 
 /* ---- fades: a part's level down to out over some bars (then muted, its level back as it was), or up from out (unmuted at nothing, up to its level);
  * the steps go to the engine as the unit's knob would (web_st_par), so the piece keeps its level */
-let fadeBars = 4;
+let fadeBars = 4, fadeGen = 0;                                 // (fadeGen: one more each piece taken up; a fade of the last piece stops)
 const fadeV = {}, fading = {};
 async function deskFade(trk, p, dir, bars) {                 // (dir, bars: a recorded move's; dir 1 in, 0 out: none when the part is that way already)
   if (!node || !io || fading[trk]) return;
   const target = parV(p), out = live ? ((live.trk || 0) & trk) === trk : false, nb = bars || fadeBars, secs = nb * 240 / Math.max(40, parV(PE.P_TEMPO));
   if (dir !== undefined && !!dir !== out) return;
   if (dir === undefined) mvAdd({ k: "fade", trk, p, dir: out ? 1 : 0, bars: nb });
+  const gen = fadeGen, own = ioOf ? { g: ioOf.g, pc: ioOf.p } : {};
   const run = (from, to) => new Promise((res) => {
     const t0 = performance.now();
     const tick = () => {
+      if (gen !== fadeGen) return res(false);                 // (another piece opened, or the song moved on: its own level stays)
       const t = Math.min(1, (performance.now() - t0) / (secs * 1000)), v = Math.round(from + (to - from) * (to > from ? Math.sqrt(t) : t * t));   // (by ear: up quick at first, down slow at first)
       fadeV[p] = v; fading[trk] = { t, dir: to > from };
-      node.port.postMessage({ type: "st_par", p, v, id: ++reqId });
+      node.port.postMessage({ type: "st_par", p, v, ...own, id: ++reqId });
       deskFadeShow(trk);
-      if (t < 1) setTimeout(tick, 50); else res();
+      if (t < 1) setTimeout(tick, 50); else res(true);
     };
     tick();
   });
+  let done;
   if (out) {
-    node.port.postMessage({ type: "st_par", p, v: 0, id: ++reqId });
+    node.port.postMessage({ type: "st_par", p, v: 0, ...own, id: ++reqId });
     await deskTrk((live.trk || 0) & ~trk, deskSolo);
     say("Fading in over " + nb + " bar" + (nb > 1 ? "s" : "") + "…");
-    await run(0, target);
+    done = await run(0, target);
   } else {
     say("Fading out over " + nb + " bar" + (nb > 1 ? "s" : "") + "…");
-    await run(target, 0);
-    await deskTrk(((live && live.trk) || 0) | trk, deskSolo);
-    node.port.postMessage({ type: "st_par", p, v: target, id: ++reqId });   // (out by its mute; its level as the piece has it)
+    done = await run(target, 0);
+    if (done) {
+      await deskTrk(((live && live.trk) || 0) | trk, deskSolo);
+      node.port.postMessage({ type: "st_par", p, v: target, ...own, id: ++reqId });   // (out by its mute; its level as the piece has it)
+    }
   }
   delete fadeV[p]; delete fading[trk];
+  if (!done) { deskFadeShow(trk); syncCtls(); return say("The fade stopped: another piece plays now, at its own level."); }
   deskFadeShow(trk); syncCtls();
   say(out ? "Faded in." : "Faded out: the part is muted (M), its level as it was. FADE IN brings it back.");
 }
@@ -3691,6 +3770,13 @@ async function songWav(stems) {
   if (s0 < 0) return;
   let wasm;
   try { wasm = await fetch("../emu/amb.wasm", { cache: "no-store" }).then((r) => r.arrayBuffer()); } catch { return songWavLive(); }
+  const inSong = (g, q) => pcSetPlaces(song.places.filter((x) => x)).some((x) => x.genre === g && x.slot === q);
+  if (dirty && ioOf && inSong(ioOf.g, ioOf.p)) {             // (the export renders the bank as saved: the piece being edited, saved first or not, as the player says)
+    const nm = S.genreName(ioOf.g) + " " + S.pieceName(ioOf.g, ioOf.p);
+    if (confirm(nm + " has edits you have not saved, and the song plays it.\n\nOK: save them, then export.\nCancel: export the saved version.")) { if (!(await savePiece())) return; }
+  }
+  const unsaved = [...drafts.keys()].filter((k) => inSong(Math.floor(k / 100), k % 100)).length;
+  if (unsaved) say(unsaved + " piece" + (unsaved > 1 ? "s" : "") + " in the song " + (unsaved > 1 ? "have" : "has") + " unsaved edits (kept as drafts): the export plays " + (unsaved > 1 ? "them" : "it") + " as saved.", true);
   const fxr = await ask({ type: "st_fx", light: 1 }), sl = songBytes({ ...song, on: 1, end: 1 }), store = loadStore();
   const url = URL.createObjectURL(new Blob([RENDER_SRC + MEASURE_SRC], { type: "application/javascript" })), w = new Worker(url);
   const t0 = performance.now(), base = moves.find((e) => e.k === "base");
@@ -3883,16 +3969,26 @@ $("song").addEventListener("drop", async (e) => {
   setSel = to; dragFrom = -1;
   await songWrite();
 });
-$("saveEmu").addEventListener("click", async () => {
-  if (!node || !io) return;
+async function savePiece() {                                  // the piece in hand into the emulator's bank and this browser's storage: true when both have it
+  if (!node || !io || !ioOf) return false;
+  const { g, p } = ioOf, name = S.genreName(g) + " " + S.pieceName(g, p);
+  const movedSay = () => say("The song moved on before " + name + " was saved: your edits are kept. Open it again (or let the song come back to it) and Save.", true);
   clearTimeout(putTimer);
-  node.port.postMessage({ type: "st_put", io: io.slice(), id: ++reqId });      // (the last edit in first: the engine takes its lines and steps at
+  const pr = await ask({ type: "st_put", io: io.slice(), g, p });                 // (the last edit in first: the engine takes its lines and steps at
+  if (pr.moved) { if (ioOf && (ioOf.g !== g || ioOf.p !== p)) drafts.set(g * 100 + p, new Uint8Array(pr.io || io)); movedSay(); return false; }
   await new Promise((res) => setTimeout(res, 120));                             //  its next blocks, and SAVE reads them back from it)
-  const r = await ask({ type: "st_save" });
-  if (r.ok) dirty = false;
-  say(r.ok ? "Saved: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " is in the emulator's bank (this browser). The Library & pieces page can send it to the FM-1." : "The emulator is writing; try again in a moment.", !r.ok);
+  const ack = storeAck(1500), r = await ask({ type: "st_save", g, p });
+  if (r.moved) { movedSay(); return false; }
+  if (!r.ok) { say("The emulator is writing; try again in a moment.", true); return false; }
+  const kept = await ack;
+  if (ioOf && ioOf.g === g && ioOf.p === p) dirty = false;
+  drafts.delete(g * 100 + p);
+  if (kept === false) say("Saved in the emulator, but this browser would not keep it (storage full or blocked): it lasts until the page closes. Download .piece keeps a copy.", true);
+  else say("Saved: " + name + " is in the emulator's bank (this browser). The Library & pieces page can send it to the FM-1.");
   if (view === "song") songRender();
-});
+  return kept !== false;
+}
+$("saveEmu").addEventListener("click", savePiece);
 
 /* ======================================================================== the FM-1 link (fm1link.js; the Editor page's messages, R2 of the studio plan)
  * Connect: what the firmware is (the about message: its number of settings must be the studio's, or a setting's number means another setting), its 176
@@ -3937,7 +4033,7 @@ async function lkOpen() {
     if (r.k === "dump" && lk.val) {
       r.vals.forEach((v, k) => { if (r.first + k < lk.val.length) lk.val[r.first + k] = v; });
       lk.got = Math.max(lk.got, r.first + r.vals.length);
-      if (lk.got >= lk.val.length && lk.dumpW) lk.dumpW(true);
+      if (lk.got >= lk.val.length && lk.dumpW) lk.dumpW(lk.val.every((v) => v !== null));   // (done when every setting came: the last frame with one lost before it is not)
     } else if (r.k === "ack") { const w = lk.acks.shift(); if (w) w(r); }
     else if (r.k === "slot" && lk.slotW) lk.slotW(r);
   };

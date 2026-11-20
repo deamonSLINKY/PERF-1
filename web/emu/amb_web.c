@@ -452,6 +452,7 @@ __attribute__((used, visibility("default"))) void web_st_set(int write)
 {
     int k;
     if (write) {
+        const int was = ui.sl_pos < SL_N && glob.sl_on ? glob.sl[ui.sl_pos] : 0;   /* (the place playing: an edit to another place, or a move, leaves it and its bars going) */
         for (k = 0; k < SL_N; k++) {
             glob.sl[k] = st_sl[k] <= EN_NGENRE * NPIECES ? st_sl[k] : 0;
             glob.sl_bars[k] = st_sl[SL_N + 1 + k];
@@ -464,8 +465,10 @@ __attribute__((used, visibility("default"))) void web_st_set(int write)
         project_globals();
         project_flush_globals();
         ui.sl_pos = (uint8_t)sl_find();         /* (as the unit's Play knob: the place of the piece playing, its bars from here; its parts heard at once) */
-        ui.sl_q = 0;
-        sl_b0 = sl_bar_now();
+        if (!(was && glob.sl_on && ui.sl_pos < SL_N && glob.sl[ui.sl_pos] == was)) {   /* (the same place still in the list: its bar count goes on, a jump is st_go's) */
+            ui.sl_q = 0;
+            sl_b0 = sl_bar_now();
+        }
         if (sl_play() && ui.sl_pos < SL_N)
             sl_parts(ui.sl_pos);
         else if (!glob.sl_on) {

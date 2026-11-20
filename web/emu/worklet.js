@@ -26,6 +26,11 @@ class Amb extends AudioWorkletProcessor {
     }
   }
 
+  stHere(m) {                                         // the piece a studio edit names is the one playing (web_st_live: 113 the genre, 114 the piece)
+    const b = new Uint8Array(this.mem.buffer, this.ex.web_st_live(), 141);
+    return b[113] === (m.g | 0) && b[114] === ((m.type === "st_par" ? m.pc : m.p) | 0);
+  }
+
   async handle(m) {
     if (m.type === "load") {
       const now = () => BigInt(Math.round(currentTime * 1e9));
@@ -65,6 +70,8 @@ class Amb extends AudioWorkletProcessor {
       this.ex.web_enc(m.role, m.n | 0);
     } else if (m.type === "master") {
       this.ex.web_master(m.value | 0);
+    } else if (this.studio && m.g !== undefined && (m.type === "st_put" || m.type === "st_par" || m.type === "st_save") && this.ex.web_st_live && !this.stHere(m)) {
+      this.port.postMessage({ type: "st", id: m.id, ok: 0, moved: true });   // (the song moved on before it came: not into the next piece)
     } else if (this.studio && m.type === "st_note" && this.ex.web_st_note) {
       this.ex.web_st_note(m.voice | 0, m.note | 0, m.vel | 0);    // a note heard (no answer)
     } else if (this.studio && m.type === "st_save" && this.ex.web_st_save) {
