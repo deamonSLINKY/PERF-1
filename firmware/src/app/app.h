@@ -55,6 +55,10 @@ int ui_kit_read(uint32_t sect, uint8_t *dst);   /* and read back (4096 bytes) */
 void project_piece_empty(void);          /* (0.17.31) the playing piece emptied to build up by hand: no drums, one chord, the bass, acid and pluck on steps, all rests (edited, not stored) */
 int project_factory_genre(void);         /* (0.17.23) every stored piece of this genre to factory; how many */
 void project_piece_recipe(int i);        /* (0.17.11, a track code) piece i as its recipe into play; the bank as it is (a stored piece stays stored) */
+const char *project_guest_title(int i, const char **by);   /* (0.17.80) piece i of the playing genre, a guest piece: its title (and maker); else 0 */
+void project_recipe_par(int i, int16_t *par, uint16_t *pool);   /* piece i's factory settings (a guest piece's, else the generated ones) */
+void project_recipe_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE]);
+void project_recipe_mods(int i, uint8_t mod[EN_NLANE][16]);
 #define PX_NFX 9
 extern const uint8_t PX_FXS[PX_NFX];     /* (0.16.28) the effect settings a piece keeps: the FILTERS page's three types, SCREAM's four, the bass answer's two (0.17.30) */
 void project_fx_get(uint8_t *v);        /* the playing piece's (as left this time, as saved with it, or the defaults) */

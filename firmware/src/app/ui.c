@@ -764,7 +764,7 @@ static int code_par_match(void)                  /* the piece's settings as its 
     int16_t r[P_NPARAMS];
     uint16_t pool;
     int p;
-    en_piece_g(proj.genre, proj.piece, r, &pool);
+    project_recipe_par(proj.piece, r, &pool);
     for (p = 0; p < P_NPARAMS; p++)
         if (!en_par_sticky(p) && p != P_TEMPO && p != P_ROOT && p != P_MODE && p != P_PATTERN && proj.par[p] != r[p])
             return 0;   /* (the pattern playing is where the song is, not a setting) */
@@ -792,8 +792,8 @@ static void track_fresh(int roll, int taken)     /* the track from its start: a 
             else
                 en_pats[p][l] = code_pats[p][l];
         }
-    en_piece_pats_g(proj.genre, proj.piece, rp);
-    en_piece_mods_g(proj.genre, proj.piece, rm);
+    project_recipe_pats(proj.piece, rp);
+    project_recipe_mods(proj.piece, rm);
     for (p = 0; p < EN_NPAT; p++)
         for (l = 0; l < EN_NLANE; l++)
             same &= code_pats[p][l] == rp[p][l];
@@ -2702,10 +2702,15 @@ static void piece_title(char *b, int n)
 {
     uint32_t h = ((uint32_t)proj.genre * 16u + proj.piece + 1u) * 2654435761u;
     const char *a = TITLE_ADJ[h >> 28 & 15u], *w = TITLE_NOUN[h >> 20 & 15u];
+    const char *gt = project_guest_title(proj.piece, 0);
     int k = 0;
+    if (gt) {                                    /* (0.17.80) a guest piece: its maker's title */
+        a = gt;
+        w = "";
+    }
     while (*a && k < n - 1)
         b[k++] = *a++;
-    if (k < n - 1)
+    if (*w && k < n - 1)
         b[k++] = ' ';
     while (*w && k < n - 1)
         b[k++] = *w++;
@@ -9074,12 +9079,17 @@ static void draw_knobs(void)
                     u[j++] = *q++;
                 u[j] = 0;
             } else {
-                const char *q = project_saved(proj.piece) ? " STORED" : " FACTORY";
+                const char *by = 0, *q;
                 int j = 0;
+                if (!project_saved(proj.piece))
+                    project_guest_title(proj.piece, &by);
+                q = project_saved(proj.piece) ? " STORED" : by ? " BY " : " FACTORY";   /* (0.17.80: a guest piece, its maker) */
                 while (u[j])
                     j++;
                 while (*q && j < 23)
                     u[j++] = *q++;
+                while (by && *by && j < 23)
+                    u[j++] = *by++;
                 u[j] = 0;
             }
             xs = cv_text(x0, -1, &FONT_XS, u, proj.edited >> proj.piece & 1u ? K_TEXT : K_DIM);

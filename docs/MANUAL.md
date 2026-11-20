@@ -788,6 +788,9 @@ synthwave and trip-hop keep their pad; the breakbeat and percussion genres keep 
 role changes is an ordinary setting you can turn back. A piece you have stored keeps what it was stored with; the roles
 shape the factory pieces only.
 
+Two factory pieces are players' own, from the Library: FUNK 10 is Golfhole's "Funky Space Jam" and HOUSE 09 is Roj's
+"About last night". They play as their makers shared them, and Global shows who made them (`F10 BY GOLFHOLE`).
+
 ### Storing a piece
 
 This works in every genre. Go to **Global** and press **SAVE**. The piece is stored as it is: every page's
@@ -2791,6 +2794,8 @@ The bass modes, the pad's comping rhythms, the ghost notes and accents of the ge
 The sixty built-in DX7 voices are patches made by people, from banks published as public domain. Most are from [Bobby Blues' DX7 page](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html): Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the folders of Clyde Jones, Toby, Frank Carvalho, Narfman, Godric and Jezreel, and the Aftertouch, Keyboards, Guitares & Claviers, E&MM and Keyboard magazine banks. One is from Jack Deckard's collection on [Dave Benson's DX7 page](https://homepages.abdn.ac.uk/d.j.benson/pages/html/dx7.html). No voice from Yamaha's own banks is used.
 
 The idea of running FM-1 firmware in the browser comes from [Groove OS](https://www.groove-os.com/)'s emulator. What is known about the FM-1's hardware comes largely from the [FM-1-RE](https://github.com/AL-255/FM-1-RE) reverse-engineering work. The rescue route uses [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter)'s protocol and JieLi's flash loader from kagaimiq's jl-uboot-tool.
+
+Two factory pieces were made by players and shared in the Library: FUNK 10, "Funky Space Jam", by **Golfhole**, and HOUSE 09, "About last night", by **Roj**.
 
 Screen and page fonts: Chakra Petch (Cadson Demak) and Barlow Semi Condensed (The Barlow Project Authors), SIL Open Font License 1.1.
 

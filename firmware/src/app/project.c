@@ -90,16 +90,85 @@ typedef struct {
 
 const char *piece_name(int i) { return en_piece_name_g(proj.genre, i); }
 
+/* THE GUEST PIECES (0.17.80): players' pieces from the Library, built in as the factory piece of their place (guest_pieces.h): the record
+ * as the Library has it, read as a stored one is (a setting the record lacks, or marks "the recipe's", is the place's generated one) */
+#include "guest_pieces.h"
+static uint16_t grd16(const uint8_t *b) { return (uint16_t)(b[0] | b[1] << 8); }
+static const guest_t *guest_of(int g, int i)
+{
+    int k;
+    for (k = 0; k < GUEST_N; k++)
+        if (GUEST[k].genre == g && GUEST[k].slot == i)
+            return &GUEST[k];
+    return 0;
+}
+const char *project_guest_title(int i, const char **by)
+{
+    const guest_t *G = guest_of(proj.genre, i);
+    if (by)
+        *by = G ? G->by : 0;
+    return G ? G->title : 0;
+}
+void project_recipe_par(int i, int16_t *par, uint16_t *pool)
+{
+    const guest_t *G = guest_of(proj.genre, i);
+    int p;
+    en_piece_g(proj.genre, i, par, pool);
+    if (!G)
+        return;
+    *pool = grd16(G->rec);
+    for (p = 0; p < G->npar && p < P_NPARAMS; p++) {
+        const uint8_t b = G->rec[2u + 2u * EN_NPAT * EN_NLANE + (uint32_t)p];
+        const en_param_t *pi = en_param_info(p);
+        const int v = pi->lo + b;
+        if (b != 0xFFu)
+            par[p] = (int16_t)(v > pi->hi ? pi->hi : v);
+    }
+}
+void project_recipe_pats(int i, uint16_t pats[EN_NPAT][EN_NLANE])
+{
+    const guest_t *G = guest_of(proj.genre, i);
+    int p, l;
+    if (!G) {
+        en_piece_pats_g(proj.genre, i, pats);
+        return;
+    }
+    for (p = 0; p < EN_NPAT; p++)
+        for (l = 0; l < EN_NLANE; l++)
+            pats[p][l] = grd16(G->rec + 2 + 2 * (p * EN_NLANE + l));
+}
+void project_recipe_mods(int i, uint8_t mod[EN_NLANE][16])
+{
+    const guest_t *G = guest_of(proj.genre, i);
+    int p, l;
+    if (!G) {
+        en_piece_mods_g(proj.genre, i, mod);
+        return;
+    }
+    for (l = 0; l < EN_NLANE; l++)
+        for (p = 0; p < 16; p++)
+            mod[l][p] = G->rec[REC_MOD + l * 16 + p];
+}
+
 static void recipe(int i, slot_t *s)
 {
-    en_piece_g(proj.genre, i, s->par, &s->pool);
-    en_piece_pats_g(proj.genre, i, s->pats);
-    en_piece_mods_g(proj.genre, i, s->mod);
+    const guest_t *G = guest_of(proj.genre, i);
+    project_recipe_par(i, s->par, &s->pool);
+    project_recipe_pats(i, s->pats);
+    project_recipe_mods(i, s->mod);
     memset(s->acl, 0, sizeof s->acl);
     memset(s->cml, 0, sizeof s->cml);
     memset(s->prg, 0, sizeof s->prg);
     memset(s->prk, 0, sizeof s->prk);
     memset(s->bs, 0, sizeof s->bs);
+    if (G) {
+        memcpy(s->acl, G->rec + REC_ACL, 18);
+        memcpy(s->cml, G->rec + REC_CML1, 6);
+        memcpy(s->cml + 6, G->rec + REC_CML2, 6);
+        memcpy(s->prg, G->prg, sizeof s->prg);
+        memcpy(s->prk, G->kinds, sizeof s->prk);
+        memcpy(s->bs, G->bass, sizeof s->bs);
+    }
 }
 
 static int16_t clamp_par(int p, int v)
@@ -480,6 +549,8 @@ void project_fx_get(uint8_t *v)
         memcpy(v, pxl[i] + 1, PX_NFX);
     else if (px[i][PX_FLAGS] & 1u)
         memcpy(v, px[i] + PX_FXAT, PX_NFX);
+    else if (guest_of(proj.genre, i))
+        memcpy(v, guest_of(proj.genre, i)->fx, PX_NFX);   /* (0.17.80) a guest piece's, as its maker shared it */
     else
         for (k = 0; k < PX_NFX; k++)
             v[k] = (uint8_t)en_piece_fx_def(proj.genre, i, PX_FXS[k]);   /* (0.17.30: the factory piece's own: its role's bass answer) */

@@ -1,0 +1,44 @@
+# Guest pieces (0.17.80): two players' pieces from the Library are the factory pieces of their places, with their titles and makers:
+# FUNK 10 is Golfhole's "Funky Space Jam", HOUSE 09 Roj's "About last night". Their settings are the records as shared (the tempo:
+# 106 and 123, where the generated pieces had their own); SEL + SAVE held on Global brings them back like any factory piece.
+seed 0
+wait 3000
+press GLO
+wait 100
+turn PRESET 11
+wait 200
+release GLO
+wait 300
+expect genre 11
+turn PRESET 9
+wait 400
+expect piece 9
+expect tempo 106
+shot guest_funk10.png
+tap GLO
+wait 300
+shot guest_funk10_global.png
+# changed and brought back to factory: the guest piece again
+turn K1 20
+wait 300
+press SEL
+press SAVE
+wait 2000
+release SAVE
+release SEL
+wait 300
+expect tempo 106
+expect saved 0
+# HOUSE 09: Roj's
+press GLO
+wait 100
+turn PRESET -9
+wait 200
+release GLO
+wait 300
+expect genre 2
+turn PRESET -1
+wait 400
+expect piece 8
+expect tempo 123
+shot guest_house09.png
