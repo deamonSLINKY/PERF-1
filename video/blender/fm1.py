@@ -139,7 +139,8 @@ nt.links.new(LCD_TEX.outputs["Color"], em.inputs["Color"]); nt.links.new(em.outp
 LCD.data.materials.append(M_LCD)
 if A["screen"]: LCD_TEX.image = bpy.data.images.load(os.path.abspath(A["screen"]))
 
-rrect("red_tab", 548, 40, 34, 22, 3, Z_TOP, Z_TOP + 0.6 * MM, M_RED, bev=0.2 * MM, seg=2)
+# (no red tab: that is the shipping screen protector's pull tab, not the unit; the maker 2026-11-19)
+# rrect("red_tab", 548, 40, 34, 22, 3, Z_TOP, Z_TOP + 0.6 * MM, M_RED, bev=0.2 * MM, seg=2)
 text("M-VAVE", 382, 312, 30, Z_TOP + 0.02 * MM, M_PRINT, font=FONT)
 
 # OCT buttons, the function buttons and the keyboard: silicone on a silicone mat
