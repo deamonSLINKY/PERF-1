@@ -1708,8 +1708,35 @@ static void knob_range(int k, int *lo, int *hi)
 /* (0.17.83, the maker's Easter egg: "these go to eleven") a knob that runs 0-100 and shows a plain 100 has one more notch: it reads 11, in
  * red. The setting stays 100 (nothing is louder: it only says so); a notch down is 100 again, and anything that moves the value lets go of it. */
 #define K_ELEVEN RGB(255, 40, 40)
-static int eleven_k = -1;
-static int eleven_on(int k) { return k >= 0 && k == eleven_k && knob_get(k) == 100; }
+#define N_ELEVEN 8
+static int16_t eleven_ks[N_ELEVEN] = {-1, -1, -1, -1, -1, -1, -1, -1};   /* (0.17.84) the knobs at eleven, any number of them on a page (the
+                                                 * eight latest; one whose value has left 100 is free again) */
+static int eleven_at(int k)                      /* its place in the list, or -1 */
+{
+    int i;
+    for (i = 0; k >= 0 && i < N_ELEVEN; i++)
+        if (eleven_ks[i] == k)
+            return i;
+    return -1;
+}
+static int eleven_on(int k) { return eleven_at(k) >= 0 && knob_get(k) == 100; }
+static void eleven_set(int k, int on)
+{
+    int i = eleven_at(k);
+    if (!on) {
+        if (i >= 0)
+            eleven_ks[i] = -1;
+        return;
+    }
+    for (i = 0; i < N_ELEVEN; i++)               /* a free place (or one whose knob has left 100) */
+        if (eleven_ks[i] < 0 || knob_get(eleven_ks[i]) != 100)
+            break;
+    if (i == N_ELEVEN) {                         /* all eight at eleven: the oldest goes */
+        for (i = 0; i < N_ELEVEN - 1; i++)
+            eleven_ks[i] = eleven_ks[i + 1];
+    }
+    eleven_ks[i] = (int16_t)k;
+}
 static void knob_text(int k, char *b)
 {
     int p = knob_par(k);
@@ -2252,19 +2279,22 @@ static void turn(int role, int k, int32_t e)
     if (eleven_on(k)) {                          /* (0.17.83) at eleven: up stays; the first notch down is 100 again, the rest turn on from there */
         if (e > 0)
             return;
-        eleven_k = -1;
+        eleven_set(k, 0);
         if (!++e)
             return;
     }
-    if (e > 0 && lo == 0 && hi == 100 && knob_get(k) == 100) {   /* one past 100, on a plain number (not a name, nor a value with a unit) */
-        char t[16];
-        knob_text(k, t);
-        if (t[0] == '1' && t[1] == '0' && t[2] == '0' && !t[3]) {
-            eleven_k = k;
-            return;
+    {
+        const int v0 = knob_get(k), a = accel(role, e, hi - lo);
+        knob_set(k, v0 + a);
+        if (e > 0 && lo == 0 && hi == 100 && v0 + a - 100 >= a / e) {   /* a whole notch past 100, in this turn or the next (0.17.84: a turn that
+                                                                          * crosses 100 goes straight on to eleven), on a plain number (not a
+                                                                          * name, nor a value with a unit) */
+            char t[16];
+            knob_text(k, t);
+            if (t[0] == '1' && t[1] == '0' && t[2] == '0' && !t[3])
+                eleven_set(k, 1);
         }
     }
-    knob_set(k, knob_get(k) + accel(role, e, hi - lo));
 }
 
 /* ------------------------------------------------------------ scenes --- */
@@ -3595,13 +3625,16 @@ static void button(int b)
     }
     for (g = 0; g < NGROUP; g++)                 /* a page's button: its page, or the next in its group */
         if (GROUP[g].btn == b) {
-            int v = ui.view;
+            int v = ui.view, was_menu = ui.fx_menu;
             if (ui.fx_menu) {                    /* a page's button leaves the FX menu (latched effects play on) */
                 ui.fx_menu = 0;
                 ui.fx_page = 0;
                 ui.fx_open_t = 0;
             }
-            if (group_of(v) == g && GROUP[g].n > 1)
+            if (was_menu && group_of(v) == g)    /* (0.17.84, the maker: Acid 1, the settings over it, ARP went on to Acid 2) out of a menu, the page
+                                                  * it was over, as from any other page: the next press steps on as always */
+                set_view(v);
+            else if (group_of(v) == g && GROUP[g].n > 1)
                 set_view(GROUP[g].first + (v - GROUP[g].first + 1) % GROUP[g].n);       /* inside: the next page */
             else if (ui.grp_last[g] >= GROUP[g].first && ui.grp_last[g] < GROUP[g].first + GROUP[g].n)
                 set_view(ui.grp_last[g]);                                               /* from elsewhere: back where you were */
@@ -8651,7 +8684,7 @@ static uint32_t lk_hash(uint32_t h)             /* what the strips and the track
 {
     int i;
     for (i = 0; i < 4; i++)
-        h = hash(h, (uint32_t)knob_get(view_knob(i)) + 100u);
+        h = hash(h, (uint32_t)knob_get(view_knob(i)) + 100u + (eleven_on(view_knob(i)) ? 1000u : 0u));   /* (0.17.84: an eleven redraws at once) */
     h = hash(h, (uint32_t)(plat_ms() < ui.touch_until) | (uint32_t)ui.touched << 1 | (uint32_t)ui.trk_m << 8 | (uint32_t)ui.trk_s << 16 | (uint32_t)ui.lane << 24);
     h = hash(h, (uint32_t)(plat_ms() < ui.msg_until) | (uint32_t)en_walk_next_root << 4 | (uint32_t)en_chord_alt << 8 | (uint32_t)ui.view << 12 | (uint32_t)en_cm_pos << 20);
     for (i = 0; i < 16; i++)
@@ -8803,7 +8836,7 @@ static void draw_main(void)
     if (scope_kind(ui.view)) {                   /* a page that shapes a sound: its curve */
         h = hash(hash(0x53434F50u, ui.view | (uint32_t)ui.theme << 8), scope_tick());
         for (i = 0; i < 4; i++)
-            h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u);
+            h = hash(h, (uint32_t)knob_get(view_knob((int)i)) + 100u + (eleven_on(view_knob((int)i)) ? 1000u : 0u));   /* (0.17.84: an eleven redraws at once) */
         h = hash(h, (uint32_t)proj.par[P_CM_DEC] | (uint32_t)proj.par[P_CM_STYLE] << 8 | (uint32_t)proj.par[P_CM_RATE] << 12 | (uint32_t)proj.par[P_CM_RANGE] << 16);
         h = hash(h, (uint32_t)proj.par[P_AC_ENV] | (uint32_t)proj.par[P_ECHO] << 8 | (uint32_t)proj.par[P_SIZE] << 16 |
                         (uint32_t)proj.par[P_PL_RATE] << 24);

@@ -1,5 +1,6 @@
 # These go to eleven (0.17.83): a knob that runs 0-100 and shows a plain 100 has one more notch, reading 11 in red. The setting stays 100;
-# a notch down is 100 again. A knob with a unit or a name (or another range) stops at its top as before.
+# a notch down is 100 again. A knob with a unit or a name (or another range) stops at its top as before. (0.17.84) It shows at once, in the
+# same turn (the screen redraws for it), and any number of knobs on a page can be at eleven together.
 seed 0
 wait 3000
 tap ENV
@@ -9,29 +10,35 @@ spin K1 120
 wait 100
 expect par0 100
 spin K1 1
-wait 100
+wait 40
 expect par0 100
-expect eleven 0
+expect eleven 1
+expect eleven0 1
 shot eleven.png
 spin K1 3
 wait 100
-expect eleven 0
+expect eleven 1
 expect par0 100
 spin K1 -1
 wait 100
-expect eleven -1
+expect eleven 0
 expect par0 100
 spin K1 -1
 wait 100
 expect par0 99
-# Bright (also 0-100, a plain number): the same
+# two at once: Level and Bright both at eleven
+spin K1 2
 spin K2 120
 spin K2 1
 wait 100
-expect eleven 9
+expect eleven0 1
+expect eleven9 1
+expect eleven 2
 expect par9 100
-# turning another knob up to its top moves the eleven there; a value moved some other way lets go of it
+shot eleven_two.png
+# a turn down from eleven: the first notch is 100, the rest go on from there; the other knob stays at eleven
 spin K2 -5
 wait 100
-expect eleven -1
+expect eleven9 0
 expect par9 96
+expect eleven0 1

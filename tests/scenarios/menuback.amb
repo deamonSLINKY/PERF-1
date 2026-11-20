@@ -1,0 +1,23 @@
+# (0.17.84, the maker) On Acid 1, HOLD HOME opens the settings over it; ARP closes them and shows Acid 1 again (it went on to Acid 2: the page
+# under the menu counted as "inside the group"). The next ARP steps on as always.
+seed 0
+wait 3000
+tap ARP
+wait 200
+expect view 12
+press HOME
+wait 800
+release HOME
+wait 300
+tap ARP
+wait 200
+expect view 12
+tap ARP
+wait 200
+expect view 13
+# the FX menu over Acid env: ARP shows Acid env again
+tap FX
+wait 300
+tap ARP
+wait 200
+expect view 13
