@@ -1097,21 +1097,21 @@ It sits under the other parts by default (Level 50, Density 45). Turn Level to 0
 The pluck has three groups of sounds:
 
 - **Plain (12):** Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass. All are FM except Bleep, which is a plain sine.
-- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" below). DX MF EPRHOD1 (an electric piano), DX WINEGLASS (a glass bell), DX SMOOTHBASS, DX FULL-BRASS, DX EASY DXPAD (a soft pad), DX FLUTEMRMBA (wooden bars), DX DRAWBARS, DX GITARA AKU (a nylon guitar), DX ROLAND BRS (brass), DX SOLID BASS, DX TEMPLEBELL, DX MARIMBA, DX CLAVINET, DX SOFTSTRNGS (strings), DX SHIMMERPAD (a glass pad), DX SKY SYNC (a sync lead), DX HARFA LSR (a harp), DX KALIMBA, DX FLUTE BLOW, DX STEEL PANS, DX MOOGBASS (a saw bass), DX TUBUL-BELL, and the eight described below. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
-- **Yours (up to 16):** DX7 voices you load yourself come after the built-in ones, named `DX` plus the voice's own name (section 15).
+- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" below). MF EPRHOD1 (an electric piano), WINEGLASS (a glass bell), SMOOTHBASS, FULL-BRASS, EASY DXPAD (a soft pad), FLUTEMRMBA (wooden bars), DRAWBARS, GITARA AKU (a nylon guitar), ROLAND BRS (brass), SOLID BASS, TEMPLEBELL, DX MARIMBA, CLAVINET, SOFTSTRNGS (strings), SHIMMERPAD (a glass pad), SKY SYNC (a sync lead), HARFA LSR (a harp), DX KALIMBA, FLUTE BLOW, STEEL PANS, MOOGBASS (a saw bass), TUBUL-BELL, and the eight described below. Each shows by its own name; DX MARIMBA and DX KALIMBA keep DX in front, to tell them from the plain Marimba and Kalimba. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
+- **Yours (up to 16):** DX7 voices you load yourself come after the built-in ones, shown by the voice's own name (section 15).
 
 The last eight built-in DX voices are guitars, a bass and brass:
 
 | Voice | What it is |
 |---|---|
-| DX PEDALSTEEL | A pedal steel guitar |
-| DX CHOR.STRAT | A clean electric guitar, chorused |
-| DX GUITARDAMP | A muted guitar, the funk "chank" |
-| DX AXE | A distorted guitar |
-| DX SLAPS | A slapped bass |
-| DX MFSYNBRASS | Synth brass |
-| DX SAXOPHONE | A saxophone |
-| DX SOLO TRPT | A solo trumpet |
+| PEDALSTEEL | A pedal steel guitar |
+| CHOR.STRAT | A clean electric guitar, chorused |
+| GUITARDAMP | A muted guitar, the funk "chank" |
+| AXE | A distorted guitar |
+| SLAPS | A slapped bass |
+| MFSYNBRASS | Synth brass |
+| SAXOPHONE | A saxophone |
+| SOLO TRPT | A solo trumpet |
 
 The disco, funk, reggae, synthwave, amapiano and trip-hop genres use them.
 

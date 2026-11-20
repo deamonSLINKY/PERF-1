@@ -729,7 +729,7 @@ async function readSlots() {
 }
 function syncPluckNames() {                      /* the pluck's Sound lists the loaded voices by name */
   const q = P[D.enum.P_CM_SND];
-  for (let i = 0; i < 16; i++) q.t[42 + i] = slots[i] ? "DX " + nameOf(slots[i]) : "(empty)";
+  for (let i = 0; i < 16; i++) q.t[42 + i] = slots[i] ? nameOf(slots[i]) : "(empty)";
   renderRows();
 }
 

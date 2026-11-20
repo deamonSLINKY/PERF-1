@@ -202,20 +202,19 @@ static uint8_t fm_user[EN_NUSER][128] EN_POOL, fm_stage[EN_NUSER][128] EN_POOL;
 static volatile uint16_t fm_stage_pend;
 static volatile uint8_t fm_user_n;
 static char fm_uname[EN_NUSER][16];
-static void fm_user_name(int slot)               /* "DX " and the voice's ten characters, trailing spaces gone */
+static void fm_user_name(int slot)               /* the voice's ten characters, trailing spaces gone (0.17.81: no "DX " in front, room on the pluck page) */
 {
     int k, n = 10;
     char *d = fm_uname[slot];
-    d[0] = 'D', d[1] = 'X', d[2] = ' ';
     while (n > 0 && (fm_user[slot][118 + n - 1] & 0x7Fu) <= 32u)
         n--;
     for (k = 0; k < n; k++) {
         const uint8_t c = fm_user[slot][118 + k] & 0x7Fu;
-        d[3 + k] = c < 32u || c > 126u ? ' ' : (char)c;
+        d[k] = c < 32u || c > 126u ? ' ' : (char)c;
     }
     if (!n)
-        d[3] = '?', n = 1;
-    d[3 + n] = 0;
+        d[0] = '?', n = 1;
+    d[n] = 0;
     EN_CM_SOUND[12 + EN_NFMFACT + slot] = d;
 }
 static void fm_user_take(int slot)               /* C_USERVOICE, in the engine's own time */

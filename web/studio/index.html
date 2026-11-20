@@ -2145,7 +2145,7 @@ async function dxMount() {
 async function dxSlots() {                                    // the player's voices: how many, their names
   const r = await ask({ type: "st_vox", op: "get", slot: 0 });
   dxN = r.n || 0; dxNames = [];
-  for (let k = 0; k < dxN; k++) { const q = k ? await ask({ type: "st_vox", op: "get", slot: k }) : r; dxNames[k] = q.ok ? "DX " + vName(vUnpack(q.vox.subarray(0, 128))) : ""; }
+  for (let k = 0; k < dxN; k++) { const q = k ? await ask({ type: "st_vox", op: "get", slot: k }) : r; dxNames[k] = q.ok ? vName(vUnpack(q.vox.subarray(0, 128))) : ""; }
   const t = dxSndNames(); for (let k = 0; k < 16; k++) t[DXB() + k] = k < dxN ? dxNames[k] : "(empty)";
 }
 async function dxReadPlaying() {                              // the voice the pluck plays now, into the editor
@@ -2369,7 +2369,7 @@ async function dxPut(keep) {
     if (r.ok < 0 && ++tries < 30) { await new Promise((res) => setTimeout(res, 30)); continue; }
     if (r.ok >= 0) {
       dxSlot = r.ok; dxDx = -1; dxN = Math.max(dxN, r.ok + 1);
-      dxNames[dxSlot] = "DX " + vName(dxv); dxSndNames()[DXB() + dxSlot] = dxNames[dxSlot];
+      dxNames[dxSlot] = vName(dxv); dxSndNames()[DXB() + dxSlot] = dxNames[dxSlot];
       if (!first && parV(PE.P_CM_SND) !== DXB() + dxSlot) dxPlay(DXB() + dxSlot);
       if (first) { dxPlay(DXB() + dxSlot); dxWhat(); say("Your voice " + (dxSlot + 1) + " (“" + vName(dxv) + "”): the pluck plays it. Every change is heard as you make it, and kept in the emulator's voices (this browser)."); }
       if (keep || first) dxWhat();

@@ -37,6 +37,14 @@ def qn(s):
     return '"%s"' % s.replace("\\", "/").replace('"', "'")
 
 
+PLAIN = {"PLUCK", "MARIMBA", "E.PIANO", "KALIMBA", "BELL", "VIBES", "GONG", "CLAV", "DIGITAL", "BRASS", "BLEEP", "GLASS"}   # amb.c's twelve plain sounds
+
+
+def shown(s):
+    """a voice's name on the pluck's Sound list (0.17.81: alone; "DX " in front only where a plain sound has the same name on the screen)"""
+    return ('"DX " ' if s.strip().upper() in PLAIN else "") + qn(s)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) < 2:
@@ -83,8 +91,8 @@ def main():
            "#pragma once", "#include <stdint.h>", f"#define FM6_NDY {n}",
            "#define FM6_DY_NAME_LIST " + ", ".join(qn(voices[i][6]) for i in range(n)),   # the voice's own name, as its bank has it (or the manifest's shown name)
            "#define FM6_DYX_NAME_LIST " + ", ".join(qn(voices[i][6]) for i in range(30, n)),
-           "#define FM6_DY30_DXNAME_LIST " + ", ".join('"DX " ' + qn(voices[i][6]) for i in range(30)),   # (the first thirty as the Sound list shows them, 0.17.75)
-           "#define FM6_DYX_DXNAME_LIST " + ", ".join('"DX " ' + qn(voices[i][6]) for i in range(30, n)),   # (and the thirty more, likewise)   # (the ones after the thirty: amb.c's sound list starts with them)
+           "#define FM6_DY30_DXNAME_LIST " + ", ".join(shown(voices[i][6]) for i in range(30)),   # (the first thirty as the Sound list shows them: 0.17.81 their names alone)
+           "#define FM6_DYX_DXNAME_LIST " + ", ".join(shown(voices[i][6]) for i in range(30, n)),   # (and the thirty more, likewise)   # (the ones after the thirty: amb.c's sound list starts with them)
            "static const char *const FM6_DY_NAME[FM6_NDY] = {FM6_DY_NAME_LIST};",
            "static const uint8_t FM6_DY[FM6_NDY][128] = {"]
     for i in range(n):
