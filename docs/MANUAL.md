@@ -288,7 +288,7 @@ New to PERF-1? **Start here**, at the top of this manual, walks you through your
 short version.
 
 1. Switch it on. The **deamonSLINKY** card shows (the slinky mascot hops twice and blinks, then the name and
-   PRESENTS), then the **PERF-1** card (the version, "by deamonSLINKY", "free software, GPL-3.0"),
+   PRESENTS), then the **PERF-1** card (a festival picture, the version, "by deamonSLINKY", GPL-3.0),
    with sixteen steps filling in and the white keys lighting with them. Any button or key skips the cards.
    Then the music starts: the piece you played last, or a HYPNO piece at random (SETTINGS, **Start**).
 2. Turn **SELECT** to move through the pages. The four knobs under the screen change what each page shows.
@@ -2105,7 +2105,6 @@ The four settings are stored with the piece. The default is a light 1.5:1 at -12
 | **FX** | Walks through the effects' settings pages one by one, then back to the keys. |
 | A key in the FX menu | Opens that effect's settings page. |
 | **GLO** | Remote: the FM-1's panel plays the emulator (section 17). Works only when stopped, because it stops the music. If the music is playing, the screen says `STOP FIRST`. |
-| **EDIT** | A secret. Works only when stopped. It starts the music by itself. |
 | Black keys 1-6 (in the sequencer) | Copies the pattern you're editing into pattern 1-6. Without SEL, the black keys in the sequencer choose the lane's source (section 8). |
 | **OCT-** (in the sequencer) | Clears this drum's lane. |
 | **OCT+** (in the sequencer) | Puts this drum's lane back to the piece's own pattern. |
@@ -2798,5 +2797,3 @@ Screen and page fonts: Chakra Petch (Cadson Demak) and Barlow Semi Condensed (Th
 Licence: GPL-3.0-only, no warranty. The source is at <https://github.com/deamonSLINKY/PERF-1>, and its LICENSING.md says where each part comes from.
 
 M-VAVE and FM-1 are trademarks of their owners. PERF-1 is independent firmware, not affiliated with or endorsed by them. Other product names in this manual are trademarks of their owners, used only to describe sounds and gear.
-
-Runners: hold shift and edit the beat.

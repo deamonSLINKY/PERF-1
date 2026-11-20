@@ -4578,18 +4578,10 @@ static void rm_tick(void)
         ui.act_t = now;
 }
 
-static int runner_on(void);
-static void runner_input(uint32_t btn, uint32_t keys);
-static void runner_start(void);
-
 static void input(void)
 {
     uint32_t btn = plat_buttons(), keys = plat_keys(), ch, i;
     int32_t e;
-    if (runner_on()) {                           /* the secret: the game has the panel */
-        runner_input(btn, keys);
-        return;
-    }
     if (ui.saver_on) {                           /* the screensaver: the touch that wakes it only wakes (it was the visualizer's: a key muted a track, a knob moved the filter) */
         const uint32_t nb = btn & ~ui.btn, nk = keys & ~ui.keys;
         int r;
@@ -4652,17 +4644,8 @@ static void input(void)
                 }
             }
 #endif
-            if (i == B_EDIT && (btn >> B_SEL & 1u) && en_playing) {   /* the secret, stopped only (it takes the music over) */
+            if (i == B_EDIT && (btn >> B_SEL & 1u))   /* (shift + EDIT was HYP-1's game, gone in 0.17.79 for the boot picture's flash: it does nothing) */
                 ui.btn_used |= m | 1u << B_SEL;
-                say("STOP FIRST", 0);
-            } else if (i == B_EDIT && (btn >> B_SEL & 1u)) {   /* shift: the secret (it starts the music: it plays to the beat) */
-                ui.btn_used |= m | 1u << B_SEL;
-                en_play(1);
-                ui.btn = btn;
-                ui.keys = keys;
-                runner_start();
-                return;
-            }
             if (i == B_REC && (btn >> B_SEL & 1u)) {   /* shift: Capture: the bar played on Jam into the acid line or the pluck loop; in the FX menu, the gesture */
                 ui.btn_used |= m | 1u << B_SEL;
                 if (ui.fx_menu)
@@ -6792,8 +6775,62 @@ static void draw_mix(void)
     }
 }
 
-#include "runner.c"
-static int runner_on(void) { return kr.on; }
+/* two drawing helpers on the canvas (from HYP-1's game, KICK RUNNER, which left in 0.17.79): a soft glow, and a smooth line */
+static void aa_glow(float cx, float cy, float r0, float r1, uint16_t c, float s)   /* c fading out from r0 to r1 */
+{
+    int32_t x0 = (int32_t)fm_floorf(cx - r1), x1 = (int32_t)(cx + r1 + 1.0f);
+    int32_t y0 = (int32_t)fm_floorf(cy - r1), y1 = (int32_t)(cy + r1 + 1.0f), x, y;
+    for (y = y0; y <= y1; y++)
+        for (x = x0; x <= x1; x++) {
+            float dx = (float)x + 0.5f - cx, dy = (float)y + 0.5f - cy, d = fm_sqrtf(dx * dx + dy * dy), a;
+            if (d >= r1)
+                continue;
+            a = d <= r0 ? 1.0f : 1.0f - (d - r0) / (r1 - r0);
+            px_blend(x, y, c, (uint32_t)(a * a * s * 16.0f + 0.5f));
+        }
+}
+static void aa_seg(float x0, float y0, float x1, float y1, uint16_t c, float s)
+{
+    float dx = x1 - x0, dy = y1 - y0, ax = dx < 0.0f ? -dx : dx, ay = dy < 0.0f ? -dy : dy, t, step;
+    int n, k;
+    if (s <= 0.02f)
+        return;
+    if (ax >= ay) {
+        if (x1 < x0) {
+            t = x0, x0 = x1, x1 = t;
+            t = y0, y0 = y1, y1 = t;
+        }
+        n = (int)(x1 - x0) + 1;
+        step = ax > 0.0f ? (y1 - y0) / (x1 - x0) : 0.0f;
+        for (k = 0; k <= n; k++) {
+            float x = x0 + (float)k, y = y0 + step * (float)k, f;
+            int32_t iy;
+            if (x > x1 + 0.5f)
+                break;
+            iy = (int32_t)fm_floorf(y);
+            f = y - (float)iy;
+            px_blend((int32_t)x, iy, c, (uint32_t)((1.0f - f) * s * 16.0f + 0.5f));
+            px_blend((int32_t)x, iy + 1, c, (uint32_t)(f * s * 16.0f + 0.5f));
+        }
+    } else {
+        if (y1 < y0) {
+            t = x0, x0 = x1, x1 = t;
+            t = y0, y0 = y1, y1 = t;
+        }
+        n = (int)(y1 - y0) + 1;
+        step = (x1 - x0) / (y1 - y0);
+        for (k = 0; k <= n; k++) {
+            float y = y0 + (float)k, x = x0 + step * (float)k, f;
+            int32_t ix;
+            if (y > y1 + 0.5f)
+                break;
+            ix = (int32_t)fm_floorf(x);
+            f = x - (float)ix;
+            px_blend(ix, (int32_t)y, c, (uint32_t)((1.0f - f) * s * 16.0f + 0.5f));
+            px_blend(ix + 1, (int32_t)y, c, (uint32_t)(f * s * 16.0f + 0.5f));
+        }
+    }
+}
 
 /* THE SCOPES: on the pages that shape a sound the main area draws what the knobs make: the envelopes' curves, the
  * LFOs' waves, the filters' response, the echo and the reverb. The shape follows the knobs as they turn; a dot
@@ -6861,8 +6898,8 @@ static void scope_trace(uint16_t col)            /* sc_y[x] (0 .. SC_H): a fille
     }
     for (x = 1; x < SC_W; x++) {                 /* (0.17.39) the line smooth: two anti-aliased strokes a column, as thick as the old one */
         const float x0 = (float)(SC_X + x - 1), y0 = (float)(sc_oy + sc_oh - sc_y[x - 1]) - 1.0f, y1 = (float)(sc_oy + sc_oh - sc_y[x]) - 1.0f;
-        kr_seg(x0, y0, x0 + 1.0f, y1, col, 1.0f);
-        kr_seg(x0, y0 + 1.0f, x0 + 1.0f, y1 + 1.0f, col, 1.0f);
+        aa_seg(x0, y0, x0 + 1.0f, y1, col, 1.0f);
+        aa_seg(x0, y0 + 1.0f, x0 + 1.0f, y1 + 1.0f, col, 1.0f);
     }
 }
 
@@ -6941,8 +6978,8 @@ static void step_roll(int32_t y0, int32_t h, uint16_t col, const int16_t *pit, c
         y = y < y0 + 4 ? y0 + 4 : y > y0 + h - 9 ? y0 + h - 9 : y;
         c = st >= len ? K_LINE : st == pos ? K_TEXT : lv[st] == 3 ? col : lv[st] == 1 ? mix(K_PANEL, col, 6) : mix(K_PANEL, col, 11);
         if (px >= 0 && (slide_in >> st & 1u)) {  /* a slide: a line from the note before into this one */
-            kr_seg((float)px, (float)py + 1.0f, (float)x, (float)y + 1.0f, c, 1.0f);   /* (0.17.39: smooth) */
-            kr_seg((float)px, (float)py + 2.0f, (float)x, (float)y + 2.0f, c, 1.0f);
+            aa_seg((float)px, (float)py + 1.0f, (float)x, (float)y + 1.0f, c, 1.0f);   /* (0.17.39: smooth) */
+            aa_seg((float)px, (float)py + 2.0f, (float)x, (float)y + 2.0f, c, 1.0f);
         }
         cv_rect(x, y - (lv[st] == 3 ? 1 : 0), cw - 4, lv[st] == 3 ? 6 : 4, c);
         px = x + cw - 5, py = y;
@@ -8442,7 +8479,7 @@ static void console_roll(int v, int32_t x0, int32_t y0, int32_t w, int32_t h)
             const int32_t x = x0 + s * cw + 1, y = y0 + h - 6 - n * (h - 8) / 23;
             const uint16_t c = d == 0 && en_playing ? K_TEXT : acc ? col : mix(K_PANEL, col, 11);
             if (v == LK_ACID && px >= 0 && (en_acid_slide >> ((s + 15) & 15) & 1u))
-                kr_seg((float)px, (float)py + 2.0f, (float)x, (float)y + 2.0f, mix(K_PANEL, col, 9), 1.0f);   /* a slide into it (smooth: 0.17.39) */
+                aa_seg((float)px, (float)py + 2.0f, (float)x, (float)y + 2.0f, mix(K_PANEL, col, 9), 1.0f);   /* a slide into it (smooth: 0.17.39) */
             cv_rect(x, y - (acc ? 1 : 0), cw - 2, acc ? 6 : 4, c);
             px = x + cw - 3, py = y;
         }
@@ -10167,8 +10204,8 @@ static void autosave(void)
 }
 
 /* THE BOOT CARDS. First deamonSLINKY (the maker): its mascot, a slinky with demon horns (a 23 x 20 sprite, 4 px a pixel; the Hellfire
- * colorway of the logo concept), the name in two colours, a ringed bar and "PRESENTS". Then PERF-1 in big pixel letters, what it is,
- * and the licence (free software, GPL-3.0), with sixteen steps filling in (the white keys lighting with them) until the
+ * colorway of the logo concept), the name in two colours, a ringed bar and "PRESENTS". Then (0.17.79) the maker's festival picture,
+ * PERF-1 in big pixel letters under it, and the licence (GPL-3.0), with sixteen steps filling in (the white keys lighting with them) until the
  * music starts. Any button or key: straight to the music.
  * Sprite letters: K outline, H horn, h horn shade, Y eye, R body, r body shade, L highlight, T tail, . nothing. */
 static const char *const MASCOT[23] = {   /* (0.17.39 re-art: lit from the top left; k its own dark outline, D r R L W the body's ramp (shade to light, hue-shifted),
@@ -10232,7 +10269,7 @@ static void splash_mascot(int hop, int blink)    /* the mascot, hopped up hop pi
 {
     int x, y;
     cv_begin(240, 108, K_BG);
-    kr_glow(120.0f, 62.0f - (float)hop, 22.0f, 70.0f, RGB(156, 29, 58), 0.6f);   /* (0.17.39) a faint glow behind him, rising with him */
+    aa_glow(120.0f, 62.0f - (float)hop, 22.0f, 70.0f, RGB(156, 29, 58), 0.6f);   /* (0.17.39) a faint glow behind him, rising with him */
     for (y = 0; y < 23; y++)
         for (x = 0; x < 23; x++)
             if (MASCOT[y][x] != '.')
@@ -10261,9 +10298,11 @@ static void draw_splash(void)
     cv_blit(0, 108);
 }
 
-/* the second card: PERF-1, big 5 x 7 pixel letters (6 px a pixel), an orange shadow under the purple */
+/* the second card (0.17.79): the maker's festival picture (boot_art.h: 240 x 162, sixteen colours, run-length coded; tools/boot_art.py),
+ * then under it PERF-1 in big 5 x 7 pixel letters (4 px a pixel), an orange shadow under the purple, and who made it */
+#include "boot_art.h"
 #define BIG_N 6
-#define BIG_PX 6
+#define BIG_PX 4
 static const uint8_t BIG_GLYPH[BIG_N][7] = {
     {0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10},  /* P */
     {0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F},  /* E */
@@ -10272,26 +10311,37 @@ static const uint8_t BIG_GLYPH[BIG_N][7] = {
     {0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00},  /* - */
     {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E},  /* 1 */
 };
-#define SPLASH_STEP_Y 184
+#define SPLASH_STEP_Y 228
 static void draw_hyp(void)
 {
+    const uint8_t *p = BOOT_RLE;
+    uint32_t y = 0, band;
     int g, r, c, pass;
-    lcd_fill(0, 0, 240, 240, K_BG);
-    cv_begin(240, 140, K_BG);
+    for (band = 0; band < 2u; band++) {          /* the picture, in two canvases (a canvas is at most 144 rows) */
+        const uint32_t h = band ? BOOT_H - BOOT_H / 2u : BOOT_H / 2u;
+        uint16_t *q, *e;
+        cv_begin(BOOT_W, h, K_BG);
+        for (q = cv_px, e = cv_px + BOOT_W * h; q < e;) {   /* a byte a run: the colour low, the length less one high */
+            const uint32_t b = *p++;
+            const uint16_t col = swap16(BOOT_PAL[b & 15u]);
+            uint32_t n = (b >> 4) + 1u;
+            while (n-- && q < e)
+                *q++ = col;
+        }
+        cv_blit(0, y);
+        y += h;
+    }
+    cv_begin(240, 240 - BOOT_H, K_BG);
     for (pass = 0; pass < 2; pass++)             /* the shadow, then the letters */
         for (g = 0; g < BIG_N; g++)
             for (r = 0; r < 7; r++)
                 for (c = 0; c < 5; c++)
                     if (BIG_GLYPH[g][r] >> (4 - c) & 1u)
-                        cv_rect(12 + (g * 6 + c) * BIG_PX + (pass ? 0 : 3), 24 + r * BIG_PX + (pass ? 0 : 3), BIG_PX, BIG_PX,
+                        cv_rect(50 + (g * 6 + c) * BIG_PX + (pass ? 0 : 2), 5 + r * BIG_PX + (pass ? 0 : 2), BIG_PX, BIG_PX,
                                 pass ? K_PAD : K_ACC);
-    text_c(120, 86, &FONT_S, "GENERATIVE  //  LIVE", K_TEXT);
-    cv_blit(0, 6);
-    cv_begin(240, 52, K_BG);                     /* (a canvas is at most 144 rows) */
-    text_c(120, 0, &FONT_XS, EN_VERSION[0] == 'D' ? "FM-1 CUSTOM FIRMWARE" : "FM-1 CUSTOM FIRMWARE  //  " EN_VERSION, K_TEXT);
-    text_c(120, 16, &FONT_XS, "BY DEAMONSLINKY", RGB(255, 143, 143));
-    text_c(120, 32, &FONT_XS, "FREE SOFTWARE  //  GPL-3.0", K_DIM);   /* (1.0: the credits are in the manual) */
-    cv_blit(0, 120);
+    text_c(120, 38, &FONT_XS, EN_VERSION[0] == 'D' ? "FM-1 CUSTOM FIRMWARE" : "FM-1 CUSTOM FIRMWARE  //  " EN_VERSION, K_TEXT);
+    text_c(120, 52, &FONT_XS, "BY DEAMONSLINKY  //  GPL-3.0", RGB(255, 143, 143));   /* (1.0: the credits are in the manual) */
+    cv_blit(0, BOOT_H);
     for (c = 0; c < 16; c++)
         lcd_fill(8 + c * 14, SPLASH_STEP_Y, 11, 11, K_PANEL);
 }
@@ -10572,18 +10622,6 @@ void ui_frame(void)
         }
     }
     autosave();
-    if (kr.on) {                                 /* the secret: the whole screen, twenty frames a second */
-        runner_update();
-        if (ui.frame % 3u == 0u) {
-            runner_draw(0);
-            cv_blit(0, 0);
-            runner_draw(1);
-            cv_blit(0, 120);
-        }
-        runner_leds();
-        ui.frame++;
-        return;
-    }
     cv_scan = ui.scan & 1u;                     /* (Look's bit 0; bit 1 is Calm) */
     if (!ui.saver_on)
         draw_header();                           /* (the screensaver has the whole screen) */

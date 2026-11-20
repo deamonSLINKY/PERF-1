@@ -428,55 +428,6 @@ static int fmt_check(const char *path)
 }
 #endif
 
-/* Kick Runner's autopilot (videos only): SELECT turned a notch at a time, as a player would, toward the
- * nearest gate and out of a wall's way */
-static int autopilot;
-static void kr_autopilot(void)
-{
-    static uint32_t t;
-    int k, l, target = -1, danger = 0, dir = 0;
-    float best = 99.0f;
-    if (now_ms - t < 110u || kr.over)
-        return;
-    for (k = 0; k < KR_NROW; k++) {
-        float z = kr.row[k].beat - kr.beat;
-        if (kr.row[k].done || z < 0.0f || z > 4.0f)
-            continue;
-        if ((kr.row[k].wall >> kr.lane & 1u) && z < 1.8f)
-            danger = 1;
-        for (l = 0; l < KR_LANES; l++)
-            if ((kr.row[k].gate >> l & 1u) && z < best && z > 0.4f) {
-                best = z;
-                target = l;
-            }
-    }
-    if (danger) {                                /* the nearest lane with no wall coming soon */
-        int d;
-        for (d = 1; d < 4 && !dir; d++) {
-            int s;
-            for (s = 1; s >= -1; s -= 2) {
-                int ln = (kr.lane + s * d + KR_LANES) % KR_LANES, ok = 1;
-                for (k = 0; k < KR_NROW; k++) {
-                    float z = kr.row[k].beat - kr.beat;
-                    if (!kr.row[k].done && z >= 0.0f && z < 2.2f && (kr.row[k].wall >> ln & 1u))
-                        ok = 0;
-                }
-                if (ok) {
-                    dir = s;
-                    break;
-                }
-            }
-        }
-    } else if (target >= 0 && target != kr.lane) {
-        int d = (target - kr.lane + KR_LANES) % KR_LANES;
-        dir = d <= KR_LANES / 2 ? 1 : -1;
-    }
-    if (dir) {
-        enc_acc[EN_SELECT] += dir;
-        t = now_ms;
-    }
-}
-
 /* ---------------------------------------------------------- outputs --- */
 static void png_write(const char *path)
 {
@@ -656,8 +607,6 @@ static void run_ms(uint32_t ms)
         }
         if (now_ms >= ui_due) {
             ui_due = now_ms + 16;
-            if (autopilot && kr.on)
-                kr_autopilot();
             ui_frame();
         } else {
             ui_input_only();
@@ -710,20 +659,6 @@ static int expect(const char *what, const char *val)
         got = en_dd_left;
     else if (!strcmp(what, "pattern_synced"))
         got = proj.par[P_PATTERN] == en_pat_next;
-    else if (!strcmp(what, "runner"))              /* the secret game (SEL + EDIT): on, lane, rows, gates, ... */
-        got = kr.on;
-    else if (!strcmp(what, "kr_lane"))
-        got = kr.lane;
-    else if (!strcmp(what, "kr_rows"))
-        got = (int)kr.rows_born;
-    else if (!strcmp(what, "kr_gates"))
-        got = (int)kr.gates;
-    else if (!strcmp(what, "kr_crashes"))
-        got = (int)kr.crashes;
-    else if (!strcmp(what, "kr_layer"))
-        got = kr.layer;
-    else if (!strcmp(what, "kr_over"))
-        got = kr.over;
     else if (!strcmp(what, "piece"))
         got = proj.piece;
     else if (!strcmp(what, "pool"))               /* the scale, relative to the root (hex ok) */
@@ -1430,8 +1365,6 @@ int main(int argc, char **argv)
                     bk[o] = (uint8_t)pats[k / EN_NLANE][k % EN_NLANE], bk[o + 1] = (uint8_t)(pats[k / EN_NLANE][k % EN_NLANE] >> 8);
             }
             plat_store_save(OBJ_PROJ, bk, (uint32_t)o + 16u);
-        } else if (!strcmp(cmd, "autopilot")) {      /* autopilot 0/1: Kick Runner steers itself (for videos) */
-            autopilot = atoi(a);
         } else if (!strcmp(cmd, "splash")) {         /* splash MS: the next boot's RedtailWorks card */
             ui_splash_ms = (uint32_t)strtoul(a, 0, 10);
         } else if (!strcmp(cmd, "fxpageset")) {      /* (0.17.19) fxpageset N: the effects' page N up (as the walk reaches it), for pictures */
