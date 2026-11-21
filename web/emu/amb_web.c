@@ -65,6 +65,7 @@ __attribute__((used, visibility("default"))) void web_render(uint32_t n)
 __attribute__((used, visibility("default"))) void web_boot(void)
 {
     ui_splash_ms = 3200u;                        /* the boot cards, as on the FM-1 */
+    host_seamless = 1;                           /* (a store goes on under the music, as the FM-1's sliced erase: no fade, the ~60 ms gap heard after each edit) */
     boot();
 }
 __attribute__((used, visibility("default"))) void web_seed(uint32_t s) { host_seed = s; }   /* before web_boot */
@@ -395,6 +396,7 @@ __attribute__((used, visibility("default"))) uint8_t *web_st_live(void)
 __attribute__((used, visibility("default"))) void web_st_boot(void)
 {
     ui_splash_ms = 600u;                         /* the studio: the boot card short */
+    host_seamless = 1;                           /* (as web_boot: a store without the fade) */
     boot();
 }
 /* track codes (0.17.11, ui.c): a code's text in st_txt started as the panel's Code page starts it (its genre, its piece's recipe, key, mode,
