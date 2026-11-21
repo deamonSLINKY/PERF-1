@@ -469,7 +469,7 @@ columns a to d are **KNOB1** to **KNOB4**. These knobs go to eleven: a knob that
 | Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO; hold **SEL** and turn it to choose bars or seconds) |
 | Pad | **ENV** | Level | Bright | Sound (24) | Detune |
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
-| Pad LFO | **ENV** x3 | Rate. It goes from slow to fast as you turn left: 32 bars down to a 1/16T, with dotted and triplet values between (1/2., 1/4., 1/8., 1/4T, 1/8T). While the music plays, the LFO is locked to the bar. | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
+| Pad LFO | **ENV** x3 | Rate. Turn left for faster and right for slower: from 1/16T at the far left to 32 bars at the far right, with dotted and triplet values between (1/2., 1/4., 1/8., 1/4T, 1/8T). While the music plays, the LFO is locked to the bar. | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
 | Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Comp: how the pad plays the chords (auto, hold, 7 stab rhythms) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, sometimes one chord is chosen again.) |
 | Progression | **ENV** x5, or hold **EDIT** | Chord (a chord of the scale, or Hold) | Type (Piece's, Triad, 7th, 9th, Sus, Dub, Fourths, 11th) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
@@ -1502,10 +1502,12 @@ The piece stores the tricks. Pieces stored with older firmware have no tricks. T
 pattern plays. Thus a trick on an empty step waits until a hit lands on that step. The tricks do not apply in fills,
 builds or breakdowns, on the hit where the drop lands, or in the first bar after **PLAY**.
 
-Some genres have tricks that are already set. In lofi, house, garage and most of the other genres, the off-beat hats
-are soft. In disco, house and electro, the off-beat hats have an accent. In DnB, breaks, funk and synthwave, the
-backbeat has an accent. In lofi and trip-hop, the snare is a little late (laid back), and in reggae the rim is a very
-little late. Trap has triplet rolls and a swell on its last hat beat.
+Some genres have tricks that are already set. In lofi, house, garage, hip-hop and most of the other genres, the hats
+between the eighth notes (the second and the fourth 16th of each beat) are soft. In house, disco and electro, the hat
+on the "and" of each beat (half a beat after the beat) has an accent. In DnB, breaks, funk and synthwave, the
+backbeat has an accent. In lofi and trip-hop, the snare is a little late (laid back). In garage and hip-hop, the snare
+is a very little late. In dub and reggae, the rim is a very little late. Trap has triplet rolls and a swell on its
+last hat beat.
 
 ### Feel: ghosts, accents, comping and looseness
 
@@ -1905,6 +1907,7 @@ These are the actions to play a set live. Most of them wait for the next bar, so
 
 - **Change** goes to the next pattern, or to a random pattern from pattern 1 up to the **Pool** number.
 - **Every** sets how often a change occurs: after a set number of bars, or with each chord change. The bar before each change ends in a fill: the snare and hats play a roll into the change.
+- **Pool** sets the highest pattern for a random change. A random change selects a pattern from pattern 1 up to this number.
 - **Mutate** changes the pattern a little at the same moments. **Shift** moves one or two hits by one step. **Morph** also adds or removes a hit.
 
 The kick and the clap always stay as written. A snare on a beat never moves. This keeps the groove steady.
@@ -2282,7 +2285,7 @@ The sounds come from the piece that was playing: its kit, its sounds, its key. S
 
 ![The SOUND page](img/perf-screen-sound.png)
 
-The last settings page changes how all the parts sound together. These are the settings of the unit. They are the same for every piece.
+This settings page comes after SAMPLE. It changes how all the parts sound together. These are the settings of the unit. They are the same for every piece.
 
 | Knob | What it does |
 |---|---|
@@ -2295,7 +2298,7 @@ The last settings page changes how all the parts sound together. These are the s
 
 ![The CHORUS page](img/perf-screen-chorus.png)
 
-This is the last settings page, after SOUND. It is a chorus in the style of the Juno-106 chorus, and it makes the pluck and the acid wide. As on the Juno, a slow triangle sweeps one short delay. It sweeps the other side in the opposite direction. The chorus mixes this with the dry sound. The lows (under about 200 Hz) stay dry in the middle, so the low end stays mono. These are the settings of the unit, the same for every piece.
+This settings page comes after SOUND. It is a chorus in the style of the Juno-106 chorus, and it makes the pluck and the acid wide. As on the Juno, a slow triangle sweeps one short delay. It sweeps the other side in the opposite direction. The chorus mixes this with the dry sound. The lows (under about 200 Hz) stay dry in the middle, so the low end stays mono. These are the settings of the unit, the same for every piece.
 
 | Knob | What it does |
 |---|---|
@@ -2628,7 +2631,7 @@ The FM-1 checks the two types against the DX7 checksum (a number that shows if t
 ### Good to know
 
 - The FM-1 saves the voices a couple of seconds after your last change (the music dips, as for all saves). The voices stay after power-off.
-- A voice plays as it was made: the algorithm, the envelopes (how the sound changes over time) and their scaling, velocity, LFO (a slow wave that moves the sound), pitch envelope and feedback. PERF-1 does not support pitch bend, mod wheel, portamento (a slide between notes) and mono mode (one note at a time) yet. To edit the voice itself, use the [editor page](../editor/) (below).
+- A voice plays as it was made: the algorithm, the envelopes (how the sound changes over time) and their scaling, velocity, LFO (a slow wave that moves the sound), pitch envelope and feedback. PERF-1 does not use the pitch bend range, mod wheel, portamento (a slide between notes) and mono mode (one note at a time) settings of the voice yet. The pitch bend and the mod wheel of a MIDI keyboard still work on a DX voice (section 14). To edit the voice itself, use the [editor page](../editor/) (below).
 - Loaded voices are **not level-matched** (their levels are not made equal) to each other or to the other sounds. They play up to four notes at the same time. If a voice is too loud or too quiet, turn the Level of the pluck.
 - A piece keeps the sound of the pluck **by slot number**. For example, a piece uses your voice in slot 3, and then you load other voices. The piece now plays the voice that is in slot 3. The factory pieces never use your slots.
 - The Sound knob can stop on an empty slot. The screen shows it as `(empty)`, and it makes no sound. **SEL** + **ALGORITHM** skips empty slots.
