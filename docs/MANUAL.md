@@ -1,12 +1,14 @@
 # PERF-1
 
-PERF-1 is free firmware that turns your M-VAVE FM-1 into a groovebox that plays by itself. Switch it on and a piece of music starts: drums, a bass line, a pad, an acid line and a short plucked melody, made up as it plays so it never repeats exactly. There are twenty-two styles, from techno and house to lofi, hip-hop, reggae, drum and bass, trance and ambient, with ten pieces each.
+PERF-1 is free firmware that turns your M-VAVE FM-1 into a groovebox that plays by itself. When you switch it on, a piece of music starts. The piece has drums, a bass line, a pad, an acid line and a short plucked melody. PERF-1 makes up the music while it plays, so the music never repeats exactly. There are twenty-two styles, from techno and house to lofi, hip-hop, reggae, drum and bass, trance and ambient. Each style has ten pieces.
 
-You don't have to program anything to get going. You steer the music: change the chords, break the beat down and bring it back, mute parts, throw on effects, or let the auto-DJ do it for you. When you want to go deeper, almost everything can be edited, from the drum steps to the sounds, and any piece you shape can be saved. The FM-1 also works as a USB audio and MIDI device, so you can record what you play straight into your computer.
+You do not have to program anything to start. You control the music. You change the chords, you take the beat out (a breakdown) and bring it back, you mute parts and you add effects. Or the auto-DJ can do these things for you. If you want to do more, you can edit almost everything, from the drum steps to the sounds. You can save each piece that you change.
 
-If you're new, read **Start here** below first. The numbered sections after it are the full reference.
+The FM-1 also works as a USB audio and MIDI device. Thus, you can record what you play directly into your computer.
 
-PERF-1 is made by deamonSLINKY, and it's free and open source (GPL-3.0-only); the people whose work it builds on are in the credits (section 19). It's still young and changes often, so keep a way back to the stock firmware (section 1 explains how).
+If you are new, read **Start here** below first. The numbered sections after it are the full reference.
+
+PERF-1 is made by deamonSLINKY. It is free and open source (GPL-3.0-only). The credits (section 19) give the people whose work it uses. PERF-1 is still new and it changes frequently. Thus, keep a way to go back to the stock firmware, M-VAVE's own firmware (section 1 explains how).
 
 ![The Tempo page, the home screen](img/perf-screen-home.png)
 
@@ -14,131 +16,131 @@ PERF-1 is made by deamonSLINKY, and it's free and open source (GPL-3.0-only); th
 
 ## Start here: your first hour
 
-This guide is for your first hour. No music theory needed, nothing to set up. Every step is one thing to press, and what you will hear.
+This guide is for your first hour. You do not need music theory, and you do not have to set up anything. Each step is one thing to press. Each step also tells you what you will hear.
 
-When you want every detail, the [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) has every control on eight pages, and the rest of this manual, from section 1 on, explains everything. This part is also a [printable PDF](https://deamonslinky.github.io/PERF-1/manual/PERF-1-beginners-guide.pdf).
+If you want all the details, the [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) shows every control on eight pages. The rest of this manual, from section 1, explains everything. This part is also a [printable PDF](https://deamonslinky.github.io/PERF-1/manual/PERF-1-beginners-guide.pdf).
 
 ### What PERF-1 is
 
-PERF-1 turns your M-VAVE FM-1 into a little band that plays by itself. Switch it on and music starts: drums, a bass, a soft pad, a squelchy "acid" line and a plucked melody, all made up on the spot so it never repeats exactly.
+PERF-1 turns your M-VAVE FM-1 into a small band that plays by itself. When you switch it on, music starts. You hear drums, a bass, a soft pad, an "acid" line (a twisting line with a sharp, wet sound) and a plucked melody. PERF-1 makes up all of this music while it plays, so it never repeats exactly.
 
-You are the conductor. You don't have to play notes. You change the chords, break the beat down and bring it back, throw effects on, mute things, and keep the moments you like.
+You control the band. You do not have to play notes. You change the chords. You take the beat out and bring it back. You add effects, you mute parts, and you keep the moments that you like.
 
 ### Before you start
 
-- **Try it without installing.** The [emulator](https://deamonslinky.github.io/PERF-1/emu/) runs PERF-1 in your web browser, with sound. Every step in this guide works there too.
-- **Installing** takes a couple of minutes with the [web installer](https://deamonslinky.github.io/PERF-1/install/) in Chrome or Edge. Use a USB cable that carries data, not a charge-only one.
-- **You can always go back.** The same installer page puts M-VAVE's own firmware back. Anything you saved on the stock firmware may be lost when you switch, so keep copies of what you care about.
+- **Try it before you install it.** The [emulator](https://deamonslinky.github.io/PERF-1/emu/) runs PERF-1 in your web browser, with sound. All the steps in this guide also work there.
+- **To install**, use the [web installer](https://deamonslinky.github.io/PERF-1/install/) in Chrome or Edge. It takes a couple of minutes. Use a USB cable that carries data. Do not use a cable that only charges.
+- **You can always go back.** The same installer page puts M-VAVE's own firmware back. Keep copies of the items that are important to you. When you change the firmware, you can lose the items that you saved on the stock firmware.
 
 ### The buttons you need today
 
-Only a few. The rest can wait.
+You need only a few buttons. The other buttons can wait.
 
 ![The FM-1's panel: the knobs top left and right, the screen in the middle, the buttons to its right, the keys below](img/guide-panel.png)
 
 | Control | What it does for you today |
 |---|---|
-| **MASTER** knob | Volume. |
-| **PLAY** | Stop and start the music. Each start is a fresh track with its own code (see Track codes). |
-| **EDIT** | Move on to the next chord. |
-| The **keys** | Play along. Every note fits the music. |
-| **PRESETS** knob | The next piece of music. |
-| **SAVE** | Break the beat down, then build it back up. |
-| **FX** | Effects. |
-| **HOME** | Back to the start page. Press it whenever you feel lost. |
-| **GLO** | The Global page. Hold it for the mix map: mutes, solos and scenes. |
+| **MASTER** knob | Sets the volume. |
+| **PLAY** | Stops and starts the music. Each start makes a new track with its own code (see Track codes). |
+| **EDIT** | Goes to the next chord. |
+| The **keys** | Play along with the music. Every note fits the music. |
+| **PRESETS** knob | Goes to the next piece of music. |
+| **SAVE** | Takes the beat out (a breakdown), then builds it back up. |
+| **FX** | Opens the effects. |
+| **HOME** | Goes back to the start page. Press it when you do not know where you are. |
+| **GLO** | Opens the Global page. Hold it for the mix map: mutes, solos and scenes. |
 
 ### Your first five minutes
 
-**1. Switch it on and listen.** After a short animation, a piece starts playing on its own. Turn **MASTER** to a comfortable level. Nothing you press in this guide can break anything.
+**1. Switch it on and listen.** After a short animation, a piece starts to play by itself. Turn **MASTER** to a comfortable volume. Nothing that you press in this guide can cause damage.
 
 ![The home screen: the chord at the top, then a strip for each of the five parts with the notes coming up and how loud it is](img/perf-screen-home.png)
 
-**2. Tap EDIT.** At the start of the next bar the chord changes. The whole band follows: the bass, the pad and the melodies all move to fit. Tap it a few more times.
+**2. Tap EDIT.** At the start of the next bar, the chord changes. The whole band follows: the bass, the pad and the melodies all change to fit the chord. Tap it a few more times.
 
-**3. Play a few keys.** The keys play a melody over the band. Every key is a note of the music's scale, so there are no wrong notes: play anything, slowly or fast, and it fits. The piece's chords and scale stay as they are.
+**3. Play a few keys.** The keys play a melody over the band. Every key is a note of the music's scale, so no note is wrong. Play anything, slowly or quickly, and it fits. The chords and the scale of the piece do not change.
 
-**4. Turn PRESETS one click.** A new piece starts: a new key, a new tempo, new sounds. There are ten pieces in each style.
+**4. Turn PRESETS one click.** A new piece starts, with a new key, a new tempo (speed) and new sounds. There are ten pieces in each style.
 
-**5. Hold GLO and turn PRESETS.** Now you are changing the style itself. There are twenty-two: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance, dark forest, hip-hop, trance and ambient. Let go of GLO when you find one you like.
+**5. Hold GLO and turn PRESETS.** Now you change the style. There are twenty-two styles: techno, lofi, house, dubstep, dub, drum and bass, breaks, garage, electro, trap, disco, funk, reggae, synthwave, amapiano, trip-hop, industrial, psytrance, dark forest, hip-hop, trance and ambient. When you find a style that you like, release GLO.
 
 ### Make it move
 
-**6. Tap SAVE: a breakdown.** At the next bar the drums drop out and the music gets softer and dreamier.
+**6. Tap SAVE: a breakdown.** At the next bar, the drums stop. The music becomes softer and more dreamy.
 
 ![A breakdown: the top of the screen says BREAK](img/perf-screen-breakdown.png)
 
-**7. Tap SAVE again: the build and the drop.** The drums come back climbing for a few bars, there is a short silence, and then everything hits at once. This is the moment DJs live for. Tap SAVE, wait, tap SAVE, and you have done it.
+**7. Tap SAVE again: the build and the drop.** The drums come back and climb for a few bars. Then there is a short silence. Then all the parts play together at once. DJs like this moment very much. Tap SAVE, wait, and tap SAVE again. That is all.
 
 ![A build: the top of the screen counts the bars to the drop](img/perf-screen-build.png)
 
-**8. Press FX: effects on the keys.** Every key is now an effect, and the screen shows their names.
+**8. Press FX: effects on the keys.** Now each key is an effect. The screen shows the names of the effects.
 
 ![The FX screen: each effect's name next to its key](img/perf-screen-fx-menu.png)
-- **Tap** a key and the effect stays on.
-- **Hold** a key and the effect lasts only while you hold it.
-- Tap the same key again to switch it off, or tap **OCT-** to switch every effect off at once.
-- Press **FX** again to leave. Try the gate, the phaser, the tape and the beat repeats.
+- **Tap** a key to keep its effect on.
+- **Hold** a key to use its effect only while you hold the key.
+- To stop an effect, tap the same key again. To stop all the effects at once, tap **OCT-**.
+- To leave, press **FX** again. Try the gate, the phaser, the tape and the beat repeats.
 
 ### The Perform screen, a first look
 
-**9. Press HOME, then HOME again** (not too quickly). This is the Perform screen: the eight parts of the band, and a **mood** bar.
+**9. Press HOME, then HOME again** (do not press too quickly). This is the Perform screen. It shows the eight parts of the band and a **mood** bar.
 
 ![The Perform screen: the eight parts, the four scenes, the mood bar](img/perf-screen-perform.png)
 
-**10. Turn ALGORITHM, the knob that sets the mood.** Turn it left for calm and sparse, right for busy and bright. The acid, the hats, the melody, the bass and the reverb all change together.
+**10. Turn ALGORITHM, the knob that sets the mood.** Turn it left for calm music with few notes. Turn it right for busy, bright music. The acid, the hats (the hi-hats), the melody, the bass and the reverb (the sound of a room) all change together.
 
-**11. Tap the keys to mute parts.** On this screen the keys switch parts of the band off and on. The screen shows which key is which. Try muting the kick drum, listen to how much it changes, then bring it back.
+**11. Tap the keys to mute parts.** On this screen, the keys turn the parts of the band off and on. The screen shows which key controls which part. Mute the kick drum and listen to the difference. Then turn it on again.
 
-**12. Let it play itself.** Hold **GLO** and tap the **F5** key (the second white key from the right). "DJ" lights up at the top of the screen. Now PERF-1 runs breakdowns, builds and drops on its own, like a DJ. Do the same again to switch it off.
+**12. Let it play itself.** Hold **GLO** and tap the **F5** key (the second white key from the right). "DJ" comes on at the top of the screen. Now PERF-1 does the breakdowns, builds and drops by itself, like a DJ. To stop this, do the same again.
 
 ### Keep what you like
 
-**13. Save the piece.** If you have changed a piece and like it, press **GLO**, then **SAVE**. The screen says it has been stored, and it is there next time you switch on.
+**13. Save the piece.** If you changed a piece and you like it, press **GLO**, then **SAVE**. The screen shows that it stored the piece. The piece is there the next time that you switch on.
 
 ![Stored: the top of the screen says so](img/perf-screen-store.png)
 
- Every style keeps its own ten pieces.
+ Each style keeps its own ten pieces.
 
-To put a piece back the way it was at the start, go to **GLO** and hold **SEL** and **SAVE** together for a moment.
+To put a piece back to how it was at the start, go to **GLO**. Then hold **SEL** and **SAVE** together for a moment.
 
 ### When you want more
 
-You don't need any of this to have fun, but it is there.
+You do not need these things to have fun, but they are there.
 
-- **Turn SELECT** to walk through the pages. Each page has four knobs underneath the screen. The page name tells you what they change: the pad, the bass, the acid, the drums, the reverb and much more.
-- **The Jam page** (turn SELECT past Global) picks what the keys play: the pluck, the pad, the acid or the bass, single notes or whole chords, and how high. On a part's own pages (the pad's, bass's, acid's or pluck's) the keys play that part instead.
-- **Change the scale** on the **Global** page (press GLO): there, each key puts a note into the music or takes one out, and ALGORITHM picks its mode (a brighter or darker minor, a major). Everywhere else ALGORITHM is the mood.
+- **Turn SELECT** to go through the pages. Each page has four knobs below the screen. The page name tells you what the knobs change: the pad, the bass, the acid, the drums, the reverb and much more.
+- **The Jam page** (turn SELECT past Global) sets what the keys play. It can be the pluck, the pad, the acid or the bass, as single notes or full chords. It also sets how high the notes are. On the pages of a part (the pad's, bass's, acid's or pluck's pages), the keys play that part.
+- **Change the scale** on the **Global** page (press GLO). On this page, each key adds a note to the music or removes it. ALGORITHM sets the mode of the scale (a brighter or darker minor, or a major). On all other pages, ALGORITHM sets the mood.
 - **Hold HOME** for the settings.
-- **The SET page** has an **Intro** that starts with just a pad and brings the band in one part at a time over a few minutes. Great for mixing in, or for playing over. You get there by holding **HOME**, then turning **SELECT** to SET.
+- **The SET page** has an **Intro**. The Intro starts with only a pad. Then it brings in the band, one part at a time, over a few minutes. It is good for mixing in, or for playing over. To get there, hold **HOME**, then turn **SELECT** to SET.
 
 ![The SET page: Rounds, Ramp, Intro](img/perf-screen-set.png)
-- The [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) is eight pages to print and keep beside the FM-1.
+- The [quick manual](https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf) has eight pages. Print it and keep it next to the FM-1.
 
 ### If something goes wrong
 
-- **Lost on some page?** Press **HOME**.
-- **An effect won't go away?** Press **FX**, then **OCT-**, then **FX** again.
+- **You do not know where you are?** Press **HOME**.
+- **An effect does not stop?** Press **FX**, then **OCT-**, then **FX** again.
 - **The music stopped?** Press **PLAY**.
-- **A piece sounds odd after a lot of changes?** Turn PRESETS to another piece and back, or reset it with **SEL** and **SAVE** held on the **GLO** page.
-- **Want the original firmware back?** Use the [installer](https://deamonslinky.github.io/PERF-1/install/) page: "Back to the stock firmware" at the bottom.
-- **Found a bug or have an idea?** Tell us on [GitHub](https://github.com/deamonSLINKY/PERF-1/issues). Most of the newest features came from ideas like yours.
+- **A piece sounds strange after many changes?** Turn PRESETS to a different piece and then back. Or reset the piece: on the **GLO** page, hold **SEL** and **SAVE**.
+- **You want the original firmware back?** Go to the [installer](https://deamonslinky.github.io/PERF-1/install/) page. Use "Back to the stock firmware" at the bottom.
+- **You found a bug (a problem) or you have an idea?** Tell us on [GitHub](https://github.com/deamonSLINKY/PERF-1/issues). Most of the newest features came from ideas like yours.
 
 ### Words you will see
 
 | Word | Means |
 |---|---|
-| **Piece** | One song: its key, tempo, sounds and drum patterns. Ten in each style. |
-| **Genre** | A style of music, with its own drums, sounds and habits. Twenty-two of them. |
+| **Piece** | One song: its key, tempo, sounds and drum patterns. There are ten in each style. |
+| **Genre** | A style of music, with its own drums, sounds and typical ways to play. There are twenty-two. |
 | **Pad** | The soft, long chords in the background. |
 | **Bass** | The low notes. |
-| **Acid** | The squelchy, twisting line, after the classic Roland TB-303. |
+| **Acid** | The twisting line with a sharp, wet sound, in the style of the classic Roland TB-303. |
 | **Pluck** | The short, plucked melody on top. |
-| **Chord** | The group of notes the band is playing around right now. EDIT moves it on. |
-| **Scale** | The set of notes the music is allowed to use. The keys only play these. On the Global page the keys add or remove them. |
-| **Breakdown, build, drop** | Calm down, climb back up, then everything hits at once. SAVE runs them. |
+| **Chord** | The group of notes that the band plays around at this moment. EDIT changes it to the next chord. |
+| **Scale** | The set of notes that the music can use. The keys play only these notes. On the Global page, the keys add or remove these notes. |
+| **Breakdown, build, drop** | The music becomes calm, climbs back up, then all the parts play at once. SAVE starts them. |
 | **Latch** | An effect that stays on after you tap its key. |
-| **Auto-DJ** | PERF-1 running the breakdowns, builds and drops by itself. |
+| **Auto-DJ** | PERF-1 does the breakdowns, builds and drops by itself. |
 
 ---
 
@@ -168,145 +170,165 @@ You don't need any of this to have fun, but it is there.
 
 ## 1. Install
 
-You can try PERF-1 before you install it. The [PERF-1 emulator](../emu/) runs the same firmware in your web
-browser, with sound. Play it with the mouse, a touch screen or your computer keyboard.
+You can try PERF-1 before you install it. The [PERF-1 emulator](../emu/) runs the same firmware in your web browser, with sound. Play it with the mouse, a touch screen or your computer keyboard.
 
 ### Installing PERF-1
 
 1. Open the [web installer](../install/) in Chrome or Edge.
-2. Connect the FM-1 straight to the computer with a USB cable that carries data (some cables only charge).
-   You don't need a hub, a probe or Transporter.
-3. Close any other program that uses the FM-1's MIDI port, such as your DAW (recording software).
-4. When the browser asks, allow MIDI with SysEx. SysEx is the kind of MIDI message the installer uses to
+2. Connect the FM-1 directly to the computer with a USB cable that carries data (some cables only charge).
+   You do not need a hub, a probe or Transporter.
+3. Close all other programs that use the FM-1's MIDI port, for example your DAW (recording software).
+4. When the browser asks, allow MIDI with SysEx. SysEx is the type of MIDI message that the installer uses to
    send the firmware.
-5. Wait until the **Install** button isn't grey (the page is still loading the firmware). The line under it
-   names the version it will write (`PERF-1 1.0.0`, for example). If that's older than you expected, hard-refresh the
-   page (Ctrl+F5, or Cmd+Shift+R on a Mac) so the browser doesn't use an old saved copy.
+5. Wait until the **Install** button is not grey (while it is grey, the page is still loading the firmware). The line
+   below the button shows the version that it will write (for example, `PERF-1 1.0.0`). If that version is older than
+   you expected, hard-refresh the page (Ctrl+F5, or Cmd+Shift+R on a Mac). Then the browser does not use an old saved copy.
 6. Press **Install**.
 
 The bar and the line above it show each stage: verifying, switching to update mode, writing, restarting,
-done. **Don't unplug the cable or close the page while it writes.** The page asks before it lets you leave.
-When it's finished, the FM-1 restarts into PERF-1 and the page checks that it reports the right version.
+done. **Do not disconnect the cable or close the page while it writes.** If you try to leave, the page asks you first.
+When the install is complete, the FM-1 restarts into PERF-1. Then the page checks that the FM-1 reports the correct version.
 
-> Installing firmware is at your own risk. The author accepts no responsibility if your FM-1 is damaged or misbehaves because of this custom firmware. Anything you stored (pieces, settings, DX7 voices) may be lost when the firmware is replaced: keep your own copies of the .syx files you load.
+> Install firmware at your own risk. The author accepts no responsibility if this custom firmware damages your FM-1 or makes it work incorrectly. Keep your own copies of the .syx files that you load. When you replace the firmware, you can lose all the items that you stored (pieces, settings, DX7 voices).
 
 ### Going back to the stock firmware
 
-"Back to the stock firmware", at the bottom of the same page, puts M-VAVE's own FM-1 firmware, V15, back on
+The "Back to the stock firmware" part, at the bottom of the same page, puts M-VAVE's own FM-1 firmware, V15, back on
 the unit.
 
-1. Download the file the page links to, `FM-1.fwsc`. It's also on
+1. Download the file that the page links to, `FM-1.fwsc`. It is also on
    [m-vave.com/download](https://www.m-vave.com/download). M-VAVE's link now gives V16. For V15, the page also
-   links the copy of M-VAVE's original file the Internet Archive kept
-   ([V15](https://web.archive.org/web/20261009203224id_/https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc)); the page checks either file's fingerprint before it writes anything.
-2. Choose that file on the page. The page checks the file's SHA-256 fingerprint and refuses any other file.
-3. Connect the FM-1 and press **Install the stock firmware**.
+   links to the copy of M-VAVE's original file that the Internet Archive kept
+   ([V15](https://web.archive.org/web/20261009203224id_/https://yms-file-store.oss-cn-hongkong.aliyuncs.com/software/firmware/FM-1.fwsc)). The page checks the fingerprint of each file before it writes anything.
+2. Select that file on the page. The page checks the SHA-256 fingerprint of the file (a code that identifies the
+   exact file). It refuses all other files.
+3. Connect the FM-1. Then press **Install the stock firmware**.
 
-It works from PERF-1, from safe mode and from update mode. M-VAVE's own updater, M-UPGRADE (Downloads,
-PC Software), works too from PERF-1 0.16.13 on. M-UPGRADE 3.11 doesn't find older PERF-1 builds ("A USB MIDI device is
-present but did not answer"): use this page's button for those.
+This works from PERF-1, from safe mode and from update mode. M-VAVE's own updater, M-UPGRADE (Downloads,
+PC Software), also works from PERF-1 0.16.13 and later. M-UPGRADE 3.11 does not find older PERF-1 builds ("A USB MIDI device is
+present but did not answer"). For those builds, use the button on this page.
 
-**V16.** M-UPGRADE now offers M-VAVE's newer firmware, V16 (`FM-1_016`). From PERF-1 0.16.15 on you can go either way:
-M-UPGRADE takes PERF-1 straight to V16, and this page installs PERF-1 on an FM-1 that runs V16. This page's button takes V15's
-or V16's file. (V16 changes the FM-1's boot head, the first 16 KB of its memory. PERF-1 lets that change happen only between
-M-VAVE's own V15 and V16 heads.) An older PERF-1 shows `UPDATE FAILED` and M-UPGRADE times out (error 258). There, choose V15's
-`FM-1.fwsc` with M-UPGRADE's **Select firmware**, or use this page's button, then update the stock V15 to V16 with M-UPGRADE.
+**V16.** M-UPGRADE now offers V16 (`FM-1_016`), the newer firmware from M-VAVE. From PERF-1 0.16.15 and later, you can go in
+either direction. M-UPGRADE changes PERF-1 directly to V16, and this page installs PERF-1 on an FM-1 that runs V16. The button
+on this page accepts the V15 file or the V16 file.
 
-**One program at a time.** On Windows only one program can use the FM-1's MIDI port. This page and the Pieces page let go of it
-4 seconds after they last talked to the FM-1 (Live status keeps it while it runs), so M-UPGRADE or your music software can open
-it with the page still open. If a program says the FM-1 is busy or "present but did not answer", close the other programs and
-pages that use it, then unplug the FM-1 and plug it back in.
+V16 changes the FM-1's boot head, the first 16 KB of its memory. PERF-1 lets that change occur only between M-VAVE's own V15
+and V16 heads. With an older PERF-1, the FM-1 shows `UPDATE FAILED` and M-UPGRADE times out (error 258). In that case, select
+V15's `FM-1.fwsc` with **Select firmware** in M-UPGRADE, or use the button on this page. Then update the stock V15 to V16 with
+M-UPGRADE.
+
+**One program at a time.** On Windows, only one program at a time can use the FM-1's MIDI port. This page and the Pieces page
+release the port 4 seconds after they last communicated with the FM-1. (Live status keeps the port while it runs.) Thus,
+M-UPGRADE or your music software can open the port while the page is still open. If a program says that the FM-1 is busy or
+"present but did not answer", close the other programs and pages that use the port. Then disconnect the FM-1 and connect it again.
 
 ### Update mode
 
-In update mode the installer can write to the FM-1. To enter it yourself, hold **OCT-** and **OCT+**
-together for 5 seconds while PERF-1 is running.
+In update mode, the installer can write to the FM-1. To start update mode yourself, hold **OCT-** and **OCT+**
+together for 5 seconds while PERF-1 runs.
 
-- After 2 seconds the screen counts down: `UPDATE MODE IN 3..`.
-- Let go before the end and it says `UPDATE MODE CANCELLED`.
-- At 5 seconds the FM-1 goes into update mode and shows `UBOOT`.
+- After 2 seconds, the screen counts down: `UPDATE MODE IN 3..`.
+- If you release the buttons before the end, the screen shows `UPDATE MODE CANCELLED`.
+- At 5 seconds, the FM-1 goes into update mode and shows `UBOOT`.
 
-If an install is cut off, the FM-1 stays in update mode until a write finishes. Press **Install** again. If
-the page says it lost the FM-1, unplug the cable and plug it back in first.
+If an install stops before the end, the FM-1 stays in update mode until a write is complete. Press **Install** again. If
+the page says that it lost the FM-1, first disconnect the cable and connect it again.
 
 ### Safe mode
 
-If PERF-1 crashes or freezes twice in a row while starting up, the FM-1 starts in safe mode instead. The
-screen is black and says `PERF-1 SAFE MODE`, with the address of the crash at the bottom. There's no sound,
-but USB works. From here you can:
+If PERF-1 crashes or freezes two times in sequence while it starts, the FM-1 starts in safe mode instead. The
+screen is black and shows `PERF-1 SAFE MODE`, with the address of the crash at the bottom. There is no sound,
+but USB works. In safe mode, you can:
 
-- reinstall from the web installer, or
-- press **PLAY** to try starting PERF-1 again.
+- install again from the web installer, or
+- press **PLAY** to try to start PERF-1 again.
 
-If starting keeps failing even then, the FM-1 goes into update mode by itself, ready for the installer.
+If the start still fails after this, the FM-1 goes into update mode automatically, ready for the installer.
 
-If PERF-1 crashes while it's running, the next start tells you: the screen shows `RESTARTED AFTER A CRASH`
-and a `PC` address for two and a half seconds. If you report the crash, note that address.
+If PERF-1 crashes while it runs, the next start tells you. The screen shows `RESTARTED AFTER A CRASH`
+and a `PC` address for two and a half seconds. If you report the crash, write down that address.
 
 ### Recovering an FM-1 that won't start
 
-**An install that was cut off (PERF-1 0.16.17 on).** If the power or the cable goes while PERF-1 is being installed, switch the FM-1 on
-again. The key lights flash three times and the screen stays dark: it is waiting for the installer. Plug it in, open the Install page and
-press **Install** again; it finishes the job. To get there on purpose, hold **OCT-** alone while you switch the FM-1 on. One long flash
-instead means that rescue was not possible; the FM-1 is then in the chip's own USB mode (below). This comes from ChoralRoot's boot stub,
-as Melodee uses it. It is **experimental** in PERF-1: the method is tested in Melodee and ChoralRoot, and PERF-1 boots through it on every
-start, but its own copy hasn't been through a cut-off install yet, so don't rely on it on purpose. The first install of 0.16.17 over an older PERF-1 has a moment, early on, that isn't protected yet: keep the cable
-in and the power on until it's done. Installing the stock firmware or another firmware removes it.
+**An install that stopped before the end (PERF-1 0.16.17 and later).** If the power or the cable is lost while PERF-1 installs,
+switch the FM-1 on again. The key lights flash three times and the screen stays dark. This means that the FM-1 waits for the
+installer. Then do these steps:
 
-- **Covered:** a bad PERF-1 install. The installer checks the package before sending it, checks each packet
-  it writes, and reads the FM-1's version back after the restart. On the FM-1 there's safe mode, update mode
-  after four failed starts, the **OCT-** + **OCT+** hold, and a USB command that enters update mode. The
+1. Connect the FM-1.
+2. Open the Install page.
+3. Press **Install** again. The installer completes the install.
+
+To get to this mode on purpose, hold **OCT-** alone while you switch the FM-1 on. If the lights give one long flash instead,
+the rescue was not possible. The FM-1 is then in the chip's own USB mode (below).
+
+This function comes from ChoralRoot's boot stub (a small program that the FM-1 starts through), as Melodee uses it. It is
+**experimental** in PERF-1. The method is tested in Melodee and ChoralRoot, and PERF-1 starts through it at every start. But
+PERF-1's own copy has not been through a stopped install yet. Thus, do not rely on it on purpose.
+
+The first install of 0.16.17 over an older PERF-1 has a short time, near the start, that is not protected yet. Keep the cable
+connected and the power on until the install is complete. If you install the stock firmware or a different firmware, that
+install removes the boot stub.
+
+- **Covered:** a bad PERF-1 install. The installer checks the package before it sends it. It checks each packet
+  that it writes. After the restart, it reads back the FM-1's version. On the FM-1, there is safe mode, update mode
+  after four failed starts, the **OCT-** + **OCT+** hold, and a USB command that starts update mode. The
   installer works from all of them.
-- **Not covered:** a damaged start-up sector or boot loader (the part of the memory that starts the FM-1),
-  or the power or cable going during a write before the installer has saved its record of where to resume.
-  The protection for cut-off writes is reasoned from the design and has **not** been tested with a real
-  power cut. No hardware way in (test pads, a strap, a key combination) has been found for this chip. An
-  FM-1 that fails like that may be gone for good.
+- **Not covered:** a damaged start-up sector or boot loader (the part of the memory that starts the FM-1).
+  Also not covered: a loss of power or cable during a write, before the installer has saved its record of where to continue.
+  The protection for stopped writes comes from the design. It has **not** been tested with a real
+  power cut. Nobody has found a hardware way in for this chip (test pads, a strap, a key combination). An
+  FM-1 that fails in this way can be permanently lost.
 
-If the FM-1 won't start but still reaches the chip's own update mode (one long flash; it shows up on USB as
-4C4A:8057, `UBOOT`), the easiest way back on any computer is **Melodee's recovery tool**: download `fm1-recover`
-for Windows, Linux or Mac from the [Melodee 1.4.0 release](https://github.com/keremimo/melodee/releases) (no
-Python needed). It puts M-VAVE's own V15 back (`FM-1.fwsc` from M-VAVE: the tool accepts only the unmodified
-file); then install PERF-1 again from the web installer. On Windows it needs the WinUSB driver for that one device
-(4C4A:8057), installed once with [Zadig](https://zadig.akeo.ie/); don't change the driver of the FM-1's normal
-MIDI and audio device. Run `fm1-recover --info` first: it only looks. The tool keeps a full backup of the memory
-before it writes. It is Kerem Kilic's (Ellic Studio), from the Melodee project, and is not part of PERF-1.
+If the FM-1 does not start but it still gets to the chip's own update mode (one long flash; it shows on USB as
+4C4A:8057, `UBOOT`), use **Melodee's recovery tool**. It is the easiest way back on all computers. Download `fm1-recover`
+for Windows, Linux or Mac from the [Melodee 1.4.0 release](https://github.com/keremimo/melodee/releases). You do not
+need Python. The tool puts M-VAVE's own V15 back (`FM-1.fwsc` from M-VAVE: the tool accepts only the unchanged
+file). Then install PERF-1 again from the web installer.
+
+On Windows, the tool needs the WinUSB driver for that one device (4C4A:8057). Install the driver one time with
+[Zadig](https://zadig.akeo.ie/). Do not change the driver of the FM-1's normal MIDI and audio device. First, run
+`fm1-recover --info`: it only reads, and it does not write. The tool keeps a full backup of the memory before it writes.
+It is Kerem Kilic's (Ellic Studio), from the Melodee project, and it is not part of PERF-1.
 
 On a Mac, the PERF-1 source also has its own rescue tool, `tools/fm1_rescue.py` (and its wrapper `fm1_rescue.sh`). It
-puts the stock V15 back from a Mac, using sudo, `pyusb` and `libusb-package`. It backs up the whole memory
-first, writes only the 4 KiB sectors between 0x4000 and 0x93000 that differ from V15, reads everything back
-to check, and accepts only the exact V15 file. It was written for an FM-1 stuck crashing at start-up, and it
-uses FM-1-transporter's method, which that project tested on real hardware. Treat it as a last resort, not
-a guarantee. Otherwise, recovery needs
-[FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter) or hardware you may not have.
+puts the stock V15 back from a Mac. It uses sudo, `pyusb` and `libusb-package`. First, it makes a backup of the full memory.
+Then it writes only the 4 KiB sectors between 0x4000 and 0x93000 that are different from V15. Then it reads all of the memory
+back to check it. It accepts only the exact V15 file.
+
+The tool was written for an FM-1 that crashes at each start. It uses the method of FM-1-transporter, which that project
+tested on real hardware. Use it only as a last resort. It is not a guarantee. In other cases, recovery needs
+[FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter) or hardware that you possibly do not have.
 
 ---
 
 ## 2. Getting started
 
-New to PERF-1? **Start here**, at the top of this manual, walks you through your first hour. This is the
+Are you new to PERF-1? **Start here**, at the top of this manual, takes you through your first hour. This section is the
 short version.
 
-1. Switch it on. The **deamonSLINKY** card shows (the slinky mascot hops twice and blinks, then the name and
-   PRESENTS), then the **PERF-1** card (a festival picture, the version, "by deamonSLINKY", GPL-3.0),
-   with sixteen steps filling in and the white keys lighting with them. Any button or key skips the cards.
-   Then the music starts: the piece you played last, or a HYPNO piece at random (SETTINGS, **Start**).
-2. Turn **SELECT** to move through the pages. The four knobs under the screen change what each page shows.
-3. Press **SEQ** for the drums. Hold it for the step sequencer, and tap the white keys to change the beat.
-4. Play the keys: on a voice's page they play that voice over the music, elsewhere the Jam page's voice. Turn **PRESETS** for another piece.
-   Hold **GLO** and turn **PRESETS** for another genre. On a voice's page, hold **SEL** and turn
-   **ALGORITHM** to hear that voice's other sounds.
-5. Want to play the bass yourself? Press **LFO** for the bass page, then hold **SEL** and press **ENV**. The
-   bass stops playing its own part and the keys play it instead. Press **SEL** + **ENV** again to hand it
-   back. The **JAM** page (turn **SELECT** past Global) is a keyboard that never changes the scale.
-6. Tap **SAVE** for a breakdown on the next bar. Tap it again for a build and then the drop. A build lasts
-   four bars. It's two in lofi, trip-hop, hip-hop and ambient, and eight in house, dubstep, DnB, psytrance and trance.
-7. Press **FX** for the effects. Tap a key to latch its effect on, or hold the key to play the effect only
+1. Switch it on. The **deamonSLINKY** card shows (the slinky mascot jumps twice and blinks, then the name and
+   PRESENTS show). Then the **PERF-1** card shows (a festival picture, the version, "by deamonSLINKY", GPL-3.0).
+   On it, sixteen steps fill in and the white keys come on with them. Push any button or key to skip the cards.
+   Then the music starts: the piece that you played last, or a HYPNO piece at random (SETTINGS, **Start**).
+2. Turn **SELECT** to go through the pages. The four knobs below the screen change what each page shows.
+3. Press **SEQ** for the drums. Hold it for the step sequencer (the drum beat as 16 steps). Then tap the white keys
+   to change the beat.
+4. Play the keys. On the page of a voice, the keys play that voice over the music. On other pages, they play the
+   voice of the Jam page. Turn **PRESETS** for a different piece.
+   Hold **GLO** and turn **PRESETS** for a different genre. On the page of a voice, hold **SEL** and turn
+   **ALGORITHM** to hear the other sounds of that voice.
+5. Do you want to play the bass yourself? Press **LFO** for the bass page. Then hold **SEL** and press **ENV**. The
+   bass stops its own part, and the keys play the bass instead. To give the part back to the bass, press **SEL** + **ENV**
+   again. The **JAM** page (turn **SELECT** past Global) is a keyboard that never changes the scale.
+6. Tap **SAVE** for a breakdown on the next bar. Tap it again for a build and then the drop. A build is
+   four bars long. It is two bars in lofi, trip-hop, hip-hop and ambient. It is eight bars in house, dubstep, DnB,
+   psytrance and trance.
+7. Press **FX** for the effects. Tap a key to latch its effect on (to keep it on). Or hold the key to play the effect only
    while you hold it.
 8. **HOME** goes to the Tempo page. Press **HOME** again, not too quickly, for the Perform screen. Press it
    twice quickly for the visualizers. Hold it for the settings.
-9. Like a piece? Go to **Global** (**GLO**) and press **SAVE** to store it. Storing works in every
-   genre: a piece you store in lofi or house stays there.
+9. Do you like a piece? Go to **Global** (**GLO**) and press **SAVE** to store it. Storing works in every
+   genre: a piece that you store in lofi or house stays there.
 
 ---
 
@@ -314,51 +336,51 @@ short version.
 
 | Control | What it does |
 |---|---|
-| **MASTER** | Volume. |
-| **SELECT** | Steps through the pages in order. With **HOME** held: the tempo, from any page. In the FX menu: the bank (FX, BEAT FX, FLEX BEAT, DJ SNIPS), or inside an effect's settings, the next settings page. On the visualizers: the next one. |
-| **PRESETS** | The piece, 1 to 10. With **SEL** held, the new piece starts on the next bar. With **GLO** held: the genre. |
-| **ALGORITHM** | The mood, on every page but two (so a turn never changes the scale by accident). On the **Chords** page and **Global**: the mode of the scale (Aeolian is the natural minor, Dorian a brighter minor, Phrygian a darker one, Mixolydian a major with a flat seventh; the fourteen are listed under **The scales**, section 5). With **SEL** held: the sound of the voice on screen (on the drum pages, the whole kit). |
-| **KNOB1**-**KNOB4** | The four values (a, b, c, d) of the page on screen. |
-| **OCT-** | Down an octave, to -3. On a voice's pages it moves that voice (pad, bass or acid; the pluck goes down to -2). On any other page it moves the whole song. In the sequencer it picks the previous drum. In the FX menu it turns every effect off. |
-| **OCT+** | Up an octave, to +3, the same way. In the sequencer it picks the next drum. |
-| **FX** | Opens and closes the effects menu. Held: the settings of the effect you used last, from any page. |
-| **SEL** | Shift: hold it while you use another control (section 12). Tapped alone on the Perform screen or a visualizer: the **swell**, the mood, the throw and the wash lifted over a bar and let back over four (tap again on the way: straight back; a knob turned ends it where it is). With **ARP**: the acid answers on the next bar. |
-| **ENV** | The Pad page. Again: Pad env, Pad LFO, Chords, Progression. With **SEL** held: takes the voice on screen off its automatic part so you play it by hand (again: hands it back). |
-| **LFO** | The Bass page. Again: Bass env, Bass LFO, Bass line, Bass steps, Bass answer. |
-| **ARP** | The Acid page. Again: Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. |
-| **EDIT** | The next chord, on the next bar. Held: the Progression page, your own chords. |
-| **GLO** | The Global page: root, theme, tune, genre. Here **SAVE** stores the piece. Held: the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter. Held with **PRESETS**: the genre. With **SEL** held: remote (section 17). |
-| **HOME** | The Tempo page. Again: the Perform screen, then back to Tempo. Twice quickly: the visualizers. Held: the settings. Held with **SELECT**: the tempo. |
-| **SAVE** | A breakdown on the next bar. Again: a build and the drop. Held: the drop. On Global: stores the piece. |
-| **SEQ** | The Drums page. Again: Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. Held: the sequencer. Tapped in the sequencer: back to Drums. With **SEL** held: the links on and off. |
-| **PLAY** | Play and stop. Each start is a fresh track with its own code; on the Code page, the track again from the top (or the code typed in). |
-| **REC** | Freeze: the chord holds and the reverb rings on until you press it again (or STOP). On the Jam page, REC alone is the phrase recorder (up to four bars played back as played) instead. With **SEL**: Capture, which writes the bar you played on Jam into the acid line, the pluck loop or the bass steps (section 10); on an Acid page, it keeps the acid's answer as its line; in the FX menu, the gesture recorder. |
-| White keys | Play a voice: on the pad's, bass's, acid's or pluck's pages that voice, elsewhere the Jam page's (with Jam's Keys and Octave). On **Global**: the scale, each key adding or removing its note (the root stays). In the sequencer: the 16 steps. In the FX menu: the effects. On Perform, the visualizers, and with **GLO** held: the track mix. |
+| **MASTER** | Sets the volume. |
+| **SELECT** | Goes through the pages in order. With **HOME** held: sets the tempo, from any page. In the FX menu: selects the bank (FX, BEAT FX, FLEX BEAT, DJ SNIPS). In the settings of an effect: goes to the next settings page. On the visualizers: goes to the next visualizer. |
+| **PRESETS** | Selects the piece, 1 to 10. With **SEL** held, the new piece starts on the next bar. With **GLO** held: selects the genre. |
+| **ALGORITHM** | Sets the mood, on all pages but two (so that a turn never changes the scale by accident). On the **Chords** page and **Global**: sets the mode of the scale (Aeolian is the natural minor, Dorian is a brighter minor, Phrygian is a darker minor, Mixolydian is a major with a flat seventh; the fourteen modes are in the list under **The scales**, section 5). With **SEL** held: sets the sound of the voice on the screen (on the drum pages, the full kit). |
+| **KNOB1**-**KNOB4** | Set the four values (a, b, c, d) of the page on the screen. |
+| **OCT-** | Moves down one octave, to -3. On the pages of a voice, it moves that voice (pad, bass or acid; the pluck goes down to -2). On all other pages, it moves the whole song. In the sequencer, it selects the previous drum. In the FX menu, it turns off all the effects. |
+| **OCT+** | Moves up one octave, to +3, in the same way. In the sequencer, it selects the next drum. |
+| **FX** | Opens and closes the effects menu. Held: opens the settings of the effect that you used last, from any page. |
+| **SEL** | Shift: hold it while you use a different control (section 12). Tapped alone on the Perform screen or a visualizer: the **swell**. The swell lifts the mood, the throw and the wash over one bar, and lets them back down over four bars (tap again during the swell: they go back immediately; turn a knob: the swell stops where it is). With **ARP**: the acid answers on the next bar. |
+| **ENV** | Opens the Pad page. Again: Pad env, Pad LFO, Chords, Progression. With **SEL** held: takes the voice on the screen off its automatic part, so that you play it by hand (again: gives the part back). |
+| **LFO** | Opens the Bass page. Again: Bass env, Bass LFO, Bass line, Bass steps, Bass answer. |
+| **ARP** | Opens the Acid page. Again: Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu, Pluck steps. |
+| **EDIT** | Goes to the next chord, on the next bar. Held: opens the Progression page, your own chords. |
+| **GLO** | Opens the Global page: root, theme, tune, genre. On this page, **SAVE** stores the piece. Held: opens the mix map (mutes, solos, scenes, the auto-DJ, tap tempo) and the load meter. Held with **PRESETS**: selects the genre. With **SEL** held: remote (section 17). |
+| **HOME** | Opens the Tempo page. Again: the Perform screen, then back to Tempo. Twice quickly: the visualizers. Held: the settings. Held with **SELECT**: sets the tempo. |
+| **SAVE** | Starts a breakdown on the next bar. Again: a build and the drop. Held: the drop. On Global: stores the piece. |
+| **SEQ** | Opens the Drums page. Again: Links, Kit, Drum drift, Groove, Steps, Feel, Phrase. Held: opens the sequencer. Tapped in the sequencer: goes back to Drums. With **SEL** held: turns the links on and off. |
+| **PLAY** | Plays and stops. Each start is a new track with its own code. On the Code page, it plays the track again from the start (or the code that you typed in). |
+| **REC** | Freeze: the chord stays and the reverb continues to sound until you press it again (or STOP). On the Jam page, REC alone is the phrase recorder instead (up to four bars, played back as you played them). With **SEL**: Capture. Capture writes the bar that you played on Jam into the acid line, the pluck loop or the bass steps (section 10). On an Acid page, it keeps the acid's answer as its line. In the FX menu, it is the gesture recorder. |
+| White keys | Play a voice. On the pages of the pad, bass, acid or pluck, they play that voice. On other pages, they play the voice of the Jam page (with the Keys and Octave settings of Jam). On **Global**: the scale; each key adds or removes its note (the root stays). In the sequencer: the 16 steps. In the FX menu: the effects. On Perform, on the visualizers, and with **GLO** held: the track mix. |
 | Black keys | The same as the white keys. |
 
-Pressing a group's button again steps through that group's pages. Pressing it from another page takes you
-back to the page you were last on in that group.
+If you press the button of a group again, it goes through the pages of that group. If you press it from a different page,
+it takes you back to the last page that you used in that group.
 
 **Holds and double taps**
 
 | Gesture | Time | Does |
 |---|---|---|
 | Hold **SEQ** | 0.4 s | Opens the sequencer. |
-| Hold **SAVE** | 0.5 s | The drop, straight away on the next bar. |
-| Hold **SEL** + **SAVE** on Global | 1.5 s | Puts the piece back to factory. From 0.4 s a card says `KEEP HOLDING: FACTORY`. A plain **SAVE** on Global only stores. |
-| Hold **SEL** + **SAVE** on Global, stopped | 6 s | Every piece you stored, in every genre, back to factory. From 3 s a card says `KEEP HOLDING: EVERY PIECE, ALL GENRES`. |
-| Hold **HOME** | 0.7 s | The settings pages (**SELECT** walks them). |
-| Hold **FX** | 0.5 s | The effects' settings, from the one you used last (**SELECT** walks them). |
-| Hold **GLO** | 0.4 s | The mix map. |
+| Hold **SAVE** | 0.5 s | Starts the drop immediately, on the next bar. |
+| Hold **SEL** + **SAVE** on Global | 1.5 s | Puts the piece back to its factory settings. From 0.4 s, a card shows `KEEP HOLDING: FACTORY`. A plain **SAVE** on Global only stores the piece. |
+| Hold **SEL** + **SAVE** on Global, stopped | 6 s | Puts every piece that you stored, in every genre, back to its factory settings. From 3 s, a card shows `KEEP HOLDING: EVERY PIECE, ALL GENRES`. |
+| Hold **HOME** | 0.7 s | Opens the settings pages (**SELECT** goes through them). |
+| Hold **FX** | 0.5 s | Opens the settings of the effects, from the effect that you used last (**SELECT** goes through them). |
+| Hold **GLO** | 0.4 s | Opens the mix map. |
 | Hold **SEL** alone | 0.4 s | A card shows what shift does on this page. |
-| Hold **EDIT** | 0.4 s | The Progression page. |
-| Hold another button alone | 0.9 s | A card says what it does (**ENV**, **LFO**, **ARP**, **REC**, **OCT-**, **OCT+**). |
-| Tap an effect key | under 0.25 s | Latches the effect on. Hold it longer and it plays only while held. |
-| Hold a scene key | 0.6 s | Stores the scene. A tap recalls it. |
-| **HOME**, **HOME** | within 0.45 s | The visualizers. |
-| **OCT-** + **OCT+** | 5 s | Update mode. |
+| Hold **EDIT** | 0.4 s | Opens the Progression page. |
+| Hold another button alone | 0.9 s | A card tells you what the button does (**ENV**, **LFO**, **ARP**, **REC**, **OCT-**, **OCT+**). |
+| Tap an effect key | under 0.25 s | Latches the effect on. If you hold the key longer, the effect plays only while you hold it. |
+| Hold a scene key | 0.6 s | Stores the scene. A tap recalls the scene. |
+| **HOME**, **HOME** | within 0.45 s | Opens the visualizers. |
+| **OCT-** + **OCT+** | 5 s | Starts update mode. |
 
-Holding **OCT-** and **OCT+** while you **switch the FM-1 on** does something else: it calibrates the
+If you hold **OCT-** and **OCT+** while you **switch the FM-1 on**, they do a different thing: they calibrate the
 hardware (section 18).
 
 ---
@@ -369,105 +391,107 @@ hardware (section 18).
 
 ![A breakdown](img/perf-screen-breakdown.png)
 
-The screen has five bands, top to bottom: the header, the chord, the five voices, the page tabs and the knobs. Every
-colour theme uses this layout (it's called Console); the themes change only its colours.
+The screen has five bands. From top to bottom, they are: the header, the chord, the five voices, the page tabs and
+the knobs. Every colour theme uses this layout (its name is Console). The themes change only its colours.
 
-**The header, left.** The piece's tag: its number, with a letter for the genre (`01` for HYPNO, `L03`, `H07`, `D02`,
-`V01` for dub, `N05` for DnB, `B04`, `G09`, `E06`, `T10`, `S03`, `F01`, `R07`, `W01`, `A05`, `P02`, `I04`, `Y01`, `O08`, `M06`, `U03`, `Z02` for the others; the table in section 6 has them all). A mark in the tag means the piece has changes
-you haven't stored. Next to the tag are the root and the mode.
+**The header, left.** This part shows the tag of the piece. The tag is the number of the piece, with a letter for
+the genre (`01` for HYPNO, `L03`, `H07`, `D02`, `V01` for dub, `N05` for DnB, `B04`, `G09`, `E06`, `T10`, `S03`, `F01`, `R07`, `W01`, `A05`, `P02`, `I04`, `Y01`, `O08`, `M06`, `U03`, `Z02` for the others; the table in section 6 has them all). A mark in the tag shows that the piece has changes
+that you did not store. The root and the mode are next to the tag.
 
-**The header, right.** The tempo. It says `EXT` while an outside MIDI clock (another device sending its tempo over
-MIDI) drives it, and shows a play triangle beside it while stopped. On battery, a cell shows the charge (a bolt in it
-while USB powers the FM-1). The slinky imp pops up here for a moment on a drop, a breakdown or a build. To the left,
-marks show what's on:
+**The header, right.** This part shows the tempo. When an outside MIDI clock (another device that sends its tempo
+over MIDI) controls the tempo, the tempo shows `EXT`. When PERF-1 is stopped, a play triangle shows next to the
+tempo. On battery, a cell shows the charge. When USB supplies power to the FM-1, the cell has a bolt in it. The
+slinky imp (a small figure) shows here for a moment at a drop, a breakdown or a build. To the left, marks show what
+is on:
 
 | Mark | Means |
 |---|---|
-| BREAK, BUILD | The section playing. `BREAK>`, `BUILD>` or `DROP>` means one is waiting for the next bar. In a build, `DROP 3` counts the bars to the drop. With the auto-DJ, `BREAK IN 4` shows in the last bars of a groove, and `BREAK 2` in a breakdown counts the bars to its build. |
-| ARM, REC, PHR | The phrase recorder: waiting for your first note, recording, playing your phrase. |
-| ARM, REC, LOOP, AUTO | The gesture recorder: waiting, recording, looping your knob moves, or Auto FX playing them. |
-| KNOB | An FX knob isn't at its home position. If the sound is unexpectedly filtered, this is why. |
-| KEY | The drop's key change is on. |
-| S1> to S4> | A scene is waiting for the next bar. |
-| DJ | The auto-DJ is running. |
-| FX | Effects are latched on and the menu is closed. The **FX** button blinks too. |
-| a small dot | Something is waiting to be saved to memory (the theme, Tune, MIDI out, a piece). |
+| BREAK, BUILD | The section that plays now. `BREAK>`, `BUILD>` or `DROP>` means that a section waits for the next bar. In a build, `DROP 3` counts the bars until the drop. With the auto-DJ, `BREAK IN 4` shows in the last bars of a groove. In a breakdown, `BREAK 2` counts the bars until its build. |
+| ARM, REC, PHR | The phrase recorder: it waits for your first note, it records, or it plays your phrase. |
+| ARM, REC, LOOP, AUTO | The gesture recorder: it waits, it records, it loops your knob moves, or Auto FX plays them. |
+| KNOB | An FX knob is not at its home position. If the sound has a filter on it and you do not know why, this is the cause. |
+| KEY | The key change of the drop is on. |
+| S1> to S4> | A scene waits for the next bar. |
+| DJ | The auto-DJ runs. |
+| FX | Effects are latched on (they stay on) and the menu is closed. The **FX** button also blinks. |
+| a small dot | Something waits to be saved to memory (the theme, Tune, MIDI out, a piece). |
 
-**The chord.** The chord playing (`Am7`), then an arrow and the root of the chord coming next. `V OF NEXT` or
-`BORROWED` says when the next one leans into the chord after it or comes from outside the key. `HELD` means the
-chords are frozen. On the right, the section (`GROOVE`, `BREAK`, `BUILD`) and a bar that fills towards the next chord
-change.
+**The chord.** This band shows the chord that plays now (`Am7`). After it are an arrow and the root of the next
+chord. `V OF NEXT` shows when the next chord leads into the chord after it. `BORROWED` shows when the next chord
+comes from outside the key. `HELD` means that the chords are frozen (they do not change). On the right are the
+section (`GROOVE`, `BREAK`, `BUILD`) and a bar. The bar fills as the next chord change comes nearer.
 
-**The five voices.** A strip each for the pad, bass, acid, pluck and drums, in their colours, with the voice's sound
-(on the drums, the kit) at the foot and its level as a meter.
+**The five voices.** Each voice has a strip: the pad, bass, acid, pluck and drums, in their colours. At the bottom
+of each strip is the sound of the voice (on the drums, the kit). A meter shows its level.
 
-- The bass, acid and pluck show the bar's notes falling to the playhead: higher notes higher, accents bigger, the
-  acid's slides joined. A held drone is a long bar. The pad shows its held voices; the drums, their lanes.
-- On a voice's own pages its strip opens wide with a picture of what it plays: the pad's notes on two octaves of
-  keys, the bass, acid and pluck as a roll of the bar, the drums as six lanes of sixteen steps. The other voices fold
-  to slivers with their meters.
-- A muted or resting voice is dimmed (red when muted).
+- The bass, acid and pluck show the notes of the bar. The notes fall to the playhead. Higher notes are higher on
+  the screen, and accents are bigger. The slides of the acid are joined. A held drone is a long bar. The pad shows
+  its held voices. The drums show their lanes.
+- On the pages of a voice, its strip opens wide. It shows a picture of what the voice plays: the pad's notes on two
+  octaves of keys, the bass, acid and pluck as a roll of the bar, the drums as six lanes of sixteen steps. The other
+  voices become thin strips with their meters.
+- A voice that is muted or that rests is dim. A muted voice is red.
 
-How hard the FM-1 is working isn't on the main screen. Hold **GLO** for the mix map: its corner shows `CPU` and `XR`
-after a dropout or while PERF-1 is easing off, and **GLO**'s help card (hold GLO alone for about a second) always shows them. Section 16 explains them.
+The main screen does not show how hard the FM-1 works. Hold **GLO** to see the mix map. Its corner shows `CPU` and
+`XR` after a dropout, or while PERF-1 reduces its work. The help card of **GLO** always shows them (hold GLO alone for about a second). Section 16 explains them.
 
-**The tabs.** The page's name in its voice's colour, then ten keys, one for each group of pages (Tempo, Pad, Bass,
-Acid, pLuck, dRums, Space, Mix, Global, Jam). Your group is lit, with a pip for each of its pages; the page
-you're on is the dark pip.
+**The tabs.** This band shows the name of the page in the colour of its voice. After it are ten keys, one for each
+group of pages (Tempo, Pad, Bass, Acid, pLuck, dRums, Space, Mix, Global, Jam). Your group is lit, with a pip (a
+small dot) for each of its pages. The dark pip is the page that you are on.
 
-**The line above the knobs.** After the page's name, the sound of the voice on screen (on the drum pages, the kit).
-After it comes `BY HAND` when you're playing the voice yourself, `+LINK` or `LINKS OFF`, and the octave when
-it isn't at home (`OCT+2` for the page's voice, `SONG-1` for the whole song). On Global this line says what
-**SAVE** will do: `01 SAVE: STORE`, `01 STORED` or `01 FACTORY`. In the FX menu and the effects' settings, dots on the right show
-the four banks or the settings pages, the one you're on bright.
+**The line above the knobs.** After the name of the page, this line shows the sound of the voice on the screen (on
+the drum pages, the kit). After that, it can show `BY HAND` when you play the voice yourself, and `+LINK` or
+`LINKS OFF`. It also shows the octave when the octave is not at home (`OCT+2` for the voice of the page, `SONG-1`
+for the whole song). On Global, this line tells you what **SAVE** will do: `01 SAVE: STORE`, `01 STORED` or `01 FACTORY`. In the FX menu and in the settings of the effects, dots on the right show
+the four banks or the settings pages. The dot for the one that you are on is bright.
 
-**Bottom.** The four knobs. Each shows its name, its value (units small after the number: `0.54 s`, `-3.0 dB`) and
-a fader. The knob you're turning gets a soft ring and flicks brighter for a moment.
+**Bottom.** This band shows the four knobs. Each knob shows its name, its value and a fader. The units are small,
+after the number: `0.54 s`, `-3.0 dB`. When you turn a knob, it gets a soft ring and becomes brighter for a moment.
 
-**Pictures.** Pages that shape a sound draw it: the envelopes and LFOs, the filter's response, the echo and
-reverb tails, the compressor's curve. The picture follows the knobs as you turn them, with a dot running
-along it. It shows the shape, not exact milliseconds.
+**Pictures.** Pages that shape a sound show a picture of it: the envelopes and LFOs, the response of the filter,
+the tails of the echo and reverb, and the curve of the compressor. The picture changes with the knobs as you turn
+them. A dot moves along it. The picture shows the shape, not the exact milliseconds.
 
-**Messages.** Short messages take the place of the header for a moment, such as `PATTERN 3 NEXT BAR`,
-`STORING` or `KEY CHANGE +5`.
+**Messages.** Short messages replace the header for a moment. Examples are `PATTERN 3 NEXT BAR`, `STORING` and
+`KEY CHANGE +5`.
 
 ---
 
 ## 5. The pages
 
-Turn **SELECT** to move through the pages in this order. There are 37, and the dial stops at each end. The
-voice buttons jump straight to a voice. Pressing the same button again steps through that voice's envelope
-and LFO pages (and, for the pad, the chords and the progression). On a voice's main page, **KNOB1** is its level. The a to d
-columns are **KNOB1** to **KNOB4**. And yes: a knob that runs 0-100 goes to eleven (one more notch past 100 reads **11**, in red; it is still 100).
+Turn **SELECT** to move through the pages in this order. There are 37 pages. The dial stops at each end. The voice
+buttons go directly to a voice. Push the same button again to go through the envelope and LFO pages of that voice
+(and, for the pad, the chords and the progression). On the main page of a voice, **KNOB1** is its level. The
+columns a to d are **KNOB1** to **KNOB4**. These knobs go to eleven: a knob that goes 0-100 has one more notch after 100. That notch shows **11**, in red. The value is still 100.
 
 | Page | Reach it | a | b | c | d |
 |---|---|---|---|---|---|
-| Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO; hold **SEL** and turn it for bars or seconds) |
+| Tempo | **HOME** | Tempo (70-190) | Evolve | Motion | Drift (how long a chord lasts: 1-32 bars in a genre, 20 s to 5 min in HYPNO; hold **SEL** and turn it to choose bars or seconds) |
 | Pad | **ENV** | Level | Bright | Sound (24) | Detune |
 | Pad env | **ENV** x2 | Attack (0.05-10 s) | Hold (0-8 s) | Release (0.1-12 s) | Rest (0-6 s) |
-| Pad LFO | **ENV** x3 | Rate, slow to fast as you turn left: 32 bars down to a 1/16T, with dotted and triplet values between (1/2., 1/4., 1/8., 1/4T, 1/8T). Playing, the LFO is locked to the bar. | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
-| Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Comp: how the pad plays the chords (auto, hold, 7 stab rhythms) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, now and then one chord is picked anew.) |
+| Pad LFO | **ENV** x3 | Rate. It goes from slow to fast as you turn left: 32 bars down to a 1/16T, with dotted and triplet values between (1/2., 1/4., 1/8., 1/4T, 1/8T). While the music plays, the LFO is locked to the bar. | Depth | Shape (sine, triangle, saw, square, S&H, drift) | Target (filter, level, pan, pitch; or another voice or effect: acid cut, acid reso, echo time, punch cut) |
+| Chords | **ENV** x4 | Chord (Auto, Triads, 7ths, 9ths, Sus, Dub, Fourths) | Voicing (close, open) | Comp: how the pad plays the chords (auto, hold, 7 stab rhythms) | Loop (off, or repeat the last 2, 4 or 8 chords. With a ~, sometimes one chord is chosen again.) |
 | Progression | **ENV** x5, or hold **EDIT** | Chord (a chord of the scale, or Hold) | Type (Piece's, Triad, 7th, 9th, Sus, Dub, Fourths, 11th) | Bars (1, 2, 4, 8) | Play (Walk, Loop) |
 | Bass | **LFO** | Level | Sound (24) | Cutoff | Reso |
 | Bass env | **LFO** x2 | Trigger (each chord, every 1, 2, 4 or 8 bars, or off) | Attack (0.01-4 s) | Decay (0.05-16 s) | Amount |
-| Bass LFO | **LFO** x3 | Rate (as the pad's: 32 bars down to a 1/16T for a fast wobble, dotted and triplet values between; locked to the bar) | Depth | Shape (as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
+| Bass LFO | **LFO** x3 | Rate (the same as the pad's: 32 bars down to a 1/16T for a fast wobble, with dotted and triplet values between; locked to the bar) | Depth | Shape (the same as the pad's) | Target (cutoff, pitch, level, drive, reso; or acid cut, acid reso, echo time) |
 | Bass line | **LFO** x4 | Mode (hold, root, kick, eighths, off-beat, walk, riff, nine named figures, and Steps) | Length (how long each note holds) | Move (octaves, fifths, approach notes) | Glide |
-| Bass steps | **LFO** x5 | Step (pick one with a white key: rest, note, accent, glide, accent + glide, hold: the note before goes on through it) | Note (root, 2nd .. 7th, octave: scale steps above the chord's root) | Octave (down, mid, up) | Mode (Steps plays them) |
-| Bass answer | **LFO** x6 | Answer (off, octave, fifth, run, busy, sparse, slide) | Every (2-8 bars, drift, with acid, after acid) | Acid ans (the acid answer's kind) | Mode |
+| Bass steps | **LFO** x5 | Step (choose one with a white key: rest, note, accent, glide, accent + glide, hold: the note before continues through it) | Note (root, 2nd .. 7th, octave: scale steps above the root of the chord) | Octave (down, mid, up) | Mode (Steps plays them) |
+| Bass answer | **LFO** x6 | Answer (off, octave, fifth, run, busy, sparse, slide) | Every (2-8 bars, drift, with acid, after acid) | Acid ans (the kind of acid answer) | Mode |
 | Acid | **ARP** | Level | Cutoff | Reso | Env mod |
 | Acid env | **ARP** x2 | Decay | Accent | Slide | Sound (31) |
-| Acid line | **ARP** x3 | Density | Length (1-16) | Range (1-3 octaves) | Mutate (hold **SEL** and turn to choose what a mutation changes: all, notes, rhythm or accents) |
+| Acid line | **ARP** x3 | Density | Length (1-16) | Range (1-3 octaves) | Mutate (hold **SEL** and turn it to choose what a mutation changes: all, notes, rhythm or accents) |
 | Acid answer | **ARP** x4 | Answer (off, octave, fifth, third, mirror, reverse, rotate, sparse, accents) | Every (2 to 8 bars or loops of the line, or Drift: the bar before the drums change) | Direction (down 2, down, same, up, up 2) | Level (same, +2, +4, +6 dB) |
-| Acid steps | **ARP** x5 | Step (pick one with a white key: rest, note, accent, slide, accent + slide) | Note (0-15 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
+| Acid steps | **ARP** x5 | Step (choose one with a white key: rest, note, accent, slide, accent + slide) | Note (0-15 scale steps above the chord) | Octave (0-3) | Frozen (free, frozen) |
 | Pluck | **ARP** x6 | Level | Sound (12 + 60 DX7 + yours) | Density | Octave (-2 to +2) |
 | Pluck 2 | **ARP** x7 | Decay | Style (up, down, up-down, random, skip, thirds) | Rate (1/4, 3/16, 1/8, 1/16, slow to fast) | Range (1-3 octaves) |
-| Deja vu | **ARP** x8 | Pluck vu (0 always new notes, 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (notes jumping an octave) | Motif (0 off to 100: how often a bar reworks the phrase's first bar) |
-| Pluck steps | **ARP** x9 | Step (pick a step with a white key: rest, soft, note, accent) | Note (1-12: the chord's notes, low to high) | Octave (the pluck's, -2 to +2) | Frozen (free, frozen) |
+| Deja vu | **ARP** x8 | Pluck vu (0 always new notes, 100 locked) | Loop (4, 8, 16, 32 notes) | Leaps (notes that jump an octave) | Motif (0 off to 100: how often a bar plays a changed version of the first bar of the phrase) |
+| Pluck steps | **ARP** x9 | Step (choose a step with a white key: rest, soft, note, accent) | Note (1-12: the notes of the chord, low to high) | Octave (the pluck's, -2 to +2) | Frozen (free, frozen) |
 | Drums | **SEQ** | Level | Drive | Swing (50-75 %) | Pattern (1-6, changes on the bar) |
 | Links | **SEQ** x2 | K>Bass | S>Pad | H>Acid | - |
 | Kit | **SEQ** x3 | Kick | Snare (and clap) | Hats (closed and open) | Perc |
-| Drum drift | **SEQ** x4 | Change (off, next, random; off lets the Settings page's Form decide) | Every (each chord, or 4-64 bars) | Pool (patterns 1-2 up to 1-6) | Mutate (off, shift, morph) |
-| Groove | **SEQ** x5 | Lane (kick to perc) | Density (0-100; 50 plays as written) | Source (follow, or pattern 1-6) | All dens (every lane's density at once) |
+| Drum drift | **SEQ** x4 | Change (off, next, random; with off, Form on the Settings page decides) | Every (each chord, or 4-64 bars) | Pool (patterns 1-2 up to 1-6) | Mutate (off, shift, morph) |
+| Groove | **SEQ** x5 | Lane (kick to perc) | Density (0-100; 50 plays as written) | Source (follow, or pattern 1-6) | All dens (the density of every lane at one time) |
 | Steps | **SEQ** x6 | Lane | Ratchet (off, x2, x3, x4, x6, flam, swell 3, swell 4) | Push (0-7 twelfths of a step late) | Level (normal, ghost, soft, accent) |
 | Feel | **SEQ** x7 | Ghosts (0-100) | Accents (0-100; 50 as marked) | - | Humanize (0-100) |
 | Phrase | **SEQ** x8 | Chain (off, or 9 chains of patterns) | Slice (off, 8 reorderings, auto) | Time (normal, half, double) | Cond (for the chosen lane: always, 1:2 ...) |
@@ -476,30 +500,30 @@ columns are **KNOB1** to **KNOB4**. And yes: a knob that runs 0-100 goes to elev
 | Comp/Limit | **SELECT** | Ratio (off to 10:1) | Thresh (-30 to 0 dB) | Make-up (0 to +12 dB) | Ceiling (-12 to 0 dB) |
 | Mixer | **SELECT** | Track (pad, bass, acid, pluck, drums) | Level | Pan (L100, C, R100) | Send (0-100) |
 | Global | **GLO** | Root | Theme (7) | Tune (+-50 cents) | Genre (the bank, the same as **GLO** + **PRESETS**) |
-| Set list | **GLO** x2 | Slot (1-16; or a white key) | Piece (every genre's, or Empty) | Bars (Auto, 4-128) | Play (off, loop, once) |
+| Set list | **GLO** x2 | Slot (1-16; or a white key) | Piece (the pieces of every genre, or Empty) | Bars (Auto, 4-128) | Play (off, loop, once) |
 | Code | **GLO** x3 | Place (1-9) | Letter | Roll (a new code) | |
-| Jam | **SELECT** | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Sound (that voice's sound) |
+| Jam | **SELECT** | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Sound (the sound of that voice) |
 
 Words on these pages:
 
 - An **envelope** (env) shapes how a sound starts and fades each time it plays.
 - An **LFO** is a slow wobble that moves the Target up and down. S&H jumps to a random value each cycle.
-  Either LFO can also move another voice or an effect, stored with the piece: **Acid cut** and **Acid reso** give the acid a wah or a wobble of its own; **Echo time** wobbles the tape echo (a dub siren at full depth); the pad LFO's **Punch cut** sweeps the punch-in FILTER while you hold it (an auto-wah on the tracks it takes); the bass LFO's **Reso** moves the bass's resonance. The rates from 1/8 on lock it to the beat.
-- **Cutoff** is where the filter starts cutting the highs (lower is darker). **Reso** (resonance) adds a
-  squelchy peak there. **Env mod** is how far the acid's envelope opens the filter on each note.
+  Each LFO can also move another voice or an effect. The piece stores this setting. **Acid cut** and **Acid reso** give the acid its own wah or wobble. **Echo time** wobbles the tape echo (at full depth, it sounds like a dub siren). The **Punch cut** target of the pad LFO sweeps the punch-in FILTER while you hold it (an auto-wah on the tracks that it takes). The **Reso** target of the bass LFO moves the resonance of the bass. The rates from 1/8 on lock the LFO to the beat.
+- **Cutoff** is the point where the filter starts to cut the high sounds (lower is darker). **Reso** (resonance)
+  adds a sharp, strong peak at that point. **Env mod** is how far the envelope of the acid opens the filter on each
+  note.
 - An **accent** is a louder note. A **slide** or **glide** bends smoothly into the next note.
-- **Swing** plays every second sixteenth a little late. 50 % is straight.
+- **Swing** plays every second sixteenth note a little late. 50 % is straight (no swing).
 - A **ratchet** is a step that plays as a quick roll. A flam is two hits very close together.
-- **Ghosts** are very quiet hits between the main ones.
+- **Ghosts** are very quiet hits between the main hits.
 - **Send** is how much of a track goes to the echo and reverb. A **cent** is a hundredth of a semitone.
 
-Three more screens are off the dial: the **Sequencer** (hold **SEQ**; section 8), the **Perform** screen
-(**HOME** again from Tempo; section 10) and the **visualizers** (**HOME** twice quickly; section 13). On the
-Perform screen and the visualizers, the four knobs are the FX knobs: Filter, Crush, Throw and Wash
-(section 9).
+Three more screens are not on the dial: the **Sequencer** (hold **SEQ**; section 8), the **Perform** screen
+(push **HOME** again from Tempo; section 10) and the **visualizers** (push **HOME** twice quickly; section 13). On
+the Perform screen and the visualizers, the four knobs are the FX knobs: Filter, Crush, Throw and Wash (section 9).
 
-For a bed of noise, use the **Vinyl** effect (section 9). The Mixer page sits between Comp/Limit (the master
-bus) and Global.
+For a constant background noise, use the **Vinyl** effect (section 9). The Mixer page is between Comp/Limit (the
+master bus) and Global.
 
 ![The Pad page](img/perf-screen-pad.png)
 
@@ -511,7 +535,7 @@ bus) and Global.
 
 **What moves by itself**
 
-The chord changes on a bar line every few bars. How often depends on the genre:
+The chord changes on a bar line every few bars. The genre sets how often:
 
 | Bars per chord | Genres |
 |---|---|
@@ -519,160 +543,189 @@ The chord changes on a bar line every few bars. How often depends on the genre:
 | 4 | dub, DnB, breaks, electro, trap, funk, amapiano, trip-hop, trance |
 | 8 | dubstep, psytrance, dark forest, ambient |
 
-**Drift** on the Tempo page changes that pace. Below 20 the chords change four times as often, below 45
-twice as often. Above 80 they last twice as long, above 95 four times as long. The Tempo page shows the result
-in bars. In HYPNO a chord lasts for a time instead: Drift sets 20 seconds to 5 minutes, a little random, and
-the change waits for the next bar line. In any genre, **EDIT** moves on to the next chord.
+**Drift** on the Tempo page changes that rate. Below 20, the chords change four times as often. Below 45, they
+change twice as often. Above 80, they last twice as long. Above 95, they last four times as long. The Tempo page
+shows the result in bars.
 
-You can switch any piece between the two. Hold **SEL** and turn Drift right for bars, left for seconds. HYPNO
-in bars starts from four bars a chord, and the other genres in seconds work as HYPNO does. The setting is
-stored with the piece, and the genres keep their own unless you change it.
+In HYPNO, a chord lasts for a time, not for a number of bars. Drift sets 20 seconds to 5 minutes, with a small
+random change. The chord change then waits for the next bar line. In any genre, **EDIT** goes to the next chord.
 
-On a seven-note scale, each genre has its own habits for which chord comes next:
+Any piece can use bars or seconds. To change it, hold **SEL** and turn Drift right for bars or left for seconds.
+HYPNO in bars starts from four bars for each chord. The other genres in seconds work as HYPNO does. The piece
+stores this setting. The genres keep their own setting if you do not change it.
 
-- Lofi and DnB love to move up a fourth (the ii-V-I turnaround of jazz).
+On a seven-note scale, each genre has its own habits for the next chord:
+
+- Lofi and DnB often move up a fourth (the ii-V-I turnaround of jazz).
 - House loops by steps and thirds.
-- Dubstep and trap stay close to the home chord, on the dark side.
-- Dub keeps to a minor vamp between the first and fourth chords.
+- Dubstep and trap stay near the home chord, on the dark side.
+- Dub stays on a minor vamp (a repeated pattern) between the first and fourth chords.
 - HYPNO keeps its original walk.
 
-Lofi, DnB, breaks, garage, disco, reggae and amapiano use cadences (a strong pull back home). In a minor key
-their V chord (built on the scale's fifth note) raises the scale's seventh note a semitone, as in the
-harmonic minor. That note is the V chord's third, and the acid and bass raise it too. Diminished chords (the
-tense chord on the seventh note of a major key, the second of a minor one) are rare in every genre. Where a
-genre would lead home through one, it goes through V instead.
+Lofi, DnB, breaks, garage, disco, reggae and amapiano use cadences (a strong pull back home). In a minor key, their
+V chord (built on the fifth note of the scale) raises the seventh note of the scale by a semitone, as in the
+harmonic minor. That note is the third of the V chord, and the acid and bass also raise it. Diminished chords (the
+tense chord on the seventh note of a major key, the second of a minor key) are rare in every genre. When a genre
+would lead home through a diminished chord, it goes through V instead.
 
-The **Loop** setting on the Chords page repeats the last 2, 4 or 8 chords, counted back from the chord
-playing now. So a loop of two is the home chord and one other. Picking a new piece empties the loop. Most
-genres come with one: four chords in house, disco, garage, trap and synthwave, two in dubstep, DnB, electro,
-amapiano and trip-hop. Lofi (for its turnarounds), dub, funk, reggae and breaks keep walking.
+The **Loop** setting on the Chords page repeats the last 2, 4 or 8 chords. It counts back from the chord that
+plays now. Thus, a loop of two is the home chord and one other chord. When you choose a new piece, the loop
+becomes empty. Most genres have a loop at the start: four chords in house, disco, garage, trap and synthwave, two
+in dubstep, DnB, electro, amapiano and trip-hop. Lofi (for its turnarounds), dub, funk, reggae and breaks keep
+walking.
 
-The voices follow the chords. The pad's notes swell and fade on cycles of different lengths, and each note
-takes the new chord's pitch as it swells back in. The bass follows the chord's root and glides. The acid
-line's notes are tied to the chord, so the riff moves with it. **Mutate** rewrites some of its steps each time
-round. The pluck plays an arpeggio, the chord's notes one after another. **Motion** sets how far the music
-slowly swings between sparse and full, over a minute or two. **Evolve** makes the acid and the chords more
-restless.
+The voices follow the chords. The pad's notes swell and fade on cycles of different lengths. Each note takes the
+pitch of the new chord when it swells back in. The bass follows the root of the chord and glides. The notes of the
+acid line are tied to the chord, so the riff moves with the chord. **Mutate** rewrites some of its steps each time
+the line repeats.
 
-**Tempo.** Tempo runs from 70 to 190. To set it from any page, hold **HOME** and turn **SELECT**. To tap it
-in, hold **GLO** and tap `E4` four times or so. When an outside MIDI clock drives PERF-1, it follows that
-clock and the screen says `EXT`.
+The pluck plays an arpeggio: the notes of the chord one after another. **Motion** sets how far the music slowly
+changes between sparse and full, over a minute or two. **Evolve** makes the acid and the chords change more.
+
+**Tempo.** The tempo goes from 70 to 190. To set it from any page, hold **HOME** and turn **SELECT**. To tap the
+tempo, hold **GLO** and tap `E4` approximately four times. When an outside MIDI clock controls PERF-1, PERF-1
+follows that clock and the screen shows `EXT`.
 
 ### Octaves
 
-**OCT-** and **OCT+** move an octave at a time, from three down to three up.
+**OCT-** and **OCT+** move one octave at a time, from three down to three up.
 
-- On the Pad, Bass or Acid pages (or their env and LFO pages), they move that voice alone.
-- On the Pluck pages they move the pluck, from two down to two up.
-- On any other page, Tempo included, they move the whole song: pad, bass and acid together.
+- On the Pad, Bass or Acid pages (or their env and LFO pages), they move only that voice.
+- On the Pluck pages, they move the pluck, from two down to two up.
+- On all other pages, Tempo included, they move the whole song: pad, bass and acid together.
 
-The line above the knobs shows the octave when it isn't at home: `OCT+2` for the page's voice, `SONG-1` for
-the song. Octaves are stored with the piece. Going down, each voice stops at the lowest note you can hear
-(about C1), so -2 and -3 may sound the same.
+The line above the knobs shows the octave when it is not at home: `OCT+2` for the voice of the page, `SONG-1` for
+the song. The piece stores the octaves. When a voice goes down, it stops at the lowest note that you can hear
+(about C1). Thus, -2 and -3 can sound the same.
 
 ### The scales
 
-**ALGORITHM** on the Chords page or on Global picks the scale. Every one starts on the piece's root (Global's Root).
+**ALGORITHM** on the Chords page or on Global selects the scale. Every scale starts on the root of the piece (Root on Global).
 
 | Scale | Its notes over A | Sounds |
 |---|---|---|
 | Ionian | A B C# D E F# G# | the major scale: bright, settled |
-| Dorian | A B C D E F# G | a minor that's lighter: house, funk, dub |
-| Phrygian | A Bb C D E F G | a dark minor, the flat second: techno, dark psy |
+| Dorian | A B C D E F# G | a lighter minor: house, funk, dub |
+| Phrygian | A Bb C D E F G | a dark minor, with the flat second: techno, dark psy |
 | Lydian | A B C# D# E F# G# | major with a raised fourth: dreamy, floating |
 | Mixolydian | A B C# D E F# G | major with a flat seventh: bluesy, rock |
 | Aeolian | A B C D E F G | the natural minor: most of the minor pieces |
 | Pent maj, Pent min | five notes | no wrong notes; no circle of chords to walk |
 | Locrian | A Bb C D Eb F G | the darkest: its own home chord is diminished |
-| Harm. min | A B C D E F G# | harmonic minor: the minor with a real pull home (E major leads to A minor) |
+| Harm. min | A B C D E F G# | harmonic minor: the minor with a strong pull home (E major leads to A minor) |
 | Mel. min | A B C D E F# G# | melodic minor, the "jazz minor": minor below, major above |
 | Phr. dom | A Bb C# D E F G | Phrygian dominant: flamenco, the Middle East, psytrance |
 | Hung. min | A B C D# E F G# | Hungarian minor: harmonic minor with a raised fourth, very dark |
 | Dbl. harm | A Bb C# D E F G# | double harmonic ("Arabic"): two wide steps, exotic |
 
-The chord walk never goes to a diminished or augmented chord (harmonic minor's C+ and the like), so these play the scale's
-strong chords and let its colour come from the melody lines. The borrowed chords and the dominants of the next chord (section 5,
-the circle) are for the first six; the newer seven-note scales are their own colour already. A progression you set by hand
-plays any chord you put in it.
+The chord walk never goes to a diminished or augmented chord (for example, C+ in harmonic minor). Thus, these
+scales play the strong chords of the scale, and the melody lines give the colour of the scale. The borrowed chords
+and the dominants of the next chord (section 5, the circle) are for the first six scales. The newer seven-note
+scales already have their own colour. A progression that you set by hand plays any chord that you put in it.
 
 ### Chords
 
-The pad's chords are built on the notes of the scale. How long each lasts is set as above (the genre's pace
-and Drift, or **EDIT**). The **Chords** page (**ENV** four times) sets what kind of chord it plays:
+The chords of the pad are built on the notes of the scale. The length of each chord is set as above (the pace of
+the genre and Drift, or **EDIT**). The **Chords** page (push **ENV** four times) sets the type of chord that the
+pad plays:
 
 | Chord | What it plays |
 |---|---|
 | Auto | Seventh chords on a 7-note scale (Am7, CM7, G7 ...), triads on a pentatonic (5-note) scale |
 | Triads | Three notes: Am, C, G |
-| 7ths | Four notes: Am7, Dm7, CM7. On a pentatonic scale too. |
-| 9ths | The 1st, 3rd, 7th and 9th, with the fifth left out (four notes): Am9, CM9, G9 |
-| Sus | The 1st, 4th, 5th and 7th: A7sus4 (CM7sus4 where the seventh is major; a sus2 where the fourth would be sharp, as on F in A minor). Open and unresolved. |
-| Dub | The same minor 9 shape on every chord, whatever the scale says. These are the parallel chord stabs of dub techno. |
-| Fourths | The scale's notes stacked in fourths (shown as A4ths on the home chord of a minor key), an m11 sound. Where the scale's next fourth would be a tritone it takes the note below, as in the "So What" chord. Deep, hollow and modal. |
+| 7ths | Four notes: Am7, Dm7, CM7. Also on a pentatonic scale. |
+| 9ths | The 1st, 3rd, 7th and 9th, without the fifth (four notes): Am9, CM9, G9 |
+| Sus | The 1st, 4th, 5th and 7th: A7sus4 (CM7sus4 where the seventh is major; a sus2 where the fourth would be sharp, as on F in A minor). It sounds open and unresolved. |
+| Dub | The same minor 9 shape on every chord, whatever the scale. These are the parallel chord stabs of dub techno. |
+| Fourths | The notes of the scale stacked in fourths (shown as A4ths on the home chord of a minor key), an m11 sound. Where the next fourth of the scale would be a tritone, it uses the note below, as in the "So What" chord. It sounds deep, hollow and modal. |
 
-**Filter types.** The pad's saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck: on the others the page says NO FILTER), the bass and the acid each run through a resonant filter, low-pass as
-standard. The **FILTERS** settings page (hold **HOME**: it's the first one) changes each one's type:
+**Filter types.** The saw sounds of the pad (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck: on the other pad sounds, the page shows NO FILTER), the bass and the acid each go through a resonant filter. The standard type is
+low-pass (it cuts the high sounds). The **FILTERS** settings page (hold **HOME**: it is the first one) changes the
+type of each filter:
 
 | Type | Sounds like |
 |---|---|
-| Low | As before: the top rolled off, Cutoff closes it down. |
-| High | The bottom taken away: thin, airy, good for a build or a lead that cuts through. On the bass and the pad its corner sits lower than the low-pass's, so it thins them rather than taking them away. |
-| Band | Only a band around the cutoff: nasal, telephone-like, great with resonance. |
-| Notch | A gap at the cutoff: hollow and phasey as the cutoff moves. |
-| Peak | The cutoff's band boosted against the rest: a vowel-like bite. |
-| 303 | The acid only: a ladder filter after the Roland TB-303's. Four stages that bend as they are driven, the resonance singing at the cutoff while the bass underneath stays full (its low end is kept out of the resonance, as on the original). Rounder and more liquid than Low, and it squeals rather than whistles when Reso and SCREAM are high. |
+| Low | As before: the top of the sound is cut. Cutoff closes it down. |
+| High | The bottom of the sound is removed: thin and airy. It is good for a build or for a lead that must be clear in the mix. On the bass and the pad, its corner is lower than the corner of the low-pass, so it makes them thinner but does not remove them. |
+| Band | Only a band around the cutoff: nasal, like a telephone. It is very good with resonance. |
+| Notch | A gap at the cutoff: hollow, with a phaser-like sound as the cutoff moves. |
+| Peak | The band at the cutoff is louder than the rest: a bite that sounds like a vowel. |
+| 303 | The acid only: a ladder filter in the style of the filter of the Roland TB-303. It has four stages that bend as you drive them. The resonance sings at the cutoff, and the bass below it stays full (its low end is kept out of the resonance, as on the original). It is rounder and more liquid than Low. It squeals and does not whistle when Reso and SCREAM are high. |
 
-**Making it scream.** The **SCREAM** settings page (the next one after FILTERS) pushes the acid's and the bass's filters into the raw, screaming sound of an acid line through a distortion pedal. It belongs to the piece, like FILTERS: store the piece to keep it. At 0 everything sounds as it did.
+**Making it scream.** The **SCREAM** settings page (the next page after FILTERS) pushes the filters of the acid
+and the bass into a raw, screaming sound, like an acid line through a distortion pedal. It is part of the piece,
+like FILTERS: store the piece to keep it. At 0, everything sounds as before.
 
 | Knob | What it does |
 |---|---|
 | Drive | Pushes the sound harder into the filter and saturates it: thicker, louder, rawer. |
-| Scream | Takes the resonance far past Reso's top, towards the filter singing on its own. With Reso high and Cutoff moving, this is the scream. |
-| Wow | Accented notes open the resonance and the drive further: the acid's wow on the accents. |
+| Scream | Takes the resonance far above the top of Reso, near the point where the filter sings on its own. With Reso high and Cutoff that moves, this makes the scream. |
+| Wow | Accented notes open the resonance and the drive more: the "wow" of the acid on the accents. |
 | Target | Which voice: the acid, the bass, or both. |
 
-Start with Scream at 60 and Drive at 40 on an acid piece, then turn the acid's Cutoff and Env mod (or let an LFO on **Acid cut** do it). Turn the acid's level down a little if it gets too loud: the limiter will hold it, but it squashes the rest of the mix.
+On an acid piece, start with Scream at 60 and Drive at 40. Then turn the Cutoff and Env mod of the acid (or let an
+LFO on **Acid cut** do it). If the acid gets too loud, turn its level down a little. The limiter holds it, but the
+limiter then makes the rest of the mix quieter.
 
-**The wub.** In DUBSTEP, and with the Wub sound in any genre, the bass LFO on the cutoff makes a wub the way a producer builds one. A clean sine sub stays underneath. The sound's own oscillator goes through a resonant low-pass that the LFO sweeps from about 70 Hz up to 3-4 kHz, with a vowel band above it (the "yoi"). It is then driven hard after the filter, so it growls more as it opens, and high-passed so the sub stays clean. On the drop the LFO's speed follows a rhythm, beat by beat over two bars (1/4, 1/8, 1/8T, 1/16, 1/2), each piece with its own and a second one every 8 bars (the Wub sound does this in any genre). DNB pieces 2 and 6 and INDUS pieces 4 and 8 come with it. Through a build it speeds up from 1/4 to 1/16. Depth sets how far it opens, Shape how it moves (Sine: closed on the beat, open between; Saw: open then closing; Square: open and shut; S&H: a level each cycle), Cutoff where it starts, Reso how much it sings. SCREAM on the bass drives it harder still. Set the Target to anything but Cutoff for the old wobble.
+**The wub.** In DUBSTEP, and with the Wub sound in any genre, the bass LFO on the cutoff makes a wub in the same
+way as a producer makes one. A clean sine sub stays below it. The oscillator of the sound goes through a resonant
+low-pass filter. The LFO sweeps this filter from about 70 Hz up to 3-4 kHz. A vowel band above it gives the "yoi".
 
-The bass's LFO moving the cutoff (a wobble) works with every type. The filter types belong to the piece and are
-stored with it. It's the MultiFilter idea from Caustic, rebuilt here.
+After the filter, the sound is driven hard, so it growls more as the filter opens. It is also high-passed, so the
+sub stays clean. On the drop, the speed of the LFO follows a rhythm, beat by beat over two bars (1/4, 1/8, 1/8T,
+1/16, 1/2). Each piece has its own rhythm, and a second one every 8 bars (the Wub sound does this in any genre).
+DNB pieces 2 and 6 and INDUS pieces 4 and 8 have it. Through a build, the LFO speeds up from 1/4 to 1/16.
 
-**Voicing** sets how the chord is spread. Close keeps the four notes together. Open drops the second-highest
-note an octave, spreading the chord out. **Comp** is how the pad plays the chords: **Auto** uses the genre's
-own rhythm for the stab sounds, **Hold** never stabs (a stab sound plays as a held pad, like a drone), and the
-other seven force stabs on any pad sound (section 8, Feel, describes them). The pad's **Chorus**, which makes it
-sound wider, is on the CHORUS settings page since 0.17.82. The song's **Root** is on Global.
+Depth sets how far the filter opens. Shape sets how it moves (Sine: closed on the beat, open between; Saw: open,
+then it closes; Square: open and shut; S&H: a level each cycle). Cutoff sets where it starts. Reso sets how much
+it sings. SCREAM on the bass drives it harder. For the old wobble, set the Target to any value other than Cutoff.
 
-For dub techno, set Chord to Dub, pick the pad's Dub sound (dark chord stabs) and turn the echo up. HYPNO
-piece 06 is set up that way.
+A wobble (the bass LFO moves the cutoff) works with every filter type. The filter types are part of the piece, and
+the piece stores them. This is the MultiFilter idea from Caustic, made again here.
+
+**Voicing** sets how the chord is spread. Close keeps the four notes together. Open moves the second-highest note
+down an octave, which spreads the chord out. **Comp** sets how the pad plays the chords. **Auto** uses the rhythm
+of the genre for the stab sounds (short chords). **Hold** never plays stabs (a stab sound plays as a held pad, like
+a drone). The other seven settings force stabs on any pad sound (section 8, Feel, describes them).
+
+Since 0.17.82, the **Chorus** of the pad (it makes the pad sound wider) is on the CHORUS settings page. The **Root**
+of the song is on Global.
+
+For dub techno:
+
+1. Set Chord to Dub.
+2. Choose the Dub sound for the pad (dark chord stabs).
+3. Turn the echo up.
+
+HYPNO piece 06 has these settings.
 
 ### Your own progression
 
 ![The Progression page](img/perf-screen-progression.png)
 
-The **Progression** page lets you write the chords yourself. Hold **EDIT** to open it, or press **ENV** five
-times. A tap of **EDIT** still moves on to the next chord.
+On the **Progression** page, you write the chords yourself. To open it, hold **EDIT** or press **ENV** five
+times. A short push of **EDIT** still goes to the next chord.
 
-The page has eight slots. Each slot is one chord of the scale, its type and how many bars it lasts. The first
-eight white keys pick the slot you're editing. Until you change something, the page shows the chords you just
-heard, so you can start from those.
+The page has eight slots. Each slot holds one chord of the scale, its type and the number of bars that it lasts. The
+first eight white keys select the slot that you edit. Until you change a value, the page shows the chords that you
+heard last. You can start from those chords.
 
 | Knob | Does |
 |---|---|
-| Chord | The slot's chord, picked from the chords of the scale. The page shows each as a numeral (I to VII, small for a minor chord) and its name, like Am7. **Hold** leaves the slot empty: the chord before keeps playing for its bars. |
-| Type | The kind of chord this slot plays. **Piece's** follows the Chord setting on the Pad's Chords page, like every slot did before. The others give the slot its own: **Triad** (three notes), **7th**, **9th**, **Sus** (the third swapped for the fourth), **Dub** (a minor ninth stab), **Fourths** (the scale's fourths stacked) or **11th** (root, seventh, ninth and eleventh). All of them but Dub use only notes of the scale. |
-| Bars | How long the slot's chord lasts: 1, 2, 4 or 8 bars. |
-| Play | **Walk**: the genre picks the chords, as usual. **Loop**: your slots play in turn. |
+| Chord | The chord of the slot. You select it from the chords of the scale. The page shows each chord as a numeral (I to VII, in small letters for a minor chord) and its name, for example Am7. **Hold** keeps the slot empty: the chord before it continues to play for its bars. |
+| Type | The type of chord that this slot plays. **Piece's** uses the Chord setting on the Chords page of the Pad, as every slot did before. The other types give the slot its own chord type: **Triad** (three notes), **7th**, **9th**, **Sus** (the fourth replaces the third), **Dub** (a minor ninth stab, a short chord), **Fourths** (fourths of the scale, one on top of the other) or **11th** (root, seventh, ninth and eleventh). All types except Dub use only notes of the scale. |
+| Bars | The length of the slot's chord: 1, 2, 4 or 8 bars. |
+| Play | **Walk**: the genre selects the chords, as usual. **Loop**: your slots play one after the other. |
 
-Turning Chord, Type or Bars switches Play to Loop. Your progression starts on the next bar, from slot 1. The loop
-ends at the last slot that has a chord, so a four-chord progression only needs slots 1 to 4. **EDIT** jumps
-to the next slot, and the drop of a build goes back to slot 1.
+When you turn Chord, Type or Bars, Play changes to Loop. Your progression starts on the next bar, from slot 1. The
+loop ends at the last slot that has a chord. Thus a four-chord progression needs only slots 1 to 4. **EDIT** goes
+to the next slot. At the drop of a build, the progression goes back to slot 1.
 
-**Fills.** The **black keys** write a whole progression into the slots in one press. The first five are circle of fifths fills,
-one that moves round the circle of fifths: each chord a fifth below the one before, as the scale allows. That
-fall by a fifth is the strongest pull in harmony, the one that makes a progression sound like it's going home. The
-other six are progressions that are everywhere in songs (from Steven's chord chart in the PERF-1 issues).
+**Fills.** When you push one of the **black keys**, it writes a full progression into the slots. The first five keys
+write circle of fifths fills. Each of these fills moves round the circle of fifths: each chord is a fifth below the
+chord before it, as the scale permits. This fall by a fifth gives the strongest pull in harmony. It makes a
+progression sound as if it goes back to its home chord. The other six keys write progressions that are very common
+in songs (from Steven's chord chart in the PERF-1 issues).
 
 | Black key | Writes | In C major | In A minor |
 |---|---|---|---|
@@ -680,7 +733,7 @@ other six are progressions that are everywhere in songs (from Steven's chord cha
 | 2 (G#) | vi ii V I | Am Dm G C | F Bdim Em Am |
 | 3 (A#) | iii vi ii V I I | Em Am Dm G C C | C F Bdim Em Am Am |
 | 4 (C#) | I vi ii V (the turnaround) | C Am Dm G | Am F Bdim Em |
-| 5 (D#) | The whole circle: I IV vii iii vi ii V I | C F Bdim Em Am Dm G C | Am Dm G C F Bdim Em Am |
+| 5 (D#) | The full circle: I IV vii iii vi ii V I | C F Bdim Em Am Dm G C | Am Dm G C F Bdim Em Am |
 | 6 (F#) | I IV V V | C F G G | Am Dm Em Em |
 | 7 (G#) | I I IV vi | C C F Am | Am Am Dm F |
 | 8 (A#) | I IV I V | C F C G | Am Dm Am Em |
@@ -688,26 +741,31 @@ other six are progressions that are everywhere in songs (from Steven's chord cha
 | 10 (D#) | I vi IV | C Am F | Am F Dm |
 | 11 (F#) | IV V IV I | F G F C | Dm Em Dm Am |
 
-Each chord gets the bars of the slot you had chosen, so choose a slot and set its Bars first; the slots after the
-fill are emptied, and Play goes to Loop. The types you gave the slots stay. The chords stay in the scale, so in a
-minor key the V is minor (v), unless the genre raises it for the cadence (the THEORY screen shows that G# in red).
-It's stored with the piece like any progression. A pentatonic scale has no circle to walk, so the fills are off
-there. The black keys blink faintly on this page to show they do something; watch the THEORY screen while it
-plays and you see the progression walk round the circle.
+Each chord gets the Bars value of the slot that you selected. Thus, first select a slot and set its Bars. The fill
+empties the slots after it, and Play changes to Loop. The types that you gave the slots do not change.
 
-**Pedal: follow the chords, or hold the key.** **White key 9** switches the **bass** and **white key 10** the **pad** between two ways of playing:
+The chords stay in the scale. Thus in a minor key, the V is minor (v), unless the genre raises it for the cadence
+(the chord move that ends a phrase). The THEORY screen shows that G# in red. The fill is stored with the piece, as
+any progression is. A pentatonic scale has no circle of fifths to walk, so the fills are off in that scale.
 
-- **Follows** (as always): the voice moves with each chord.
-- **Pedal**: the voice stays on the key while the chords move above it. The bass holds the key's root (a walking bass walks the key's own chord), and the pad holds the key's chord (Am7 in A minor) as the progression goes round. This is a pedal point, the oldest drone trick there is: the music gets tension as the chords pull away from the held note, and it all comes home when they return to I. Good for playing a guitar or a synth over it.
+The black keys blink faintly on this page. This shows that they have a function. Look at the THEORY screen while the
+progression plays. You see the progression walk round the circle.
 
-The keys are lit while a voice is on Pedal, and the bottom of the page says which. It's your setting, not the piece's: it stays as you leave it, across pieces and power-off. The THEORY screen still shows the chords as they move.
+**Pedal: follow the chords, or hold the key.** **White key 9** changes the **bass** between two modes, and **white key 10** changes the **pad**:
 
-The chords are steps of the scale, not fixed notes, so they follow the key. Change the root or the mode and
-the progression moves with it. The chord kind, the voicing and the rest of the Chords page still apply. In
-the genres with a cadence, the V chord in a minor key gets its raised seventh, as it does in the walk.
+- **Follows** (the usual mode): the voice moves with each chord.
+- **Pedal**: the voice stays on the key while the chords move above it. The bass holds the root of the key. (A walking bass walks the chord of the key.) The pad holds the chord of the key (Am7 in A minor) while the progression goes round. This is a pedal point, the oldest drone method (a drone is one note that you hold for a long time). When the chords move away from the held note, the music gets tension. When the chords go back to I, the tension goes away. Use it when you play a guitar or a synth over the music.
 
-While Play is on Loop, the walk, Drift and the chord Loop setting have no say. Set Play back to Walk and the
-genre takes over again, with your slots kept for later. The progression is stored with the piece.
+While a voice is on Pedal, its key is lit, and the bottom of the page shows which voice it is. This is your setting, not a setting of the piece. It stays as you set it, when you change pieces and after power-off. The THEORY screen continues to show the chords as they move.
+
+The chords are steps of the scale, not fixed notes. Thus they follow the key. If you change the root or the mode,
+the progression moves with it. The chord kind, the voicing (the order and spacing of the chord notes) and the other
+settings of the Chords page still apply. In the genres with a cadence, the V chord in a minor key gets its raised
+seventh, as it does in the walk.
+
+While Play is on Loop, the walk, Drift and the chord Loop setting have no effect. To give the chords back to the
+genre, set Play to Walk. The genre then selects the chords again, and your slots stay for later. The progression is
+stored with the piece.
 
 ---
 
@@ -715,134 +773,143 @@ genre takes over again, with your slots kept for later. The progression is store
 
 ![Storing a piece on Global](img/perf-screen-store.png)
 
-PERF-1 has twenty-two **genres**. Each is a bank of ten **pieces**, ready-made songs to play and change.
+PERF-1 has twenty-two **genres**. Each genre is a bank of ten **pieces**. A piece is a ready-made song that you can
+play and change.
 
-- Turn **PRESETS** for another piece in the bank. It goes from 01 to 10 and wraps round.
-- Hold **GLO** and turn **PRESETS** for another bank (it wraps round too), or use the Genre knob on the Global
-  page.
+- To select another piece in the bank, turn **PRESETS**. The number goes from 01 to 10, and then it continues from
+  the other end.
+- To select another bank, hold **GLO** and turn **PRESETS** (this also continues from the other end). Or, use the
+  Genre knob on the Global page.
 
-When you change genre, the same piece number keeps playing in the new genre, and the genre's own effects
-come on with it. For example, lofi latches vinyl and tape on, and house latches the pump on (the pump ducks
-the music on each kick, so it seems to breathe with the beat). Changing genre first clears any vinyl, tape,
-pump or phaser you had latched.
+When you change genre, the same piece number continues to play in the new genre. The effects of the new genre also
+come on. For example, lofi latches vinyl and tape on, and house latches the pump on (a latched effect stays on). The
+pump makes the music quieter on each kick, so the music seems to breathe with the beat. When you change genre,
+PERF-1 first clears all vinyl, tape, pump or phaser that you latched.
 
-Each piece has its own settings, its own six drum patterns and its own drum sounds. Patterns 1 to 6 run
-roughly: intro, groove, build, peak, variation, and a thinner one to mix with. When you pick a piece it shows
-a made-up title, such as `VELVET RAIN`, the same one every time.
+Each piece has its own settings, its own six drum patterns and its own drum sounds. Patterns 1 to 6 are
+approximately: intro, groove, build, peak, variation, and a thinner pattern to use in a mix. When you select a
+piece, the screen shows a made-up title, for example `VELVET RAIN`. The title is the same each time.
 
 | Genre | Pieces | BPM | What it is |
 |---|---|---|---|
 | HYPNO | 01-10 | 118-138 | The original hypnotic techno and acid set. |
-| LOFI | L01-L10 | 70-94 | Swung boom-bap. Rhodes chords in 7ths and 9ths over a warm bass, a soft sparse lead, the Dusty kit. Vinyl and tape latched on. |
-| HOUSE | H01-H10 | 118-126 | Four on the floor, claps on 2 and 4, open hats on the off-beats, stabs and organ, a sub or square bass, the House kit. The pump latched on. |
-| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, a wub bass (see **The wub** below), a harsh lead, dark pads, chords in fourths. After a drop: 8 bars half time, then 8 bars at full time, then half time again. 8-bar builds that end in 32nds and triplets, the wub speeding up through them. |
-| DUB | V01-V10 | 64-76 | One-drop, steppers and rockers rhythms. A sparse kick and rim, a deep bass on beats one and three, the off-beat chord chops (the skank), a long dotted echo and worn tape latched on. A breakdown is a dub-out: the drums and the bass line go on, the rest falls away. |
+| LOFI | L01-L10 | 70-94 | Swung boom-bap (a hip-hop beat). Rhodes chords in 7ths and 9ths over a warm bass, a soft lead with few notes, the Dusty kit. Vinyl and tape are latched on. |
+| HOUSE | H01-H10 | 118-126 | Four on the floor (a kick on each beat), claps on 2 and 4, open hats on the off-beats, stabs and organ, a sub or square bass, the House kit. The pump is latched on. |
+| DUBSTEP | D01-D10 | 136-150 | Half time, the Heavy kit, a wub bass (see **The wub** below), a harsh lead, dark pads, chords in fourths. After a drop: 8 bars half time, then 8 bars at full time, then half time again. 8-bar builds that end in 32nds and triplets, and the wub gets faster through them. |
+| DUB | V01-V10 | 64-76 | One-drop, steppers and rockers rhythms. A kick and rim with few notes, a deep bass on beats one and three, short off-beat chords (the skank), a long dotted echo and worn tape latched on. A breakdown is a dub-out: the drums and the bass line continue, and the other parts stop. |
 | DNB | N01-N10 | 170-178 | Two-step, liquid, roller, neuro, jump-up and half-time. The DnB kit, a shimmer reverb, a light pump and tape. |
-| BREAKS | B01-B10 | 100-135 | Patterns after classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat) and a big-beat stomp. Some are approximations. The Break kit, a gated reverb, tape and the phaser latched on. |
-| GARAGE | G01-G10 | 126-138 | Swung two-step, skippy beats and speed garage. A conga kick, rim shots that call and answer, the Minimal snare and House hats. Tape and a light pump. |
-| ELECTRO | E01-E10 | 118-130 | A syncopated kick, the clap on the backbeat, the Electro kit, a gated reverb. The phaser latched on. |
+| BREAKS | B01-B10 | 100-135 | Patterns based on classic breaks (Funky Drummer, Impeach, Levee, Cold Sweat) and a big-beat stomp. Some patterns are approximations. The Break kit, a gated reverb, tape and the phaser latched on. |
+| GARAGE | G01-G10 | 126-138 | Swung two-step, beats with skips, and speed garage. A conga kick, rim shots that play a call and an answer, the Minimal snare and House hats. Tape and a light pump. |
+| ELECTRO | E01-E10 | 118-130 | A syncopated kick, the clap on the backbeat, the Electro kit, a gated reverb. The phaser is latched on. |
 | TRAP | T01-T10 | 130-150 | The long 808 bass (the Trap kit), the clap on beat 3, hats in 16ths with rolls (two per piece), an open hat and a rim. Fills roll the hats in 32nds and triplets. A shimmer reverb, and a pump under the 808. |
-| DISCO | S01-S10 | 112-126 | Four on the floor, accented open hats on the off-beats, a bass bouncing in octaves, strings and brass stabs, Wurli and clav, a little swing. |
-| FUNK | F01-F10 | 96-110 | Syncopated sixteenths, ghost snares and soft kick pickups, a funk bass figure, a clav line, sixteenth-note chords, the Dusty and 909 kicks. A breakdown is the drums alone. |
-| REGGAE | R01-R10 | 70-84 | One-drop, steppers and rockers, the rim a touch late, a melodic bass, an off-beat skank, a long echo, the Dusty kit. |
-| SYNTHWAVE | W01-W10 | 100-118 | A driving eighth-note bass, a gated reverb, a big accented snare, lots of chorus, an arpeggiating acid. The minor pieces circle i-VI-III-VII; the major ones play the decade's I-vi-IV-V. (On the screen: SYNTHWV.) |
-| AMAPIANO | A01-A10 | 108-115 | A soft kick with shakers, a gliding syncopated bass (playing the log drum's part), jazzy 9ths, marimba and kalimba plucks. (On the screen: AMAPI.) |
-| TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back, ghost notes, vinyl noise, a pluck loop that comes round again, minor and sparse. |
-| INDUS | I01-I10 | 118-145 | Industrial techno, EBM and industrial breakbeat. Driven, harsh drums tuned against each other (the snare a tritone up, the perc a semitone off), the Hard kit with the Break kit's chops in some pieces, broken and off-beat kicks, an EBM stomp, perc in threes against the beat. Phrygian and minor, suspended and fourths chords, a grinding bass, metal and bell sounds, a gated reverb and hard tape. Fills roll on the off-beats and in triplets. |
-| PSY | Y01-Y10 | 92-146 | Psytrance: progressive, full-on and goa (132-146), a short kick on every beat with the rolling bass between (K-B-B-B), each bass note clear of the kick, soft 16th hats, the open hat off the beat, the acid as the squelching lead, a dotted (3/16) echo, phrygian and minor, a chord held for 8 bars. Y01, Y02 and Y10 are psy-ambient and psychill (92-112): a downtempo beat, a held bass, a wide shimmer reverb. With the set list and the SET page's Mix you can go from the cosmic into the trance and back. |
-| FOREST | O01-O10 | 148-165 | Dark forest and dark psy: the same rolling bass under every-16th hats and a glitching percussion in threes against the four, hat rolls, triplets, hard drums over a short kick, phrygian and fourths, the chord barely moving. |
-| HIPHOP | M01-M10 | 86-98 | Boom-bap instrumentals: the kick off the one, a loud snare on 2 and 4, an MPC swing, the bass on the kick, minor loops of one and four (harmonic minor's real V in M03 and M10), Rhodes, strings, organ, a muted trumpet; M06 and M08 G-funk (Mixolydian, the acid a whistle), M05 and M09 dark. The Boom kit. |
+| DISCO | S01-S10 | 112-126 | Four on the floor, accented open hats on the off-beats, a bass that jumps between octaves, strings and brass stabs, Wurli and clav, a little swing. |
+| FUNK | F01-F10 | 96-110 | Syncopated sixteenths, ghost snares (very quiet snare notes) and soft kick pickups, a funk bass figure, a clav line, sixteenth-note chords, the Dusty and 909 kicks. A breakdown is the drums alone. |
+| REGGAE | R01-R10 | 70-84 | One-drop, steppers and rockers, the rim a little late, a melodic bass, an off-beat skank, a long echo, the Dusty kit. |
+| SYNTHWAVE | W01-W10 | 100-118 | A strong eighth-note bass, a gated reverb, a big accented snare, much chorus, an acid that plays arpeggios (chord notes one after the other). The minor pieces play i-VI-III-VII again and again. The major pieces play the decade's I-vi-IV-V. (On the screen: SYNTHWV.) |
+| AMAPIANO | A01-A10 | 108-115 | A soft kick with shakers, a syncopated bass that glides (it plays the part of the log drum), jazz-style 9ths, marimba and kalimba plucks. (On the screen: AMAPI.) |
+| TRIPHOP | P01-P10 | 70-88 | Slow and dusty, the snare laid back (a little late), ghost notes, vinyl noise, a pluck loop that comes back again, minor, with few notes. |
+| INDUS | I01-I10 | 118-145 | Industrial techno, EBM and industrial breakbeat. Driven, harsh drums tuned against each other (the snare a tritone up, the perc a semitone off). The Hard kit, with chops (short cut pieces) of the Break kit in some pieces. Broken and off-beat kicks, an EBM stomp, perc in threes against the beat. Phrygian and minor, suspended and fourths chords, a bass with grind, metal and bell sounds, a gated reverb and hard tape. Fills roll on the off-beats and in triplets. |
+| PSY | Y01-Y10 | 92-146 | Psytrance: progressive, full-on and goa (132-146). A short kick on every beat, with the rolling bass between the kicks (K-B-B-B), and each bass note clear of the kick. Soft 16th hats, the open hat off the beat, the acid as the lead with a strong resonant sound, a dotted (3/16) echo, phrygian and minor, a chord held for 8 bars. Y01, Y02 and Y10 are psy-ambient and psychill (92-112): a downtempo beat, a held bass, a wide shimmer reverb. Use the set list and the Mix on the SET page to go from the slow, spacey pieces into the trance and back. |
+| FOREST | O01-O10 | 148-165 | Dark forest and dark psy: the same rolling bass under hats on every 16th, and glitch percussion in threes against the four beats, hat rolls, triplets, hard drums over a short kick, phrygian and fourths, a chord that almost does not move. |
+| HIPHOP | M01-M10 | 86-98 | Boom-bap instrumentals: the kick off the one, a loud snare on 2 and 4, an MPC swing, the bass on the kick, minor loops of one and four (the real V of harmonic minor in M03 and M10), Rhodes, strings, organ, a muted trumpet. M06 and M08 are G-funk (Mixolydian, the acid sounds like a whistle). M05 and M09 are dark. The Boom kit. |
 | TRANCE | U01-U10 | 132-140 | Classic and uplifting trance (PSY is psytrance): four on the floor, the open hat off every beat, the bass off the beat, the supersaw lead, the Trance pad, four-chord minor loops of four bars, long breakdowns and eight-bar builds with a snare roll. |
-| AMBIENT | Z01-Z10 | 70-88 | Beatless or nearly: a soft kick now and then, a ride, a shaker, bars with no drums; long pads, a held bass, slow chords in Lydian, Ionian and Dorian, a long shimmer. A set's opener, or its rest. |
+| AMBIENT | Z01-Z10 | 70-88 | No beat, or almost no beat: a soft kick from time to time, a ride, a shaker, bars with no drums. Long pads, a held bass, slow chords in Lydian, Ionian and Dorian, a long shimmer. A piece to open a set, or to rest in a set. |
 
-The sections follow each genre's habits too. House, dubstep, DnB, trap, disco and synthwave cut everything for the
-last beat before the drop. Lofi, dub, reggae, amapiano and trip-hop build on the perc instead of a snare roll. Breaks
-and funk break down to the drums alone. Each genre has its own fills: house and disco ramp and rush, dub and reggae
-drag, trap and dubstep roll in triplets, garage rolls its rim, and disco, funk and synthwave play a falling tom. In
-HYPNO the kick drops out for the last beat of every eighth bar.
+The sections also follow the usual style of each genre. House, dubstep, DnB, trap, disco and synthwave stop all
+parts for the last beat before the drop. Lofi, dub, reggae, amapiano and trip-hop use the perc for the build, not a
+snare roll. In a breakdown, breaks and funk play only the drums. Each genre has its own fills: house and disco ramp
+and rush, dub and reggae drag, trap and dubstep roll in triplets, garage rolls its rim, and disco, funk and synthwave
+play a tom that falls in pitch. In HYPNO, the kick stops for the last beat of every eighth bar.
 
-Pieces in the same genre differ in sound as well as in key and tempo. Each genre has a set of sounds for the
-pad, bass, acid, pluck and kits, and each piece takes one of each, picked by its number. The pluck's sound,
-style and rate change from piece to piece in every genre. Each genre also has its own compressor settings
-(section 11).
+Pieces in the same genre have different sounds, and also different keys and tempos. Each genre has a set of sounds
+for the pad, bass, acid, pluck and kits. Each piece uses one of each, and its number selects which one. In every
+genre, the sound, style and rate of the pluck change from piece to piece. Each genre also has its own compressor
+settings (section 11). A compressor makes the loud and the quiet parts closer in level.
 
-**Each piece has a role.** In every genre but HYPNO, each piece after the first is arranged differently on top of the
-genre's recipe, so the ten don't sound like one track in ten keys:
+**Each piece has a role.** In every genre except HYPNO, each piece after the first has a different arrangement on top
+of the basic plan of the genre. Thus the ten pieces do not sound like one song in ten keys:
 
 | Role | What changes |
 |---|---|
 | Classic | the genre as written (always piece 1) |
-| Bass-led | the bass line carries it: pad and pluck back, the line moving more |
-| Chords | the pad in front, comping; the bass line simple under it |
-| Acid | the acid leads and answers itself; the pluck out of its way |
-| Pluck hook | the pluck's riff held (Deja vu) and up front, the pad darker |
+| Bass-led | the bass line is the main part: the pad and pluck are further back, and the line moves more |
+| Chords | the pad is in front and plays chords in rhythm (comping); the bass line is simple under it |
+| Acid | the acid is the lead and answers its own phrases; the pluck stays clear of it |
+| Pluck hook | the pluck keeps its riff (Deja vu) and is in front; the pad is darker |
 | Space | more echo (a dotted quarter) and reverb, fewer notes, thinner hats |
-| Peak | more drive, brighter, the pluck busier, busier hats |
+| Peak | more drive, a brighter sound, more notes in the pluck and in the hats |
 | Dark | filters closed, a duller room |
-| Across the bar | the perc in 12 against the bar, the acid's loop shorter, the pluck skipping |
-| Left field | the phrase sliced, leaps in the pluck, a stranger acid, the pad moving more |
+| Across the bar | the perc in 12 against the bar, a shorter acid loop, the pluck skips |
+| Left field | the phrase cut into slices, large jumps in the pluck, a less usual acid, the pad moves more |
 
-Which piece gets which role rotates from genre to genre. What makes a genre stays put: its kit, swing, drum patterns,
-tempo, scales, chords and sounds. Each genre also keeps the parts that define it: house, dubstep, dub, funk, disco,
-reggae, trap, amapiano, drum and bass, psy and forest keep their bass line; psy and forest keep their acid; lofi,
-synthwave and trip-hop keep their pad; the breakbeat and percussion genres keep their drum lanes. Every setting a
-role changes is an ordinary setting you can turn back. A piece you have stored keeps what it was stored with; the roles
-shape the factory pieces only.
+The roles go to different piece numbers in each genre. The things that make a genre do not change: its kit, swing,
+drum patterns, tempo, scales, chords and sounds. Each genre also keeps the parts that make it that genre: house,
+dubstep, dub, funk, disco, reggae, trap, amapiano, drum and bass, psy and forest keep their bass line; psy and forest
+keep their acid; lofi, synthwave and trip-hop keep their pad; the breakbeat and percussion genres keep their drum
+lanes. Each setting that a role changes is a normal setting, and you can turn it back. A piece that you stored keeps
+the settings that you stored. The roles change only the factory pieces.
 
-Two factory pieces are players' own, from the Library: FUNK 10 is Golfhole's "Funky Space Jam" and HOUSE 09 is Roj's
-"About last night". They play as their makers shared them, and Global shows who made them (`F10 BY GOLFHOLE`).
+Two factory pieces come from players, through the Library: FUNK 10 is Golfhole's "Funky Space Jam" and HOUSE 09 is
+Roj's "About last night". They play as their makers shared them. Global shows who made them (`F10 BY GOLFHOLE`).
 
 ### Storing a piece
 
-This works in every genre. Go to **Global** and press **SAVE**. The piece is stored as it is: every page's
-values, the scale and mode, the voices' sounds and kit, the patterns and the drum sounds. It's stored in the
-genre you're in and takes the place of that genre's factory piece: store piece 3 of lofi, and piece 3 of lofi
-is yours from then on. Each genre has its own place in memory. The line above the knobs says
-`01 SAVE: STORE` while the piece has changes, then `01 STORED`.
+You can store a piece in every genre. Go to **Global** and press **SAVE**. PERF-1 stores the piece as it is now: the
+values of every page, the scale and mode, the sounds and kit of the voices, the patterns and the drum sounds. PERF-1
+stores it in the current genre, and it replaces the factory piece of that genre. For example, if you store piece 3
+of lofi, piece 3 of lofi is yours from then on. Each genre has its own place in memory.
 
-Changes you don't store last while you stay in that genre, even if you move between its pieces. They're
-gone when you change genre or switch off, and the genre's pieces come back as they were when you return.
+While the piece has changes, the line above the knobs shows `01 SAVE: STORE`. After you store it, the line shows
+`01 STORED`.
 
-**Back to factory.** On Global, hold **SEL** and **SAVE** together for 1.5 seconds. The screen says
-`KEEP HOLDING: FACTORY` while you hold. The piece goes back to how it shipped, and its slot goes back to the
-factory piece. **SAVE** alone only stores.
+If you do not store your changes, they stay while you stay in that genre, also when you move between its pieces.
+When you change genre or switch off, these changes are lost. When you go back to the genre, its pieces are as they
+were before.
 
-**Everything back to factory.** Not sure what you stored by accident? Stop the music, then on Global hold **SEL** and
-**SAVE** for 6 seconds: past the piece's own reset, the screen says `KEEP HOLDING: EVERY PIECE, ALL GENRES`, then
-it goes through the genres one by one and says how many pieces it put back. Your settings, voices and set list
-stay as they are. While the music plays it only resets the piece and says `STOP FIRST`.
+**Back to factory.** On Global, hold **SEL** and **SAVE** together for 1.5 seconds. While you hold, the screen shows
+`KEEP HOLDING: FACTORY`. The piece goes back to its factory settings, and its slot goes back to the factory piece.
+**SAVE** alone only stores.
 
-**Start from nothing.** On Global, hold **SEL** and press **OCT-**. The screen says `EMPTY PIECE`. The piece playing
-keeps its sounds, kit, key and tempo, and loses everything else: no drums, the pad holding the key's home chord, and
-the bass, the acid and the pluck each switched to its steps with every step a rest. Nothing changes by itself
-(Evolve, drum drift, the answers and ghost notes are off). Build it up from there:
+**Everything back to factory.** Use this if you do not know what you stored by accident. Stop the music. Then, on
+Global, hold **SEL** and **SAVE** for 6 seconds. When you hold past the reset of the piece, the screen shows
+`KEEP HOLDING: EVERY PIECE, ALL GENRES`. Then PERF-1 goes through the genres one by one, and the screen shows how
+many pieces it put back.
 
-- the drums in the **sequencer** (hold **SEQ**, section 8);
-- the bass on **Bass steps** (**LFO** x5), the acid on **Acid steps** (**ARP** x5), the pluck on **Pluck
-  steps** (**ARP** x9): pick a step with a white key, then turn its kind from rest to a note;
-- the chords on the **Progression** page (hold **EDIT**): one chord to start, add more slots.
+Your settings, voices and set list do not change. If the music plays, PERF-1 resets only the piece, and the screen
+shows `STOP FIRST`.
 
-**SAVE** keeps it, in that piece's place. Changed your mind? **SEL + SAVE** held brings the factory piece back.
+**Start from nothing.** On Global, hold **SEL** and press **OCT-**. The screen shows `EMPTY PIECE`. The piece that
+plays keeps its sounds, kit, key and tempo. It loses all other settings: there are no drums, and the pad holds the
+home chord of the key. The bass, the acid and the pluck each change to its steps, and every step is a rest (no note).
+Nothing changes automatically (Evolve, drum drift, the answers and ghost notes are off). Then build the piece up:
 
-**When it's written.** Straight away. The FM-1 can't make sound while it writes to its memory. So if the music
-is playing, it fades out (the screen says `STORING`), writes, and fades back in exactly where it was. The
-pause is a fraction of a second, and the song stays in time with itself. MIDI clock out pauses with it.
-Factory works the same way, and so does anything else PERF-1 saves (section 13).
+- Put the drums in the **sequencer** (hold **SEQ**, section 8).
+- Put the bass on **Bass steps** (**LFO** x5), the acid on **Acid steps** (**ARP** x5) and the pluck on **Pluck steps** (**ARP** x9). Select a step with a white key. Then turn its kind from rest to a note.
+- Put the chords on the **Progression** page (hold **EDIT**). Start with one chord, then add more slots.
 
-**At power-on** PERF-1 comes back to the piece you played last, as it is stored (Settings, **Start**: Last). On
-**Random** it starts on a HYPNO piece at random. A piece you never stored plays its factory settings with small random
-changes.
+**SAVE** stores it in the place of that piece. If you change your mind, hold **SEL + SAVE** to get the factory piece
+back.
+
+**When it is written.** PERF-1 writes immediately. The FM-1 cannot make sound while it writes to its memory. Thus, if
+the music plays, the music fades out (the screen shows `STORING`). Then PERF-1 writes, and the music fades back in at
+exactly the same point. The pause is less than a second, and the song stays in time with itself. MIDI clock out (the
+tempo signal that PERF-1 sends to other devices) also pauses. Back to factory operates in the same way, and so does
+all other data that PERF-1 saves (section 13).
+
+**At power-on**, PERF-1 goes back to the piece that you played last, as it is stored (Settings, **Start**: Last). With
+**Random**, it starts on a random HYPNO piece. A piece that you never stored plays its factory settings with small
+random changes.
 
 | HYPNO piece | Character | BPM | Key |
 |---|---|---|---|
 | 01 | Hypnotic four on the floor | 128 | A Aeolian |
-| 02 | Deep and dubby, with rims and shakers | 124 | D Dorian |
-| 03 | Pounding, with a rumble kick and claps | 132 | E Phrygian |
+| 02 | Deep and in a dub style, with rims and shakers | 124 | D Dorian |
+| 03 | Hard and heavy, with a rumble kick and claps | 132 | E Phrygian |
 | 04 | Trance, with off-beat open hats and rolls | 138 | G Aeolian |
 | 05 | Acid electro, with cowbells and breaks | 130 | A Dorian |
-| 06 | Dub techno: chord stabs (Dub chords), sparse, swung | 120 | F Pent minor |
+| 06 | Dub techno: chord stabs (Dub chords), few notes, swung | 120 | F Pent minor |
 | 07 | Minimal glitch, with patterns in threes over the four beats | 134 | B Pent major |
-| 08 | Rolling, tom-like percussion | 126 | Bb Mixolydian |
+| 08 | Percussion that rolls and sounds like toms | 126 | Bb Mixolydian |
 | 09 | Warehouse: hard, with rides and rumble (the Techno kit) | 136 | C Phrygian |
 | 10 | Deep field, with half time and breaks | 118 | Eb Aeolian |
 
@@ -850,33 +917,37 @@ changes.
 
 ## 7. Sounds, kits and playing
 
-Each voice has its own list of sounds, and each drum can take its sound from any of twenty-three kits, and three more you load yourself. The sounds you
-pick are stored with the piece.
+Each voice has its own list of sounds. Each drum can take its sound from any of twenty-three kits, and from three more kits that you load yourself. The sounds that you
+select are stored with the piece.
 
-To change a voice's sound, turn the **Sound** knob on its page, or hold **SEL** and turn **ALGORITHM** on any of its
-pages. On the pluck pages, SEL + ALGORITHM skips to the next sound that's actually there and wraps round from the
-last to the first. The voice keeps its notes, envelope, LFO and filter. Only the sound changes.
+To change the sound of a voice, turn the **Sound** knob on its page. Or, hold **SEL** and turn **ALGORITHM** on any
+of its pages. On the pluck pages, SEL + ALGORITHM goes to the next sound that is really there. After the last sound,
+it goes back to the first. The voice keeps its notes, envelope (how the sound starts and fades), LFO (a slow wave that
+moves a setting) and filter. Only the sound changes.
 
-A few words used below. **FM** is the way the DX7 and the FM-1 make sound: one tone bends another, which is good for
-bells, electric pianos and metallic sounds. A **saw** is the buzzy waveform behind most analog synth sounds. **Detuned**
-means a few copies of a sound slightly out of tune with each other, which makes it wider. A **sub** is an extra tone an
-octave below. A **filter** cuts the high end of a sound. Opening it makes the sound brighter.
+Some words that this section uses: **FM** is the method that the DX7 and the FM-1 use to make sound. One tone bends
+another tone. FM is good for bells, electric pianos and metallic sounds. A **saw** is the waveform with a bright,
+buzzing sound that most analog synth sounds use.
+
+**Detuned** means some copies of a sound, each slightly out of tune with the others. This makes the sound wider. A
+**sub** is an extra tone an octave below. A **filter** cuts the high sounds. When you open the filter, the sound
+becomes brighter.
 
 ### The pad: 24 sounds
 
 | # | Sound | What it is |
 |---|---|---|
-| 1 | Rhodes | An FM electric piano that gets brighter as it swells |
+| 1 | Rhodes | An FM electric piano. It gets brighter as it swells (gets louder). |
 | 2 | Voices | A sung choir |
 | 3 | Strings | Four detuned saws. The Detune knob spreads them. |
 | 4 | Glass | An FM bell |
 | 5 | Organ | A drawbar organ |
 | 6 | Warm | Soft triangle waves |
-| 7 | Stabs | Short Rhodes chords on the off-beats. Release on the Pad env page sets their length. Evolve adds a few more. |
+| 7 | Stabs | Short Rhodes chords on the off-beats. Release on the Pad env page sets their length. Evolve adds some more chords. |
 | 8 | Dark | The Voices, muffled |
 | 9 | Dub | Short, dark saw chords for dub techno |
 | 10 | Trance | A supersaw: four detuned saws plus one an octave up |
-| 11 | Poly | Two detuned saws with a slowly drifting pulse, like an 80s polysynth |
+| 11 | Poly | Two detuned saws with a pulse that drifts slowly, like an 80s polysynth |
 | 12 | Hollow | A hollow tone, like a clarinet |
 | 13 | Pings | The Glass bells as short stabs |
 | 14 | Hits | A house organ as stabs |
@@ -885,16 +956,16 @@ octave below. A **filter** cuts the high end of a sound. Opening it makes the so
 | 17 | Ooh | The Voices, darker and rounder |
 | 18 | Wurli | A bright electric piano, played as stabs |
 | 19 | Mallet | Marimba and vibes chords as stabs, a softer FM sound |
-| 20 | Brass | Saw chords as stabs, with the filter wide open |
-| 21 | Fat | A supersaw with the top end cut |
+| 20 | Brass | Saw chords as stabs, with the filter fully open |
+| 21 | Fat | A supersaw with the high sounds cut |
 | 22 | Pluck | The Poly sound as short stabs |
-| 23 | Chapel | A church organ (drawbars with the top end cut) |
+| 23 | Chapel | A church organ (drawbars with the high sounds cut) |
 | 24 | Air | An open sine, like breath |
 
 The saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat and Pluck) go through an analog-style filter with a sub
-an octave below them. The filter is a four-pole low-pass with resonance, which means a strong cut of the high end with
-a peak where it cuts. It opens with each swell or stab and closes after it. **Bright** opens it further, and the Pad
-LFO with its Target on Filter sweeps it.
+an octave below them. The filter is a four-pole low-pass with resonance. This means that it cuts the high sounds
+strongly, with a peak at the point where it cuts. The filter opens with each swell or stab and closes after it.
+**Bright** opens it more. When the Target of the Pad LFO is on Filter, the LFO sweeps the filter.
 
 ### The bass: 24 sounds
 
@@ -902,10 +973,10 @@ LFO with its Target on Filter sweeps it.
 |---|---|---|
 | 1 | Saws | Three saws, slightly detuned |
 | 2 | Warm | Rounder, with more sub |
-| 3 | Grit | Overdriven |
+| 3 | Grit | Overdriven (distorted) |
 | 4 | Dirty | A distorted sub |
 | 5 | Reese | Two saws far out of tune, so they phase against each other |
-| 6 | Pulse | A pulse wave whose width wanders |
+| 6 | Pulse | A pulse wave with a width that moves |
 | 7 | FM | An FM bass that the envelope opens up |
 | 8 | Organ | A drawbar organ |
 | 9 | Rumble | A driven sub with the saws far back, for techno rumble |
@@ -913,12 +984,12 @@ LFO with its Target on Filter sweeps it.
 | 11 | Square | Hollow, for deep house |
 | 12 | Hoover | Detuned pulses plus an octave down |
 | 13 | Fifths | The root and its fifth, a dub chord |
-| 14 | Metal | Clangy FM |
-| 15 | Sync | A saw with hard sync (one oscillator restarting another, for a tearing sound), swept by the envelope |
+| 14 | Metal | FM with a metallic, ringing sound |
+| 15 | Sync | A saw with hard sync (one oscillator restarts another, for a tearing sound), swept by the envelope |
 | 16 | Bright | The Saws with the filter open |
 | 17 | Wub | Saws over a clean sub: the dubstep wub (see **The wub**), in any genre |
 | 18 | Bite | A biting FM bass that the envelope opens up |
-| 19 | Solid | A round FM bass with a punch, the DX7's classic |
+| 19 | Solid | A round FM bass with a strong attack, the classic DX7 bass |
 | 20 | Growl | FM with a grind an octave under the note |
 | 21 | Gnarl | The Reese, driven hard |
 | 22 | Wide | A softer Hoover with more sub |
@@ -929,51 +1000,53 @@ LFO with its Target on Filter sweeps it.
 
 ![The Bass line page](img/perf-screen-bassline.png)
 
-Want the bass to play a rhythm instead of one long note? Use the **Bass line** page (press **LFO** four times). It
-turns the bass into a line that follows the chord. **Mode** picks where the notes fall.
+Use the **Bass line** page to make the bass play a rhythm instead of one long note. To open it, press **LFO** four
+times. The page turns the bass into a line that follows the chord. **Mode** sets where the notes fall.
 
-In the figures below, 1 2 3 4 are the beats, "and" is the eighth between two beats, and "e" and "a" are the
-sixteenths either side of the "and". So "and-of-2" is halfway between beats 2 and 3.
+In the figures below, 1 2 3 4 are the beats. "and" is the eighth between two beats (half a beat after the beat). "e"
+and "a" are the sixteenths on each side of the "and". So "and-of-2" is halfway between beats 2 and 3.
 
 | Mode | Where the notes fall |
 |---|---|
-| Hold | No line: one long note that glides to each chord's root |
-| Root | On the genre's own bass rhythm (hypnotic on the beats, lofi a lazy three, DnB a roll, and so on) |
+| Hold | No line. One long note that glides to the root of each chord |
+| Root | On the bass rhythm of the genre (hypnotic on the beats, lofi a relaxed three, DnB a roll, and so on) |
 | Kick | On every kick, as an 808 or sub bass does |
 | Eighths | On every eighth |
-| Off-beat | On the off-beat eighths, as in house |
-| Walk | On the beats: the root, then the third or fifth, then the fifth, then a lead-in to the next bar: the scale note just below the root, or half the time the note a half step below (a chromatic approach, the one passing note PERF-1 plays outside the scale) |
-| Riff | On the genre's own figure. Disco bounces the octave, funk and amapiano syncopate, reggae leans on the fifth. |
-| Octaves | Eighths bouncing between the root and its octave (disco) |
+| Off-beat | On the eighths between the beats (the off-beats), as in house |
+| Walk | On the beats. First the root, then the third or fifth, then the fifth, then a lead-in to the next bar. The lead-in is the scale note just below the root, or, half of the time, the note a half step below. That note is a chromatic approach: it is the one passing note that PERF-1 plays outside the scale |
+| Riff | On the figure of the genre. Disco jumps up and down the octave. Funk and amapiano are syncopated (the notes fall off the beat). Reggae puts weight on the fifth. |
+| Octaves | Eighths that jump between the root and its octave (disco) |
 | Two-step | 1, and-of-2, and-of-3 (garage, drum and bass) |
 | One-drop | 1, a-of-1, and-of-2, 3 (reggae) |
 | Log drum | 1, a-of-1, and-of-2, and-of-3, a-of-4 (amapiano) |
-| Skippy | A skipping sub that jumps up to the fifth and the octave |
+| Skippy | A sub bass that skips and jumps up to the fifth and the octave |
 | Funk | 1, a-of-1, 3, and-of-3 |
 | Big beat | 1, e-of-2, 3, 4 |
 | Dub | 1, 3, and-of-3 |
-| Gallop | Three sixteenths a beat |
+| Gallop | Three sixteenths on each beat |
 | Steps | Your own sixteen steps, from the **Bass steps** page (below) |
-| Rolling | Every sixteenth except the ones on the beat, rolling around the kick (rolling techno, psy) |
-| Tresillo | 3 + 3 + 2 sixteenths, twice a bar (dancehall, reggaeton) |
-| Push | 1, and-of-2, and-of-3, then the last sixteenth an octave up, pushing into the next bar |
+| Rolling | Every sixteenth except the ones on the beat. The notes roll around the kick (rolling techno, psy) |
+| Tresillo | 3 + 3 + 2 sixteenths, two times in each bar (dancehall, reggaeton) |
+| Push | 1, and-of-2, and-of-3, then the last sixteenth an octave up. This last note pushes into the next bar |
 | Bounce | 1, and-of-1, and-of-2, 3, and-of-3, and-of-4 (house, garage) |
 
-The named figures work in any genre. Each is a rhythm with up to four notes, so it sounds the same every bar.
-"The fifth" is the fifth above the root when the chord has one. A 9th, Dub or
-Fourths chord has no fifth among its first notes, so the line uses the chord's third note instead.
+The named figures work in all genres. Each one is a rhythm with up to four notes, so it sounds the same in every bar.
+"The fifth" is the fifth above the root, when the chord has one. A 9th, Dub or Fourths chord has no fifth in its first
+notes. For these chords, the line uses the third note of the chord instead.
 
 | Knob | Does |
 |---|---|
-| Mode | Where the notes fall (the table above) |
-| Length | How long each note holds before it lets go, from a quarter of a step to five steps |
+| Mode | Where the notes fall (see the table above) |
+| Length | How long each note holds before it stops, from a quarter of a step to five steps |
 | Move | How often a note jumps up an octave, to the fifth, or to the scale note below the root instead. In Walk, how often the last beat steps below. |
-| Glide | The slide from one note to the next. 0 plays each note straight. 100 takes about 0.4 s. |
+| Glide | The slide from one note to the next. At 0, each note plays straight. At 100, the slide takes about 0.4 s. |
 
-Each note opens the bass's filter again, using the attack and decay from the **Bass env** page, so that page still
-shapes the sound. Its Trigger setting doesn't apply to a bass line. The sound, cutoff and resonance come from the
-**Bass** page. A breakdown plays no bass notes, and in Kick mode a build plays none either. When you play the bass by
-hand from the keys, the bass line stops. Every note stays between C1 and B5.
+Each note opens the bass filter again. It uses the attack and decay from the **Bass env** page (how fast the sound
+starts and fades), so that page still shapes the sound. The Trigger setting on that page does not apply to a bass line.
+The sound, cutoff and resonance come from the **Bass** page.
+
+A breakdown plays no bass notes. In Kick mode, a build also plays no bass notes. When you play the bass by hand from
+the keys, the bass line stops. Every note stays between C1 and B5.
 
 New pieces start with these bass lines:
 
@@ -990,124 +1063,129 @@ New pieces start with these bass lines:
 
 ![The Bass steps page](img/perf-screen-bass-steps.png)
 
-Want a bass line of your own? The **Bass steps** page (press **LFO** five times, after Bass line) gives the bass
-sixteen steps, one bar, like the Acid steps and Pluck steps pages. Open it and it already holds the bar the bass just
-played, so you can start from something that works and change what you like.
+Use the **Bass steps** page to write your own bass line. To open it, press **LFO** five times (the page after Bass
+line). The page gives the bass sixteen steps (one bar), like the Acid steps and Pluck steps pages. When you open it,
+it already holds the bar that the bass played last. So you can start from a line that works and change what you want.
 
-- Press a **white key** to pick a step (the sixteen white keys are the sixteen steps; the one you picked is lit).
-- **Step** (KNOB1): rest, note, accent (louder), glide (slides into the note from the one before, without a new attack),
-  accent and glide, or **hold**: the note before keeps sounding through this step (a few holds in a row make a long note).
-- **Note** (KNOB2): the root, 2nd, 3rd, 4th, 5th, 6th, 7th or octave, counted in the scale above the chord's root. The
-  notes follow the chords: a 5th is always the fifth of the chord playing.
+- Press a **white key** to select a step. The sixteen white keys are the sixteen steps. The step that you selected is
+  lit.
+- **Step** (KNOB1): sets rest, note, accent (louder), glide, accent and glide, or **hold**. With glide, the note slides
+  in from the note before, without a new attack. With hold, the note before continues to sound through this step. Some
+  holds in a row make a long note.
+- **Note** (KNOB2): the root, 2nd, 3rd, 4th, 5th, 6th, 7th or octave, counted in the scale above the root of the chord.
+  The notes follow the chords: a 5th is always the fifth of the chord that plays.
 - **Octave** (KNOB3): down, mid or up.
-- **Mode** (KNOB4): the bass line's mode. **Steps** plays your steps; any edit switches to it. Turn it back to try the
-  other modes: your steps stay.
+- **Mode** (KNOB4): the mode of the bass line. **Steps** plays your steps. Any edit changes the mode to Steps. To try
+  the other modes, turn the knob again. Your steps stay.
 
-The steps belong to the piece: save it (**GLO**, then **SAVE**) to keep them, and a shared piece carries them. A piece
-without steps plays its own bass line.
+The steps are part of the piece. To keep them, save the piece (**GLO**, then **SAVE**). A shared piece also contains
+them. A piece without steps plays its own bass line.
 
 ### The bass answer
 
 ![The Bass answer page](img/perf-screen-bass-answer.png)
 
-The **Bass answer** page (press **LFO** six times, after Bass steps) lets the bass answer, the way the acid does: every
-few bars it plays its line changed, for one bar. It needs a bass line to change, so it does nothing while the bass's
-Mode is Hold (KNOB4 is the Mode, to pick a line from here).
+The **Bass answer** page lets the bass answer, as the acid does. To open it, press **LFO** six times (the page after
+Bass steps). Every few bars, the bass plays a changed version of its line for one bar. The answer needs a bass line to
+change. So it does nothing while the Mode of the bass is Hold. KNOB4 is the Mode, so you can select a line from this
+page.
 
 | Setting | Does |
 |---|---|
-| Answer | How the line changes. **Octave**: every second note jumps up an octave. **Fifth**: every second root goes to the fifth. **Run**: the last beat climbs the scale from the root, a fill into the next bar. **Busy**: a note on every eighth the line leaves empty, root and octave. **Sparse**: two notes in the bar, held long. **Slide**: every note glides from the one before and every second one jumps an octave, legato like a 303. **Off** by default. |
-| Every | When it answers. **2 bars** to **8 bars** (the last bar of each). **Drift**: the bar before the drums change pattern. **With acid**: in the same bar as the acid's answer. **After acid**: the bar after the acid's answer, so the acid calls and the bass replies. |
-| Acid ans | The acid answer's kind (the same knob as on the Acid answer page), so you can set up a call and response from one page. |
-| Mode | The bass line's mode (as on Bass line). |
+| Answer | How the line changes. **Octave**: every second note jumps up an octave. **Fifth**: every second root goes to the fifth. **Run**: on the last beat, the line climbs the scale from the root, as a fill into the next bar. **Busy**: the line adds a note, root and octave, on every eighth that it leaves empty. **Sparse**: two notes in the bar, held long. **Slide**: every note glides from the note before, and every second note jumps an octave. The result is legato (smooth and connected), as on a 303. **Off** is the default. |
+| Every | When it answers. **2 bars** to **8 bars** (in the last bar of each). **Drift**: in the bar before the drums change pattern. **With acid**: in the same bar as the acid answer. **After acid**: in the bar after the acid answer. This way, the acid calls and the bass replies. |
+| Acid ans | The kind of acid answer (the same knob as on the Acid answer page). This lets you set a call and response from one page. |
+| Mode | The mode of the bass line (as on Bass line). |
 
-The answer's settings belong to the piece, like FILTERS and SCREAM: save the piece to keep them, and a shared piece
-carries them. Some factory pieces come with one: the Bass-led pieces run into every fourth bar, the Peak pieces get busy
-every eighth. `ANSWER` shows over the bass strip on Home while it answers.
+The answer settings are part of the piece, like FILTERS and SCREAM. To keep them, save the piece. A shared piece also
+contains them. Some factory pieces have an answer: the Bass-led pieces play a run into every fourth bar, and the Peak
+pieces play busy every eighth bar. `ANSWER` shows over the bass strip on Home while the bass answers.
 
 ### The acid: 31 sounds
 
-The acid voice is modelled on the Roland TB-303, the small bass synth behind acid house.
+The acid voice is modelled on the Roland TB-303. The TB-303 is the small bass synth that gave acid house its sound.
 
 | # | Sound | What it is |
 |---|---|---|
-| 1-2 | Saw, Square | The 303's own two waveforms |
-| 3 | Driven | Pushed hard and up front |
-| 4 | Sync | Hard sync, swept by the envelope |
+| 1-2 | Saw, Square | The two waveforms of the 303 |
+| 3 | Driven | Driven hard, loud and at the front of the mix |
+| 4 | Sync | Hard sync, which the envelope sweeps |
 | 5 | Pluck | A plucked FM tone |
-| 6 | PWM | A pulse wave whose width moves |
+| 6 | PWM | A pulse wave with a width that moves |
 | 7 | Chip | A raw 8-bit square, like an old game console |
 | 8 | Sub | With a square an octave below |
 | 9 | Trance | Three detuned saws, for a trance arp |
-| 10 | Bleep | A sine, the bleeps of early techno |
+| 10 | Bleep | A sine, like the bleeps of early techno |
 | 11 | Fifth | A saw plus its fifth, a rave stab |
-| 12 | Bell | An FM bell that mellows as it rings |
+| 12 | Bell | An FM bell that becomes softer as it rings |
 | 13 | Organ | A house organ riff |
 | 14 | Laser | The pitch drops with the envelope |
-| 15 | Fold | A sine that folds over itself and gets buzzier as the envelope opens |
+| 15 | Fold | A sine that folds over itself. It becomes buzzier as the envelope opens |
 | 16 | Soft | A triangle, for quiet arps |
-| 17-24 | Marimba, E.Piano, Kalimba, Brass, Gong, Clav, Vibes, Digital | FM instruments, each with its own character. Brass gets brighter as the note settles. Digital is a DX-style bell. |
-| 25 | Super | Five saws spread wide (+-24 cents), a wall of trance lead |
-| 26 | CZ | In the style of Casio's CZ synths: a smooth tone that bends into a saw as the envelope rises, with a resonant peak |
+| 17-24 | Marimba, E.Piano, Kalimba, Brass, Gong, Clav, Vibes, Digital | FM instruments, each with its own character. Brass becomes brighter as the note settles. Digital is a DX-style bell. |
+| 25 | Super | Five saws spread wide (+-24 cents), for a thick, full trance lead |
+| 26 | CZ | In the style of the Casio CZ synths: a smooth tone that changes into a saw as the envelope rises, with a resonant peak |
 | 27 | Mini | An analog-style monosynth bass: two slightly detuned saws and a pulse an octave down |
-| 28 | Hyper | Like Super, spread twice as wide |
-| 29 | CZ Pulse | CZ-style, a hollow tone that turns into a buzz |
-| 30 | CZ Bell | CZ-style, a bell tone that rings with the envelope |
-| 31 | Lead | Two saws and a wandering pulse |
+| 28 | Hyper | Like Super, but spread two times as wide |
+| 29 | CZ Pulse | CZ style: a hollow tone that changes into a buzz |
+| 30 | CZ Bell | CZ style: a bell tone that rings with the envelope |
+| 31 | Lead | Two saws and a pulse that wanders |
 
 ### The acid answer: call and response
 
 ![The Acid answer page](img/perf-screen-acid-answer.png)
 
-The **Acid answer** page (press **ARP** four times) makes the acid line ask and then answer. Every few bars it plays
-a changed version of itself. It's off by default, stored with the piece, and listed under Acid in the editor
-(section 15).
+The **Acid answer** page makes the acid line ask and then answer. To open it, press **ARP** four times. Every few
+bars, the line plays a changed version of itself. The answer is off by default. It is stored with the piece, and the
+editor shows it under Acid (section 15).
 
 | Setting | Does |
 |---|---|
-| Answer | How the line is changed. **Octave**. **Fifth** (seven semitones). **Third** (two notes up or down the scale, so it stays in key). **Mirror** (the line turned upside down around its own middle note, so it stays in the same range). **Reverse** (the line backwards). **Rotate** (the line shifted by a beat). **Sparse** (only the even steps). **Accents** (only the accented notes). |
-| Every | How often the answer comes, and what it counts. **2 bars** to **8 bars**: the answer lasts one bar, so with a line of 12 or 10 steps it starts and ends partway through the line. On 4 bars you hear the call three times and the answer on the fourth. **Drift** brings the answer in the bar before the drums change pattern (Drum drift, section 10); if Drum drift isn't changing patterns, it falls back to every 8th bar. Turn on past Drift for **2 loops** to **8 loops** and **Drift lp**: the same, counting times round the line, and the answer is the whole line. Use loops for lines that aren't 16 steps long. (Until 0.17.21 bars or loops was a fourth knob, Sync.) |
-| Direction | Down 2, Down, Same, Up or Up 2. For Octave, Fifth and Third it moves the line by that interval once or twice. For the others it moves by octaves. If the answer would leave the acid's range (a low line answered downwards), it goes the other way instead, so it never lands back on the call. |
-| (SEL + ARP) | The answer on the next bar (on loops: the next time round), whatever the count, for a call and response of your own. Changing the Answer or the Direction no longer starts the count again; Every does. |
-| Level | How loud the answer is against the call: **Same**, **+2 dB**, **+4 dB** or **+6 dB**, so it stands out when you play with it. This one is the unit's setting, kept for every piece (like the effects' settings), not stored with a piece. |
+| Answer | How the line changes. **Octave**. **Fifth** (seven semitones). **Third** (two notes up or down the scale, so it stays in key). **Mirror** (the line upside down around its own middle note, so it stays in the same range). **Reverse** (the line backwards). **Rotate** (the line moved by one beat). **Sparse** (only the even steps). **Accents** (only the accented notes). |
+| Every | How often the answer comes, and what it counts. **2 bars** to **8 bars**: the answer lasts one bar. So with a line of 12 or 10 steps, the answer starts and ends in the middle of the line. On 4 bars, you hear the call three times and the answer on the fourth bar. **Drift** puts the answer in the bar before the drums change pattern (Drum drift, section 10). If Drum drift does not change patterns, the answer comes every 8th bar. Turn the knob past Drift to get **2 loops** to **8 loops** and **Drift lp**. These work the same way, but they count the times through the line, and the answer is the whole line. Use loops for lines that are not 16 steps long. (Until 0.17.21, bars or loops was a fourth knob, Sync.) |
+| Direction | Down 2, Down, Same, Up or Up 2. For Octave, Fifth and Third, it moves the line by that interval one time or two times. For the other answers, it moves the line by octaves. If the answer would go out of the range of the acid (for example, a low line with a downward answer), it goes in the other direction. So the answer never lands back on the call. |
+| (SEL + ARP) | Plays the answer on the next bar (with loops: the next time through the line), whatever the count. Use it to make your own call and response. A change to the Answer or the Direction no longer starts the count again. A change to Every starts it again. |
+| Level | How loud the answer is, compared with the call: **Same**, **+2 dB**, **+4 dB** or **+6 dB**. Use it to make the answer clear when you play with it. This is a setting of the unit, kept for every piece (like the effect settings). It is not stored with a piece. |
 
-The page draws the call and its answer, one dot per step at the height of its note.
+The page shows the call and its answer. Each step is one dot, at the height of its note.
 
-**Keep the answer.** Like what the answer did? On any Acid page, press **SEL + REC**: the answer becomes the line itself,
-frozen (`ANSWER KEPT`), and the answer goes on answering it. Save the piece to keep it.
+**Keep the answer.** If you like what the answer did, go to any Acid page and press **SEL + REC**. The answer becomes
+the line itself, and the line is frozen (it stops changing) (`ANSWER KEPT`). The answer then continues to answer the
+new line. To keep it, save the piece.
 
 ### The pluck: 12 + 60 + up to 16 sounds
 
-![The Pluck page draws its decay and the line it plays over a bar](img/perf-screen-pluck.png)
+![The Pluck page shows its decay and the line it plays over a bar](img/perf-screen-pluck.png)
 
-The pluck is the counter-melody, a second, lighter line over the rest. It plays an **arpeggio**: the chord's notes
-one after another rather than all at once. Two plucked voices take turns, so each note's tail rings on under the
-next. It plays in time with the bar, with swing on the off-sixteenths (swing makes every second note land a little
-late, for a shuffle), and it thins out in a breakdown.
+The pluck is the counter-melody: a second, lighter line over the other parts. It plays an **arpeggio**: the notes of
+the chord one after another, not all at the same time. Two plucked voices take turns, so the end of each note continues
+to ring under the next note. The pluck plays in time with the bar, with swing on the off-sixteenths. Swing makes every
+second note play a little late, for a shuffle feel. In a breakdown, the pluck plays fewer notes.
 
-It sits under the other parts by default (Level 50, Density 45). Turn Level to 0 to turn it off. Its two pages are **Pluck** and
-**Pluck 2**, on **ARP** (press it six and seven times). The mood (section 10) moves its level, decay and density.
+By default, the pluck stays in the background, below the other parts (Level 50, Density 45). To turn it off, set Level
+to 0. Its two pages are **Pluck** and **Pluck 2**, on **ARP** (press it six times and seven times). The mood (section
+10) changes its level, decay and density.
 
 | Setting | Does |
 |---|---|
 | Style | The order of the notes: up, down, up-down, random, skip (every second chord note), or thirds |
 | Rate | How fast: 1/4, 3/16 (a dotted eighth), 1/8 or 1/16 |
-| Range | How many octaves the arpeggio spans, 1-3 |
-| Decay | How long a note rings. For the DX sounds it sets how long the key is held down (0.12 s to 1.7 s), and the note fades out a while after the key comes up. |
+| Range | How many octaves the arpeggio covers, 1-3 |
+| Decay | How long a note rings. For the DX sounds, it sets how long the key is held down (0.12 s to 1.7 s). The note then fades out some time after the key comes up. |
 
 The pluck has three groups of sounds:
 
-- **Plain (12):** Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass. All are FM except Bleep, which is a plain sine.
-- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" below). MF EPRHOD1 (an electric piano), WINEGLASS (a glass bell), SMOOTHBASS, FULL-BRASS, EASY DXPAD (a soft pad), FLUTEMRMBA (wooden bars), DRAWBARS, GITARA AKU (a nylon guitar), ROLAND BRS (brass), SOLID BASS, TEMPLEBELL, DX MARIMBA, CLAVINET, SOFTSTRNGS (strings), SHIMMERPAD (a glass pad), SKY SYNC (a sync lead), HARFA LSR (a harp), DX KALIMBA, FLUTE BLOW, STEEL PANS, MOOGBASS (a saw bass), TUBUL-BELL, and the eight described below. Each shows by its own name; DX MARIMBA and DX KALIMBA keep DX in front, to tell them from the plain Marimba and Kalimba. The DX7 is Yamaha's classic 1983 FM synth. These voices play just as they would on one: all 32 algorithms (the ways its six tone generators are wired together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at once. Heavy patches play fewer (the bells, brass, strings and pads three or four) to keep the load down.
-- **Yours (up to 16):** DX7 voices you load yourself come after the built-in ones, shown by the voice's own name (section 15).
+- **Plain (12):** Pluck, Marimba, E.Piano, Kalimba, Bell, Vibes, Gong, Clav, Digital, Brass, Bleep, Glass. All are FM, except Bleep, which is a plain sine.
+- **Built-in DX7 voices (60):** the thirty below and thirty more (see "Thirty more" below). MF EPRHOD1 (an electric piano), WINEGLASS (a glass bell), SMOOTHBASS, FULL-BRASS, EASY DXPAD (a soft pad), FLUTEMRMBA (wooden bars), DRAWBARS, GITARA AKU (a nylon guitar), ROLAND BRS (brass), SOLID BASS, TEMPLEBELL, DX MARIMBA, CLAVINET, SOFTSTRNGS (strings), SHIMMERPAD (a glass pad), SKY SYNC (a sync lead), HARFA LSR (a harp), DX KALIMBA, FLUTE BLOW, STEEL PANS, MOOGBASS (a saw bass), TUBUL-BELL, and the eight described below. Each voice shows its own name. DX MARIMBA and DX KALIMBA keep DX at the front, to make them different from the plain Marimba and Kalimba. The DX7 is the classic 1983 FM synth from Yamaha. These voices play as they do on a DX7: all 32 algorithms (the ways its six tone generators connect together), the envelopes with their curves and scaling, velocity, LFO, pitch envelope and feedback. The pluck plays up to six notes at the same time. Heavy patches play fewer notes, to keep the load down: the bells, brass, strings and pads play three or four.
+- **Yours (up to 16):** DX7 voices that you load yourself come after the built-in voices. Each one shows the voice's own name (section 15).
 
 The last eight built-in DX voices are guitars, a bass and brass:
 
 | Voice | What it is |
 |---|---|
 | PEDALSTEEL | A pedal steel guitar |
-| CHOR.STRAT | A clean electric guitar, chorused |
-| GUITARDAMP | A muted guitar, the funk "chank" |
+| CHOR.STRAT | A clean electric guitar, with chorus |
+| GUITARDAMP | A muted guitar, the funk "chank" sound |
 | AXE | A distorted guitar |
 | SLAPS | A slapped bass |
 | MFSYNBRASS | Synth brass |
@@ -1116,16 +1194,17 @@ The last eight built-in DX voices are guitars, a bass and brass:
 
 The disco, funk, reggae, synthwave, amapiano and trip-hop genres use them.
 
-**Who made them.** The thirty are DX7 patches made by people, chosen by kind from public-domain banks: Pafreak's
-SYNTHOXICATED banks, madFame's Custom Patches (`MF EPRHOD1`, `SHIMMERPAD`), the 1980s magazine banks on Bobby Blues'
-page (the Aftertouch magazine's `SAXOPHONE`), one from Jack Deckard's collection on Dave Benson's page, and `CHOR.STRAT`
-from Jezreel's folder. Each shows its bank's own name after `DX`. Each is set to a matching loudness, so the genres' mix
-stays balanced.
+**Who made them.** The thirty are DX7 patches that people made. They were chosen by kind from public-domain banks:
+Pafreak's SYNTHOXICATED banks, madFame's Custom Patches (`MF EPRHOD1`, `SHIMMERPAD`), the 1980s magazine banks on Bobby
+Blues' page (the Aftertouch magazine's `SAXOPHONE`), one from Jack Deckard's collection on Dave Benson's page, and
+`CHOR.STRAT` from Jezreel's folder. Each one shows the name of its bank after `DX`. Each one is set to a matching
+loudness, so the mix of each genre stays balanced.
 
-**Thirty more.** After the first thirty on the **Sound** list come thirty more DX7 voices made by people, from
-the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's, Narfman's, Godric's and Jezreel's folders, and the
-Aftertouch, Guitares & Claviers and E&MM magazine banks). Most show `DX` and their banks' own names; the
-seven added in the 2026-11-13 audit (each one a kind of instrument the set lacked) show what they are:
+**Thirty more.** After the first thirty on the **Sound** list come thirty more DX7 voices that people made. They come
+from the same public-domain pages (Clyde Jones', Toby's, Frank Carvalho's, Narfman's, Godric's and Jezreel's folders,
+and the Aftertouch, Guitares & Claviers and E&MM magazine banks). Most show `DX` and the names of their banks. Seven
+were added in the 2026-11-13 audit, each one a kind of instrument that the set did not have. These seven show what
+they are:
 
 | On the screen (after DX) | What it is | On the screen (after DX) | What it is |
 |---|---|---|---|
@@ -1145,93 +1224,98 @@ seven added in the 2026-11-13 audit (each one a kind of instrument the set lacke
 | Techno2 | Techno lead | NEUTRNPLUK | Pluck |
 | ETH. STAB | Stab | SHORTHORNS | Short horn section |
 
-**Stereo.** A DX7 voice is mono. The pluck widens its DX voices with a light ensemble: what is above 200 Hz goes
-through a delay on each side, swept slowly, so the voice spreads about as wide as the plain pluck. The lows, the bass
-voices and the reverb and echo sends stay in the middle.
+**Stereo.** A DX7 voice is mono. The pluck makes its DX voices wider with a light ensemble effect. The sound above
+200 Hz goes through a delay on each side, and the delay changes slowly. So the voice spreads about as wide as the plain
+pluck. The lows, the bass voices and the reverb and echo sends stay in the middle.
 
-For more sounds, load your own. The installer page takes any DX7 `.syx` bank or single voice (section 15), and there
-are large free collections, such as [Bobby Blues' DX7 archive](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html),
+For more sounds, load your own. The installer page accepts any DX7 `.syx` bank or single voice (section 15). There are
+large free collections, for example [Bobby Blues' DX7 archive](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html),
 [Soundarchive](https://www.soundarchive.co/yamaha-dx7) and
-[Yamaha Black Boxes](https://yamahablackboxes.com/collection/yamaha-dx7-synthesizer/patches/). Each bank's licence is
-its author's. PERF-1 doesn't include any of them.
+[Yamaha Black Boxes](https://yamahablackboxes.com/collection/yamaha-dx7-synthesizer/patches/). The licence of each bank
+is the licence of its author. PERF-1 does not include any of them.
 
 ### Pluck steps: freeze the pluck's loop and edit it
 
 ![The Pluck steps page](img/perf-screen-pluck-steps.png)
 
-Like a pluck phrase and want to keep it, or write your own? The **Pluck steps** page (press **ARP** nine times, after
-Deja vu) holds the pluck's loop and lets you edit it one step at a time.
+Use the **Pluck steps** page to keep a pluck phrase that you like, or to write your own. To open it, press **ARP**
+nine times (the page after Deja vu). The page holds the loop of the pluck and lets you edit it one step at a time.
 
-The page is laid out like Acid steps. It shows one bar as sixteen steps, each drawn as a bar, and the height is the
-step's note. A note here is one of the chord's notes, counted from low to high across the pluck's octaves (1 is the
-lowest). Because the notes come from the chord playing, your line follows the harmony when the chord changes. An accent is drawn in the bright colour, a soft note dim, a rest as a
-dash, and a mark sits under the step that's playing.
+The page has the same layout as Acid steps. It shows one bar as sixteen steps, and each step shows as a bar. The height
+is the note of the step. A note here is one of the notes of the chord, counted from low to high across the octaves of
+the pluck (1 is the lowest). The notes come from the chord that plays, so your line follows the harmony when the chord
+changes. An accent shows in the bright colour, a soft note shows dim, and a rest shows as a dash. A mark shows under
+the step that is playing.
 
-1. Press a **white key** to choose a step.
+1. Press a **white key** to select a step.
 2. Turn **Step** to set what it plays: Rest, Soft, Note or Accent.
 3. Turn **Note** (1-12) to set its note.
-4. **Octave** moves the whole pluck up or down (-2 to +2), the same as on the Pluck page. How many octaves the
-   notes span is **Range**, on Pluck 2.
+4. Turn **Octave** to move the whole pluck up or down (-2 to +2), the same as on the Pluck page. **Range**, on
+   Pluck 2, sets how many octaves the notes cover.
 
-**Frozen** holds the line. Any edit freezes it. Freezing also sets Deja vu's Loop to 16, the pluck's Rate to 1/16
-and Pluck vu to 100, so every note comes round the same each bar. A frozen line stays when you start a new piece, and
-it's **stored with the piece** (a note and a kind for each step). Set Frozen back to Free and the loop belongs to
-Deja vu again, and a new piece forgets it.
+**Frozen** holds the line. Any edit freezes the line. When the line freezes, PERF-1 also sets the Deja vu Loop to 16,
+the pluck Rate to 1/16 and Pluck vu to 100. So every note comes back the same in each bar. A frozen line stays when you
+start a new piece, and it is **stored with the piece** (a note and a kind for each step). If you set Frozen back to
+Free, the loop belongs to Deja vu again, and a new piece forgets it.
 
-With the Jam page's voice on the pluck, Capture (**SEL** + **REC**) writes the bar you just played into this page
-(section 10).
+When the voice of the Jam page is on the pluck, Capture (**SEL** + **REC**) writes the bar that you just played into
+this page (section 10).
 
 ### Acid steps: freeze the line and edit it
 
 ![The Acid steps page](img/perf-screen-acsteps.png)
 
-The acid line makes itself up as it goes, and Mutate rewrites a little of it each time round. To keep a line you
-like and shape it, use the **Acid steps** page (press **ARP** five times, after Acid answer).
+The acid line makes itself up as it plays. Mutate changes a small part of it each time through the line. To keep a
+line that you like and shape it, use the **Acid steps** page. To open it, press **ARP** five times (the page after
+Acid answer).
 
-The page draws the line as sixteen bars, one per step, the same way as Pluck steps. The height is the note, and a
-short tail means the step slides into the next. Press a **white key** to choose a step, then set it with the knobs:
+The page shows the line as sixteen bars, one for each step, the same way as Pluck steps. The height is the note. A
+short tail shows that the step slides into the next step. Press a **white key** to select a step. Then set the step
+with the knobs:
 
 | Knob | Does |
 |---|---|
 | Step | **Rest**, **Note**, **Accent** (louder and brighter), **Slide** (glides into the next note, as on a 303) or **Acc+Slide** |
 | Note | The note, 0 to 11 scale steps above the chord. The line follows the chord, so it moves when the chord changes. |
-| Octave | 0 to 3 octaves up, on top of the Acid octave |
-| Frozen | **Free**: the line keeps changing (Mutate), and a new one grows with each piece. **Frozen**: the line holds as it is, Mutate leaves it alone, and it's **stored with the piece** (Global, SAVE) and comes back with it. |
+| Octave | 0 to 3 octaves up, added to the Acid octave |
+| Frozen | **Free**: the line continues to change (Mutate), and a new line grows with each piece. **Frozen**: the line stays as it is, and Mutate does not change it. The line is **stored with the piece** (Global, SAVE) and comes back with it. |
 
-Any edit freezes the line, so Mutate can't rewrite it. Turn Frozen back to Free to let it change again. To keep
-the line you're hearing as it is, turn Frozen to Frozen. The line's Length, the
-answer (above) and the Acid octave all work on a frozen line as usual. Steps beyond the Length are drawn dim and
-don't play. A piece stored with older firmware starts with a free line.
+Any edit freezes the line, so Mutate cannot change it. To let the line change again, turn Frozen back to Free. To keep
+the line that you hear now, turn Frozen to Frozen. The Length of the line, the answer (above) and the Acid octave all
+work as usual on a frozen line. Steps after the Length show dim and do not play. A piece stored with older firmware
+starts with a free line.
 
 ### Deja vu: loops in the pluck, and what the acid mutates
 
 ![The Deja vu page](img/perf-screen-dejavu.png)
 
-Left alone, the pluck picks every note fresh. The **Deja vu** page (press **ARP** eight times) makes it remember, so
-phrases come back.
+Without Deja vu, the pluck selects every note new. The **Deja vu** page makes the pluck remember, so phrases come
+back. To open it, press **ARP** eight times.
 
 | Knob | Does |
 |---|---|
-| Pluck vu | Each time a note comes round again, the chance it's the same note, rest or leap as last time. 0: every note is new. 100: the loop is locked and repeats exactly. |
+| Pluck vu | Each time a note comes back, the chance that it is the same note, rest or leap as the last time. 0: every note is new. 100: the loop is locked and repeats exactly. |
 | Loop | How many notes it remembers: 4, 8, 16 or 32 |
 | Leaps | How often a new note jumps an octave |
-| Motif | How often a bar develops the phrase's opening idea (0 off, 100 always; 60 by default) |
+| Motif | How often a bar develops the opening idea of the phrase (0 off, 100 always; 60 by default) |
 
-A locked phrase is always played over the chord of the moment, so it follows the harmony. Changing the Loop length,
-or starting a new piece, forgets the loop.
+A locked phrase always plays over the current chord, so it follows the harmony. A change to the Loop length, or a new
+piece, makes the pluck forget the loop.
 
-**Motif** makes the pluck think in phrases. The first bar of every eight is kept as an idea: which sixteenths played
-and how far each note stepped up or down the chord from the one before. Each bar after it then develops the idea,
-as often as the knob says. It plays the same shape starting from wherever the line is (so it follows the chords),
-sometimes upside down, or with a new last step. The fifth bar plays the idea again at its first pitch, as an answer
-to the first bar. Most phrases start a new idea. Some open with the old one again. At 0, the pluck
-makes up every bar fresh. Deja vu wins over Motif: a note that Deja vu replays is replayed whatever the motif says.
+**Motif** makes the pluck play in phrases. The first bar of every eight bars is kept as an idea. The idea is which
+sixteenths played, and how far each note moved up or down the chord from the note before. Each bar after it then
+develops the idea, as often as the knob sets. The bar plays the same shape, starting from the current position of the
+line (so it follows the chords). Sometimes it plays the shape upside down, or with a new last step.
 
-The acid has its own version of this, **Mutate** on the Acid line page, which rewrites a few steps each time round.
-Hold **SEL** and turn the Mutate knob on that page to choose what a rewrite changes:
+The fifth bar plays the idea again at its first pitch, as an answer to the first bar. Most phrases start a new idea.
+Some start with the old idea again. At 0, the pluck makes every bar new. Deja vu has priority over Motif: if Deja vu
+replays a note, the note plays again, whatever the motif says.
+
+The acid has its own version of this: **Mutate** on the Acid line page. Mutate changes a few steps each time through
+the line. To select what a change does, hold **SEL** and turn the Mutate knob on that page:
 
 - **All:** anything.
-- **Notes:** the rhythm stays and the notes drift, the classic acid move.
+- **Notes:** the rhythm stays and the notes change slowly. This is the classic acid change.
 - **Rhythm:** the same notes come and go.
 - **Accents:** only the accents and slides.
 
@@ -1239,11 +1323,12 @@ Hold **SEL** and turn the Mutate knob on that page to choose what a rewrite chan
 
 ![The Kit page](img/perf-screen-kit.png)
 
-Press **SEQ** three times for the Kit page. Each knob picks one drum's sound from the same twenty-three kits: the kick,
-the snare (with the clap), the hats (closed and open) and the perc.
+Press **SEQ** three times to open the Kit page. Each knob selects the sound of one drum from the same twenty-three kits.
+The drums are the kick, the snare (with the clap), the hats (closed and open) and the perc.
 
-Some kits **duck** other parts: each kick briefly turns them down, which gives a pumping feel. Some **crush** the
-drums, adding a grainy, lo-fi grit. 808 and 909 are Roland's classic drum machines.
+Some kits **duck** other parts. Each kick turns the other parts down for a short time. This gives a pumping feel. Some
+kits **crush** the drums. This makes the drums sound grainy and lo-fi (rough and less clean, like an old sampler). 808
+and 909 are classic drum machines from Roland.
 
 | Kit | The kick | The rest |
 |---|---|---|
@@ -1251,81 +1336,92 @@ drums, adding a grainy, lo-fi grit. 808 and 909 are Roland's classic drum machin
 | House | Round | A wide clap, long open hats, congas |
 | Techno | Hard, with a rumble tail | A tight clap, metal hats, a bell perc |
 | Acid | Punchy, 909-style | A cowbell for the perc |
-| Break | Distorted | A cracking snare, noisy hats, a tom. The Break kick also chops the drums up live (ghost snares, extra kicks, fast 32nd rolls, more with Evolve) and crushes them. |
+| Break | Distorted | A cracking snare, noisy hats, a tom. The Break kick also cuts up the drums while they play (ghost snares, extra kicks, fast 32nd rolls, more with Evolve). It also crushes them. |
 | Minimal | Short and clicky | A rim for the snare, tight hats, a woodblock |
 | Hard | Industrial, distorted, with a long rumble | A noisy snare, a metal clank. It crushes the drums a little. |
 | 808 | A long boom | A snappy snare, a wide clap, a cowbell |
-| Dusty | Soft and round, ducking the rest a little | A loose low snare, a muted clap, dull short hats, a soft rim (lofi) |
-| Heavy | A deep sub kick with a long tail, ducking the bass hard | A big cracking snare, a wide clap, tight hats, a metal perc (dubstep) |
-| 909 | Punchy, with a click | A snappy snare, a clap, ticking hats and long open ones, a tom |
+| Dusty | Soft and round. It ducks the rest a little. | A loose low snare, a muted clap, dull short hats, a soft rim (lofi) |
+| Heavy | A deep sub kick with a long tail. It ducks the bass hard. | A big cracking snare, a wide clap, tight hats, a metal perc (dubstep) |
+| 909 | Punchy, with a click | A snappy snare, a clap, ticking hats and long open hats, a tom |
 | Electro | Short and high | A tight bright snare, a thin clap, glassy hats, a zappy tom |
 | DnB | Tight | A loud cracking snare, a clap, fast tiny hats, a clicky perc |
 | Trap | A long 808 sub with almost no click | A snare and a wide clap together, tiny hats, a bell |
-| Boom | Round with body (boom-bap, SP-1200 style) | A fat cracking snare, crisp short hats, a rim; a little crushed |
-| Ride | Light | Its hats are a ride: a long tick, and the open one a wash; a woodblock |
-| Snap | A short sub | Its snare is a snap (high and short), its clap one burst; tight hats, a high rim |
+| Boom | Round with body (boom-bap, SP-1200 style) | A fat cracking snare, crisp short hats, a rim. It is a little crushed. |
+| Ride | Light | Its hats are a ride: the closed one is a long tick and the open one is a wash. A woodblock. |
+| Snap | A short sub | Its snare is a snap (high and short). Its clap is one burst. Tight hats, a high rim. |
 | 606 | Short and tight | A small snappy snare, bright short hats, a tom (Roland's TR-606) |
 | Gabber | Driven hard, with a long tail (hardcore) | A hard noisy snare, harsh hats, a metal perc |
 | Linn | Round (the 80s) | A fat long snare for the gated reverb, a wide clap, a tom |
-| Shaker | Soft and round | Its perc is a shaker, its hats noisy; a rim for the snare |
-| Machine | **Sampled**: an 808 / 909 style drum machine | The 808's six-square hats, its cowbell, its clap's bursts, a 909-style snare |
-| Boombap | **Sampled**: an acoustic kit through an SP-1200 (26 kHz, 12 bits) | A round kick, a fat snare with its wires, a cymbal's shimmer, a side-stick |
+| Shaker | Soft and round | Its perc is a shaker. Its hats are noisy. A rim for the snare. |
+| Machine | **Sampled**: an 808 / 909 style drum machine | The 808's six-square hats, its cowbell, the bursts of its clap, a 909-style snare |
+| Boombap | **Sampled**: an acoustic kit through an SP-1200 (26 kHz, 12 bits) | A round kick, a fat snare with its wires, the shimmer of a cymbal, a side-stick |
 
-On any of the drums' pages, **SEL** + **ALGORITHM** switches all four to the next kit at once. Mix them freely. A
-Techno kick under House hats is fine. Since 0.17.34 every kit's drums are levelled to each other: a snare or hats from any kit
-sit at the same loudness, so mixing them doesn't leave one drum too quiet.
+On any of the drum pages, press **SEL** + **ALGORITHM** to change all four drums to the next kit at the same time. You
+can mix drums from different kits as you like. For example, a Techno kick under House hats is fine. Since 0.17.34, the
+drums of all kits are levelled to each other. A snare or hats from any kit have the same loudness. Thus, when you mix
+kits, no drum is too quiet.
 
-**The sampled kits** (Machine, Boombap) play recorded sounds instead of the synth: made for PERF-1 with heavier models than the FM-1 could
-run live, then stored in its memory. Tune pitches a sampled drum up or down; Decay below the middle cuts it shorter.
+**The sampled kits** (Machine, Boombap) play recorded sounds, not the synth. The sounds were made for PERF-1 with heavier
+models than the FM-1 can run live. Then they were stored in the memory of the FM-1. Tune moves the pitch of a sampled
+drum up or down. Decay below the middle makes the drum shorter.
 
-**Your own sample kits.** Three more places at the very end of each drum's list hold kits you load yourself, from your own sound files,
-on the installer page (**Your own sample kits**): pick a slot, give the kit a name, choose up to six files (kick, snare, clap, closed hat,
-open hat, perc: WAV, MP3, anything your browser plays), stop the music on the FM-1, and press **Load into the FM-1**. The page makes each
-sound mono at 22 kHz, trims the silence before it, levels it to sit like the other kits and, if all six won't fit (about 1.8 seconds between
-them), cuts them a little shorter. The kit shows by its name in the Kit page's lists (an empty place says Empty 1, 2, 3); a drum on a slot you
-empty plays the Hypno synth. Your samples live only on your FM-1: nothing of them is in PERF-1 itself, so samples you may use but not pass on
-are fine here.
+**Your own sample kits.** There are three more slots at the end of the list of each drum. They hold kits that you load
+yourself, from your own sound files. Use the installer page (**Your own sample kits**):
+
+1. Pick a slot.
+2. Give the kit a name.
+3. Choose up to six files (kick, snare, clap, closed hat, open hat, perc). WAV, MP3 and all files that your browser plays are fine.
+4. Stop the music on the FM-1.
+5. Press **Load into the FM-1**.
+
+The page changes each sound to mono at 22 kHz. It removes the silence before the sound. It sets the level of the sound,
+so that it fits with the other kits. If all six sounds do not fit (about 1.8 seconds for all of them together), the page
+makes them a little shorter.
+
+The kit shows with its name in the lists on the Kit page. An empty slot shows Empty 1, 2, 3. If you empty a slot, a
+drum on that slot plays the Hypno synth. Your samples are only on your FM-1. PERF-1 itself does not contain any of them.
+Thus you can use samples here that you may use but not give to other persons.
 
 ### Playing a voice by hand
 
 ![Help card for the LFO button, which also says how to play the bass](img/perf-screen-help.png)
 
-The keys always play a voice over the music: on a voice's pages that voice, alongside its own part. You can also take a voice away from the algorithm and play only it yourself:
+The keys always play a voice over the music. On the pages of a voice, the keys play that voice, together with its own part. You can also take a voice away from the algorithm. Then only you play that voice:
 
-1. Go to any of the voice's pages: **ENV** for the pad, **LFO** for the bass, **ARP** for the acid.
-2. Hold **SEL** and press **ENV**. The voice goes quiet and the line above the knobs says `BY HAND`. (On a page that isn't a voice's, SEL + ENV just tells you so.)
-3. Play the keys. While that voice's pages are on screen (any of the pad's, the bass's or the acid's pages), the keys play it over the rest of the song.
+1. Go to one of the pages of the voice: **ENV** for the pad, **LFO** for the bass, **ARP** for the acid.
+2. Hold **SEL** and press **ENV**. The voice becomes silent and the line above the knobs shows `BY HAND`. (If the page is not a page of a voice, SEL + ENV only tells you this.)
+3. Play the keys. While the pages of that voice are on the screen (any page of the pad, the bass or the acid), the keys play the voice over the rest of the song.
 
 How each voice plays:
 
-- **Pad:** up to four notes at once, each on one of its voices, with Attack and Release from the Pad env page (quicker than its own slow swells).
-- **Bass:** the last key held, two octaves down. The envelope opens on each new press.
-- **Acid:** the last key held, an octave down, with its filter and envelope. Press a second key while holding one and it slides to it, as a 303 does.
+- **Pad:** Up to four notes at the same time, each on one of its voices. Attack and Release come from the Pad env page (they are quicker than the slow swells of the pad).
+- **Bass:** The last key that you hold, two octaves down. The envelope (the shape of the sound over time) opens on each new press.
+- **Acid:** The last key that you hold, an octave down, with its filter and envelope. If you hold a key and press a second key, the note slides to the second key, as on a 303.
 
-Everything else carries on by itself: the other voices, the chords and the drums. The keys follow the voice's octave
-and the song's (**OCT-** / **OCT+**), and the lit keys still show the scale, so you can see what's in key. It works
-while stopped too. A key keeps playing until you let go, even if you change page. On any other page the keys play the
-Jam page's voice; on Global they edit the scale.
+All the other parts continue by themselves: the other voices, the chords and the drums. The keys follow the octave of
+the voice and the octave of the song (**OCT-** / **OCT+**). The lit keys still show the scale, so you can see which notes
+are in key. This also works when the music is stopped. A key plays until you release it, also if you change the page.
+On all other pages, the keys play the voice of the Jam page. On the Global page, the keys edit the scale.
 
-To give the voice back to the algorithm, press **SEL** + **ENV** on its pages again. Which voices are played by hand
-is stored with the piece. MIDI out sends what you play, on the voice's channel. The pluck is played on the **Jam** page
-instead (section 10).
+To give the voice back to the algorithm, press **SEL** + **ENV** again on one of its pages. The piece stores which
+voices you play by hand. MIDI out sends the notes that you play, on the channel of the voice. To play the pluck, use the
+**Jam** page (section 10).
 
 ### Links: the drums into the voices
 
 ![The Links page](img/perf-screen-links.png)
 
-Links let the drum hits push the voices around, like trigger cables on a modular synth. **SEL** + **SEQ** turns the
-links on and off without losing their settings, and `+LINK` shows on the line above the knobs while they're on. Set
-each one on the **Links** page (press **SEQ** twice). 0 means off. They're stored with the piece.
+Links let the drum hits change the voices, as trigger cables do on a modular synth. **SEL** + **SEQ** turns the links on
+and off. The links keep their settings. While the links are on, `+LINK` shows on the line above the knobs. Set each link
+on the **Links** page (press **SEQ** twice). 0 means off. The piece stores the links.
 
 | Link | What it does |
 |---|---|
-| K>Bass | Each kick opens the bass's filter, which then closes again over the beat. The bass rolls along with your kick pattern. The amount sets how far it opens and how long it takes to close. |
-| S>Pad | Each snare or clap flashes the pad's filter open and makes it a little louder, so the pad answers the backbeat. |
-| H>Acid | A hat that lands on an acid note accents it. Busier hats make a squelchier 303. |
+| K>Bass | Each kick opens the filter of the bass. Then the filter closes again over the beat. The bass moves with your kick pattern. The amount sets how far the filter opens and how long it takes to close. |
+| S>Pad | Each snare or clap opens the filter of the pad for a short time and makes the pad a little louder. Thus the pad answers the backbeat. |
+| H>Acid | If a hat hits on an acid note, the acid note gets an accent (it plays stronger). More hats give a sharper, more "squelchy" 303 (more accented notes). |
 
-Muting a drum with FX silences it, but its hits still drive the links.
+If you mute a drum with FX, you do not hear it. But its hits still control the links.
 
 ---
 
@@ -1335,126 +1431,130 @@ Muting a drum with FX silences it, but its hits still drive the links.
 
 ![Probability set on a lane with SEL + KNOB 3](img/perf-screen-seq-tricks.png)
 
-The sequencer is where you write the drum patterns. **Hold SEQ** to open it. Tap **SEQ** to go back to the Drums page.
+Use the sequencer to write the drum patterns. **Hold SEQ** to open it. Tap **SEQ** to go back to the Drums page.
 
-- There are six **lanes**, one for each drum: kick, snare, clap, closed hat, open hat and perc. Each has sixteen steps and its own colour.
-- The sixteen **white keys** are the steps of the drum you're on. They light where it hits, and a moving light shows where the beat is. Tap a key to turn that hit on or off.
-- **OCT-** and **OCT+** choose the previous or next drum.
-- The knobs set the drum's **Level** (0 to 150: past 100 it's louder than the piece made it, up to +7 dB, for a snare or hats that sit too low), **Tune** (+-1 octave) and **Decay**, and which **Pattern** you're editing. You can edit a pattern before it plays. A pattern change waits for the next bar.
+- There are six **lanes**, one for each drum: kick, snare, clap, closed hat, open hat and perc. Each lane has sixteen steps and its own colour.
+- The sixteen **white keys** are the steps of the drum that you are on. They come on where the drum hits. A moving light shows the position of the beat. Tap a key to turn that hit on or off.
+- **OCT-** and **OCT+** select the previous or the next drum.
+- The knobs set these values for the drum: **Level**, **Tune** (+-1 octave), **Decay**, and **Pattern** (the pattern that you edit). Level goes from 0 to 150. Above 100, the drum is louder than the piece made it, up to +7 dB. Use this for a snare or hats that are too quiet. You can edit a pattern before it plays. A pattern change waits for the next bar.
 
-With **SEL** held:
+While you hold **SEL**:
 
 | SEL + | Does |
 |---|---|
 | White keys 1-6 (F3 G3 A3 B3 C4 D4) | Choose the pattern to edit |
 | Black keys 1-6 | Copy this pattern into pattern 1-6 |
-| OCT- | Clear this drum's lane |
+| OCT- | Clear the lane of this drum |
 | OCT+ | Put back the piece's own lane |
 
-**Tricks: SEL + a knob**, on the lane you're on:
+**Tricks: SEL + a knob**, on the lane that you are on:
 
 | SEL + | Does |
 |---|---|
-| KNOB 1 | Fills the lane with a **Euclidean** pattern: n hits in 16 steps, spread as evenly as possible. Many traditional rhythms are built this way. 0 clears the lane. |
-| KNOB 2 | **Rotates** that pattern, shifting it 0-15 steps later round the bar. |
-| KNOB 3 | Sets the lane's **probability**, in steps of 5 %. That's the chance each hit sounds. Below 100, the lane's name shows its chance. Rolls and fills you hold on top still sound. |
-| KNOB 4 | Sets the lane's **length**, 1-16 steps. 16 is a full bar. A shorter lane loops on its own, against the others. This is called **polymeter**. The screen shows `L5` (for 5 steps) under the lane's name, with a mark where it ends and the steps beyond dimmed. A short lane counts from the start of the song, not the bar, so a 5-step hat against the 16-step kick lines up again only every 80 steps. |
+| KNOB 1 | Fills the lane with a **Euclidean** pattern: n hits in 16 steps, spread as evenly as possible. Many traditional rhythms use this method. 0 clears the lane. |
+| KNOB 2 | **Rotates** that pattern. It moves the pattern 0-15 steps later around the bar. |
+| KNOB 3 | Sets the **probability** of the lane, in steps of 5 %. This is the chance that each hit plays. Below 100, the name of the lane shows its chance. Rolls and fills that you hold on top still play. |
+| KNOB 4 | Sets the **length** of the lane, 1-16 steps. 16 is a full bar. A shorter lane loops on its own, against the other lanes. This is called **polymeter**. The screen shows `L5` (for 5 steps) under the name of the lane. A mark shows where the lane ends, and the steps after the end are dim. A short lane counts from the start of the song, not from the start of the bar. Thus a 5-step hat against the 16-step kick lines up again only every 80 steps. |
 
-Probability and length are stored with the piece. The Euclidean fill and rotation change the pattern itself, so they
-stay in it if you store the piece.
+The piece stores the probability and the length. The Euclidean fill and the rotation change the pattern itself. Thus
+they stay in the pattern if you store the piece.
 
 ![The Groove page](img/perf-screen-groove.png)
 
-**The Groove page: density and borrowing lanes.** The **Groove** page (press **SEQ** five times, or turn the dial
-past Drum drift) makes a lane busier or sparser without editing it, or lets it play another pattern's lane. It draws
-every lane as it plays: a bright hit is as written, a white one is added, a dash is one taken out.
+**The Groove page: density and borrowing lanes.** To open the **Groove** page, press **SEQ** five times, or turn the
+dial past Drum drift. On this page, you can give a lane more hits or fewer hits, and you do not edit the lane. You can
+also let a lane play the lane of a different pattern. The page shows every lane while it plays. A bright hit is as
+written. A white hit is added. A dash is a hit that is removed.
 
 | Knob | Does |
 |---|---|
-| Lane | The lane you're setting (kick ... perc) |
-| Density | 50 plays the lane exactly as written. Turn it down and the least important hits drop out first (the off-sixteenths, then the off-eighths, the beats last). Turn it up and hits are added on the most important empty steps (at 100, half of them). The pattern itself is never changed. |
-| Source | **Follow** plays the piece's own lane. Pattern 1-6 makes the lane play that pattern's lane from the next bar. For example, take the hats from pattern 4 while the kick stays on pattern 1. A lane set like this shows its pattern's number after its name. |
-| All dens | Moves every lane's density at once |
+| Lane | The lane that you set (kick ... perc) |
+| Density | At 50, the lane plays exactly as written. If you turn it down, the least important hits stop first (the off-sixteenths, then the off-eighths, the beats last). If you turn it up, Density adds hits on the most important empty steps (at 100, half of them). The pattern itself never changes. |
+| Source | **Follow** plays the piece's own lane. Pattern 1-6 makes the lane play the lane of that pattern from the next bar. For example, take the hats from pattern 4 while the kick stays on pattern 1. A lane with this setting shows the number of its pattern after its name. |
+| All dens | Changes the density of every lane at the same time |
 
-You can also set Source in the sequencer: **black keys 1-6** set it for the lane you're on, and **black key 7** sets
-it back to following the piece. Density and Source are stored with the piece, and scenes carry them.
+You can also set Source in the sequencer. Use **black keys 1-6** to set it for the lane that you are on. Use **black
+key 7** to set it back, so that the lane follows the piece. The piece stores Density and Source, and scenes also keep
+them.
 
 ### Steps: ratchets, push and level
 
 ![The Steps page](img/perf-screen-steps.png)
 
-Each lane also has **step tricks**, a ratchet, a push and a level for each of its sixteen steps. They sit under the
-six patterns, so they apply whichever pattern is playing. Set them on the **Steps** page (press **SEQ** six times, or
-turn the dial past Groove).
+Each lane also has **step tricks**: a ratchet, a push and a level for each of its sixteen steps. The step tricks are on
+a layer below the six patterns. Thus they apply to the pattern that plays, whichever pattern it is. Set them on the
+**Steps** page (press **SEQ** six times, or turn the dial past Groove).
 
 1. Turn KNOB 1 to choose the lane.
-2. Press a **white key** to choose the step. The key lights, and the page shows the lane as it plays.
+2. Press a **white key** to choose the step. The key comes on, and the page shows the lane while it plays.
 3. Set the step with the other knobs:
 
 | Knob | Does |
 |---|---|
-| Ratchet | Repeats the hit inside its step, as a quick roll: **x2**, **x3**, **x4**, **x6**. A **flam** adds a quiet grace note just before the hit. A **swell** plays three or four hits getting louder. |
-| Push | Makes the hit land late, 0 to 7 twelfths of a step, for a laid-back snare. At 128 BPM each twelfth is about 10 ms. It can only be late, never early. |
+| Ratchet | Repeats the hit inside its step, as a quick roll: **x2**, **x3**, **x4**, **x6**. A **flam** adds a quiet grace note (a short extra note) just before the hit. A **swell** plays three or four hits that get louder. |
+| Push | Makes the hit come late, 0 to 7 twelfths of a step. Use it for a relaxed, late snare. At 128 BPM each twelfth is about 10 ms. The hit can only be late, never early. |
 | Level | **Normal**, **ghost** (very soft), **soft** or **accent** |
 
-The page draws each step as a bar. Its height is the level, the push shifts it right, and the ratchet's hits show
-underneath.
+The page shows each step as a bar. The height of the bar is the level. The push moves the bar to the right. The hits of
+the ratchet show below the bar.
 
-The tricks are stored with the piece. Pieces stored with older firmware have none. They act on the hits the pattern
-plays, so a trick on an empty step waits until a hit lands there. They're skipped in fills, builds and breakdowns, on
-the hit the drop lands on, and in the first bar after **PLAY**.
+The piece stores the tricks. Pieces stored with older firmware have no tricks. The tricks act on the hits that the
+pattern plays. Thus a trick on an empty step waits until a hit lands on that step. The tricks do not apply in fills,
+builds or breakdowns, on the hit where the drop lands, or in the first bar after **PLAY**.
 
-Some genres come with tricks already set. The off-beat hats are soft in lofi, house, garage and most of the rest.
-The off-beat hats are accented in disco, house and electro. The backbeat is accented in DnB, breaks, funk and
-synthwave. The snare is laid back in lofi and trip-hop, and reggae's rim a touch. Trap has triplet rolls and a swell
-on its last hat beat.
+Some genres have tricks that are already set. In lofi, house, garage and most of the other genres, the off-beat hats
+are soft. In disco, house and electro, the off-beat hats have an accent. In DnB, breaks, funk and synthwave, the
+backbeat has an accent. In lofi and trip-hop, the snare is a little late (laid back), and in reggae the rim is a very
+little late. Trap has triplet rolls and a swell on its last hat beat.
 
 ### Feel: ghosts, accents, comping and looseness
 
 ![The Feel page](img/perf-screen-feel.png)
 
-The **Feel** page (press **SEQ** seven times) holds the things that make a groove sound played by a person.
+The **Feel** page (press **SEQ** seven times) has the settings that make a groove sound as if a person plays it.
 
 | Knob | Does |
 |---|---|
-| Ghosts (0-100) | Adds the genre's **ghost notes**, very soft hits between the main ones: soft snares, plus soft kicks in lofi, breaks, funk and trip-hop. They go on steps the pattern doesn't have. At 100, about six in ten of those steps sound. Lofi, house, DnB, breaks, garage, funk and trip-hop have ghost steps. The other genres don't change. |
-| Accents (0-100) | How much the accents and ghosts from the Steps page count. 50 plays them as marked, 0 plays every level the same, 100 exaggerates them. |
-| Pad comp (on the Pad's **Chords** page, **ENV** x4, since 0.17.82; the knob here is empty) | The rhythm of the pad's stabs (comping is the rhythm a keyboard player chops chords in). It affects the stab sounds: Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass and Pluck. **Auto** uses the genre's own rhythm. **Hold** never stabs, so a stab sound plays as a held pad. The other choices force stabs on any pad sound: **Off-beat**, **On-beat**, **3-3-2** (eighths grouped 3+3+2), **Charleston** (the old jazz "long-short" rhythm), **Syncopated**, **Sparse** and **Eighths**. |
-| Humanize (0-100) | A little looseness. Each hit lands a touch softer and a touch late. |
+| Ghosts (0-100) | Adds the **ghost notes** of the genre. These are very soft hits between the main hits: soft snares, and also soft kicks in lofi, breaks, funk and trip-hop. They go on steps that the pattern does not use. At 100, about six in ten of those steps play. Lofi, house, DnB, breaks, garage, funk and trip-hop have ghost steps. The other genres do not change. |
+| Accents (0-100) | Sets how much the accents and ghosts from the Steps page count. At 50, they play as marked. At 0, every level is the same. At 100, the differences are stronger than marked. |
+| Pad comp (on the Pad's **Chords** page, **ENV** x4, since 0.17.82; the knob on this page is empty) | The rhythm of the pad's stabs (short chords). Comping is the rhythm in which a keyboard player plays short chords. It affects the stab sounds: Stabs, Dub, Pings, Hits, Rave, Wurli, Mallet, Brass and Pluck. **Auto** uses the rhythm of the genre. **Hold** never stabs, so a stab sound plays as a held pad. The other settings force stabs on all pad sounds: **Off-beat**, **On-beat**, **3-3-2** (eighths grouped 3+3+2), **Charleston** (the old jazz "long-short" rhythm), **Syncopated**, **Sparse** and **Eighths**. |
+| Humanize (0-100) | A little looseness. Each hit comes a little softer and a little late. |
 
 ### Phrase: chains, slices, half and double time, conditions
 
 ![The Phrase page](img/perf-screen-phrase.png)
 
-The **Phrase** page (press **SEQ** eight times) shapes what the patterns do over several bars. Everything on it is
-stored with the piece, including the condition for each lane.
+The **Phrase** page (press **SEQ** eight times) controls what the patterns do over several bars. The piece stores all
+the settings on this page, also the condition for each lane.
 
-**Chain** plays a different pattern each bar, round and round. The choices are **12** (patterns 1, 2), **1112**,
+**Chain** plays a different pattern in each bar, in a loop. The settings are **12** (patterns 1, 2), **1112**,
 **1123**, **1134** (the chain of the Amen break, the famous drum loop), **1213**, **1234**, **1232**, **1115** and
-**123456**. While a chain is on, it picks the pattern at every bar line. The Pattern knob, held pattern keys and Drum
-drift's pattern changes give way to it, but Drum drift's fills still come. Turn it off and the patterns are yours
-again. Turning a chain on, or changing it, starts it from its first bar.
+**123456**. While a chain is on, it selects the pattern at the start of each bar. The chain has priority over the
+Pattern knob, the pattern keys that you hold and the pattern changes from Drum drift. But the fills from Drum drift
+still play. When you turn the chain off, you control the patterns again. When you turn a chain on or change it, the
+chain starts from its first bar.
 
-**Slice** plays the drum steps in a different order. It affects only the drums, and a lane with its own length keeps
-its steps.
+**Slice** plays the drum steps in a different order. It affects only the drums. A lane with its own length keeps its
+steps as they are.
 
 | Slice | What you hear |
 |---|---|
-| Halves | The two halves of the bar swapped |
-| Stutter | The first beat of each half repeated |
+| Halves | The two halves of the bar change places |
+| Stutter | The first beat of each half repeats |
 | Reverse | The bar backwards |
 | Delay | The second half an eighth late |
-| Beats | The middle two beats swapped |
+| Beats | The middle two beats change places |
 | Mirror | The second half backwards |
-| Double | The first half twice |
-| Swap | The beats within each half swapped |
-| Auto | The last bar of every four gets one of the above, picked at random |
+| Double | The first half two times |
+| Swap | The beats in each half change places |
+| Auto | The last bar of every four gets one of the slices above, selected at random |
 
-**Time** changes the speed the pattern is read at. **Half** stretches it over two bars, with the hats in eighths
-(turns DnB into drumstep). **Double** plays it twice in a bar, and a hit on an odd step joins the step before.
+**Time** changes the speed at which the pattern is read. **Half** makes the pattern two bars long, with the hats in
+eighths. This changes DnB into drumstep. **Double** plays the pattern twice in one bar. A hit on an odd step joins the
+step before it.
 
-**Cond** sets a **condition** for the lane chosen on the Groove page, the Steps page or the sequencer: which bars
-its hits play in. The knob shows the first letters of its setting.
+**Cond** sets a **condition** for the lane that you selected on the Groove page, the Steps page or the sequencer. The
+condition sets the bars in which the hits of the lane play. The knob shows the first letters of its setting.
 
 | Cond | The lane's hits play |
 |---|---|
@@ -1465,9 +1565,9 @@ its hits play in. The knob shows the first letters of its setting.
 | 4:4 | The last bar of every four |
 | 1:8 | The first bar of every eight |
 | Fill | Only in fill bars |
-| No fill | Everywhere except fill bars |
+| No fill | In all bars except fill bars |
 
-A condition only decides whether the pattern's own hits sound. Fills still add theirs.
+A condition only controls whether the pattern's own hits play. Fills still add their hits.
 
 ---
 
@@ -1475,18 +1575,18 @@ A condition only decides whether the pattern's own hits sound. Fills still add t
 
 ![The FX menu, with Gate 1/8 and Low-pass latched](img/perf-screen-fx-menu.png)
 
-The effects are for changing the music live while it plays. Press **FX** to open the effects menu, and press it again to close it. While the menu is open, every key is an effect.
+Use the effects to change the music live while it plays. Press **FX** to open the effects menu. Press it again to close it. While the menu is open, each key is an effect.
 
-The keys hold four banks of effects: **FX**, **BEAT FX**, **FLEX BEAT** and **DJ SNIPS**. Turn the **SELECT** dial to move between them. It stops at the first and last bank. The knobs become the **FX knobs** (below).
+The keys have four banks of effects: **FX**, **BEAT FX**, **FLEX BEAT** and **DJ SNIPS**. Turn the **SELECT** dial to go from one bank to another. The dial stops at the first bank and at the last bank. The knobs become the **FX knobs** (see below).
 
 ### Tap or hold
 
-- **Tap** a key (let go within a quarter of a second) and its effect stays on. This is called latching. Tap it again to turn it off.
-- **Hold** a key and the effect plays only while you hold it.
+- **Tap** a key (release it in less than a quarter of a second). The effect stays on. This is called latching. Tap the key again to turn the effect off.
+- **Hold** a key. The effect plays only while you hold the key.
 
-You can latch several effects at once. On the screen, a held key shows as a lit tile, and a latched one has a bar beside it.
+You can latch more than one effect at the same time. On the screen, a key that you hold shows as a lit tile. A latched key has a bar next to it.
 
-Each kind of effect has its own colour, so you can find keys at a glance:
+Each type of effect has its own colour, so you can find the keys quickly:
 
 | Colour | Effects |
 |---|---|
@@ -1494,264 +1594,266 @@ Each kind of effect has its own colour, so you can find keys at a glance:
 | Green | Filters |
 | Yellow | Gates and the pump |
 | Red | The drum mutes |
-| Pink | Colour effects (phaser, flanger and the like) |
+| Pink | Colour effects (phaser, flanger and similar effects) |
 | Violet | Builds |
-| Orange | Moves that bend the playback: reverse, stops, scatter |
+| Orange | Effects that change the playback: reverse, stops, scatter |
 | Teal | Flex Beat |
 
-**Latched effects keep playing after you close the menu.** The **FX** button blinks and `FX` shows next to the tempo, to remind you. The keys go back to playing a voice. To turn an effect off, open FX again and tap its key.
+**Latched effects continue to play after you close the menu.** As a reminder, the **FX** button blinks and `FX` shows next to the tempo. The keys play a voice again. To turn an effect off, open FX again and tap its key.
 
-To turn everything off at once, press **OCT-** in the FX menu. This clears all effects, puts the FX knobs back to their home positions, and clears all mutes and solos. If you didn't mean it, **GLO** + `B3` undoes it. Tapping **SAVE** in the FX menu still starts a breakdown (section 10).
+To turn off all effects at the same time, press **OCT-** in the FX menu. This clears all effects and puts the FX knobs back to their home positions. It also clears all mutes and solos. If you did this by mistake, press **GLO** + `B3` to undo it. If you tap **SAVE** in the FX menu, it still starts a breakdown (section 10).
 
 ### The FX knobs
 
-These four knobs work in the FX menu, on the Perform screen and on the visualizers, so you don't need the menu open to use them.
+These four knobs work in the FX menu, on the Perform screen and on the visualizers. Thus you do not need to open the menu to use them.
 
 | Knob | What it does |
 |---|---|
-| Filter | Turn left of centre for a low-pass filter, which cuts the highs and makes the sound darker. It closes from 16 kHz down to about 250 Hz. Turn right of centre for a high-pass filter, which cuts the lows and thins the sound out. It rises from 20 Hz to about 1.6 kHz. In the middle it's off. The screen shows `OFF` in the middle and readings like `LP 40` or `HP 40` as you turn. |
-| Crush | Makes the sound grittier and more lo-fi, like an old sampler. Turned all the way up, it's about 5.5 kHz and 5 bits. |
-| Throw | Sends the mix into the echo. Turn it up for more echo that repeats for longer. |
+| Filter | Turn it to the left of the centre for a low-pass filter. This filter cuts the high sounds and makes the sound darker. It closes from 16 kHz down to about 250 Hz. Turn it to the right of the centre for a high-pass filter. This filter cuts the low sounds and makes the sound thinner. It goes up from 20 Hz to about 1.6 kHz. In the middle, the filter is off. The screen shows `OFF` in the middle and values like `LP 40` or `HP 40` as you turn. |
+| Crush | Makes the sound more gritty and lo-fi, like an old sampler. At the maximum position, it is about 5.5 kHz and 5 bits. |
+| Throw | Sends the mix into the echo. Turn it up for more echo with longer repeats. |
 | Wash | Sends the mix into the reverb. |
 
-The FX knobs aren't saved. They go back to home when you power off. A scene does store them (section 10). While any FX knob is away from home, the header says `KNOB`.
+PERF-1 does not save the FX knobs. When you turn off the power, they go back to their home positions. But a scene stores them (section 10). While an FX knob is not at its home position, the header shows `KNOB`.
 
 ### The gesture recorder: loop your knob moves
 
 ![The gesture recorder playing back a bar of knob moves](img/perf-screen-gesture.png)
 
-Record up to four bars of FX knob moves and effects, and they play on by themselves, so your hands are free for the keys.
+Record up to four bars of FX knob moves and effects. Then they play again by themselves, and your hands are free for the keys.
 
-1. With the music playing, open the FX menu and press **SEL + REC**. The header says `ARM`: it waits for you.
-2. Turn an FX knob or play an effect key: that starts the recording (`REC`), from the start of the bar you're in. Sweep
-   the filter, crush the last beat, throw into the echo, hold a roll or a stutter: the knobs and the effect you hold are
-   both written, every sixteenth.
-3. Press **SEL + REC** again. It finishes the bar you're in and from then on plays your moves in a loop (1 to 4 bars;
-   after four it loops by itself). The header says `LOOP`. An effect you play by hand goes first; the loop's comes back
-   when you let go.
+1. While the music plays, open the FX menu and press **SEL + REC**. The header shows `ARM`: the recorder waits for you.
+2. Turn an FX knob or play an effect key. This starts the recording (`REC`), from the start of the bar that plays now.
+   For example, move the filter, crush the last beat, send to the echo, or hold a roll or a stutter. The recorder writes
+   the knobs and the effect that you hold, every sixteenth.
+3. Press **SEL + REC** again. The recorder finishes the bar that plays now. Then it plays your moves in a loop (1 to 4
+   bars; after four bars, it starts the loop by itself). The header shows `LOOP`. An effect that you play by hand has
+   priority. The effect of the loop comes back when you release the key.
 
-Turn a knob yourself and that knob is yours again; the others keep playing the loop. **SEL + REC** in the FX menu
-while it loops lets all of them go, where they are. **OCT-** in the FX menu (everything home) does too. Like the knobs
-themselves, the loop isn't saved; it keeps playing across pieces, and stopping pauses it.
+If you turn a knob yourself, you control that knob again. The other knobs continue to play the loop. While the loop
+plays, press **SEL + REC** in the FX menu to release all the knobs. The knobs stay where they are. **OCT-** in the FX
+menu (it puts everything back to home) also releases them. PERF-1 does not save the loop, the same as the knobs. The
+loop continues to play when you change the piece. When you stop the music, the loop pauses.
 
-**Now and then instead of all the time:** set **Auto FX** on (its settings page) with **Pick** on **YOURS** before you
-record. When you close the loop it's kept (`GESTURE KEPT`), and Auto FX plays it once, whole, ending on its phrase
-lines (**Every**: 4, 8, 16 or 32 bars), then puts the knobs back. The header says `AUTO` while it plays.
+**Now and then instead of all the time:** before you record, set **Auto FX** to on (on its settings page), and set
+**Pick** to **YOURS**. When you close the loop, PERF-1 keeps it (`GESTURE KEPT`). Then Auto FX plays the whole loop
+once, so that it ends on its phrase lines (**Every**: 4, 8, 16 or 32 bars). After this, it puts the knobs back. While
+the loop plays, the header shows `AUTO`.
 
 ### Bank 1: FX
 
-The 27 keys run from `F3` to `G5`. On the screen they're laid out in three columns of nine.
+The 27 keys go from `F3` to `G5`. On the screen, they are in three columns of nine.
 
 | Key | Effect | What it does |
 |---|---|---|
-| F3 | Sweep | A filter sweeps up and down in time with the tempo. |
-| F#3 | Gate 16 | A trance gate: chops the synths on and off in sixteenth notes. |
-| G3 | Ring mod | Gives the sound a metallic, bell-like clang. |
+| F3 | Sweep | A filter moves up and down in time with the tempo. |
+| F#3 | Gate 16 | A trance gate: it turns the synths on and off in sixteenth notes. |
+| G3 | Ring mod | Gives the sound a metallic tone, like a bell. |
 | G#3 | Gate 8 | The same gate, in eighth notes. |
-| A3 | Freeze | Grabs the sound and holds it as a steady drone, built from tiny repeated grains of it. |
-| A#3 | Gate pattern | The gate playing its own rhythm, which you set on the Gate page. |
-| B3 | Reverse swell | The last beat or so plays backwards once, getting louder as it goes. |
-| C4 | Talk | Makes the whole mix "talk" by sweeping it through the vowels A E I O U. The kick and bass underneath stay as they are. |
+| A3 | Freeze | Captures the sound and holds it as a steady drone. The drone is made from very small repeated grains of the sound. |
+| A#3 | Gate pattern | The gate plays its own rhythm. You set this rhythm on the Gate page. |
+| B3 | Reverse swell | About the last beat plays backwards once and gets louder as it plays. |
+| C4 | Talk | Makes the whole mix "talk": it moves the mix through the vowels A E I O U. The kick and bass below do not change. |
 | C#4 | Phaser | A swirling, sweeping sound. |
-| D4 | Wah | An auto-wah: a filter that opens up as the music gets louder. The kick and bass underneath stay as they are. |
-| D#4 | Flanger | A jet-plane whoosh. |
+| D4 | Wah | An auto-wah: a filter that opens more when the music gets louder. The kick and bass below do not change. |
+| D#4 | Flanger | A sound like a jet plane that goes past. |
 | E4 | Reverse | Plays the music backwards. |
-| F4 | Tape stop | The music slows down and stops, like a tape machine switched off. |
-| F#4 | Tape | Makes it sound like worn tape: wobbling pitch (wow and flutter) and drive. |
-| G4 | FILTER | A filter on the tracks you choose: low, high, band, notch, peak, or Morph between them (see below). |
-| G#4 | Roll | Repeats that speed up. |
-| A4 | DELAY | Sends the tracks you choose into the echo, with long repeats (see below). |
-| A#4 | Pump | Ducks the sound in a rhythm so it "pumps", the way music does when a kick is pushing it down. This is called sidechain ducking. |
-| B4 | PHASE | A phaser on the tracks you choose (see below). |
-| C5 | M:DRUMS | Mutes all four drums while held: the classic drop-the-drums move. |
-| C#5 | Riser | A build-up: a filter and the reverb climbing. |
-| D5 | Throw | Throws the mix into the echo. Let go and the send closes at once, but the repeats keep going for a bar (over the next downbeat), then die away: a dub throw. |
-| D#5 | Vinyl | Adds record crackle, hiss and pops underneath. |
+| F4 | Tape stop | The music slows down and stops, like a tape machine that you turn off. |
+| F#4 | Tape | Makes the music sound like worn tape: the pitch wobbles (wow and flutter), with drive. |
+| G4 | FILTER | A filter on the tracks that you choose: low, high, band, notch, peak, or Morph between them (see below). |
+| G#4 | Roll | Repeats that get faster. |
+| A4 | DELAY | Sends the tracks that you choose into the echo, with long repeats (see below). |
+| A#4 | Pump | Turns the sound down in a rhythm, so that it "pumps" as music does when a kick pushes it down. This is called sidechain ducking. |
+| B4 | PHASE | A phaser on the tracks that you choose (see below). |
+| C5 | M:DRUMS | Mutes all four drums while you hold the key. This is the classic move that removes the drums. |
+| C#5 | Riser | A build-up: a filter and the reverb go up. |
+| D5 | Throw | Sends the mix into the echo. When you release the key, the send closes immediately. But the repeats continue for a bar (past the next downbeat), and then they fade out. This is a dub throw. |
+| D#5 | Vinyl | Adds record crackle, hiss and pops below the music. |
 | E5 | Fill | Plays a drum fill. |
-| F5 | Low-pass | A low-pass filter that closes in, making the sound darker. |
-| F#5 | FILL> | Tap it and the drums play a fill in the next bar. |
-| G5 | High-pass | A high-pass filter that thins the sound out from the bottom. |
+| F5 | Low-pass | A low-pass filter that closes and makes the sound darker. |
+| F#5 | FILL> | Tap it, and the drums play a fill in the next bar. |
+| G5 | High-pass | A high-pass filter that removes the low sounds and makes the sound thinner. |
 
-M:DRUMS works only while you hold it, like any held key. The single drums' mutes (kick, hats, snare, perc) are on the same keys of the BEAT FX bank. To mute the other tracks, or to solo anything, use the mix map on the **GLO** layer (section 10).
+M:DRUMS works only while you hold it, the same as all held keys. The mutes for the single drums (kick, hats, snare, perc) are on the same keys in the BEAT FX bank. To mute the other tracks, or to solo a track, use the mix map on the **GLO** layer (section 10).
 
-**Punch-ins on tracks: FILTER, DELAY and PHASE.** The other effects work on the whole mix. These three work only on the
-tracks you pick, the way Caustic puts effects on one machine: hold DELAY and only the acid and the pluck echo away, hold
-FILTER and only the synths go thin while the drums stay punchy. Hold **SEL** and press the key to open its settings
-page; its last knob is **Targets**:
+**Punch-ins on tracks: FILTER, DELAY and PHASE.** The other effects work on the whole mix. These three effects work
+only on the tracks that you select, as Caustic puts effects on one machine. For example, hold DELAY, and only the acid
+and the pluck echo. Or hold FILTER, and only the synths become thin while the drums stay strong. To open the settings
+page of the key, hold **SEL** and press the key. The last knob on the page is **Targets**:
 
 | Targets | What it hits |
 |---|---|
 | ALL | Everything |
 | DRUMS | All four drums together |
-| SYNTHS | Pad, bass, acid and pluck (everything but the drums) |
+| SYNTHS | Pad, bass, acid and pluck (everything except the drums) |
 | PAD, BASS, ACID, PLUCK | That one track |
-| ACID+PLK, PAD+PLK, BASS+ACID | Those two |
+| ACID+PLK, PAD+PLK, BASS+ACID | Those two tracks |
 
-**Morph** (FILTER's Type, turned past PEAK): one filter that moves from low-pass (**MORPH LP**) through band-pass (**MORPH BP**, halfway)
-to high-pass (**MORPH HP**) in 5% steps, gliding between them, while Cutoff and Reso stay where they are. Park the cutoff on an acid
-line, hold FILTER and turn Type: the acid goes from full to nasal to thin without the filter sweeping. The band-pass is lifted to sit
-about as loud as the low and high ends, more so at high resonance.
+**Morph** (turn FILTER's Type past PEAK) is one filter that moves from low-pass (**MORPH LP**) through band-pass
+(**MORPH BP**, at the halfway point) to high-pass (**MORPH HP**). A band-pass filter keeps only the middle sounds. Morph
+moves in 5% steps and glides between them. Cutoff and Reso do not change. For example, set the cutoff on an acid line,
+hold FILTER and turn Type. The acid changes from full to nasal to thin, and the filter does not sweep.
+
+The band-pass is made louder, so that it is about as loud as the low and high ends. At high resonance, it is made
+louder again.
 
 | Key | Settings |
 |---|---|
-| FILTER | Type (low, high, band, notch, peak, then Morph: above), Cutoff, Reso, Targets |
-| DELAY | Send (how much goes into the echo), Repeats (how long it echoes on; it uses the piece's echo time), Targets. Like Throw, its repeats carry on for a bar after you let go. |
+| FILTER | Type (low, high, band, notch, peak, then Morph: see above), Cutoff, Reso, Targets |
+| DELAY | Send (how much goes into the echo), Repeats (how long the echo continues; it uses the echo time of the piece), Targets. Like Throw, its repeats continue for a bar after you release the key. |
 | PHASE | Rate, Depth, Mix (100 is the deepest swirl), Targets |
 
-Hold two of them at once and they share their tracks: both act on everything either one is aimed at. The effect is on a
-track's own sound; its reverb and echo sends carry on as before, so a filtered pad still has its unfiltered reverb tail.
-The whole-mix versions are still here: Phaser on C#4, Throw on D5, the filters on F5 and G5.
+If you hold two of them at the same time, they share their tracks. Both effects then act on all the tracks that either
+effect is set to. The effect changes only the track's own sound. The reverb and echo sends of the track do not change.
+Thus a filtered pad still has its reverb tail without the filter. The versions for the whole mix are still available:
+Phaser on C#4, Throw on D5, the filters on F5 and G5.
 
 ### Bank 2: BEAT FX
 
 ![The BEAT FX bank](img/perf-screen-beat-fx.png)
 
-These effects chop and rework the beat.
+These effects cut up the beat and change it.
 
 | Keys | Effect | What it does |
 |---|---|---|
-| F3 to C4 | Beat repeats | Loops a short slice of what just played, over and over. From slow to fast: 1/2, 1/4, 1/6 (a quarter-note triplet), 1/8, 1/16, 1/32, then 1/8T and 1/16T (triplets, three in the space of two). If you hold more than one, the shortest wins. A repeat starts on the next sixteenth note. |
-| D4 | Scatter | Shuffles the last few slices into a new order. |
-| D#4 | Brake | Slows the music to a halt, like a record when you stop the turntable. |
-| E4 | Spin back | Spins the music backwards, like a DJ pulling a record back. |
-| F4 | Half time | Makes the music play at half speed. |
-| F#4 | Scratch | An automatic record scratch. |
-| G4, A4, B4, C5 | Drum mutes | Kick, hats, snare, perc, each muted while held (bank 1 has M:DRUMS, all four, on C5). |
+| F3 to C4 | Beat repeats | Loops (plays again and again) a short slice of the music that just played. From slow to fast: 1/2, 1/4, 1/6 (a quarter-note triplet), 1/8, 1/16, 1/32, then 1/8T and 1/16T (triplets: three notes in the time of two). If you hold more than one key, the shortest repeat plays. A repeat starts on the next sixteenth note. |
+| D4 | Scatter | Puts the last few slices into a new order. |
+| D#4 | Brake | Slows the music down until it stops, like a record when you stop the turntable. |
+| E4 | Spin back | Turns the music backwards, like a DJ who pulls a record back. |
+| F4 | Half time | Plays the music at half speed. |
+| F#4 | Scratch | Plays an automatic record scratch. |
+| G4, A4, B4, C5 | Drum mutes | Mutes the kick, hats, snare or perc while you hold the key (bank 1 has M:DRUMS, all four, on C5). |
 | G#4 | Reverse | Plays the music backwards. |
-| A#4 | Tape stop | Slows the music to a stop. |
-| C#5 | Hat roll | The hi-hats play every step, in 32nd notes. |
-| D5 | Hat trip | The hi-hats roll in triplets. |
-| D#5 | Snare roll | A snare roll that gets louder through the bar. |
-| E5 | Flam | A quick extra hit just before every snare and clap. |
+| A#4 | Tape stop | Slows the music down until it stops. |
+| C#5 | Hat roll | The hi-hats play on every step, in 32nd notes. |
+| D5 | Hat trip | The hi-hats play a roll in triplets. |
+| D#5 | Snare roll | Plays a snare roll that gets louder through the bar. |
+| E5 | Flam | Adds a quick extra hit just before each snare and clap. |
 | F5 | Double kick | Each kick plays again half a step later. |
 
-Beat repeat and reverse play back the last moment of the mix, just under a second of it. At slow tempos a 1/2 repeat doesn't fit in that, so it plays as a 1/4.
+Beat repeat and reverse play back the last part of the mix: a little less than one second of it. At slow tempos, a 1/2 repeat is longer than this, so it plays as a 1/4.
 
 ### Bank 3: FLEX BEAT
 
 ![The FLEX BEAT bank](img/perf-screen-flex.png)
 
-Flex Beat chops up the last moment of the music and replays it as a new one-bar pattern, locked to the beat. There are 27 patterns, one on every key from `F3` to `G5`:
+Flex Beat cuts up the last part of the music. Then it plays that part again as a new pattern of one bar, in time with the beat. There are 27 patterns, one on each key from `F3` to `G5`:
 
 | Pattern | What it does |
 |---|---|
 | **Bt Rept** | Loops the last beat. |
 | **Hf Rept** | Loops the last half bar. |
 | **Bt Rev** | Plays the last beat backwards. |
-| **Skip** | Loops the last beat with every other sixteenth left out. |
-| **Trance** | A 3-3-2 gate: the music cuts on and off in a three, three, two rhythm. |
-| **Gate 8** | Cuts the music on and off in eighth notes. |
-| **Double** | Plays each sixteenth of the last beat twice. |
-| **Shuffle** | Loops the last beat with its sixteenths in a new order. |
-| **Bck-Fwd** | The last beat forwards, then backwards. |
-| **Roll out** | Plays normally for three beats, then a stutter on the last beat. |
-| **Build** | Plays normally, then a stutter that speeds up. |
-| **Scratch** | Rocks the last two sixteenths back and forth, like a scratch. |
-| **Dropout** | Mostly silence, with the music coming through on a few steps. |
-| **Jump bk** | Jumps back to repeat the last beat, then carries on. |
+| **Skip** | Loops the last beat, but leaves out every second sixteenth note. |
+| **Trance** | A 3-3-2 gate: the music goes off and on in a rhythm of three, three, two. |
+| **Gate 8** | Turns the music off and on in eighth notes. |
+| **Double** | Plays each sixteenth note of the last beat two times. |
+| **Shuffle** | Loops the last beat with its sixteenth notes in a new order. |
+| **Bck-Fwd** | Plays the last beat forwards, then backwards. |
+| **Roll out** | Plays normally for three beats, then plays a stutter (fast repeats of a short slice) on the last beat. |
+| **Build** | Plays normally, then plays a stutter that gets faster. |
+| **Scratch** | Moves the last two sixteenth notes back and forth, like a scratch. |
+| **Dropout** | Mostly silence. The music comes through on only a few steps. |
+| **Jump bk** | Jumps back and repeats the last beat, then continues. |
 | **Halves** | Swaps the two halves of the last half bar. |
 | **Swap** | Swaps the sixteenth notes in pairs. |
-| **Mirror** | Forwards, then backwards. |
-| **Lag** | Plays late, leaving a gap. |
-| **Slowmo** | Plays every sixteenth twice: half time without the pitch dropping. |
+| **Mirror** | Plays forwards, then backwards. |
+| **Lag** | Plays late and leaves a gap. |
+| **Slowmo** | Plays each sixteenth note two times: half time, but the pitch does not go down. |
 | **Skip 3** | A pattern in threes over the bar of four. |
-| **Stut up** | A stutter that speeds up. |
-| **Stut dn** | A stutter that slows down. |
-| **Tresillo** | The 3-3-2 rhythm (called tresillo) on the last sixteenth. |
+| **Stut up** | A stutter that gets faster. |
+| **Stut dn** | A stutter that gets slower. |
+| **Tresillo** | The 3-3-2 rhythm (its name is tresillo) on the last sixteenth note. |
 | **Offbeat** | Plays only the off-beats. |
-| **Cut 4** | Leaves a gap every fourth step. |
-| **Rev 8** | Plays the half bar backwards, twice. |
-| **Half gap** | Plays the half bar once, then silence. |
+| **Cut 4** | Leaves a gap on every fourth step. |
+| **Rev 8** | Plays the half bar backwards, two times. |
+| **Half gap** | Plays the half bar one time, then silence. |
 
-For plain stutters, use the beat repeats on bank 2.
+For simple stutters, use the beat repeats on bank 2.
 
-Tap a key to latch it, or hold it to play it. A pad you hold down keeps repeating its bar. When you let go, the bar that's playing finishes, so it always ends on the bar line.
+Tap a key to latch it (the pattern stays on after you release the key). Hold a key to play the pattern only while you hold it. If you hold a key down, it repeats its bar again and again. When you release the key, the bar that plays continues to its end. Thus the pattern always stops on the bar line.
 
-Flex Beat works on the last 8 sixteenth notes you heard (fewer at slow tempos), and it keeps working on that same stretch for as long as it plays.
+Flex Beat uses the last 8 sixteenth notes that you heard (fewer at slow tempos). It continues to use that same part of the music for as long as it plays.
 
 The Flex settings page (below) has three settings:
 
-- **Quant** sets when a pattern starts: at once (off), on the next beat, or on the next bar. Bar is the default.
-- **Mode** is one shot or loop. In one shot, the bar plays to its end and then a latched pad turns itself off. In loop, it keeps going until you let go of the pad or tap it off.
-- **Mix** goes from dry (just the music) to wet (just the Flex pattern).
+- **Quant** sets when a pattern starts: immediately (off), on the next beat, or on the next bar. The default is bar.
+- **Mode** is one shot or loop. In one shot, the bar plays to its end, and then a latched key turns itself off. In loop, the pattern continues until you release the key or tap it off.
+- **Mix** goes from dry (only the music) to wet (only the Flex pattern).
 
 ### Bank 4: DJ SNIPS
 
 ![The DJ SNIPS bank](img/perf-screen-snips.png)
 
-These are the sound effects a DJ throws in over a set. The 27 keys, `F3` to `G5`, are:
+These are the sound effects that a DJ adds over the music during a set. The 27 keys, `F3` to `G5`, are:
 
-AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord playing, in saws), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, KICK, LASER, SNARE, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover as a short stab), BELL and SNR ROLL (a snare roll that speeds up).
+AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord that plays now, with saw sounds), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, KICK, LASER, SNARE, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover sound as a short stab), BELL and SNR ROLL (a snare roll that gets faster).
 
-The horns, the crash, the kick and the snare are samples, made by PERF-1's own models (not taken from anywhere). The horns play on the root of the chord playing, and a held horn goes on for as long as you hold the key. The kick and the snare are the sampled kits' (MACHINE's kick, BOOMBAP's snare). The rest are made on the spot.
+The horns, the crash, the kick and the snare are samples (recorded sounds) that PERF-1's own models made. They are not taken from other sources. The horns play on the root note of the chord that plays now. A held horn continues for as long as you hold the key. The kick and the snare come from the sampled kits (the kick of MACHINE, the snare of BOOMBAP). PERF-1 makes all the other snips at the moment that they play.
 
-Up to four can sound at once. Snips play when you press the key. They don't latch.
+Up to four snips can sound at the same time. A snip plays when you press its key. Snips do not latch.
 
 ![The SNIP LAND page](img/perf-screen-snip-land.png)
 
-**Land** (the SNIP LAND page, after the SNIPS page): set it to **Beat**, **2 beats** or **Bar** and the RISER, REWIND and SNR ROLL time
-themselves to the next such line at least that far away. They start at once, take exactly the time to get there, and peak on it: the
-rewind pulls back into the downbeat, the riser tops out on it, the roll (on the grid: eighths, then sixteenths, then thirty-seconds) ends
-with the drop. Pressed just after a bar line with Land on Bar, it takes nearly two bars, the next line being too close. They play to the line
-even if you let go. **Now** (the default) plays them as before, in seconds. The other snips always fire the moment you press.
+**Land** (the SNIP LAND page, after the SNIPS page) sets the timing of the RISER, REWIND and SNR ROLL. Set it to **Beat**, **2 beats** or **Bar**. Then these three snips time themselves to the next line of that type that is at least that far away. They start immediately, take exactly the time to get to that line, and reach their peak on it. The rewind pulls back into the downbeat, and the riser gets to its top on the line. The roll (on the grid: eighths, then sixteenths, then thirty-seconds) ends with the drop.
 
-The ones with a pitch play in key: the horns, the stabs, the rave horn and the riser start on the root of the chord playing
-(the horns play that chord), and the sirens, beeps, whoops, the dub siren and the bell take the nearest note of it. They all
-sit at about the same loudness, and the horns, sirens, stabs, crash, riser and roll are wide in stereo (in mono nothing is lost).
+If Land is on Bar and you press one of these snips just after a bar line, it takes nearly two bars, because the next line is too near. They play to the line even if you release the key. **Now** (the default) plays them as before, with a length in seconds. The other snips always play immediately when you press the key.
+
+The snips that have a pitch play in key. The horns, the stabs, the rave horn and the riser start on the root note of the chord that plays now (the horns play that chord). The sirens, beeps, whoops, the dub siren and the bell use the nearest note of that chord. All the snips have about the same loudness. The horns, sirens, stabs, crash, riser and roll are wide in stereo (in mono, nothing is lost).
 
 The Snips settings page has four settings:
 
 - **Pitch**: normal, an octave up, or an octave down.
-- **Play**: HELD or ONE SHOT. In HELD, the long sounds (the horns, sirens, dub siren, riser and snare roll) last as long as you hold the key, and the others play to their end. In ONE SHOT, every snip plays to its end, and the long ones last a second or so.
-- **Echo**: dry, some or lots. How much of the snips goes to the echo and the reverb.
+- **Play**: HELD or ONE SHOT. In HELD, the long sounds (the horns, sirens, dub siren, riser and snare roll) continue for as long as you hold the key, and the other sounds play to their end. In ONE SHOT, every snip plays to its end, and the long sounds last about a second.
+- **Echo**: dry, some or lots. This sets how much of the snips goes to the echo and the reverb.
 - **Level**: how loud the snips are.
 
-While the Snips page is up, the keys play the snips, so you can try them out.
+While the Snips page shows, the keys play the snips. Use this to try the snips.
 
 ### Settings pages
 
 ![A settings page: the Gate](img/perf-screen-gate.png)
 
-Every effect that has settings has its own page, with a picture of what the effect is doing. You can get to a page in four ways:
+Each effect that has settings has its own page. The page shows a picture of what the effect does. There are four ways to go to a page:
 
-- In the FX menu, hold **SEL** and press a key. You get the page for that key's effect. If the effect has no settings, the screen says so.
-- Hold **FX** (half a second), from any page, for the page of the effect you used last (the first one if you haven't used any).
-- Press **SEL** + **FX** to step through all the effects' pages, then back to the keys. Talk and Wah come right after the phaser and the flanger. (The unit's own settings, such as Auto DJ, SET and MIDI IN, are a separate walk: hold **HOME**, section 13.)
-- Once you're on a settings page, turn the **SELECT** dial to move to the next or previous one. It stops at the ends.
+- In the FX menu, hold **SEL** and press a key. The page for the effect of that key opens. If the effect has no settings, the screen tells you.
+- From any page, hold **FX** for half a second. The page for the last effect that you used opens. If you did not use an effect yet, the first page opens.
+- Press **SEL** + **FX** to go through the pages of all the effects, one by one, and then back to the keys. Talk and Wah come immediately after the phaser and the flanger. (The unit's own settings, for example Auto DJ, SET and MIDI IN, are a separate sequence of pages: hold **HOME**, section 13.)
+- When a settings page shows, turn the **SELECT** dial to go to the next or the previous page. The dial stops at the first and the last page.
 
 Press **FX** to close the page.
 
-The effect is switched on while its page is showing, so you hear what you change. The roll, riser, scatter, brake, half time, scratch, freeze and reverse swell only sound while you hold a key. The dots at the right of the knob strip show where you are in the list of pages.
+While its page shows, the effect is on, so you hear the changes that you make. The roll, riser, scatter, brake, half time, scratch, freeze and reverse swell make sound only while you hold a key. The dots on the right side of the knob strip show your position in the list of pages.
 
 The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 
 | Page | **KNOB1** | **KNOB2** | **KNOB3** | **KNOB4** |
 |---|---|---|---|---|
-| Gate (chops the sound on and off in a rhythm) | Pattern: 3-3-3, tres, offbeat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, custom | Length: 2-16 steps | Targets: no drums, pad, bass, acid, drums, hats, kick, all, no kick, kick+bass, pluck | Depth |
-| Phaser (a swirling sweep) | Rate | Depth | Feedback | Mix |
-| Flanger (a jet-plane whoosh) | Rate | Depth | Feedback | Mix |
-| Vinyl (record crackle and hiss) | Level | Crackle | Hiss | Tone |
-| Tape (wobbly, driven tape sound) | Wow | Flutter | Drive | Dull |
-| Roll (repeats that speed up) | From: 1/2 to 1/64 | To | Each: 1/2, 1, 2 or 4 beats at a rate | Swell |
-| Pump (rhythmic ducking) | Depth | Release | Every: 1/2, 1/4, 1/8, 1/16, or KICK (on every kick, wherever the kicks fall) | Targets |
-| Riser (a build-up) | Time: about 1-12 s | Filter | Wash | Echo |
-| Scatter (shuffled slices) | Chaos | Reverse | Slice: 1/32, 1/16, 1/8 | Slices: 2-8 |
-| Brake (a record slowing to a stop) | Time | Spin back | Return | Dull |
-| Half time (half-speed playback) | Speed: x1.5, x2, x4 | Slide | - | - |
-| Sweep (a filter moving in time) | Every: 8, 4, 2, 1 bar, 1/2, 1/4, 1/8 | Depth | Reso | Type: low, high, band |
+| Gate (turns the sound off and on in a rhythm) | Pattern: 3-3-3, tres, offbeat, Euclid 5, 7 or 9, waltz, chop, sparse, dense, dotted, 5/10, custom | Length: 2-16 steps | Targets: no drums, pad, bass, acid, drums, hats, kick, all, no kick, kick+bass, pluck | Depth |
+| Phaser (a sound that sweeps and moves around) | Rate | Depth | Feedback | Mix |
+| Flanger (a sound like a jet plane that flies past) | Rate | Depth | Feedback | Mix |
+| Vinyl (the crackle and hiss of a record) | Level | Crackle | Hiss | Tone |
+| Tape (the sound of tape: a pitch that moves, and drive) | Wow | Flutter | Drive | Dull |
+| Roll (repeats that get faster) | From: 1/2 to 1/64 | To | Each: 1/2, 1, 2 or 4 beats at a rate | Swell |
+| Pump (the volume goes down and up in a rhythm) | Depth | Release | Every: 1/2, 1/4, 1/8, 1/16, or KICK (on each kick, wherever the kicks are) | Targets |
+| Riser (a build-up: the sound climbs) | Time: about 1-12 s | Filter | Wash | Echo |
+| Scatter (slices in a new order) | Chaos | Reverse | Slice: 1/32, 1/16, 1/8 | Slices: 2-8 |
+| Brake (a record that slows down until it stops) | Time | Spin back | Return | Dull |
+| Half time (plays at half speed) | Speed: x1.5, x2, x4 | Slide | - | - |
+| Sweep (a filter that moves in time with the music) | Every: 8, 4, 2, 1 bar, 1/2, 1/4, 1/8 | Depth | Reso | Type: low, high, band |
 | Scratch (a record scratch) | Every: 1/4, 1/8, 1/16, 1/32 | Reach: 1/16, 1/8, 1/4, 1/2 | Style: baby, pull | - |
-| Freeze (holds the sound as a drone) | Size | Spread | Grains: 1-4 | - |
-| Rv swell (backwards, getting louder) | Length: 1/2, 1, 2 beats | Mix | - | - |
-| Ring mod (a metallic clang) | Tone: 40-800 Hz | Mix | - | - |
-| Auto DJ (runs the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
-| Auto FX (effects played by themselves; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any, yours (your gesture) |
-| SET (shapes a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
+| Freeze (holds the sound as a drone, a long steady sound) | Size | Spread | Grains: 1-4 | - |
+| Rv swell (plays backwards and gets louder) | Length: 1/2, 1, 2 beats | Mix | - | - |
+| Ring mod (a hard, metallic sound) | Tone: 40-800 Hz | Mix | - | - |
+| Auto DJ (changes the sections for you; section 10) | Scenes: at once, next bar | Groove: 8, 16, 32, 64 bars, sync | Break: short, half, full | Fill: off, on |
+| Auto FX (plays effects automatically; section 10) | Auto FX: off, gentle, medium, wild | Every: 4, 8, 16, 32 bars | Length: a beat, half bar, a bar, 2 bars | Pick: genre, any, yours (your gesture) |
+| SET (gives a shape to a longer DJ set; section 10) | Rounds: 1, 2, 4, 8 | Ramp: off, +2, +4, +8, +12 BPM | Intro: off, 1, 2, 4, 8 min, break | Mix: cut, 4, 8, 16, 32 bars |
 | Settings | Key: same, +2, +3, +5, +7 | (none) | Form: Song, Few rests, No rests, Loop | Start: Last, Random |
 | USB & MIDI | Level: knob, fixed | MIDI out: off, on | MIDI map: GM, M:Samples, MPC Sample, SP-404 | - |
 | MIDI IN | Notes: keys, pads, M:S, MPK, chords | Channel: all, 1-16 | USB host: off, on (never kept) | Knob CCs: off, in, out, in+out |
-| RESONATOR (pitched percussion; section 13) | Amount: 0 (off)-100 | Decay: 0-100 | Register: low, mid, high | Targets: perc, hats, snare, perc+hats, drums, pluck |
-| RETURNS (the echo and reverb ducked by the kick; section 13) | Duck: kit, off, custom | Depth: 0-100 (custom) | Release: 1/16, 1/8, 3/16, 1/4, 1/2, 1 bar (custom) | - |
-| LINK (two units as one band; section 14) | Link: off, auto, lead, follow, cable lead, cable follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
+| RESONATOR (percussion with a pitch; section 13) | Amount: 0 (off)-100 | Decay: 0-100 | Register: low, mid, high | Targets: perc, hats, snare, perc+hats, drums, pluck |
+| RETURNS (the kick makes the echo and reverb quieter; section 13) | Duck: kit, off, custom | Depth: 0-100 (custom) | Release: 1/16, 1/8, 3/16, 1/4, 1/2, 1 bar (custom) | - |
+| LINK (two units play as one band; section 14) | Link: off, auto, lead, follow, cable lead, cable follow | Plays: all, beat, top, drums, no drums | Sections: own, follow | - |
 | FILTERS | Pad: low, high, band, notch, peak | Bass: the same | Acid: the same | - |
 | SCREAM | Drive: 0-100 | Scream: 0-100 | Wow: 0-100 | Target: acid, bass, both |
 | SCREEN | Zoom: off, on | Saver: off, 1, 3, 10 min | Lights: off, show | Look: plain, scanlines, calm, calm+scan |
@@ -1759,27 +1861,27 @@ The four knobs, **KNOB1** to **KNOB4**, set the four settings on each page:
 | FILTER (G4) | Type: low ... peak, then Morph LP ... BP ... HP | Cutoff | Reso | Targets: all, drums, synths, one track, two |
 | DELAY (A4) | Send | Repeats | Targets | - |
 | PHASE (B4) | Rate | Depth | Mix | Targets |
-| Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB a repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
+| Repeat (the beat repeats on bank 2) | Pitch: -12 to +12 semitones | Decay: 0 to 6 dB for each repeat | Gate: full, 3/4, half, 1/4 | Refresh: off, beat, bar |
 | Flex (Flex Beat) | Quant: off, beat, bar | Mode: one shot, loop | Mix | - |
 | Snips (DJ snips) | Pitch | Play | Echo | Level |
 | Snip land (after Snips) | Land: now, beat, 2 beats, bar | - | - | - |
-| Talk (vowel sounds) | Every: 2 bars, 1 bar, 1/2, 1/4, 1/8 | Depth | Reso | Mix |
+| Talk (sounds like vowels) | Every: 2 bars, 1 bar, 1/2, 1/4, 1/8 | Depth | Reso | Mix |
 | Wah (auto-wah) | Sens | Range | Reso | Mix |
 
-What some of these mean:
+What some of these settings mean:
 
-- **Mix** is the balance between the plain sound and the effect. **Reso** (resonance) makes the filter ring and whistle at its setting. **Feedback** feeds the effect back into itself for a stronger result. **Targets** chooses which parts of the music the effect works on.
-- **Gate patterns.** Euclid 5, 7 or 9 spreads 5, 7 or 9 hits as evenly as possible over the steps. Custom is a pattern you edit yourself (below).
-- **Roll.** From and To set the speed the repeats start and end at. Each sets how often a roll happens.
-- **Riser.** Time is how long it takes to climb. Filter, Wash and Echo set how much of each it builds up.
-- **Settings page.** Key is the drop's key change (section 13). The second knob is free.
-- **SCREEN page.** Zoom shows a knob's name and value large as you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Look adds scanlines (every other row a quarter darker, like an old CRT TV) and Calm (the screen's small movements off).
-- **USB & MIDI page.** Level chooses whether the USB audio follows the **MASTER** knob or stays at a fixed level, so a recording doesn't change when you turn the volume. MIDI out sends notes out over USB. MIDI map chooses where the notes go (section 14).
-- **Repeat page.** Pitch makes each repeat step toward that pitch over four beats while you hold the key, which sounds like a build. Every repeat still starts on the beat grid. Decay makes each repeat quieter than the last, for a dub-style tail. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh grabs a fresh slice of the newest music every beat or bar, which DJs call a slip roll. It only works where there's enough recent music held to do it.
+- **Mix** is the balance between the plain sound and the effect. **Reso** (resonance) makes the filter ring and whistle at its setting. **Feedback** sends the effect back into itself, for a stronger result. **Targets** selects the parts of the music that the effect changes.
+- **Gate patterns.** Euclid 5, 7 or 9 puts 5, 7 or 9 hits over the steps, with spaces that are as equal as possible. Custom is a pattern that you edit yourself (below).
+- **Roll.** From and To set the speed of the repeats at the start and at the end. Each sets how often a roll occurs.
+- **Riser.** Time sets how long the riser takes to climb. Filter, Wash and Echo set how much of each the riser builds up.
+- **Settings page.** Key is the key change at the drop (section 13). The second knob has no function.
+- **SCREEN page.** Zoom shows the name and value of a knob in large text when you turn it. Saver is the screensaver. Lights makes the key lights follow the music. Look adds scanlines (every second row is a quarter darker, like an old CRT TV) and Calm (the small movements on the screen are off).
+- **USB & MIDI page.** Level sets if the USB audio follows the **MASTER** knob or stays at a fixed level. With a fixed level, a recording does not change when you turn the volume. MIDI out sends notes out through USB. MIDI map sets where the notes go (section 14).
+- **Repeat page.** Pitch makes each repeat move toward that pitch over four beats while you hold the key, and this sounds like a build. Each repeat still starts on the beat grid. Decay makes each repeat quieter than the one before it, for a tail in dub style. Gate sets how much of each slice sounds: all of it, 3/4, half or 1/4. Refresh takes a new slice of the newest music every beat or bar (DJs call this a slip roll). Refresh works only when enough recent music is held in memory.
 
-**The Gate page.** The white keys show the pattern's steps. They're lit where the gate opens, and the step that's playing is marked. Press a key to edit a step, and the pattern becomes "custom". A pattern of 12 or 10 steps against the bar of 16 drifts against the beat and comes back around, which is called a polymeter. **Gate 16** and **Gate 8** share this page.
+**The Gate page.** The white keys show the steps of the pattern. A key is lit where the gate opens, and a mark shows the step that plays now. Press a key to edit a step, and the pattern becomes "custom". A pattern of 12 or 10 steps against the bar of 16 moves away from the beat and then comes back to it. This is called a polymeter. **Gate 16** and **Gate 8** share this page.
 
-All of these settings, and the gate's pattern and targets, are kept when you power off (section 13).
+PERF-1 keeps all of these settings, and the pattern and targets of the gate, when you power off (section 13).
 
 ---
 
@@ -1787,48 +1889,54 @@ All of these settings, and the gate's pattern and targets, are kept when you pow
 
 ![A build](img/perf-screen-perform.png)
 
-These are the moves for playing a set live. Most of them wait for the next bar, so everything stays in time.
+These are the actions to play a set live. Most of them wait for the next bar, so all the music stays in time.
 
-- **Breakdown: tap SAVE.** In the bar before the breakdown, the percussion, the open hi-hat and half the hats drop out, to let the energy go. On the next bar's first beat the groove lets go: a last kick, a crash and the bass's root, with the echo thrown so the bar before rings on into the breakdown; then the drums rest. In house, techno and dub the kick keeps going. In drum and bass and industrial the hats keep going. Breaks and funk break down to the drums alone. The mix gets darker, the bass filter closes and the pad gets louder. The breakdown lasts as long as you leave it.
-- **Build: tap SAVE again.** A snare roll climbs in pitch while the bass opens up. It lasts four bars, two in lofi, trip-hop, hip-hop and ambient, eight in house, dubstep, DnB, psytrance and trance. In the last bar the open hat plays every eighth note, and in the four-on-the-floor genres the kick comes back. Then comes the drop.
-- **Drop: hold SAVE.** Everything comes straight back in on the next bar. **SAVE** lights up during a breakdown or build, and blinks while it waits for the bar.
-- **Freeze: REC.** The chord holds and the reverb rings on. Press **REC** again to let the music move on.
-- **Next chord: EDIT.** Moves to the next chord at the next bar. With your own progression playing, it moves to the next slot.
-- **The scale: the keys on Global.** There each key adds its note to the scale or takes it away, on a keyboard picture of the scale. The root note always stays. On every other page the keys play a voice, so a stray key never changes the scale. On Global and the Chords page, **ALGORITHM** picks a mode (a ready-made scale). Everywhere else it's the mood.
-- **Patterns.** Change the drum pattern with **KNOB4** on the Drums page, or with **SEL** + white keys 1-6. A change waits for the next bar, so if you turn the knob past several patterns, only the one you stop on plays.
+- **Breakdown: tap SAVE.** In the bar before the breakdown, the percussion, the open hi-hat and half of the hats stop, so the energy goes down. On the first beat of the next bar, the groove stops with a last kick, a crash and the root note of the bass. PERF-1 sends the echo hard at that moment, so the bar before continues to sound into the breakdown. Then the drums stop.
 
-**Drum drift** makes the drums change by themselves as you play. Press **SEQ** four times to get to it. It's off by default. It has four settings:
+  In house, techno and dub, the kick continues. In drum and bass and industrial, the hats continue. In breaks and funk, the breakdown has only the drums. The mix becomes darker, the bass filter closes and the pad becomes louder. The breakdown has no fixed length: it continues until you do the next action.
+- **Build: tap SAVE again.** A snare roll goes up in pitch while the bass filter opens. The build lasts four bars. In lofi, trip-hop, hip-hop and ambient, it lasts two bars. In house, dubstep, DnB, psytrance and trance, it lasts eight bars. In the last bar, the open hat plays on every eighth note. In the four-on-the-floor genres (a kick on every beat), the kick comes back, and then the drop comes.
+- **Drop: hold SAVE.** All the parts come back on the next bar. **SAVE** comes on during a breakdown or a build. It blinks while it waits for the bar.
+- **Freeze: REC.** The chord stays and the reverb continues to sound. Press **REC** again to make the music move on.
+- **Next chord: EDIT.** Goes to the next chord at the next bar. If your own progression plays, it goes to the next slot.
+- **The scale: the keys on Global.** On the Global page, each key adds its note to the scale or removes it, on a keyboard picture of the scale. The root note always stays in the scale. On all other pages, the keys play a voice, so a key that you press by mistake never changes the scale. On Global and on the Chords page, **ALGORITHM** selects a mode (a ready-made scale). On all other pages, **ALGORITHM** sets the mood.
+- **Patterns.** To change the drum pattern, turn **KNOB4** on the Drums page, or press **SEL** + white keys 1-6. A change waits for the next bar. If you turn the knob past several patterns, only the pattern where you stop plays.
 
-- **Change** moves to the next pattern, or to a random one from pattern 1 up to the **Pool** number.
-- **Every** sets how often: every so many bars, or with each chord change. The bar before each change ends in a fill, with the snare and hats rolling in.
-- **Mutate** rewrites the pattern a little at the same moments. **Shift** moves a hit or two by a step. **Morph** also adds or removes a hit.
+**Drum drift** makes the drums change automatically while you play. Press **SEQ** four times to go to it. It is off by default. It has four settings:
 
-The kick and clap always stay as written, and a snare on a beat never moves, so the groove keeps its footing. What Mutate changes stays in the pattern, so store the piece to keep it. Mutate also works with Change off, slowly wearing one pattern into something new. Your Drum drift settings stay the same when you change piece or genre.
+- **Change** goes to the next pattern, or to a random pattern from pattern 1 up to the **Pool** number.
+- **Every** sets how often a change occurs: after a set number of bars, or with each chord change. The bar before each change ends in a fill: the snare and hats play a roll into the change.
+- **Mutate** changes the pattern a little at the same moments. **Shift** moves one or two hits by one step. **Morph** also adds or removes a hit.
+
+The kick and the clap always stay as written. A snare on a beat never moves. This keeps the groove steady.
+
+The changes that Mutate makes stay in the pattern. To keep them, store the piece. Mutate also works when Change is off: then it slowly changes one pattern into a new pattern. Your Drum drift settings stay the same when you change the piece or the genre.
 
 ![Drum drift](img/perf-screen-drum-drift.png)
 
-PERF-1 doesn't save songs. To keep a performance, record the audio (or the MIDI out) into your computer's recording software, and keep the takes you like.
+PERF-1 does not save songs. To keep a performance, record the audio (or the MIDI out) with the recording software on your computer. Keep the recordings that you like.
 
 ### The Perform screen
 
-Press **HOME** on the Tempo page to get here. From any other page, press **HOME**, then **HOME** again (not too quickly). The screen shows:
+Press **HOME** on the Tempo page to go to this screen. From all other pages, press **HOME**, then press **HOME** again (not too quickly). The screen shows:
 
-- the section you're in (GROOVE, BREAK, BUILD) and how far the auto-DJ is through it
+- the section that plays now (GROOVE, BREAK, BUILD) and how far the auto-DJ is through it
 - the sixteen steps of the bar
-- the eight tracks (kick, hats, snare, perc, bass, acid, pad, pluck) with their levels. A muted track has a line through it, and a soloed one is filled in.
+- the eight tracks (kick, hats, snare, perc, bass, acid, pad, pluck) and their levels. A muted track has a line through it. A soloed track (the only track that you hear) is filled in.
 - the four scenes
-- which effects are on
+- the effects that are on
 - the **mood**
 
-On this screen the keys are the track mix (the mix map, below), the knobs are the FX knobs, and **ALGORITHM** sets the mood.
+On this screen, the keys control the track mix (the mix map, below). The knobs are the FX knobs, and **ALGORITHM** sets the mood.
 
 ### The mix map (GLO held)
 
-The mix map lets you mute, solo and recall scenes while you play. Hold **GLO** and the screen shows what each key does. On the Perform screen or a visualizer you don't need to hold **GLO**: just press the keys, with FX closed. The load meter shows at the top right only when something is wrong: after a dropout, or when the engine eases off to keep up.
+Use the mix map to mute and solo tracks and to recall scenes while you play. Hold **GLO**, and the screen shows the function of each key. On the Perform screen or on a visualizer, you do not have to hold **GLO**. When FX is closed, press the keys. The load meter shows at the top right only when there is a problem: after a dropout (a short gap in the sound), or when the engine does less work to keep up.
 
-Each key shows its job as an icon and a name: a crossed speaker mutes, headphones solo, a snowflake freezes, four squares recall a scene.
+Each key shows its function as an icon and a name. A speaker with a cross mutes. Headphones solo. A snowflake freezes. Four squares recall a scene.
 
-A mute stays on until you press the key again. The black key above a track solos it, so you hear only that track. The hats', snare's and perc's black keys freeze a part instead (a drum on its own was little use; their icon is a snowflake): **freeze BASS** puts the bass on Pedal (it holds the key while the chords move, as on the Progression page), **freeze ACID** and **freeze PLUCK** keep that line as it is (as on its steps page, stored with the piece). Press again to let go.
+A mute stays on until you press the key again. The black key above a track solos that track, so you hear only that track.
+
+The black keys of the hats, the snare and the perc freeze a part instead. (A solo of one drum was of little use.) Their icon is a snowflake. **freeze BASS** puts the bass on Pedal (the bass holds the key while the chords change, as on the Progression page). **freeze ACID** and **freeze PLUCK** keep that line as it is (as on its steps page, stored with the piece). Press the key again to release the freeze.
 
 | Key | Does |
 |---|---|
@@ -1849,34 +1957,34 @@ A mute stays on until you press the key again. The black key above a track solos
 | F#5 | Solo the pluck |
 | G5 | DJ new pieces on / off |
 
-**Scenes** are snapshots of your performance that you can jump back to. A scene stores which effects are latched, the mutes and solos, where the FX knobs are, and the groove: each drum lane's density and source pattern, and the pattern that's playing (which comes back from the next bar).
+**Scenes** are snapshots of your performance. You can go back to a scene at any time. A scene stores the latched effects, the mutes and solos, the positions of the FX knobs, and the groove. The groove is the density and source pattern of each drum lane, and the pattern that plays (it comes back from the next bar).
 
-- **Tap** a scene key to recall it. While the music plays, it comes in on the next bar if the Scenes setting on the Auto DJ page is `NEXT BAR` (the default). Otherwise it comes in at once. The FX knobs glide to their stored positions over about a second.
-- **Hold** a scene key for 0.6 seconds to store things as they are right now.
+- **Tap** a scene key to recall the scene. If the music plays and the Scenes setting on the Auto DJ page is `NEXT BAR` (the default), the scene comes in on the next bar. In all other conditions, it comes in immediately. The FX knobs move smoothly to their stored positions in about a second.
+- **Hold** a scene key for 0.6 seconds to store the current state.
 
-Scenes are kept until you power off.
+PERF-1 keeps the scenes until you power off.
 
-**Undo** (`B3`) puts things back as they were before the last big change: a scene, a reset, muting all drums, or a clear. Press it again to redo.
+**Undo** (`B3`) puts back the state from before the last large change: a scene, a reset, a mute of all drums, or a clear. Press it again to redo.
 
-**Reset all** (`E5`) turns off every latched effect, clears all mutes and solos, and puts the FX knobs back home. You can undo it.
+**Reset all** (`E5`) turns off all latched effects, clears all mutes and solos, and puts the FX knobs back to their home positions. You can undo it.
 
-**Tap tempo** (`E4`): tap it four times or so in time with the beat you want. The tempo becomes the average of your taps.
+**Tap tempo** (`E4`): tap it approximately four times in time with the beat that you want. The tempo becomes the average of your taps.
 
 ![The mix map](img/perf-screen-glo-mix.png)
 
 ### The auto-DJ
 
-The auto-DJ plays the breakdowns, builds and drops for you, so you can focus on the effects and the mix. Press **GLO** + `F5` to start it. `DJ` shows in the header, and the Perform screen counts the bars through each part. It runs through these sections, always on the bar:
+The auto-DJ plays the breakdowns, builds and drops for you. Then you can give your attention to the effects and the mix. Press **GLO** + `F5` to start it. `DJ` shows in the header. The Perform screen counts the bars through each part. The auto-DJ goes through these sections, always on the bar:
 
 1. A **groove** of 8, 16, 32 or 64 bars (16 by default).
 2. A **drum fill** in the last bar of the groove, if Fill is on.
 3. A **breakdown**: short (4 bars), half the length of the groove (at least 4 bars, the default), or full (as long as the groove).
-4. A **build** (its length depends on the genre). The riser climbs, and the music cuts out for the last two sixteenth notes. Then the **drop**: everything comes back at once on the first beat, with the kick, a clap and an open hat that rings like a crash, usually on the home chord of the key.
+4. A **build** (its length depends on the genre). The riser (a sound that goes up) climbs. The music stops for the last two sixteenth notes. Then the **drop** comes: all the parts come back together on the first beat. The drop has the kick, a clap and an open hat that rings like a crash. Usually the drop is on the home chord of the key.
 5. The groove again.
 
-You set Groove, Break, Fill and Scenes on the **Auto DJ** settings page. Groove has a fifth setting, **Sync**. With Sync, the groove lasts until the chord changes. (How long a chord lasts is set by **Drift** on the Tempo page.) The bar before a chord change is a fill, and the bar of the change is the breakdown.
+Set Groove, Break, Fill and Scenes on the **Auto DJ** settings page. Groove has a fifth setting, **Sync**. With Sync, the groove continues until the chord changes. (**Drift** on the Tempo page sets how long a chord lasts.) The bar before a chord change is a fill. The bar of the change is the breakdown.
 
-Turn on **DJ new pieces** (**GLO** + `G5`) and the auto-DJ brings in the next piece in the bank on the fill's bar, so the breakdown and the drop belong to the new piece. If you press **SAVE** yourself, the auto-DJ simply carries on from there. If the drop's key change is on (section 13), it happens on each drop.
+Turn on **DJ new pieces** (**GLO** + `G5`). Then the auto-DJ brings in the next piece in the bank on the bar of the fill. Thus the breakdown and the drop are part of the new piece. If you press **SAVE** yourself, the auto-DJ continues from that point. If the key change on the drop is on (section 13), the key changes on each drop.
 
 ![The SET page](img/perf-screen-set.png)
 
@@ -1884,150 +1992,154 @@ Turn on **DJ new pieces** (**GLO** + `G5`) and the auto-DJ brings in the next pi
 
 ![The Auto FX page](img/perf-screen-auto-fx.png)
 
-**Auto FX** plays effects by itself, like a DJ who throws in a filter sweep or a tape stop before the next phrase. Turn it on from the **Auto FX** settings page (hold **HOME**, then turn **SELECT**: it comes right after Auto DJ). It works with or without the auto-DJ.
+**Auto FX** plays effects automatically. It works as a DJ who adds a filter sweep or a tape stop before the next phrase. Turn it on from the **Auto FX** settings page. To get there, hold **HOME**, then turn **SELECT**. The page comes directly after Auto DJ. Auto FX works with or without the auto-DJ.
 
-- **Each effect ends on a phrase line.** With **Every** at 8 bars, an effect leads into bar 9, 17, 25 and so on, finishing exactly as the next phrase starts. **Length** is the longest one may take: a beat, half a bar, a bar or two bars. Short effects such as a throw or a tape stop always stay short.
-- **It picks what suits the moment.** In a groove: gates, repeats, sweeps and filters. In a breakdown: washes such as the reverse swell, freeze and tape. In a build: rolls and rising filters. At the end of a build (Medium and Wild), a stop, reverse, brake or spin-back leads into the drop, and the four bars after a drop are left alone.
-- **It knows the genre.** With **Pick** on Genre, each genre's own effects come four times as often: throws and tape in dub and reggae, the pump and filters in house and disco, scratches and repeats in breaks and funk, hat rolls and half time in trap and dubstep, gates and flangers in psy. **Any** treats them all alike. **Yours** plays your own gesture instead (record one in the FX menu with SEL + REC: see the gesture recorder), once, whole, ending on the phrase line.
-- **Auto FX** sets how much: **Gentle** keeps to washes and sweeps; **Medium** adds gates, filters, repeats and rolls; **Wild** adds stops, brakes, scatter and half time. It never plays the same effect twice in a row. A phrase line is sometimes skipped (more often at Gentle).
-- **It gets out of your way.** Nothing plays while you hold or latch an effect yourself, and playing one ends an automatic one at once. It also waits while the FX menu is open, during the intro, and when the music is stopped.
+- **Each effect ends on a phrase line** (the start of the next phrase). When **Every** is at 8 bars, an effect leads into bar 9, 17, 25 and so on. The effect ends exactly when the next phrase starts. **Length** is the longest time that an effect can take: a beat, half a bar, a bar or two bars. Short effects, such as a throw or a tape stop, always stay short.
+- **It selects the effects that suit the moment.** In a groove, it uses gates, repeats, sweeps and filters. In a breakdown, it uses washes such as the reverse swell, freeze and tape. In a build, it uses rolls and rising filters. At the end of a build (Medium and Wild), a stop, reverse, brake or spin-back leads into the drop. Auto FX plays no effect in the four bars after a drop.
+- **It knows the genre.** When **Pick** is on Genre, the effects of each genre come four times as often. These are throws and tape in dub and reggae, the pump and filters in house and disco, scratches and repeats in breaks and funk, hat rolls and half time in trap and dubstep, and gates and flangers in psy. **Any** gives all the effects the same chance. **Yours** plays your own gesture instead. It plays the gesture once, complete, and ends it on the phrase line. To record a gesture, use SEL + REC in the FX menu (see the gesture recorder).
+- **Auto FX** sets the amount. **Gentle** uses only washes and sweeps. **Medium** adds gates, filters, repeats and rolls. **Wild** adds stops, brakes, scatter and half time. Auto FX never plays the same effect twice in a row. Sometimes it skips a phrase line (more often at Gentle).
+- **It does not interfere with you.** No automatic effect plays while you hold or latch an effect yourself. When you play an effect, the automatic effect stops immediately. Auto FX also waits while the FX menu is open, during the intro, and when the music is stopped.
 
-The name of each effect shows in the header as it plays. The settings are kept across power-off.
+The header shows the name of each effect while it plays. The settings stay after power-off.
 
-The **SET** settings page shapes a longer set. Hold **HOME** for the settings; it comes after Auto FX on the dial.
+The **SET** settings page controls a longer set. Hold **HOME** to see the settings. The SET page comes after Auto FX on the dial.
 
-- **Rounds** gives each piece 1, 2, 4 or 8 rounds before DJ new pieces moves on. A round is one groove, breakdown, build and drop. The header and the Perform screen count them, like `R2/4`.
-- **Ramp** makes the tempo climb over a piece's rounds of groove, by +2, +4, +8 or +12 BPM, one BPM at a time. If you change the tempo by hand, the climb carries on from there. The next piece starts at its own tempo.
-- **Intro** builds the music up slowly from nothing. When you press Play, the tracks come in one at a time over 1, 2, 4 or 8 minutes. The pad starts in the first bar, then come the hats, the perc, the kick, the snare, the bass, the pluck and last the acid, each a seventh of the way further through. This is handy for mixing in from another deck, or for scratching or sampling over just a pad and a hat. The header counts down, like `INTRO 1:42`, and the auto-DJ stays in its groove until every track is in. Stop and Play again to restart the intro. **Break** is different: a piece you start with PLAY or turn to with PRESETS begins in its breakdown, so you can move from piece to piece through a breakdown and bring each one in with **SAVE** (the build, then the drop). The auto-DJ's own new pieces don't.
-- **Mix** changes pieces the way a DJ changes records. A piece that comes in on the bar (the auto-DJ's next piece, the set list's next slot, or **SEL** + **PRESETS**) starts at the tempo that was playing, then glides to its own tempo over 4, 8, 16 or 32 bars. **Cut** jumps straight to the new tempo, as before. With a set list that goes from a slow piece to a fast one, a long Mix carries the whole set up (or down) smoothly. Turning the tempo by hand stops the glide where it is.
+- **Rounds** gives each piece 1, 2, 4 or 8 rounds before DJ new pieces goes to the next piece. A round is one groove, breakdown, build and drop. The header and the Perform screen count the rounds, like `R2/4`.
+- **Ramp** makes the tempo increase during the rounds of groove of a piece, by +2, +4, +8 or +12 BPM. The tempo increases one BPM at a time. If you change the tempo manually, the increase continues from the new tempo. The next piece starts at its own tempo.
+- **Intro** builds up the music slowly from silence. When you press Play, the tracks come in one at a time over 1, 2, 4 or 8 minutes. The pad starts in the first bar. Then the hats, the perc, the kick, the snare, the bass, the pluck and last the acid come in. Each track comes in a seventh of the way further through the intro. This is useful when you mix in from another deck. It is also useful when you scratch or sample over only a pad and a hat. The header counts down, like `INTRO 1:42`. The auto-DJ stays in its groove until all the tracks are in. To start the intro again, stop the music and press Play again. **Break** is different. With Break, a piece that you start with PLAY or select with PRESETS starts in its breakdown. Thus you can go from piece to piece through a breakdown. Then you bring in each piece with **SAVE** (the build, then the drop). The new pieces that the auto-DJ brings in do not start in a breakdown.
+- **Mix** changes pieces as a DJ changes records. A piece can come in on the bar: the next piece from the auto-DJ, the next slot of the set list, or **SEL** + **PRESETS**. This piece starts at the tempo that was playing. Then its tempo changes slowly to its own tempo over 4, 8, 16 or 32 bars. **Cut** changes immediately to the new tempo, as before. Some set lists go from a slow piece to a fast piece. With these set lists, a long Mix moves the tempo of the whole set up (or down) smoothly. If you turn the tempo manually, the slow change stops at the tempo it has.
 
 ### The set list
 
 ![The Set list page](img/perf-screen-setlist.png)
 
-A set list is the pieces you want to play, in your order, from any genres. Press **GLO** twice (Global, then **Set list**) to open it.
+A set list is a list of the pieces that you want to play, in your order, from any genres. To open it, press **GLO** twice (Global, then **Set list**).
 
 | Knob | Setting | What it does |
 |---|---|---|
-| **KNOB1** | Slot | Which of the 16 slots you're editing. The first 16 white keys choose a slot too. |
-| **KNOB2** | Piece | The slot's piece: every genre's ten in turn (`HYPNO 01` ... `DARK F 10`). Turn it on an empty slot and the piece playing goes in. Turn it right down to *Empty* to clear the slot. |
-| **KNOB3** | Bars | How long the slot plays: *Auto* (the auto-DJ's rounds, as before) or exactly 4, 8, 12, 16, 24, 32, 48, 64, 96 or 128 bars. |
-| **KNOB4** | Play | *Loop* or *Once*: the set list takes over from the bank (below). *Once* stops after the last slot; *Loop* goes round again. |
+| **KNOB1** | Slot | The slot that you edit, from the 16 slots. The first 16 white keys also select a slot. |
+| **KNOB2** | Piece | The piece in the slot. You can select the ten pieces of each genre in turn (`HYPNO 01` ... `DARK F 10`). If you turn it on an empty slot, the piece that plays goes into the slot. To clear the slot, turn the knob fully down to *Empty*. |
+| **KNOB3** | Bars | How long the slot plays: *Auto* (the rounds of the auto-DJ, as before) or exactly 4, 8, 12, 16, 24, 32, 48, 64, 96 or 128 bars. |
+| **KNOB4** | Play | *Loop* or *Once*: the set list replaces the bank (see below). *Once* stops after the last slot. *Loop* plays the list again. |
 
-**Black keys 1-5** take a part out of the slot, or put it back: pad, bass, acid, pluck, drums. The parts line along the bottom shows the slot you're editing, with the parts left out struck through.
+**Black keys 1-5** remove a part from the slot, or put it back: pad, bass, acid, pluck, drums. The parts line along the bottom shows the slot that you edit. The parts that you removed have a line through them.
 
-**Hold SEL** for two more: **KNOB2** is the slot's **Pattern** (*Piece's*: whatever it plays, or drum pattern 1-6) and **KNOB3** its **Energy** (*As is*, or the mood from 0, chill, to 100, peak: the same macro as Perform's mood fader). They take effect when the slot comes in. While SEL is held, the line along the bottom shows them.
+**Hold SEL** for two more settings. **KNOB2** is the **Pattern** of the slot (*Piece's*: the pattern that the piece plays, or drum pattern 1-6). **KNOB3** is the **Energy** of the slot (*As is*, or the mood from 0, chill, to 100, peak). Energy is the same macro (one control for many settings) as the mood fader on Perform. These settings start to work when the slot comes in. While you hold SEL, the line along the bottom shows them.
 
-**A song from the set list.** Give each slot bars and parts and the list plays as a song: each slot for exactly its bars, from the bar it comes in on, with only its parts, then the next. For example: slot 1 a piece for 8 bars with only the pad and the pluck at energy 30 (an intro), slot 2 the same piece for 32 bars with everything on pattern 1, slot 3 for 16 bars without the drums (a break), slot 4 for 32 bars on pattern 3 at energy 85 (the peak), and Play on *Once*. When the next slot is the same piece, it carries on without starting again: only the parts, the pattern and the energy change, on the bar line. Press **PLAY** and it plays through and stops, with the first slot ready again. The slot playing shows how far it is with a line along its bottom.
+**A song from the set list.** Give bars and parts to each slot, and the list plays as a song. Each slot plays for exactly its bars, from the bar where it comes in, with only its parts. Then the next slot plays. For example, slot 1 has a piece for 8 bars, with only the pad and the pluck, at energy 30 (an intro). Slot 2 has the same piece for 32 bars, with all the parts, on pattern 1. Slot 3 has it for 16 bars without the drums (a break). Slot 4 has it for 32 bars on pattern 3 at energy 85 (the peak), and Play is on *Once*.
 
-The song arranges its own changes:
+When the next slot has the same piece, the piece continues and does not start again. Only the parts, the pattern and the energy change, on the bar line. Press **PLAY**. The song plays through and stops, and the first slot is ready again. A line along the bottom of the slot that plays shows how far it is.
 
-- **Into a slot that brings the drums in, or lifts the energy by 25 or more:** the slot before it ends with a build over its last bars. The build is the genre's length, at most half the slot, and the drums come in for it if that slot had them out. The next slot starts on the drop.
-- **Into a slot without the drums:** it comes in as a breakdown, the groove letting go on the one.
-- **Any other change:** a drum fill the bar before.
+The song makes its own changes:
 
-In the example above: the intro builds into slot 2, slot 3 comes in as a breakdown, and slot 3 builds into the peak.
+- **Into a slot that brings the drums in, or lifts the energy by 25 or more:** the slot before it ends with a build over its last bars. The build has the length of the genre, but it is not more than half of the slot. If that slot had the drums out, the drums come in for the build. The next slot starts on the drop.
+- **Into a slot without the drums:** the slot comes in as a breakdown. The groove releases on the one (the first beat of the bar).
+- **Any other change:** a drum fill in the bar before.
+
+In the example above, the intro builds into slot 2. Slot 3 comes in as a breakdown. Slot 3 builds into the peak.
 
 With **Play** on:
 
-- **PRESETS** steps to the next or last slot in the list, across genres, instead of the next piece in the bank. With **SEL** held while the music plays, the slot waits for the next bar. The header says `SET 2/5` and the piece's title.
-- The **auto-DJ** brings in the next slot instead of the bank's next piece (you don't need DJ new pieces on). It changes on the fill's bar, after the piece's **Rounds**, so the breakdown and the drop belong to the new piece. A slot with **Bars** set changes when its bars are up instead; the DJ's breakdowns and builds still come in between.
-- Empty slots are skipped, and after the last slot it goes back to the first.
+- **PRESETS** goes to the next or the previous slot in the list, across genres. It does not go to the next piece in the bank. If you hold **SEL** while the music plays, the slot waits for the next bar. The header shows `SET 2/5` and the title of the piece.
+- The **auto-DJ** brings in the next slot, not the next piece in the bank. (DJ new pieces does not have to be on.) It changes on the bar of the fill, after the **Rounds** of the piece. Thus the breakdown and the drop are part of the new piece. If a slot has **Bars** set, the slot changes when its bars are complete. The breakdowns and builds of the DJ still come in between.
+- The set list skips empty slots. After the last slot, it goes back to the first slot.
 
-The list on screen shows each slot's genre and piece. The slot playing is bright, and the slot you're editing has a bar behind it. The white keys light the slots in use, and the slot playing blinks.
+The list on the screen shows the genre and the piece of each slot. The slot that plays is bright. The slot that you edit has a bar behind it. The white keys light the slots that are in use. The key of the slot that plays blinks.
 
 ### Track codes
 
 ![The Code page](img/perf-screen-code.png)
 
-Every time you press **PLAY**, PERF-1 starts a fresh track and gives it a code of nine letters, like `DZBT-4DTT9`. The screen shows it as the music starts (`PLAYING DZBT-4DTT9`). The code holds the genre, the piece, the key, the mode, the tempo, and the dice every generator starts from. Start the same code again and you hear the same track, note for note from the top: the same chords, drums, bass line, acid and pluck. Write one down when you like what you hear, or share it in a comment.
+Each time you press **PLAY**, PERF-1 starts a new track. It gives the track a code of nine letters, like `DZBT-4DTT9`. The screen shows the code when the music starts (`PLAYING DZBT-4DTT9`). The code holds the genre, the piece, the key, the mode, the tempo, and the dice (the random values) that each generator starts from. If you start the same code again, you hear the same track, note for note from the start. You hear the same chords, drums, bass line, acid and pluck. When you like a track, write down its code, or share the code in a comment.
 
-Press **GLO** three times (Global, Set list, **Code**) to open the Code page. It shows the code playing on nine tiles, a strip of its bits, and what it starts: the genre and piece, the key and mode, the tempo.
+To open the Code page, press **GLO** three times (Global, Set list, **Code**). The page shows the code that plays on nine tiles, and a strip of its bits. It also shows what the code starts: the genre and piece, the key and mode, and the tempo.
 
 | Knob | Setting | What it does |
 |---|---|---|
-| **KNOB1** | Place | Which letter you're changing (the tile with the bar). |
-| **KNOB2** | Letter | The letter there. The last letter is a check and follows the others, so one wrong letter shows as `NOT A CODE`. |
-| **KNOB3** | Roll | A new code: the same genre, piece, key and tempo, other dice. Each turn is another one. |
+| **KNOB1** | Place | The letter that you change (the tile with the bar). |
+| **KNOB2** | Letter | The letter in that place. The last letter is a check letter, and it comes from the other letters. Thus one wrong letter shows as `NOT A CODE`. |
+| **KNOB3** | Roll | A new code with the same genre, piece, key and tempo, but other dice. Each turn gives a different code. |
 
-**PLAY** on the Code page starts the code shown: the one you typed or rolled, or the track playing again from the top.
+**PLAY** on the Code page starts the code that shows. This is the code that you typed or rolled, or the track that plays, again from the start.
 
-What a code keeps and what it doesn't:
+What a code keeps and what it does not keep:
 
-- A code gives the piece as it comes (its recipe), in the code's key, mode and tempo. If you've changed the piece (a knob, a pattern, a stored version), the page says `EDITED: THE CODE GIVES THE RECIPE`: the code still starts the track, without your changes. To keep those, store the piece and share it through the library.
-- The same track plays as long as you let it run. A knob turned, a key played, a scene, the FX or the auto-DJ's moves take it somewhere else from there.
-- Starting the music while the pad is still ringing can change the pad's first breath; the notes are the same.
-- Codes are for this firmware. A later version may change how the generators work, and an old code then starts a different track.
+- A code gives the piece as it comes (its recipe), in the key, mode and tempo of the code. If you changed the piece (a knob, a pattern, a stored version), the page shows `EDITED: THE CODE GIVES THE RECIPE`. The code still starts the track, but without your changes. To keep your changes, store the piece and share it through the library.
+- The same track plays while you let it play without changes. If you turn a knob or play a key, the track changes from that point. A scene, the FX or a change from the auto-DJ also change the track from that point.
+- If you start the music while the pad still rings, the first sound of the pad can be different. The notes are the same.
+- Codes are for this firmware. A later version can change how the generators work. Then an old code starts a different track.
 
-The set list is kept with the theme, Tune and MIDI out. It plays your stored pieces as they are stored, and factory pieces as they come.
+The FM-1 keeps the set list together with the theme, Tune and MIDI out. The set list plays your stored pieces as you stored them, and the factory pieces as they come.
 
 ### Mood
 
-Mood is one control that makes the whole piece calmer or more intense. **ALGORITHM** sets it on every page except Chords and Global, where it picks the mode. 0 is chill, 100 is peak, and 50 (the middle, and the default) leaves the piece as it is.
+Mood is one control that makes the whole piece calmer or more intense. **ALGORITHM** sets it on all pages except Chords and Global. On those two pages, **ALGORITHM** selects the mode. 0 is chill, 100 is peak, and 50 (the middle, and the default) keeps the piece as it is.
 
-The further you turn from 50, the more it changes these:
+The more you turn from 50, the more Mood changes these:
 
-- the acid's density and filter cutoff (how bright it is)
+- the density and the filter cutoff of the acid (how bright it is)
 - the levels of the hats and the perc
-- the pad's brightness
-- the pluck's density, level and decay (shorter toward peak)
-- the bass's cutoff and drive
-- the reverb and echo (less toward peak)
+- the brightness of the pad
+- the density, level and decay of the pluck (shorter toward peak)
+- the cutoff and the drive of the bass
+- the reverb and the echo (less toward peak)
 - Evolve
-- the drums' level
+- the level of the drums
 
-Mood changes what you hear, but it doesn't change the stored piece. It stays where you left it when you change piece. It isn't remembered when you power off.
+Mood changes what you hear, but it does not change the stored piece. When you change the piece, Mood stays where you set it. The FM-1 does not keep Mood when you power off.
 
 ### The keys' lights
 
-On most pages the keys light the scale. While the music plays, the notes of the chord playing are lit bright and the rest of the scale dim, so you can see which keys fit right now. Stopped, the whole scale is lit.
+On most pages, the key lights show the scale. While the music plays, the notes of the chord that plays are bright, and the other notes of the scale are dim. Thus you can see which keys fit at this moment. When the music is stopped, all the notes of the scale are lit.
 
 ### Jam
 
 ![The Jam page](img/perf-screen-jam.png)
 
-The **Jam** page turns the 27 keys into an instrument so you can play along with the music. Turn the **SELECT** dial to it; it comes after Global. Its Voice, Keys and Octave are also how the keys play on pages that aren't a voice's own (Tempo, the drums, the mixer and so on).
+The **Jam** page changes the 27 keys into an instrument, so you can play with the music. Turn the **SELECT** dial to it. It comes after Global. Some pages are not the page of a voice (Tempo, the drums, the mixer and so on). On these pages, the keys also play with the Voice, Keys and Octave of the Jam page.
 
 | Knob | Setting | What it does |
 |---|---|---|
-| **KNOB1** | Voice | Which sound you play: the pluck, the pad, the acid or the bass. While the page is up, that part stops playing its own line. It gets it back when you leave. |
-| **KNOB2** | Keys | *Scale*: every key plays a note of the scale. A black key plays the scale note at or below it, so there are no wrong notes. *Chords*: every key plays a three-note chord (a triad) from the scale. *Harp*: the keys play the scale's notes in order, one per key, from C3. |
+| **KNOB1** | Voice | The sound that you play: the pluck, the pad, the acid or the bass. While the page shows, that part stops its own line. The part plays its line again when you leave the page. |
+| **KNOB2** | Keys | *Scale*: each key plays a note of the scale. A black key plays the scale note at or below it, so there are no wrong notes. *Chords*: each key plays a three-note chord (a triad) from the scale. *Harp*: the keys play the notes of the scale in order, one note for each key, from C3. |
 | **KNOB3** | Octave | -2 to +2. |
-| **KNOB4** | Sound | The sound of the voice you play: the pluck's DX voice, the pad's, the acid's or the bass's. It is the same setting as on that voice's own page, saved with the piece. |
+| **KNOB4** | Sound | The sound of the voice that you play: the DX voice of the pluck, or the sound of the pad, the acid or the bass. It is the same setting as on the page of that voice, and it is saved with the piece. |
 
-The page shows a keyboard with the scale's notes lit and the keys you hold bright (orange). While the music plays, the notes of the chord playing are blue, and its name is in the top right, like `Am7`. If the pluck's level is turned almost all the way down, playing it raises it to 40 so you can hear it.
+The page shows a keyboard. The notes of the scale are lit, and the keys that you hold are bright (orange). While the music plays, the notes of the chord that plays are blue. The name of the chord is in the top right, like `Am7`. If the level of the pluck is almost fully down, the level goes up to 40 when you play the pluck. Then you can hear it.
 
-**Accents (SEL).** The FM-1's keys can't feel how hard you press, so hold **SEL** while you play a key for an accent: a louder note, and on the acid a full accent (brighter, punchier). On the Jam page SEL + a key always plays; it doesn't change the pattern as it does elsewhere.
+**Accents (SEL).** The keys of the FM-1 cannot sense how hard you push them. To play an accent, hold **SEL** while you play a key. An accent is a louder note. On the acid, it is a full accent (brighter, with more punch). On the Jam page, SEL + a key always plays a note. It does not change the pattern as it does on other pages.
 
-**The phrase recorder (REC on the Jam page).** For a line longer than a bar, with long notes and rests, record it as you play it:
+**The phrase recorder (REC on the Jam page).** Use it for a line that is longer than a bar, with long notes and rests. Record the line while you play it:
 
-1. On the Jam page, with the music playing and the voice on the **pluck**, the **acid** or the **bass**, press **REC**. The header
-   says `ARM` and REC blinks: it waits for you. (On the Jam page REC is the phrase recorder; everywhere else it's still Freeze.)
-2. Play. Your first key starts the recording (`REC`), from the start of the bar you're in. Every key is written on its sixteenth, with how long
-   you held it; hold **SEL** for an accent.
-3. Press **REC** to end it with the bar you're in (after four bars it ends by itself). Pressed on the one or just after it (the bar's first
-   beat), it ends with the bar just gone instead, so you can hit REC on the downbeat like a looper. It plays from there on, over and over,
-   exactly as you played it: long notes long, rests as rests. The voice's own line is off while it plays. The header says `PHR`.
-4. **REC** again on the Jam page (or **SEL** + **REC** on any other page) lets it go, and the voice's own line comes back.
+1. Go to the Jam page. Make sure that the music plays and that the voice is the **pluck**, the **acid** or the **bass**. Press **REC**.
+   The header shows `ARM` and REC blinks: the recorder waits for you. (On the Jam page, REC is the phrase recorder. On all other pages, REC is still Freeze.)
+2. Play. Your first key starts the recording (`REC`), from the start of the bar that you are in. The recorder writes each key on its sixteenth note,
+   with the time that you held it. Hold **SEL** for an accent.
+3. Press **REC** to stop the recording at the end of the bar that you are in. (After four bars, it stops automatically.) If you press REC on the one (the first
+   beat of the bar) or just after it, the recording ends with the bar before. Thus you can push REC on the downbeat, as on a looper. From then on, the phrase plays again and again,
+   exactly as you played it. Long notes stay long, and rests stay rests. The line of the voice is off while the phrase plays. The header shows `PHR`.
+4. Press **REC** again on the Jam page (or **SEL** + **REC** on any other page) to release the phrase. The line of the voice comes back.
 
-A phrase of one bar is also written into the voice's line (as Capture does, below), so it's kept when you save the piece. Longer phrases play
-until you let them go, and aren't saved with the piece. The notes play as you played them: when the chords change under a long phrase, it
-doesn't follow them. On the **pluck**, a chord (the Jam page's **Chords** mode) comes back as the whole chord, the same notes you heard; the
-acid and the bass play one note at a time, so a chord on them is recorded as its root. (The pluck's line keeps one note a step, so a
-one-bar phrase saved into it keeps the chord's root: the phrase itself plays the chord.)
+A phrase of one bar is also written into the line of the voice (as Capture does, below). Thus the phrase stays when you save the piece. Longer phrases play
+until you release them. They are not saved with the piece. The notes play as you played them. When the chords change under a long phrase, the phrase
+does not follow them.
 
-**Capture (SEL + REC).** The quickest way to write a riff is to play it. Capture takes the bar you last played on the Jam page (of the last
-four, the one where you played the most) and makes it that voice's own line, as you played it: each note against the chord it was played over, a
-key a little early counted on the step it was meant for, and the line starting where the bar does:
+On the **pluck**, a chord (the **Chords** mode of the Jam page) plays back as the full chord, with the same notes that you heard. The
+acid and the bass play one note at a time, so they record a chord as its root (the note that gives the chord its name). (The line of the pluck keeps one note for each step. Thus a
+one-bar phrase that goes into the line keeps the root of the chord. The phrase itself plays the chord.)
 
-- With the voice on **acid**, the bar goes into the Acid steps page as a 16-step line, set to **Frozen**. Each sixteenth where you played a key gets that note. The notes are stored relative to the chord at the time, so the line follows the chords from then on. A key played on a beat becomes an accent (a louder note). A key you hold keeps sounding for as long as you held it: the steps it covers get the same note, slid into from the one before, so it plays as one long note (the 303's tie). The line plays when you leave the Jam page.
-- With the voice on the **pluck**, the bar goes into the Deja vu loop, set to Loop 16, Rate 1/16 and Pluck vu 100, starting at the next bar line. Turn Pluck vu down to let it drift again.
-- With the voice on the **bass**, the bar goes into the Bass steps page and the bass line's Mode goes to Steps. Each note becomes a scale step
-  above the chord's root, in the octave nearest to what you played; a key on a beat is an accent. A key you hold keeps sounding: the steps it
-  covers become **Hold** steps, so the note lasts as long as you held it (still held when you press **SEL** + **REC**: to the bar's end).
-- The pad can't be captured.
+**Capture (SEL + REC).** The fastest way to write a riff (a short musical line) is to play it. Capture takes the bar that you played last on the Jam page. (Of the last
+four bars, it takes the bar where you played the most.) Capture makes that bar the line of that voice, as you played it. It sets each note against the chord that played under it. If you played a
+key a little early, Capture puts it on the step that you meant. The line starts where the bar starts:
 
-Capture remembers your last 32 key presses, so play the bar on the Jam page first, then press **SEL** + **REC** (on the Jam page or any other). The header says `CAPTURED`.
+- With the voice on **acid**, the bar goes into the Acid steps page as a 16-step line, set to **Frozen**. Each sixteenth where you played a key gets that note. The notes are stored relative to the chord at that time, so the line follows the chords from then on. A key that you played on a beat becomes an accent (a louder note). A key that you hold sounds for as long as you held it. The steps that it covers get the same note, with a slide from the note before. Thus it plays as one long note (the tie of the 303). The line plays when you leave the Jam page.
+- With the voice on the **pluck**, the bar goes into the Deja vu loop, set to Loop 16, Rate 1/16 and Pluck vu 100. The loop starts at the next bar line. To let the line change again, turn Pluck vu down.
+- With the voice on the **bass**, the bar goes into the Bass steps page, and the Mode of the bass line changes to Steps. Each note becomes a scale step
+  above the root of the chord, in the octave nearest to the note that you played. A key on a beat is an accent. A key that you hold continues to sound. The steps that it
+  covers become **Hold** steps, so the note lasts as long as you held it. (If you still hold the key when you press **SEL** + **REC**, the note lasts to the end of the bar.)
+- You cannot capture the pad.
+
+Capture remembers your last 32 key presses. First, play the bar on the Jam page. Then press **SEL** + **REC** (on the Jam page or on any other page). The header shows `CAPTURED`.
 
 ---
 
@@ -2035,61 +2147,63 @@ Capture remembers your last 32 key presses, so play the bar on the Jam page firs
 
 ![The Mixer page](img/perf-screen-mixer.png)
 
-The **Mixer** page sets the balance between the parts. Turn the **SELECT** dial to it; it sits between Comp/Limit and Global. It works on one layer at a time.
+The **Mixer** page sets the balance between the parts. Turn the **SELECT** dial to it. It is between Comp/Limit and Global. It works on one layer at a time.
 
 | Knob | Does |
 |---|---|
-| **KNOB1** | Chooses the layer: pad, bass, acid, pluck or drums. |
-| **KNOB2** | The layer's level. It's the same level as on the layer's own page. |
-| **KNOB3** | The layer's **pan**, its place from left to right: L100 to R100. It works like a balance knob, and the middle leaves the sound as it was. |
-| **KNOB4** | The layer's **send**: how much of it goes to the echo and the reverb. 50 is as it was, 0 is none, 100 is twice as much. |
+| **KNOB1** | Selects the layer: pad, bass, acid, pluck or drums. |
+| **KNOB2** | The level of the layer. It is the same level as on the page of the layer. |
+| **KNOB3** | The **pan** of the layer: its position from left to right, L100 to R100. It works like a balance knob. The middle keeps the sound as it was. |
+| **KNOB4** | The **send** of the layer: how much of the layer goes to the echo and the reverb. 50 is as it was, 0 is none, 100 is twice as much. |
 
-The page draws a strip for each layer. Each strip shows the level you've set (the fader, with its number) and the level you're actually hearing (the meter beside it). A muted track shows an `M`, and a soloed one has its name in the highlight colour. The last strip is the output's peak level. The layer you've chosen has a frame round it, with a tick under it for its pan. Everything on this page is stored with the piece.
+The page shows a strip for each layer. Each strip shows the level that you set (the fader, with its number). It also shows the level that you actually hear (the meter next to the fader). A muted track shows an `M`. A soloed track shows its name in the highlight colour. The last strip shows the peak level of the output. The layer that you selected has a frame around it, with a tick below it that shows its pan. The piece keeps all the settings on this page.
 
-**Space** and **Reverb** are the pages for the echo and the reverb. The echo is in time with the tempo: 1/8, 3/16, 1/4, dotted 1/4, 1/2 or 1 bar. **Echo** sets how much it repeats, **Reverb** how much goes into the reverb, and **Size** how long the reverb tail is.
+**Space** and **Reverb** are the pages for the echo and the reverb. The echo is in time with the tempo: 1/8, 3/16, 1/4, dotted 1/4, 1/2 or 1 bar. **Echo** sets how much the echo repeats. **Reverb** sets how much sound goes into the reverb. **Size** sets how long the reverb tail is (the sound that continues after the note).
 
 ![The Space page](img/perf-screen-space.png)
 
 ![The Reverb page](img/perf-screen-reverb.png)
 
-The **Reverb** page chooses the type of reverb:
+The **Reverb** page selects the type of reverb:
 
 | Type | What it is |
 |---|---|
-| Plate | A classic, smooth reverb. Amount does nothing. |
-| Shimmer | The tail is shifted an octave up and fed back into the reverb, so it sparkles. Amount sets how much is fed back. |
-| Gated | The tail opens with the sound, stays open for a set time and then cuts off sharply (in about 10 ms). Amount sets that time, from 80 to 400 ms. |
+| Plate | A classic, smooth reverb. Amount has no effect. |
+| Shimmer | The tail moves up an octave and goes back into the reverb, so it sounds bright. Amount sets how much goes back. |
+| Gated | The tail opens with the sound, stays open for a set time, and then stops sharply (in about 10 ms). Amount sets that time, from 80 to 400 ms. |
 
-**Damping** (0-100, 47 by default) makes the reverb lose its highs, so higher settings sound darker. **Predelay** (6-30 ms, 30 by default) is a short gap before the reverb starts, which keeps the sound clear.
+**Damping** (0-100, 47 by default) makes the reverb lose its high sounds. Higher settings sound darker. **Predelay** (6-30 ms, 30 by default) is a short gap before the reverb starts. This gap keeps the sound clear.
 
-Each genre sets its own damping and predelay. Lofi and dubstep are darker, and house is brighter and shorter. Drum and bass and trap use the shimmer, and breaks and electro use the gated reverb. The page draws the tail for the type you've chosen.
+Each genre sets its own damping and predelay. Lofi and dubstep are darker. House is brighter and shorter. Drum and bass and trap use the shimmer. Breaks and electro use the gated reverb. The page shows the tail for the type that you selected.
 
 ### The master bus
 
 ![The Comp/Limit page](img/perf-screen-master.png)
 
-The master bus is the last stage before the sound leaves the FM-1. It evens out the volume and stops it from clipping. After the effects, and before the **MASTER** volume, the mix goes through two stages:
+The master bus is the last stage before the sound goes out of the FM-1. It makes the volume more even and stops clipping (distortion when the sound is too loud). After the effects, and before the **MASTER** volume, the mix goes through two stages:
 
-- a **compressor**, which turns the loud parts down so the mix sounds tighter and more even. It works on both sides of the stereo together.
-- a **limiter**, a hard ceiling the sound can't go over. It looks a moment ahead (it delays the sound by about 1.4 ms, too little to hear), so it's ready before a peak arrives, and lets go over about 60 ms.
+- a **compressor**. It turns the loud parts down, so the mix sounds tighter and more even. It works on the two sides of the stereo together.
+- a **limiter**: a hard ceiling that the sound cannot go above. It looks a moment ahead (it delays the sound by about 1.4 ms, which is too short to hear). Thus it is ready before a peak comes. It releases over about 60 ms.
 
-After the **MASTER** volume there's also a gentle soft clip as a last safety net.
+After the **MASTER** volume, there is also a gentle soft clip as a last protection.
 
 | Knob | Range | Does |
 |---|---|---|
-| Ratio | Off, 1.5:1, 2:1, 3:1, 4:1, 6:1, 10:1 | How hard the compressor squeezes. Higher is stronger. It eases in gently (a 6 dB soft knee). |
-| Thresh | -30 to 0 dB | The threshold: how loud the sound has to get before the compressor starts working. |
-| Make-up | 0 to +12 dB | Turns the sound back up after compressing. |
-| Ceiling | -12 to 0 dB | The limiter's ceiling, before the **MASTER** volume. |
+| Ratio | Off, 1.5:1, 2:1, 3:1, 4:1, 6:1, 10:1 | How strongly the compressor reduces the sound. Higher is stronger. It starts gently (a 6 dB soft knee). |
+| Thresh | -30 to 0 dB | The threshold: how loud the sound must be before the compressor starts to work. |
+| Make-up | 0 to +12 dB | Turns the sound up again after the compressor. |
+| Ceiling | -12 to 0 dB | The ceiling of the limiter, before the **MASTER** volume. |
 
-The compressor listens without the deep lows (below about 100 Hz), so the kick and the sub don't pull the whole mix down on every beat. It
-reacts in 10 ms, so a drum's hit gets through before it comes down (the punch stays). It lets go in about 80 ms, more slowly (up to half a
-second) when it's turning the sound down a lot. It gives back most of what it takes on average, so the level stays about where it was and
+The compressor does not listen to the deep lows (below about 100 Hz). Thus the kick and the sub do not pull the whole mix down on each beat. It
+reacts in 10 ms, so the hit of a drum gets through before the compressor turns it down. This keeps the punch.
+
+The compressor releases in about 80 ms. It releases more slowly (up to half a
+second) when it turns the sound down a lot. On average, it gives back most of what it takes. Thus the level stays near where it was, and
 the knobs change the feel, not the volume.
 
-The page draws the compressor's curve, with the sound going in along the bottom and coming out up the side. The dotted line is where in and out are equal, the upright tick is the threshold, and the flat tick is the ceiling. There are also live meters: **COMP** (how much the compressor is turning down), **LIMIT** (how much the limiter is) and **OUT** (the output's peak).
+The page shows the curve of the compressor. The sound that goes in is along the bottom, and the sound that comes out is up the side. The dotted line is where the input and the output are equal. The vertical tick is the threshold, and the horizontal tick is the ceiling. There are also live meters: **COMP** (how much the compressor turns the sound down), **LIMIT** (how much the limiter turns it down) and **OUT** (the peak of the output).
 
-The four settings are stored with the piece. The default is a light 1.5:1 at -12 dB, with +1.2 dB of make-up. Each genre brings its own: lofi and garage use 2:1, house, drum and bass and electro 3:1, and breaks, dubstep and trap 4:1 with more make-up. The limiter's ceiling is 0 dB in every genre, so it only catches sounds that would clip.
+The piece keeps the four settings. The default is a light 1.5:1 at -12 dB, with +1.2 dB of make-up. Each genre has its own settings. Lofi and garage use 2:1. House, drum and bass and electro use 3:1. Breaks, dubstep and trap use 4:1 with more make-up. The ceiling of the limiter is 0 dB in every genre, so it only catches sounds that would clip.
 
 ---
 
@@ -2097,24 +2211,24 @@ The four settings are stored with the piece. The default is a light 1.5:1 at -12
 
 ![What shift does on this page](img/perf-screen-shift.png)
 
-**SEL** is the shift button. Hold it and the keys, buttons and knobs do something else:
+**SEL** is the shift button. When you hold **SEL**, the keys, buttons and knobs do different things:
 
 | Hold SEL and press | What happens |
 |---|---|
-| White keys 1-6 (F3 G3 A3 B3 C4 D4) | Switches to pattern 1-6 on the next bar. The key of the pattern you chose lights up, and the one still playing blinks until the change. Tap the key and the new pattern stays. Hold it for more than a quarter of a second and that pattern plays only while you hold the key. Let go and the previous pattern comes back from the next bar. This is a good way to use pattern 5 or 6 as a held variation. |
-| **PRESETS** | Next or previous piece, on the next bar. The screen shows `PIECE 03 NEXT BAR` until it changes. |
-| **ALGORITHM** | Steps through the sounds of the voice on screen (pad, bass, acid, pluck). On the drum pages it steps through whole kits. |
-| **SEQ** | Turns the links (drum hits patched into the voices, section 7) on and off. |
-| **ENV** | On a pad, bass or acid page: takes that voice away from the automatic part so it only plays what you play by hand. Press again to hand it back. |
-| **FX** | Walks through the effects' settings pages one by one, then back to the keys. |
-| A key in the FX menu | Opens that effect's settings page. |
-| **GLO** | Remote: the FM-1's panel plays the emulator (section 17). Works only when stopped, because it stops the music. If the music is playing, the screen says `STOP FIRST`. |
-| Black keys 1-6 (in the sequencer) | Copies the pattern you're editing into pattern 1-6. Without SEL, the black keys in the sequencer choose the lane's source (section 8). |
-| **OCT-** (in the sequencer) | Clears this drum's lane. |
-| **OCT+** (in the sequencer) | Puts this drum's lane back to the piece's own pattern. |
+| White keys 1-6 (F3 G3 A3 B3 C4 D4) | Changes to pattern 1-6 at the next bar. The key of the pattern that you selected lights up. The key of the pattern that plays now flashes until the change. If you tap the key, the new pattern stays. If you hold the key for more than a quarter of a second, that pattern plays only while you hold the key. When you release the key, the previous pattern comes back at the next bar. Use this to play pattern 5 or 6 as a held variation. |
+| **PRESETS** | The next or the previous piece starts at the next bar. Until the change, the screen shows `PIECE 03 NEXT BAR`. |
+| **ALGORITHM** | Goes through the sounds of the voice on the screen (pad, bass, acid, pluck), one at a time. On the drum pages, it goes through complete kits. |
+| **SEQ** | Turns the links on and off (a link sends a drum hit into a voice, section 7). |
+| **ENV** | On a pad, bass or acid page: removes that voice from the automatic part. The voice then plays only the notes that you play by hand. Press again to give the voice back to the automatic part. |
+| **FX** | Goes through the settings pages of the effects, one at a time, and then back to the keys. |
+| A key in the FX menu | Opens the settings page of that effect. |
+| **GLO** | Remote: the panel of the FM-1 plays the emulator (section 17). This works only when the music is stopped, because it stops the music. If the music plays, the screen shows `STOP FIRST`. |
+| Black keys 1-6 (in the sequencer) | Copies the pattern that you edit into pattern 1-6. Without SEL, the black keys in the sequencer select the source of the lane (section 8). |
+| **OCT-** (in the sequencer) | Clears the lane of this drum. |
+| **OCT+** (in the sequencer) | Sets the lane of this drum back to the piece's own pattern. |
 | **KNOB1**-**KNOB4** (in the sequencer) | Euclid, rotation, probability, lane length. |
 
-While SEL is held, keys never play notes or effects. Hold SEL on its own for a moment and a card pops up listing what shift does on the page you're on.
+While you hold SEL, the keys do not play notes or effects. If you hold SEL alone for a moment, a card comes on the screen. The card shows what shift does on the page that is open.
 
 ---
 
@@ -2122,16 +2236,18 @@ While SEL is held, keys never play notes or effects. Hold SEL on its own for a m
 
 ![The settings page](img/perf-screen-settings.png)
 
-To open the **settings**, **hold HOME** for just under a second (0.7 s) without turning anything. The settings are their own walk, apart from the effects' pages: turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **Auto FX**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE**, **SOUND**, **CHORUS**, **RESONATOR**, **RETURNS** and **LINK**. FILTERS and SCREAM come first because they belong to the piece: each piece keeps its own, saved with it (**GLO**, then **SAVE**), and a piece without any plays the defaults. It stops at the ends. **FX** leaves.
+To open the **settings**, **hold HOME** for just under a second (0.7 s). Do not turn anything while you hold it. The settings pages are a separate series from the effects pages. Turn **SELECT** to go through **FILTERS**, **SCREAM**, **Settings**, **Auto DJ**, **Auto FX**, **SET**, **USB & MIDI**, **MIDI IN**, **SCREEN**, **SAMPLE**, **SOUND**, **CHORUS**, **RESONATOR**, **RETURNS** and **LINK**. The series stops at the first page and at the last page. Press **FX** to close the settings.
+
+FILTERS and SCREAM come first because they belong to the piece. Each piece keeps its own FILTERS and SCREAM settings, and they are saved with the piece (**GLO**, then **SAVE**). A piece without these settings plays the defaults.
 
 The Settings page:
 
 | Knob | What it does |
 |---|---|
-| Save | When a store while the music plays is written to memory. **Anytime** (the default): at once. Writing pauses the FM-1 for a moment, so the music fades out and back in around it. **At stop**: the piece is stored straight away (it plays and shows as stored) but is only written when you stop the music, so nothing fades. The effects' and other settings wait for the stop too. Stop before you switch off, or the store is lost. Changing genre while a store is waiting writes it first, with the usual fade. |
-| Key | A key change for the drop: same, +2, +3, +5 or +7 semitones. When a breakdown or build ends and the groove comes back in, the whole piece moves up by this much for that round. The next breakdown, a stop or another piece moves it back. `KEY` shows in the header while it's on. |
-| Form | **Song** (the default): a piece moves through its own drum patterns, a new one every 8 bars (16 in the slower genres), with a fill just before each change, so it plays like a track. Song also arranges the parts: now and then a phrase rests the pluck or the acid (or both) for half of it, and the bass may sit out the fill bar and land on the change. The pad always plays. A set-list slot with its own bars leaves the arranging to you. **Few rests** is Song with those rests half as often, and **No rests** is Song with none: every part plays every bar. **Loop**: it stays on its first pattern, for when you want to steer it yourself. If you set Drum drift (**SEQ** x4), yours plays instead, in either. Song keeps the beat's feel: when it moves to a pattern with another feel (half time after four on the floor, say), the kick, snare and clap stay as they were and only the hats and perc move on. |
-| Start | **Last** (the default): the FM-1 switches on to the piece you last played, as it is saved (unsaved changes are not kept: save with **GLO**, then **SAVE**). **Random**: a piece of HYPNO at random, the old way. |
+| Save | Sets when the FM-1 writes a store to memory while the music plays. **Anytime** (the default): at once. The write pauses the FM-1 for a moment, so the music fades out and back in around it. **At stop**: the FM-1 stores the piece immediately (it plays and shows as stored), but writes it only when you stop the music. Thus nothing fades. The settings of the effects and the other settings also wait for the stop. Stop the music before you switch off, or the store is lost. If you change the genre while a store waits, the FM-1 writes the store first, with the usual fade. |
+| Key | A key change for the drop (the moment when the groove comes back): same, +2, +3, +5 or +7 semitones. When a breakdown or a build ends and the groove comes back, the whole piece moves up by this value for that round. The next breakdown, a stop or another piece moves it back. While the key change is on, `KEY` shows in the header. |
+| Form | **Song** (the default): a piece goes through its own drum patterns. A new pattern starts every 8 bars (16 in the slower genres), with a fill just before each change. Thus it plays like a track. Song also arranges the parts. Sometimes a phrase rests the pluck or the acid (or both) for half of the phrase. The bass can stop for the fill bar and come back on the change. The pad always plays. If a set-list slot has its own bars, you do the arranging. **Few rests** is Song with those rests half as often. **No rests** is Song with no rests: every part plays every bar. **Loop**: the piece stays on its first pattern. Use it when you want to control the piece yourself. If you set Drum drift (**SEQ** x4), your drift plays instead, in Song and in Loop. Song keeps the feel of the beat. When it moves to a pattern with a different feel (for example, half time after four on the floor), the kick, snare and clap stay as they were. Only the hats and perc move to the new pattern. |
+| Start | **Last** (the default): the FM-1 starts with the piece that you played last, as it is saved. Unsaved changes are not kept: save with **GLO**, then **SAVE**. **Random**: a random piece of HYPNO, as in older versions. |
 
 ### The SCREEN page
 
@@ -2139,93 +2255,84 @@ The Settings page:
 
 | Knob | What it does |
 |---|---|
-| Zoom | Off or on. With Zoom on, turning any knob fills the middle of the screen with its name and value in large type for a second, on any page. It's for playing at a distance, outdoors, or on camera. |
-| Saver | The screensaver: off, 1, 3 or 10 minutes. If you leave the FM-1 alone while it plays, the visualizers (the AUTO one) take over the **whole screen**, with no header and no knobs. Any key, button or knob brings the page back. It doesn't come on in the FX menu or while a visualizer is already up. |
-| Lights | Off or show. With show, the key lights join in with the visualizers. In a groove you get two chasers and flashes on the kick and snare. In a breakdown they slowly pulse. In a build they fill up. |
-| Look | Plain, scanlines, calm or calm+scan. **Scanlines** darkens every other row of the screen by a quarter, like an old CRT TV. **Calm** turns off the screen's small movements: the imp that hops into the header on a drop, a break or a build, the brighter flick of a knob as you turn it, and the moment a new page takes to settle in. The music's own movement (the steps, the meters) stays. |
+| Zoom | Off or on. When Zoom is on and you turn a knob, the name and value of the knob show in large text in the middle of the screen for a second. This occurs on all pages. Use it when you play at a distance, outdoors, or on camera. |
+| Saver | The screensaver: off, 1, 3 or 10 minutes. If you do not touch the FM-1 for that time while it plays, the visualizers (the AUTO visualizer) fill the **whole screen**, with no header and no knobs. Any key, button or knob shows the page again. The screensaver does not come on in the FX menu or when a visualizer already shows. |
+| Lights | Off or show. With show, the key lights move with the visualizers. In a groove, two moving lights chase each other, and the lights flash on the kick and snare. In a breakdown, they pulse slowly. In a build, they fill up. |
+| Look | Plain, scanlines, calm or calm+scan. **Scanlines** makes every other row of the screen darker by a quarter, like an old CRT TV. **Calm** stops the small movements of the screen: the imp that jumps into the header on a drop, a break or a build, the brighter flash of a knob when you turn it, and the short time that a new page takes to settle. The movement of the music (the steps, the meters) stays. |
 
 ### The sampling helper (SAMPLE)
 
 ![The SAMPLE page](img/perf-screen-sample.png)
 
-The **SAMPLE** page plays PERF-1's sounds one at a time, so a sampler (an MPC sampling its input, say) can record them and your project keeps them without the FM-1. It comes after SCREEN.
+The **SAMPLE** page plays the sounds of PERF-1 one at a time. Thus a sampler (for example, an MPC that samples its input) can record them, and your project keeps them without the FM-1. The page comes after SCREEN.
 
 | Knob | What it does |
 |---|---|
-| Sounds | **All**, **Drums** or **Synths**: press any key to start a run. **By key**: the white keys play one sound each. |
-| FX | **Off** (dry): no echo, reverb, effects or FX knobs while the page is up. **On**: the piece's own effects. |
-| Gap | The time between sounds in a run: 0.5, 1, 2 or 4 seconds. Use a longer gap for the pad and bass tails. |
+| Sounds | **All**, **Drums** or **Synths**: press any key to start a run. **By key**: each white key plays one sound. |
+| FX | **Off** (dry): no echo, reverb, effects or FX knobs while the page shows. **On**: the piece's own effects. |
+| Gap | The time between sounds in a run: 0.5, 1, 2 or 4 seconds. Use a longer gap for the tails of the pad and the bass. |
 
-**A run.** Start your sampler recording, then press a key. The music stops, there's a count-in of 1.5 seconds, and then each sound plays once, Gap apart: the six drums (kick, snare, clap, hat, open hat, perc), then the pad (a chord), the bass, the acid and the pluck, each on the scale's root. Record it as one sample and chop it into pads. Press a key again to stop early.
+**A run.** Start the recording on your sampler. Then press a key. The music stops, and there is a count-in of 1.5 seconds. Then each sound plays one time, with the Gap between them: the six drums (kick, snare, clap, hat, open hat, perc), then the pad (a chord), the bass, the acid and the pluck. Each sound is on the root of the scale. Record the run as one sample and cut it into pads. To stop before the end, press a key again.
 
-**By key.** White keys 1-6 are the drums, 7-10 the pad, bass, acid and pluck. A synth sound holds as long as the key does. The ten keys are lit while the page is up.
+**By key.** White keys 1-6 are the drums. White keys 7-10 are the pad, bass, acid and pluck. A synth sound continues while you hold the key. The ten keys are lit while the page shows.
 
-The sounds are those of the piece that was playing: its kit, its sounds, its key. Pick the piece first, then open the page.
+The sounds come from the piece that was playing: its kit, its sounds, its key. Select the piece first. Then open the page.
 
 ### The SOUND page
 
 ![The SOUND page](img/perf-screen-sound.png)
 
-The last settings page shapes how everything sounds together. These are the unit's settings, the same for every piece.
+The last settings page changes how all the parts sound together. These are the settings of the unit. They are the same for every piece.
 
 | Knob | What it does |
 |---|---|
-| Vintage | Each voice's pitch wanders a little and slowly, each its own way, as an analog synth's does: the pad's four voices, the bass, the acid and the pluck. 0 is off; 100 wanders up to 12 cents. The default, 30, is about 4 cents: you hear it as warmth more than as detuning. |
-| Polish | **On** (the default): the lows are made mono (the stereo below about 140 Hz goes to the middle, as a club system or a phone plays it anyway), and the loudest peaks are rounded off just before the limiter, so it has less to catch. **Off**: as before 0.17.30. |
-| Tilt | A gentle tone balance on the whole mix: **Genre** (the default: each genre's own, a dB or two at most), **Warmer** (more low end, softer top), **Brighter** (more top), or **Off**. |
-| Width | How much wider the top end is (the stereo above about 2.5 kHz): 0 as before, up to +6 dB. The default is 30. Mono stays as it was. |
+| Vintage | The pitch of each voice moves a little and slowly, each voice in its own way, as on an analog synth: the four voices of the pad, the bass, the acid and the pluck. 0 is off. At 100, the pitch moves up to 12 cents. The default, 30, is about 4 cents: you hear it as warmth more than as detuning. |
+| Polish | **On** (the default): the lows become mono. The stereo sound below about 140 Hz goes to the middle, as a club system or a phone plays it anyway. Also, the loudest peaks are made round just before the limiter, so the limiter has less to catch. **Off**: as before 0.17.30. |
+| Tilt | A gentle tone balance on the whole mix: **Genre** (the default: the balance of each genre, a dB or two at most), **Warmer** (more low end, a softer top), **Brighter** (more top), or **Off**. |
+| Width | How much wider the top end is (the stereo sound above about 2.5 kHz): 0 is as before, up to +6 dB. The default is 30. Mono sound stays as it was. |
 
 ### The CHORUS page
 
 ![The CHORUS page](img/perf-screen-chorus.png)
 
-After SOUND, the last settings page: a chorus in the style of the Juno-106's, to make the pluck and the acid wide. Like the Juno's, it is one short
-delay swept by a slow triangle, with the other side swept the opposite way, mixed with the dry sound. The lows (under about 200 Hz) stay dry in the
-middle, so the low end stays mono. These are the unit's settings, the same for every piece.
+This is the last settings page, after SOUND. It is a chorus in the style of the Juno-106 chorus, and it makes the pluck and the acid wide. As on the Juno, a slow triangle sweeps one short delay. It sweeps the other side in the opposite direction. The chorus mixes this with the dry sound. The lows (under about 200 Hz) stay dry in the middle, so the low end stays mono. These are the settings of the unit, the same for every piece.
 
 | Knob | What it does |
 |---|---|
-| Type | **Off**, **I** (the default since 0.17.54: slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), **I+II** (a fast, shallow shimmer, close to a vibrato), or a rotary speaker's two speeds: **ROT SLOW** (about 0.8 turns a second) and **ROT FAST** (about 6.7). The rotary sways the sound from side to side with a touch of pitch, like an organ's spinning horn; going from one speed to the other, it speeds up or slows down over about a second, as the real one does. Try it on an organ DX voice on the pluck. |
-| Target | What goes through it: the **Pluck** (its plain sounds and its DX voices; it replaces the DX voices' own ensemble), the **Acid**, or **Both**. |
-| Pad | The pad's own ensemble chorus (0-100), the one the genres set between 20 and 50: it makes the pad wider, like several players at once. It belongs to the piece and is stored with it (it was on the Pad's Chords page before 0.17.82). |
+| Type | **Off**, **I** (the default since 0.17.54: slow and deep, about half a sweep a second), **II** (a little faster, the classic wide Juno pad), **I+II** (a fast, shallow shimmer, almost a vibrato), or the two speeds of a rotary speaker: **ROT SLOW** (about 0.8 turns a second) and **ROT FAST** (about 6.7). The rotary moves the sound from side to side with a small change of pitch, like the turning horn of an organ. When it changes from one speed to the other, it gets faster or slower over about a second, as the real one does. Try it with an organ DX voice on the pluck. |
+| Target | What goes through the chorus: the **Pluck** (its plain sounds and its DX voices; the chorus replaces the ensemble of the DX voices), the **Acid**, or **Both**. |
+| Pad | The pad's own ensemble chorus (0-100). The genres set it between 20 and 50. It makes the pad wider, like several players at the same time. It belongs to the piece and is stored with it (before 0.17.82, it was on the Pad's Chords page). |
 
-The level stays where it was, and in mono nothing is lost. It switches off by itself when the load is very high, like the pad's chorus.
+The level stays where it was, and in mono nothing is lost. When the load is very high, the chorus switches off automatically, as the pad's chorus does.
 
 ### The RESONATOR page
 
 ![The RESONATOR page](img/perf-screen-resonator.png)
 
-After CHORUS: three ringing filters tuned to the chord playing (its root, third and fifth), struck by the drums you choose. A rim, a perc
-tick or a hat comes out pitched, in the key, and the ringing follows each chord change. These are the unit's settings, the same for every piece.
+This page comes after CHORUS. It has three ringing filters, tuned to the chord that plays (its root, third and fifth). The drums that you select strike them. A rim, a perc tick or a hat then sounds pitched, in the key. The ringing follows each chord change. These are the settings of the unit, the same for every piece.
 
 | Knob | What it does |
 |---|---|
-| Amount | How loud the ringing is: **35** by default (0.17.54), **0** is off. |
-| Decay | How long it rings: low is short and woody (a marimba, a log drum), high is long and glassy (a bell, a steel tine). The level stays about the same across the range. |
-| Register | Where the three notes sit: **Low**, **Mid** or **High**. |
-| Targets | What strikes them (**Perc** by default): the **Perc**, the **Hats**, the **Snare** (and clap), **Perc+Hats**, all the **Drums** but the kick, or the **Pluck**. |
+| Amount | How loud the ringing is: **35** by default (0.17.54). **0** is off. |
+| Decay | How long it rings. Low is short and woody (a marimba, a log drum). High is long and glassy (a bell, a steel tine). The level stays almost the same across the range. |
+| Register | Where the three notes are: **Low**, **Mid** or **High**. |
+| Targets | What strikes the filters (**Perc** by default): the **Perc**, the **Hats**, the **Snare** (and clap), **Perc+Hats**, all the **Drums** except the kick, or the **Pluck**. |
 
-The ringing is about as loud whatever the piece (it follows how hard it's being struck, not how loud that track is set). The first note is in the
-middle, the second a little left, the third a little right, with some reverb. With the **Pluck**, it rings only when the pluck plays in the
-Register's octave: try each one. Try Perc on an Industrial piece, or Hats at a long Decay on an ambient one. It switches off by itself when
-the load is very high.
+The ringing is about equally loud in all pieces. It follows how hard the sound strikes it, not the level of that track. The first note is in the middle, the second a little to the left, the third a little to the right, with some reverb. With the **Pluck**, it rings only when the pluck plays in the octave of the Register: try each Register. Try Perc on an Industrial piece, or Hats with a long Decay on an ambient piece. When the load is very high, it switches off automatically.
 
 ### The RETURNS page
 
 ![The RETURNS page](img/perf-screen-returns.png)
 
-After RESONATOR: how the kick ducks the echo's and the reverb's returns (what comes back from them), so a repeat or a tail swells in between the kicks
-instead of smearing over them. Only the returns: the dry sound, what goes into the echo and the reverb, and the echo's repeats are left alone.
-These are the unit's settings, the same for every piece.
+This page comes after RESONATOR. It sets how the kick ducks the returns of the echo and the reverb (the sound that comes back from them). Thus a repeat or a tail gets louder between the kicks, and does not smear over them. Only the returns change. The dry sound, the sound that goes into the echo and the reverb, and the repeats of the echo do not change. These are the settings of the unit, the same for every piece.
 
 | Knob | What it does |
 |---|---|
-| Duck | **Kit** (the default): as each kit has it, the same as before. **Off**: the returns stay steady. **Custom**: the two knobs below. |
-| Depth | With Custom: how far the returns dip on each kick, **60** by default. 100 is the deepest. |
-| Release | With Custom: how long they take to come back, in the tempo: **1/16** (snappy) to **1 bar** (they breathe with the bar). The kit's is about 3/16. |
+| Duck | **Kit** (the default): as each kit sets it, the same as before. **Off**: the returns stay steady. **Custom**: use the two knobs below. |
+| Depth | With Custom: how far the returns go down on each kick, **60** by default. 100 is the deepest. |
+| Release | With Custom: how long the returns take to come back, in the tempo: **1/16** (fast) to **1 bar** (they rise and fall with the bar). The kit's release is about 3/16. |
 
-The kick has to be playing for it to duck anything. The returns are a small part of most pieces' sound, so the change is subtle until you
-turn up the echo or the reverb: try a dub throw (THROW, or the DELAY punch-in on the snare) over a four-on-the-floor kick with Custom, Depth 100, Release 1/2.
+The kick must play, or nothing ducks. The returns are a small part of the sound of most pieces. Thus the change is small until you turn up the echo or the reverb. Try a dub throw (THROW, or the DELAY punch-in on the snare) over a four-on-the-floor kick with Custom, Depth 100, Release 1/2.
 
 ### Visualizers
 
@@ -2233,84 +2340,88 @@ turn up the echo or the reverb: try a dub throw (THROW, or the DELAY punch-in on
 
 ![KALEIDO](img/perf-screen-viz-kaleido.png)
 
-The visualizers are animations that move with the music. Press **HOME twice quickly** from anywhere to open them, and **HOME** again to go back to the Perform screen. Turn the **SELECT** dial to choose one. Your choice is remembered.
+The visualizers are animations that move with the music. To open them from any page, press **HOME twice quickly**. Press **HOME** again to go back to the Perform screen. Turn the **SELECT** dial to select a visualizer. The FM-1 remembers your selection.
 
-While a visualizer is up, the knobs are still the FX knobs, **ALGORITHM** still sets the mood, and the keys still set the track mix, as on Perform. **FX** opens its menu over the picture. Everything is drawn in your theme's colours and follows the kicks and snares, the level of each part, the chord, the pattern and the section.
+While a visualizer shows, the knobs are still the FX knobs, **ALGORITHM** still sets the mood, and the keys still set the track mix, as on Perform. **FX** opens its menu over the picture. All drawings use the colours of your theme. They follow the kicks and snares, the level of each part, the chord, the pattern and the section.
 
 | Visualizer | What you see |
 |---|---|
-| PLASMA | A field of colour that swirls faster as the music gets more intense, and flashes on the kick. |
-| KALEIDO | Curves drawn from the sound, mirrored four ways like a kaleidoscope, turning and fading. A kick throws out a ring. |
-| BARS | A real spectrum analyser: 24 bars from 70 Hz (low) to 10 kHz (high). |
-| FLUX | A media-player style light show: the spectrum folded back on itself into a trippy bloom. |
-| DISCO | The mascot dancing in a room with a disco ball, light beams and a floor that lights up along with the drum pattern. He jumps on the kicks and changes moves every couple of bars (sway, twirl, wave, headbang, stomp). He sleeps in a breakdown, shakes in a build, and jumps with confetti on the drop. |
-| LIFE | A Game of Life style pattern of cells that the drums feed: the kick drops a cluster, the snare a spray, a hat a spark. |
-| ORBIT | A looping line drawing (a harmonograph) made from the notes of the chord. It changes shape with every chord. |
-| TRIP | A kaleidoscope you fall through: mirrored slices (six, or eight when the chord has four notes) rushing towards you. The kick throws you forward and the picture breathes in, the snare turns the twist the other way, a build winds it tighter bar by bar, the hats strike sparks, and a breakdown drifts. |
-| THEORY | The harmony as it plays, drawn like the circle of fifths in a theory book. **The circle:** C at the top, then clockwise a fifth further each step. The inner ring is every key's **key signature** (0, 1#, 2# .. 6#, 5b .. 1b): the one for your key is lit, so you can read "E major has 4 sharps" straight off it. The scale lies on the circle as **one arc** (a mode's seven notes are always neighbours on the circle of fifths), with each chord's **Roman numeral** on it (upper case major, lower case minor, ° diminished), coloured by its job as theory books group them: the tonic's family (I, iii, vi) in the pad's colour, the subdominant's (ii, IV) in the bass's, the dominant's (V, vii) in the acid's, and the function's name on the right in the same colour: the chord playing is filled, the next one ringed, a curved arrow swoops from one to the other (your progression's next chord, or the genre's own, which it picks one chord ahead), and the last move stays behind it for half the chord before it fades, so you see the progression jump around the circle. The outer ring names every note **the way the key spells it**: G# in E major (not Ab), Cb in Eb minor, E# in F# major. The chord's notes are marked; a note borrowed from outside the scale, like the G# in A minor's E7, is **red**. **The right side:** the chord's numeral, its name and its notes (spelled the same way), what the chord does (tonic, subdominant, dominant ..; **V OF THE NEXT** in red when the genre makes it the next chord's dominant, **BORROWED** when it comes from the parallel minor), the next chord and how the root gets there (a fifth down, a step up; "home" when it falls a fifth to the tonic), your progression's eight slots as a chord chart, and at the bottom the key and its signature with the major key it's written in ("0: C MAJOR" for A minor). With your progression off, the slots show the genre's walk as it was heard. |
-| AUTO | Picks one of the light shows (not THEORY), and switches to a new one at each section change and every 32 bars. |
+| PLASMA | A field of colour that turns faster when the music gets more intense. It flashes on the kick. |
+| KALEIDO | Curves made from the sound, mirrored four ways like a kaleidoscope. They turn and fade. A kick sends out a ring. |
+| BARS | A real spectrum analyser (each bar shows the level of one range of sound): 24 bars from 70 Hz (low) to 10 kHz (high). |
+| FLUX | A light show in the style of a media player: the spectrum folds back on itself into a shape that opens out like a flower. |
+| DISCO | The mascot dances in a room with a disco ball, light beams and a floor. The floor lights up with the drum pattern. He jumps on the kicks and changes moves every couple of bars (sway, twirl, wave, headbang, stomp). He sleeps in a breakdown, shakes in a build, and jumps with confetti on the drop. |
+| LIFE | A pattern of cells in the style of the Game of Life. The drums add cells: the kick adds a cluster, the snare a spray, a hat a spark. |
+| ORBIT | A line drawing that loops (a harmonograph), made from the notes of the chord. Its shape changes with every chord. |
+| TRIP | A kaleidoscope that you fall through: mirrored slices (six, or eight when the chord has four notes) come quickly towards you. The kick pushes you forward and the picture pulls in. The snare turns the twist the other way. A build makes the twist tighter bar by bar. The hats make sparks. In a breakdown, the picture drifts. |
+| THEORY | The harmony as it plays, drawn like the circle of fifths in a theory book. **The circle:** C is at the top. Each step clockwise is one fifth higher. The inner ring shows the **key signature** of each key (0, 1#, 2# .. 6#, 5b .. 1b). The signature of your key is lit, so you can read "E major has 4 sharps" directly from it. The scale is **one arc** on the circle (the seven notes of a mode are always neighbours on the circle of fifths). Each chord has its **Roman numeral** on the arc (upper case is major, lower case is minor, ° is diminished). The colour of each numeral shows its job, in the groups that theory books use: the tonic's family (I, iii, vi) has the pad's colour, the subdominant's family (ii, IV) has the bass's colour, and the dominant's family (V, vii) has the acid's colour. The name of the function shows on the right in the same colour. The chord that plays is filled, and the next chord has a ring. A curved arrow goes from one to the other. The next chord comes from your progression, or from the genre's own progression, which the FM-1 selects one chord ahead. The last move stays for half the chord and then fades. Thus you see the progression jump around the circle. The outer ring names every note **the way the key spells it**: G# in E major (not Ab), Cb in Eb minor, E# in F# major. The notes of the chord are marked. A note borrowed from outside the scale, like the G# in the E7 of A minor, is **red**. **The right side:** the numeral of the chord, its name and its notes (with the same spelling). Then what the chord does (tonic, subdominant, dominant ..; **V OF THE NEXT** in red when the genre makes it the dominant of the next chord, **BORROWED** when it comes from the parallel minor). Then the next chord and how the root moves to it (a fifth down, a step up; "home" when it falls a fifth to the tonic). Then the eight slots of your progression as a chord chart. At the bottom: the key and its signature, with the major key that it is written in ("0: C MAJOR" for A minor). When your progression is off, the slots show the genre's walk as you heard it. |
+| AUTO | Selects one of the light shows (not THEORY). It changes to a new one at each section change and every 32 bars. |
 
 ![The screensaver has the whole screen](img/perf-screen-saver.png)
 
 ### What is remembered across power-off
 
-| Kept | When it's saved |
+| Kept | When it is saved |
 |---|---|
-| The pieces you stored (Global, **SAVE**), in any genre, with their FILTERS and SCREAM settings, their drum drift and their chord types | Straight away (section 6). |
-| Theme, Tune, MIDI out, the set list, Zoom, the SET page's Mix | A couple of seconds after your last change. |
-| Every effect's settings, the gate's pattern and targets, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, form, start), the Auto FX page, the SCREEN page (saver, lights, look), the SOUND, CHORUS, RESONATOR and RETURNS pages, the USB & MIDI page's USB level and MIDI map, the MIDI IN page, the Jam page's settings and your visualizer | A couple of seconds after you stop changing them. |
+| The pieces that you stored (Global, **SAVE**), in any genre, with their FILTERS and SCREAM settings, their drum drift and their chord types | Immediately (section 6). |
+| Theme, Tune, MIDI out, the set list, Zoom, the Mix of the SET page | A couple of seconds after your last change. |
+| The settings of every effect, the pattern and targets of the gate, the Auto DJ settings (scenes timing, groove, break, fill), the SET page (rounds, ramp, intro), the Settings page (key, form, start), the Auto FX page, the SCREEN page (saver, lights, look), the SOUND, CHORUS, RESONATOR and RETURNS pages, the USB level and MIDI map of the USB & MIDI page, the MIDI IN page, the settings of the Jam page and your visualizer | A couple of seconds after you stop changing them. |
 | Your DX7 voices | The same. |
-| The panel calibration (if you ran it) | When you finish it. |
+| The panel calibration (if you did it) | When you complete it. |
 
-"A couple of seconds" is 2 seconds with the music stopped and 4 seconds while it plays; the effects' and performing settings wait 20 seconds while it plays (0.17.56: turning the filters saved every few seconds, each save a small hitch), and are saved 2 seconds after you stop. While it plays, the sound dips for a moment during the save, the same as when you store a piece: the music fades out, the FM-1 saves, and the music fades back in.
+"A couple of seconds" is 2 seconds when the music is stopped and 4 seconds while it plays. While the music plays, the settings of the effects and the performance settings wait 20 seconds (0.17.56: before this, when you turned the filters, the FM-1 saved every few seconds, and each save caused a small interruption). They are saved 2 seconds after you stop. While the music plays, the sound goes down for a moment during the save, the same as when you store a piece: the music fades out, the FM-1 saves, and the music fades back in.
 
-**Not kept:** anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, whether the auto-DJ is on, and edits to a piece you haven't stored. With Start on Random, the genre isn't kept either. Each genre sets its own tape, vinyl and pump settings when you switch to it.
+**Not kept:** anything latched in FX, the FX knobs, the mood, mutes and solos, scenes, the on/off state of the auto-DJ, and edits to a piece that you did not store. If Start is set to Random, the FM-1 does not keep the genre either. When you change to a genre, the genre sets its own tape, vinyl and pump settings.
 
 ### Backing up and restoring
 
-Installing another firmware, or reinstalling, can wipe what PERF-1 has stored. The **Back up and restore** card on the installer page (below the DX7 voices) protects it:
+If you install another firmware, or install PERF-1 again, the data that PERF-1 stored can be erased. The **Back up and restore** card on the installer page (below the DX7 voices) keeps this data safe:
 
-- **Save a backup** reads everything the FM-1 has stored and saves it as a `.p1bak` file: the pieces you saved in every genre, the settings, the DX7 voices, the theme, Tune and MIDI out. Do this *before* you install anything else. Changes to a piece that you haven't stored aren't included (store them first, section 6). The panel calibration isn't included either, because it belongs to that particular unit.
-- **Restore the chosen backup** (choose the file first) writes everything in the file back, one item at a time, then the FM-1 restarts. It replaces what is stored now. The music fades out for each write, and nothing else is saved until the restart. A backup from an older PERF-1 loads into a newer one. Anything in the file the firmware doesn't recognise is refused and never written.
-- Only PERF-1 reads these files, and the FM-1 must be running PERF-1 0.14 or later. An older version doesn't answer, and the page tells you so.
+- **Save a backup** reads all the data that the FM-1 stored and saves it as a `.p1bak` file: the pieces that you saved in every genre, the settings, the DX7 voices, the theme, Tune and MIDI out. Do this *before* you install anything else. The backup does not include changes to a piece that you did not store (store them first, section 6). It also does not include the panel calibration, because the calibration belongs to that one unit.
+- **Restore the chosen backup** (select the file first) writes all the items in the file back, one item at a time. Then the FM-1 restarts. The backup replaces the data that is stored now. The music fades out for each write, and the FM-1 saves nothing else until the restart. A backup from an older PERF-1 loads into a newer one. If the firmware does not recognise an item in the file, it refuses the item and does not write it.
+- Only PERF-1 reads these files. The FM-1 must run PERF-1 0.14 or later. An older version does not answer, and the page tells you this.
 
 ### Sharing pieces
 
-The **Pieces** page on the PERF-1 website shares one piece at a time: you send a piece you made to someone else, and you add the pieces other people share. Plug the FM-1 in by USB and open the page in Chrome or Edge.
+The **Pieces** page on the PERF-1 website shares one piece at a time. You can send a piece that you made to another person, and you can add the pieces that other people share. Connect the FM-1 with a USB cable and open the page in Chrome or Edge.
 
-**What goes with a piece:** all of its settings, its six drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice its pluck plays if that voice is one you loaded yourself (section 15). Your effects settings, the theme and the set list stay yours.
+**What goes with a piece:** all of its settings, its six drum patterns and step tricks, a frozen acid or pluck line, your chord progression, and the DX7 voice that its pluck plays, if you loaded that voice yourself (section 15). Your effects settings, the theme and the set list do not go with the piece.
 
 **To share a piece:**
 
-1. Store it on the FM-1 (**GLO**, then **SAVE**). Only stored pieces can be shared.
-2. On the website's **Library & pieces** page, open **My FM-1**, press **Read my pieces and set list** and tick the piece (or several: **Tick all** ticks every one).
-3. Add a title, your name and a note if you like (what to play, what to try). With several ticked, your name goes with each, and each keeps its own genre and number as its name.
-4. **Submit to the Library** puts it in the Library for everyone at once. **Download .piece** saves a small file (several download as one `.zip`). **Copy link** copies a link that opens the page with your piece in it, ready to add (several: one link a line). **Copy code** copies the same thing as text, starting `P1.`, for places where links don't work.
+1. Store the piece on the FM-1 (**GLO**, then **SAVE**). You can share only stored pieces.
+2. On the **Library & pieces** page of the website, open **My FM-1**. Press **Read my pieces and set list**. Tick the piece (or tick several: **Tick all** ticks all of them).
+3. If you want, add a title, your name and a note (what to play, what to try). If you tick several pieces, your name goes with each one. Each piece keeps its own genre and number as its name.
+4. **Submit to the Library** puts the piece in the Library for everyone immediately. **Download .piece** saves a small file (several pieces download as one `.zip`). **Copy link** copies a link that opens the page with your piece in it, ready to add (for several pieces: one link on each line). **Copy code** copies the same data as text that starts with `P1.`. Use the code where links do not work.
 
 **To add a shared piece:**
 
-1. Open the link, or paste the code into the box, or choose the `.piece` file. The page shows the piece's genre and number, tempo, key and pluck sound, and the title and note if it has them.
-2. Choose where it goes. It always goes into its own genre; you pick which of the ten pieces it replaces. It starts on the number it had.
-3. Press **Add to my FM-1**. If you already stored a piece there, the page asks before it replaces it.
-4. The FM-1 restarts to load it. Then go to the genre (**GLO** + **PRESETS**) and the piece (**PRESETS**). Store what you were playing before you add a piece, because the restart loses changes you haven't stored.
+1. Open the link, paste the code into the box, or select the `.piece` file. The page shows the genre and number of the piece, its tempo, key and pluck sound, and its title and note, if it has them.
+2. Select where it goes. It always goes into its own genre. You select which of the ten pieces it replaces. It starts on the number that it had.
+3. Press **Add to my FM-1**. If you already stored a piece there, the page asks you before it replaces it.
+4. The FM-1 restarts to load the piece. Then go to the genre (**GLO** + **PRESETS**) and the piece (**PRESETS**). Store the piece that you played before you add a piece. The restart loses the changes that you did not store.
 
-**Its DX7 voice.** If the piece's pluck plays its own DX7 voice, the voice comes with it:
+**Its DX7 voice.** If the pluck of the piece plays its own DX7 voice, the voice comes with the piece:
 
-- If you already have that voice loaded, nothing changes and the piece uses yours.
-- If the voice's slot on your FM-1 is empty, the voice goes there.
-- If the slot holds a different voice of yours, the page asks: put the new voice in your next empty slot (nothing of yours changes), or replace your voice in that slot. Replacing it changes the sound of any of your pieces that use the old voice.
+- If that voice is already loaded on your FM-1, nothing changes, and the piece uses your voice.
+- If the slot of the voice on your FM-1 is empty, the voice goes into that slot.
+- If the slot holds a different voice of yours, the page asks you to select: put the new voice in your next empty slot (none of your data changes), or replace your voice in that slot. If you replace it, the sound changes in all of your pieces that use the old voice.
 
-**Hear it in the emulator** puts the piece into the browser emulator (section 17) instead, with its voice, so you can listen before you add it to your FM-1.
+**Hear it in the emulator** puts the piece into the browser emulator (section 17) instead, with its voice. Thus you can listen to it before you add it to your FM-1.
 
-**Sharing a whole set.** The first row after **Read my pieces and set list** is **My set list**: your set list (section 10) with every piece in it, their DX7 voices, Play and the SET page's Mix. Pieces you stored go with it; a factory piece is the same on every FM-1, so only its place is sent. It downloads as a `.perfset` file, or copies as a link or code (a long one: for a set with many stored pieces, share the file where links are cut short, as in a Discord message). Adding a set puts each stored piece back at its own number in its genre, its voices in your empty voice slots (a voice you already have is used as it is), and replaces your set list with it. The page lists the stored pieces of yours it would replace and asks first.
+**Sharing a whole set.** The first row after **Read my pieces and set list** is **My set list**: your set list (section 10) with every piece in it, their DX7 voices, Play and the Mix of the SET page. Your stored pieces go with it. A factory piece is the same on every FM-1, so the page sends only its place. The set downloads as a `.perfset` file, or copies as a link or a code. The link or code is long: for a set with many stored pieces, share the file where links get cut short, for example in a Discord message.
 
-**The card.** **Card** draws a picture of the piece or set to post with its link: its name, title, maker, tempo and key, and its drum pattern as rings (one ring a drum, the kick inside, sixteen steps round), or a set's places as a ring. **Save the card (PNG)** downloads it.
+When you add a set, each stored piece goes back to its own number in its genre. Its voices go into your empty voice slots (if you already have a voice, the FM-1 uses it as it is). The set also replaces your set list. Before it does this, the page shows the list of your stored pieces that it would replace, and asks you.
 
-**Based on.** When you add a piece from a share, this browser remembers where it came from. If you change it, store it and share it again, it goes out as "based on" the original (its title and maker), and the card says so. If you share it unchanged, the page fills in its original title and maker for you.
+**The card.** **Card** draws a picture of the piece or set, to post with its link. The picture shows its name, title, maker, tempo and key, and its drum pattern as rings (one ring for each drum, the kick inside, sixteen steps around). For a set, it shows the places of the set as a ring. **Save the card (PNG)** downloads the picture.
 
-**The Library.** The **Library** tab of the **Library & pieces** page collects pieces and sets people made: each with its card, title, maker and note, to hear in the emulator or add to your FM-1 (**Hear or add**). Filter it by genre, search it, or show only the maker's **picked** ones, the newest, or yours. To put yours in, tick them on **My FM-1** and press **Submit**: they are there at once, for everyone, with no account. A submission is checked first (it has to be a real PERF-1 piece or set; the title, name and note short and plain). What you submitted from a browser can be taken back from the same browser: its card there has **Remove**.
+**Based on.** When you add a piece from a share, this browser remembers where the piece came from. If you change it, store it and share it again, it goes out as "based on" the original (its title and maker), and the card shows this. If you share it without changes, the page fills in its original title and maker for you.
 
-**Versions.** Both of you need PERF-1 0.16.3 or later to add a piece. A piece made on an older PERF-1 loads into a newer one: anything it doesn't have yet plays as the piece's genre sets it. A piece made on a newer PERF-1 loads into an older one without the newer settings, and the page tells you so.
+**The Library.** The **Library** tab of the **Library & pieces** page collects pieces and sets that people made. Each one has its card, title, maker and note. You can hear it in the emulator or add it to your FM-1 (**Hear or add**). You can filter the Library by genre, search it, or show only the ones that the maker **picked**, the newest ones, or yours.
+
+To put your pieces in, tick them on **My FM-1** and press **Submit**. They are there immediately, for everyone, with no account. The Library checks each submission first: it must be a real PERF-1 piece or set, and the title, name and note must be short and plain. You can remove a submission from the same browser that you submitted it from: its card in that browser has **Remove**.
+
+**Versions.** You and the other person both need PERF-1 0.16.3 or later to add a piece. A piece made on an older PERF-1 loads into a newer one: settings that it does not have yet play as the piece's genre sets them. A piece made on a newer PERF-1 loads into an older one without the newer settings, and the page tells you this.
 
 ---
 
@@ -2320,22 +2431,22 @@ The **Pieces** page on the PERF-1 website shares one piece at a time: you send a
 
 The **Global** page (**GLO**) has four knobs:
 
-- **Root**: the key the music is in.
-- **Theme**: the colours: Console (the default), Imp, Synth, Acid, Ice, Ember or Phosphor. Every theme uses the same layout (section 4); only the colours change.
+- **Root**: the key of the music.
+- **Theme**: the colours: Console (the default), Imp, Synth, Acid, Ice, Ember or Phosphor. All themes use the same layout (section 4). Only the colours change.
 - **Tune**: fine tuning, +-50 cents (a cent is a hundredth of a semitone).
-- **Genre**: the bank of pieces, the same as **GLO** + **PRESETS**.
+- **Genre**: the bank of pieces. It is the same as **GLO** + **PRESETS**.
 
-MIDI out and the USB audio level are on the **USB & MIDI** settings page. Hold **HOME** for the settings and turn **SELECT** to it.
+MIDI out and the USB audio level are on the **USB & MIDI** settings page. Hold **HOME** to show the settings. Then turn **SELECT** to the page.
 
 ![The Synth theme: the home screen](img/perf-screen-home-synth.png)
 
-Each voice keeps one colour everywhere in a theme. In Imp, the pad is bone white, the bass crimson, the acid lime, the pluck ice-teal and the drums pink; Phosphor is all one green. The accent colour marks whatever is happening right now. A piece waiting for the next bar shows as `>08` beside the key and mode.
+In a theme, each voice always has the same colour on all pages. In Imp, the pad is bone white, the bass is crimson, the acid is lime, the pluck is ice-teal and the drums are pink. Phosphor uses only one green. The accent colour shows what is happening now. If a piece waits for the next bar, the screen shows `>08` next to the key and mode.
 
-Hold **SEL** alone and a card lists what shift does on this page. The **SCREEN** settings page has **Look**: plain, scanlines, calm (the small movements off) or calm with scanlines.
+Hold **SEL** alone. A card shows what shift does on this page. The **SCREEN** settings page has **Look**: plain, scanlines, calm (no small movements) or calm with scanlines.
 
-The theme, Tune and MIDI out apply to all pieces.
+The theme, Tune and MIDI out settings apply to all pieces.
 
-**MIDI out** (over USB): the FM-1 sends what it plays as MIDI notes, so you can record them or drive other synths.
+**MIDI out** (over USB): the FM-1 sends the notes that it plays as MIDI notes. You can record them or use them to play other synths.
 
 | Part | MIDI channel |
 |---|---|
@@ -2345,9 +2456,9 @@ The theme, Tune and MIDI out apply to all pieces.
 | Acid | 4 |
 | Drums | 10 (General MIDI drum notes) |
 
-It also sends MIDI clock (the tempo signal other gear follows) with start, continue and stop. A pluck note lasts as long as it sounds (a plain sound's decay, or a DX voice's key time), and its level is sent as the velocity. The DJ snips are not sent. Notes you play by hand go out on their voice's channel. You can switch MIDI out off on the USB & MIDI settings page.
+The FM-1 also sends MIDI clock (the tempo signal that other equipment follows), with start, continue and stop. A pluck note is as long as its sound (the decay of a plain sound, or the key time of a DX voice). The FM-1 sends the level of the note as the velocity. The FM-1 does not send the DJ snips. Notes that you play by hand go out on the channel of their voice. To switch MIDI out off, use the USB & MIDI settings page.
 
-**MIDI map: playing a sampler's drums.** The third knob on the USB & MIDI page sends the drums where a sampler plays them with little or no setup on the sampler. Load your kick, snare, clap, closed hat, open hat and perc samples as shown below. The samplers' maps send the drums and the clock only: the pad, pluck, bass and acid would land on the sampler's other pads or tracks, so they aren't sent.
+**MIDI map: playing a sampler's drums.** The third knob on the USB & MIDI page sends the drums to the place where a sampler plays them. The sampler then needs little or no setup. Load your kick, snare, clap, closed hat, open hat and perc samples as the table below shows. The sampler maps send only the drums and the clock. The FM-1 does not send the pad, pluck, bass and acid, because they would play on other pads or tracks of the sampler.
 
 | Map | Kick | Snare | Clap | Closed hat | Open hat | Perc |
 |---|---|---|---|---|---|---|
@@ -2356,113 +2467,116 @@ It also sends MIDI clock (the tempo signal other gear follows) with start, conti
 | MPC Sample | pad A01 (ch 1, note 36) | A02 (37) | A03 (38) | A04 (39) | A05 (40) | A06 (41) |
 | SP-404 | pad 13 of bank A (ch 1, note 36) | pad 14 (37) | pad 15 (38) | pad 16 (39) | pad 9 (40) | pad 10 (41) |
 
-The FM-1 sends MIDI over its USB port only (its TRS jack is an input), and the samplers are USB devices too. So the notes need a computer in between (route the FM-1's MIDI to the sampler in your music software), or a USB MIDI host box that joins two USB devices.
+The FM-1 sends MIDI only through its USB port (its TRS jack is an input). The samplers are also USB devices. Thus the notes need a computer between them: in your music software, send the MIDI of the FM-1 to the sampler. Or use a USB MIDI host box, which connects two USB devices.
 
 On the sampler:
 
-- **Model:Samples:** its tracks listen on channels 1-6 as they come. Each hit is note 36, the sample's own pitch. Set the MIDI input to USB (or MIDI, for a host box with a DIN or TRS out), and turn clock in on to follow PERF-1's tempo.
-- **MPC Sample:** set the MIDI port to USB (or External), Pad MIDI In on, the MIDI In channel to All or 1, and MIDI Sync In to MIDI Clock. The notes follow the MPC's default pad map, bank A.
-- **SP-404MKII:** set MIDI mode A, where channel 1 plays bank A, and MIDI Sync to Auto. The pads are counted as Roland counts them: 13 to 16 is the bottom row.
+- **Model:Samples:** its tracks listen on channels 1-6 in their default setup. Each hit is note 36, the own pitch of the sample. Set the MIDI input to USB (or to MIDI, for a host box with a DIN or TRS out). To follow the tempo of PERF-1, turn clock in on.
+- **MPC Sample:** set the MIDI port to USB (or External). Set Pad MIDI In to on. Set the MIDI In channel to All or 1. Set MIDI Sync In to MIDI Clock. The notes follow the default pad map of the MPC, bank A.
+- **SP-404MKII:** set MIDI mode A, where channel 1 plays bank A. Set MIDI Sync to Auto. The pad numbers are the Roland numbers: 13 to 16 is the bottom row.
 
-These maps follow the samplers' manuals and default settings (for the MPC Sample, the pad map in its default project). They haven't all been tried on the real boxes yet, so if a pad doesn't answer, check the sampler's MIDI settings first, and tell us what you found.
+These maps follow the manuals and default settings of the samplers (for the MPC Sample, the pad map in its default project). We did not test all of them on the real samplers yet. If a pad does not respond, check the MIDI settings of the sampler first. Then tell us what you found.
 
-**MIDI in:** notes on channel 1 (or the channel chosen on the MIDI IN page) play like the FM-1's own keys: the voice whose page is up, or the Jam page's voice, snapped to the scale. On **Global** they add their note to the scale, or remove it if it's already there. MIDI clock and start / stop from other gear set the tempo, and `EXT` shows where the tempo usually is. The FM-1 listens on its USB MIDI port, and on the TRS MIDI input where the build has one.
+**MIDI in:** notes on channel 1 (or on the channel that you choose on the MIDI IN page) play like the keys of the FM-1. They play the voice whose page is open, or the voice of the Jam page. The notes snap to the scale (they move to a note of the scale). On **Global**, each note adds its note to the scale. If the note is already in the scale, it removes it. MIDI clock and start / stop from other equipment set the tempo. Then `EXT` shows in the usual position of the tempo. The FM-1 receives MIDI on its USB MIDI port. It also receives MIDI on the TRS MIDI input, if the build has one.
 
-**Playing the chords from a keyboard (CHORDS).** Like an arranger keyboard: your left hand plays the chords, PERF-1 plays the
-band around them. Set **Notes** on the **MIDI IN** page to **CHORDS** and play a keyboard into the FM-1 (any channel, or the one you pick):
+**Playing the chords from a keyboard (CHORDS).** This mode works like an arranger keyboard. Your left hand plays the chords, and PERF-1 plays the band around them. Set **Notes** on the **MIDI IN** page to **CHORDS**. Then play a keyboard that sends MIDI to the FM-1 (on any channel, or on the channel that you choose):
 
-- **Below middle C** the keys are read as a chord, and the song follows it straight away: the pad plays it, the bass plays the lowest
-  key, the acid and the pluck bend the scale to fit it. The screen says what it heard (`CHORD IN Dm7`). The chord stays when you let go,
-  until you play the next; the walk and the progression wait.
-- It knows the usual chords: major, minor, 7, maj7, m7, dim, aug, sus4, sus2, m7b5, dim7, m(maj7), 7sus4, 6, m6, add9, m(add9), 9, maj9,
-  m9, 7b5, 7#5, and the 7ths without their fifth. **The lowest key is the bass**: E G C is C over E (a first inversion), and a key under a
-  chord it isn't part of makes a slash chord (D under C E G is C/D). **One key** plays the scale's own chord on it (a key outside the scale:
-  its major), the quickest way to steer.
-- **From middle C up** the keys play the voice, as **KEYS** does: the melody on top.
-- Another Notes setting lets go: the walk carries on from the chord you left it on.
+- **Below middle C**, the FM-1 reads the keys as a chord. The song follows the chord immediately: the pad plays it, the bass plays the lowest
+  key, and the acid and the pluck change the scale to fit it. The screen shows the chord that it received (`CHORD IN Dm7`). When you release
+  the keys, the chord stays until you play the next chord. The walk and the progression wait.
+- The FM-1 knows the usual chords: major, minor, 7, maj7, m7, dim, aug, sus4, sus2, m7b5, dim7, m(maj7), 7sus4, 6, m6, add9, m(add9), 9, maj9,
+  m9, 7b5, 7#5, and the 7ths without their fifth. **The lowest key is the bass**: E G C is C over E (a first inversion). A key under a
+  chord that does not contain that key makes a slash chord (D under C E G is C/D). **One key** plays the chord of the scale on that key (for
+  a key outside the scale, it plays the major chord). This is the quickest way to change the chords.
+- **From middle C up**, the keys play the voice, the same as with **KEYS**. This is the melody on top.
+- If you set Notes to a different setting, the chord control stops. The walk continues from the last chord.
 
-**Playing PERF-1 from a pad controller.** An MPC, or any box with pads that sends MIDI notes, can play PERF-1. Connect the pad box's MIDI out to the FM-1's TRS MIDI input with a 3.5 mm TRS MIDI cable (both ends type A for an MPC Sample), or over USB through a computer. Then open the **MIDI IN** settings page (hold **HOME**, then turn **SELECT** past USB & MIDI) and set **Notes** to **Pads**. **Channel** listens to all channels, or only the one you pick.
+**Playing PERF-1 from a pad controller.** An MPC, or any other device with pads that sends MIDI notes, can play PERF-1. Connect the MIDI out of the pad device to the TRS MIDI input of the FM-1. Use a 3.5 mm TRS MIDI cable (both ends type A for an MPC Sample). Or connect over USB through a computer. Then open the **MIDI IN** settings page: hold **HOME**, then turn **SELECT** past USB & MIDI. Set **Notes** to **Pads**. With **Channel**, the FM-1 listens to all channels, or only to the channel that you choose.
 
-The pads are read in banks of 16, from note 36, the way an MPC's pads come out of the box (bank A is notes 36-51, bank B 52-67, and so on):
+The FM-1 reads the pads in banks of 16, from note 36. This is the factory layout of the MPC pads (bank A is notes 36-51, bank B 52-67, and so on):
 
 | Bank | Pads |
 |---|---|
-| A | 1-6: the drums (kick, snare, clap, closed hat, open hat, perc), with the pad's velocity. 7: all the drums muted, or back. 9: breakdown. 10: build. 11: drop. 12: the next chord. 13: a fill. 14: freeze. 15: the auto-DJ on or off. 16: the next piece. The sections, chords and pieces wait for the bar, as from the panel. |
-| B | The pluck: each pad is the next note of the scale up from the root, so every pad is in key. The pad's velocity sets the note's level (on the acid, hit hard for an accent), as it does for the drums. |
-| C | The bass, the same way. |
-| D | The acid, the same way. |
-| E | The chords: pads 1-7 jump to the scale's chords I to VII at once. |
+| A | 1-6: the drums (kick, snare, clap, closed hat, open hat, perc), with the velocity of the pad. 7: mutes all the drums, or brings them back. 9: breakdown. 10: build. 11: drop. 12: the next chord. 13: a fill. 14: freeze. 15: the auto-DJ on or off. 16: the next piece. The sections, chords and pieces wait for the bar, as they do from the panel. |
+| B | The pluck. Each pad plays the next note of the scale, up from the root. Thus every pad is in key. The velocity of the pad sets the level of the note, as for the drums (on the acid, hit hard for an accent). |
+| C | The bass, in the same way. |
+| D | The acid, in the same way. |
+| E | The chords: pads 1-7 change immediately to the chords I to VII of the scale. |
 
-On an MPC Sample, turn on **Pad MIDI Out** so the pads send notes, and set its MIDI port to External for the TRS cable. With Notes on Pads, channel 1 notes play PERF's pads instead of a voice; set it back to Keys for that.
+On an MPC Sample, turn on **Pad MIDI Out** so that the pads send notes. For the TRS cable, set its MIDI port to External. When Notes is on Pads, notes on channel 1 play PERF's pads, not a voice. To play a voice, set Notes back to Keys.
 
-**USB host: plugging a MIDI device straight into the FM-1.** Normally the FM-1's USB port is a device: a computer plugs into it. Turn **USB host** on (the MIDI IN page's third knob) and the port becomes the host instead, so a class-compliant USB MIDI device plugs straight in: an MPC Sample, a keyboard, a pad controller, a groovebox. Its notes, clock and transport come in like any MIDI in (so with Notes on Pads its pads play PERF-1), and PERF-1's MIDI out goes to it, following the MIDI map.
+**USB host: plugging a MIDI device straight into the FM-1.** Normally, the USB port of the FM-1 is a device: you connect a computer to it. If you turn **USB host** on (the third knob of the MIDI IN page), the port becomes the host. Then you can connect a class-compliant USB MIDI device directly to it: an MPC Sample, a keyboard, a pad controller or a groovebox. Its notes, clock and transport (start and stop) come in like all MIDI in. Thus, when Notes is on Pads, its pads play PERF-1. The MIDI out of PERF-1 goes to the device and follows the MIDI map.
 
-- **Power:** the FM-1 doesn't power the port. Plug the device in through a **powered USB hub**, or an adapter that powers the device. One device, directly or behind one hub.
-- **While it's on,** the computer side of the port is off: no USB audio, no MIDI to the computer, no editor, no updates. Turn it off to get them back. It's never kept: every power-on starts with USB host off, so the installer always works.
-- **What it says:** `ON: PLUG IN A DEVICE`, then `DEVICE CONNECTED` when it finds one. `NO MIDI DEVICE` means it found something without USB MIDI, or nothing answered: the MIDI IN page then shows what it found (`NO ANSWER` with its codes, `HUB INSIDE` for a dock with a hub behind its hub, or the device and the step it stopped at). The page also shows the last MIDI message that came in and whether a clock is coming in, from any input. Low-speed devices (some old keyboards) aren't supported. `DEVICE LOST: LOOKING` means it came unplugged; it reconnects by itself.
-- Full-speed USB MIDI 1.0 only, notes and clock: no SysEx goes to or comes from the device.
+- **Power:** the FM-1 does not supply power to the port. Connect the device through a **powered USB hub**, or through an adapter that supplies power to the device. Use one device, directly or behind one hub.
+- **While it is on,** the computer side of the port is off. You get no USB audio, no MIDI to the computer, no editor and no updates. To get them back, turn USB host off. The FM-1 never keeps this setting: at each power-on, USB host is off. Thus the installer always works.
+- **What it says:** first `ON: PLUG IN A DEVICE`, then `DEVICE CONNECTED` when it finds a device. `NO MIDI DEVICE` means that it found a device without USB MIDI, or that no device answered. Then the MIDI IN page shows what it found: `NO ANSWER` with its codes, `HUB INSIDE` for a dock with a hub behind its hub, or the device and the step where it stopped. The page also shows the last MIDI message that came in on any input, and if a clock comes in. The FM-1 does not support low-speed devices (some old keyboards). `DEVICE LOST: LOOKING` means that the device is disconnected. It connects again automatically.
+- Only full-speed USB MIDI 1.0, with notes and clock. No SysEx (the kind of MIDI message that carries sound data) goes to the device or comes from it.
 
-This is Melodee's USB host, by Kerem Kilic, with host code by recursivefieldinstruments. Receiving from a device has been tried on hardware with Melodee; sending to a device hasn't been yet, so if your device doesn't answer PERF-1's notes, say so.
+This is Melodee's USB host, by Kerem Kilic, with host code by recursivefieldinstruments. Reception from a device was tested on hardware with Melodee. Transmission to a device was not tested yet. If your device does not respond to the notes of PERF-1, tell us.
 
-**The link: two units as one band.** Two units running PERF-1 (two FM-1s, or an FM-1 and a PERF-1 SMK) find each other and play together:
-one leads, the other follows.
+**The link: two units as one band.** Two units with PERF-1 (two FM-1s, or an FM-1 and a PERF-1 SMK) find each other and play together.
+One unit leads, and the other unit follows.
 
 ![The LINK page](img/perf-screen-link.png)
 
-1. Connect them, one of two ways:
-   - **The cable (simplest):** one plain USB-C to USB-C cable between the two, no hub, no computer. Set **Link** to **Cable lead** on one
-     and **Cable follow** on the other (the LINK settings page, the last one). The port then carries only the link, not USB: each unit runs
-     on its own power (battery or its own charger), and the page's third line counts the link's messages (`WIRE OUT`, `IN`, `BAD`).
-     The cable setting is never kept: after a power-off the port is plain USB again, so the installer always finds the unit.
-   - **Over USB:** turn **USB host** on one of them (the MIDI IN page) and plug the other into it, through a powered hub. Leave **Link** on
-     **Auto** on both: the unit that is the USB host leads. **Lead** or **Follow** sets it by hand.
-2. They say hello about once a second; when each hears the other, both say `LINKED`.
-3. Press **PLAY** on the lead. The follower starts with it and keeps its tempo (`EXT`).
+1. Connect the two units. There are two ways:
+   - **The cable (simplest):** use one plain USB-C to USB-C cable between the two units, with no hub and no computer. Set **Link** to
+     **Cable lead** on one unit and to **Cable follow** on the other unit (on the LINK settings page, the last page). The port then carries
+     only the link, not USB. Each unit uses its own power (battery or its own charger). The third line of the page counts the link
+     messages (`WIRE OUT`, `IN`, `BAD`). The FM-1 never keeps the cable setting: after a power-off, the port is plain USB again. Thus the
+     installer always finds the unit.
+   - **Over USB:** turn on **USB host** on one unit (on the MIDI IN page). Connect the other unit to it through a powered hub. Keep **Link**
+     on **Auto** on the two units: the unit that is the USB host leads. To set the lead by hand, use **Lead** or **Follow**.
+2. The units send a hello message about once a second. When each unit receives the other, both show `LINKED`.
+3. Press **PLAY** on the lead. The follower starts at the same time and uses the tempo of the lead (`EXT`).
 
-While they're linked:
+While the units are linked:
 
 - **The harmony is shared.** The lead sends its key, scale and every chord change. The follower plays its own pad, bass, pluck and acid
-  over the lead's chords, so two different genres or pieces still play in the same key.
-- **The sections are shared** (Sections on **Follow**): a breakdown, build or drop on the lead happens on the follower on the same bar.
-  On **Own**, the follower keeps its own.
-- **Plays splits the band.** Each unit can leave parts to the other: **Beat** plays the drums and bass, **Top** the pad, pluck and acid,
-  **Drums** only the drums, **No drums** the rest. For example, the lead on Beat and the follower on Top, or both on All for a thicker sound.
-- **Neither sends its notes** over the link, only the clock and the link's own messages, so the follower doesn't play the lead's notes as keys.
-- **The LINK page shows** the partner (`PERF-1 FM-1` or `PERF-1 SMK`) and whether this one leads or follows. `TWO LEADS: SET ONE` or
-  `NO LEAD: SET ONE` means set one of them to Lead (or Follow).
+  over the chords of the lead. Thus two different genres or pieces still play in the same key.
+- **The sections are shared** (Sections on **Follow**): when the lead plays a breakdown, build or drop, the follower plays it on the same
+  bar. On **Own**, the follower keeps its own sections.
+- **Plays splits the band.** Each unit can leave parts to the other unit. **Beat** plays the drums and bass. **Top** plays the pad, pluck
+  and acid. **Drums** plays only the drums. **No drums** plays the other parts. For example, set the lead to Beat and the follower to Top.
+  Or set the two units to All for a thicker sound.
+- **Neither sends its notes** over the link. The units send only the clock and the link messages. Thus the follower does not play the
+  notes of the lead as keys.
+- **The LINK page shows** the partner (`PERF-1 FM-1` or `PERF-1 SMK`) and if this unit leads or follows. If it shows `TWO LEADS: SET ONE`
+  or `NO LEAD: SET ONE`, set one unit to Lead (or Follow).
 
-When the partner is gone for 3.5 seconds (unplugged, switched off), each says `PARTNER GONE: ALONE` and plays on by itself: its own chords
-and all its parts again. The link uses MIDI channel 16, CCs 20-31; with Link on, other gear on your MIDI out sees a CC 20 on channel 16 about
-once a second. Set Link to **Off** if that gets in the way.
+If the partner is gone for 3.5 seconds (disconnected or switched off), each unit shows `PARTNER GONE: ALONE`. It then continues alone,
+with its own chords and all its parts again. The link uses MIDI channel 16, CCs 20-31 (CCs are MIDI control messages). When Link is on,
+other equipment on your MIDI out receives a CC 20 on channel 16 about once a second. If this causes a problem, set Link to **Off**.
 
-The cable was tried on an FM-1 leading a PERF-1 SMK for eight minutes (2026-11-16): linked the whole time, every message through, no
-measurable load on either. The link over USB hasn't been tried between two units yet, so if the follower doesn't link or doesn't follow
-that way, say so. Each unit keeps its own mood, piece and (on Own) sections: the link shares the tempo, the harmony and who plays what.
+We tested the cable with an FM-1 as the lead and a PERF-1 SMK as the follower for eight minutes (2026-11-16). The units stayed linked
+all the time, all messages arrived, and there was no measurable load on either unit. We did not test the link over USB between two units
+yet. If the follower does not link or does not follow over USB, tell us. Each unit keeps its own mood, piece and (on Own) sections. The
+link shares the tempo, the harmony and which unit plays which parts.
 
-**A Model:Samples (or any Elektron Model) as a controller.** The Model:Samples sends each of its six tracks on its own channel (1-6), at whatever note that track is pitched to, so the **Pads** layout doesn't fit it. Set **Notes** to **M:S** instead, and the channel decides what a trig does, whatever its note:
+**A Model:Samples (or any Elektron Model) as a controller.** The Model:Samples sends each of its six tracks on a different channel (1-6). Each track sends the note of its own pitch. Thus the **Pads** layout does not fit it. Set **Notes** to **M:S** instead. Then the channel sets what a trig (a note that a track plays) does, and the note has no effect:
 
 | M:S track (channel) | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
 | PERF-1 | Next chord | Fill | Breakdown | Build | Drop | Next piece |
 
-The sections and pieces wait for the bar, as they do from the pads. Connect its MIDI out to the FM-1's TRS MIDI input. On the Model:Samples, turn on MIDI out for the tracks you want to use as triggers and leave it off for the ones you play yourself. Its trigs still play their own samples, so a trigger track can be a quiet one, or one you like hearing with the change.
+The sections and pieces wait for the bar, as they do from the pads. Connect its MIDI out to the TRS MIDI input of the FM-1. On the Model:Samples, turn on MIDI out for the tracks that you use as triggers. Keep it off for the tracks that you play yourself. Its trigs still play their own samples. Thus a trigger track can be a quiet track, or a track that you like to hear with the change.
 
-**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the FM-1's TRS MIDI input (the MPK mini MK4's DIN MIDI out, with a TRS type A to DIN cable or adapter), or over USB through a computer. It expects the MPK's factory program: keys on channel 1, pads on channel 10 from note 36, knobs on CC 24-31 (the MK4's; an older MPK mini's CC 70-77 work too). The MK4's knobs turn endlessly and send steps, so PERF-1 moves each setting from where it is, about fifty clicks from one end to the other; an older MPK's knobs (CC 70-77) set the value straight to where the knob points.
+**An Akai MPK mini as the keyboard.** Set **Notes** to **MPK**. Connect its MIDI out to the TRS MIDI input of the FM-1. On the MPK mini MK4, use the DIN MIDI out with a TRS type A to DIN cable or adapter. Or connect over USB through a computer. This mode expects the factory program of the MPK: keys on channel 1, pads on channel 10 from note 36, and knobs on CC 24-31 (on the MK4). The CC 70-77 of an older MPK mini also work. The knobs of the MK4 turn with no end and send steps. Thus PERF-1 moves each setting from its current value. It takes about fifty clicks to go from one end of the range to the other. The knobs of an older MPK (CC 70-77) set the value immediately to the knob position.
 
 | MPK | PERF-1 |
 |---|---|
-| Keys | Play the Jam page's voice (pluck, pad, acid or bass) with their velocity, snapped to the scale, so there are no wrong notes. With Jam's Keys on Chords, every key plays a triad of the scale. |
-| Pads, bank A (1-8) | The drums (kick, snare, clap, closed hat, open hat, perc), with velocity; pad 7 mutes all the drums or brings them back. |
-| Pads, bank B (9-16) | Breakdown, build, drop, next chord, fill, freeze, auto-DJ on or off, next piece (as the MPC's pads 9-16). |
+| Keys | Play the voice of the Jam page (pluck, pad, acid or bass) with their velocity. The notes snap to the scale, so there are no wrong notes. When Keys on the Jam page is on Chords, each key plays a triad (a three-note chord) of the scale. |
+| Pads, bank A (1-8) | The drums (kick, snare, clap, closed hat, open hat, perc), with velocity. Pad 7 mutes all the drums or brings them back. |
+| Pads, bank B (9-16) | Breakdown, build, drop, next chord, fill, freeze, auto-DJ on or off, next piece (the same as pads 9-16 of the MPC). |
 | Knobs 1-4 (CC 24-27) | The FX knobs: Filter, Crush, Throw, Wash. |
-| Knobs 5-7 (CC 28-30) | The acid's cutoff and resonance, the bass's cutoff. |
+| Knobs 5-7 (CC 28-30) | The cutoff and resonance of the acid, and the cutoff of the bass. |
 | Knob 8 (CC 31) | The mood. |
-| Pitch bend | Bends the voice the keys play, two semitones each way. |
-| Mod wheel (CC 1) | Vibrato on the voice the keys play, up to half a semitone each way. |
+| Pitch bend | Bends the voice that the keys play, two semitones up or down. |
+| Mod wheel (CC 1) | Vibrato on the voice that the keys play, up to half a semitone up or down. |
 
-The keys play over the song from any page. On the Jam page the voice is all yours: its own line stops while the page is up. The **Channel** setting doesn't apply in this mode (keys and pads come on their own channels). The bend and vibrato work on the pluck (plain and DX sounds), the bass and the acid, not the pad, and they bend that voice's own line too while you hold them. If your MPK's program sends other numbers, the MIDI IN page's `LAST IN` line shows what each knob and pad sends; tell us and we'll match it.
+The keys play over the song on any page. On the Jam page, only you play the voice: its own line stops while the page is open. The **Channel** setting does not apply in this mode (keys and pads use their own channels). The bend and vibrato work on the pluck (plain and DX sounds), the bass and the acid. They do not work on the pad. While you hold them, they also bend the own line of that voice. If the program of your MPK sends other numbers, the `LAST IN` line on the MIDI IN page shows what each knob and pad sends. Tell us the numbers, and we will match them.
 
-**Knob CCs** (the MIDI IN page's fourth knob) turn the four FX knobs over MIDI:
+**Knob CCs** (the fourth knob of the MIDI IN page) controls the four FX knobs over MIDI:
 
 | FX knob | CC | On a Model:Samples |
 |---|---|---|
@@ -2472,144 +2586,146 @@ The keys play over the song from any page. On the Jam page the voice is all your
 | Wash | 13 | Reverb send |
 | Mood (in only) | 1 | (the mod wheel on a keyboard) |
 
-- **In:** these CCs on the listened channel (**Channel**, All by default) move PERF-1's FX knobs. On a Model:Samples, turn on its knobs' MIDI out (ENCS), and its filter, resonance, delay send and reverb send knobs play PERF-1's Filter, Crush, Throw and Wash.
-- **Out:** turning PERF-1's FX knobs sends the same CCs on every channel the **MIDI map** uses (GM: 1-4 and 10; M:Samples: 1-6, so the filter sweeps all six tracks at once). It needs MIDI out on, and it goes out over USB, so the same limits apply as for notes (below). A CC that came in isn't sent back out.
+- **In:** these CCs on the channel that the FM-1 listens to (**Channel**, All by default) move the FX knobs of PERF-1. On a Model:Samples, turn on the MIDI out of its knobs (ENCS). Then its filter, resonance, delay send and reverb send knobs control the Filter, Crush, Throw and Wash of PERF-1.
+- **Out:** when you turn the FX knobs of PERF-1, it sends the same CCs on every channel that the **MIDI map** uses (GM: 1-4 and 10; M:Samples: 1-6, so the filter moves on all six tracks at the same time). MIDI out must be on. The CCs go out over USB, so the same limits apply as for notes (below). PERF-1 does not send back out a CC that came in.
 - **In+Out:** both.
 
-**Freeze from MIDI:** CC 64, the sustain pedal's number, works like holding **REC**: the chord freezes while the pedal is down (or the CC is 64 or more) and thaws when it's let up. It works in every Notes mode, on the listened channel, so a pedal on a keyboard or a button in an editor can freeze PERF-1. Start, Continue and Stop always start and stop the music.
+**Freeze from MIDI:** CC 64 (the number of the sustain pedal) works like holding **REC**. The chord freezes while the pedal is down (or while the CC is 64 or more). The chord unfreezes when you release the pedal. This works in all Notes modes, on the channel that the FM-1 listens to. Thus a pedal on a keyboard or a button in an editor can freeze PERF-1. Start, Continue and Stop always start and stop the music.
 
-**Any controller as the panel:** a map you make with MIDI learn in the emulator turns any controller's pads, keys, buttons and knobs into the FM-1's own (section 17, "Your MIDI map on the FM-1"). It takes its messages before everything above.
+**Any controller as the panel:** make a map with MIDI learn in the emulator. The map makes the pads, keys, buttons and knobs of any controller work as the controls of the FM-1 (section 17, "Your MIDI map on the FM-1"). This map gets its messages before all the modes above.
 
-What the FM-1 can't do here: its TRS jack is an input, so nothing goes back to the Model:Samples over TRS. PERF-1's notes and knob CCs reach it only over USB, through a computer, a USB MIDI host box, or the FM-1's own USB host (above; not yet tried with a Model:Samples). Clock works both ways: PERF-1 follows the Model:Samples' clock over TRS, or sends its own over USB.
+Limits of the FM-1 here: its TRS jack is an input. Thus nothing goes back to the Model:Samples over TRS. The notes and knob CCs of PERF-1 get to it only over USB: through a computer, a USB MIDI host box, or the USB host of the FM-1 (above; not tested with a Model:Samples yet). Clock works in the two directions: PERF-1 follows the clock of the Model:Samples over TRS, or sends its own clock over USB.
 
-**USB audio:** the FM-1 also shows up on a computer as a stereo USB audio input (16-bit, 44.1 kHz). It carries the master output, so you can record the FM-1 over the same cable. On the USB & MIDI settings page, the level can follow the **MASTER** knob (KNOB) or stay at a fixed level (FIXED, about the same as the knob at three quarters). With FIXED you can turn your speakers down without changing the recording.
+**USB audio:** on a computer, the FM-1 is also a stereo USB audio input (16-bit, 44.1 kHz). It carries the master output. Thus you can record the FM-1 through the same cable. On the USB & MIDI settings page, the level can follow the **MASTER** knob (KNOB). Or it can stay at a fixed level (FIXED, about the same as the knob at three quarters). With FIXED, you can turn your speakers down and the recording does not change.
 
 ---
 
 ## 15. Your own DX7 voices
 
-The DX7 was Yamaha's classic FM synth, and thousands of its sounds (voices) are free online as `.syx` files. PERF-1 can hold **16 of your own DX7 voices** and plays them on the pluck. They stay stored when you switch off. On the Pluck page they come after the 60 built-in DX voices: use the Sound knob, or **SEL** + **ALGORITHM** on a pluck page. Each shows as `DX` and the voice's own name (ten characters).
+The DX7 was a classic FM synth from Yamaha. Thousands of its sounds (voices) are free on the internet as `.syx` files. PERF-1 can keep **16 of your own DX7 voices**. It plays them on the pluck. They stay in memory when you switch off. On the Pluck page, they come after the 60 built-in DX voices. To select them, use the Sound knob, or **SEL** + **ALGORITHM** on a pluck page. Each voice shows as `DX` and the name of the voice (ten characters).
 
 ### Loading them from the installer page
 
-1. Open the [installer](../install/) and find **Load DX7 voices**.
-2. Choose one or more `.syx` files. A 32-voice bank, single voices or a bare 4096-byte bank all work. The voices in them are listed.
-3. Tick up to 16 and press **Send the chosen voices**. The page clears what is loaded and sends them in order.
+1. Open the [installer](../install/). Find **Load DX7 voices**.
+2. Choose one or more `.syx` files. A 32-voice bank, single voices or a bare 4096-byte bank all work. The page shows a list of the voices in them.
+3. Tick up to 16 voices. Press **Send the chosen voices**. The page clears the loaded voices and sends the new voices in order.
 
 **Clear the loaded voices** empties the slots.
 
-The FM-1 must be running PERF-1 and connected. Use Chrome or Edge, allow MIDI with SysEx (the kind of MIDI message that carries sound data) when the browser asks, and make sure nothing else is using the FM-1's MIDI port. If the FM-1 doesn't answer, the page says `The FM-1 did not answer (an older firmware?)`.
+The FM-1 must run PERF-1 and must be connected. Use Chrome or Edge. When the browser asks, allow MIDI with SysEx (the kind of MIDI message that carries sound data). Make sure that nothing else uses the MIDI port of the FM-1. If the FM-1 does not answer, the page shows `The FM-1 did not answer (an older firmware?)`.
 
 ### Loading them from a MIDI librarian
 
-You can also send a DX7 SysEx dump from any MIDI librarian app to the FM-1's USB MIDI port.
+You can also send a DX7 SysEx dump from any MIDI librarian app (an app that keeps and sends sounds) to the USB MIDI port of the FM-1.
 
 - A **32-voice bank** replaces the loaded voices with its first 16.
-- A **single voice** is added after the last one loaded. If all 16 slots are full, it replaces the last one.
+- A **single voice** goes after the last loaded voice. If all 16 slots are full, it replaces the last voice.
 
-Both are checked against the DX7's checksum, so a damaged file is rejected. The header tells you what happened: `DX7 VOICES 16 LOADED`, `1 ADDED`, `CLEARED`, `BAD CHECKSUM` or `NOT TAKEN`.
+The FM-1 checks the two types against the DX7 checksum (a number that shows if the data is damaged). It rejects a damaged file. The header shows the result: `DX7 VOICES 16 LOADED`, `1 ADDED`, `CLEARED`, `BAD CHECKSUM` or `NOT TAKEN`.
 
-(For people writing their own tools: the page uses its own message too, `F0 7D 50 56`, slot, 128 bytes, checksum, `F7`. `7F` alone clears. The FM-1 answers `F0 7D 50 57` so a sender can wait for each voice.)
+(For people who write their own tools: the page also uses its own message: `F0 7D 50 56`, slot, 128 bytes, checksum, `F7`. `7F` alone clears. The FM-1 answers `F0 7D 50 57`, so a sender can wait for each voice.)
 
 ### Good to know
 
-- Voices are saved a couple of seconds after your last change (the music dips, as for any save) and are still there after power-off.
-- A voice plays as it was made: the algorithm, the envelopes and their scaling, velocity, LFO, pitch envelope and feedback. Pitch bend, mod wheel, portamento and mono mode aren't supported yet. You can edit the voice itself on the [editor page](../editor/) (below).
-- Loaded voices are **not level-matched**, to each other or to the other sounds, and play up to four notes at once. If one is too loud or too quiet, turn the pluck's Level.
-- A piece remembers the pluck's sound **by slot number**. If it uses your voice in slot 3 and you then load other voices, it plays whatever is in slot 3 now. The factory pieces never use your slots.
-- The Sound knob can land on an empty slot, shown as `(empty)`, which makes no sound. **SEL** + **ALGORITHM** skips empty slots.
+- The FM-1 saves the voices a couple of seconds after your last change (the music dips, as for all saves). The voices stay after power-off.
+- A voice plays as it was made: the algorithm, the envelopes (how the sound changes over time) and their scaling, velocity, LFO (a slow wave that moves the sound), pitch envelope and feedback. PERF-1 does not support pitch bend, mod wheel, portamento (a slide between notes) and mono mode (one note at a time) yet. To edit the voice itself, use the [editor page](../editor/) (below).
+- Loaded voices are **not level-matched** (their levels are not made equal) to each other or to the other sounds. They play up to four notes at the same time. If a voice is too loud or too quiet, turn the Level of the pluck.
+- A piece keeps the sound of the pluck **by slot number**. For example, a piece uses your voice in slot 3, and then you load other voices. The piece now plays the voice that is in slot 3. The factory pieces never use your slots.
+- The Sound knob can stop on an empty slot. The screen shows it as `(empty)`, and it makes no sound. **SEL** + **ALGORITHM** skips empty slots.
 
 ### Editing them: the editor page
 
-The [editor](../editor/) lets you change sounds and DX7 voices from a computer. Use Chrome or Edge, with the FM-1 on USB, MIDI with SysEx allowed, and nothing else using the FM-1's MIDI port. It has two tabs.
+Use the [editor](../editor/) to change sounds and DX7 voices from a computer. Use Chrome or Edge. Connect the FM-1 with USB. Allow MIDI with SysEx. Make sure that nothing else uses the MIDI port of the FM-1. The editor has two tabs.
 
-**Sound** has every setting of the piece, grouped by voice (Tempo & global, Pad, Bass, Acid, Pluck, Drums, Space & master, Mixer), with the FM-1's names, ranges and values. A last page has the rest: each drum lane's level, tune, decay, probability and length, each layer's pan and send, the noise, the octaves and the by-hand switches.
+**Sound** has all the settings of the piece, in groups by voice (Tempo & global, Pad, Bass, Acid, Pluck, Drums, Space & master, Mixer). It uses the names, ranges and values of the FM-1. A last page has the other settings: the level, tune, decay, probability and length of each drum lane; the pan and send of each layer; the noise; the octaves; and the by-hand switches.
 
-Moving a control changes the piece that's playing, just like turning the knob. **To keep the change, store the piece on the FM-1 itself** (GLO page, **SAVE**). The page reads the FM-1's values when it connects, and again when you press **Read everything from the FM-1**, so what you see is what the FM-1 holds. The **↺** button puts a setting back to its default.
+When you move a control, it changes the piece that plays, the same as when you turn the knob. **To keep the change, store the piece on the FM-1 itself** (GLO page, **SAVE**). The page reads the values of the FM-1 when it connects. It reads them again when you press **Read everything from the FM-1**. Thus the page shows the values that the FM-1 has. The **↺** button puts a setting back to its default.
 
-**DX7 voices** edits the 16 slots. Press **Read the slots from the FM-1**, pick a slot and edit:
+**DX7 voices** edits the 16 slots. Press **Read the slots from the FM-1**. Select a slot. Then edit:
 
-- the voice's name
-- the **algorithm** (how the six operators are wired together). All 32 are drawn, with the operators you hear (carriers) marked and a curl for feedback. Click an operator in the drawing to edit it.
+- the name of the voice
+- the **algorithm** (how the six operators connect together; the operators are the six sound sources of a DX7 voice). The page shows a drawing of all 32. It marks the operators that you hear (carriers), and a curl shows feedback. To edit an operator, click it in the drawing.
 - feedback, oscillator sync, transpose, the pitch envelope and the LFO
 - for each of the six operators: output level, ratio or fixed frequency (coarse, fine, detune), the four-stage envelope (with a graph), level scaling (break point, left and right depth and curve), rate scaling, amplitude-modulation sensitivity and velocity sensitivity.
 
-With **Live** on, every change goes to the slot as you make it, so the pluck plays what you're editing. **Choose it on the pluck** sets the pluck to that slot. Slots fill in order, so send to the next free one to add a voice. **Init voice** starts from a plain sine wave.
+When **Live** is on, each change goes to the slot immediately. Thus the pluck plays the voice that you edit. **Choose it on the pluck** sets the pluck to that slot. The slots fill in order. To add a voice, send it to the next free slot. **Init voice** starts from a plain sine wave.
 
-**Choose files** loads `.syx` banks and single voices into a list you can take voices from (click one to edit it). **Save the slots as a bank** and **Save this voice** write `.syx` files for a librarian or for later. The FM-1 saves the slots a couple of seconds after your last change.
+**Choose files** loads `.syx` banks and single voices into a list. You can take voices from this list (click a voice to edit it). **Save the slots as a bank** and **Save this voice** write `.syx` files. Use them in a librarian, or keep them for later. The FM-1 saves the slots a couple of seconds after your last change.
 
 ---
 
 ## 16. Load, telemetry and the logger
 
-Read this if the sound crackles or stutters, or if you want to report a problem. It explains the load numbers on the mix map and how to record a status log to send with a bug report.
+Read this section if the sound crackles or stutters, or if you want to report a problem. It explains the load numbers on the mix map. It also tells you how to record a status log to send with a bug report.
 
 ### The load line on screen
 
-Hold **GLO** for the mix map: after a dropout, or while the FM-1 is easing off, its top right shows a line like `CPU 41 XR 0`, with `C2 38` and `S1` below it and the auto-DJ's phase beneath. **GLO**'s help card (hold GLO alone for about a second) always shows it.
+Hold **GLO** to see the mix map. After a dropout, or while the FM-1 is easing off (it does less work to keep up), the top right shows a line like `CPU 41 XR 0`. Below it are `C2 38` and `S1`, and below them is the phase of the auto-DJ. The help card of **GLO** always shows this line (hold GLO alone for about a second).
 
 | You see | It means |
 |---|---|
-| CPU nn | How hard the FM-1 is working to make the sound, in percent. Drawing the screen doesn't count. |
-| XR n | How many dropouts there have been. Each one is a click or a stutter, where a tiny bit of sound repeats. If this number goes up, you heard a glitch. |
-| C2 nn | The FM-1's second processor is helping, and is nn % busy. |
-| C1 | The second processor stopped after a fault, and everything runs on one until you switch off. Switching off and on again brings it back. |
-| S1 | The FM-1 is easing off to keep up. The sound enhancers are off: the pad's chorus, the CHORUS page, the DX voices' shimmer and the RESONATOR. The DX voices are untouched. |
-| S2 | Easing off further. The DX voices are also limited to four notes at once. |
-| S3 | As far as it goes. The DX voices are limited to two notes, the Echoplex and the vinyl noise are off, and the output clip is the cheaper one. |
-| QD n | Commands the sound engine never got because too many came at once (a knob turned, a piece loaded). It has never been seen; if it shows, a setting may not have taken, so say so. |
+| CPU nn | How hard the FM-1 works to make the sound, in percent. The work to draw the screen does not count. |
+| XR n | The number of dropouts. Each dropout is a click or a stutter, where a very small part of the sound plays again. If this number goes up, you heard a glitch (a short fault in the sound). |
+| C2 nn | The second processor of the FM-1 helps, and it is nn % busy. |
+| C1 | The second processor stopped after a fault. Everything runs on one processor until you switch off. Switch off and on again to get the second processor back. |
+| S1 | The FM-1 eases off to keep up. The sound enhancers are off: the pad's chorus, the CHORUS page, the DX voices' shimmer and the RESONATOR. The DX voices do not change. |
+| S2 | The FM-1 eases off more. The DX voices are also limited to four notes at the same time. |
+| S3 | The last step. The DX voices are limited to two notes, and the Echoplex and the vinyl noise are off. The output clip uses the version that needs less work. |
+| QD n | Commands that the sound engine did not get, because too many came at the same time (for example, a knob turned or a piece loaded). Nobody has seen this yet. If it shows, a setting possibly did not change, so tell us. |
 
-The FM-1 eases off one step when there's a dropout, or when about a quarter of its renders run late within ten seconds (a load that stays too high). A late render that loses sound counts as a dropout (0.17.56); one that doesn't costs nothing in itself. `S1` comes earlier, before any dropout: at 40 late renders in ten seconds, the sign that the margin is thin. It costs only the enhancers, not the DX voices. It goes back one step after twenty seconds without either. With `S1` to `S3` on, the sound is a little thinner, but not broken.
+The FM-1 eases off one step when there is a dropout. It also eases off one step when about a quarter of its renders are late within ten seconds (a load that stays too high). A render is one calculation of a short part of the sound. A late render that loses sound counts as a dropout (0.17.56). A late render that does not lose sound causes no problem by itself.
 
-The heaviest combinations are the DX plucks with the shimmer reverb, and the fast genres (dnb, breaks). If you hear crackles there, that's the likely cause.
+`S1` comes earlier, before any dropout: at 40 late renders in ten seconds. These late renders show that the margin is small. This step turns off only the enhancers, not the DX voices. The FM-1 goes back one step after twenty seconds without a dropout or a high load. With `S1` to `S3` on, the sound is a little thinner, but it is not broken.
 
-There's always a delay of a few milliseconds between pressing a key and hearing it. The DX plucks come in very slightly later than the plain sounds.
+The heaviest combinations are the DX plucks with the shimmer reverb, and the fast genres (dnb, breaks). If you hear crackles there, this is the probable cause.
+
+There is always a delay of a few milliseconds between the time you press a key and the time you hear it. The DX plucks start very slightly later than the plain sounds.
 
 ### Recording a status log in the browser
 
-The easiest way to record what's happening:
+This is the easiest way to record what happens:
 
-1. Connect the FM-1 by USB and open the [installer page](../install/).
-2. Find the **Live status** panel and press **Start**. It asks the FM-1 for its numbers four times a second and shows the CPU, the second processor, dropouts, the longest render against its budget, what is shed or moved to the other processor, the genre and piece, the flash writes and the frames drawn.
-3. Play the piece that crackles for a minute or so.
+1. Connect the FM-1 by USB. Then open the [installer page](../install/).
+2. Find the **Live status** panel. Press **Start**. The page asks the FM-1 for its numbers four times a second. It shows the CPU, the second processor, the dropouts and the longest render against its budget (the time that the render has). It also shows the work that is shed (turned off) or moved to the other processor, the genre and piece, the flash writes and the frames drawn.
+3. Play the piece that crackles for about one minute.
 4. Press **Save CSV** to save the log as a file.
-5. Attach the file to a bug report, with the piece, its sounds and the tempo (section 19 has the link).
+5. Attach the file to a bug report. Include the piece, its sounds and the tempo (section 19 has the link).
 
 ### Recording with the logger (for people comfortable with Python)
 
-The PERF-1 source has a small Python tool that records the same kind of log from a computer.
+The PERF-1 source has a small Python tool. It records the same type of log from a computer.
 
-1. Install what it needs: `pip install mido python-rtmidi`.
-2. With the FM-1 on USB, run `python tools/fm1log.py`. Use `--list` to see the MIDI ports, and `--port` and `--out` to choose a port and a file name.
-3. It writes `telemetry/fm1_<time>.csv`. Send that file.
+1. Install the software that the tool needs: `pip install mido python-rtmidi`.
+2. When the FM-1 is connected by USB, run `python tools/fm1log.py`. Use `--list` to see the MIDI ports. Use `--port` and `--out` to select a port and a file name.
+3. The tool writes `telemetry/fm1_<time>.csv`. Send that file.
 
-`python tools/fm1sum.py telemetry/<file>.csv` prints a summary of the load, dropouts and stage times for each genre and piece. Don't use `fm1log.py --bench` while making music: it's a development test that causes one glitch.
+`python tools/fm1sum.py telemetry/<file>.csv` prints a summary of the load, the dropouts and the stage times for each genre and piece. Do not use `fm1log.py --bench` while you make music. It is a development test, and it causes one glitch.
 
-The FM-1 sends nothing until it's asked, and stops ten seconds after the last ask. If it's busy it skips a reading rather than wait, so logging can't hold up the music.
+The FM-1 sends nothing until it gets a request. It stops ten seconds after the last request. If it is busy, it skips a reading and does not wait. Thus the logging cannot delay the music.
 
 ### Details for helpers
 
 | Item | Detail |
 |---|---|
-| CPU nn | Share of the render's time budget the first core uses, measured inside the audio interrupt, including waiting for the second core. Screen drawing isn't counted. |
-| XR n (xruns) | Halves of audio that were never rendered; the last 11.6 ms play a second time. Since 0.17.56 also a render so late that the second part of its half had already played (a run of late renders adds up). A render that only ran a little past its half isn't counted: the next starts at once and nothing is lost. The status log counts those as `late`. |
-| C2 nn | Percent of a chunk's time the second core spends on its job: the pad with its chorus, the DX voices, the reverb, and at times the bass and acid. The engine moves some of this work between the cores as the load changes. `C1`: the second core stopped after a fault. |
-| Shedding | S1: the enhancers off (the pad's chorus, CHORUS, the DX shimmer, the RESONATOR). S2: DX voices held to four. S3: held to two, with the Echoplex, the vinyl noise and the exact clip off. Steps up on an xrun (a late render that lost sound included) or on 200 late renders in ten seconds, one level at a time. S1 also comes at 40. Steps back one level after twenty seconds of neither. |
-| Audio blocks | 512 frames at a time, as two renders of 256 (11.6 ms for the pair), so a slow render borrows time from a quick one beside it. The DX plucks are rendered a chunk ahead on the second core and sound 5.8 ms later than the plain ones. |
+| CPU nn | The part of the render's time budget that the first core uses. The FM-1 measures it inside the audio interrupt, and it includes the time that the first core waits for the second core. Screen drawing does not count. |
+| XR n (xruns) | Halves of audio that were never rendered. The last 11.6 ms play a second time. Since 0.17.56, it also counts a render so late that the second part of its half already played (a series of late renders adds up). A render that only ran a little past its half does not count: the next render starts immediately and no sound is lost. The status log counts those renders as `late`. |
+| C2 nn | The percent of a chunk's time that the second core uses for its work: the pad with its chorus, the DX voices, the reverb, and sometimes the bass and the acid. The engine moves some of this work between the cores when the load changes. `C1`: the second core stopped after a fault. |
+| Shedding | S1: the enhancers are off (the pad's chorus, CHORUS, the DX shimmer, the RESONATOR). S2: the DX voices are limited to four. S3: the DX voices are limited to two, and the Echoplex, the vinyl noise and the exact clip are off. The level goes up one step at a time: on an xrun (this includes a late render that lost sound) or on 200 late renders in ten seconds. S1 also comes at 40. The level goes back one step after twenty seconds without either. |
+| Audio blocks | 512 frames at a time, as two renders of 256 (11.6 ms for the pair). Thus a slow render can use time from a fast render next to it. The second core renders the DX plucks one chunk early, and they sound 5.8 ms later than the plain sounds. |
 | Logger columns | CPU and CPU1 %, xruns, the longest render since the last frame against its budget, the longest gap between main-loop turns, the longest screen frame (a flash write or a long frame shows there), the shed level, flash writes (and how long the last one stopped the chip), crashes, the genre and piece, and the first core's time by stage. |
 | Logger events | XRUN, LATE, FLASH, OVER, GAP, SHED. |
-| `fm1log.py --bench` | Times loops on the chip once. Interrupts are off for a few milliseconds, so the music glitches once. For development. |
+| `fm1log.py --bench` | It measures the time of loops on the chip one time. Interrupts are off for a few milliseconds, thus the music has one glitch. Use it only for development. |
 
 ---
 
 ## 17. The emulator
 
-The [emulator](../emu/) runs the real PERF-1 firmware in your web browser, so you can try it without the FM-1 or follow along with this manual.
+The [emulator](../emu/) runs the real PERF-1 firmware in your web browser. You can try it without the FM-1, or use it while you read this manual.
 
 - Drag a knob up or down, or scroll over it.
 - Click buttons and keys.
-- To hold a button down, Shift-click (or right-click) it, and click again to let go. That's how you hold **SEQ**, **SAVE**, **SEL** or **HOME**.
-- **New start** switches it off and on. Stored pieces stay, in that browser. **Forget stored** clears them.
+- To hold a button down, Shift-click (or right-click) it. Click again to release it. Use this to hold **SEQ**, **SAVE**, **SEL** or **HOME**.
+- **New start** switches the emulator off and on. Stored pieces stay, in that browser. **Forget stored** clears them.
 
 | Computer key | FM-1 control |
 |---|---|
@@ -2630,74 +2746,76 @@ The [emulator](../emu/) runs the real PERF-1 firmware in your web browser, so yo
 
 ![The remote screen](img/perf-screen-remote.png)
 
-You can use the real FM-1's panel to play the emulator, which is handy for streaming or for seeing the screen large.
+You can use the panel of the real FM-1 to play the emulator. This is useful for streaming, or to see the screen at a large size.
 
-1. Plug the FM-1 in by USB.
-2. Open the emulator in Chrome, Edge or Firefox, switch it on and press **Connect MIDI**. Allow MIDI when the browser asks.
-3. On the FM-1, hold **SEL** and press **GLO**. The screen says REMOTE, the FM-1 stops and goes quiet, and its whole panel now plays the emulator: every button, key and knob, **MASTER** too.
+1. Connect the FM-1 by USB.
+2. Open the emulator in Chrome, Edge or Firefox. Switch it on and press **Connect MIDI**. When the browser asks, allow MIDI.
+3. On the FM-1, hold **SEL** and press **GLO**. The screen shows REMOTE, and the FM-1 stops and becomes silent. Now its full panel plays the emulator: every button, key and knob, and **MASTER** too.
 
-The emulator's lights are sent back to the FM-1's buttons and keys, so the panel lights up as usual, but watch the emulator's screen. The FM-1 shows `PLAYING THE BROWSER` while the emulator is answering and `WAITING FOR THE BROWSER` when it isn't. Press **SEL** + **GLO** again to get the FM-1 back. It comes back stopped (**PLAY** starts it).
+The emulator sends its lights back to the buttons and keys of the FM-1. Thus the panel lights come on as usual, but look at the screen of the emulator. The FM-1 shows `PLAYING THE BROWSER` while the emulator answers, and `WAITING FOR THE BROWSER` when it does not answer. To get the FM-1 back, press **SEL** + **GLO** again. The FM-1 comes back stopped (**PLAY** starts it).
 
-**For livestreams:** the emulator's **Stream view** button (or adding `?stream` to the address) puts the FM-1 and its screen, large, on a clean 16:9 stage for OBS or any capture software. Whatever is pressed glows, whether on the real FM-1 through the remote or clicked in the browser. A turning knob gets a ring, and a strip under the screen names the last moves. FM-1 LINKED shows while the remote is on. The small bar (Connect MIDI, Exit) and the mouse pointer hide when the mouse is still.
+**For livestreams:** the **Stream view** button of the emulator (or `?stream` added to the address) shows the FM-1 and its screen at a large size. They show on a clean 16:9 stage for OBS or other capture software. Each control that you push glows, on the real FM-1 through the remote or with a click in the browser. A knob that turns gets a ring, and a strip below the screen shows the names of the last moves. FM-1 LINKED shows while the remote is on. The small bar (Connect MIDI, Exit) and the mouse pointer hide when the mouse does not move.
 
-How it talks, for the curious: USB MIDI channel 16. Keys are notes 48-74, buttons are CC 102-115 (127 down, 0 up), the knobs are CC 85-91 (64 plus or minus the number of clicks), **MASTER** is CC 7, and CC 116 is a hello sent each second. The emulator sends its lights back the same way, with CC 117 each second.
+How it communicates, for people who want to know: USB MIDI channel 16. The keys are notes 48-74. The buttons are CC 102-115 (127 down, 0 up). A CC is a MIDI control change message. The knobs are CC 85-91 (64 plus or minus the number of clicks), and **MASTER** is CC 7. CC 116 is a hello message, sent each second. The emulator sends its lights back the same way, with CC 117 each second.
 
 ### Any other controller (MIDI learn)
 
-You can play the emulator from an FM-1 running M-VAVE's own firmware, or from any MIDI keyboard or controller. As soon as it's connected, its keys play the emulator's keys by pitch, from F3 to G5. Notes outside that range are folded into it.
+You can play the emulator from an FM-1 that runs the M-VAVE firmware, or from any MIDI keyboard or controller. When it is connected, its keys play the keys of the emulator by pitch, from F3 to G5. Notes outside that range are moved into it.
 
-To use the controller's other buttons and knobs:
+To use the other buttons and knobs of the controller:
 
 1. Press **MIDI learn**.
-2. Click a control on the emulator. It gets an outline.
-3. Press or move the control you want on your controller.
-4. Repeat for as many as you like, then press **Done learning**.
+2. Click a control on the emulator. The control gets an outline.
+3. On your controller, push or move the control that you want.
+4. Do steps 2 and 3 again for as many controls as you want. Then press **Done learning**.
 
-Buttons and keys can take a note or a CC. Knobs take a CC, either absolute (a normal knob or fader) or relative (an endless encoder that turns forever; pick which in the list). The list is kept in that browser. **Forget learned** clears it.
+Buttons and keys can use a note or a CC. Knobs use a CC. The CC can be absolute (a normal knob or fader) or relative (an endless encoder that turns without a stop). Select the type in the list. The browser keeps the list. **Forget learned** clears it.
 
 ### Your MIDI map on the FM-1 (experimental)
 
-*Experimental: it works in the tests, and is still being tried on more controllers. Tell us what yours does.*
+*Experimental: it works in the tests, and we continue to try it on more controllers. Tell us what your controller does.*
 
-What you learn in the emulator can play the real PERF-1 too, with no computer in between: your controller's pads, keys, buttons and knobs become the FM-1's own buttons, keys and knobs.
+The controls that you learn in the emulator can also play the real PERF-1, with no computer between them. The pads, keys, buttons and knobs of your controller become the buttons, keys and knobs of the FM-1.
 
 1. Learn the controls in the emulator, as above.
-2. Press **Send it to your FM-1**. It opens the Install page's **Your MIDI map** section, which lists what you learned.
-3. Plug the FM-1 in and press **Send to my FM-1**. The FM-1 keeps the map and restarts.
-4. Plug your controller into the FM-1 (USB host, or the TRS MIDI jack), or play it through the computer.
+2. Press **Send it to your FM-1**. It opens the **Your MIDI map** section of the Install page. This section lists the controls that you learned.
+3. Connect the FM-1 and press **Send to my FM-1**. The FM-1 keeps the map and starts again.
+4. Connect your controller to the FM-1 (USB host, or the TRS MIDI jack), or play it through the computer.
 
-A learned control works in every mode, before anything else PERF-1 does with MIDI: a pad you learned as **PLAY** starts and stops, a fader you learned on **SELECT** walks the pages, an encoder on a page knob turns it. A button or key is held while its note (or its CC at 64 and over) is down, so holds work too (**SEQ** held opens the sequencer, **SEL** held is a shift). Anything you did not learn does what it did before. **MASTER** stays the FM-1's own knob: a learned MASTER works in the emulator only. Up to 48 controls.
+A learned control works in every mode, before PERF-1 does anything else with MIDI. For example, a pad that you learned as **PLAY** starts and stops. A fader that you learned on **SELECT** moves through the pages. An encoder on a page knob turns that knob.
 
-Nothing learns? Some controllers keep their pads off MIDI until you turn it on. On an **MPC Sample**: SHIFT + pad 8 (MIDI Config), **MIDI Port** USB (the TRS jacks are External), **Pad MIDI Out** Always. While learning, the emulator shows anything it hears, so you can tell whether the controller is sending at all.
+A button or key stays held while its note is down (or while its CC is at 64 or more). Thus holds also work (**SEQ** held opens the sequencer, **SEL** held is a shift). A control that you did not learn does the same as before. **MASTER** stays the FM-1's own knob: a learned MASTER works only in the emulator. The map holds up to 48 controls.
 
-**Download .perfmap** saves the map as a file to keep or share, and **load one** reads it back (into the emulator too). **Read it from my FM-1** brings the FM-1's map back into the list to change it. **Clear the FM-1's map** removes it. The map is also in your backups.
+If no control learns: some controllers do not send MIDI from their pads until you turn it on. On an **MPC Sample**: SHIFT + pad 8 (MIDI Config), **MIDI Port** USB (the TRS jacks are External), **Pad MIDI Out** Always. While you learn, the emulator shows all the MIDI that it receives. Thus you can see if the controller sends anything.
+
+**Download .perfmap** saves the map as a file that you can keep or share. **load one** reads a map file back (also into the emulator). **Read it from my FM-1** brings the map of the FM-1 back into the list, so that you can change it. **Clear the FM-1's map** removes it. Your backups also contain the map.
 
 ### A knob on each setting (MIDI CC to settings)
 
-*Experimental. Tell us how it goes with your controller.*
+*Experimental. Tell us how it works with your controller.*
 
-A learned panel knob turns whatever the page on screen shows. A learned **setting** is different: a knob or fader on your controller is tied to one setting (the acid's Cutoff, the reverb, the swing) and sets it on any page, even while the screen shows something else. A controller with 32 knobs and faders can hold 32 settings at once, with no computer in between.
+A learned panel knob turns the setting that the page on screen shows. A learned **setting** is different. A knob or fader on your controller is connected to one setting (the acid's Cutoff, the reverb, the swing). It sets that setting on any page, also while the screen shows something else. A controller with 32 knobs and faders can control 32 settings at the same time, with no computer between them.
 
-1. Open the **Editor** page in Chrome or Edge and plug your controller into the computer. Connecting the FM-1 too lets you hear each setting while you learn, but it isn't needed.
-2. Under **Your controller**, press **Connect a controller**, then **Learn**.
-3. Click a setting in the list (for example Acid, Cutoff). It gets an outline.
-4. Move the knob or fader you want for it. The setting now shows its CC, for example `CC 21`.
-5. Repeat for as many as you like, then press **Done**.
-6. Press **Send to my FM-1**. That opens the Install page's **Your MIDI map** section, where the settings are listed with your panel controls. Plug the FM-1 in and press **Send to my FM-1** there. The FM-1 keeps the map and restarts.
-7. Plug the controller into the FM-1 (USB host, or the TRS MIDI jack).
+1. Open the **Editor** page in Chrome or Edge. Connect your controller to the computer. You can also connect the FM-1 to hear each setting while you learn, but this is not necessary.
+2. Under **Your controller**, press **Connect a controller**. Then press **Learn**.
+3. Click a setting in the list (for example Acid, Cutoff). The setting gets an outline.
+4. Move the knob or fader that you want for it. The setting now shows its CC, for example `CC 21`.
+5. Do steps 3 and 4 again for as many settings as you want. Then press **Done**.
+6. Press **Send to my FM-1**. This opens the **Your MIDI map** section of the Install page, which lists the settings with your panel controls. Connect the FM-1 and press **Send to my FM-1** on that page. The FM-1 keeps the map and starts again.
+7. Connect the controller to the FM-1 (USB host, or the TRS MIDI jack).
 
-How it behaves:
-- A fader or knob sets the value straight: the bottom of its travel is the setting's lowest value, the top its highest. It jumps to where the knob is. The FM-1 has no pick-up mode.
-- An endless encoder (pick **64 ± n** or **1 up, 127 down** in the list) steps the setting from where it is, one step a click.
-- If the page on screen shows that setting, its knob lights up (and zooms, with ZOOM on). On any other page the screen shows the setting's name and value for a moment.
-- The change is the same as turning the FM-1's own knob: it belongs to the piece that is playing until you store it (the player's own settings, such as Tune, are kept at once, as always).
-- Only CCs, on the channel they were learned on. A setting has one control; learning a new one replaces the old.
-- Panel controls (learned in the emulator) and settings share the map: 48 in all.
-- An FM-1 with an older PERF-1 refuses a map that has settings. Install 0.16.18 or later first.
+How it works:
+- A fader or knob sets the value directly. The bottom of its travel is the lowest value of the setting, and the top is the highest value. The value jumps to the position of the knob. The FM-1 has no pick-up mode.
+- An endless encoder (select **64 ± n** or **1 up, 127 down** in the list) changes the setting from its current value, one step for each click.
+- If the page on screen shows that setting, its knob lights up (and zooms, if ZOOM is on). On all other pages, the screen shows the name and value of the setting for a short time.
+- The change is the same as when you turn the FM-1's own knob. It belongs to the piece that plays until you store it. (The player's own settings, such as Tune, are kept immediately, as always.)
+- Only CCs work, on the channel that they were learned on. Each setting has one control. If you learn a new control for a setting, it replaces the old control.
+- Panel controls (learned in the emulator) and settings use the same map: 48 in total.
+- An FM-1 with an older PERF-1 does not accept a map that has settings. Install 0.16.18 or later first.
 
 #### Novation Launch Control XL 3: a ready map
 
-Press **Use the Launch Control XL 3 map** on the Editor page (or load [launch-control-xl-3.perfmap](maps/launch-control-xl-3.perfmap) on the Install page) and send it. It uses the controller's factory custom mode, channel 1: faders CC 5-12, the knobs CC 13-20 (top row), 21-28 (middle) and 29-36 (bottom). If you changed the custom mode in Novation Components, learn your own instead. The buttons are free: learn them as panel buttons in the emulator if you want (PLAY, SEQ and so on).
+Press **Use the Launch Control XL 3 map** on the Editor page (or load [launch-control-xl-3.perfmap](maps/launch-control-xl-3.perfmap) on the Install page). Then send it. The map uses the factory custom mode of the controller, channel 1: faders CC 5-12, the knobs CC 13-20 (top row), 21-28 (middle) and 29-36 (bottom). If you changed the custom mode in Novation Components, learn your own map instead. The buttons are free. If you want, learn them as panel buttons in the emulator (PLAY, SEQ and so on).
 
 | Control | CC | Setting | | Control | CC | Setting |
 |---|---|---|---|---|---|---|
@@ -2718,90 +2836,92 @@ Press **Use the Launch Control XL 3 map** on the Editor page (or load [launch-co
 | Top knob 7 | 19 | Bass Reso | | Bottom knob 7 | 35 | Echo time |
 | Top knob 8 | 20 | Bass line Move | | Bottom knob 8 | 36 | Reverb Size |
 
-Every setting can be learned: the Editor page lists all 176, grouped by voice.
+You can learn every setting. The Editor page lists all 176 settings, in groups by voice.
 
 ---
 
 ## 18. Troubleshooting
 
 **No sound.**
-Check the **MASTER** knob, and that **PLAY** is lit. Then check:
-- A layer's level may be at 0. Each voice's page has its level on **KNOB1**, and the Mixer shows them all.
-- A voice marked `BY HAND` is silent until you play it. **SEL** + **ENV** on its page gives it back to the automatic part.
-- A track may be muted on the mix map (hold **GLO** to see it).
-- An effect latched in FX can silence things. The header shows `FX` when one is latched.
-- On the Jam page, the voice you play stops its own line while that page is up.
-- REMOTE silences the FM-1 on purpose (section 17).
+Check the **MASTER** knob. Make sure that **PLAY** is lit. Then check these items:
+- The level of a layer can be at 0. Each voice page has its level on **KNOB1**, and the Mixer shows all the levels.
+- A voice marked `BY HAND` is silent until you play it. To give it back to the automatic part, push **SEL** + **ENV** on its page.
+- A track can be muted on the mix map (hold **GLO** to see it).
+- An effect latched (held on) in FX can make sounds silent. The header shows `FX` when an effect is latched.
+- On the Jam page, the voice that you play stops its own line while that page is open.
+- REMOTE makes the FM-1 silent on purpose (section 17).
 
 **A short dip or tick when you change a setting or store a piece.**
-That's normal. While the FM-1 saves, the music fades out and back in. Settings are saved a couple of seconds after your last change, so lots of quick edits make just one dip.
+This is normal. While the FM-1 saves, the music fades out and then fades in again. The FM-1 saves settings a few seconds after your last change. Thus many fast changes cause only one dip.
 
 **A stored piece came back the way it was before.**
-It was stored while playing and the power went off before the save finished. Stores happen straight away, with a short dip in the sound. Don't switch off during the dip.
+You stored it while it played, and the power went off before the save was complete. A store occurs immediately, with a short dip in the sound. Do not switch off during the dip.
 
-**Everything I saved is gone after switching off, or an install stops at once.**
-Newer FM-1s (sold since autumn 2026) have a different memory chip. PERF-1 before 0.16.23, and many other firmwares, don't recognise it: they keep your saves only until power-off and can't take an update (the installer says "nothing was written"). Nothing is broken. Install 0.16.23 or newer. If the installer can't reach the FM-1, use a recovery tool such as FM-SWITCH, or the Firmware Hub's rescue page, to put the stock firmware back first. The Install page's Live status shows which chip yours has (P25Q80 or UC25HQ80).
+**Everything I saved is gone after I switch off, or an install stops immediately.**
+Newer FM-1s (sold since autumn 2026) have a different memory chip. PERF-1 before 0.16.23, and many other firmwares, do not recognise this chip. They keep your saves only until power-off, and they cannot take an update (the installer says "nothing was written"). Nothing is broken.
+
+Install 0.16.23 or newer. If the installer cannot connect to the FM-1, first put the original (stock) firmware back. Use a recovery tool such as FM-SWITCH, or the rescue page of the Firmware Hub. The Live status on the Install page shows which chip your FM-1 has (P25Q80 or UC25HQ80).
 
 **PERF-1 got heavier after I tried M-VAVE's V16 (CPU higher, easing off sooner).**
-V16 also changes the FM-1's startup code, and with it the whole FM-1 runs about 12% slower. Installing PERF-1 again doesn't change that. On the Install page, **Full speed** checks your FM-1 and can put V15's startup code back (it installs M-VAVE's V15, then PERF-1). FM-1s with the newer memory chip stay on V16 for now.
+V16 also changes the startup code of the FM-1. With this code, the full FM-1 runs about 12% slower. If you install PERF-1 again, this does not change. On the Install page, **Full speed** checks your FM-1. It can put the V15 startup code back (it installs M-VAVE's V15, then PERF-1). FM-1s with the newer memory chip stay on V16 for now.
 
-**My changes vanished.**
-Only a piece you stored (Global, **SAVE**) is kept. Changes you didn't store are lost when you change genre or switch off. See "What is remembered" in section 13.
+**My changes are gone.**
+The FM-1 keeps only a piece that you stored (Global, **SAVE**). If you did not store your changes, you lose them when you change the genre or switch off. See "What is remembered" in section 13.
 
-**The installer doesn't find the FM-1.**
-Use Chrome or Edge and a USB data cable (some cables only charge). Close any music software (DAW) that might be using the FM-1's MIDI port. Allow MIDI with SysEx for the page when asked.
+**The installer does not find the FM-1.**
+Use Chrome or Edge. Use a USB data cable (some cables can only charge). Close all music software (DAW, a program to record and make music) that can use the MIDI port of the FM-1. When the page asks, allow MIDI with SysEx.
 
 **The installer offers an old version.**
-Hard-refresh the page: Ctrl+F5, or Cmd+Shift+R on a Mac.
+Do a hard refresh of the page: Ctrl+F5, or Cmd+Shift+R on a Mac.
 
-**An install was cut off.**
-Run it again. The FM-1 stays in update mode until an install finishes. If it doesn't come back at all, see "Recovering an FM-1 that won't start" in section 1.
+**An install stopped before the end.**
+Run it again. The FM-1 stays in update mode until an install is complete. If the FM-1 does not come back at all, see "Recovering an FM-1 that won't start" in section 1.
 
 **The screen says `PERF-1 SAFE MODE`.**
-The FM-1 crashed twice while starting up. Reinstall from the installer, or press **PLAY** to try again.
+The FM-1 crashed two times during startup. Install again from the installer, or press **PLAY** to try again.
 
 **`UPDATE MODE IN 3..` appeared.**
-You were holding **OCT-** and **OCT+** together. Let go before the countdown ends and it cancels.
+You held **OCT-** and **OCT+** together. Release them before the countdown ends, and the FM-1 cancels the update mode.
 
-**The buttons or knobs don't match their labels.**
-Run the **hardware calibration** (a Felucca feature). Hold **OCT-** and **OCT+** while you switch the FM-1 on. It asks you to press each button and turn each knob in turn, and saves the result. If you don't touch anything for 30 seconds it gives up and changes nothing.
+**The buttons or knobs do not match their labels.**
+Do the **hardware calibration** (a Felucca feature). Hold **OCT-** and **OCT+** while you switch the FM-1 on. The FM-1 asks you to press each button and turn each knob, one after the other. Then it saves the result. If you do not touch anything for 30 seconds, it stops and changes nothing.
 
-**The DX7 voices I loaded don't show up.**
-Use the pluck's Sound knob, or **SEL** + **ALGORITHM** on a Pluck page. Your voices come after the 60 built-in DX7 voices. Check that the page said they were sent and the header showed `DX7 VOICES n LOADED`, and that the pluck's Level isn't 0. A bank must pass the DX7 checksum.
+**The DX7 voices that I loaded do not show.**
+Use the Sound knob of the pluck, or **SEL** + **ALGORITHM** on a Pluck page. Your voices come after the 60 built-in DX7 voices. Make sure that the page said that the voices were sent, and that the header showed `DX7 VOICES n LOADED`. Also make sure that the Level of the pluck is not 0. A bank must pass the DX7 checksum (a check that the data is correct).
 
 **Crackles or dropouts.**
-Look at the load line (section 16). `XR` goes up by one with each click. `S1` or `S2` mean the FM-1 is already easing off to keep up. Heavy DX plucks, a shimmer reverb and the fast genres push it hardest. Record a status log for a minute (Live status on the installer page, or `fm1log.py`) and send the CSV to deamonSLINKY, with the piece, its sounds and the tempo.
+Look at the load line (section 16). `XR` goes up by one for each click. `S1` or `S2` means that the FM-1 already eases off to keep up. Heavy DX plucks, a shimmer reverb and the fast genres cause the highest load. Record a status log for one minute (Live status on the installer page, or `fm1log.py`). Send the CSV to deamonSLINKY, with the piece, its sounds and the tempo.
 
-**The emulator doesn't see the FM-1.**
-Close any DAW using the FM-1's MIDI port, and use Chrome, Edge or Firefox (Safari doesn't support Web MIDI). For the FM-1's panel to play the emulator, the FM-1 must be in remote (**SEL** + **GLO**).
+**The emulator does not see the FM-1.**
+Close all DAWs that use the MIDI port of the FM-1. Use Chrome, Edge or Firefox (Safari does not support Web MIDI). If you want the panel of the FM-1 to play the emulator, the FM-1 must be in remote (**SEL** + **GLO**).
 
 **MIDI notes change my scale.**
-Since 0.17.7 they only do on the Global page, as the FM-1's own keys do; on every other page they play a voice. On Global, send on another channel, or set Notes on the MIDI IN page to Pads.
+Since 0.17.7, they change the scale only on the Global page, the same as the FM-1's own keys. On all other pages, they play a voice. On Global, send on a different channel, or set Notes on the MIDI IN page to Pads.
 
 ---
 
 ## 19. Credits
 
-**Feedback and contributing.** Comments, ideas and bug reports are welcome, and anyone is invited to help: [open an issue on GitHub](https://github.com/deamonSLINKY/PERF-1/issues/new/choose). The source is at <https://github.com/deamonSLINKY/PERF-1>. A bug report helps most when it includes the version (shown on the boot card), the genre and piece, and, for anything about load or crackles, a status log (section 16).
+**Feedback and contributing.** Comments, ideas and bug reports are welcome, and anyone can help: [open an issue on GitHub](https://github.com/deamonSLINKY/PERF-1/issues/new/choose). The source is at <https://github.com/deamonSLINKY/PERF-1>. A bug report is most useful when it includes the version (the boot card shows it) and the genre and piece. For a problem with load or crackles, also include a status log (section 16).
 
-PERF-1 is by **deamonSLINKY**. That covers the firmware, the slinky mascot and the pages around them. It is a fork of **HYP-1**, a [RedtailWorks](https://www.redtail.works) project. HYP-1 is a fork of [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal.
+PERF-1 is by **deamonSLINKY**. This includes the firmware, the slinky mascot and the pages around them. It is a fork (a changed copy) of **HYP-1**, a [RedtailWorks](https://www.redtail.works) project. HYP-1 is a fork of [AMB-1](https://github.com/charlesvestal/fm1-amb) by Charles Vestal.
 
-The platform (USB, update loader, storage, installer, panel calibration) is [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic), Hügelton Instruments. It reaches PERF-1 by way of X0X and FoMni. The boot guard, knob acceleration, help cards and anti-aliased drawing came from X0X.
+The platform (USB, update loader, storage, installer, panel calibration) is [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita (@kurogedelic), Hügelton Instruments. It comes to PERF-1 through X0X and FoMni. The boot guard, knob acceleration, help cards and anti-aliased drawing came from X0X.
 
-The six-operator FM engine that plays the DX7 voices is **Melodee**'s, by Kerem Kilic (Ellic Studio, GPL-3.0). From Melodee also come the second-core work (the reverb, the pad and the DX voices on the FM-1's other processor core) and the safe core hold. So do the USB MIDI host, with host code by recursivefieldinstruments, and the fix for the TRS MIDI input. The FM engine is after **Dexed** by Pascal Gauthier (GPL-3.0), on **MSFA** by Raph Levien (Google, Apache 2.0). The boot stub that brings back a cut-off install is **ChoralRoot FM-1**'s, as Melodee ships it.
+The six-operator FM engine that plays the DX7 voices is from **Melodee**, by Kerem Kilic (Ellic Studio, GPL-3.0). Melodee also gave the second-core work (the reverb, the pad and the DX voices on the other processor core of the FM-1) and the safe core hold. Melodee also gave the USB MIDI host, with host code by recursivefieldinstruments, and the fix for the TRS MIDI input. The FM engine is based on **Dexed** by Pascal Gauthier (GPL-3.0), on **MSFA** by Raph Levien (Google, Apache 2.0). The boot stub that recovers an install that stopped before the end is from **ChoralRoot FM-1**, as Melodee supplies it.
 
-The plate reverb is Jon Dattorro's design ("Effect Design, Part 1", 1997), by way of FoMni. The RESONATOR is modelled on **Rings** by Mutable Instruments (Emilie Gillet, MIT). The idea of a resonator, and the Progression page's chord slots, came from **DUB-1**. Auto FX follows an idea from **DARK-1** by Polystellarflow. The punch-in effects and the filter types follow Caustic's per-machine effects (Single Cell Software). Each is written afresh for PERF-1.
+The plate reverb is Jon Dattorro's design ("Effect Design, Part 1", 1997), through FoMni. The RESONATOR is modelled on **Rings** by Mutable Instruments (Emilie Gillet, MIT). The idea of a resonator, and the chord slots of the Progression page, came from **DUB-1**. Auto FX follows an idea from **DARK-1** by Polystellarflow. The punch-in effects and the filter types follow the per-machine effects of Caustic (Single Cell Software). Each one is written new for PERF-1.
 
-The bass modes, the pad's comping rhythms, the ghost notes and accents of the genres, and the deja vu loop in the pluck follow ideas in **Tuna** by delirioux ([github.com/delirioux/tuna](https://github.com/delirioux/tuna), GPL-3.0), a generative firmware for the FM-1 on Felucca. Tuna's random section is a port of **Marbles** by Emilie Gillet (Mutable Instruments, MIT). PERF-1's versions are written for its own engine.
+The bass modes, the pad's comping rhythms, the ghost notes and accents of the genres, and the deja vu loop in the pluck follow ideas in **Tuna** by delirioux ([github.com/delirioux/tuna](https://github.com/delirioux/tuna), GPL-3.0). Tuna is a generative firmware for the FM-1 on Felucca. Tuna's random section is a port of **Marbles** by Emilie Gillet (Mutable Instruments, MIT). PERF-1's versions are written for its own engine.
 
-The sixty built-in DX7 voices are patches made by people, from banks published as public domain. Most are from [Bobby Blues' DX7 page](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html): Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the folders of Clyde Jones, Toby, Frank Carvalho, Narfman, Godric and Jezreel, and the Aftertouch, Keyboards, Guitares & Claviers, E&MM and Keyboard magazine banks. One is from Jack Deckard's collection on [Dave Benson's DX7 page](https://homepages.abdn.ac.uk/d.j.benson/pages/html/dx7.html). No voice from Yamaha's own banks is used.
+The sixty built-in DX7 voices are patches that people made, from banks published as public domain. Most are from [Bobby Blues' DX7 page](https://bobbyblues.recup.ch/yamaha_dx7/dx7_patches.html): Pafreak's SYNTHOXICATED banks, madFame's Custom Patches, the folders of Clyde Jones, Toby, Frank Carvalho, Narfman, Godric and Jezreel, and the Aftertouch, Keyboards, Guitares & Claviers, E&MM and Keyboard magazine banks. One is from Jack Deckard's collection on [Dave Benson's DX7 page](https://homepages.abdn.ac.uk/d.j.benson/pages/html/dx7.html). PERF-1 uses no voice from Yamaha's own banks.
 
-The idea of running FM-1 firmware in the browser comes from [Groove OS](https://www.groove-os.com/)'s emulator. What is known about the FM-1's hardware comes largely from the [FM-1-RE](https://github.com/AL-255/FM-1-RE) reverse-engineering work. The rescue route uses [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter)'s protocol and JieLi's flash loader from kagaimiq's jl-uboot-tool.
+The idea to run FM-1 firmware in the browser comes from the emulator of [Groove OS](https://www.groove-os.com/). Most of what is known about the FM-1's hardware comes from the [FM-1-RE](https://github.com/AL-255/FM-1-RE) reverse-engineering work. The rescue route uses the protocol of [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter) and JieLi's flash loader from kagaimiq's jl-uboot-tool.
 
-Two factory pieces were made by players and shared in the Library: FUNK 10, "Funky Space Jam", by **Golfhole**, and HOUSE 09, "About last night", by **Roj**.
+Players made two factory pieces and shared them in the Library: FUNK 10, "Funky Space Jam", by **Golfhole**, and HOUSE 09, "About last night", by **Roj**.
 
 Screen and page fonts: Chakra Petch (Cadson Demak) and Barlow Semi Condensed (The Barlow Project Authors), SIL Open Font License 1.1.
 
 Licence: GPL-3.0-only, no warranty. The source is at <https://github.com/deamonSLINKY/PERF-1>, and its LICENSING.md says where each part comes from.
 
-M-VAVE and FM-1 are trademarks of their owners. PERF-1 is independent firmware, not affiliated with or endorsed by them. Other product names in this manual are trademarks of their owners, used only to describe sounds and gear.
+M-VAVE and FM-1 are trademarks of their owners. PERF-1 is independent firmware. It is not affiliated with or endorsed by them. Other product names in this manual are trademarks of their owners, used only to describe sounds and gear.
