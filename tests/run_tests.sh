@@ -57,6 +57,7 @@ if command -v node >/dev/null 2>&1; then run webidle node tests/web_idle_test.mj
 run dxproto sh -c "$CC -O2 -Wall -Wextra -Werror -o $OUT/dxproto_test tests/host/dxproto_test.c && $OUT/dxproto_test"
 run params sh -c "python3 tools/make_params.py"
 run palette python3 tests/host/palette_test.py
+run topbar python3 tools/sync_top.py --check   # (0.17.84) the same top bar on every web page
 if command -v node >/dev/null 2>&1; then
     run webvoice sh -c "$CC -O1 -std=c99 -DEN_HOST -Ifirmware/src/dsp -o $OUT/gvoice tests/host/gvoice.c firmware/src/dsp/amb.c -lm && $OUT/gvoice > $OUT/voices.json && node tests/web_voice_test.js $OUT/voices.json"
 fi
