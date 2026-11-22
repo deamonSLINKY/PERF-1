@@ -1752,7 +1752,7 @@ static float kit_g[EN_NDRUM] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 typedef struct { const uint8_t *d; uint32_t n; uint8_t i0; } smp_t;
 typedef struct { const char *name; smp_t s[6]; } skit_t;
 #include "smpkits.h"
-#include "djsmp.h"                              /* (0.17.44) the sampled DJ snips: the air horn, the rave horn, the crash (tools/djsamples.py) */
+#include "djsmp.h"                              /* (0.17.44) the sampled DJ snips: the air horn, the OH!, the crash, the kick (tools/djsamples.py) */
 _Static_assert(EN_NSKIT_BI == EN_NSKIT_BI_H, "the sampled kits: EN_NSKIT_BI as smpkits.h has them");
 static skit_t skit_user[EN_NUKIT];               /* (0.17.38) the loaded kits (their sounds in the flash), */
 static int8_t ukit_lv[EN_NUKIT][6];              /* their sounds' levels (half dB, the installer measured them), */
@@ -6318,7 +6318,7 @@ static void flx_tick(int st)                    /* on every sixteenth */
 enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, DJ_DROP, DJ_RISER, DJ_REWIND, DJ_CRASH, DJ_STAB, DJ_BELL, DJ_ROLL, DJ_BLAST, DJ_RAVE, DJ_RSTAB,
        DJ_KICK, DJ_SNARE };
 /* (0.17.44, the maker: "the horns are still trash, maybe a sampled sound would be easier and sound better. A good crash, kick, and snare too") the air
- * horn and blast, the rave horn and stab, and the crash are samples now (djsmp.h: rendered offline by tools/djsamples.py, our own models), the horns
+ * horn and blast, the OH!s (0.17.87, in the rave horn's place), the crash and the kick are samples now (djsmp.h, tools/djsamples.py: our own models and CC0 recordings), the horns
  * looped while held and played on the chord's root; the kick and the snare (on SIREN 3's and LASER LO's keys) are the sampled kits' (MACHINE's kick,
  * BOOMBAP's snare). */
 /* (0.17.24, the snips pass: each one measured alone; their levels were 25 dB apart, every pitched one a fixed B flat, all mono, the crash, the roll and the
@@ -6326,7 +6326,7 @@ enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, D
  * the horns, the sirens, the rave horn, the stabs, the crash, the riser and the roll have a side (left and right differ; in mono it cancels), and the air
  * horns, the rave horn, the crash, the roll, the riser and the bell are remade. HORN MIN's key is a chord stab now (the chord playing, in saws). */
 static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] = {
-    {DJ_HORN, 302.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 302.0f, 0.0f, "AIR BLAST"}, {DJ_STAB, 233.0f, 0.0f, "CHORD STAB"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
+    {DJ_HORN, 302.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 302.0f, 0.0f, "AIR BLAST"}, {DJ_STAB, 233.0f, 0.0f, "CHORD STAB"}, {DJ_RAVE, 0.0f, 0.0f, "OH!"},
     {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_KICK, 0.0f, 0.0f, "KICK"},
     {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_SNARE, 0.0f, 0.0f, "SNARE"},
     {DJ_ZAP, 3000.0f, 0.15f, "ZAP"}, {DJ_ZAP, 6000.0f, 0.08f, "ZAP HI"},
@@ -6335,9 +6335,9 @@ static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] =
     {DJ_DUB, 1400.0f, 0.9f, "DUB SIREN"}, {DJ_DUB, 900.0f, 1.6f, "DUB LOW"},
     {DJ_DROP, 140.0f, 1.2f, "DROP"}, {DJ_DROP, 100.0f, 2.4f, "DROP LONG"},
     {DJ_RISER, 110.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 1.2f, "CRASH"},
-    {DJ_RSTAB, 233.0f, 0.0f, "RAVE STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
+    {DJ_RSTAB, 0.0f, 0.0f, "OH! LOW"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
 /* each snip's trim, half dB (+ louder), so that each sits at the same loudness (its loudest 400 ms, K-weighted): measured alone (0.17.24) */
-static const int8_t DJ_TRIM[27] = {-14, -12, 1, -10, -11, -11, -2, 3, -4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, -2, 10, -7, 6};   /* (0.17.44: the sampled horns, crash, kick and snare measured the same way; 0.17.86: the KICK, now the CC0 hard kick, 3.8 dB quieter at the same peak: -10 to -2) */
+static const int8_t DJ_TRIM[27] = {-14, -12, 1, 0, -11, -11, -2, 3, 1, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, -2, -4, -7, 6};   /* (0.17.44: the sampled horns, crash, kick and snare measured the same way; 0.17.86: the KICK, now the CC0 hard kick, 3.8 dB quieter at the same peak: -10 to -2; 0.17.87: OH! 0, OH! LOW -4, the Dusty SNARE +1 (its loudest 100 ms), measured the same way) */
 const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
 typedef struct {
     uint8_t on, held, key, type, hold_mode, land;   /* (land, 0.17.72: its time is the way to the line it lands on) */
@@ -6422,7 +6422,7 @@ static void smp_note(int key, int on)
         d->type = (uint8_t)ty;
         d->hold_mode = fxs_v[EN_FXS_SM_LOOP] != 0;
         d->aux = DJS[key].aux;
-        if (ty == DJ_HORN || ty == DJ_BLAST || ty == DJ_STAB || ty == DJ_RAVE || ty == DJ_RSTAB || ty == DJ_RISER) {
+        if (ty == DJ_HORN || ty == DJ_BLAST || ty == DJ_STAB || ty == DJ_RISER) {   /* (0.17.87: the OH!s play as recorded) */
             hz = dj_note(hz, 1, &r3, &r5);
             if (ty == DJ_HORN || ty == DJ_BLAST || ty == DJ_STAB)
                 d->aux = r3;
@@ -6452,12 +6452,12 @@ static void smp_note(int key, int on)
         d->age = ++dj_age;
         d->sd = 0;
         {   /* (0.17.44) the sampled ones: the horns at the chord's root (as their note against the sample's), the crash, the kick and the snare as they are */
-            const djsmp_t *s = ty == DJ_HORN || ty == DJ_BLAST ? &DJ_SMP[DJS_HORN_I] : ty == DJ_RAVE || ty == DJ_RSTAB ? &DJ_SMP[DJS_RAVE_I] :
-                               ty == DJ_CRASH ? &DJ_SMP[DJS_CRASH_I] : ty == DJ_KICK ? &DJ_SMP[DJS_KICK_I] : 0;   /* (0.17.86: the KICK a CC0 hard kick, was MACHINE's) */
+            const djsmp_t *s = ty == DJ_HORN || ty == DJ_BLAST ? &DJ_SMP[DJS_HORN_I] : ty == DJ_RAVE || ty == DJ_RSTAB ? &DJ_SMP[DJS_OH_I] :
+                               ty == DJ_CRASH ? &DJ_SMP[DJS_CRASH_I] : ty == DJ_KICK ? &DJ_SMP[DJS_KICK_I] : ty == DJ_SNARE ? &DJ_SMP[DJS_SNARE_I] : 0;   /* (0.17.86: the KICK a CC0 hard kick, was MACHINE's; 0.17.87: the SNARE the Dusty kit's, was BOOMBAP's) */
             const float po = oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f;   /* (the page's octave, for the unpitched ones too) */
             if (s) {
                 d->sd = s->d, d->sn = s->n, d->sls = s->ls, d->sle = s->le, d->sai = s->i0;
-                d->srate = s->sr * (1.0f / EN_SR) * (s->hz > 0.0f ? hz / s->hz : po);
+                d->srate = s->sr * (1.0f / EN_SR) * (s->hz > 0.0f ? hz / s->hz : po) * (ty == DJ_RSTAB ? 0.5f : 1.0f);   /* (OH! LOW: an octave down) */
             } else if (ty == DJ_KICK || ty == DJ_SNARE) {
                 const smp_t *k = ty == DJ_KICK ? &SKIT_BI[0].s[0] : &SKIT_BI[1].s[1];
                 d->sd = k->d, d->sn = k->n, d->sls = d->sle = 0, d->sai = k->i0;
@@ -6545,11 +6545,7 @@ static float dj_voice(dj_t *v, float *amp, float *side)
             a = t < 0.32f ? 1.0f : dj_dec(v, 0, 12.0f, t - 0.32f);
             if (t > 0.9f)
                 v->on = 0;
-        } else if (v->type == DJ_RSTAB) {       /* a stab of the rave horn */
-            a = dj_dec(v, 0, 7.0f, t);
-            if (t > 0.55f)
-                v->on = 0;
-        } else if (v->type == DJ_CRASH || v->type == DJ_KICK || v->type == DJ_SNARE) {
+        } else if (v->type == DJ_CRASH || v->type == DJ_KICK || v->type == DJ_SNARE || v->type == DJ_RAVE || v->type == DJ_RSTAB) {   /* (0.17.87: the OH!s too) */
             if (v->si >= v->sn && fm_fabsf(v->sx1) < 1e-4f)
                 v->on = 0;                       /* (played out) */
         }
@@ -8509,7 +8505,7 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
             continue;
         for (j = 0; j < n && d->on; j++) {
             float a, sd, y = dj_voice(d, &a, &sd);
-            const int sustained = d->type == DJ_HORN || d->type == DJ_RAVE || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
+            const int sustained = d->type == DJ_HORN || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
             /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
             const int gate = d->land ? d->t < d->aux * EN_SR : !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
             d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : d->land ? 0.004f : 0.00025f);   /* (landed: out in about 6 ms, on the line) */

@@ -176,10 +176,10 @@
 | `F3` | AIR HORN (held) | `D4` | ZAP | `B4` | DUB LOW |
 | `F#3` | AIR BLAST (short) | `D#4` | ZAP HI | `C5` | DROP |
 | `G3` | CHORD STAB (the chord playing) | `E4` | BEEP | `C#5` | DROP LONG |
-| `G#3` | RAVE HORN (hoover, held) | `F4` | BEEP LO | `D5` | RISER |
+| `G#3` | OH! (a voice) | `F4` | BEEP LO | `D5` | RISER |
 | `A3` | SIREN | `F#4` | BEEP HI | `D#5` | REWIND |
 | `A#3` | SIREN 2 | `G4` | 2 BEEP | `E5` | CRASH |
-| `B3` | SIREN 3 | `G#4` | WHOOP | `F5` | RAVE STAB (hoover stab) |
+| `B3` | SIREN 3 | `G#4` | WHOOP | `F5` | OH! LOW (an octave down) |
 | `C4` | LASER | `A4` | WHOOP 2 | `F#5` | BELL |
 | `C#4` | LASER LO | `A#4` | DUB SIREN | `G5` | SNR ROLL (speeds up) |
 

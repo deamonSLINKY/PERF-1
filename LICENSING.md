@@ -37,6 +37,7 @@ your recipients its complete corresponding source under the same licence.
 | Terminus (Dimitar Toshkov Zhekov), an alternative font set | SIL OFL 1.1 | `assets/fonts/ter-u*.bdf`, `assets/fonts/Terminus-LICENSE.txt` |
 | "Airhorn" by jacksonacademyashmore (<https://freesound.org/s/414208/>), the HORN snip (trimmed, looped, levelled, ADPCM in `firmware/src/dsp/djsmp.h`) | CC0 1.0 (public domain) | `assets/samples/airhorn-414208.wav` |
 | "Rooler Kick-A" by CAT-FOX_ALEX (<https://freesound.org/s/868065/>), the KICK snip (summed to mono, ADPCM in `firmware/src/dsp/djsmp.h`) | CC0 1.0 (public domain) | `assets/samples/kick-868065.wav` |
+| "pleased oh!" by Reitanna (<https://freesound.org/s/242663/>), the OH! and OH! LOW snips (from 0.103 s, ADPCM in `firmware/src/dsp/djsmp.h`) | CC0 1.0 (public domain) | `assets/samples/oh-242663.wav` |
 | JieLi AC79 SDK: `uboot.boot`, `cfg_tool.bin`, `eq_cfg_hw.bin` are read from your SDK checkout at build time and placed in the package; no SDK files are in this tree | Apache-2.0 | <https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK> |
 
 ## Trademarks

@@ -4,7 +4,7 @@ recordings only under CC0 (the public domain; see LICENSING.md: a sound under a 
 The kick and the snare snips use the sampled kits' (smpkits.h: MACHINE's kick, BOOMBAP's snare), so they cost nothing here.
   AIR HORN  (0.17.86) a recording, CC0: horn_cc0() (players found the modelled one weak). The model, kept for its level: three reeds (the root, its fifth, its octave: right over a major or a minor chord) a few cents apart, each a band-limited pulse scooping up
             into its note, through a reed's asymmetric clip and the bell's two resonances, a breath of air at the start; a held loop (crossfaded)
-  RAVE HORN the hoover: five detuned saws, two width-modulated pulses and a square an octave down, the pitch swooping in from a fourth above, dipping
+  RAVE HORN (0.17.87: replaced by OH!, oh_cc0(); the model kept here) the hoover: five detuned saws, two width-modulated pulses and a square an octave down, the pitch swooping in from a fourth above, dipping
             under the note and settling, chorused, driven; a held loop
   CRASH     a cymbal by its modes: 180 inharmonic partials (log-spread 350 Hz .. 10 kHz, the high ones dying first and blooming in a little after the
             stick), the stick's click and a wash of noise
@@ -146,6 +146,38 @@ def kick_cc0():
     return norm(x) * 10 ** (KICK_DB / 20), 0, 0, 0.0
 
 
+def oh_cc0():
+    """(0.17.87) the OH! snips (in the rave horn's place): Reitanna's "pleased oh!" (freesound.org/s/242663, CC0), assets/samples/oh-242663.wav: from
+    0.103 s (the silence before it cut, the maker's choice), a 1 ms fade in and 20 ms out at its end. Unpitched: it plays as recorded (OH! LOW an octave down)."""
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "samples", "oh-242663.wav")
+    with wave.open(src) as w:
+        sr0 = w.getframerate()
+        x0 = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(np.float64) / 32768
+    x = np.interp(np.arange(0, len(x0), sr0 / SR), np.arange(len(x0)), x0)
+    x = x - np.mean(x)
+    x = x[int(0.103 * SR):]
+    k = int(0.001 * SR)
+    x[:k] *= np.linspace(0, 1, k)
+    k = int(0.02 * SR)
+    x[-k:] *= np.cos(0.5 * np.pi * np.arange(k) / k)
+    return norm(x), 0, 0, 0.0
+
+
+def snare_dusty():
+    """(0.17.87) the SNARE snip: the Dusty kit's snare (the maker's pick; was BOOMBAP's sampled one), PERF-1's own synth, so ours: rendered alone and
+    dry by tests/host/gsnare.c (gsnare 8 1 out.wav) into assets/samples/dusty-snare-render.wav. Its 0.25 s from the hit, through a tanh (drive 3:
+    its crest 8.2 to 3.1 dB, near BOOMBAP's 5.6, so it reaches the snips' loudness without its peak past full scale), a 20 ms fade at the end."""
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "samples", "dusty-snare-render.wav")
+    with wave.open(src) as w:
+        x = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(np.float64) / 32768
+    on = int(np.argmax(np.abs(x) > 0.001))
+    x = x[on:on + int(0.25 * SR)]
+    x = np.tanh(3.0 * x / np.max(np.abs(x))) / np.tanh(3.0)
+    k = int(0.02 * SR)
+    x[-k:] *= np.cos(0.5 * np.pi * np.arange(k) / k)
+    return norm(x), 0, 0, 0.0
+
+
 def rave():
     f0 = 233.08                                   # B flat below
     t = t_of(0.66)
@@ -246,7 +278,7 @@ def down(x, out_sr):
     return np.interp(np.arange(0, len(y), SR / out_sr), np.arange(len(y)), y)
 
 
-SOUNDS = [("HORN", horn_cc0, 22050), ("RAVE", rave, 16000), ("CRASH", crash, 22050), ("KICK", kick_cc0, 22050)]
+SOUNDS = [("HORN", horn_cc0, 22050), ("OH", oh_cc0, 22050), ("CRASH", crash, 22050), ("KICK", kick_cc0, 22050), ("SNARE", snare_dusty, 22050)]
 
 
 def main():

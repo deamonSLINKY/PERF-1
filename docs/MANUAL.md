@@ -1789,9 +1789,9 @@ The Flex settings page (below) has three settings:
 
 These are the sound effects that a DJ adds over the music during a set. The 27 keys, `F3` to `G5`, are:
 
-AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord that plays now, with saw sounds), RAVE HORN (the "hoover" rave sound, held), SIREN, SIREN 2, KICK, LASER, SNARE, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, RAVE STAB (the hoover sound as a short stab), BELL and SNR ROLL (a snare roll that gets faster).
+AIR HORN (held), AIR BLAST (a short blast), CHORD STAB (the chord that plays now, with saw sounds), OH! (a voice: "oh!"), SIREN, SIREN 2, KICK, LASER, SNARE, ZAP, ZAP HI, BEEP, BEEP LO, BEEP HI, 2 BEEP, WHOOP, WHOOP 2, DUB SIREN, DUB LOW, DROP, DROP LONG, RISER, REWIND, CRASH, OH! LOW (the same voice, an octave down), BELL and SNR ROLL (a snare roll that gets faster).
 
-The horns, the crash, the kick and the snare are samples (recorded sounds) that PERF-1's own models made. They are not taken from other sources. The horns play on the root note of the chord that plays now. A held horn continues for as long as you hold the key. The kick and the snare come from the sampled kits (the kick of MACHINE, the snare of BOOMBAP). PERF-1 makes all the other snips at the moment that they play.
+The horns, the OH!s, the crash, the kick and the snare are samples (recorded sounds). The air horn, the kick and the OH! are recordings in the public domain (CC0, from freesound.org: see LICENSING.md). PERF-1's own models made the crash. The horns play on the root note of the chord that plays now. Tap AIR HORN for one short blast, tap it quickly for a run of blasts, and hold it for the long note. The OH!s play as recorded. The kick is a hard (rawstyle) kick. The snare is the snare of the Dusty kit, made into a sample. PERF-1 makes all the other snips at the moment that they play.
 
 Up to four snips can sound at the same time. A snip plays when you press its key. Snips do not latch.
 
@@ -1801,7 +1801,7 @@ Up to four snips can sound at the same time. A snip plays when you press its key
 
 If Land is on Bar and you press one of these snips just after a bar line, it takes nearly two bars, because the next line is too near. They play to the line even if you release the key. **Now** (the default) plays them as before, with a length in seconds. The other snips always play immediately when you press the key.
 
-The snips that have a pitch play in key. The horns, the stabs, the rave horn and the riser start on the root note of the chord that plays now (the horns play that chord). The sirens, beeps, whoops, the dub siren and the bell use the nearest note of that chord. All the snips have about the same loudness. The horns, sirens, stabs, crash, riser and roll are wide in stereo (in mono, nothing is lost).
+The snips that have a pitch play in key. The horns, the stab and the riser start on the root note of the chord that plays now (the stab plays that chord). The sirens, beeps, whoops, the dub siren and the bell use the nearest note of that chord. All the snips have about the same loudness. The horns, sirens, stabs, crash, riser and roll are wide in stereo (in mono, nothing is lost).
 
 The Snips settings page has four settings:
 
