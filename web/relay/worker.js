@@ -6,10 +6,12 @@
 //   GET  /list                          {items: [{id, code, added}]}, newest first (cached a minute)
 //   POST /submit {codes: [...]}         {done: [{id, del} | {error}]}  (16 a time; 30 an hour from one address)
 //   POST /remove {id, del}              {ok}  (del: the submitter's key, or the ADMIN secret)
+//   POST /count {v}                     {ok}  (1.0.1) the Install page: one PERF-1 install finished, version v; nothing else is kept
+//   GET  /count                         {total, since, v: {version: n}}  (cached five minutes)
 // Setup: web/relay/README.md.
 import { pcFromCode } from "../fm1piece.js";
 
-const MAX_CODE = 16000, MAX_ITEMS = 3000, PER_HOUR = 30;
+const MAX_CODE = 16000, MAX_ITEMS = 3000, PER_HOUR = 30, COUNT_PER_HOUR = 3;
 const enc = new TextEncoder();
 
 function cors(req, env) {
@@ -119,6 +121,39 @@ export default {
         if (fresh.length) await rebuild(env, fresh);
         ctx.waitUntil(caches.default.delete(new Request(url.origin + "/list")));
         return json(req, env, { done });
+      }
+      if (url.pathname === "/count") {                               // (1.0.1) the install counter: totals only, no addresses kept
+        const cache = caches.default, key = new Request(url.origin + "/count");
+        if (req.method === "GET") {
+          let hit = await cache.match(key);
+          if (!hit) {
+            const raw = await env.LIB.get("n:counts");
+            hit = new Response(raw || JSON.stringify({ total: 0, since: "", v: {} }), { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300" } });
+            ctx.waitUntil(cache.put(key, hit.clone()));
+          }
+          return new Response(hit.body, { headers: { "Content-Type": "application/json", ...cors(req, env) } });
+        }
+        if (req.method === "POST") {
+          const body = await req.json().catch(() => ({}));
+          const v = String(body.v || "");
+          if (!/^\d{1,2}\.\d{1,3}\.\d{1,3}$/.test(v)) return json(req, env, { error: "no version" }, 400);
+          // a few an hour from one address (a unit installed twice, or a resume, counts once more; a script can't run the total up):
+          // the address only as a salted hash, in a key that expires with the hour, as /submit's limit
+          const who = await sha((req.headers.get("CF-Connecting-IP") || "") + (env.ADMIN || "")), hour = Math.floor(Date.now() / 3600000);
+          const rk = "rc:" + who + ":" + hour, used = +((await env.LIB.get(rk)) || 0);
+          if (used >= COUNT_PER_HOUR) return json(req, env, { ok: true, counted: false });
+          await env.LIB.put(rk, String(used + 1), { expirationTtl: 3700 });
+          let c;
+          try { c = JSON.parse((await env.LIB.get("n:counts")) || "{}"); } catch (_) { c = {}; }
+          if (!c || typeof c !== "object" || Array.isArray(c)) c = {};
+          c.total = (+c.total || 0) + 1;
+          c.since = c.since || new Date().toISOString().slice(0, 10);
+          c.v = c.v && typeof c.v === "object" ? c.v : {};
+          if (Object.keys(c.v).length < 200 || c.v[v]) c.v[v] = (+c.v[v] || 0) + 1;
+          await env.LIB.put("n:counts", JSON.stringify(c));          // (two at the same moment may lose one: KV is not a counter; near enough)
+          ctx.waitUntil(cache.delete(key));
+          return json(req, env, { ok: true, counted: true });
+        }
       }
       if (req.method === "POST" && url.pathname === "/remove") {
         const body = await req.json().catch(() => ({}));

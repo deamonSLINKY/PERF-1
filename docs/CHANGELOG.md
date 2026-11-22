@@ -28,6 +28,8 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 1.0.1)
 
+- **An install counter (the maker's ask, after 1.0).** The Install page counts each finished PERF-1 install through the Library's relay (the version number only, nothing about the person or the unit) and shows the total under its heading ("Installed from this page 1,234 times since ..."). Stock installs are not counted, nor installs from the DEV site; one address counts at most three times an hour. Before it, the only counts were the Firmware Hub's (670 installs) and GitHub's downloads (686), up to 1.0.
+
 ## 1.0.0 (the builds 0.17.1 .. 0.17.93 are its steps)
 
 - **A restore no longer lands in safe mode (0.17.93, the maker's test of 0.17.92).** Restoring a backup soon after the FM-1 had started (a second restore right after a first) counted as a failed start: the unit came back on one core as a precaution, a busy piece then took all its time (the screen stayed black, the music ran slow), the watchdog restarted it, and that second "failed" start was safe mode. The restore's restart now counts as the deliberate restart it is. And a start on one core (after a failed start or a crash) now waits for PLAY instead of starting the music by itself, so the screen comes up first ("ONE CORE: PLAY TO START"). 0.17.92 brought this out: its fix to the start-up clock made the 30 s check after each start real.

@@ -50,6 +50,8 @@ page = (SRC / "web" / "amb_installer.html").read_text(encoding="utf-8")
 lib = strip_module((SRC / "web" / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1backup.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1idle.js").read_text(encoding="utf-8")) + "\n" + strip_module((SRC / "web" / "fm1kit.js").read_text(encoding="utf-8"))
 meta = json.dumps({"version": ver, "product": product, "pkg": "../firmware/" + name})
 page = page.replace("/*LIB*/", lib).replace("/*META*/", meta).replace("<h1>Install PERF-1</h1>", f"<h1>Install PERF-1 {ver}</h1>")
+_relay = SRC / "web" / "relay" / "relay.json"            # (1.0.1) the install counter's address: the Library relay (the DEV site leaves it out: no count)
+page = page.replace("/*RELAY*/", _relay.read_text(encoding="utf-8").strip() if _relay.exists() else "{}")
 (OUT / "install" / "index.html").write_text(page, encoding="utf-8", newline="\n")
 
 params = SRC / "build" / "params.json"

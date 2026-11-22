@@ -189,6 +189,9 @@ The bar and the line above it show each stage: verifying, switching to update mo
 done. **Do not disconnect the cable or close the page while it writes.** If you try to leave, the page asks you first.
 When the install is complete, the FM-1 restarts into PERF-1. Then the page checks that the FM-1 reports the correct version.
 
+The page counts finished installs, so the maker can see how many people use PERF-1: it sends only the version number
+(nothing about you or your FM-1), and the total shows under the page's heading.
+
 > Install firmware at your own risk. The author accepts no responsibility if this custom firmware damages your FM-1 or makes it work incorrectly. Keep your own copies of the .syx files that you load. When you replace the firmware, you can lose all the items that you stored (pieces, settings, DX7 voices).
 
 ### Going back to the stock firmware

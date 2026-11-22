@@ -25,6 +25,13 @@ It runs on Cloudflare's free plan: 100,000 requests and 1,000 KV writes a day, f
    It prints the address, like `https://perf1-library.YOURNAME.workers.dev`.
 5. Put that address in `web/relay/relay.json` as `{"url": "https://perf1-library.YOURNAME.workers.dev"}` and rebuild the site. Until then, the page's Submit button opens a pre-filled GitHub issue as before.
 
+## The install counter (1.0.1)
+
+The Install page sends `POST /count {"v": "1.0.1"}` when a PERF-1 install finishes (not a stock one), and shows the total from `GET /count`
+(`{total, since, v: {version: count}}`, cached five minutes) under its heading. Only the totals are kept, in one KV key (`n:counts`); an
+address counts at most three times an hour, through a salted hash in a key that expires with the hour, as the submit limit does. The DEV
+site's installer has no relay address, so installs there are not counted. Each count is two KV writes, well inside the free plan's 1,000 a day.
+
 ## Removing an entry
 
 - On the site: open `pieces/#admin=YOUR-SECRET` once in your browser. The page keeps the secret in that browser only, and every Library card gets a **Remove** button. `#admin=` with nothing after it forgets it.

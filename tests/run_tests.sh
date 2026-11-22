@@ -54,6 +54,7 @@ if command -v node >/dev/null 2>&1; then run webbackup node tests/web_backup_tes
 if command -v node >/dev/null 2>&1; then run weblink node tests/web_link_test.js; fi
 if command -v node >/dev/null 2>&1; then run webota node tests/web_ota_test.mjs; fi
 if command -v node >/dev/null 2>&1; then run webidle node tests/web_idle_test.mjs; fi
+if command -v node >/dev/null 2>&1; then run webcount node tests/web_count_test.mjs; fi
 run dxproto sh -c "$CC -O2 -Wall -Wextra -Werror -o $OUT/dxproto_test tests/host/dxproto_test.c && $OUT/dxproto_test"
 run params sh -c "python3 tools/make_params.py"
 run palette python3 tests/host/palette_test.py
