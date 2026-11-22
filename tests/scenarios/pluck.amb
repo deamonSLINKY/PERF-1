@@ -1,6 +1,8 @@
 # The counter-melody (PLUCK): two pages in the ARP button's cycle (Acid, Acid env, Acid line, Acid answer, Acid steps, Pluck, Pluck 2, Deja vu), a Sound that SEL + ALGORITHM
 # steps, a mute (GLO + B4) and a solo (GLO + F#5) of its own.
 wait 3000
+# (0.17.85) HYPNO 01 is the maker's now (the pluck NEUTRNPLU): the test starts on Marimba
+setpar 99 1
 tap ARP
 tap ARP
 tap ARP

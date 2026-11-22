@@ -3,6 +3,9 @@
 # And the SOUND page (0.17.30, the settings' walk, last): Vintage, Polish, Tilt, Width (fxs99 .. 102).
 seed 0
 wait 500
+# (0.17.85) HYPNO 01 has the maker's answers now (the acid's octave, the bass's busy one): the test starts from none
+setpar 151 0
+setfxs 97 0
 tap GLO
 tap LFO
 tap LFO

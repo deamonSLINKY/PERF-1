@@ -2,6 +2,8 @@
 # pages the whole kit); each voice's Sound knob; the Kit page (SEQ three times), a sound for each drum.
 # Keys on a voice's pages play it (the scale stays as it is); on any other page they edit the scale.
 wait 500
+# (0.17.85) HYPNO 01 is the maker's now (the acid Lead): the test starts on Saw
+setpar 40 0
 expect par10 1
 # the pad: SEL + ALGORITHM, then its Sound knob (KNOB 3)
 tap ENV

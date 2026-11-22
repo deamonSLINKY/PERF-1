@@ -25,13 +25,13 @@ PIECES = [
     ("skip", "x...x...x..x..x.", ".......x........", _, "..x...x...x...x.", "..............x.", "...x.....x..x..."),
     ("no kick", _, ".......x......x.", _, "..x...x...x...x.", "..x.......x.....", "...x..x....x..x."),
   ]),
-  ("03", "pounding, rumble and claps (Monolith)", [
-    ("hammer", "x...x...x...x...", _, _, "..x...x...x...x.", _, _),
-    ("rumble", "x..xx..xx..xx..x", _, "....x.......x...", "..x...x...x...x.", _, _),
-    ("pressure", "x..xx..xx..xx..x", _, "....x.......x...", "xxxxxxxxxxxxxxxx", "..x...x...x...x.", _),
-    ("industrial", "x..xx..xx..xx..x", "....x.......x..x", "....x.......x...", "xxxxxxxxxxxxxxxx", "..x...x...x...x.", "x..x..x..x..x..."),
-    ("stomp", "x...x...x.x.x...", "....x.......x...", "....x.......x.x.", "x.x.x.x.x.x.x.x.", "..x.......x.....", ".....x.........x"),
-    ("tunnel", "x...............", _, "....x.......x...", "xxxxxxxxxxxxxxxx", "..x...x...x...x.", "x..x..x..x..x..."),
+  ("03", "pounding, rumble and claps (Monolith; the maker's own drums, 2026-11-21)", [
+    ("hammer", "x...x...x...x...", ".x..x...xx......", _, "x.....x....x....", "...x..x.........", ".x.....x........"),
+    ("rumble", "x..xx..xx..xx..x", "....x...x.......", "....x.......x...", ".........x......", "xx..............", "......x.....x..."),
+    ("pressure", "x..xx..xx..xx..x", "x.....x.xx......", "....x.......x...", "xxx.xxxxxx.xxx.x", ".....x........x.", "........x.xxx..."),
+    ("industrial", "x..xx..xx..xx..x", "x...x.....x.xxxx", "....x.......x...", "x.x...xx...xxx.x", "...x...xxx.x.x..", ".....xxx.....x.."),
+    ("stomp", "x...x...x.x.x...", "..x.x.....xxx...", "....x.......x.x.", ".xx.x..xx...x..x", "..........x.....", "...........x..x."),
+    ("tunnel", "x...............", "x.x...x.x.....x.", "....x.......x...", ".xxxxxxxxx..xxxx", "x..x......x...x.", "....xx.x..x.x..x"),
   ]),
   ("04", "trance: offbeat opens, claps, a roll (Ascension)", [
     ("lift", "x...x...x...x...", _, _, _, "..x...x...x...x.", _),

@@ -3,6 +3,8 @@
 # the mood reaches the pluck. (Parameters: 94 drum drift Change, 122 the pluck's hand switch, 111 acid hand.)
 seed 0
 wait 3000
+# (0.17.85) HYPNO 01 is the maker's now (its drums drift, Next): the test starts with drift off
+setpar 94 0
 turn SELECT 24 100
 expect view 24
 spin K1 1

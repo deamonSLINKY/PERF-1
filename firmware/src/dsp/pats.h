@@ -104,56 +104,56 @@ const uint16_t EN_PIECE_PATS[EN_NPIECES][EN_NPAT][EN_NLANE] = {
          *   P ...x..x....x..x. */
         {0x0000u, 0x4080u, 0x0000u, 0x4444u, 0x0404u, 0x4848u},
     },
-    /* 03: pounding, rumble and claps (Monolith) */
+    /* 03: pounding, rumble and claps (Monolith; the maker's own drums, 2026-11-21) */
     {
         /* 1 hammer
          *   K x...x...x...x...
-         *   S ................
+         *   S .x..x...xx......
          *   C ................
-         *   H ..x...x...x...x.
-         *   O ................
-         *   P ................ */
-        {0x1111u, 0x0000u, 0x0000u, 0x4444u, 0x0000u, 0x0000u},
+         *   H x.....x....x....
+         *   O ...x..x.........
+         *   P .x.....x........ */
+        {0x1111u, 0x0312u, 0x0000u, 0x0841u, 0x0048u, 0x0082u},
         /* 2 rumble
          *   K x..xx..xx..xx..x
-         *   S ................
+         *   S ....x...x.......
          *   C ....x.......x...
-         *   H ..x...x...x...x.
-         *   O ................
-         *   P ................ */
-        {0x9999u, 0x0000u, 0x1010u, 0x4444u, 0x0000u, 0x0000u},
+         *   H .........x......
+         *   O xx..............
+         *   P ......x.....x... */
+        {0x9999u, 0x0110u, 0x1010u, 0x0200u, 0x0003u, 0x1040u},
         /* 3 pressure
          *   K x..xx..xx..xx..x
-         *   S ................
+         *   S x.....x.xx......
          *   C ....x.......x...
-         *   H xxxxxxxxxxxxxxxx
-         *   O ..x...x...x...x.
-         *   P ................ */
-        {0x9999u, 0x0000u, 0x1010u, 0xFFFFu, 0x4444u, 0x0000u},
+         *   H xxx.xxxxxx.xxx.x
+         *   O .....x........x.
+         *   P ........x.xxx... */
+        {0x9999u, 0x0341u, 0x1010u, 0xBBF7u, 0x4020u, 0x1D00u},
         /* 4 industrial
          *   K x..xx..xx..xx..x
-         *   S ....x.......x..x
+         *   S x...x.....x.xxxx
          *   C ....x.......x...
-         *   H xxxxxxxxxxxxxxxx
-         *   O ..x...x...x...x.
-         *   P x..x..x..x..x... */
-        {0x9999u, 0x9010u, 0x1010u, 0xFFFFu, 0x4444u, 0x1249u},
+         *   H x.x...xx...xxx.x
+         *   O ...x...xxx.x.x..
+         *   P .....xxx.....x.. */
+        {0x9999u, 0xF411u, 0x1010u, 0xB8C5u, 0x2B88u, 0x20E0u},
         /* 5 stomp
          *   K x...x...x.x.x...
-         *   S ....x.......x...
+         *   S ..x.x.....xxx...
          *   C ....x.......x.x.
-         *   H x.x.x.x.x.x.x.x.
-         *   O ..x.......x.....
-         *   P .....x.........x */
-        {0x1511u, 0x1010u, 0x5010u, 0x5555u, 0x0404u, 0x8020u},
+         *   H .xx.x..xx...x..x
+         *   O ..........x.....
+         *   P ...........x..x. */
+        {0x1511u, 0x1C14u, 0x5010u, 0x9196u, 0x0400u, 0x4800u},
         /* 6 tunnel
          *   K x...............
-         *   S ................
+         *   S x.x...x.x.....x.
          *   C ....x.......x...
-         *   H xxxxxxxxxxxxxxxx
-         *   O ..x...x...x...x.
-         *   P x..x..x..x..x... */
-        {0x0001u, 0x0000u, 0x1010u, 0xFFFFu, 0x4444u, 0x1249u},
+         *   H .xxxxxxxxx..xxxx
+         *   O x..x......x...x.
+         *   P ....xx.x..x.x..x */
+        {0x0001u, 0x4145u, 0x1010u, 0xF3FEu, 0x4409u, 0x94B0u},
     },
     /* 04: trance: offbeat opens, claps, a roll (Ascension) */
     {

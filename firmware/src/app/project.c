@@ -169,6 +169,10 @@ static void recipe(int i, slot_t *s)
         memcpy(s->prk, G->kinds, sizeof s->prk);
         memcpy(s->bs, G->bass, sizeof s->bs);
     }
+    if (proj.genre == 1 && i == 5) {             /* (0.17.85) LOFI 06: the maker's own progression (the first tuning round) */
+        static const uint8_t L06[EN_PRG_LEN] = {0xa9, 0x56, 0x00, 0x15, 0x54, 0x01};
+        memcpy(s->prg, L06, sizeof s->prg);
+    }
 }
 
 static int16_t clamp_par(int p, int v)

@@ -23,7 +23,7 @@ spin K1 1
 tapkey 21
 spin K2 5
 wait 100
-expect mod1_12 5
+expect mod1_12 71
 expect mod0_2 83
 # the top of each knob stays on it
 spin K2 20

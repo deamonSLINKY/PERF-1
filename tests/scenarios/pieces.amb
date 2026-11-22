@@ -25,8 +25,8 @@ shot piece02.png
 # and 03 (E Phrygian, its acid up, the rumbling kick)
 turn PRESET 1
 expect piece 2
-expect par1 60
-expect par72 2
+expect par1 66
+expect par72 1
 expect lane0 0x9999
 wait 10000
 expect pad_level >5

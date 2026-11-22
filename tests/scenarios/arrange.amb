@@ -1,6 +1,8 @@
 # Arrange: a lane's density (the pattern as written is never edited; 50 plays it as written), a lane's own source pattern (from the next bar),
 # a pattern key held (plays that pattern only while down), scenes that carry the groove, the progression loop.
 seed 0
+# (0.17.85) HYPNO 01 drifts its drums now (the maker's: Next): held for this test
+setpar 94 0
 wait 3000
 # the Groove page (SEQ x5: the dial, 17): the kick lane (the first), its density
 turn SELECT 25 100

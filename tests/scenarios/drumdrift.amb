@@ -1,5 +1,7 @@
 # Drum drift (SEQ four times): the patterns change by themselves, a fill the bar before, and mutate.
 wait 1500
+# (0.17.85) HYPNO 01 is the maker's now (its drums drift, Next): the test starts with drift off
+setpar 94 0
 expect playing 1
 tap SEQ
 tap SEQ

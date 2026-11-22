@@ -449,18 +449,18 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{0, 17, 5, 2, 3}, {1, 9, 7, 3, 23}, {15, 17, 18, 22, 4}, {12, 2, 17, 23, 28}, {8, 8, 7}, {8, 8, 1}, {8, 5, 8}, {8, 5, 8}},
     {{6, 13, 0, 10, 14}, {9, 10, 5, 1, 12}, {4, 9, 25, 8, 5}, {24, 7, 27, 20, 9}, {1, 10, 2}, {1, 10, 11}, {1, 10, 5}, {5, 1, 11}},
     {{7, 8, 11, 22, 1}, {16, 4, 20, 3, 10}, {14, 2, 24, 3, 20}, {31, 6, 22, 33, 8}, {9, 7, 6}, {9, 6, 4}, {9, 5, 2}, {9, 4, 6}},
-    {{13, 8, 6, 17, 21}, {9, 1, 5, 8, 20}, {12, 4, 16, 21, 15}, {18, 24, 12, 30, 36}, {8, 8, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 11}},
-    {{3, 23, 5, 22, 10}, {4, 9, 16, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 2, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
-    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 24, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
-    {{13, 17, 0, 20, 21}, {9, 5, 21, 1, 10}, {4, 15, 25, 16, 9}, {12, 19, 28, 2, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
+    {{13, 8, 6, 17, 21}, {9, 1, 5, 8, 20}, {12, 5, 16, 21, 15}, {18, 25, 12, 30, 36}, {8, 8, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 11}},
+    {{3, 23, 5, 22, 10}, {4, 9, 16, 21, 20}, {8, 13, 23, 15, 9}, {28, 11, 10, 3, 5}, {12, 10, 12}, {12, 4, 10}, {12, 5, 10}, {12, 4, 5}},
+    {{6, 14, 19, 10, 0}, {11, 2, 22, 5, 3}, {2, 1, 24, 3, 19}, {20, 58, 27, 9, 18}, {4, 6, 3}, {4, 6, 10}, {4, 10, 2}, {4, 11, 6}},
+    {{13, 17, 0, 20, 21}, {9, 5, 21, 1, 10}, {5, 15, 25, 16, 9}, {12, 19, 58, 59, 29}, {1, 5, 8}, {5, 1, 8}, {1, 5, 10}, {5, 11, 1}},
     {{10, 14, 9, 3, 12}, {5, 10, 14, 0, 9}, {9, 6, 26, 23, 5}, {27, 10, 8, 22, 31}, {11, 10, 3}, {11, 2, 10}, {11, 2, 3}, {11, 10, 2}},
-    {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 4, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
-    {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 3}, {21, 4, 17, 19, 12}, {35, 24, 39, 15, 25}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
-    {{17, 21, 13, 19, 0}, {1, 5, 10, 9, 20}, {21, 4, 19, 17, 12}, {36, 24, 35, 41, 12}, {8, 10, 8}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},   /* (funk's kick 0.15.13: Dusty and 909, not Break: its chops and crush broke the pocket) */
-    {{13, 6, 17, 21, 19}, {9, 1, 8, 7, 5}, {12, 21, 15, 4, 16}, {34, 35, 18, 30, 31}, {8, 5, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 5}},
+    {{7, 15, 22, 3, 18}, {9, 8, 22, 1, 23}, {11, 18, 16, 15, 22}, {13, 22, 33, 3, 29}, {13, 7, 9}, {13, 7, 10}, {13, 7, 11}, {13, 11, 7}},
+    {{2, 19, 17, 0, 13}, {10, 9, 1, 5, 3}, {21, 15, 17, 19, 12}, {35, 58, 39, 15, 25}, {1, 10, 1}, {10, 1, 10}, {1, 10, 10}, {10, 1, 5}},
+    {{17, 21, 13, 19, 0}, {1, 5, 10, 9, 20}, {21, 5, 19, 17, 12}, {36, 24, 35, 41, 12}, {8, 10, 8}, {4, 8, 11}, {4, 8, 4}, {4, 11, 8}},   /* (funk's kick 0.15.13: Dusty and 909, not Break: its chops and crush broke the pocket) */
+    {{13, 6, 17, 21, 19}, {9, 1, 8, 7, 5}, {12, 21, 15, 5, 16}, {34, 35, 18, 30, 31}, {8, 5, 7}, {8, 5, 8}, {8, 5, 8}, {5, 8, 5}},
     {{10, 20, 2, 9, 5}, {0, 10, 5, 1, 22}, {26, 24, 25, 30, 28}, {39, 27, 12, 26, 25}, {11, 9, 11}, {9, 11, 9}, {11, 11, 6}, {11, 9, 11}},
-    {{0, 5, 17, 2, 18}, {9, 1, 8, 21, 5}, {7, 4, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
-    {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 4, 20, 11}, {35, 12, 5, 28, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
+    {{0, 5, 17, 2, 18}, {9, 1, 8, 21, 5}, {7, 5, 16, 18, 15}, {17, 23, 40, 5, 29}, {5, 1, 8}, {1, 5, 1}, {5, 1, 8}, {5, 8, 1}},
+    {{7, 2, 16, 5, 1}, {9, 1, 8, 3, 7}, {15, 17, 5, 20, 11}, {35, 12, 5, 29, 4}, {8, 8, 9}, {8, 4, 8}, {8, 8, 4}, {8, 5, 8}},
     {{7, 13, 14, 6, 11}, {4, 20, 16, 2, 3}, {2, 14, 3, 27, 0}, {33, 22, 6, 10, 8}, {6, 4, 6}, {4, 6, 2}, {2, 6, 4}, {6, 2, 6}},   /* industrial (0.15.14): Dark, Hits, Rave, Stabs,
                                                  * Hollow; Reese, Gnarl, Wub, Grit, Dirty; Driven, Fold, Sync, Hyper, Saw; TUBUL-BELL, TEMPLEBELL, Gong, Bleep, Digital; the Hard
                                                  * kick (the Break kit's chop in a third of the pieces), Break and Hard snares, Techno hats, a Hard clank */
@@ -472,11 +472,11 @@ static const struct { uint8_t pad[5], drone[5], acid[5], pluck[5], kick[3], snar
     {{0, 2, 4, 19, 17}, {9, 1, 8, 10, 5}, {15, 17, 22, 26, 30}, {12, 41, 40, 36, 5}, {14, 8, 7}, {14, 16, 8}, {14, 8, 10}, {14, 20, 8}},   /* hiphop (0.17.35):
                                                  * Rhodes, Strings, Organ, Brass, Wurli; Sub, Warm, Rumble, Square, Pulse; Soft, E.Piano, Vibes, Mini, Lead; DX Tine EP, Mute Trumpet, Sax,
                                                  * Muted Gtr, Vibes; the Boom kit, Dusty and 808 kicks, Snap snares, 909 hats, a shaker */
-    {{9, 2, 23, 10, 1}, {0, 5, 15, 9, 4}, {24, 8, 0, 27, 30}, {13, 28, 22, 0, 8}, {10, 2, 3}, {10, 3, 1}, {10, 2, 15}, {3, 10, 20}},   /* trance: Trance, Strings,
-                                                 * Air, Poly, Voices; Saws, Pulse, Bright, Sub, Reese; Super, Trance, Saw, Hyper, Lead; DX Glass Bell, Harp, Bells, Pluck, Digital; 909,
+    {{9, 2, 23, 10, 1}, {0, 5, 15, 9, 4}, {24, 8, 0, 27, 30}, {13, 62, 22, 0, 8}, {10, 2, 3}, {10, 3, 1}, {10, 2, 15}, {3, 10, 20}},   /* trance: Trance, Strings,
+                                                 * Air, Poly, Voices; Saws, Pulse, Bright, Sub, Reese; Super, Trance, Saw, Hyper, Lead; DX Glass Bell, Harpsichord (0.17.85: was Harp), Bells, Pluck, Digital; 909,
                                                  * Techno and Acid, the Ride's hats, a shaker */
-    {{23, 22, 3, 11, 5}, {23, 9, 1, 21, 12}, {15, 11, 18, 16, 22}, {29, 28, 13, 26, 11}, {5, 8, 15}, {5, 8, 16}, {15, 5, 20}, {20, 5, 15}},   /* ambient: Air,
-                                                 * Chapel, Glass, Hollow, Warm; Air, Sub, Warm, Wide, Fifths; Soft, Bell, Kalimba, Marimba, Vibes; DX Kalimba, Harp, Glass Bell, Glass
+    {{23, 22, 3, 11, 5}, {23, 9, 1, 21, 12}, {15, 11, 18, 16, 22}, {29, 25, 13, 26, 11}, {5, 8, 15}, {5, 8, 16}, {15, 5, 20}, {20, 5, 15}},   /* ambient: Air,
+                                                 * Chapel, Glass, Hollow, Warm; Air, Sub, Warm, Wide, Fifths; Soft, Bell, Kalimba, Marimba, Vibes; DX Kalimba, Soft Strings (0.17.85: was Harp), Glass Bell, Glass
                                                  * Pad, Glass; Minimal and Dusty, the Ride, the Shaker */
 };
 static const uint8_t PLUCK_RATE[EN_NGENRE] = {2, 2, 2, 0, 0, 3, 2, 2, 3, 0, 2, 3, 0, 2, 3, 0, 3, 3, 3, 2, 3, 0};   /* the pluck's rate by genre: 1/8 (2), 1/16 (3), 1/4 (0) */
@@ -653,6 +653,23 @@ void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
         par[P_EVOLVE] = 35;
         par[P_BASS] = 68;                       /* (0.16.6: held, at 85 it was as loud as the whole mix) */
     }
+    if (g == 0) {                               /* (0.17.85) HYPNO's master bus as the maker set three of its pieces (01, 03, 07: 6:1, -15 .. -20 dB, +7.5 .. +9,
+                                                 * the ceiling -4 .. -10): 6:1 at -18 dB, +8.4 dB, the ceiling at -6 (the host: PLR 10.9 to 9.1 dB; the trim keeps the level) */
+        par[P_MC_RATIO] = 5;
+        par[P_MC_THR] = 39;
+        par[P_MC_MAKE] = 70;
+        par[P_ML_CEIL] = 50;
+    }
+    if (g >= 4) {                               /* (0.17.85) what the maker's first tuning round taught, for the genres not tuned yet (research/piece-tuning-round1) */
+        if ((g == 15 || g == 19) && par[P_ACID] < 45)
+            par[P_ACID] = 45;                   /* trip-hop and hiphop, lofi's nearest: the acid was too quiet in 13 of 17 lofi and house pieces under 40 */
+        if ((g == 7 || g == 8 || g == 10) && par[P_DE_AMT] <= 35)
+            par[P_DE_AMT] = 55;                 /* garage, electro, disco: the bass filter's envelope deeper (the maker: 35 to about 60) */
+        if (i == 0 && !par[P_AC_RESP]) {
+            par[P_AC_RESP] = 8;                 /* each genre's first piece: the acid answers an octave up, every fourth time round */
+            par[P_AC_EVERY] = 2;
+        }
+    }
     {   /* (0.17.82) the maker's listening pass on the weakest pieces: a few settings changed by ear, piece by piece */
         static const struct { uint8_t g, i, p, v; } TWEAK[] = {
             {21, 8, P_PADTONE, 23}, {21, 8, P_PAD_COMP, 1},                    /* AMBIENT 09: the Air pad, held (no stabs) */
@@ -667,11 +684,121 @@ void en_piece_g(int g, int i, int16_t *par, uint16_t *pool)
             {21, 2, P_ACID, 40}, {21, 2, P_AC_WAVE, 6},                        /* AMBIENT 03: the Chip acid at 40 */
             {0, 5, P_DETUNE, 0},                                               /* HYPNO 06 */
             {4, 8, P_AC_WAVE, 1},                                              /* DUB 09: the Square acid (the Pluck acid sat on the pluck; Organ would twin DUB 03) */
+            {5, 0, P_CM_SND, 59},                                              /* (0.17.85) DNB 01: TF-RHODES (the maker: HARFA LSR suits 06, less 01) */
+            /* (0.17.85) the pieces whose pluck sound or acid wave the palettes changed (HARFA LSR, CLAVINET, E.Piano, the Pluck acid out): the pluck as loud
+             * as its old sound plus 1 dB, the acid at least as loud as its old wave (each measured alone on the host, 24 s; the level's gain is its square) */
+            {4, 3, P_CM_LVL, 36}, {4, 8, P_CM_LVL, 31}, {5, 0, P_CM_LVL, 53}, {5, 3, P_CM_LVL, 61}, {6, 0, P_CM_LVL, 48}, {6, 5, P_CM_LVL, 56},
+            {7, 0, P_CM_LVL, 54}, {7, 1, P_ACID, 52}, {7, 4, P_CM_LVL, 58}, {7, 5, P_CM_LVL, 38}, {7, 8, P_ACID, 46}, {7, 9, P_CM_LVL, 53},
+            {9, 4, P_ACID, 29}, {9, 6, P_ACID, 44}, {10, 4, P_CM_LVL, 49}, {10, 4, P_ACID, 53}, {10, 6, P_ACID, 46}, {10, 9, P_CM_LVL, 33},
+            {11, 2, P_ACID, 42}, {14, 1, P_ACID, 58}, {14, 8, P_ACID, 35}, {15, 2, P_CM_LVL, 38}, {15, 5, P_ACID, 50}, {15, 7, P_CM_LVL, 46},
+            {20, 4, P_CM_LVL, 51}, {20, 9, P_CM_LVL, 51}, {21, 5, P_CM_LVL, 41},
         };
         unsigned k;
         for (k = 0; k < sizeof TWEAK / sizeof TWEAK[0]; k++)
             if (TWEAK[k].g == g && TWEAK[k].i == i)
                 par[TWEAK[k].p] = TWEAK[k].v;
+    }
+    {   /* (0.17.85) the maker's first tuning round (2026-11-21): HOUSE (not 09, ROJ's guest piece), LOFI, HYPNO and DUBSTEP 01 and 10 as the maker stored
+         * them, a setting a row (the value is the setting's lowest plus the byte; research/piece-tuning-round1-2026-11-21.md, the rows written by its
+         * tools/mktune.py). Not the drum pattern they were stored on, nor the theme. HOUSE 08: TF-RHODES for the maker's own DX piano, the Slice off. */
+        static const struct { uint8_t g, i, p, r; } TUNE[] = {
+            /* DUBSTEP 01: AC_WAVE Mini, CM_SND Techno2 */
+            {3, 0, P_PAD, 60}, {3, 0, P_ACID, 55}, {3, 0, P_PL_RATE, 8}, {3, 0, P_PL_DEPTH, 58}, {3, 0, P_DR_RES, 89}, {3, 0, P_AC_CUT, 62},
+            {3, 0, P_AC_DEC, 65}, {3, 0, P_AC_WAVE, 26}, {3, 0, P_AC_LEN, 11}, {3, 0, P_AC_RANGE, 1}, {3, 0, P_CM_SND, 71}, {3, 0, P_CM_DENS, 55},
+            {3, 0, P_CM_OCT, 3}, {3, 0, P_CM_DEC, 69}, {3, 0, P_CM_RATE, 2}, {3, 0, P_CM_VU, 85}, {3, 0, P_CM_LEAP, 30},
+            /* HOUSE 01: AC_WAVE Trance */
+            {2, 0, P_ACID, 55}, {2, 0, P_AC_CUT, 48}, {2, 0, P_AC_RES, 75}, {2, 0, P_AC_WAVE, 8}, {2, 0, P_CM_VU, 80}, {2, 0, P_CM_LEAP, 25},
+            /* HOUSE 02: AC_WAVE PWM, CM_SND DRAWBARS */
+            {2, 1, P_PAD, 95}, {2, 1, P_ACID, 55}, {2, 1, P_DETUNE, 60}, {2, 1, P_AC_CUT, 50}, {2, 1, P_AC_RES, 90}, {2, 1, P_AC_WAVE, 5},
+            {2, 1, P_CM_LVL, 64}, {2, 1, P_CM_SND, 18},
+            /* HOUSE 03: CM_SND SOFTSTRNG */
+            {2, 2, P_ACID, 45}, {2, 2, P_DE_AMT, 61}, {2, 2, P_KIT_SNARE, 6}, {2, 2, P_KIT_HAT, 4}, {2, 2, P_CM_LVL, 80}, {2, 2, P_CM_SND, 25},
+            /* HOUSE 04: CM_SND AXE */
+            {2, 3, P_ACID, 50}, {2, 3, P_CM_LVL, 70}, {2, 3, P_CM_SND, 37},
+            /* HOUSE 05: PADTONE Wurli */
+            {2, 4, P_PAD, 65}, {2, 4, P_BRIGHT, 90}, {2, 4, P_PADTONE, 17}, {2, 4, P_DETUNE, 20}, {2, 4, P_PE_HOLD, 66}, {2, 4, P_PE_REL, 77},
+            {2, 4, P_PE_REST, 4}, {2, 4, P_MODE, 3}, {2, 4, P_CM_LVL, 60},
+            /* HOUSE 06 */
+            {2, 5, P_PAD, 60}, {2, 5, P_ACID, 60}, {2, 5, P_BRIGHT, 50}, {2, 5, P_DR_CUT, 40}, {2, 5, P_DR_RES, 96}, {2, 5, P_DE_AMT, 60},
+            {2, 5, P_CM_LVL, 55},
+            /* HOUSE 07: CM_SND REAL GRAN */
+            {2, 6, P_CM_LVL, 76}, {2, 6, P_CM_SND, 60},
+            /* HOUSE 08: CM_SND TF-RHODES */
+            {2, 7, P_KIT_KICK, 10}, {2, 7, P_KIT_SNARE, 21}, {2, 7, P_KIT_HAT, 21}, {2, 7, P_KIT_PERC, 6}, {2, 7, P_CM_SND, 59}, {2, 7, P_SLICE, 0},
+            /* HOUSE 10 */
+            {2, 9, P_PAD, 78}, {2, 9, P_ACID, 35}, {2, 9, P_PE_REL, 63}, {2, 9, P_AC_CUT, 35}, {2, 9, P_AC_RES, 94},
+            /* HYPNO 01: AC_WAVE Lead, CM_SND NEUTRNPLU */
+            {0, 0, P_PULSE, 81}, {0, 0, P_PL_RATE, 5}, {0, 0, P_PL_DEPTH, 73}, {0, 0, P_PL_DEST, 4}, {0, 0, P_AC_EVERY, 2}, {0, 0, P_DE_AMT, 47},
+            {0, 0, P_AC_CUT, 39}, {0, 0, P_AC_RES, 80}, {0, 0, P_AC_WAVE, 30}, {0, 0, P_ECHO, 53}, {0, 0, P_DD_CHANGE, 1}, {0, 0, P_CM_SND, 85},
+            {0, 0, P_PL_CHO, 55}, {0, 0, P_MC_RATIO, 5}, {0, 0, P_MC_THR, 49}, {0, 0, P_MC_MAKE, 63}, {0, 0, P_ML_CEIL, 50}, {0, 0, P_AC_RESP, 8},
+            /* HYPNO 02: CM_SND DX KALIMB */
+            {0, 1, P_ACID, 50}, {0, 1, P_AC_CUT, 44}, {0, 1, P_CM_SND, 29},
+            /* HYPNO 03: CM_SND WURLITZER */
+            {0, 2, P_PAD, 69}, {0, 2, P_ACID, 66}, {0, 2, P_BASS, 66}, {0, 2, P_PULSE, 85}, {0, 2, P_NOISE, 8}, {0, 2, P_TEMPO, 61},
+            {0, 2, P_EVOLVE, 32}, {0, 2, P_MOTION, 52}, {0, 2, P_DRIFT, 29}, {0, 2, P_BRIGHT, 52}, {0, 2, P_DETUNE, 31}, {0, 2, P_PL_DEPTH, 38},
+            {0, 2, P_PL_DEST, 5}, {0, 2, P_AC_EVERY, 2}, {0, 2, P_DR_CUT, 29}, {0, 2, P_DR_RES, 85}, {0, 2, P_DE_AMT, 42}, {0, 2, P_DL_DEPTH, 51},
+            {0, 2, P_DL_DEST, 4}, {0, 2, P_AC_CUT, 56}, {0, 2, P_AC_RES, 91}, {0, 2, P_AC_ENV, 13}, {0, 2, P_AC_DEC, 42}, {0, 2, P_AC_DENS, 69},
+            {0, 2, P_AC_MUT, 8}, {0, 2, P_DRIVE, 96}, {0, 2, P_SWING, 29}, {0, 2, P_REVERB, 31}, {0, 2, P_SIZE, 59}, {0, 2, P_MODE, 1},
+            {0, 2, P_DR_INST, 15}, {0, 2, P_CM_LVL, 71}, {0, 2, P_CM_SND, 58}, {0, 2, P_RV_PRE, 40}, {0, 2, P_MC_RATIO, 5}, {0, 2, P_MC_THR, 33},
+            {0, 2, P_MC_MAKE, 75}, {0, 2, P_ML_CEIL, 17}, {0, 2, P_AC_RESP, 33}, {0, 2, P_CM_VU, 100},
+            /* HYPNO 05: CM_SND HARPSICHO */
+            {0, 4, P_AC_EVERY, 2}, {0, 4, P_AC_CUT, 46}, {0, 4, P_AC_RES, 78}, {0, 4, P_AC_ENV, 71}, {0, 4, P_AC_DEC, 82}, {0, 4, P_AC_ACC, 69},
+            {0, 4, P_AC_RANGE, 1}, {0, 4, P_CM_LVL, 80}, {0, 4, P_CM_SND, 62}, {0, 4, P_AC_RESP, 13},
+            /* HYPNO 06: CM_SND PROPHET */
+            {0, 5, P_ACID, 36}, {0, 5, P_AC_CUT, 35}, {0, 5, P_AC_LEN, 15}, {0, 5, P_CM_SND, 66},
+            /* HYPNO 07 */
+            {0, 6, P_PAD, 73}, {0, 6, P_ACID, 65}, {0, 6, P_PL_DEPTH, 29}, {0, 6, P_PL_SHAPE, 3}, {0, 6, P_PL_DEST, 4}, {0, 6, P_AC_CUT, 47},
+            {0, 6, P_AC_RES, 50}, {0, 6, P_AC_ENV, 86}, {0, 6, P_AC_DEC, 12}, {0, 6, P_AC_ACC, 80}, {0, 6, P_AC_SLIDE, 60}, {0, 6, P_REVERB, 56},
+            {0, 6, P_SIZE, 39}, {0, 6, P_CM_LVL, 62}, {0, 6, P_CM_OCT, 3}, {0, 6, P_SEND2, 92}, {0, 6, P_RV_TYPE, 1}, {0, 6, P_RV_DAMP, 69},
+            {0, 6, P_RV_PRE, 50}, {0, 6, P_RV_X, 49}, {0, 6, P_PL_CHO, 84}, {0, 6, P_MC_RATIO, 5}, {0, 6, P_MC_THR, 34}, {0, 6, P_MC_MAKE, 74},
+            {0, 6, P_ML_CEIL, 68},
+            /* HYPNO 08: CM_SND TF-RHODES */
+            {0, 7, P_PAD, 42}, {0, 7, P_ACID, 31}, {0, 7, P_BASS, 61}, {0, 7, P_NOISE, 8}, {0, 7, P_TEMPO, 53}, {0, 7, P_EVOLVE, 79},
+            {0, 7, P_MOTION, 92}, {0, 7, P_DRIFT, 63}, {0, 7, P_BRIGHT, 37}, {0, 7, P_DR_CUT, 37}, {0, 7, P_DR_RES, 46}, {0, 7, P_DE_AMT, 68},
+            {0, 7, P_DL_DEPTH, 91}, {0, 7, P_AC_CUT, 41}, {0, 7, P_AC_RES, 68}, {0, 7, P_AC_ENV, 60}, {0, 7, P_AC_DEC, 39}, {0, 7, P_AC_DENS, 52},
+            {0, 7, P_AC_MUT, 22}, {0, 7, P_DRIVE, 48}, {0, 7, P_ECHO, 44}, {0, 7, P_REVERB, 34}, {0, 7, P_SIZE, 76}, {0, 7, P_CM_SND, 59},
+            {0, 7, P_CM_OCT, 3},
+            /* HYPNO 09 */
+            {0, 8, P_PAD, 75}, {0, 8, P_PL_DEPTH, 31}, {0, 8, P_DR_CUT, 59}, {0, 8, P_DE_TRIG, 1}, {0, 8, P_DE_ATK, 31}, {0, 8, P_DE_AMT, 57},
+            {0, 8, P_DL_RATE, 3},
+            /* HYPNO 10 */
+            {0, 9, P_PULSE, 91}, {0, 9, P_AC_CUT, 39}, {0, 9, P_LK_HAT, 87}, {0, 9, P_KIT_KICK, 21}, {0, 9, P_KIT_SNARE, 21}, {0, 9, P_KIT_HAT, 21},
+            {0, 9, P_KIT_PERC, 21}, {0, 9, P_DENS, 59},
+            /* LOFI 01: PADTONE Trance, AC_WAVE Lead, CM_SND WINEGLASS */
+            {1, 0, P_ACID, 74}, {1, 0, P_PADTONE, 9}, {1, 0, P_DETUNE, 0}, {1, 0, P_AC_RES, 19}, {1, 0, P_AC_DEC, 47}, {1, 0, P_AC_WAVE, 30},
+            {1, 0, P_AC_RANGE, 1}, {1, 0, P_ROOT, 0}, {1, 0, P_MODE, 7}, {1, 0, P_CHORD, 0}, {1, 0, P_CM_SND, 13}, {1, 0, P_CM_DENS, 25},
+            {1, 0, P_CM_OCT, 3}, {1, 0, P_CM_VU, 95}, {1, 0, P_CM_LOOP, 3}, {1, 0, P_CM_LEAP, 30}, {1, 0, P_CM_MOTIF, 69},
+            /* LOFI 02: CM_SND CS 80 */
+            {1, 1, P_DR_CUT, 45}, {1, 1, P_DR_RES, 42}, {1, 1, P_DE_AMT, 65}, {1, 1, P_DR_INST, 23}, {1, 1, P_KIT_KICK, 17}, {1, 1, P_KIT_SNARE, 17},
+            {1, 1, P_KIT_HAT, 17}, {1, 1, P_KIT_PERC, 17}, {1, 1, P_CM_SND, 73},
+            /* LOFI 03: CM_SND SHORTHORN */
+            {1, 2, P_AC_CUT, 13}, {1, 2, P_AC_RES, 0}, {1, 2, P_AC_ENV, 59}, {1, 2, P_CM_SND, 87}, {1, 2, P_CM_DEC, 85}, {1, 2, P_CM_RANGE, 2},
+            /* LOFI 04: AC_WAVE E.Piano */
+            {1, 3, P_ACID, 39}, {1, 3, P_AC_WAVE, 17}, {1, 3, P_AC_RANGE, 1}, {1, 3, P_CM_LVL, 45}, {1, 3, P_CM_DEC, 83},
+            /* LOFI 05: PADTONE Organ, AC_WAVE Soft */
+            {1, 4, P_ACID, 74}, {1, 4, P_PULSE, 85}, {1, 4, P_PADTONE, 4}, {1, 4, P_PL_RATE, 0}, {1, 4, P_PL_DEPTH, 5}, {1, 4, P_PL_DEST, 3},
+            {1, 4, P_AC_WAVE, 15}, {1, 4, P_AC_DENS, 23}, {1, 4, P_AC_LEN, 15}, {1, 4, P_AC_RANGE, 1},
+            /* LOFI 06: PADTONE Rhodes, CM_SND Bleep */
+            {1, 5, P_ACID, 42}, {1, 5, P_PULSE, 80}, {1, 5, P_BRIGHT, 85}, {1, 5, P_PADTONE, 0}, {1, 5, P_DETUNE, 18}, {1, 5, P_PE_HOLD, 84},
+            {1, 5, P_PE_REL, 87}, {1, 5, P_AC_EVERY, 2}, {1, 5, P_ROOT, 7}, {1, 5, P_MODE, 6}, {1, 5, P_KIT_KICK, 17}, {1, 5, P_KIT_SNARE, 17},
+            {1, 5, P_KIT_HAT, 17}, {1, 5, P_KIT_PERC, 17}, {1, 5, P_CM_SND, 10}, {1, 5, P_SEND3, 90}, {1, 5, P_AC_RESP, 8}, {1, 5, P_PAD_COMP, 8},
+            /* LOFI 07 */
+            {1, 6, P_ACID, 45},
+            /* LOFI 08: CM_SND DX KALIMB */
+            {1, 7, P_ACID, 35}, {1, 7, P_AC_CUT, 35}, {1, 7, P_CM_SND, 29},
+            /* LOFI 09 */
+            {1, 8, P_ACID, 50}, {1, 8, P_DETUNE, 35}, {1, 8, P_PL_DEPTH, 25}, {1, 8, P_AC_EVERY, 2}, {1, 8, P_AC_CUT, 40}, {1, 8, P_AC_RES, 66},
+            {1, 8, P_AC_ENV, 49}, {1, 8, P_AC_DEC, 72}, {1, 8, P_AC_ACC, 74}, {1, 8, P_AC_DENS, 46}, {1, 8, P_AC_LEN, 15}, {1, 8, P_AC_RANGE, 1},
+            {1, 8, P_KIT_KICK, 21}, {1, 8, P_KIT_SNARE, 21}, {1, 8, P_KIT_HAT, 21}, {1, 8, P_KIT_PERC, 21}, {1, 8, P_AC_RESP, 8},
+            {1, 8, P_CM_VU, 50}, {1, 8, P_CM_LEAP, 0}, {1, 8, P_SLICE, 0},
+            /* LOFI 10: AC_WAVE PWM */
+            {1, 9, P_ACID, 70}, {1, 9, P_DETUNE, 4}, {1, 9, P_AC_CUT, 27}, {1, 9, P_AC_RES, 85}, {1, 9, P_AC_ENV, 17}, {1, 9, P_AC_DEC, 90},
+            {1, 9, P_AC_WAVE, 5}, {1, 9, P_CHORD, 2}, {1, 9, P_CM_LVL, 60}, {1, 9, P_CM_DENS, 28}, {1, 9, P_SEND, 84}, {1, 9, P_SEND3, 85},
+        };
+        unsigned k;
+        for (k = 0; k < sizeof TUNE / sizeof TUNE[0]; k++)
+            if (TUNE[k].g == g && TUNE[k].i == i)
+                par[TUNE[k].p] = (int16_t)(PARAMS[TUNE[k].p].lo + TUNE[k].r);
     }
     *pool = EN_MODE_POOL[par[P_MODE]];
 }
@@ -758,6 +885,10 @@ void en_piece_mods_g(int g, int i, uint8_t mod[EN_NLANE][16])
         const int a = i % 5, b = (i + 2) % 5;
         mod[3][ROLL[a][0]] = (uint8_t)(mod[3][ROLL[a][0]] & ~7u) | ROLL[a][1];
         mod[3][ROLL[b][0]] = (uint8_t)(mod[3][ROLL[b][0]] & ~7u) | ROLL[b][1];
+    }
+    if (g == 0 && i == 0) {                             /* (0.17.85, the maker's) HYPNO 01: a ghost x3 on the snare's 13th, an accented x3 on the open hat's 11th */
+        mod[1][12] = 66u;
+        mod[4][10] = 194u;
     }
 }
 
@@ -1248,29 +1379,30 @@ volatile float en_intro_k = 1.0f;
  * unit starts, integrated loudness, the perf-sound-check skill), then brought to the median of all (-15.3 LUFS) at the output, in half
  * dB: a boost at most 4 dB and never past a -1 dBFS peak, a cut at most 6. The genres' medians had spread from -12.6 (PSY, FOREST) to
  * -17.8 (DUB, TRIPHOP), so the auto-DJ's genre changes jumped 5 dB; now every genre's median is within 0.2 dB, every piece within
- * -17.6 .. -15.0 */
+ * -17.6 .. -15.0. (0.17.85) The 108 pieces the first tuning round changed measured again the same way (raw, then to -15.7, the median the
+ * unchanged pieces reach now); 25 moved by 1 dB or more (HYPNO's denser master bus most: -2.5 .. -5.5 dB), the rest kept */
 static const int8_t EN_TRIM[EN_NGENRE][10] = {   /* half dB, + louder */
-    {  4,   5,  -1,   5,   2,   6,   3,   2,  -2,  -2},   /* HYPNO */
-    {  1,   6,   3,   4,   3,   3,   2,   6,   0,   2},   /* LOFI */
-    { -2,  -3,  -1,  -3,  -3,  -3,  -3,  -1,  -2,  -2},   /* HOUSE */
-    {  0,  -1,  -8,  -4,  -1,  -7,  -7,  -2,  -5,  -6},   /* DUBSTEP */
+    { -6,  -5,   1,  -5,  -6,  -4, -11,  -5,  -8,  -7},   /* HYPNO */
+    {  4,   6,   3,   4,  -3,   3,   2,   6,  -3,  -4},   /* LOFI */
+    { -2,  -3,  -1,  -3,  -3,  -5,  -3,  -1,  -2,  -2},   /* HOUSE */
+    { -2,  -1,  -8,  -4,  -1,  -7,  -7,  -2,  -5,  -6},   /* DUBSTEP */
     {  4,   5,   5,   4,   5,   6,   4,   3,   3,   2},   /* DUB */
     {  5,   3,   2,   3,   5,   4,   3,   0,   2,   3},   /* DNB */
     { -3,  -2,  -2,  -3,  -5,   4,  -4,  -6,   0,  -3},   /* BREAKS */
-    {  7,   3,   0,   5,   2,   1,   4,   3,  -1,   5},   /* GARAGE */
-    { -3,  -1,   0,   0,  -4,   2,   0,  -2,  -1,  -3},   /* ELECTRO */
-    { -4,   1,  -2,  -5,   0,  -1,  -2,  -2,   1,  -4},   /* TRAP */
+    {  7,   3,   0,   5,   2,   1,   2,   3,  -1,   5},   /* GARAGE */
+    {  0,  -1,   0,   0,  -4,   2,   0,  -2,  -1,   1},   /* ELECTRO */
+    { -6,   1,  -2,  -5,   0,  -1,  -5,  -2,   1,  -4},   /* TRAP */
     { -1,   0,  -2,  -4,  -3,  -1,  -2,  -4,  -2,  -3},   /* DISCO */
     {  2,  -1,   2,   4,  -1,   1,   2,   1,   0,   3},   /* FUNK */
     {  3,   2,   4,   4,   0,   3,   6,   2,   0,   0},   /* REGGAE */
     { -2,   3,  -1,  -1,   1,   0,  -5,   4,  -2,  -3},   /* SYNTHWV */
-    { -1,   3,   5,  -2,   4,   3,   5,  -3,   1,   0},   /* AMAPI */
-    {  4,   6,   4,   6,   4,   8,   4,   8,   5,   2},   /* TRIPHOP */
+    { -1,   3,   5,  -2,   4,   3,   5,  -3,  -3,   0},   /* AMAPI */
+    {  4,   6,   4,   6,   4,   6,   4,   8,   3,   2},   /* TRIPHOP */
     {  1,  -6,  -6,  -2,  -6,  -4,  -2,  -7,  -6,   0},   /* INDUS */
     {  1,  -4,  -7,  -3, -10,  -3,  -5,  -4,  -8,  -5},   /* PSY (0.17.43: re-levelled after its short kick and bass) */
     { -1,  -2,  -3,  -6,  -4,  -2,  -4,  -2,  -1,  -3},   /* FOREST (0.17.43: the same) */
     {  1,   2,  -2,   0,   0,   1,   1,  -3,  -1,  -1},   /* HIPHOP */
-    { -1,  -2,  -5,  -3,  -5,  -1,  -4,  -5,  -5,   0},   /* TRANCE */
+    { -1,  -2,  -5,  -3,  -7,  -1,  -4,  -5,  -5,   0},   /* TRANCE */
     {  1,   8,   0,   4,   4,   2,   2,   8,   8,   0},   /* AMBIENT */
 };
 static float trim_to = 1.0f, trim_k = 1.0f;
@@ -2997,11 +3129,19 @@ static void ac_keep_answer(void)                /* (0.17.31, a Reddit player's "
     ac_publish();
 }
 
+static void ac_not_empty(void)                  /* (0.17.85, the maker: a piece's acid silent until the density moved) a line rolled with no note in its
+                                                 * length stays silent while Mutate holds it: the first step sounds, and one more */
+{
+    const int len = par[P_AC_LEN] < 1 ? 1 : par[P_AC_LEN] > EN_NSTEP ? EN_NSTEP : par[P_AC_LEN];
+    if (!par[P_AC_LOCK] && !(ac_gate & (uint16_t)((1u << len) - 1u)))   /* (a frozen line is the player's: the Empty piece's rests stay) */
+        ac_gate |= (uint16_t)(1u | 1u << irand(len));
+}
 static void ac_regrow(void)
 {
     int st;
     for (st = 0; st < EN_NSTEP; st++)
         ac_roll(st);
+    ac_not_empty();
     ac_publish();
 }
 
@@ -3017,6 +3157,7 @@ static void ac_mutate(void)                     /* the loop's end: Mutate (a dej
     for (st = 0; st < par[P_AC_LEN]; st++)
         if (frand() < m)
             ac_roll_w(st, par[P_AC_CHG] > 0 && par[P_AC_CHG] < 4 ? par[P_AC_CHG] : 0);
+    ac_not_empty();
     ac_publish();
 }
 
@@ -3931,6 +4072,14 @@ static void cm_step(int st, int32_t sw)         /* a sixteenth of the counter-me
     slot = (int)(cm_k++ % (4u << (par[P_CM_LOOP] < 0 ? 0 : par[P_CM_LOOP] > 3 ? 3 : par[P_CM_LOOP])));
     en_cm_pos = (uint8_t)(slot & 15);
     replay = par[P_CM_VU] > 0 && cm_f[slot] && frand() * 100.0f < (float)par[P_CM_VU];
+    if (replay && !cm_g[slot] && !par[P_CM_LOCK]) {   /* (0.17.85, the maker: a pluck silent until the density moved) a free loop that kept only rests is not
+                                                 * replayed: with Deja vu high it would keep the silence */
+        const int nl = 4 << (par[P_CM_LOOP] < 0 ? 0 : par[P_CM_LOOP] > 3 ? 3 : par[P_CM_LOOP]);
+        int q, any = 0;
+        for (q = 0; q < nl && !any; q++)
+            any = cm_f[q] && cm_g[q];
+        replay = any;
+    }
     if (replay) {
         if (!cm_g[slot] || (sec == SEC_BREAK && frand() >= 0.4f))
             return;
@@ -5845,6 +5994,12 @@ const int16_t EN_FXS_DEF[EN_NFXS] = EN_FXS_DEFAULTS;
 typedef char fxs_defaults_all[sizeof((int16_t[])EN_FXS_DEFAULTS) == sizeof(int16_t) * EN_NFXS ? 1 : -1];   /* (every setting has its default) */
 int en_piece_fx_def(int g, int i, int k)
 {
+    static const struct { uint8_t g, i, k, v; } FX_TUNE[] = {   /* (0.17.85) the maker's: HYPNO 01 the busy bass answer, 05 and 07 the acid's filter, 07 SCREAM */
+        {0, 0, EN_FXS_BA_TYPE, 4}, {0, 4, EN_FXS_FT_ACID, 4}, {0, 6, EN_FXS_FT_ACID, 1}, {0, 6, EN_FXS_SQ_AMT, 69}, {0, 6, EN_FXS_SQ_WOW, 57}};
+    unsigned n;
+    for (n = 0; n < sizeof FX_TUNE / sizeof FX_TUNE[0]; n++)
+        if (FX_TUNE[n].g == g && FX_TUNE[n].i == i && FX_TUNE[n].k == k)
+            return FX_TUNE[n].v;
     if (k == EN_FXS_BA_TYPE || k == EN_FXS_BA_EVERY) {   /* (0.17.30) the roles' bass answers: Bass-led runs into every fourth bar, Peak gets busy every eighth */
         const int r = en_piece_role(g, i);
         if (r == RL_BASS)

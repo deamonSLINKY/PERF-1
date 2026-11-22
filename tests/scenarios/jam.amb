@@ -2,6 +2,8 @@
 # harp; Octave (K3); Sound (K4): the sound of that voice (0.17.4; it was Answer).
 seed 0
 wait 3000
+# (0.17.85) HYPNO 01 is the maker's now (the pluck NEUTRNPLU): the test starts on Marimba
+setpar 99 1
 tap GLO
 expect view 33
 spin SELECT 1

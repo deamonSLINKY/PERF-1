@@ -1,6 +1,8 @@
 # The second home screen, PERFORM: HOME again from the tempo page; HOME once more, back. Its keys are the track mix (the
 # GLO layer) without GLO; its knobs the FX knobs; the keys are the scale again on any other page.
 wait 3000
+# (0.17.85) HYPNO 01 is the maker's now (its drums drift, Next): the test starts with drift off
+setpar 94 0
 expect view 0
 tap HOME
 wait 100

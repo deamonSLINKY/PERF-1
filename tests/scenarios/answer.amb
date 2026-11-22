@@ -2,6 +2,9 @@
 # 0.17.21: the unit's setting, fxs96). The line asks, then answers.
 seed 0
 wait 500
+# (0.17.85) HYPNO 01 answers now (the maker's: an octave up, every 4th): the test starts from no answer
+setpar 151 0
+setpar 21 0
 tap GLO
 tap ARP
 tap ARP
