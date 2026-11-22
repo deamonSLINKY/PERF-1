@@ -10,29 +10,29 @@
 
 **Watch the tour (5 minutes, made from the firmware itself):** [![PERF-1 tour: the Perform screen, the auto-DJ's build, effects, genres](docs/img/readme-tour.png)](https://youtu.be/NSJR3SOgDXo)
 
-## What's new in 0.17.0
+## What's new in 1.0
 
-**Pieces that sound finished**
-- **Song or Loop** (hold HOME, Settings, **Form**). On **Song**, the default, a piece moves through its own drum patterns with a fill before each change, the way a track does, instead of looping one bar forever. **Loop** keeps it on one pattern for you to steer.
-- **Chords that go somewhere.** Some genres now use the moves real songs use: a chord that leads into the next one (chains like E7, A7, D7, G7 falling round to C, most in DISCO, LOFI and AMAPIANO), and chords borrowed from the minor key (SYNTHWAVE's big bVI and bVII). No more accidental diminished chords, and melodies end their phrases at home.
-- **Write your own bass line:** **Bass steps** (press **LFO** five times). It opens with the bar the bass just played; pick a step with a white key, then set rest, note, accent or glide, the note (root, 3rd, 5th...) and its octave. It follows the chords, so a 5th is always the 5th of the chord playing.
-- **Progression fills:** on the Progression page (hold EDIT) the black keys fill all eight slots in one press: circle-of-fifths runs like ii-V-I, and six classic loops like I-IV-V-V. White keys 9 and 10 switch the bass and the pad to **Pedal**: they stay on the key while the chords move, a drone to play over.
+**PERF-1 1.0: finished.** Every public release's saved pieces load in it, and the save formats stay locked for all of 1.x. It runs on the newer FM-1s too (the ones with the UC25HQ80 memory chip).
 
-**Your pieces, kept and shared**
-- **The Library is open.** On the [Pieces page](https://deamonslinky.github.io/PERF-1/pieces/), read your saved pieces, give them titles and **Submit** them; anyone can hear them in the emulator and add them to their FM-1.
-- **More of a piece is saved with it:** its FILTERS and SCREAM settings (they're the first two settings pages now), its drum drift, its chord types and its bass steps. Factory pieces play the plain defaults.
-- **Switch on where you left off** (Settings, **Start**: Last or Random).
+**A new screen and song mode**
+- **Console:** channel strips, each bar's notes as rolls, the drums as a grid, the FX menu as lit tiles, in all seven themes. **Perform** works like a mixing desk, with a mood fader.
+- **Song mode that plays like a track:** each set-list slot has exact bars, parts left out, a drum pattern and an energy, so one piece can make an intro, a groove, a break and a peak, with builds, breakdowns and fills arranged between them.
 
-**See the harmony**
-- **THEORY** is drawn like a theory book: the circle of fifths with C at the top, key signatures, the scale as an arc, notes spelled the way the key wants (G# in E major), and a curved arrow from the chord playing to the next one, always, with **V OF THE NEXT** or **BORROWED** when a chord leans or borrows.
+**More music**
+- **22 genres, 220 pieces** (HIPHOP, TRANCE and AMBIENT are new), each piece with a role, many tuned by ear on the unit, all at one loudness. Six new scales.
+- **21 drum kits,** two of them sampled, and **your own sample kits** from the Install page.
 
-**Control**
-- **A knob on every setting:** learn any of the 176 settings to a MIDI CC on the Editor page and send the map from the Install page; a ready map for the Novation Launch Control XL 3 is in the manual.
+**Play it live**
+- A **phrase recorder**, a **gesture recorder** for the FX (or let Auto FX play it), **Capture** as you played it, an **Empty piece**, and from Perform: freeze a part, a new line or pattern on its own, the swell, start in a breakdown.
 
-**Fixes and the FM-1 itself**
-- **Newer FM-1s** (sold since autumn 2026, with a UCUN UC25HQ80 memory chip) can save and install now; before, saves were lost at power-off and installs stopped.
-- **Full speed after V16.** M-VAVE's V16 also changes the FM-1's startup code, and with it the whole unit runs about 12% slower. The Install page's **Full speed** section checks yours and can put V15's back.
-- **Safer installs:** a boot stub brings the unit back to the update loader if an install is cut off by a power cut or a pulled cable (OCT- held at power-on starts it by hand); press Install again to finish. It's the method Melodee and ChoralRoot use. Bench-tested on a real FM-1 on 2026-11-21, the cable pulled at each stage; pulled while the installer checks the package (before it writes), nothing is written and the unit waits dark until you switch it off and on.
+**Sound**
+- A **diode-ladder 303 filter** on the acid, the **wub** rebuilt, **60 DX7 voices** in stereo, bass answer and bass figures, **CHORUS**, **RESONATOR**, the **SOUND** page, a master compressor that works, and the **DJ snips remade** (a real air horn, a hard kick, an "OH!"), landing on the beat.
+
+**Connect it**
+- A **MIDI keyboard** plays the voices, or PERF-1 follows your chords. **Track codes** restart a track note for note. **Two FM-1s** play as one band over a USB-C cable. The **Studio** web page lays a piece out over its bars: edit it and hear it.
+
+**Solid**
+- Long played runs without dropouts, a final audit before 1.0, installs tested on the bench with the cable pulled at every stage, and backups of everything from the Install page.
 
 Earlier updates, and every development build: [docs/CHANGELOG.md](docs/CHANGELOG.md) and the [releases](https://github.com/deamonSLINKY/PERF-1/releases).
 

@@ -128,8 +128,8 @@
 | Keys | Effect |
 |---|---|
 | `F3` .. `C4` | Beat repeats (a slice looped) 1/2, 1/4, 1/6, 1/8, 1/16, 1/32, 1/8T, 1/16T; the shortest held wins |
-| `D4` `D#4` `E4` | Scatter (slices shuffled), Brake (a vinyl brake), Spin back; Brake and Spin back held stay stopped and silent until let go, then come back in time |
-| `F4` `F#4` | Half time (held, it goes back to the live music each bar and stays slowed), Scratch (automatic) |
+| `D4` `D#4` `E4` | Scatter (slices shuffled), Brake (a vinyl brake), Spin back (held, both stay stopped until let go) |
+| `F4` `F#4` | Half time (held, it keeps to the bar), Scratch (automatic) |
 | `G4` `A4` `B4` `C5` | Mutes, held: kick, hats, snare, perc |
 | `G#4` `A#4` | Reverse, Tape stop |
 | `C#5` .. `F5` | Hat roll (32nds), Hat trip (triplets), Snare roll (louder through the bar), Flam (a grace note before each snare), Double kick |
@@ -169,7 +169,7 @@
 | `C4` | Shuffle | `A4` | Mirror: forwards, then back | `F#5` | Rev 8: half bar backwards |
 | `C#4` | Bck-Fwd | `A#4` | Lag: late, with a gap | `G5` | Half gap: half bar, then rest |
 
-### Bank 4: DJ SNIPS (27 sounds; up to four at once, fewer under load; they play while held and never latch)
+### Bank 4: DJ SNIPS (27 sounds, up to four at once; they play while held, never latch)
 
 | Key | Snip | Key | Snip | Key | Snip |
 |---|---|---|---|---|---|

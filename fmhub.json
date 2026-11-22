@@ -1,10 +1,11 @@
 {
-  "what": "A groovebox that plays itself while you steer it: twenty-two genres, pad, bass, acid and FM pluck voices, drums with a step sequencer, an auto-DJ, effects you play on the keys, scenes, and a Jam page to play along. Store your pieces, and share them through the online library.",
+  "what": "A groovebox that plays itself while you steer it: 22 genres and 220 pieces that play like tracks, with builds, breakdowns and fills. Pad, bass, 303-style acid and DX7 pluck voices, 21 drum kits plus your own samples, an auto-DJ, effects on the keys and a web studio. Works on the newer FM-1s too.",
   "author": "deamonSLINKY",
   "kinds": ["groove"],
   "play": "https://deamonslinky.github.io/PERF-1/emu/",
-  "editor": "https://deamonslinky.github.io/PERF-1/editor/",
+  "editor": "https://deamonslinky.github.io/PERF-1/studio/",
   "cheat": "https://deamonslinky.github.io/PERF-1/manual/PERF-1-quick-manual.pdf",
   "image": "docs/card.png",
+  "sounds": "public domain: 60 DX7 patches from public-domain banks (Bobby Blues and Dave Benson DX7 pages); CC0: three Freesound recordings (snips); everything else made in code",
   "color": "#FFB000"
 }

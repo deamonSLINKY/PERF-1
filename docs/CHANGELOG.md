@@ -20,11 +20,15 @@
 
 **0.17.0 is the seventh release.** Its firmware is development build 0.16.29's code (it reports `FM-1_7001700`); the builds 0.16.17 to 0.16.29 in the git history are its steps. The Pieces page and the Library are on the website from this release, with the Library's relay live. The next development builds count from 0.17.1.
 
+**1.0.0 is the eighth release, and the first finished one.** Its firmware is development build 0.17.93's code (it reports `FM-1_7010000`); the builds 0.17.1 to 0.17.93 in the git history are its steps. There was no public 0.18: the 0.17.x work went straight into 1.0. The save formats are locked for all of 1.x. The next development builds count from 1.0.1.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Next (development builds from 0.17.1)
+## Next (development builds from 1.0.1)
+
+## 1.0.0 (the builds 0.17.1 .. 0.17.93 are its steps)
 
 - **A restore no longer lands in safe mode (0.17.93, the maker's test of 0.17.92).** Restoring a backup soon after the FM-1 had started (a second restore right after a first) counted as a failed start: the unit came back on one core as a precaution, a busy piece then took all its time (the screen stayed black, the music ran slow), the watchdog restarted it, and that second "failed" start was safe mode. The restore's restart now counts as the deliberate restart it is. And a start on one core (after a failed start or a crash) now waits for PLAY instead of starting the music by itself, so the screen comes up first ("ONE CORE: PLAY TO START"). 0.17.92 brought this out: its fix to the start-up clock made the 30 s check after each start real.
 - **The final audit before 1.0 (0.17.92).** Six read-only passes (the engine over long sets, the held effects and snips, the screens and saves, the start-up and the cores, the installer and the Library, the manuals) and every test scenario run under the address and undefined-behaviour checkers; about 60 findings, the clear ones fixed (the list: research/AUDIT-1.0-2026-11-22.md). What you would notice:

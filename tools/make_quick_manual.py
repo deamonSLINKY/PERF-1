@@ -28,7 +28,7 @@ IMG_BASE = None                                     # the Markdown file's folder
 
 CSS = """
 @page { size: A4; margin: 12mm 12mm 13mm; @bottom-center { content: var(--foot); } }   /* (filled in by convert(): the running footer and the page number) */
-html { font-size: 8.6pt; }                          /* (0.17.73: 9pt ran onto a ninth page) */
+html { font-size: 8.4pt; }                          /* (0.17.73: 9pt ran onto a ninth page; 1.0: 8.6pt as well, after the docs audit) */
 body { margin: 0; color: #000; background: #fff; line-height: 1.22;
        font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
