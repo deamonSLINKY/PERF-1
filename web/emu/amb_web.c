@@ -224,6 +224,22 @@ __attribute__((used, visibility("default"))) int web_st_fx_lock_hi(void) { retur
 __attribute__((used, visibility("default"))) int web_st_fx_nkeys(void) { return NKEYS; }
 __attribute__((used, visibility("default"))) int web_st_fx_key(int bank, int key) { return (unsigned)bank < 4u && (unsigned)key < (unsigned)NKEYS ? KEY_FX[bank][key] : FX_NONE; }
 __attribute__((used, visibility("default"))) const char *web_st_fx_name(int bit) { return (unsigned)bit < EN_NFX && EN_FX_NAME[bit] ? EN_FX_NAME[bit] : ""; }
+/* the FX menu's third and fourth banks (web/studio's FX view): Flex Beat, every key the one FX_FLEX bit and a pattern of its own (as a key on the unit:
+ * pat >= 0 the pattern latched or held, with FX_FLEX in the latched mask; hold >= 0 a pad held by hand, en_flx_hold: a one shot bar after bar until
+ * let go), its patterns' names; and the DJ snips' names (their keys play EN_V_SAMPLE notes 53 + key, web_st_note) */
+__attribute__((used, visibility("default"))) int web_st_flex(int pat, int hold)
+{
+    if (pat >= 0 && pat < EN_NFLEX) {
+        ui.flex_lock = (uint8_t)pat;
+        ui.act_t = plat_ms();
+    }
+    if (hold >= 0)
+        en_flx_hold(hold ? 1 : 0);
+    return ui.flex_lock;
+}
+__attribute__((used, visibility("default"))) int web_st_flex_n(void) { return EN_NFLEX; }
+__attribute__((used, visibility("default"))) const char *web_st_flex_name(int i) { return (unsigned)i < EN_NFLEX ? FLEX_LABEL[i] : ""; }
+__attribute__((used, visibility("default"))) const char *web_st_dj_name(int k) { return en_dj_name(k); }
 __attribute__((used, visibility("default"))) int web_st_fx_page(int bit) { return fx_page_of(bit) - 1; }
 __attribute__((used, visibility("default"))) int web_st_fxp_n(void) { return NFXP; }
 /* page p's: what 0 its effect (63: none, the UI's settings), 1 heard only while held; control i's: 2 its kind (-1 none), 3 lowest, 4 highest, 5 value */

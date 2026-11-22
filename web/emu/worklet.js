@@ -108,6 +108,7 @@ class Amb extends AudioWorkletProcessor {
       // and every page; the answer: the latched mask and every page's settings as they are now
       const ex = this.ex, str = (ptr) => { const b = new Uint8Array(this.mem.buffer, ptr, 64); let s = ""; for (let i = 0; i < 64 && b[i]; i++) s += String.fromCharCode(b[i]); return s; };
       if (m.page !== undefined) ex.web_st_fxp_set(m.page | 0, m.i | 0, m.v | 0);
+      const flex = ex.web_st_flex ? ex.web_st_flex(m.flex !== undefined ? m.flex | 0 : -1, m.fhold !== undefined ? m.fhold | 0 : -1) : undefined;   // (the Flex pattern before its bit)
       const lo = ex.web_st_fx_lock(m.lo !== undefined ? 1 : 0, m.lo | 0, m.hi | 0) >>> 0, hi = ex.web_st_fx_lock_hi() >>> 0, pages = [];
       const desc = (p) => {
         const c = [];
@@ -118,7 +119,7 @@ class Amb extends AudioWorkletProcessor {
         return { name: str(ex.web_st_fxp_str(p, 0, 0)), bit: ex.web_st_fxp_num(p, 0, 0), hold: ex.web_st_fxp_num(p, 0, 1), c };
       };
       if (m.light) {                                    // (light: the page set, or the mask alone: little work on this thread while it plays)
-        const r = { type: "st", id: m.id, ok: 1, lo, hi };
+        const r = { type: "st", id: m.id, ok: 1, lo, hi, flex };
         if (m.page !== undefined) r.one = { page: m.page | 0, desc: desc(m.page | 0) };
         this.port.postMessage(r);
         return;
@@ -131,11 +132,13 @@ class Amb extends AudioWorkletProcessor {
         }
         pages.push({ name: str(ex.web_st_fxp_str(p, 0, 0)), bit: ex.web_st_fxp_num(p, 0, 0), hold: ex.web_st_fxp_num(p, 0, 1), c });
       }
-      const r = { type: "st", id: m.id, ok: 1, lo, hi, pages };
+      const r = { type: "st", id: m.id, ok: 1, lo, hi, flex, pages };
       if (m.all) {
-        r.keys = [0, 1].map((b) => Array.from({ length: ex.web_st_fx_nkeys() }, (_, k) => ex.web_st_fx_key(b, k)));
+        r.keys = [0, 1, 2, 3].map((b) => Array.from({ length: ex.web_st_fx_nkeys() }, (_, k) => ex.web_st_fx_key(b, k)));
         r.names = Array.from({ length: 64 }, (_, b) => str(ex.web_st_fx_name(b)));
         r.pageOf = Array.from({ length: 64 }, (_, b) => ex.web_st_fx_page(b));
+        if (ex.web_st_flex_name) r.flexNames = Array.from({ length: ex.web_st_flex_n() }, (_, i) => str(ex.web_st_flex_name(i)));   // (Flex Beat's patterns, a key each)
+        if (ex.web_st_dj_name) r.djNames = Array.from({ length: ex.web_st_fx_nkeys() }, (_, k) => str(ex.web_st_dj_name(k)));   // (the DJ snips, a key each)
       }
       this.port.postMessage(r);
     } else if (this.studio && m.type === "st_clock") {            // (no answer: 24 a beat while the FM-1 plays)
