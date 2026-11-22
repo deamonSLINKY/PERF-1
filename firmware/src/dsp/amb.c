@@ -6326,7 +6326,7 @@ enum { DJ_HORN, DJ_SIREN, DJ_LASER, DJ_ZAP, DJ_BEEP, DJ_DBL, DJ_WHOOP, DJ_DUB, D
  * the horns, the sirens, the rave horn, the stabs, the crash, the riser and the roll have a side (left and right differ; in mono it cancels), and the air
  * horns, the rave horn, the crash, the roll, the riser and the bell are remade. HORN MIN's key is a chord stab now (the chord playing, in saws). */
 static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] = {
-    {DJ_HORN, 466.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 466.0f, 0.0f, "AIR BLAST"}, {DJ_STAB, 233.0f, 0.0f, "CHORD STAB"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
+    {DJ_HORN, 302.0f, 0.0f, "AIR HORN"}, {DJ_BLAST, 302.0f, 0.0f, "AIR BLAST"}, {DJ_STAB, 233.0f, 0.0f, "CHORD STAB"}, {DJ_RAVE, 233.0f, 0.0f, "RAVE HORN"},
     {DJ_SIREN, 900.0f, 1.2f, "SIREN"}, {DJ_SIREN, 1100.0f, 3.0f, "SIREN 2"}, {DJ_KICK, 0.0f, 0.0f, "KICK"},
     {DJ_LASER, 2400.0f, 0.06f, "LASER"}, {DJ_SNARE, 0.0f, 0.0f, "SNARE"},
     {DJ_ZAP, 3000.0f, 0.15f, "ZAP"}, {DJ_ZAP, 6000.0f, 0.08f, "ZAP HI"},
@@ -6337,7 +6337,7 @@ static const struct { uint8_t type; float hz, aux; const char *name; } DJS[27] =
     {DJ_RISER, 110.0f, 3.0f, "RISER"}, {DJ_REWIND, 2200.0f, 0.7f, "REWIND"}, {DJ_CRASH, 0.0f, 1.2f, "CRASH"},
     {DJ_RSTAB, 233.0f, 0.0f, "RAVE STAB"}, {DJ_BELL, 880.0f, 0.0f, "BELL"}, {DJ_ROLL, 0.0f, 2.5f, "SNR ROLL"}};
 /* each snip's trim, half dB (+ louder), so that each sits at the same loudness (its loudest 400 ms, K-weighted): measured alone (0.17.24) */
-static const int8_t DJ_TRIM[27] = {-14, -12, 1, -10, -11, -11, -10, 3, -4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, -2, 10, -7, 6};   /* (0.17.44: the sampled horns, crash, kick and snare measured the same way) */
+static const int8_t DJ_TRIM[27] = {-14, -12, 1, -10, -11, -11, -2, 3, -4, 5, 8, 3, 3, 1, 0, -6, -12, -4, -4, -5, -6, 17, 4, -2, 10, -7, 6};   /* (0.17.44: the sampled horns, crash, kick and snare measured the same way; 0.17.86: the KICK, now the CC0 hard kick, 3.8 dB quieter at the same peak: -10 to -2) */
 const char *en_dj_name(int key) { return DJS[(unsigned)key < 27u ? key : 0].name; }
 typedef struct {
     uint8_t on, held, key, type, hold_mode, land;   /* (land, 0.17.72: its time is the way to the line it lands on) */
@@ -6453,7 +6453,7 @@ static void smp_note(int key, int on)
         d->sd = 0;
         {   /* (0.17.44) the sampled ones: the horns at the chord's root (as their note against the sample's), the crash, the kick and the snare as they are */
             const djsmp_t *s = ty == DJ_HORN || ty == DJ_BLAST ? &DJ_SMP[DJS_HORN_I] : ty == DJ_RAVE || ty == DJ_RSTAB ? &DJ_SMP[DJS_RAVE_I] :
-                               ty == DJ_CRASH ? &DJ_SMP[DJS_CRASH_I] : 0;
+                               ty == DJ_CRASH ? &DJ_SMP[DJS_CRASH_I] : ty == DJ_KICK ? &DJ_SMP[DJS_KICK_I] : 0;   /* (0.17.86: the KICK a CC0 hard kick, was MACHINE's) */
             const float po = oct == 1 ? 2.0f : oct == 2 ? 0.5f : 1.0f;   /* (the page's octave, for the unpitched ones too) */
             if (s) {
                 d->sd = s->d, d->sn = s->n, d->sls = s->ls, d->sle = s->le, d->sai = s->i0;

@@ -1,7 +1,8 @@
 """PERF-1's sampled DJ snips (0.17.44, the maker: "the horns are still trash, maybe a sampled sound would be easier and sound better"): rendered here,
-offline, with heavier models than the FM-1 can run live, then baked to 4-bit IMA ADPCM into firmware/src/dsp/djsmp.h. Ours, so GPL-clean: no samples
-from anywhere else. The kick and the snare snips use the sampled kits' (smpkits.h: MACHINE's kick, BOOMBAP's snare), so they cost nothing here.
-  AIR HORN  three reeds (the root, its fifth, its octave: right over a major or a minor chord) a few cents apart, each a band-limited pulse scooping up
+offline, with heavier models than the FM-1 can run live, then baked to 4-bit IMA ADPCM into firmware/src/dsp/djsmp.h. GPL-clean: our own models, and
+recordings only under CC0 (the public domain; see LICENSING.md: a sound under a "royalty free" licence may not be passed on in the firmware's source).
+The kick and the snare snips use the sampled kits' (smpkits.h: MACHINE's kick, BOOMBAP's snare), so they cost nothing here.
+  AIR HORN  (0.17.86) a recording, CC0: horn_cc0() (players found the modelled one weak). The model, kept for its level: three reeds (the root, its fifth, its octave: right over a major or a minor chord) a few cents apart, each a band-limited pulse scooping up
             into its note, through a reed's asymmetric clip and the bell's two resonances, a breath of air at the start; a held loop (crossfaded)
   RAVE HORN the hoover: five detuned saws, two width-modulated pulses and a square an octave down, the pitch swooping in from a fourth above, dipping
             under the note and settling, chorused, driven; a held loop
@@ -100,6 +101,49 @@ def horn():
     x = biquad("hp", x, 140.0)
     x = np.tanh(1.4 * x / (np.max(np.abs(x)) + 1e-9)) / np.tanh(1.4)
     return norm(loop_xfade(x, int(0.34 * SR), int(0.58 * SR), int(0.06 * SR))), 0.34, 0.58, f0
+
+
+def horn_cc0():
+    """(0.17.86) the air horn from a recording: jacksonacademyashmore's "Airhorn" (freesound.org/s/414208, CC0), assets/samples/airhorn-414208.wav,
+    22.05 kHz. One blast: it scoops from about 408 Hz down to 302 and holds there. Kept: the scoop and a stretch of the hold as a crossfaded loop, so a
+    tap is one bwa, quick taps the bwa-bwa-bwa, a hold the long note. As loud over its loop as the modelled horn was over its own (the snips' trims hold)."""
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "samples", "airhorn-414208.wav")
+    with wave.open(src) as w:
+        sr0 = w.getframerate()
+        x0 = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(np.float64) / 32768
+    x = np.interp(np.arange(0, len(x0), sr0 / SR), np.arange(len(x0)), x0)   # to the tool's rate (down() takes it to the snip's)
+    x = x - np.mean(x)
+    x = biquad("hp", x, 90.0)
+    on = int(np.argmax(np.abs(x) > 0.02 * np.max(np.abs(x))))             # from its first sound (no lead-in silence)
+    x = x[max(0, on - int(0.002 * SR)):]
+    x[:int(0.002 * SR)] *= np.linspace(0, 1, int(0.002 * SR))
+    l0, l1 = 0.52, 0.92                                                    # the loop, in the steady hold (302 Hz from about 0.5 s)
+    y = loop_xfade(x, int(l0 * SR), int(l1 * SR), int(0.08 * SR))
+    ref, a, b, _ = horn()
+    rms = lambda v: np.sqrt(np.mean(v ** 2))
+    y *= rms(ref[int(a * SR):int(b * SR)]) / rms(y[int(l0 * SR):int(l1 * SR)])
+    if np.max(np.abs(y)) > 0.95:
+        y *= 0.95 / np.max(np.abs(y))
+    return y, l0, l1, 302.0
+
+
+KICK_DB = 0.0   # the hard kick's level against a 0.89 peak (dB), set so the KICK snip measures as the MACHINE kick it replaced (the snips' trims hold)
+
+
+def kick_cc0():
+    """(0.17.86) the KICK snip: CAT-FOX_ALEX's "Rooler Kick-A" (freesound.org/s/868065, CC0, synthesized in Phase Plant), a rawstyle (hardstyle) kick,
+    assets/samples/kick-868065.wav: its two channels summed to one, the silence before it cut, its tail faded at its end. Played as it is (no loop)."""
+    src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "samples", "kick-868065.wav")
+    with wave.open(src) as w:
+        sr0, ch = w.getframerate(), w.getnchannels()
+        x0 = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(np.float64).reshape(-1, ch).mean(axis=1) / 32768
+    x = np.interp(np.arange(0, len(x0), sr0 / SR), np.arange(len(x0)), x0)
+    x = x - np.mean(x)
+    on = int(np.argmax(np.abs(x) > 0.02 * np.max(np.abs(x))))
+    x = x[on:]
+    k = int(0.03 * SR)
+    x[-k:] *= np.cos(0.5 * np.pi * np.arange(k) / k)
+    return norm(x) * 10 ** (KICK_DB / 20), 0, 0, 0.0
 
 
 def rave():
@@ -202,13 +246,13 @@ def down(x, out_sr):
     return np.interp(np.arange(0, len(y), SR / out_sr), np.arange(len(y)), y)
 
 
-SOUNDS = [("HORN", horn, 16000), ("RAVE", rave, 16000), ("CRASH", crash, 22050)]
+SOUNDS = [("HORN", horn_cc0, 22050), ("RAVE", rave, 16000), ("CRASH", crash, 22050), ("KICK", kick_cc0, 22050)]
 
 
 def main():
     wav_dir = sys.argv[sys.argv.index("--wav") + 1] if "--wav" in sys.argv else None
     lines = ["/* SPDX-License-Identifier: GPL-3.0-only */",
-             "/* PERF-1's sampled DJ snips (0.17.44), written by tools/djsamples.py: rendered offline by our own models (no samples from elsewhere),",
+             "/* PERF-1's sampled DJ snips (0.17.44), written by tools/djsamples.py: rendered offline by our own models, the HORN a CC0 recording (0.17.86, assets/samples/),",
              " * 4-bit IMA ADPCM, the low nibble first; each sound its samples, its loop (start, end: 0 none), its first step index (the predictor starts",
              " * at 0), its rate and its note (Hz: the engine plays it at the chord's root). */",
              "typedef struct { const uint8_t *d; uint32_t n, ls, le; uint8_t i0; float sr, hz; } djsmp_t;"]
@@ -236,8 +280,8 @@ def main():
                 rep = np.concatenate([x16] + ([x16[ls:]] * 3 if le else []))   # (a held one: its loop three times more, to hear the seam)
                 w.writeframes(rep.astype("<i2").tobytes())
         print(f"{name}: {len(x16)} samples at {out_sr} Hz, {len(by)} bytes" + (f", loop {ls}..{le}" if le else ""))
-    lines.append("enum { DJS_HORN_I, DJS_RAVE_I, DJS_CRASH_I };")
-    lines.append("static const djsmp_t DJ_SMP[3] = {")
+    lines.append("enum { " + ", ".join(f"DJS_{n}_I" for n, _, _ in SOUNDS) + " };")
+    lines.append(f"static const djsmp_t DJ_SMP[{len(SOUNDS)}] = {{")
     lines += tab
     lines.append("};")
     lines.append(f"/* {total} bytes */")
