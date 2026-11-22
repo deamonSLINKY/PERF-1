@@ -29,7 +29,10 @@ async function sha(text) {
   const s = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(text)));
   return [...s.slice(0, 10)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-const plain = (s, n) => typeof s !== "string" || (s.length <= n && !/[\u0000-\u0008\u000b-\u001f\u007f<>]/.test(s));
+// (0.17.92, the audit) a word is absent or a short plain string: a number, an array or an object passed before, and the note's "based on" (b) was not
+// looked at, so a huge b.t (it deflates small) froze every visitor's Library. The whole note is kept under MAX_META characters of JSON too.
+const plain = (s, n) => s === undefined || (typeof s === "string" && s.length <= n && !/[\u0000-\u0008\u000b-\u001f\u007f<>]/.test(s));
+const MAX_META = 1200;
 
 async function check(code) {                       // the reason it is refused, or "" (a piece or set whose words are short and plain)
   if (typeof code !== "string" || !/^P1\.[A-Za-z0-9_-]+$/.test(code)) return "not a piece code";
@@ -37,7 +40,10 @@ async function check(code) {                       // the reason it is refused, 
   let x;
   try { x = await pcFromCode(code); } catch (e) { return "it does not read: " + (e && e.message ? e.message : "damaged"); }
   const m = x.meta || {};
-  if (!plain(m.t, 60) || !plain(m.a, 40) || !plain(m.n, 400)) return "the title, name or note is too long or has odd characters";
+  if (typeof m !== "object" || Array.isArray(m) || JSON.stringify(m).length > MAX_META) return "the title, name or note is too long";
+  if (!plain(m.t, 60) || !plain(m.a, 40) || !plain(m.n, 400) || !plain(m.g, 40) || !plain(m.p, 40)) return "the title, name or note is too long or has odd characters";
+  if (m.b !== undefined && (!m.b || typeof m.b !== "object" || Array.isArray(m.b) || !plain(m.b.t, 60) || !plain(m.b.a, 40)))
+    return "what it is based on is too long or has odd characters";
   return "";
 }
 
@@ -104,10 +110,11 @@ export default {
             const added = new Date().toISOString();
             await env.LIB.put("e:" + id, code, { metadata: { added } });
             fresh.push({ id, added, code });
+            done.push({ id, del: await hmac(env.ADMIN || "", id) });
           } else {
             fresh.push({ id, added: (was.metadata && was.metadata.added) || new Date().toISOString(), code });   // (already in: the index gets it again)
+            done.push({ id });   // (0.17.92, the audit) no key for one already in: resubmitting someone's code would have given the key to remove it
           }
-          done.push({ id, del: await hmac(env.ADMIN || "", id) });
         }
         if (fresh.length) await rebuild(env, fresh);
         ctx.waitUntil(caches.default.delete(new Request(url.origin + "/list")));

@@ -47,6 +47,27 @@ export function mmDecode(b) {                                        // the lear
   }
   return maps;
 }
+// the answer to "about" (F0 7D 50 45 ver npar(2) genres voices F7, 0.16.3 on: backup_proto.h bk_build_about), or null; as web/fm1piece.js pcParseAbout
+export function bkParseAbout(d) {
+  if (d.length !== 10 || d[0] !== 0xF0 || d[1] !== 0x7D || d[2] !== 0x50 || d[3] !== 0x45 || d[9] !== 0xF7) return null;
+  return { ver: d[4], npar: (d[5] << 7) | d[6], genres: d[7], voices: d[8] };
+}
+export const bkAboutMsg = () => [0xF0, 0x7D, 0x50, 0x42, 0x06, 0xF7];
+// (0.17.92, the audit: a backup of a PERF-1 before 0.17.35 asked for HIPHOP, TRANCE, AMBIENT and stopped at the silence) the objects a firmware has,
+// from its about answer (ab; null: no answer, before 0.16.3): each of BK_OBJECTS with need "yes" (silence is a failure), "no" (it has none: not
+// asked), or "maybe" (the answer cannot tell: the piece extras of 0.16.6 and the MIDI map of 0.16.11 under about version 1, anything without one)
+export function bkPlan(ab) {
+  const NG = BK_GENRES.length;
+  return BK_OBJECTS.map((o) => {
+    const g = o.id === 0 ? 0 : o.id >= 5 && o.id < 4 + NG ? o.id - 4 : o.id >= 5 + NG + 2 ? NG + o.id - (5 + NG + 2) : -1;   // the genre its pieces are, or -1
+    let need = "yes";
+    if (!ab) need = o.id <= 4 ? "yes" : "maybe";
+    else if (g >= 0) need = g < ab.genres ? "yes" : "no";
+    else if (o.id === MM_OBJ - 1 || o.id === MM_OBJ) need = ab.ver >= 2 ? "yes" : "maybe";   // piece extras, MIDI map (about 2: 0.16.28)
+    else if (o.id === MM_OBJ + 1) need = ab.ver >= 3 ? "yes" : "no";                       // bass steps (about 3: 0.16.29)
+    return { ...o, need };
+  });
+}
 export const bkName = (id) => (BK_OBJECTS.find((o) => o.id === id) || { name: "object " + id }).name;
 
 // the checksum: 128 minus the sum of the data bytes, modulo 128

@@ -379,8 +379,10 @@ static void old_bank_load(int n)
             for (p = 0; p < EN_NPAT; p++)
                 for (l = 0; l < EN_NLANE; l++)
                     s->pats[p][l] = rd16(q + 2 * (p * EN_NLANE + l));
-            if (bad || !pool_ok(s->pool))
+            if (bad || !pool_ok(s->pool)) {
                 sv &= (uint16_t)~(1u << i);   /* out of range: not saved */
+                recipe(i, s);                 /* (0.17.92, the audit: and its recipe in the slot, as the HYP3 path does, not the out-of-range values) */
+            }
         }
         saved = sv;
     } else if (n >= (int)sizeof(old_kit_t) && rd32(raw) == OLD_KIT_MAGIC) {
@@ -562,12 +564,21 @@ void project_fx_get(uint8_t *v)
 
 static void glob_load(void)                  /* the player's three: their object, else the old bank's header, else the defaults */
 {
+    int i;
     glob_t g;
     const int n = plat_store_load(OBJ_GLOB, &g, sizeof g);
     if (n >= (int)GLOB_OLD && n <= (int)sizeof g && g.magic == GLOB_MAGIC) {   /* (0.17.61, the formats locked: any older record, the fields it lacks 0;
                                               * a field added at the end later needs no new size here) */
         if (n < (int)sizeof g)
             memset((uint8_t *)&g + n, 0, sizeof g - (uint32_t)n);
+        for (i = 0; i < SL_N; i++) {         /* (0.17.92, the audit: a damaged or hand-made backup's set list, kept in range: a pattern past 6 indexed en_pats) */
+            if (g.sl[i] > EN_NGENRE * NPIECES)
+                g.sl[i] = 0;
+            if (g.sl_pat[i] > EN_NPAT)
+                g.sl_pat[i] = 0;
+            if (g.sl_mood[i] > 101u)
+                g.sl_mood[i] = 0;
+        }
         glob = g;
     } else if (!glob_from_old) {
         glob.tune = en_param_info(P_TUNE)->def;

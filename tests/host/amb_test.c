@@ -2362,7 +2362,8 @@ int main(void)
     {
         static const struct { int tr, on, off, snd, most; const char *name; } R[6] = {   /* most: the level left, in %: the sends stay (the pad's reverb is a big one) */
             {EN_TR_KICK, 1, 3, -1, 5, "kick"}, {EN_TR_DRONE, 4, 3, -1, 5, "bass"}, {EN_TR_ACID, 5, 3, -1, 5, "acid"},
-            {EN_TR_PAD, 3, 4, -1, 25, "pad"}, {EN_TR_PLUCK, 6, 3, 1, 5, "pluck (plain)"}, {EN_TR_PLUCK, 6, 3, 12, 5, "pluck (DX)"}};
+            {EN_TR_PAD, 3, 4, -1, 25, "pad"}, {EN_TR_PLUCK, 6, 3, 1, 12, "pluck (plain)"}, {EN_TR_PLUCK, 6, 3, 12, 5, "pluck (DX)"}};
+        /* (0.17.92: the plain pluck 12 %: its top octave, over the 16 kHz high-pass, was hidden by the mix's low-pass left on by an earlier breakdown, the bug fixed) */
         int r, w;
         float lv[2];
         for (r = 0; r < 6; r++) {

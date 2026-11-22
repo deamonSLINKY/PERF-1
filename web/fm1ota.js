@@ -14,9 +14,14 @@ const UPGRADE = [0xF0, 0x22, 0x24, 0x35, 0x7F, 0xF7];
 const MAXDATA = 512;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const IS_OTA = (id) => /^ota-/i.test(id.model);
+// (0.17.92, the audit: a resume sends the image only to the loader that takes it) the loader each image goes to: PERF-1's package
+// carries Felucca's loader (firmware/loader/loader.c, "ota-FM-1_900"); M-VAVE's stock package carries M-VAVE's own, which the
+// running firmware names "ota-FM-1_015" (firmware/src/ota.c, UPDATA_PARM). The other way round skips the boot-head guard of ota.c.
+export const LOADER_PERF = (id) => !!id && id.text === "ota-FM-1_900";
+export const LOADER_STOCK = (id) => !!id && /^ota-FM-1_0\d\d$/.test(id.text);
 
-// errors carry a code the pages translate: notfound, model, stopped, noloader, lost, noreturn,
-// mismatch (detail: the identity the device reports), badreq
+// errors carry a code the pages translate: notfound, model, refused, stopped, noloader, lost, noreturn,
+// mismatch (detail: the identity the device reports), otherloader (detail: the loader's identity), badreq
 function fail(code, msg, detail = "") { const e = new Error(msg); e.code = code; e.detail = detail; return e; }
 
 export function pack7(data) {
@@ -113,8 +118,13 @@ async function handshake(link, tries = 3) {
     const id = await ask(link, HS_QUERY, 1000);
     if (id === null) continue;
     if (!/^\d{3}$/.test(id.text.split("_")[1] || "") || id.text.split("_")[1][0] !== "7") return id;   /* stock, the loader, an older PERF-1 */
-    const full = await ask(link, HS_FULL, 600);   /* "FM-1_700": PERF-1 0.16.13 and later tell their version this way (AMB-1 and HYP-1 don't answer) */
-    return full && full.model === id.model ? full : id;
+    /* "FM-1_700": PERF-1 0.16.13 and later tell their version this way (AMB-1 and HYP-1 don't answer); (0.17.92, the audit) asked
+       up to three times, as one query can be missed while the unit is still starting up */
+    for (let k = 0; k < 3; k++) {
+      const full = await ask(link, HS_FULL, 600);
+      if (full && full.model === id.model) return full;
+    }
+    return id;
   }
   return null;
 }
@@ -193,21 +203,37 @@ export class Updater {
     await sleep(2000);
     const s1 = await this.serve(dev.link, image, 0xE0000000, 8000, (n) => step("verify", n));
     dev.link.close();
-    if (!s1.finished) throw fail(s1.lost ? "lost" : "stopped", `the device ${s1.lost ? "was disconnected" : "stopped"} after ${s1.served} requests: nothing was written`);
+    /* (0.17.92, the audit) a firmware that stops asking in step 1 has refused the package (its screen says why: an unknown boot head ...) */
+    if (!s1.finished) throw fail(s1.lost ? "lost" : "refused", `the device ${s1.lost ? "was disconnected" : "refused the package or stopped"} after ${s1.served} requests: nothing was written`);
     step("loader");
     await sleep(3000);
     const ota = await this.waitFor(IS_OTA, 30000);
     if (!ota) throw fail("noloader", "the update loader did not appear. Replug the USB cable and press Install again: the device stays in update mode until it is finished.");
     const s2 = await this.write(ota, image, step);
-    if (!s2.finished) throw fail(s2.lost ? "lost" : "stopped", `the loader ${s2.lost ? "was disconnected" : "stopped"} after ${s2.served} requests. Replug and press Install again to resume.`);
+    if (!s2.finished) throw fail(s2.lost ? "lost" : "stopped", `the loader ${s2.lost ? "was disconnected" : "stopped"} after ${s2.served} requests. Replug and press the same button again to resume.`);
+    return this.back(product, step);
+  }
+
+  // after the loader's write: wait for the new firmware and check what it says it is
+  async back(product, step) {
     step("reboot");
     await sleep(3000);
     const back = await this.waitFor((id) => !IS_OTA(id), 40000);
     if (!back) throw fail("noreturn", "the device did not come back: power-cycle it");
+    let text = back.id.text;
+    /* (0.17.92, the audit) PERF-1's short answer ("FM-1_700", the start of "FM-1_7001792") while it starts up is not another version:
+       asked again, and if it still tells no more, the write (which the loader confirmed) is taken as done */
+    const short = (x) => x !== product && /_\d{3}$/.test(x) && product.startsWith(x);
+    for (let k = 0; k < 3 && short(text); k++) {
+      await sleep(1000);
+      const id = await handshake(back.link, 2);
+      if (id) text = id.text;
+    }
     back.link.close();
-    if (back.id.text !== product) throw fail("mismatch", `installed, but the device reports ${back.id.text}`, back.id.text);
-    step("done", back.id.text);
-    return back.id.text;
+    if (short(text)) { this.log(`the FM-1 answers ${text} only: its whole version is unknown, the loader's write was confirmed`); text = product; }
+    if (text !== product) throw fail("mismatch", `installed, but the device reports ${text}`, text);
+    step("done", text);
+    return text;
   }
 
   // step 2 with the loader found by find()/waitFor()
@@ -219,10 +245,19 @@ export class Updater {
     return s2;
   }
 
-  // resume: the device is already in update mode (loader) -> true when the write finished
-  async resume(image, onStep) {
+  // resume: the device is already in update mode (loader) -> true when the write finished and the firmware came back as product
+  // (0.17.92, the audit: loaderOk(id) says whether the waiting loader is the one this image is for; any other is left alone, nothing sent)
+  async resume(image, onStep, product, loaderOk) {
+    const step = onStep || (() => {});
     const ota = await this.find(IS_OTA);
     if (!ota) return false;
-    return (await this.write(ota, image, onStep || (() => {}))).finished;
+    if (!loaderOk || !loaderOk(ota.id)) {
+      ota.link.close();
+      throw fail("otherloader", `the loader waiting is ${ota.id.text}, not the one for this firmware: nothing was sent`, ota.id.text);
+    }
+    const s2 = await this.write(ota, image, step);
+    if (!s2.finished) throw fail(s2.lost ? "lost" : "stopped", `the loader ${s2.lost ? "was disconnected" : "stopped"} after ${s2.served} requests. Replug and press the same button again to resume.`);
+    await this.back(product, step);
+    return true;
   }
 }

@@ -231,7 +231,13 @@ __attribute__((section(".ram_hot.timer5"), noinline, used)) void fm1_timer5_irq(
         tel_isr_out += fm1_ticks() - tel_t0;
     {
         static uint32_t last, acc;
+        static uint8_t started;
         uint32_t now = fm1_ticks();
+        if (!started) {                             /* (0.17.92, the audit: from the first tick, not from the timer's start: if it ran on through a warm reset,
+                                                     * fm1_ms began anywhere up to 179 s and the boot guard's 30 s window was skipped) */
+            started = 1;
+            last = now;
+        }
         acc += now - last;
         last = now;
         while (acc >= 1000u * FM1_TICKS_PER_US) {
@@ -815,6 +821,8 @@ static void fm1_main(void)
         memset(&en_dbg, 0, sizeof en_dbg);
         en_dbg.magic = DBG_MAGIC;
     }
+    en_dbg.in_audio = 0;                            /* (0.17.92, the audit: a crash inside a render left it at 1 through the reset; safe mode runs no audio to
+                                                     * clear it, and USB is polled only outside a render: no USB in safe mode, no installer) */
     if (safe_mode)
         safe_main();                                /* never returns */
     if (fm1_crash.magic == FM1_CRASH_MAGIC && fm1_crash.count != en_dbg.crash_seen) {

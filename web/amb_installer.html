@@ -238,13 +238,16 @@ const TEXT = {
     stockdone: "完了。FM-1 は純正ファームウェアで起動しました。",
     nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
     start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
-    reboot: "再起動中", done: "完了しました", stopped: "途中で止まりました。USB を挿し直してもう一度押してください。",
+    reboot: "再起動中", done: "完了しました", stopped: "途中で止まりました。USB を挿し直して、始めたときと同じボタンをもう一度押してください: ",
+    refused: "FM-1 が受け付けなかったか、途中で止めました（何も書き込まれていません）。FM-1 の画面を見てください。",
+    otherloader: "FM-1 は別のファームウェアの書き込みモードで待っているので、何も送りませんでした。始めたときと同じボタンで終わらせてください（PERF-1 は「インストール」、M-VAVE の純正は「純正ファームウェアを書き込む」、フルスピードの 1/2 は「V15 の起動コードに戻す」）。待っているもの: ",
+    front: "インストール中はこのタブを前面に出したままにしてください（裏にあると書き込みがずっと遅くなります）。",
     error: "エラー: ",
     denied: "MIDI（SysEx）の使用が許可されませんでした。アドレスバーのサイト設定で MIDI を許可して、もう一度押してください。",
     notfound: "FM-1 が見つかりません。USB ケーブル（データ通信用か）を確かめ、MIDI を使う他のアプリを閉じてから、もう一度押してください。",
     model: "接続されている機器は FM-1 ではありません。",
-    lost: "USB の接続が切れました。挿し直してもう一度押してください。",
-    noloader: "書き込みモードの FM-1 が見つかりません。USB を挿し直してもう一度押してください（終わるまで書き込みモードのままです）。",
+    lost: "USB の接続が切れました。挿し直して、始めたときと同じボタンをもう一度押してください: ",
+    noloader: "書き込みモードの FM-1 が見つかりません（終わるまで書き込みモードのままです）。USB を挿し直して、始めたときと同じボタンをもう一度押してください: ",
     noreturn: "FM-1 が戻ってきません。電源を入れ直してください。",
     mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
     badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
@@ -273,6 +276,10 @@ const TEXT = {
     bkreading: "読み込み中: ", bksaved: "保存しました: ", bkwriting: "書き込み中: ", bkrestored: "復元しました。FM-1 が再起動します。",
     bknoans: "FM-1 から返事がありません（バックアップに対応していない古いファームウェアかもしれません）。",
     bkbad: "FM-1 が受け付けませんでした: ", bkbadfile: "PERF-1 のバックアップではないか、壊れています。",
+    bkdrop: "FM-1 が途中で返事をしなくなりました（バックアップは保存していません）。挿し直してもう一度: ", bkstep: "FM-1 の返事が合いません: ",
+    bkhalf: (x, n, m) => x + " で止まりました: " + m + " 個のうち " + n + " 個を書き込みました。FM-1 は再起動します（しないときは電源を入れ直してください）。そのあと、もう一度復元してください。",
+    bkskip: "（この FM-1 のファームウェアにないもの、入れていません: ",
+    vbadfile: "壊れた音色があります（送っていません）: ",
     bkconfirm: "FM-1 に保存されているものをすべてこのバックアップで置き換えますか？ 終わると FM-1 が再起動します。",
     bkloaded: " 個の保存内容", bkempty: "FM-1 にはまだ何も保存されていません。",
     statush: "FM-1 の状態（リアルタイム）",
@@ -321,13 +328,16 @@ const TEXT = {
     stockdone: "Done. The FM-1 has restarted with its original firmware.",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
     start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
-    reboot: "Restarting", done: "Done", stopped: "Stopped. Replug the USB cable and press Install again.",
+    reboot: "Restarting", done: "Done", stopped: "Stopped part way. Replug the USB cable and press the button you started with again: ",
+    refused: "The FM-1 refused the update or stopped (nothing was written): read its screen.",
+    otherloader: "The FM-1 is waiting in update mode for another firmware, so nothing was sent. Finish with the button you started with: Install for PERF-1, Install the stock firmware for M-VAVE's, or Full speed's V15 button for its step 1. Waiting: ",
+    front: "Keep this tab in front while it installs (in the background the writing is many times slower).",
     error: "Error: ",
     denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (address bar) and press Install again.",
     notfound: "FM-1 not found. Check the USB cable (a data cable), close other apps that use MIDI, and press Install again.",
     model: "The connected device is not an FM-1.",
-    lost: "The USB connection was lost. Replug it and press Install again.",
-    noloader: "The FM-1 in update mode was not found. Replug the USB cable and press Install again (it stays in update mode until it is finished).",
+    lost: "The USB connection was lost. Replug it and press the button you started with again: ",
+    noloader: "The FM-1 in update mode was not found (it stays in update mode until it is finished). Replug the USB cable and press the button you started with again: ",
     noreturn: "The FM-1 did not come back. Power-cycle it.",
     mismatch: "Written, but the FM-1 reports another version: ",
     badpkg: "The file to install is damaged. Reload the page.",
@@ -357,6 +367,10 @@ const TEXT = {
     bkreading: "Reading: ", bksaved: "Saved: ", bkwriting: "Writing: ", bkrestored: "Restored. The FM-1 restarts now.",
     bknoans: "The FM-1 did not answer (an older firmware without backup?).",
     bkbad: "The FM-1 did not accept it: ", bkbadfile: "That is not a PERF-1 backup, or it is damaged.",
+    bkdrop: "The FM-1 stopped answering part way (no backup was saved). Replug it and try again. It stopped at: ", bkstep: "The FM-1's answer was out of step: ",
+    bkhalf: (x, n, m) => "Stopped at " + x + ": " + n + " of " + m + " written. The FM-1 restarts now (if it does not, switch it off and on); then run the restore again.",
+    bkskip: " (left out, this FM-1's firmware has none: ",
+    vbadfile: "A voice is damaged, nothing was sent: ",
     bkconfirm: "Replace everything stored on the FM-1 with this backup? The FM-1 restarts afterwards.",
     bkloaded: " stores in this backup", bkempty: "Nothing is stored on the FM-1 yet.",
     statush: "Live status",
@@ -408,7 +422,7 @@ async function openPort() {
   const pick = (m) => [...m.values()].find((x) => /fm-?1/i.test(x.name) && !/ota/i.test(x.name) && x.state !== "disconnected");
   const inp = pick(midi.inputs), out = pick(midi.outputs);
   if (!inp || !out) throw new Error(t("notfound"));
-  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, ondiag: null, onframe: null };
+  port = { inp, out, waiters: [], bkwait: [], onstatus: null, onextra: null, ondiag: null, onframe: null, onabout: null };
   inp.onmidimessage = (ev) => {
     const d = ev.data;
     idleTouch();
@@ -419,6 +433,7 @@ async function openPort() {
     else if ((d[3] === 0x5B || d[3] === 0x5C) && port.ondiag) port.ondiag(d);                                          /* the diagnostic pieces */
     else if (d[3] === 0x43 && port.onframe) port.onframe(d);                                        /* a frame of an object being backed up */
     else if (d[3] === 0x44) { const w = port.bkwait.shift(); if (w) w(bkParseAck(Array.from(d))); }   /* the answer to a chunk or a write */
+    else if (d[3] === 0x45 && port.onabout) port.onabout(bkParseAbout(Array.from(d)));             /* what the firmware is (0.16.3 on) */
   };
   return port;
 }
@@ -440,7 +455,16 @@ const mmNote = (n) => MM_NOTE[n % 12] + (Math.floor(n / 12) - 1);
 const mmTarget = (x, m) => x === "m" ? "MASTER (the emulator only)" : x[0] === "p" ? "Setting: " + ((m && m.name) || "number " + x.slice(1)) : x[0] === "b" ? MM_BTN[+x.slice(1)] || x : x[0] === "e" ? MM_ENC[+x.slice(1)] || x : "Key " + mmNote(53 + +x.slice(1));
 const mmSrc = (id) => { const [ty, ch, n] = id.split(":"); return (ty === "n" ? "Note " + mmNote(+n) : "CC " + n) + " ch " + (+ch + 1); };
 const mmModes = { abs: "a fader or knob", rel64: "an encoder (64 \u00b1 n)", rel2c: "an encoder (1 up, 127 down)" };
-function mmGet() { try { return JSON.parse(localStorage.getItem(MM_KEY) || "{}") || {}; } catch (_) { return {}; } }
+/* (0.17.92, the audit) only well-formed entries are kept or shown: one bad .perfmap stored as it came broke this page on every later visit */
+function mmClean(maps) {
+  const out = {};
+  if (!maps || typeof maps !== "object" || Array.isArray(maps)) return out;
+  for (const [id, m] of Object.entries(maps))
+    if (/^[cn]:\d{1,2}:\d{1,3}$/.test(id) && m && typeof m === "object" && typeof m.t === "string" && /^(m|[bkep]\d{1,3})$/.test(m.t) &&
+        (m.mode === undefined || typeof m.mode === "string") && (m.name === undefined || typeof m.name === "string")) out[id] = m;
+  return out;
+}
+function mmGet() { try { return mmClean(JSON.parse(localStorage.getItem(MM_KEY) || "{}")); } catch (_) { return {}; } }
 function mmPut(maps) { try { localStorage.setItem(MM_KEY, JSON.stringify(maps)); } catch (_) { /* a private window */ } mmRender(); }
 function mmRender() {
   const maps = mmGet(), ul = $("mmlist"), ids = Object.keys(maps);
@@ -449,19 +473,23 @@ function mmRender() {
   if (!ids.length) { const li = document.createElement("li"); li.textContent = t("mmnone"); ul.append(li); }
   $("mmsend").disabled = $("mmdl").disabled = !ids.length;
 }
-async function writeObj(p, id, data) {                  /* an object in chunks, then its write: the FM-1 answers each */
-  for (let idx = 0; idx * BK_CHUNK < data.length; idx++) {
-    p.out.send(bkChunkMsg(id, idx, data.length, data.subarray(idx * BK_CHUNK, Math.min(data.length, (idx + 1) * BK_CHUNK))));
-    const a = await waitBk(3000);
-    if (!a) throw new Error(t("bknoans"));
-    if (a.status !== 0) throw new Error(t("bkbad") + bkName(id));
-  }
-  p.out.send(bkCommitMsg(id, data.length));
-  const a = await waitBk(10000);                        /* (a store while playing fades the music out first) */
+function bkAnswer(a, id, idx) {                        /* an answer to a chunk (idx) or a write (0x7F); (0.17.92, the audit) it must be for the one sent */
   if (!a) throw new Error(t("bknoans"));
   if (a.status !== 0) throw new Error(t("bkbad") + bkName(id));
+  if (a.obj !== (id & 0x7F) || a.idx !== (idx & 0x7F)) throw new Error(t("bkstep") + bkName(id));
+}
+async function writeObj(p, id, data, onCommit) {        /* an object in chunks, then its write: the FM-1 answers each */
+  for (let idx = 0; idx * BK_CHUNK < data.length; idx++) {
+    p.out.send(bkChunkMsg(id, idx, data.length, data.subarray(idx * BK_CHUNK, Math.min(data.length, (idx + 1) * BK_CHUNK))));
+    bkAnswer(await waitBk(3000), id, idx);
+  }
+  p.out.send(bkCommitMsg(id, data.length));
+  if (onCommit) onCommit();
+  bkAnswer(await waitBk(10000), id, 0x7F);              /* (a store while playing fades the music out first) */
 }
 async function mmWrite(maps, done) {
+  if (devBusy) return;
+  devBusy = true;
   const r = mmEncode(maps), say = (x) => { $("mmstatus").textContent = x; };
   try {
     const p = await openPort();
@@ -473,12 +501,15 @@ async function mmWrite(maps, done) {
     releasePort();
     say(t(done) + (Object.values(maps).some((m) => m.t === "m") ? " " + t("mmmaster") : ""));
   } catch (err) { writing = false; say(err.message + (r.bytes[3] === 0x32 ? " " + t("mmold") : "")); }
+  devBusy = false;
   $("mmclear").disabled = false;
   mmRender();
 }
 $("mmsend").addEventListener("click", () => mmWrite(mmGet(), "mmsent"));
-$("mmclear").addEventListener("click", () => { if (confirm(t("mmclear") + "?")) mmWrite({}, "mmcleared"); });
+$("mmclear").addEventListener("click", () => { if (!devBusy && confirm(t("mmclear") + "?")) mmWrite({}, "mmcleared"); });
 $("mmread").addEventListener("click", async () => {
+  if (devBusy) return;
+  devBusy = true;
   try {
     const p = await openPort(), d = await bkReadObject(p, MM_OBJ);
     if (d === undefined) throw new Error(t("bknoans"));
@@ -489,6 +520,7 @@ $("mmread").addEventListener("click", async () => {
     mmPut(maps);
     $("mmstatus").textContent = t("mmreadok");
   } catch (err) { $("mmstatus").textContent = err.message; }
+  devBusy = false;
 });
 $("mmdl").addEventListener("click", () => {
   const a = document.createElement("a");
@@ -499,11 +531,17 @@ $("mmdl").addEventListener("click", () => {
 $("mmfile").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   if (!f) return;
-  try { const j = JSON.parse(await f.text()); if (!j || j.perfmap !== 1 || typeof j.maps !== "object") throw 0; mmPut(j.maps); $("mmstatus").textContent = f.name; }
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.perfmap !== 1 || !j.maps || typeof j.maps !== "object") throw 0;
+    const maps = mmClean(j.maps);
+    if (Object.keys(j.maps).length && !Object.keys(maps).length) throw 0;      /* (entries that do not read are left out) */
+    mmPut(maps); $("mmstatus").textContent = f.name;
+  }
   catch (_) { $("mmstatus").textContent = t("mmbadfile"); }
 });
 window.addEventListener("storage", (e) => { if (e.key === MM_KEY) mmRender(); });   /* learned in the emulator, in another tab */
-mmRender();
+try { mmRender(); } catch (_) { /* (0.17.92) the rest of the page works whatever is stored */ }
 window.mmReady = 1;
 
 /* ---- the DX7 voices: .syx files -> a list -> up to 16 sent as the firmware takes them (F0 7D 50 56 slot, 128 bytes, a checksum, F7; 7F alone clears) */
@@ -555,10 +593,16 @@ $("syxfile").addEventListener("change", async (e) => {
   vrender();
   if (!voices.length) $("vstatus").textContent = t("vnone");
 });
-const vmsg = (slot, p) => { let s = 0; for (const b of p) s += b; return [0xF0, 0x7D, 0x50, 0x56, slot, ...p, (128 - (s & 0x7F)) & 0x7F, 0xF7]; };
+/* (0.17.92, the audit) a packed voice's bytes are 7-bit (masked, as web/fm1link.js lkVoiceMsg does); a single voice is checked whole, before the clear goes out */
+const vmsg = (slot, p) => { const b = Array.from(p, (x) => x & 0x7F); let s = 0; for (const x of b) s += x; return [0xF0, 0x7D, 0x50, 0x56, slot, ...b, (128 - (s & 0x7F)) & 0x7F, 0xF7]; };
+const vok = (m) => m.length > 2 && m[0] === 0xF0 && m[m.length - 1] === 0xF7 && m.slice(1, -1).every((x) => x < 0x80);
 $("vsend").addEventListener("click", async () => {
+  if (devBusy) return;
   const pick = [...$("vlist").querySelectorAll("input:checked")].slice(0, 16).map((b) => voices[+b.dataset.i]);
+  const msgs = pick.map((v, k) => (v.packed ? vmsg(k, v.packed) : v.single)), badv = pick.find((v, k) => !vok(msgs[k]));
+  if (badv) { $("vstatus").textContent = t("vbadfile") + badv.name + " (" + badv.file + ")"; return; }
   let msg = "";
+  devBusy = true;
   try {
     const p = await openPort();
     $("vsend").disabled = true;
@@ -567,21 +611,25 @@ $("vsend").addEventListener("click", async () => {
     if (!(await waitAck(2000))) silent++;
     for (let k = 0; k < pick.length; k++) {
       $("vstatus").textContent = t("vsending") + pick[k].name;
-      p.out.send(pick[k].packed ? vmsg(k, pick[k].packed) : pick[k].single);
+      p.out.send(msgs[k]);
       const a = await waitAck(2000);
       if (!a) silent++; else if (a.n !== 0x7F) ok++;
     }
     msg = silent && !ok ? t("vnoans") : ok === pick.length ? t("vdone") + ok : t("vbad");
   } catch (err) { msg = err.message; }
+  devBusy = false;
   vcount();
   $("vstatus").textContent = msg;                                                     /* (after vcount, which writes the count there) */
 });
 $("vclear").addEventListener("click", async () => {
+  if (devBusy) return;
+  devBusy = true;
   try {
     const p = await openPort();
     p.out.send([0xF0, 0x7D, 0x50, 0x56, 0x7F, 0xF7]);
     $("vstatus").textContent = (await waitAck(2000)) ? t("vcleared") : t("vnoans");
   } catch (err) { $("vstatus").textContent = err.message; }
+  devBusy = false;
 });
 
 /* ---- backup and restore: everything the FM-1 has stored, to a file and back (web/fm1backup.js; the protocol is in firmware/src/backup_proto.h) */
@@ -621,17 +669,35 @@ function bkReadObject(p, obj) {                       /* its bytes (none: an emp
     p.out.send(bkReadMsg(obj));
   });
 }
+function bkAbout(p) {                                /* what the firmware is (web/fm1backup.js bkParseAbout), or null (older than 0.16.3: no answer) */
+  return new Promise((res) => {
+    const tm = setTimeout(() => { p.onabout = null; res(null); }, 1500);
+    p.onabout = (a) => { clearTimeout(tm); p.onabout = null; res(a); };
+    p.out.send(bkAboutMsg());
+  });
+}
 $("bksave").addEventListener("click", async () => {
+  if (devBusy) return;
+  devBusy = true;
   try {
     const p = await openPort();
     $("bksave").disabled = true;
     const objs = [];
-    for (let i = 0; i < BK_OBJECTS.length; i++) {
-      $("bkstatus").textContent = t("bkreading") + BK_OBJECTS[i].name;
-      bkProgress(i, BK_OBJECTS.length);
-      const d = await bkReadObject(p, BK_OBJECTS[i].id);
-      if (d === undefined) throw new Error(t("bknoans"));
-      if (d.length) objs.push({ id: BK_OBJECTS[i].id, data: d });                 /* (nothing stored there: left out) */
+    /* (0.17.92, the audit) only the objects this firmware has (its about answer, web/fm1backup.js bkPlan): a PERF-1 before 0.17.35 has no
+       HIPHOP, TRANCE or AMBIENT and never answers for them. Silence for one it has still fails; for one the answer cannot tell, it counts
+       as "not on this firmware" only when the unit still answers after it */
+    const ab = await bkAbout(p), plan = bkPlan(ab);
+    for (let i = 0; i < plan.length; i++) {
+      const o = plan[i];
+      if (o.need === "no") continue;
+      $("bkstatus").textContent = t("bkreading") + o.name;
+      bkProgress(i, plan.length);
+      const d = await bkReadObject(p, o.id);
+      if (d === undefined) {
+        if (o.need === "maybe" && (ab ? await bkAbout(p) : (await bkReadObject(p, 2)) !== undefined)) continue;
+        throw new Error(i > 0 ? t("bkdrop") + o.name : t("bknoans"));
+      }
+      if (d.length) objs.push({ id: o.id, data: d });                             /* (nothing stored there: left out) */
     }
     bkProgress(1, 1);
     if (!objs.length) throw new Error(t("bkempty"));
@@ -641,6 +707,7 @@ $("bksave").addEventListener("click", async () => {
     a.click();
     $("bkstatus").textContent = t("bksaved") + objs.length + t("bkloaded");
   } catch (err) { $("bkstatus").textContent = err.message; }
+  devBusy = false;
   $("bksave").disabled = false;
 });
 let bkLoaded = null;
@@ -655,33 +722,37 @@ $("bkfile").addEventListener("change", async (e) => {
   } catch (err) { $("bkstatus").textContent = t("bkbadfile"); }
 });
 $("bkrestore").addEventListener("click", async () => {
-  if (!bkLoaded || !confirm(t("bkconfirm"))) return;
-  const objs = bkLoaded.objs;
+  if (devBusy || !bkLoaded || !confirm(t("bkconfirm"))) return;
+  devBusy = true;
+  let p = null, todo = bkLoaded.objs, sent = 0, done = 0, at = "", skip = [];
   try {
-    const p = await openPort();
+    p = await openPort();
     $("bkrestore").disabled = true;
+    const plan = bkPlan(await bkAbout(p));                                        /* (0.17.92) an object this firmware has none of would be refused: left out */
+    skip = todo.filter((o) => (plan.find((x) => x.id === o.id) || {}).need === "no");
+    todo = todo.filter((o) => !skip.includes(o));
     writing = true;
-    for (let i = 0; i < objs.length; i++) {
-      const o = objs[i], len = o.data.length;
-      $("bkstatus").textContent = t("bkwriting") + bkName(o.id);
-      bkProgress(i, objs.length);
-      for (let idx = 0; idx * BK_CHUNK < len; idx++) {
-        p.out.send(bkChunkMsg(o.id, idx, len, o.data.subarray(idx * BK_CHUNK, Math.min(len, (idx + 1) * BK_CHUNK))));
-        const a = await waitBk(3000);
-        if (!a) throw new Error(t("bknoans"));
-        if (a.status !== 0) throw new Error(t("bkbad") + bkName(o.id));
-      }
-      p.out.send(bkCommitMsg(o.id, len));
-      const a = await waitBk(10000);                                              /* (a store while playing fades the music out first) */
-      if (!a) throw new Error(t("bknoans"));
-      if (a.status !== 0) throw new Error(t("bkbad") + bkName(o.id));
+    for (let i = 0; i < todo.length; i++) {
+      const o = todo[i];
+      at = bkName(o.id);
+      $("bkstatus").textContent = t("bkwriting") + at;
+      bkProgress(i, todo.length);
+      await writeObj(p, o.id, o.data, () => { sent++; });
+      done++;
     }
     bkProgress(1, 1);
     p.out.send(bkRestartMsg());
     writing = false;
     releasePort();
-    $("bkstatus").textContent = t("bkrestored");
-  } catch (err) { writing = false; $("bkstatus").textContent = err.message; $("bkrestore").disabled = false; }
+    $("bkstatus").textContent = t("bkrestored") + (skip.length ? t("bkskip") + skip.map((o) => bkName(o.id)).join(", ") + ")" : "");
+  } catch (err) {
+    writing = false;
+    /* (0.17.92, the audit) stopped part way: the unit holds some of the backup and refuses every save until it restarts, so it is told to */
+    if (sent && p) { try { p.out.send(bkRestartMsg()); } catch (_) { /* unplugged */ } releasePort(); $("bkstatus").textContent = err.message + " " + t("bkhalf")(at, done, todo.length); }
+    else $("bkstatus").textContent = err.message;
+    $("bkrestore").disabled = false;
+  }
+  devBusy = false;
 });
 
 /* ---- your own sample kits (0.17.38, web/fm1kit.js): six files decoded and resampled here, made into a slot's image, sent a sector at a time */
@@ -722,7 +793,9 @@ async function kitWrite(secs, say) {
 }
 $("kitsend").addEventListener("click", async () => {
   const say = (x) => { $("kitstatus").textContent = x; };
+  if (devBusy) return;
   if (!kitFiles.some(Boolean)) { say(t("kitnone")); return; }
+  devBusy = true;
   try {
     $("kitsend").disabled = true;
     say(t("kitmaking"));
@@ -732,11 +805,15 @@ $("kitsend").addEventListener("click", async () => {
     await kitWrite(kitSectors(slot, k.img), say);
     say(t("kitdone") + (slot + 1) + (k.cut ? t("kitcut") : ""));
   } catch (err) { say(/did not accept/.test(err.message) ? t("kitstop") : err.message); }
+  devBusy = false;
   $("kitsend").disabled = !kitFiles.some(Boolean);
 });
 $("kitclear").addEventListener("click", async () => {
   const say = (x) => { $("kitstatus").textContent = x; }, slot = +$("kitslot").value;
+  if (devBusy) return;
+  devBusy = true;
   try { await kitWrite(kitClear(slot), say); say(t("kitcleared") + (slot + 1)); } catch (err) { say(/did not accept/.test(err.message) ? t("kitstop") : err.message); }
+  devBusy = false;
 });
 kitTable();
 
@@ -804,6 +881,7 @@ async function stStop() {
 }
 $("stgo").addEventListener("click", async () => {
   if (stTimer) { await stStop(); return; }
+  if (devBusy) return;
   try {
     const p = await openPort();
     frames = [];
@@ -827,9 +905,28 @@ $("stsave").addEventListener("click", () => {
 });
 
 let writing = false;
+/* (0.17.92, the audit) one job on the FM-1 at a time: an install, a backup, a restore, the voices, the map, a kit. Each button returns at
+   once while another runs (an Install clicked twice, or a restore's failure clearing the install's flag, let the idle release close the ports under the loader) */
+let devBusy = false;
+const DEV_BTNS = ["go", "stockgo", "fsgo", "fscheck", "vsend", "vclear", "mmsend", "mmread", "mmclear", "kitsend", "kitclear", "bksave", "bkrestore", "stgo"];
+function devButtons(off) {
+  if (off) { for (const b of DEV_BTNS) $(b).disabled = true; return; }
+  $("go").disabled = !image; $("stockgo").disabled = !stock; $("fsgo").disabled = !fsV15 || !image;
+  for (const b of ["fscheck", "vclear", "mmread", "mmclear", "kitclear", "bksave", "stgo"]) $(b).disabled = false;
+  $("vsend").disabled = !$("vlist").querySelector("input:checked");
+  $("mmsend").disabled = !Object.keys(mmGet()).length;
+  $("kitsend").disabled = !kitFiles.some(Boolean);
+  $("bkrestore").disabled = !(bkLoaded && bkLoaded.objs.length);
+}
 window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
 /* the FM-1's port is let go after 4 s quiet (web/fm1idle.js: M-UPGRADE or music software can then open it with the page left open) */
-idleRelease(() => writing || !!stTimer, () => { port = null; log("MIDI port released"); });
+idleRelease(() => writing || devBusy || !!stTimer, () => { port = null; log("MIDI port released"); });
+/* (0.17.92, the audit) a tab in the background has its timers slowed: an install there runs many times slower. Said in the tab's title and the log */
+const PAGE_TITLE = document.title;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && writing) { document.title = t("front"); log(t("front")); }
+  else document.title = PAGE_TITLE;
+});
 
 (async () => {
   if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
@@ -859,55 +956,64 @@ $("stockfile").addEventListener("change", async (e) => {
     const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
     if (!STOCK_SHA256.includes(hex)) { sayK("stockbad"); return; }
     stock = { image: logicalImage(raw), product: productOf(raw) };
-    $("stockgo").disabled = writing;
+    $("stockgo").disabled = devBusy;
     sayK("stockok");
   } catch (err) { sayK("error", err && err.message); }
 });
 
-async function run(img, product, isStock) {   /* true when it finished */
-  let midi, ok = false;
-  try { midi = await midiAccess(); }
-  catch (e) { sayK("denied"); return false; }
-  await stStop();
-  releasePort();
-  writing = true;
-  $("go").disabled = $("stockgo").disabled = true;
+/* true when it finished. btn: the text key of the button it was started with (the messages name it); inner: one of Full speed's two runs
+   (that button holds the page for both). (0.17.92, the audit) The flag is taken before anything is awaited, so a second click returns at once */
+async function run(img, product, isStock, btn, inner) {
+  if (devBusy && !inner) return false;
+  devBusy = writing = true;
+  devButtons(true);
+  let ok = false, lock = null;
+  const again = "“" + t(btn) + "”.";
   try {
+    let midi;
+    try { midi = await midiAccess(); }
+    catch (e) { sayK("denied"); return false; }
+    await stStop();
+    releasePort();
+    try { lock = navigator.wakeLock ? await navigator.wakeLock.request("screen") : null; } catch (_) { lock = null; }   /* (0.17.92) the screen kept on */
     const up = new Updater(midi, log);
     const total = 74 + 1167;
-    const step = (k, a) => {
+    const step = (k, a) => {                                      /* (0.17.92) the bar stops at 99 % until the FM-1 is back as it should be */
       log(`${k} ${a ?? ""}`);
       if (k === "start") sayK("start");
-      if (k === "verify") { sayK("verify"); $("bar").value = (a / total) * 100; }
+      if (k === "verify") { sayK("verify"); $("bar").value = Math.min(99, (a / total) * 100); }
       if (k === "loader") sayK("loader");
-      if (k === "write") { sayK("write"); $("bar").value = ((74 + a) / total) * 100; }
+      if (k === "write") { sayK("write"); $("bar").value = Math.min(99, ((74 + a) / total) * 100); }
       if (k === "reboot") sayK("reboot");
       if (k === "done") { $("bar").value = 100; sayK(isStock ? "stockdone" : "done"); }
     };
     const ota = await up.find((id) => /^ota-/i.test(id.model));
-    if (ota) {
+    if (ota) {                                                    /* (0.17.92, the audit) a resume: only to the loader this image is for, then the same wait and check as an install */
       ota.link.close();
-      ok = await up.resume(img, step);
-      sayK(ok ? (isStock ? "stockdone" : "done") : "stopped");
+      ok = await up.resume(img, step, product, isStock ? LOADER_STOCK : LOADER_PERF);
+      if (!ok) sayK("noloader", again);
     } else {
       await up.install(img, product, step);
       ok = true;
     }
   } catch (e) {
     if (isStock && e && e.code === "mismatch") { $("bar").value = 100; sayK("stockdone"); ok = true; }   /* stock names itself its own way */
+    else if (e && (e.code === "lost" || e.code === "stopped" || e.code === "noloader")) sayK(e.code, again);
     else if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
     else sayK("error", e && e.message);
     log(String(e && e.stack || e));
+  } finally {
+    if (lock) lock.release().catch(() => {});
+    writing = false;
+    if (!inner) { devBusy = false; devButtons(false); }
+    document.title = PAGE_TITLE;
+    idleTouch();
   }
-  writing = false;
-  idleTouch();
-  $("go").disabled = !image;
-  $("stockgo").disabled = !stock;
   return ok;
 }
 
-$("go").addEventListener("click", () => run(image, meta.product, false));
-$("stockgo").addEventListener("click", () => { if (stock) run(stock.image, stock.product, true); });
+$("go").addEventListener("click", () => run(image, meta.product, false, "install"));
+$("stockgo").addEventListener("click", () => { if (stock) run(stock.image, stock.product, true, "stockinstall"); });
 
 /* FULL SPEED (0.16.25): the status word's bits 15-16 say which startup code the FM-1 has (1 V15, 2 V16, 3 another; 0 an older
    PERF-1), bits 12-13 its flash chip (1 P25Q80, 2 UC25HQ80). V16's runs the whole chip 12.5% slower (the bench, 2026-11-06), and
@@ -931,11 +1037,13 @@ function readHead() {                                             /* one status 
 }
 let fsV15 = null;
 $("fscheck").addEventListener("click", async () => {
-  if (writing) return;
+  if (devBusy) return;
+  devBusy = true;
   await stStop();
   $("fsfix").hidden = true;
   sayF("fsask");
   const r = await readHead();
+  devBusy = false;
   if (r === undefined) return;
   if (!r || !r.head) { sayF("fsnone"); return; }
   if (r.head === 1) sayF("fs15");
@@ -952,24 +1060,27 @@ $("fsfile").addEventListener("change", async (e) => {
   const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
   if (hex !== STOCK_SHA256[0]) { sayF("fsbad"); return; }
   fsV15 = { image: logicalImage(raw), product: productOf(raw) };
-  $("fsgo").disabled = writing || !image;
+  $("fsgo").disabled = devBusy || !image;
   sayF("fsok");
 });
 $("fsgo").addEventListener("click", async () => {
-  if (!fsV15 || !image || writing || !confirm(t("fsconfirm"))) return;
-  $("fsgo").disabled = true;
+  if (!fsV15 || !image || devBusy || !confirm(t("fsconfirm"))) return;
+  devBusy = true;
+  devButtons(true);
   sayF("fsstep1");
-  let ok = await run(fsV15.image, fsV15.product, true);
-  if (ok) {                                                       /* V15 starts up: wait for it before PERF-1 goes on */
-    let midi = null;
-    try { midi = await midiAccess(); } catch (_) {}
-    const back = midi ? await new Updater(midi, log).waitFor((id) => !/^ota-/i.test(id.model), 30000) : null;
-    if (back) back.link.close();
-    sayF("fsstep2");
-    ok = await run(image, meta.product, false);
-  }
+  let ok = false;
+  try {
+    ok = await run(fsV15.image, fsV15.product, true, "fsgo", true);
+    if (ok) {                                                     /* V15 starts up: wait for it before PERF-1 goes on */
+      let midi = null;
+      try { midi = await midiAccess(); } catch (_) {}
+      const back = midi ? await new Updater(midi, log).waitFor((id) => !/^ota-/i.test(id.model), 30000) : null;
+      if (back) back.link.close();
+      sayF("fsstep2");
+      ok = await run(image, meta.product, false, "install", true);   /* (cut here: PERF-1's loader waits, and Install finishes it) */
+    }
+  } finally { devBusy = false; devButtons(false); }
   sayF(ok ? "fsdone" : "fsfail");
-  $("fsgo").disabled = !fsV15;
 });
 </script>
 </body>

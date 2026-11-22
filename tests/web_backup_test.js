@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const src = fs.readFileSync(path.join(__dirname, "..", "web", "fm1backup.js"), "utf8").replace(/^export /gm, "");
-const M = new Function(src + "; return { BK_CHUNK, BK_FRAME, BK_MAX, BK_OBJECTS, bkName, bkSum, bkChunkMsg, bkReadMsg, bkCommitMsg, bkRestartMsg, bkParseFrame, bkParseAck, bkCrc32, bkEncode, bkDecode, MM_OBJ, MM_LEN, mmEncode, mmDecode };")();
+const M = new Function(src + "; return { BK_CHUNK, BK_FRAME, BK_MAX, BK_OBJECTS, bkName, bkSum, bkChunkMsg, bkReadMsg, bkCommitMsg, bkRestartMsg, bkParseFrame, bkParseAck, bkCrc32, bkEncode, bkDecode, MM_OBJ, MM_LEN, mmEncode, mmDecode, bkParseAbout, bkAboutMsg, bkPlan };")();
 let bad = 0;
 const check = (name, ok) => { console.log((ok ? "  ok   " : "  FAIL ") + name); if (!ok) bad++; };
 const eq = (a, b) => JSON.stringify(Array.from(a)) === JSON.stringify(Array.from(b));
@@ -82,6 +82,21 @@ check("a file that is not a backup is refused", threw);
     tab.map(([cc]) => cc).join() === Array.from({ length: 32 }, (_, i) => i + 5).join());
   const wrong = tab.filter(([, p, name]) => nameOf(p) !== name.split(": ")[1]);
   check("each LCXL 3 setting is the one its name says (amb.c PARAMS)" + (wrong.length ? ": " + JSON.stringify(wrong) : ""), !wrong.length);
+}
+// (0.17.92, the audit) the objects a firmware has, from its about answer: a backup of 0.17.0 (about 3, 19 genres) skips HIPHOP, TRANCE and AMBIENT
+{
+  const ab = M.bkParseAbout([0xF0, 0x7D, 0x50, 0x45, 3, 1, 48, 19, 0, 0xF7]);
+  check("the about answer parses", ab && ab.ver === 3 && ab.npar === 176 && ab.genres === 19 && M.bkParseAbout([0xF0, 0x7D, 0x50, 0x44, 0, 0, 0, 0xF7]) === null);
+  check("the about message is 42 06", eq(M.bkAboutMsg(), [0xF0, 0x7D, 0x50, 0x42, 0x06, 0xF7]));
+  const need = (plan, id) => plan.find((o) => o.id === id).need;
+  const p0 = M.bkPlan(ab), no0 = p0.filter((o) => o.need === "no").map((o) => o.id);
+  check("0.17.0: HIPHOP, TRANCE, AMBIENT (26-28) not asked, the rest asked", no0.join() === "26,27,28" && p0.every((o) => o.need !== "maybe"));
+  const p1 = M.bkPlan({ ver: 4, npar: 176, genres: 22, voices: 0 });
+  check("0.17.35 on: every object asked", p1.length === M.BK_OBJECTS.length && p1.every((o) => o.need === "yes"));
+  const p2 = M.bkPlan({ ver: 1, npar: 150, genres: 19, voices: 0 });
+  check("about 1: no bass steps, extras and MIDI map perhaps", need(p2, 25) === "no" && need(p2, 23) === "maybe" && need(p2, 24) === "maybe" && need(p2, 22) === "yes" && need(p2, 26) === "no");
+  const p3 = M.bkPlan(null);
+  check("no about: the first objects asked, the rest perhaps", [0, 2, 3, 4].every((id) => need(p3, id) === "yes") && p3.filter((o) => o.id > 4).every((o) => o.need === "maybe"));
 }
 console.log(bad ? "web backup: FAILED" : "web backup: ok");
 process.exit(bad ? 1 : 0);

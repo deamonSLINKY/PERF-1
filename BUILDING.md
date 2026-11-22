@@ -6,7 +6,7 @@ PERF-1 builds on Linux x86-64 (or macOS/Windows through Docker or WSL: JieLi's t
 | --- | --- |
 | `build/amb.bin` | the firmware app |
 | `build/loader/ota.bin` | the update loader |
-| `build/amb-VERSION.fwsc` | the installable package (app + loader) |
+| `build/perf1-VERSION.fwsc` | the installable package (app + loader) |
 | `build/emu/` | the browser emulator (WebAssembly) |
 
 ## Prerequisites
@@ -31,11 +31,11 @@ tools/release.sh 0.14.0 --no-tests # without the tests
 tests/run_tests.sh                # the tests alone
 ```
 
-The tests run, on the build machine: the maths library against libm; the instrument (`tests/host/amb_test.c`); flash storage; the SysEx protocol and the editor's parameter and DX7 voice code; Felucca's update path against the package; the dual-core job handoff (identical output with the work on either core); and the whole app in a simulator (`tests/scenarios/*.amb`, about 70 scripts), with screenshots and audio in `build/scenarios/`. `host/build_host.sh` builds the simulator alone; `build/host/amb_host SCRIPT OUTDIR` runs one script (the command list is at the top of `host/amb_host.c`).
+The tests run, on the build machine: the maths library against libm; the instrument (`tests/host/amb_test.c`); flash storage; the SysEx protocol and the editor's parameter and DX7 voice code; Felucca's update path against the package; the dual-core job handoff (identical output with the work on either core); and the whole app in a simulator (`tests/scenarios/*.amb`, about 120 scripts), with screenshots and audio in `build/scenarios/`. `host/build_host.sh` builds the simulator alone; `build/host/amb_host SCRIPT OUTDIR` runs one script (the command list is at the top of `host/amb_host.c`).
 
 The build fails if a soft-double routine is linked (a `double` crept in) and checks the image, RAM and pool sizes. Build options: `EN_CORE2=0` builds single-core (the reverb on the second core is the default), `EN_CDC=1` adds Felucca's USB serial function, `EN_DIAG=1` adds the status log's third frame (timers inside the render's stages, the chunk sizes, the work between chunks) for a performance hunt.
 
-The DY voices (`firmware/src/dsp/fm6_dy.h`) are generated from DX7 bank files that are not in this tree: `python3 -I tools/gen_fm6_dy.py tools/fm6_dy.txt BANKS --rom ROMDIR` reads the manifest (slot, name, bank file, voice, source), writes the header, `build/fm6_dy.bin` and the test bank `build/PERF-1-test-voices.syx`, and refuses a voice whose operators match a Yamaha ROM voice in ROMDIR. `tests/host/dycal FILE` (built like the other host tools) prints each voice's level and the gain it would need against the plain sounds; `FM_GAIN_DY` in `amb.c` is set from it and `fmcal`'s rms column so each DY voice sits where its DX voice does.
+The DX7 voices (`firmware/src/dsp/fm6_dy.h`) are generated from DX7 bank files that are not in this tree: `python3 -I tools/gen_fm6_dy.py tools/fm6_dy.txt BANKS --rom ROMDIR` reads the manifest (slot, name, bank file, voice, source), writes the header, `build/fm6_dy.bin` and the test bank `build/PERF-1-test-voices.syx`, and refuses a voice whose operators match a Yamaha ROM voice in ROMDIR. `tests/host/dycal FILE` (built like the other host tools) prints each voice's level and the gain it would need against the plain sounds; `FM_GAIN_DY` in `amb.c` is set from it and `fmcal`'s rms column so each DX7 voice sits at the level of the plain sounds.
 
 ## The site
 
@@ -52,7 +52,7 @@ The printable quick manual (`docs/QUICK.md`, eight A4 pages) is made by `python 
 From the site, or from the command line (needs `pip3 install mido python-rtmidi`):
 
 ```
-python3 tools/fm1_install.py build/amb-0.14.0.fwsc
+python3 tools/fm1_install.py build/perf1-0.14.0.fwsc
 python3 tools/fm1_install.py --info          # identity of the connected FM-1
 ```
 
@@ -60,7 +60,7 @@ Installing firmware is at your own risk. Hold OCT- and OCT+ for 5 seconds for th
 
 ## What protects an install, and what does not
 
-The installer's checks (identity read from the package's own markers, the loader mark, the CRCs, the head-equal check, the identity read back after the reboot) and the firmware's safe mode (two failed boots, then USB-only, then UBOOT by SysEx or OCT- + OCT+ held for five seconds) cover a bad *app*. They do not cover a corrupt start-up sector, a bad SPL, or power lost partway through the write with no resume record: no hardware recovery (ISP pads, boot strapping, a key chord) has been demonstrated for this chip, and the interrupted-write safety is by design, not yet tested with a power cut. Keep a way to restore the stock firmware to hand, and do not use `--force` on a package that was not built by this tree.
+The installer's checks (identity read from the package's own markers, the loader mark, the CRCs, the head-equal check, the identity read back after the reboot) and the firmware's safe mode (two failed boots, then USB-only, then UBOOT by SysEx or OCT- + OCT+ held for five seconds) cover a bad *app*. They do not cover a corrupt start-up sector, a bad SPL, or power lost partway through the write with no resume record: no hardware recovery (ISP pads, boot strapping, a key chord) has been demonstrated for this chip, and the interrupted-write safety (the boot stub) was bench-tested on a real FM-1 on 2026-11-21, the cable pulled at each stage: pressing Install again completes the install. Pulled while the installer checks the package (before it writes), nothing is written and the unit waits dark until it is switched off and on. Keep a way to restore the stock firmware to hand, and do not use `--force` on a package that was not built by this tree.
 
 ## Where things are
 

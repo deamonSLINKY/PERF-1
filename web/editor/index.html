@@ -350,7 +350,11 @@ const LCXL3 = [[5, 0, "Mixer: Pad"], [6, 2, "Mixer: Bass"], [7, 1, "Mixer: Acid"
   [29, 46, "Drums: Drive"], [30, 47, "Drums: Swing"], [31, 163, "Drums: Humanize"], [32, 161, "Drums: Ghosts"], [33, 100, "Pluck: Density"], [34, 102, "Pluck: Decay"], [35, 68, "Space: Echo time"], [36, 70, "Space: Size"]];
 let ctlMidi = null, ctlLearning = false, ctlPick = null, ctlMaps = {};
 const ctlStat = (t) => { $("ctlstat").textContent = t || ""; };
-function ctlLoad() { try { ctlMaps = JSON.parse(localStorage.getItem(MM_KEY) || "{}") || {}; } catch (_) { ctlMaps = {}; } }
+function ctlLoad() {                                /* (0.17.92, the audit) entries that do not read (no string t) are left out: one broke the page */
+  try { ctlMaps = JSON.parse(localStorage.getItem(MM_KEY) || "{}") || {}; } catch (_) { ctlMaps = {}; }
+  if (typeof ctlMaps !== "object" || Array.isArray(ctlMaps)) ctlMaps = {};
+  for (const id of Object.keys(ctlMaps)) if (!ctlMaps[id] || typeof ctlMaps[id] !== "object" || typeof ctlMaps[id].t !== "string") delete ctlMaps[id];
+}
 function ctlSave() { try { localStorage.setItem(MM_KEY, JSON.stringify(ctlMaps)); } catch (_) { /* a private window: kept for this page only */ } ctlRender(); renderRows(); }
 const ctlSrcOf = (p) => Object.keys(ctlMaps).find((id) => ctlMaps[id] && ctlMaps[id].t === "p" + p);
 const ctlShort = (id) => { const [, ch, n] = id.split(":"); return "CC " + n + (+ch ? " ·" + (+ch + 1) : ""); };

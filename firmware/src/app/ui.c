@@ -2512,6 +2512,10 @@ static void dj_tick(void)                    /* each new bar while playing: a sc
             msent = ui.midi_map;
             en_midi_map(ui.midi_map);
         }
+        if (ui.usb_host && ui.fxs[EN_FXS_LK_MODE] >= 4) {   /* (0.17.92, the audit: the link's cable on the port first: both drove it, and after host off the cable was dead) */
+            ui.usb_host = 0;
+            say("USB HOST", "LINK CABLE OFF FIRST");
+        }
         if (ui.usb_host != hsent) {
             hsent = ui.usb_host;
             plat_usb_host(ui.usb_host);
@@ -2776,6 +2780,10 @@ static void piece_title(char *b, int n)
 static void set_piece(int i)                    /* the piece playing kept as it is; piece i as it was left */
 {
     ui.dj_round = 0;                             /* (the auto-DJ's rounds and its ramp start over with the piece) */
+    if (ui.mx_bars) {                            /* (0.17.92, the audit: left inside a Mix glide, the piece kept the tempo it was gliding through) */
+        proj.par[P_TEMPO] = ui.mx_to;
+        ui.mx_bars = 0;
+    }
     project_piece(i);
     ui.key_on = 0;                               /* (project_apply puts the key back) */
     project_apply();
@@ -2890,6 +2898,8 @@ static void code_start(const tcode_t *t)        /* a track code: its genre, its 
         en_play(0);
     if (t->genre != proj.genre)
         genre_step((int)t->genre - (int)proj.genre);
+    if (t->genre != proj.genre)                 /* (0.17.92: refused (a store first): not its piece number in this genre) */
+        return;
     ui.dj_round = 0;
     project_piece_recipe(t->piece);
     proj.par[P_ROOT] = t->root;
@@ -2956,11 +2966,19 @@ static void sl_go(int s)                        /* the set list's slot s now: it
 {
     const int e = glob.sl[s % SL_N], g = (e - 1) / NPIECES, p = (e - 1) % NPIECES;
     int i, n = 0, k = 0;
+    const uint8_t from = ui.sl_pos;
     if (!e)
         return;
     ui.sl_pos = (uint8_t)(s % SL_N);
     if (g != proj.genre)
         genre_step(g - proj.genre);
+    if (g != proj.genre) {                      /* (0.17.92, the audit: the genre change refused (a store first, or not written): the place's counts and parts with
+                                                 * the old piece. Back to where it was; after a store, again on the next bar's end) */
+        ui.sl_pos = from;
+        if (ui.store_wait)
+            ui.sl_q = (uint8_t)(s % SL_N + 1);
+        return;
+    }
     if (g == proj.genre && p != proj.piece)
         set_piece(p);
     sl_b0 = en_playing ? sl_bar_now() + 1u : 0u;   /* (it comes in on the bar's last step: its first bar is the next) */
@@ -2998,6 +3016,10 @@ static void store_now(const char *done)
     if (done[0] && en_playing && ui.save_stop && !plat_store_seamless()) {   /* (0.17.82, Settings > Save: At stop) kept in the bank, written once the music stops: no fade */
         say(done, "WRITTEN AT STOP");
         return;
+    }
+    if (ui.store_wait) {                         /* (0.17.92, the audit: an autosave in its fade taken over: its object written later, not dropped) */
+        ui.vox_dirty |= ui.store_kind == 3;
+        ui.set_dirty |= ui.store_kind == 1;
     }
     for (i = 0; done[i] && i < (int)sizeof ui.store_msg - 1; i++)
         ui.store_msg[i] = done[i];
@@ -3118,7 +3140,11 @@ void ui_flush(void)
 static void piece_store(void)                   /* Global, SAVE: the piece as it is, stored */
 {
     char t[12] = "STORED ";
+    const int16_t tp = proj.par[P_TEMPO];
+    if (ui.mx_bars)                              /* (0.17.92: SAVE inside a Mix glide: the piece's own tempo stored, the glide goes on) */
+        proj.par[P_TEMPO] = ui.mx_to;
     project_piece_save();
+    proj.par[P_TEMPO] = tp;
     caps(t + 7, piece_name(proj.piece), 4);
     store_now(t);
 }
@@ -3388,7 +3414,7 @@ static void shift_lane(int restore)             /* the sequencer: SEL + OCT-, th
     char t[16];
     uint16_t v = 0;
     if (restore) {
-        en_piece_pats(proj.piece, f);
+        project_recipe_pats(proj.piece, f);   /* (0.17.92, the audit: en_piece_pats is HYPNO's: every genre got HYPNO's lane) */
         v = f[seq_src(ui.lane)][ui.lane];
     }
     en_pats[seq_src(ui.lane)][ui.lane] = v;
@@ -4329,7 +4355,7 @@ static void lk_in(int n, int v)                  /* n: the CC + 82 (102 hello ..
         lk_lo[n == 107 ? 0 : n - 108] = (uint8_t)v;
         break;
     case 108: {
-        const uint32_t p = (uint32_t)lk_lo[0] | (uint32_t)v << 6;
+        const uint32_t p = ((uint32_t)lk_lo[0] | (uint32_t)v << 6) & 0xFFFu;   /* (0.17.92, the audit: twelve notes: a bit past them made the piece fail its check at the next power-on) */
         if ((p & 1u) && pool_count(p) >= 3 && p != proj.pool) {
             proj.pool = (uint16_t)p;
             en_pool(p);
@@ -4403,7 +4429,7 @@ static void midi_in(void)
 {
     uint32_t pkt;
     while (plat_midi_in(&pkt)) {
-        uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = pkt >> 24;
+        uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = (pkt >> 24) & 0x7Fu;   /* (0.17.92: 7 bits, as MIDI sends) */
         const int ch_ok = !ui.min_ch || (st & 15u) == (uint32_t)(ui.min_ch - 1);
         if (st < 0xF8u) {
             ui.min_last = pkt;
@@ -4451,6 +4477,8 @@ static void midi_in(void)
             if (ui.view == V_GLOBAL && !ui.fx_menu) {
                 if ((st & 0xF0u) == 0x90u && v)
                     toggle_note((int)(n % 12u));
+                else                            /* (0.17.92, the audit: a key held from another page let go here: its note stayed on) */
+                    midi_key(0, (int)n, 0, key_voice());
             } else
                 midi_key((st & 0xF0u) == 0x90u && v, (int)n, (int)v, key_voice());
         }
@@ -4580,7 +4608,7 @@ static void rm_tick(void)
     uint32_t b = plat_buttons(), k = plat_keys(), now = plat_ms(), ch, i, pkt;
     int e;
     while (plat_midi_in(&pkt)) {                 /* the browser's lights (channel 16); the rest, ignored */
-        uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = pkt >> 24;
+        uint32_t st = (pkt >> 8) & 0xFFu, n = (pkt >> 16) & 0x7Fu, v = (pkt >> 24) & 0x7Fu;
         if (st == RM_ST_NOTE || st == RM_ST_OFF) {
             if (n >= RM_KEY0 && n < RM_KEY0 + NKEYS) {
                 uint32_t m = 1u << (n - RM_KEY0);
@@ -4668,7 +4696,11 @@ static void input(void)
                 ui.turn_t = plat_ms();
         if (nb || nk)
             ui.act_t = plat_ms();
-        return;
+        if (nb) {
+            ui.save_held = ui.seq_held = 1;      /* (0.17.92, the audit: SAVE or SEQ waking it ran their hold: a drop, the sequencer) */
+        }
+        /* (0.17.92, the audit: it returned here, so the effects, AUTO FX, the auto-DJ, song mode, MIDI in (the clock, notes) and the link all stood
+         * still while it showed. The rest runs on: nothing was pressed (the buttons and keys are taken, the dials read) */
     }
     ch = btn ^ ui.btn;
     ui.btn = btn;
@@ -5152,9 +5184,11 @@ static void input(void)
         const int s = ui.sl_q - 1, t0 = proj.par[P_TEMPO], pl = en_playing, from = ui.sl_pos, sec_was = en_sec;
         ui.sl_q = 0;
         sl_go(s);
-        if (pl)
+        if (ui.sl_pos != (uint8_t)(s % SL_N)) {
+            /* (0.17.92) refused (sl_go): nothing changed, no glide, no section */
+        } else if (pl)
             mix_start(t0);
-        if (pl && glob.sl_on && from < SL_N && glob.sl_bars[from]) {   /* (0.17.61) song mode: a place without the drums comes in as a breakdown (or stays
+        if (pl && ui.sl_pos == (uint8_t)(s % SL_N) && glob.sl_on && from < SL_N && glob.sl_bars[from]) {   /* (0.17.61) song mode: a place without the drums comes in as a breakdown (or stays
                                                  * down); one with them gets its drop (a new piece restarts the engine's section: a build's own drop would be lost) */
             if (!sl_drums(s) && (sl_turn(from, s) == 1 || sec_was == EN_SEC_BREAK))
                 en_section(EN_CMD_BREAK);
@@ -6313,7 +6347,7 @@ static void console_sheet(void)
                 lk_mode() == 1 ? (ui.usb_host ? "WOULD LEAD (HOST)" : "WOULD FOLLOW") : want ? "WOULD LEAD" : "-",
                 lk_role == 1 || lk_role == 2 ? K_TEXT : lk_role ? K_ACID : K_DIM);
         if (ui.fxs[EN_FXS_LK_MODE] >= 4) {       /* the cable: packets out, in, refused */
-            char d[40];
+            char d[44];   /* (0.17.92: the longest readout is 41) */
             plat_wire_diag(d);
             cv_text(8, LK_Y + 2 * LK_DY, &FONT_XS, d, K_TEXT);
         }
@@ -9833,7 +9867,7 @@ static void ph_close(uint32_t len, int late)    /* the phrase handed to the engi
                                                                 * and accents, not Capture's busiest bar of the voice on the page) */
         say("PHRASE PLAYS", "AND IS KEPT IN THE LINE");
     } else {
-        char t[20] = "PHRASE PLAYS: 2 BARS";
+        char t[21] = "PHRASE PLAYS: 2 BARS";   /* (0.17.92, the sanitizer: 20 letters in t[20] had no end, up to 3 stray ones shown) */
         t[14] = (char)('0' + len / 16u);
         say(t, "REC LETS GO");
     }

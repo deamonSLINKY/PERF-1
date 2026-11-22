@@ -37,7 +37,8 @@ export async function drawCard(canvas, c) {
   // the words
   g.fillStyle = "#ffd447"; g.fillRect(64, 72, 26, 5); g.fillStyle = "#e0344f"; g.fillRect(90, 72, 42, 5);
   g.fillStyle = CARD_INK; g.font = head(700, 30); g.fillText("PERF-1", 146, 84);
-  const fit = (txt, font, max) => { g.font = font; let t = txt || ""; while (t && g.measureText(t).width > max) t = t.slice(0, -2) + "…"; return t; };
+  // (0.17.92, the audit: a huge title, measured a character at a time, froze the page) at most 200 characters are fitted
+  const fit = (txt, font, max) => { g.font = font; let t = String(txt || "").slice(0, 200); while (t && g.measureText(t).width > max) t = t.slice(0, -2) + "…"; return t; };
   g.fillStyle = "#f2e6c4"; g.fillText(fit(c.tag, head(700, 76), 600), 64, 196);
   let y = 196;
   if (c.title) { y += 62; g.fillStyle = "#ffd447"; g.fillText(fit(c.title, head(600, 46), 610), 64, y); }

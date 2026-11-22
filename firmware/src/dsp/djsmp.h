@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
-/* PERF-1's sampled DJ snips (0.17.44), written by tools/djsamples.py: rendered offline by our own models, the HORN a CC0 recording (0.17.86, assets/samples/),
+/* PERF-1's sampled DJ snips (0.17.44), written by tools/djsamples.py: the HORN, the KICK and the OH! CC0 recordings (freesound 414208, 868065, 242663; assets/samples/), the SNARE the project's render of its Dusty kit snare, the CRASH our own model;
  * 4-bit IMA ADPCM, the low nibble first; each sound its samples, its loop (start, end: 0 none), its first step index (the predictor starts
  * at 0), its rate and its note (Hz: the engine plays it at the chord's root). */
 typedef struct { const uint8_t *d; uint32_t n, ls, le; uint8_t i0; float sr, hz; } djsmp_t;

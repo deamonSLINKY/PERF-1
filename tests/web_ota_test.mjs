@@ -2,7 +2,7 @@
 // The web installer's handshake (web/fm1ota.js) against fake FM-1s: what each firmware answers.
 // PERF-1 0.16.13 on answers the plain query with "FM-1_700" (M-UPGRADE 3.11 takes NAME_ and 1-3 digits only) and its
 // whole identity to the query with the body 01; the installer has to see the whole one, and every older firmware as before.
-import { Updater, pack7, unpack7 } from "../web/fm1ota.js";
+import { Updater, pack7, unpack7, LOADER_PERF, LOADER_STOCK } from "../web/fm1ota.js";
 
 const HS_QUERY = [0xF0, 0x00, 0x32, 0x45, 0x00, 0x00, 0x00, 0x40, 0x7F, 0xF7];
 const HS_FULL = [0xF0, ...pack7([0, 0x59, 0x11, 1, 0, 0, 1, 0xFE]), 0xF7];
@@ -40,6 +40,23 @@ for (const [what, answer, want, asksFull] of cases) {
   check(what + ": " + want, dev && dev.id.text === want);
   check(what + ": " + (asksFull ? "asks with 01" : "never asks with 01"), a.output.sent.some((q) => same(q, HS_FULL)) === asksFull);
 }
+// (0.17.92, the audit) the query with 01 missed once (the unit still starting up): asked again, the whole identity
+{
+  let n = 0;
+  const a = access("FM-1", (q) => same(q, HS_QUERY) ? "FM-1_700" : same(q, HS_FULL) ? (n++ ? "FM-1_7001792" : null) : null);
+  const dev = await new Updater(a).find();
+  if (dev) dev.link.close();
+  check("the query with 01 missed once: FM-1_7001792 all the same", dev && dev.id.text === "FM-1_7001792");
+}
+// (0.17.92, the audit) a resume sends an image only to the loader it is for: nothing to M-VAVE's loader for PERF-1, nothing to Felucca's for the stock firmware
+for (const [what, loader, ok, wantRefused] of [["PERF-1 to M-VAVE's loader", "ota-FM-1_015", LOADER_PERF, true], ["stock to Felucca's loader", "ota-FM-1_900", LOADER_STOCK, true],
+                                                ["PERF-1 to an unknown loader", "ota-FM-1_905", LOADER_PERF, true]]) {
+  const a = access("FM-1", (q) => same(q, HS_QUERY) ? loader : null);
+  let code = "";
+  try { await new Updater(a).resume(new Uint8Array(64), null, "FM-1_7001792", ok); } catch (e) { code = e.code; }
+  check("resume, " + what + ": refused, no update message sent", (code === "otherloader") === wantRefused && a.output.sent.every((q) => same(q, HS_QUERY) || same(q, HS_FULL)));
+}
+check("the loaders told apart", LOADER_PERF({ text: "ota-FM-1_900" }) && !LOADER_PERF({ text: "ota-FM-1_015" }) && LOADER_STOCK({ text: "ota-FM-1_015" }) && LOADER_STOCK({ text: "ota-FM-1_016" }) && !LOADER_STOCK({ text: "ota-FM-1_900" }));
 // the bytes of the query with 01, as the firmware checks them (ota_take: header, length, checksum)
 const u = unpack7(HS_FULL.slice(1, -1));
 check("HS_FULL decodes to 00 59 11, length 1, body 01, checksum FE", u.length >= 8 && same(u.slice(0, 8), [0, 0x59, 0x11, 1, 0, 0, 1, 0xFE]));

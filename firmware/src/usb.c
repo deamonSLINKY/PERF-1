@@ -671,8 +671,8 @@ static void sysex_byte(uint8_t b)
 {
 #if USB_DX
     if (b == 0xF0u) {
-        dx_on = !dx_state;
-        dx_pos = 0;
+        if ((dx_on = !dx_state) != 0)   /* (0.17.92, the audit: a message waiting for the main loop (dx_state) kept: its length was zeroed by the next F0) */
+            dx_pos = 0;
         px_on = 1;
         px_pos = 0;
     } else if (b == 0xF7u) {

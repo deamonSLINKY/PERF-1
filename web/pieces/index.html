@@ -214,10 +214,11 @@ function tab(name) {
 function route() {
   const h = location.hash;
   const adm = /[#&]admin=([^&]*)/.exec(h);
-  if (adm) { store.set("perf1-admin", decodeURIComponent(adm[1]) || null); history.replaceState(null, "", "#library"); render(); }
+  const dec = (x) => { try { return decodeURIComponent(x); } catch (_) { return x; } };   // (0.17.92, the audit: a stray % in the address threw)
+  if (adm) { store.set("perf1-admin", dec(adm[1]) || null); history.replaceState(null, "", "#library"); render(); }
   if (/[#&]p=P1\./.test(h)) {
     tab("add");
-    $("code").value = decodeURIComponent(h.replace(/^#/, ""));
+    $("code").value = dec(h.replace(/^#/, ""));
     readCode($("code").value);
     $("addcard").classList.add("hot");
     return;
@@ -228,7 +229,8 @@ function route() {
 // ---------------------------------------------------------------- the FM-1's MIDI port
 let port = null;
 const NOANS = "The FM-1 did not answer. Replug it and try again.";
-idleRelease(() => false, () => { port = null; });   // the FM-1's port let go after 4 s quiet (web/fm1idle.js)
+let busy = false;                                    // (0.17.92, the audit) Add or Read under way: the port is kept (a question left open > 4 s lost it)
+idleRelease(() => busy, () => { port = null; });    // the FM-1's port let go after 4 s quiet (web/fm1idle.js)
 async function openPort() {
   if (port && port.inp.state !== "disconnected" && port.out.state !== "disconnected") return port;
   if (!navigator.requestMIDIAccess) throw new Error("This browser cannot talk to the FM-1. Open the page in Chrome or Edge.");
@@ -289,17 +291,21 @@ function waitBk(p, ms) {
     const tm = setTimeout(() => { const i = p.bkwait.indexOf(w); if (i >= 0) p.bkwait.splice(i, 1); res(null); }, ms);
   });
 }
-async function writeObject(p, obj, data) {                        // in chunks, then the write; the FM-1 answers each
+const OUTSTEP = (obj) => "The FM-1's answer was out of step (" + bkName(obj) + ").";
+async function writeObject(p, obj, data, onCommit) {              // in chunks, then the write; the FM-1 answers each (0.17.92: for the one sent)
   for (let idx = 0; idx * BK_CHUNK < data.length; idx++) {
     p.out.send(bkChunkMsg(obj, idx, data.length, data.subarray(idx * BK_CHUNK, Math.min(data.length, (idx + 1) * BK_CHUNK))));
     const a = await waitBk(p, 3000);
     if (!a) throw new Error(NOANS);
     if (a.status !== 0) throw new Error("The FM-1 did not take it (" + bkName(obj) + ").");
+    if (a.obj !== (obj & 0x7F) || a.idx !== (idx & 0x7F)) throw new Error(OUTSTEP(obj));
   }
   p.out.send(bkCommitMsg(obj, data.length));
+  if (onCommit) onCommit();
   const a = await waitBk(p, 10000);                               // (a store while playing fades the music out first)
   if (!a) throw new Error(NOANS);
   if (a.status !== 0) throw new Error("The FM-1 did not write it (" + bkName(obj) + ").");
+  if (a.obj !== (obj & 0x7F) || a.idx !== 0x7F) throw new Error(OUTSTEP(obj));
 }
 
 // a question with buttons: resolves with the chosen button's value (null: closed)
@@ -487,10 +493,12 @@ async function placeVoice(cur, voice, want) {
 }
 $("add").addEventListener("click", async () => {
   const x = incoming, say = (t) => { $("addsay").textContent = t; };
-  if (!x) return;
+  if (!x || busy) return;
+  busy = true;
   $("add").disabled = true;
+  let p = null, sent = 0, done = 0, steps = 0, at = "";
   try {
-    const p = await openPort();
+    p = await openPort();
     const ab = await about(p);
     if (!ab) throw new Error("This FM-1 has a PERF-1 older than 0.16.3: update it on the Install page first, then add it.");
     const pieces = x.kind === "set" ? x.pieces.map((q) => ({ ...q, rec: q.rec.slice() })) : [{ ...x, rec: x.rec.slice(), slot: +$("slot").value }];
@@ -548,14 +556,14 @@ $("add").addEventListener("click", async () => {
       if (bcur !== undefined) { bst = bcur; for (const q of pieces) bst = pcBassWith(bst, q.genre, q.slot, q.bass || null, ab.genres); }
     } else if (pieces.some((q) => q.bass) && !(await ask("Its bass steps", "This " + (x.kind === "set" ? "set" : "piece") + " has bass steps, which this PERF-1 is too old to keep: its bass plays its own line. Update on the Install page to hear it as made.", [["Add it anyway", 1], ["Cancel", 0, true]])))
       throw new Error("Not added.");
-    const steps = (vox ? 1 : 0) + Object.keys(banks).length + (glob ? 1 : 0) + (knd ? 1 : 0) + (bst ? 1 : 0);
-    let done = 0;
-    const step = (t) => { say(t); $("addbar").value = 20 + Math.round((75 * done++) / steps); };
-    if (vox) { step("Writing the voices…"); await writeObject(p, S.OBJ_VOICES, vox); }
-    for (const g of Object.keys(banks)) { step("Writing " + S.genreName(+g) + "…"); await writeObject(p, S.objOf(+g), banks[g]); }
-    if (glob) { step("Writing the set list…"); await writeObject(p, S.OBJ_GLOB, glob); }
-    if (knd) { step("Writing the chord types…"); await writeObject(p, S.OBJ_KINDS, knd); }
-    if (bst) { step("Writing the bass steps…"); await writeObject(p, S.OBJ_BSTEP, bst); }
+    steps = (vox ? 1 : 0) + Object.keys(banks).length + (glob ? 1 : 0) + (knd ? 1 : 0) + (bst ? 1 : 0);
+    const step = (t, what) => { say(t); at = what; $("addbar").value = 20 + Math.round((75 * done) / steps); };
+    const wr = async (obj, data) => { await writeObject(p, obj, data, () => { sent++; }); done++; };
+    if (vox) { step("Writing the voices…", "the voices"); await wr(S.OBJ_VOICES, vox); }
+    for (const g of Object.keys(banks)) { step("Writing " + S.genreName(+g) + "…", S.genreName(+g)); await wr(S.objOf(+g), banks[g]); }
+    if (glob) { step("Writing the set list…", "the set list"); await wr(S.OBJ_GLOB, glob); }
+    if (knd) { step("Writing the chord types…", "the chord types"); await wr(S.OBJ_KINDS, knd); }
+    if (bst) { step("Writing the bass steps…", "the bass steps"); await wr(S.OBJ_BSTEP, bst); }
     p.out.send(bkRestartMsg());
     port = null;
     $("addbar").value = 100;
@@ -564,7 +572,16 @@ $("add").addEventListener("click", async () => {
     say(x.kind === "set" ? "Added. The FM-1 restarts: GLO twice shows the set list." :
       "Added as " + S.tagOf(pieces[0]) + ". The FM-1 restarts: then GLO + PRESETS to " + S.genreName(x.genre) + ", PRESETS to " + S.pieceName(x.genre, pieces[0].slot) + "." +
       (x.npar > ab.npar ? " It was made with a newer PERF-1: update yours to hear all of it." : ""));
-  } catch (err) { say(err.message); $("addbar").value = 0; }
+  } catch (err) {
+    // (0.17.92, the audit) stopped part way: the FM-1 holds some of it and refuses every save until it restarts, so it is told to
+    if (sent && p) {
+      try { p.out.send(bkRestartMsg()); } catch (_) { /* unplugged */ }
+      port = null;
+      say(err.message + " Stopped at " + at + ": " + done + " of " + steps + " written. The FM-1 restarts now (if it does not, switch it off and on); then add it again.");
+    } else say(err.message);
+    $("addbar").value = 0;
+  }
+  busy = false;
   $("add").disabled = false;
 });
 $("hear").addEventListener("click", () => {
@@ -578,6 +595,8 @@ let mine = [], mySet = null;
 const ticked = () => [...document.querySelectorAll("#mine input.one:checked")].map((r) => r.value);
 $("scan").addEventListener("click", async () => {
   const say = (t) => { $("scansay").textContent = t; };
+  if (busy) return;
+  busy = true;
   $("scan").disabled = true;
   mine = []; mySet = null; $("mine").textContent = ""; $("sharebox").hidden = true;
   try {
@@ -614,6 +633,7 @@ $("scan").addEventListener("click", async () => {
     if (!mine.length && !mySet) say("No saved pieces and no set list on the FM-1 yet. Save one (GLO, then SAVE) and read again.");
     else say((mine.length ? plural(mine.length, "saved piece") : "No saved pieces") + (mySet ? " and your set list" : "") + ". Tick what to share.");
   } catch (err) { say(err.message); }
+  busy = false;
   $("scanbar").value = 0;
   $("scan").disabled = false;
 });
@@ -770,7 +790,8 @@ $("submit").addEventListener("click", async () => {
       for (let k = 0; k < j.done.length; k++) {
         const d = j.done[k];
         if (d.error) { bad.push(names[k] + ": " + d.error); continue; }
-        keys[d.id] = d.del; n++;
+        if (d.del) keys[d.id] = d.del;   // (0.17.92: the relay gives a key only for a new entry; one kept from before stays)
+        n++;
         if (!items.some((i) => i.code === codes[k])) { try { items.unshift(await libItem(codes[k], { id: d.id, added: new Date().toISOString() })); } catch (_) { /* (read above: it reads) */ } }
       }
       store.set("perf1-subs", keys);

@@ -14,7 +14,7 @@ You are the conductor. You don't have to play notes. You change the chords, brea
 ## Before you start
 
 - **Try it without installing.** The [emulator](https://deamonslinky.github.io/PERF-1/emu/) runs PERF-1 in your web browser, with sound. Every step in this guide works there too.
-- **Installing** takes a couple of minutes with the [web installer](https://deamonslinky.github.io/PERF-1/install/) in Chrome or Edge. Use a USB cable that carries data, not a charge-only one.
+- **Installing** takes a couple of minutes with the [web installer](https://deamonslinky.github.io/PERF-1/install/) in Chrome or Edge. Use a USB cable that carries data, not a charge-only one. If an install is cut off (the cable pulled, the power lost), switch the FM-1 on and press Install again; if the cable came out while the installer was still checking, before it wrote anything, the screen stays dark until you switch it off and on.
 - **You can always go back.** The same installer page puts M-VAVE's own firmware back. Anything you saved on the stock firmware may be lost when you switch, so keep copies of what you care about.
 
 ## The buttons you need today

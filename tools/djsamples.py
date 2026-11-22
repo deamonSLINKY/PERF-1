@@ -1,7 +1,8 @@
 """PERF-1's sampled DJ snips (0.17.44, the maker: "the horns are still trash, maybe a sampled sound would be easier and sound better"): rendered here,
 offline, with heavier models than the FM-1 can run live, then baked to 4-bit IMA ADPCM into firmware/src/dsp/djsmp.h. GPL-clean: our own models, and
 recordings only under CC0 (the public domain; see LICENSING.md: a sound under a "royalty free" licence may not be passed on in the firmware's source).
-The kick and the snare snips use the sampled kits' (smpkits.h: MACHINE's kick, BOOMBAP's snare), so they cost nothing here.
+The HORN (AIR HORN and AIR BLAST), the KICK and the OH! (OH! and OH! LOW) are CC0 recordings (freesound 414208, 868065, 242663; assets/samples/);
+the SNARE is the project's own render of its Dusty kit snare (tests/host/gsnare.c, assets/samples/dusty-snare-render.wav); the CRASH is our model.
   AIR HORN  (0.17.86) a recording, CC0: horn_cc0() (players found the modelled one weak). The model, kept for its level: three reeds (the root, its fifth, its octave: right over a major or a minor chord) a few cents apart, each a band-limited pulse scooping up
             into its note, through a reed's asymmetric clip and the bell's two resonances, a breath of air at the start; a held loop (crossfaded)
   RAVE HORN (0.17.87: replaced by OH!, oh_cc0(); the model kept here) the hoover: five detuned saws, two width-modulated pulses and a square an octave down, the pitch swooping in from a fourth above, dipping
@@ -284,7 +285,7 @@ SOUNDS = [("HORN", horn_cc0, 22050), ("OH", oh_cc0, 22050), ("CRASH", crash, 220
 def main():
     wav_dir = sys.argv[sys.argv.index("--wav") + 1] if "--wav" in sys.argv else None
     lines = ["/* SPDX-License-Identifier: GPL-3.0-only */",
-             "/* PERF-1's sampled DJ snips (0.17.44), written by tools/djsamples.py: rendered offline by our own models, the HORN a CC0 recording (0.17.86, assets/samples/),",
+             "/* PERF-1's sampled DJ snips (0.17.44), written by tools/djsamples.py: the HORN, the KICK and the OH! CC0 recordings (freesound 414208, 868065, 242663; assets/samples/), the SNARE the project's render of its Dusty kit snare, the CRASH our own model;",
              " * 4-bit IMA ADPCM, the low nibble first; each sound its samples, its loop (start, end: 0 none), its first step index (the predictor starts",
              " * at 0), its rate and its note (Hz: the engine plays it at the chord's root). */",
              "typedef struct { const uint8_t *d; uint32_t n, ls, le; uint8_t i0; float sr, hz; } djsmp_t;"]

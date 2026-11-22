@@ -199,7 +199,9 @@ static const uint8_t FM_CAP[EN_NCMFM] = {4, 3, 6, 3, 3, 6, 6, 6, 4, 6, 3, 6, 6, 
                                         4, 4, 4, 4, 4, 3, 3, 3, 4, 4, 3, 4, 4, 4, 4, 3, 4, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4};
 /* the player's voices: 128-byte packed records. The main loop fills a staging slot and posts C_USERVOICE; the engine copies it in between chunks. */
 static uint8_t fm_user[EN_NUSER][128] EN_POOL, fm_stage[EN_NUSER][128] EN_POOL;
-static volatile uint16_t fm_stage_pend;
+static volatile uint16_t fm_stage_req, fm_stage_ack;   /* (0.17.92, the audit: one pending mask set by the main loop and cleared by the audio
+                                                       * interrupt lost a bit now and then: each its own word, pending = req ^ ack) */
+#define fm_stage_pend ((uint16_t)(fm_stage_req ^ fm_stage_ack))
 static volatile uint8_t fm_user_n;
 static char fm_uname[EN_NUSER][16];
 static void fm_user_name(int slot)               /* the voice's ten characters, trailing spaces gone (0.17.81: no "DX " in front, room on the pluck page) */
@@ -224,7 +226,7 @@ static void fm_user_take(int slot)               /* C_USERVOICE, in the engine's
         return;
     for (k = 0; k < 128; k++)
         fm_user[slot][k] = fm_stage[slot][k] & 0x7Fu;
-    fm_stage_pend &= (uint16_t)~(1u << slot);
+    fm_stage_ack ^= (uint16_t)(1u << slot);
     if (slot >= (int)fm_user_n)
         fm_user_n = (uint8_t)(slot + 1);
     fm_user_name(slot);
@@ -250,7 +252,7 @@ int en_user_voice(int slot, const uint8_t *p)
         fm_req_n++;
     for (k = 0; k < 128; k++)
         fm_stage[slot][k] = p[k] & 0x7Fu;
-    fm_stage_pend |= (uint16_t)(1u << slot);
+    fm_stage_req ^= (uint16_t)(1u << slot);
     post(C_USERVOICE, slot, 0);
     return 1;
 }
