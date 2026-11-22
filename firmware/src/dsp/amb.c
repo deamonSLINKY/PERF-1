@@ -4574,6 +4574,7 @@ static void rpt_engage(int r);
 static void rpt_refresh(int st);
 static void scat_engage(void);
 static void var_leave(void);
+static void var_grid(int st);
 static void rvs_engage(void);
 static void flx_tick(int st);
 static uint64_t fx_on;
@@ -4657,6 +4658,7 @@ static void tick(void)
         var_leave();
         var_exit = 0;
     }
+    var_grid(st);                               /* (0.17.91) half time held: back to the live mix on the bar (or beats) */
     if (rpt_arm) {                              /* the beat repeat starts on the sixteenth */
         rpt_engage(rpt_arm - 1);
         rpt_arm = 0;
@@ -6392,7 +6394,7 @@ static float dj_note(float hz, int root_only, float *third, float *fifth)
 
 static void smp_note(int key, int on)
 {
-    int i, v = -1;
+    int i, v = -1, reuse = 0;
     if (key < 0 || key > 26)
         return;
     if (!on) {
@@ -6402,11 +6404,15 @@ static void smp_note(int key, int on)
         return;
     }
     {   /* (0.17.88, the maker's log: four snips over HOUSE 01's DX pluck, a dropout) under load fewer at once: shed level 1 three, 2 and more two */
-        const int cap = en_shed_level >= 2 ? 2 : en_shed_level >= 1 ? 3 : 4;
+        const int cap = en_shed_level >= 2 ? 2 : en_shed_level >= 1 ? 3 : 4, ty = DJS[key].type;
         int live = 0;
+        if (ty == DJ_ROLL || ty == DJ_RISER || ty == DJ_REWIND)   /* (0.17.91) a roll, a riser or a rewind pressed again starts over in its own voice */
+            for (i = 0; i < 4 && v < 0; i++)
+                if (djv[i].on && djv[i].key == key)
+                    v = i, reuse = 1;
         for (i = 0; i < 4; i++)
             live += djv[i].on;
-        for (i = 0; i < 4 && live < cap; i++)
+        for (i = 0; i < 4 && live < cap && v < 0; i++)
             if (!djv[i].on) {
                 v = i;
                 break;
@@ -6440,7 +6446,11 @@ static void smp_note(int key, int on)
         d->hz = hz;
         d->aux2 = r5;
         d->g = fm_exp2f(0.0830482f * (float)DJ_TRIM[key]);   /* (half dB: 2^(h/12.04)) */
-        d->t = d->ph = d->ph2 = d->ph3 = d->ph4 = d->env = d->z = d->z2 = d->zs = d->zs2 = 0.0f;
+        {
+            const float e0 = reuse ? d->env : 0.0f;   /* (started over: from where its envelope was, no click) */
+            d->t = d->ph = d->ph2 = d->ph3 = d->ph4 = d->env = d->z = d->z2 = d->zs = d->zs2 = 0.0f;
+            d->env = e0;
+        }
         d->land = 0;
         if ((ty == DJ_RISER || ty == DJ_REWIND || ty == DJ_ROLL) && fxs_v[EN_FXS_SM_LAND] > 0 && en_playing && sixteenth > 0u && step_len > 1.0f) {
             /* (0.17.72, ChatGPT's: "a rewind pulls into the next downbeat, a riser peaks there, and a roll ends with the drop") Land: the next line of
@@ -6454,7 +6464,10 @@ static void smp_note(int key, int on)
             d->aux = ((float)L * q - now) * step_len * (1.0f / EN_SR);
             d->land = 1;
             d->aux2 = 0.0f;                     /* (the roll: its hits a beat, from the first beat: eighths) */
-            d->ph4 = now * 0.25f;                /* (the roll: the beat it is at, for its hits on the grid) */
+            /* (the roll: where in the beat it is, for its hits on the grid. 0.17.91, the maker's soak: it was the song's whole place in beats, and
+             * twenty minutes in a sample's step (1/(4 step_len)) was under half a float's step there: it stood still, silent; pressed again and
+             * again, four silent rolls stacked up and the core ran over) */
+            d->ph4 = ((float)((sixteenth - 1u) & 3u) + fm_minf((float)step_t / step_len, 0.999f)) * 0.25f;
             d->ph2 = 1.0f / (4.0f * step_len);  /* (and beats a sample: the roll leaves ph2 unused) */
         }
         d->age = ++dj_age;
@@ -6682,11 +6695,16 @@ static float dj_voice(dj_t *v, float *amp, float *side)
         if (v->land) {                          /* (0.17.72) Land: on the grid, eighths, then sixteenths, then thirty-seconds, each from a beat's start */
             const float hb = v->aux2 > 0.0f ? v->aux2 : 2.0f, b0 = v->ph4 * hb;
             float b1;
+            int beat = 0;
             v->ph4 += v->ph2;
+            if (v->ph4 >= 1.0f) {               /* (0.17.91: the place within the beat, wrapped) */
+                v->ph4 -= 1.0f;
+                beat = 1;
+            }
             b1 = v->ph4 * hb;
-            if ((int)b1 != (int)b0) {           /* a hit; at a beat's start the rate for the next one */
+            if (beat || (int)b1 != (int)b0) {   /* a hit; at a beat's start the rate for the next one */
                 v->em[0] = v->em[1] = v->em[2] = 0.0f;
-                if ((int)v->ph4 != (int)(v->ph4 - v->ph2))
+                if (beat)
                     v->aux2 = u < 0.45f ? 2.0f : u < 0.8f ? 4.0f : 8.0f;
             }
             v->ph3 = b1 - (float)(int)b1;
@@ -6725,6 +6743,22 @@ static float dj_voice(dj_t *v, float *amp, float *side)
 static float vr_rate, vr_tgt, vr_c, vr_lp[2], vr_dull;
 static void var_leave(void) { bm_tgt = 0.0f; }
 static int vr_which;
+/* (0.17.91, the maker: "holding break repeats the last bit", half time "restarts the slowdown each 1.75 bars") held past the ring (about 0.95 s
+ * behind the live mix) it let go and, still held, took hold again from the live mix. Now held half time goes back to the live mix on the grid
+ * (a bar, two beats or a beat: what the ring holds at its speed) at its speed, and a brake or a spin-back stays stopped, silent, until let go.
+ * vr_jf: 128 down to 65 fading out, 64 the jump (half time) or stopped (stays), 63 down to 1 fading back in */
+static uint8_t vr_jf;
+static void var_grid(int st)
+{
+    if (bmode == BM_VAR && vr_which == FX_HALF && bm_tgt >= 1.0f && !var_exit && !vr_jf && en_playing && !en_ext) {
+        const float cap = (float)(RB_N - 400) * 2.0f, lag = 2.0f * (float)(rb_w - bm_start) - bm_off;
+        int per = 16;
+        while (per > 4 && (float)per * step_len * (1.0f - vr_tgt) > cap)
+            per >>= 1;
+        if ((st & (per - 1)) == 0 && lag > step_len)
+            vr_jf = 128;
+    }
+}
 static float vr_time(float v, float base)       /* base * 2 ^ (v * 0.06) seconds, as a slide's coefficient */
 {
     return 1.0f - fm_expf(-3.0f / (base * fm_exp2f(v * 0.06f) * EN_SR));
@@ -6737,6 +6771,7 @@ static void var_engage(int wh)
     bm_tgt = 1.0f;
     vr_rate = 1.0f;
     vr_which = wh;
+    vr_jf = 0;
     vr_lp[0] = vr_lp[1] = 0.0f;
 }
 static void var_params(int wh)
@@ -7605,9 +7640,23 @@ static inline void fx_master(float *pl, float *pr)   /* one sample of the master
             bl = vr_lp[0];
             br = vr_lp[1];
             w = fm_minf(ar * 8.0f, 1.0f);
+            if (vr_jf) {                        /* (0.17.91) a jump back to the live mix or a stop, faded (1.5 ms each way) */
+                w *= (float)(vr_jf > 64 ? vr_jf - 64 : 64 - vr_jf) * (1.0f / 64.0f);
+                if (vr_jf != 64) {
+                    vr_jf--;
+                } else if (vr_which == FX_HALF) {   /* from the grid line (32 frames, the fade's 64 samples, ago), at the speed it is at */
+                    bm_start = rb_w - 34u, bm_sm = bm_start % RB_N;
+                    bm_off = 0.0f;
+                    vr_jf--;
+                }
+            }
             lag = 2.0f * (float)(rb_w - bm_start) - bm_off;      /* how far behind the live mix it is */
-            if (lag > (float)(RB_N - 16) * 2.0f)
-                bm_tgt = 0.0f;                  /* the ring is used up: back to the live mix */
+            if (!vr_jf && lag > (float)(RB_N - 400) * 2.0f) {
+                if (bm_tgt >= 1.0f && !var_exit)
+                    vr_jf = 128;                /* held: half time back to the live mix, a brake or a spin-back stopped */
+                else
+                    bm_tgt = 0.0f;              /* the ring is used up: back to the live mix */
+            }
         } else if (bm_speed > 0.0f) {          /* the tape slowing: a beat to a stop */
             rb_read(bm_off, &bl, &br);
             w = bm_speed;
