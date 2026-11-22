@@ -8738,6 +8738,13 @@ static void render_acid(uint32_t n)
 {
     const int ft_acid = fxs_v[EN_FXS_FT_ACID];
     uint32_t j;
+    static int ft_was = -1;
+    if (ft_acid != ft_was) {                    /* (0.17.90) another filter type: its coefficients at once and its states from rest (the two SVFs and the
+                                                 * diode ladder share them: up to 31 samples of the one's numbers in the other blew the filter up) */
+        ft_was = ft_acid;
+        ac_ctl = 0;
+        acid.s[0] = acid.s[1] = acid.s[2] = acid.s[3] = acid.lfb = 0.0f;
+    }
     const acid_snd_t *AS = &ACID_SOUND[(unsigned)par[P_AC_WAVE] < EN_NACID ? par[P_AC_WAVE] : 0];
     const int osc = AS->osc;
     const int sq = fxs_v[EN_FXS_SQ_TGT] != 1;    /* SCREAM on the acid (its Target: 0 the acid, 2 both); at 0 each factor below is exactly 1 */
@@ -8782,7 +8789,7 @@ static void render_acid(uint32_t n)
                                                  * The ladder peaks at wc / sqrt 2, so wc is the knob's cutoff times sqrt 2; it rings on at k = 17 (the transistor
                                                  * ladder's 4), so the resonance's k runs to 17 and a hair past. g is half a TPT 1-pole's gain (the stages' 1/2). */
                 const float gw = fm_tanf(FM_PI * fm_clampf(fc * 2.0f, 40.0f, 19000.0f) * (1.0f / EN_SR)), G = gw / (1.0f + gw), g = 0.5f * G,
-                            k = fm_minf((0.6f + 16.4f * res) * (1.0f + 0.5f * sqa) * (1.0f - 0.85f * lfo_ares) * (1.0f + 0.3f * wow), 18.5f),
+                            k = fm_minf((0.6f + 17.4f * res) * (1.0f + 0.5f * sqa) * (1.0f - 0.85f * lfo_ares) * (1.0f + 0.3f * wow), 18.5f),   /* (0.17.90, the maker: more: Reso 90 is 96 % of the way to ringing, 100 rings) */
                             c23 = 1.0f / (1.0f - g * g), g23 = g * c23, c12 = 1.0f / (1.0f - g * g23), g12 = g * c12,
                             c01 = 1.0f / (1.0f - 2.0f * g * g12), g01 = 2.0f * g * c01, g24 = g * g23, g14 = g24 * g12, g04 = g14 * g01;
                 acid.c1[0] = g;
