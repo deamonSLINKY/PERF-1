@@ -722,7 +722,8 @@ let lastInput = performance.now(), idleSusp = false;           // (idle: hidden,
 function idleCheck() {
   if (!ac || !node || booting === null) return;
   const quiet = !(live && live.playing) && !(typeof rec !== "undefined" && rec) && !(lk && (lk.on || lk.clk));
-  const want = quiet && (document.hidden || performance.now() - lastInput > 120000);
+  const still = performance.now() - lastInput;
+  const want = quiet && (still > 120000 || (document.hidden && still > 10000));   // (hidden: after ten seconds, the emulator's own writes done: a voice or a setting is kept 2-4 s after its change)
   if (want && ac.state === "running") { idleSusp = true; ac.suspend().catch(() => {}); }
   else if (!want && idleSusp && ac.state === "suspended") { idleSusp = false; ac.resume().catch(() => {}); }
 }
@@ -756,6 +757,11 @@ function takeUp(g, i, bytes, restore) {                       // the piece in ha
   drafts.delete(g * 100 + i);
   cur = { genre: g, piece: i }; ioOf = { g, p: i }; $("undo").hidden = true; impPrev = null;
   io = new Uint8Array(d || bytes);
+  const ff = fadeFix.get(g * 100 + i);
+  if (ff) {                                                   // (a fade the song cut short: the part's level as it was before it)
+    fadeFix.delete(g * 100 + i);
+    for (const [q, v] of Object.entries(ff)) { io[REC_PAR + +q] = v - P[+q].min; if (node) node.port.postMessage({ type: "st_par", p: +q, v, g, pc: i, id: ++reqId }); }
+  }
   dxv = null;                                                 // (the DX7 editor reads the new piece's pluck voice when it is next shown)
   resetHistory();
   $("genre").value = g; fillPieces(); $("piece").value = i;
@@ -793,18 +799,20 @@ function parseLive(b) {
 let hist = {}, slotT = 0, slotNow = -2, lastBar = -1;
 function resetHistory() { hist = {}; slotT = 0; slotNow = -2; lastBar = -1; }
 let loomPos = -1;                                            // the playhead: a loom bar and its fraction
+let playedAt = 0;                                             // (when the engine last played: a song's own stop at its end is followed, a stop by hand has nothing to follow)
 function onLive(b) {
   live = parseLive(b);
   deskMeters();
   if (!io) return;
-  if (cur && !following && !opening && live.playing && (live.genre !== cur.genre || live.piece !== cur.piece) && live.genre < N.genres.length) {
+  if (live.playing) playedAt = performance.now();
+  if (cur && !following && !opening && (live.playing || performance.now() - playedAt < 3000) && (live.genre !== cur.genre || live.piece !== cur.piece) && live.genre < N.genres.length) {
     following = true;
     ask({ type: "st_read" }).then((r) => {
       following = false;
       if (!r.ok || r.timeout || !live || opening) return;
       const was = S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece), kept = dirty;
       const back = takeUp(live.genre, live.piece, r.io, true);
-      say("The song moved on: " + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + " plays, and edits go into it now" + (back ? ", with your unsaved edits to it back" : "") +
+      say((live.playing ? "The song moved on: " : "The song ended: ") + S.genreName(cur.genre) + " " + S.pieceName(cur.genre, cur.piece) + (live.playing ? " plays" : " is ready") + ", and edits go into it now" + (back ? ", with your unsaved edits to it back" : "") +
           (kept ? ". Your unsaved edits to " + was + " are kept: open it again (or let the song come back to it) and Save." : " (" + was + " as it was saved)."));
       refresh();
     });
@@ -1631,6 +1639,7 @@ async function pieceIn(pc) {
     if (slot < 0 && to >= 0) { const r = await ask({ type: "st_vox", op: "put", slot: to, keep: true, vox: pc.voice }); if (r.ok >= 0) slot = r.ok; }
     if (slot >= 0) { io[REC_PAR + PE.P_CM_SND] = DXB() + slot - P[PE.P_CM_SND].min; dxN = Math.max(dxN, slot + 1); dxv = null; }
   }
+  if (!(ioOf && ioOf.g === pc.genre && ioOf.p === pc.slot)) return say("The song moved on while the piece was opening: stop the song, then open it again.", true);
   changed();
   say("Opened " + (pc.meta && pc.meta.t ? "“" + pc.meta.t + "”" : "the piece") + " into " + S.genreName(pc.genre) + " " + S.pieceName(pc.genre, pc.slot) + " (in the emulator; your bank is not changed).");
 }
@@ -1933,6 +1942,7 @@ document.addEventListener("scroll", () => { hoverT = performance.now(); }, true)
 const wheelOk = (el, e) => e.deltaY !== 0 && (document.activeElement === el || (hoverEl === el && performance.now() - hoverT > 350));
 /* touch: a swipe that starts on a knob or the step editor scrolls the page, as a phone's would. The press reaches the page only as a tap (let go
  * where it began), a hold (still for 180 ms: then the finger turns it and the page holds still) or, on a slider, a sideways drag */
+function capPtr(el, e) { try { el.setPointerCapture(e.pointerId); } catch { /* (a press given late by the touch gate, its finger already up: a tap) */ } }
 const TOUCH_GATED = "#ed, .ctl:not(.list), .dxk, .fxkn";
 let tg = null;
 function tgGo() {                                             // the press, held back, given to the page now
@@ -1944,6 +1954,7 @@ function tgGo() {                                             // the press, held
 document.addEventListener("pointerdown", (e) => {
   if (!e.isTrusted || e.pointerType !== "touch") return;
   const el = e.target.closest && e.target.closest(TOUCH_GATED);
+  if (tg) clearTimeout(tg.tm);
   tg = null;
   if (!el) return;
   e.stopImmediatePropagation();
@@ -1973,7 +1984,7 @@ document.addEventListener("pointerdown", (e) => {
   if (!el || !io || e.button !== 0 || e.altKey) return;      // (right-click and Alt-click: the lock, nothing else)
   const p = +el.dataset.p, r = el.getBoundingClientRect();
   drag = { el, p, x: e.clientX, y: e.clientY, v0: parV(p), moved: false, fader: el.classList.contains("fader"), knob: el.classList.contains("knob"), r };
-  try { el.setPointerCapture(e.pointerId); } catch { /* (a press given late, its finger already up: a tap) */ } el.focus(); e.preventDefault();
+  capPtr(el, e); el.focus(); e.preventDefault();
   if (drag.fader) setFromCtl(p, meta(p).min + (r.bottom - e.clientY) / r.height * (meta(p).max - meta(p).min));
 });
 document.addEventListener("pointermove", (e) => {
@@ -2032,7 +2043,7 @@ function soundRender() {
   if (fx) h += '<div class="sec"><h3>FILTERS' + (fx.length > 1 ? " and SCREAM" : "") + ' (the FX menu&#39;s pages, kept with the piece)</h3>' +
     (noPadFilt ? '<p class="muted" style="margin:0 0 6px;font-size:.8rem">NO FILTER on this pad sound: its filter is on the saw sounds (Strings, Dub, Trance, Poly, Rave, Brass, Fat, Pluck). The setting is kept for when you pick one.</p>' : "") +
     '<div class="ctls kn"' + (noPadFilt ? ' style="opacity:.4"' : "") + ">" + fx.map((p) => knobHTML(p, null, col)).join("") + "</div></div>";
-  if (sel === "bass") h += '<div class="sec"><h3>THE ANSWER (the bass answers in its own bars, kept with the piece: 0.17.30)</h3><div class="ctls kn">' + [-8, -9].map((q) => knobHTML(q, null, col)).join("") + "</div></div>";
+  if (sel === "bass") h += '<div class="sec"><h3>THE ANSWER (the bass answers in its own bars, kept with the piece)</h3><div class="ctls kn">' + [-8, -9].map((q) => knobHTML(q, null, col)).join("") + "</div></div>";
   if (sel === "pluck") h += dxHTML();
   h = vibeHTML(col) + h;
   $("sound").innerHTML = h + '<p class="muted hint">Drag a knob up or down (Shift: finer), drag the handles on the pictures, turn the mouse wheel over a knob, or use the arrow keys; double-click: its default. Every setting here is the FM-1&#39;s own and stored with the piece' + (h.includes('class="sec dx7') ? ', except the DX7 voice: it goes into your voice slots (the FM-1 keeps those apart from the pieces)' : "") + ".</p>";
@@ -2499,7 +2510,7 @@ $("sound").addEventListener("pointerdown", (e) => {
   if (!dxv) return;
   const k = e.target.closest(".dxk, .dxfeel");
   if (k) {                                                    // a knob: up turns it up, 150 px the whole way
-    e.preventDefault(); k.setPointerCapture(e.pointerId); k.focus();
+    e.preventDefault(); capPtr(k, e); k.focus();
     if (k.classList.contains("dxfeel")) { if (!dxBase) dxBase = Uint8Array.from(dxv); dxKDrag = { k, feel: +k.dataset.feel, y: e.clientY, f0: dxFeel[+k.dataset.feel] }; }
     else dxKDrag = { k, i: +k.dataset.dx, y: e.clientY, v0: dxv[+k.dataset.dx] };
     return;
@@ -2511,15 +2522,15 @@ $("sound").addEventListener("pointerdown", (e) => {
     dxOp = h[4]; dxOpFill(); dxDraw(); return;
   }
   if (cv.id === "dxLfo") return dxSet(FP.LFW, (dxv[FP.LFW] + 1) % 6);
-  if (cv.id === "dxFreq" && dxFreqG) { e.preventDefault(); cv.setPointerCapture(e.pointerId); dxFreqDrag = true; return dxFreqAt(x, !e.shiftKey); }
+  if (cv.id === "dxFreq" && dxFreqG) { e.preventDefault(); capPtr(cv, e); dxFreqDrag = true; return dxFreqAt(x, !e.shiftKey); }
   if (cv.id === "dxKs" && dxKsG) {
     const h = dxKsG.ends.reduce((a, q) => (Math.hypot(q[0] - x, q[1] - y) < (a ? Math.hypot(a[0] - x, a[1] - y) : 22) ? q : a), null);
-    if (!h) return; e.preventDefault(); cv.setPointerCapture(e.pointerId); dxKsDrag = { which: h[2], x: h[0] }; return;
+    if (!h) return; e.preventDefault(); capPtr(cv, e); dxKsDrag = { which: h[2], x: h[0] }; return;
   }
   const G = dxEG[cv.id]; if (!G) return;
   const h = G.hp.reduce((a, q) => (Math.hypot(q.x - x, q.y - y) < (a ? Math.hypot(a.x - x, a.y - y) : 18) ? q : a), null);
   if (!h) return;
-  e.preventDefault(); cv.setPointerCapture(e.pointerId);
+  e.preventDefault(); capPtr(cv, e);
   dxEgDrag = { id: cv.id, k: h.k, x0: h.x0, sx: G.sx }; dxDraw();
 });
 $("sound").addEventListener("pointermove", (e) => {
@@ -2575,6 +2586,7 @@ const fxCol = (bit) => (FX_KIND.find(([bs]) => bs.includes(bit)) || [0, "#5b6596
 const fxIsOn = (bit) => !!fxd && !!(bit < 32 ? (fxd.lo >>> bit) & 1 : (fxd.hi >>> (bit - 32)) & 1);
 async function fxAsk(m) {
   const r = await ask({ type: "st_fx", ...m, light: m.all ? 0 : 1 });
+  if (r.timeout) return null;                                 // (no answer: the sound resting, or the emulator busy)
   if (!r.pages && !r.one && r.lo === undefined) { say("This emulator build has no FX hooks: rebuild it (web/emu/build_clang.sh).", true); return null; }
   if (r.one && fxd && fxd.pages) { fxd.pages[r.one.page] = r.one.desc; const { one, ...rest } = r; fxd = { ...fxd, ...rest }; }
   else fxd = { ...fxd, ...r };
@@ -2591,21 +2603,28 @@ function fxMask(bit, on) {                                     // the latched ma
   if (bit < 32) lo = on ? (lo | (1 << bit)) >>> 0 : (lo & ~(1 << bit)) >>> 0; else hi = on ? (hi | (1 << (bit - 32))) >>> 0 : (hi & ~(1 << (bit - 32))) >>> 0;
   return { lo: lo | 0, hi: hi | 0 };
 }
-function fxLock(bit, on) {
+async function fxLock(bit, on) {
+  await fxAsk({});                                            // (the mask as the engine has it now: a Flex one shot that ended is not sent on again)
   const m = fxMask(bit, on);
   mvAdd({ k: "fx", ...m });
-  return fxAsk(m).then(fxPaint);
+  await fxAsk(m); fxPaint();
 }
+setInterval(() => {                                           // (an effect that lets go by itself, a Flex one shot at its bar's end: the keys show it)
+  if (view !== "fx" || !fxd || !fxd.keys || !node || fxPress || xyTouch || fxBusy || !ac || ac.state !== "running") return;
+  const was = [fxd.lo, fxd.hi, fxd.flex].join();
+  fxAsk({}).then((r) => { if (r && view === "fx" && !fxPress && [fxd.lo, fxd.hi, fxd.flex].join() !== was) { fxPaint(); fxSide(); } });
+}, 400);
 /* the third and fourth banks, as the unit's DIAL turns to them: Flex Beat (every key the one FLEX effect, each its own pattern: a tap latches it, a hold
  * plays it as a one shot each bar until let go, then the latched one again) and the DJ snips (each key a sampled sound, held to play) */
 let fxBank = 1;                                               // (the second row: 1 the beat effects, 2 Flex Beat, 3 the DJ snips)
 const FXB_NAME = ["FILTERS, COLOUR AND SPACE", "REPEATS, MOTION AND DRUMS", "FLEX BEAT: TAP LATCHES, HOLD PLAYS IT EACH BAR", "DJ SNIPS: HOLD TO PLAY"];
 const flexBit = () => (fxd && fxd.keys && fxd.keys[2] ? fxd.keys[2][0] : 63);
 const flexOn = (k) => !!fxd && fxIsOn(flexBit()) && fxd.flex === k;
-function fxFlex(pat, on, hold) {                              // a Flex pattern, with the FLEX bit on or off; hold: a pad held by hand (1) or let go (0)
+async function fxFlex(pat, on, hold) {                        // a Flex pattern, with the FLEX bit on or off; hold: a pad held by hand (1) or let go (0)
+  await fxAsk({});
   const m = fxMask(flexBit(), on);
-  mvAdd({ k: "fx", ...m, flex: pat });
-  return fxAsk({ ...m, flex: pat, fhold: hold }).then(fxPaint);
+  mvAdd({ k: "fx", ...m, flex: pat, fhold: hold });           // (7. a recorded hold plays back and exports as held)
+  await fxAsk({ ...m, flex: pat, fhold: hold }); fxPaint();
 }
 function fxRender() {
   if (!fxd || !fxd.keys) return;
@@ -2696,9 +2715,19 @@ async function xyAt(e) {
   xyDraw();
 }
 let fxPress = null;
+const snipHeld = new Map();                                   // (the DJ snips held: a finger each)
+function snipOff(id) {                                        // a snip let go (id undefined: every one)
+  for (const [pid, h] of [...snipHeld]) {
+    if (id !== undefined && pid !== id) continue;
+    snipHeld.delete(pid); h.el.classList.remove("held");
+    if (node) node.port.postMessage({ type: "st_note", voice: 3, note: 53 + h.k, vel: 0 });
+  }
+}
+["pointerup", "pointercancel"].forEach((ev) => document.addEventListener(ev, (e) => { if (snipHeld.has(e.pointerId)) snipOff(e.pointerId); }, true));
+window.addEventListener("blur", () => snipOff());
 $("fx").addEventListener("pointerdown", async (e) => {
   if (e.target.id === "xyPad" && fxd) {                       // the XY pad: its effects on while touched
-    e.preventDefault(); e.target.setPointerCapture(e.pointerId);
+    e.preventDefault(); capPtr(e.target, e);
     const bits = [...new Set([xyGet(xyA).P0.bit, xyGet(xyB).P0.bit])].filter((b) => b < 62 && !fxIsOn(b));
     xyTouch = { bits };
     for (const b of bits) await fxLock(b, true);
@@ -2706,22 +2735,28 @@ $("fx").addEventListener("pointerdown", async (e) => {
     return;
   }
   const tb = e.target.closest("[data-fxbank]");
-  if (tb && fxd) { fxBank = +tb.dataset.fxbank; fxSel = -1; fxRender(); return; }
+  if (tb && fxd) { snipOff(); fxBank = +tb.dataset.fxbank; fxSel = -1; fxRender(); return; }
   const sn = e.target.closest(".fxk[data-snip]");
   if (sn && fxd && node) {                                    // a DJ snip: played while held (the sampler's voice, as the unit's fourth bank)
     e.preventDefault(); sn.classList.add("held");
+    snipOff(e.pointerId);
     node.port.postMessage({ type: "st_note", voice: 3, note: 53 + +sn.dataset.snip, vel: 100 });
-    fxPress = { snip: +sn.dataset.snip, el: sn };
+    snipHeld.set(e.pointerId, { k: +sn.dataset.snip, el: sn });
     return;
   }
   const fl = e.target.closest(".fxk[data-flex]");
   if (fl && fxd) {                                            // a Flex pad: on at once, held (a one shot each bar) until let go
     e.preventDefault();
-    const k = +fl.dataset.flex, was = flexOn(k);
-    fxPress = { flex: k, was, prev: { on: fxIsOn(flexBit()), pat: fxd.flex }, t: performance.now(), p: null, el: fl }; fl.classList.add("held");
+    const k = +fl.dataset.flex, pr = { flex: k, was: flexOn(k), prev: { on: fxIsOn(flexBit()), pat: fxd.flex }, t: performance.now(), p: null, el: fl };
+    fxPress = pr; fl.classList.add("held");
     const pg = fxd.pages.findIndex((x) => x.name === "FLEX");
     if (pg >= 0 && fxSel !== pg) { fxSel = pg; fxSide(); }
-    if (!was) { fxPress.p = fxFlex(k, true, 1); await fxPress.p; }
+    pr.p = (async () => {                                     // (on or off as the engine has it now: a one shot that ended is off)
+      await fxAsk({});
+      pr.was = flexOn(k); pr.prev = { on: fxIsOn(flexBit()), pat: fxd.flex };
+      if (!pr.was) await fxFlex(k, true, 1);
+    })();
+    await pr.p;
     return;
   }
   const b = e.target.closest(".fxk[data-bit]");
@@ -2734,7 +2769,7 @@ $("fx").addEventListener("pointerdown", async (e) => {
     return;
   }
   const k = e.target.closest(".fxkn");
-  if (k && fxd) { e.preventDefault(); k.setPointerCapture(e.pointerId); const c = fxd.pages[+k.dataset.page].c[+k.dataset.i]; fxPress = { knob: k, y: e.clientY, v0: c.v, moved: false }; }
+  if (k && fxd) { e.preventDefault(); capPtr(k, e); const c = fxd.pages[+k.dataset.page].c[+k.dataset.i]; fxPress = { knob: k, y: e.clientY, v0: c.v, moved: false }; }
 });
 $("fx").addEventListener("pointermove", (e) => {
   if (xyTouch && e.target.id === "xyPad") { xyAt(e); return; }
@@ -2750,7 +2785,6 @@ document.addEventListener("pointerup", async () => {
   if (pr && pr.el) pr.el.classList.remove("held");
   if (!pr || !fxd) return;
   if (pr.knob) { if (!pr.moved) { const c = fxd.pages[+pr.knob.dataset.page].c[+pr.knob.dataset.i]; if (c.hi - c.lo === 1) fxSetK(+pr.knob.dataset.page, +pr.knob.dataset.i, c.v === c.lo ? c.hi : c.lo); } return; }
-  if (pr.snip !== undefined) { if (node) node.port.postMessage({ type: "st_note", voice: 3, note: 53 + pr.snip, vel: 0 }); return; }
   if (pr.flex !== undefined) {
     const held = performance.now() - pr.t > 250, nm = (k) => "Flex Beat " + fxd.flexNames[k];   // (as the unit: ui.c TAP_MS)
     if (pr.p) await pr.p;
@@ -2819,7 +2853,7 @@ function mvAdd(ev) {
   if (view === "song") songRender();
 }
 function mvFire(e) {
-  if (e.k === "fx") fxAsk({ lo: e.lo, hi: e.hi, ...(e.flex !== undefined ? { flex: e.flex } : {}) }).then(() => { if (view === "fx") { fxPaint(); fxSide(); } });
+  if (e.k === "fx") fxAsk({ lo: e.lo, hi: e.hi, ...(e.flex !== undefined ? { flex: e.flex } : {}), ...(e.fhold !== undefined ? { fhold: e.fhold } : {}) }).then(() => { if (view === "fx") { fxPaint(); fxSide(); } });
   else if (e.k === "fade") deskFade(e.trk, e.p, e.dir, e.bars);
 }
 setInterval(() => {                                           // the song's moves, as it comes to them
@@ -2829,7 +2863,7 @@ setInterval(() => {                                           // the song's move
   if (!mvLast || at.pl !== mvLast.pl || at.s < mvLast.s) {    // a place begins (or the song round again): its moves up to here
     const first = song.places.findIndex((x) => x);
     const base = moves.find((e) => e.k === "base");
-    if (at.pl === first && base && moves.some((e) => e.k === "fx")) fxAsk({ lo: base.lo, hi: base.hi });   // (from the top: the effects as they were when the recording began)
+    if (at.pl === first && base && moves.some((e) => e.k === "fx")) fxAsk({ lo: base.lo, hi: base.hi, fhold: 0, ...(base.flex !== undefined ? { flex: base.flex } : {}) });   // (from the top: the effects as they were when the recording began)
     moves.filter((e) => e.pl === at.pl && e.s <= at.s).forEach(mvFire);
   } else moves.filter((e) => e.pl === at.pl && e.s > mvLast.s && e.s <= at.s).forEach(mvFire);
   mvLast = at;
@@ -2837,6 +2871,7 @@ setInterval(() => {                                           // the song's move
 
 /* ---- fades: a part's level down to out over some bars (then muted, its level back as it was), or up from out (unmuted at nothing, up to its level);
  * the steps go to the engine as the unit's knob would (web_st_par), so the piece keeps its level */
+const fadeFix = new Map();                                    // (a fade stopped part way: genre * 100 + piece -> its parts' own levels, set again when the piece comes back)
 let fadeBars = 4, fadeGen = 0;                                 // (fadeGen: one more each piece taken up; a fade of the last piece stops)
 const fadeV = {}, fading = {};
 async function deskFade(trk, p, dir, bars) {                 // (dir, bars: a recorded move's; dir 1 in, 0 out: none when the part is that way already)
@@ -2872,6 +2907,10 @@ async function deskFade(trk, p, dir, bars) {                 // (dir, bars: a re
     }
   }
   delete fadeV[p]; delete fading[trk];
+  if (!done && own.g !== undefined) {                         // (cut short: the part's own level back, now if the piece is still in hand, else when it comes back)
+    if (ioOf && ioOf.g === own.g && ioOf.p === own.pc) node.port.postMessage({ type: "st_par", p, v: target, ...own, id: ++reqId });
+    else { const k = own.g * 100 + own.pc; fadeFix.set(k, { ...(fadeFix.get(k) || {}), [p]: target }); }
+  }
   if (!done) { deskFadeShow(trk); syncCtls(); return say("The fade stopped: another piece plays now, at its own level."); }
   deskFadeShow(trk); syncCtls();
   say(out ? "Faded in." : "Faded out: the part is muted (M), its level as it was. FADE IN brings it back.");
@@ -2940,7 +2979,7 @@ function diceRoll(ps) {
 let vibeDrag = null;
 document.addEventListener("pointerdown", (e) => {
   const k = e.target.closest(".vibek"); if (!k || !io) return;
-  e.preventDefault(); k.setPointerCapture(e.pointerId);
+  e.preventDefault(); capPtr(k, e);
   const vk = +k.dataset.vk, [, , ...targets] = VIBES[sel][vk];
   vibeDrag = { k, vk, y: e.clientY, f0: vibePos[sel][vk], base: targets.map(([p, w]) => [p, w, parV(p)]) };
 });
@@ -3498,7 +3537,7 @@ $("song").addEventListener("pointerdown", (e) => {
   const p = slAt(e), t = slKind(p);
   if (!t) return;
   e.preventDefault();
-  e.target.setPointerCapture(e.pointerId);
+  capPtr(e.target, e);
   setSel = t.i;
   tl = { ...t, x0: p.x, y0: p.y, moved: false, bw: songGeo.bw };
   if (t.kind === "bars") tl.v = placeBars(t.i);
@@ -3675,6 +3714,7 @@ async function renderOnce(mod, m, stem, trimAt) {             // the song once, 
   const render = (keep) => { ex.web_render(N); frames += N; if (keep) { Ls.push(new Float32Array(mem.buffer, ex.web_out_l(), N).slice()); Rs.push(new Float32Array(mem.buffer, ex.web_out_r(), N).slice()); } };
   for (let k = 0; k < SR / N; k++) render(false);                     // (the boot card: a second of the device's own time)
   const sl = new Uint8Array(mem.buffer, ex.web_st_sl(), ex.web_st_sl_len()); sl.set(new Uint8Array(m.sl).subarray(0, sl.length)); ex.web_st_set(1);
+  if (m.flex !== undefined && ex.web_st_flex) ex.web_st_flex(m.flex | 0, -1);   // (a Flex pad latched: its pattern)
   ex.web_st_fx_lock(1, m.lo | 0, m.hi | 0);
   if (stem && ex.web_st_stem) ex.web_st_stem(stem);
   ex.web_st_go(m.first); ex.web_st_play(1);
@@ -3682,7 +3722,7 @@ async function renderOnce(mod, m, stem, trimAt) {             // the song once, 
   let last = null, started = false, endAt = 0, k = 0;
   const pos = () => { const b = live(); return { pl: b[135], s: (b[136] === 255 ? 0 : b[136]) * 16 + b[4], trk: b[137] }; };
   const fire = (ev) => {
-    if (ev.k === "fx") { if (ev.flex !== undefined && ex.web_st_flex) ex.web_st_flex(ev.flex | 0, -1); ex.web_st_fx_lock(1, ev.lo | 0, ev.hi | 0); return; }
+    if (ev.k === "fx") { if (ev.flex !== undefined && ex.web_st_flex) ex.web_st_flex(ev.flex | 0, ev.fhold !== undefined ? ev.fhold | 0 : -1); ex.web_st_fx_lock(1, ev.lo | 0, ev.hi | 0); return; }
     if (ev.k !== "fade") return;
     const at = pos(), out = (at.trk & ev.trk) === ev.trk && !(stem & ev.trk);
     if (!!ev.dir !== out || ramps.some((r) => r.trk === ev.trk)) return;
@@ -3698,7 +3738,7 @@ async function renderOnce(mod, m, stem, trimAt) {             // the song once, 
     if (moves.length && playing) {
       const at = pos();
       if (at.pl < 16) {
-        if (!last || at.pl !== last.pl || at.s < last.s) { if (at.pl === m.first && m.base) ex.web_st_fx_lock(1, m.base.lo | 0, m.base.hi | 0); moves.filter((v) => v.pl === at.pl && v.s <= at.s).forEach(fire); }
+        if (!last || at.pl !== last.pl || at.s < last.s) { if (at.pl === m.first && m.base) { if (m.base.flex !== undefined && ex.web_st_flex) ex.web_st_flex(m.base.flex | 0, 0); ex.web_st_fx_lock(1, m.base.lo | 0, m.base.hi | 0); } moves.filter((v) => v.pl === at.pl && v.s <= at.s).forEach(fire); }
         else moves.filter((v) => v.pl === at.pl && v.s > last.s && v.s <= at.s).forEach(fire);
         last = at;
       }
@@ -3859,7 +3899,7 @@ async function songWav(stems) {
     say("Exported " + mmss(secs) + " of song in " + took.toFixed(1) + " s (" + (secs / took).toFixed(1) + "× real time): " + name + " (" + (blob.size / 1048576).toFixed(1) + " MB)" + (m.cut ? ". It ran past 20 minutes and was cut there." : ". The mix check is under the song."));
   };
   w.onerror = (e) => { exp = null; w.terminate(); songRender(); say("The fast export failed (" + (e.message || "worker") + "): recording it live instead.", true); songWavLive(); };
-  w.postMessage({ type: "go", wasm, store, master: 2800, seed: (Math.random() * 4294967295) >>> 0 || 1, sl, first: s0, lo: fxr ? fxr.lo | 0 : 0, hi: fxr ? fxr.hi | 0 : 0,
+  w.postMessage({ type: "go", wasm, store, master: 2800, seed: (Math.random() * 4294967295) >>> 0 || 1, sl, first: s0, lo: fxr ? fxr.lo | 0 : 0, hi: fxr ? fxr.hi | 0 : 0, flex: fxr ? fxr.flex : undefined,
     moves: moves.filter((e) => e.k !== "base"), base: base || null, ptempo: PE.P_TEMPO, maxSecs: 1200,
     stems: stems ? [["pad", 0x40], ["bass", 0x10], ["acid", 0x20], ["pluck", 0x80], ["drums", 0x0F]] : null }, [wasm]);
 }
@@ -3956,7 +3996,7 @@ $("song").addEventListener("click", async (e) => {
   if (id === "slStems") return exp ? expCancel() : songWav(true);
   if (id === "mvRec") {
     mvRec = !mvRec;
-    if (mvRec && !moves.some((e) => e.k === "base") && node) { const r = await fxAsk({}); if (r) { moves.unshift({ k: "base", lo: r.lo | 0, hi: r.hi | 0, pl: -1, s: -1 }); mvSave(); } }
+    if (mvRec && !moves.some((e) => e.k === "base") && node) { const r = await fxAsk({}); if (r) { moves.unshift({ k: "base", lo: r.lo | 0, hi: r.hi | 0, ...(r.flex !== undefined ? { flex: r.flex } : {}), pl: -1, s: -1 }); mvSave(); } }
     songRender();
     return say(mvRec ? "Recording moves: play the song, then tap effects in FX and fade parts on the DESK; each is kept where it happens and plays back with the song. Press again to stop recording." :
       "Moves kept: " + moves.filter((e) => e.k !== "base").length + ". They play back each time the song comes to them (the studio only: the FM-1's song does not keep them).");
@@ -4024,8 +4064,9 @@ async function savePiece() {                                  // the piece in ha
   const { g, p } = ioOf, name = S.genreName(g) + " " + S.pieceName(g, p);
   const movedSay = () => say("The song moved on before " + name + " was saved: your edits are kept. Open it again (or let the song come back to it) and Save.", true);
   clearTimeout(putTimer);
-  const pr = await ask({ type: "st_put", io: io.slice(), g, p });                 // (the last edit in first: the engine takes its lines and steps at
-  if (pr.moved) { if (ioOf && (ioOf.g !== g || ioOf.p !== p)) drafts.set(g * 100 + p, new Uint8Array(pr.io || io)); movedSay(); return false; }
+  const sent = io.slice(), wasDirty = dirty;
+  const pr = await ask({ type: "st_put", io: sent, g, p });                       // (the last edit in first: the engine takes its lines and steps at
+  if (pr.moved) { if (wasDirty && ioOf && (ioOf.g !== g || ioOf.p !== p) && !drafts.has(g * 100 + p)) drafts.set(g * 100 + p, sent); movedSay(); return false; }
   await new Promise((res) => setTimeout(res, 120));                             //  its next blocks, and SAVE reads them back from it)
   const ack = storeAck(1500), r = await ask({ type: "st_save", g, p });
   if (r.moved) { movedSay(); return false; }
@@ -4580,7 +4621,7 @@ document.addEventListener("pointerdown", (e) => {
   const [x, y] = picAt(cv, e), h = nearest(cv, x, y);
   if (!h) { const lf = (cv._hs || []).find((k) => Number.isFinite(k.click)); if (lf) setFromCtl(lf.click, (parV(lf.click) + 1) % (meta(lf.click).max + 1)); return; }
   pdrag = { cv, h };
-  cv._hot = h.name; cv.setPointerCapture(e.pointerId); e.preventDefault();
+  cv._hot = h.name; capPtr(cv, e); e.preventDefault();
 });
 document.addEventListener("pointermove", (e) => {
   const cv = pdrag ? pdrag.cv : e.target.closest && e.target.closest("canvas.pic");
