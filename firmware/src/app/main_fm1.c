@@ -584,6 +584,8 @@ static void px_service(void)
         } else if (e >> 28 == 6u && bk_restored && ui_restore_state() == 2) {   /* restore: restart, once something was written */
             usb_detach();
             fm1_delay_ms(30);
+            bootguard.pending = 0;                  /* (0.17.93, the maker's restore: an intentional reset, as enter_uboot's. A restore done in the first 30 s
+                                                     * after a start counted as a failed start: the next ran on one core, starved, and the one after was safe mode) */
             fm1_reboot();
         } else if (e >> 28 == 7u) {                      /* about: answered below, as the queue has room */
             about_req = 1;

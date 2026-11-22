@@ -10596,7 +10596,10 @@ void ui_init(void)
         draw_splash();
     } else {
         lcd_fill(0, 0, 240, 240, K_BG);
-        if (!en_playing) {
+        if (!en_playing && plat_core2() == 2u) {  /* (0.17.93) one core (after a failed start or a crash): a busy piece could starve the screen and the
+                                                 * watchdog, so it waits for PLAY */
+            say("ONE CORE: PLAY", "TO START");
+        } else if (!en_playing) {
             track_fresh(1, 1);
             af_fresh = 1;
             sl_start();
@@ -10619,7 +10622,9 @@ void ui_frame(void)
         ui.btn_used = ui.btn;
         ui.shift_keys = ui.keys;
         lcd_fill(0, 0, 240, 240, K_BG);
-        if (!en_playing) {
+        if (!en_playing && plat_core2() == 2u) {  /* (0.17.93) one core: PLAY starts it (as above) */
+            say("ONE CORE: PLAY", "TO START");
+        } else if (!en_playing) {
             track_fresh(1, 1);
             af_fresh = 1;
             sl_start();
