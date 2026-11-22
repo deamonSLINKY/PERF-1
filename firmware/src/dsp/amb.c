@@ -2277,6 +2277,7 @@ static struct {
     uint8_t play;                               /* played from the keys: the line steps on, silent */
     float ps, p3, p4, p5, lph;                  /* more phases (sync, sub, the trance saws, the supersaw's...), the PWM's LFO */
     float lfb;                                  /* the 303 filter: its output's slow part (150 Hz), kept out of the feedback */
+    float dl[5];                                /* (0.17.89) the diode ladder's nested gains: g23, g12, g01, g24, g14 (c1, c2: the rest) */
 } acid;
 static int8_t ac_off[EN_NSTEP], ac_oct[EN_NSTEP];   /* each step: scale steps above the chord's degree, octave */
 static uint16_t ac_gate, ac_accent, ac_slide;       /* bit s: step s plays; is accented; slides into the next */
@@ -8777,13 +8778,26 @@ static void render_acid(uint32_t n)
             const float wow = sqw * acid.acc * acid.env;
             ac_wow = wow;
             sqg = sqin + 2.0f * wow;
-            if (ft_acid == FT_303) {            /* the 303: the stages' gain G, the feedback k, G^4 and 1 / (1 + k G^4) (acid.c1 holds them) */
-                const float gg = fm_tanf(FM_PI * fm_clampf(fc, 40.0f, 16000.0f) * (1.0f / EN_SR)), G = gg / (1.0f + gg), G2 = G * G,
-                            k = fm_minf((0.15f + 3.85f * res) * (1.0f + 0.5f * sqa) * (1.0f - 0.85f * lfo_ares) * (1.0f + 0.3f * wow), 4.4f);
-                acid.c1[0] = G;
-                acid.c1[1] = k;
-                acid.c1[2] = G2 * G2;
-                acid.c1[3] = 1.0f / (1.0f + k * G2 * G2);
+            if (ft_acid == FT_303) {            /* (0.17.89) the 303's DIODE ladder (Zavalishin, The Art of VA Filter Design 5.10): its nested zero-delay gains.
+                                                 * The ladder peaks at wc / sqrt 2, so wc is the knob's cutoff times sqrt 2; it rings on at k = 17 (the transistor
+                                                 * ladder's 4), so the resonance's k runs to 17 and a hair past. g is half a TPT 1-pole's gain (the stages' 1/2). */
+                const float gw = fm_tanf(FM_PI * fm_clampf(fc * 2.0f, 40.0f, 19000.0f) * (1.0f / EN_SR)), G = gw / (1.0f + gw), g = 0.5f * G,
+                            k = fm_minf((0.6f + 16.4f * res) * (1.0f + 0.5f * sqa) * (1.0f - 0.85f * lfo_ares) * (1.0f + 0.3f * wow), 18.5f),
+                            c23 = 1.0f / (1.0f - g * g), g23 = g * c23, c12 = 1.0f / (1.0f - g * g23), g12 = g * c12,
+                            c01 = 1.0f / (1.0f - 2.0f * g * g12), g01 = 2.0f * g * c01, g24 = g * g23, g14 = g24 * g12, g04 = g14 * g01;
+                acid.c1[0] = g;
+                acid.c1[1] = 1.0f - G;
+                acid.c1[2] = k;
+                acid.c1[3] = 1.0f / (1.0f + k * g04);
+                acid.c2[0] = c23;
+                acid.c2[1] = c12;
+                acid.c2[2] = c01;
+                acid.c2[3] = g04;
+                acid.dl[0] = g23;
+                acid.dl[1] = g12;
+                acid.dl[2] = g01;
+                acid.dl[3] = g24;
+                acid.dl[4] = g14;
             } else {
                 svf_coefs(acid.c1, fc, k1 * (1.0f - 0.8f * wow));
                 svf_coefs(acid.c2, ft_acid == 1 ? fc * (1.0f / 1.15f) : fc * 1.15f, k2);
@@ -8965,18 +8979,25 @@ static void render_acid(uint32_t n)
             /* THE 303 (0.17.17): four one-pole stages in a ladder with the output fed back (zero-delay: the loop solved for the output, then a soft
              * clip on the ladder's input, as the transistors do), the feedback's low end taken out (a 150 Hz high-pass in the loop, as the TB-303's
              * coupling does), so the bass stays full while the resonance sings and squeals near the top; then the squelch, a touch gentler. */
-            const float G = acid.c1[0], k = acid.c1[1], b = 1.0f - G, xin = x * sqin * (1.0f + 0.45f * k),   /* (the passband held up as the resonance rises) */
-                        sum = ((b * acid.s[0] * G + b * acid.s[1]) * G + b * acid.s[2]) * G + b * acid.s[3],
-                        y4 = (acid.c1[2] * (xin + k * acid.lfb) + sum) * acid.c1[3];
-            float u = fm_tanhf(1.2f * (xin - k * (y4 - acid.lfb))) * (1.0f / 1.2f), v;
-            int st;
-            for (st = 0; st < 4; st++) {        /* each stage, zero-delay: v = (in - s) G, out = v + s, s = out + v */
-                v = (u - acid.s[st]) * G;
-                u = v + acid.s[st];
-                acid.s[st] = u + v;
-            }
-            acid.lfb += 0.0211f * (u - acid.lfb);
-            y = fm_tanhf(u * (3.4f + 2.2f * res) * adrv * sqg) / fm_minf(adrv, 1.3f);   /* (its makeup: a 24 dB ladder passes less than the two SVFs, about 6 dB) */
+            /* (0.17.89, the maker: "the 303 filter should do more") now the DIODE ladder, as the TB-303's: four 1-poles that lean on their neighbours
+             * (dy1 = wc((x + y2) - y1), dy2 = wc((y1 + y3)/2 - y2), dy3 = wc((y2 + y4)/2 - y3), dy4 = wc(y3/2 - y4)) rather than a plain chain:
+             * the slope softer above the cutoff, the resonance rounder and the passband sinking as it rises (1 / (1 + k)), the 303's thinning, while
+             * the 150 Hz high-pass in the loop keeps the deep bass. Zero-delay: each nested loop solved inwards (y3 = g23 y2 + s23, y2 = g12 y1 + s12,
+             * y1 = g01 x + s01), the main loop for y4, the soft clip on the ladder's input, then the stages run outwards and their states move on. */
+            const float g = acid.c1[0], om = acid.c1[1], k = acid.c1[2], g23 = acid.dl[0], g12 = acid.dl[1], g01 = acid.dl[2],
+                        s1 = om * acid.s[0], s2 = om * acid.s[1], s3 = om * acid.s[2], s4 = om * acid.s[3],
+                        s23 = (g * s4 + s3) * acid.c2[0], s12 = (g * s23 + s2) * acid.c2[1], s01 = (2.0f * g * s12 + s1) * acid.c2[2],
+                        s04 = acid.dl[4] * s01 + acid.dl[3] * s12 + g * s23 + s4,
+                        xin = x * sqin * (1.0f + 0.16f * k),   /* (the passband held up part of the way as the resonance rises: the 303 thins, but not to nothing) */
+                        y4l = (acid.c2[3] * (xin + k * acid.lfb) + s04) * acid.c1[3];
+            const float u = fm_tanhf(1.2f * (xin - k * (y4l - acid.lfb))) * (1.0f / 1.2f),
+                        y1 = g01 * u + s01, y2 = g12 * y1 + s12, y3 = g23 * y2 + s23, y4 = g * y3 + s4;
+            acid.s[0] = 2.0f * y1 - acid.s[0];   /* (a TPT 1-pole's state: twice its output less the old state) */
+            acid.s[1] = 2.0f * y2 - acid.s[1];
+            acid.s[2] = 2.0f * y3 - acid.s[2];
+            acid.s[3] = 2.0f * y4 - acid.s[3];
+            acid.lfb += 0.0211f * (y4 - acid.lfb);
+            y = fm_tanhf(y4 * (4.9f + 3.2f * res) * adrv * sqg) / fm_minf(adrv, 1.3f);   /* (its makeup: as loud as the transistor ladder was, measured with tests/host/gacid.c) */
         } else {
             y = svf_mm(x * sqin, acid.c1, &acid.s[0], ft_acid);
             y = fm_tanhf(y * (1.6f + 1.5f * res) * adrv * sqg) / fm_minf(adrv, 1.3f);   /* the squelch: driven between the two (Drive and Wow: harder) */

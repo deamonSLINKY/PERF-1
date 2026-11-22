@@ -651,7 +651,7 @@ type of each filter:
 | Band | Only a band around the cutoff: nasal, like a telephone. It is very good with resonance. |
 | Notch | A gap at the cutoff: hollow, with a phaser-like sound as the cutoff moves. |
 | Peak | The band at the cutoff is louder than the rest: a bite that sounds like a vowel. |
-| 303 | The acid only: a ladder filter in the style of the filter of the Roland TB-303. It has four stages that bend as you drive them. The resonance sings at the cutoff, and the bass below it stays full (its low end is kept out of the resonance, as on the original). It is rounder and more liquid than Low. It squeals and does not whistle when Reso and SCREAM are high. |
+| 303 | The acid only: a diode ladder, the type of filter in the Roland TB-303. Its four stages are coupled, so its slope is softer than Low and its resonance is rounder. As you turn up Reso, the middle gets thinner, as on a 303, but the bass below it stays full (its low end is kept out of the resonance, as on the original). It is rounder and more liquid than Low. It squeals and does not whistle when Reso and SCREAM are high. |
 
 **Making it scream.** The **SCREAM** settings page (the next page after FILTERS) pushes the filters of the acid
 and the bass into a raw, screaming sound, like an acid line through a distortion pedal. It is part of the piece,
@@ -2332,7 +2332,7 @@ This page comes after RESONATOR. It sets how the kick ducks the returns of the e
 
 | Knob | What it does |
 |---|---|
-| Duck | **Kit** (the default): as each kit sets it, the same as before. **Off**: the returns stay steady. **Custom**: use the two knobs below. |
+| Duck | **Mix** (the default): the returns duck as the rest of the mix ducks under the kick, about 3 to 7 dB (more with the drums louder). **Off**: the returns stay steady. **Custom**: your own depth and release, with the two knobs below (to about 16 dB down). |
 | Depth | With Custom: how far the returns go down on each kick, **60** by default. 100 is the deepest. |
 | Release | With Custom: how long the returns take to come back, in the tempo: **1/16** (fast) to **1 bar** (they rise and fall with the bar). The kit's release is about 3/16. |
 

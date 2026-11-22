@@ -131,7 +131,7 @@ static const char *const FT_NAME[6] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK", "
 static const char *const TF_NAME[26] = {"LOW", "HIGH", "BAND", "NOTCH", "PEAK", "MORPH LP", "MORPH 5", "MORPH 10", "MORPH 15", "MORPH 20", "MORPH 25",
                                         "MORPH 30", "MORPH 35", "MORPH 40", "MORPH 45", "MORPH BP", "MORPH 55", "MORPH 60", "MORPH 65", "MORPH 70",
                                         "MORPH 75", "MORPH 80", "MORPH 85", "MORPH 90", "MORPH 95", "MORPH HP"};   /* (0.17.72) the punch-in FILTER's: past PEAK, Morph from low (0) through band (50) to high (100) */
-static const char *const RDM_NAME[3] = {"KIT", "OFF", "CUSTOM"};                       /* (0.17.72) the RETURNS page: the returns' duck as the kit has it, none, or its own */
+static const char *const RDM_NAME[3] = {"MIX", "OFF", "CUSTOM"};                       /* (0.17.72) the RETURNS page: the returns' duck as the mix's (0.17.89: was KIT), none, or its own */
 static const char *const RDR_NAME[6] = {"1/16", "1/8", "3/16", "1/4", "1/2", "1 BAR"};  /* its release: back up in that many sixteenths (the kit's: 3/16) */
 static const char *const LAND_NAME[4] = {"NOW", "BEAT", "2 BEATS", "BAR"};             /* (0.17.72) the snips' Land: the riser, the rewind and the roll peak on the next such line */
 static const char *const SQT_NAME[3] = {"ACID", "BASS", "BOTH"};   /* SCREAM's target (0.16.4) */
@@ -6442,10 +6442,11 @@ static void draw_fxedit(void)
             cv_text(4, 126, &FONT_XS, "COMPUTER USB IS OFF WHILE IT'S ON.", K_DIM);
         } else {
             const int spare = FXP[p].bit >= FX_SPARE5 && FXP[p].bit <= FX_SPARE14;   /* (a settings page on a spare bit: FILTERS, SCREAM, AUTO FX; nothing held) */
-            cv_text(4, 50, &FONT_XS, p == 16 ? "THE AUTO-DJ AND SCENES: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
+            const int land = FXP[p].c[0].kind == KN_NAME && FXP[p].c[0].idx == EN_FXS_SM_LAND;   /* (0.17.89, the maker: SNIP LAND says what it times) */
+            cv_text(4, 50, &FONT_XS, land ? "TIMES THE RISER, THE REWIND AND" : p == 16 ? "THE AUTO-DJ AND SCENES: NO EFFECT HERE." : p == 17 ? "THE UNIT'S SETTINGS: NO EFFECT HERE." :
                                      p == 33 ? "EFFECTS PLAYED BY THEMSELVES, EACH" : spare ? "SETTINGS, KEPT: NO KEY TO HOLD." :
                                      FXP[p].hold ? "HOLD ANY KEY TO HEAR IT." : "THE EFFECT IS ON WHILE YOU EDIT.", K_DIM);
-            cv_text(4, 64, &FONT_XS, p == 33 ? "ENDING ON A PHRASE LINE. DIAL: NEXT." : p == 16 || p == 17 || spare ? "THE KNOBS SET THEM. DIAL: NEXT PAGE." :
+            cv_text(4, 64, &FONT_XS, land ? "THE SNR ROLL ONLY. DIAL: NEXT PAGE." : p == 33 ? "ENDING ON A PHRASE LINE. DIAL: NEXT." : p == 16 || p == 17 || spare ? "THE KNOBS SET THEM. DIAL: NEXT PAGE." :
                                      "THE KNOBS SET IT. DIAL: NEXT PAGE.", K_DIM);
             if (p == 33 && ui.fxs[EN_FXS_AF_AMT])   /* AUTO FX: what it played last (it waits while the FX menu is open) */
                 cv_text(4, 78, &FONT_XS, ui.af_said ? EN_FX_NAME[ui.af_last[0]] : "NOTHING YET", ui.af_said ? K_ACC : K_DIM);
