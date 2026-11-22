@@ -6400,16 +6400,23 @@ static void smp_note(int key, int on)
                 djv[i].held = 0;
         return;
     }
-    for (i = 0; i < 4; i++)
-        if (!djv[i].on) {
-            v = i;
-            break;
-        }
-    if (v < 0) {                                /* all four going: the oldest is taken */
-        v = 0;
-        for (i = 1; i < 4; i++)
-            if (djv[i].age < djv[v].age)
+    {   /* (0.17.88, the maker's log: four snips over HOUSE 01's DX pluck, a dropout) under load fewer at once: shed level 1 three, 2 and more two */
+        const int cap = en_shed_level >= 2 ? 2 : en_shed_level >= 1 ? 3 : 4;
+        int live = 0;
+        for (i = 0; i < 4; i++)
+            live += djv[i].on;
+        for (i = 0; i < 4 && live < cap; i++)
+            if (!djv[i].on) {
                 v = i;
+                break;
+            }
+    }
+    if (v < 0) {                                /* all four going (or as many as the load allows): the oldest sounding one is taken */
+        for (i = 0; i < 4; i++)
+            if (djv[i].on && (v < 0 || djv[i].age < djv[v].age))
+                v = i;
+        if (v < 0)
+            v = 0;
     }
     {
         dj_t *d = &djv[v];
@@ -6653,11 +6660,17 @@ static float dj_voice(dj_t *v, float *amp, float *side)
     }
     case DJ_BELL: {                             /* THE BELL (0.17.24: in tune; its overtones were off the note, a clang): two operators 1:3, the index falling, and a glass partial two octaves up */
         v->ph = dj_wrap(v->ph + inc);
-        v->ph2 = dj_wrap(v->ph2 + inc * 3.0f);
-        v->ph3 = dj_wrap(v->ph3 + inc * 4.0f);
-        y = 0.65f * sine_any(v->ph + 1.1f * dj_dec(v, 0, 4.0f, t) * sine(v->ph2)) + 0.12f * dj_dec(v, 1, 6.0f, t) * sine(v->ph3);
+        if (t < 1.2f) {                         /* (0.17.88, the maker: the bell with other snips ran late: 100k instructions a chunk, 3 s long) the index
+                                                 * and the glass partial while they are heard (e^-4t is 0.008 at 1.2 s, e^-6t 0.004 at 0.9), a plain sine after */
+            const float ix = 1.1f * dj_dec(v, 0, 4.0f, t), gl = t < 0.9f ? 0.12f * dj_dec(v, 1, 6.0f, t) : 0.0f;
+            v->ph2 = dj_wrap(v->ph2 + inc * 3.0f);
+            v->ph3 = dj_wrap(v->ph3 + inc * 4.0f);
+            y = 0.65f * sine_any(v->ph + ix * sine(v->ph2)) + (gl > 0.0f ? gl * sine(v->ph3) : 0.0f);
+        } else {
+            y = 0.65f * sine(v->ph);
+        }
         a = dj_dec(v, 2, 2.2f, t);
-        if (t > 3.0f)
+        if (t > 2.1f)                           /* (0.17.88: -40 dB, was 3 s: -57) */
             v->on = 0;
         break;
     }
@@ -8503,26 +8516,29 @@ static void render_dj(uint32_t n)               /* the snips, into the mix and i
         dj_t *d = &djv[v];
         if (!d->on)
             continue;
+        /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out. (0.17.88: what does not change within the
+         * chunk worked out once, and the filters' states flushed once a chunk, not each sample: the snips cost about 265 instructions a voice a sample) */
+        const int sustained = d->type == DJ_HORN || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
+        const int open = !sustained || (d->held && d->hold_mode);
+        const float er = ES[ec][0], ee = ES[ec][1], lt = d->aux * EN_SR;
         for (j = 0; j < n && d->on; j++) {
             float a, sd, y = dj_voice(d, &a, &sd);
-            const int sustained = d->type == DJ_HORN || d->type == DJ_SIREN || d->type == DJ_DUB || d->type == DJ_RISER || d->type == DJ_ROLL;
-            /* a sustained sound: while its key is down (held mode), else for a second or so; the others play out */
-            const int gate = d->land ? d->t < d->aux * EN_SR : !sustained || (d->held && d->hold_mode) || (!d->hold_mode && d->t < 1.2f * EN_SR);
+            const int gate = d->land ? d->t < lt : open || (!d->hold_mode && d->t < 1.2f * EN_SR);
             d->env += ((gate ? 1.0f : 0.0f) - d->env) * (gate ? 0.01f : d->land ? 0.004f : 0.00025f);   /* (landed: out in about 6 ms, on the line) */
             const float k = a * d->env * gain;   /* (0.17.60: not the acid's track gain: in song mode the arrangement's rests of the acid silenced them) */
             y *= k;
             sd *= k;
             mixl[j] += y + sd;                  /* (the side: left and right apart, nothing of it in mono) */
             mixr[j] += y - sd;
-            rsend[j] += y * ES[ec][0];
-            esend[j] += y * ES[ec][1];
+            rsend[j] += y * er;
+            esend[j] += y * ee;
             if (sustained && !gate && d->env < 0.003f)
                 d->on = 0;
-            d->z = fm_flush(d->z);
-            d->z2 = fm_flush(d->z2);
-            d->zs = fm_flush(d->zs);
-            d->zs2 = fm_flush(d->zs2);
         }
+        d->z = fm_flush(d->z);
+        d->z2 = fm_flush(d->z2);
+        d->zs = fm_flush(d->zs);
+        d->zs2 = fm_flush(d->zs2);
         live += d->on;
     }
     en_smp_active = (uint8_t)live;
