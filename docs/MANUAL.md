@@ -232,7 +232,8 @@ together for 5 seconds while PERF-1 runs.
 - At 5 seconds, the FM-1 goes into update mode and shows `UBOOT`.
 
 If an install stops before the end, the FM-1 stays in update mode until a write is complete. Press **Install** again. If
-the page says that it lost the FM-1, first disconnect the cable and connect it again.
+the page says that it lost the FM-1, first disconnect the cable and connect it again. If the cable comes out while the installer
+checks the package (before it writes), nothing is written. The FM-1 then waits with a dark screen: switch it off and on, and PERF-1 starts as before.
 
 ### Safe mode
 
@@ -261,9 +262,10 @@ installer. Then do these steps:
 To get to this mode on purpose, hold **OCT-** alone while you switch the FM-1 on. If the lights give one long flash instead,
 the rescue was not possible. The FM-1 is then in the chip's own USB mode (below).
 
-This function comes from ChoralRoot's boot stub (a small program that the FM-1 starts through), as Melodee uses it. It is
-**experimental** in PERF-1. The method is tested in Melodee and ChoralRoot, and PERF-1 starts through it at every start. But
-PERF-1's own copy has not been through a stopped install yet. Thus, do not rely on it on purpose.
+This function comes from ChoralRoot's boot stub (a small program that the FM-1 starts through), as Melodee uses it. PERF-1
+starts through it at every start. It was tested on a real FM-1 (2026-11-21): the cable pulled and the power cut at different points
+of an install (while it checks, just after the loader starts, at about a third and at nine tenths of the write, and at the restart),
+and 40 starts in a row. Each time, the install completed and the pieces, kits and settings were all there. Even so, do not stop an install on purpose.
 
 The first install of 0.16.17 over an older PERF-1 has a short time, near the start, that is not protected yet. Keep the cable
 connected and the power on until the install is complete. If you install the stock firmware or a different firmware, that
@@ -275,8 +277,7 @@ install removes the boot stub.
   installer works from all of them.
 - **Not covered:** a damaged start-up sector or boot loader (the part of the memory that starts the FM-1).
   Also not covered: a loss of power or cable during a write, before the installer has saved its record of where to continue.
-  The protection for stopped writes comes from the design. It has **not** been tested with a real
-  power cut. Nobody has found a hardware way in for this chip (test pads, a strap, a key combination). An
+  The protection for stopped writes was tested with real cable pulls and power cuts (above). Nobody has found a hardware way in for this chip (test pads, a strap, a key combination). An
   FM-1 that fails in this way can be permanently lost.
 
 If the FM-1 does not start but it still gets to the chip's own update mode (one long flash; it shows on USB as
