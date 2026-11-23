@@ -126,6 +126,8 @@
   <progress id="bar" max="100" value="0"></progress>
   <p id="status"></p>
   <pre id="log" data-empty="(what is being written shows here)"></pre>
+  <p class="small"><span data-t="testpick"></span><br><input type="file" id="testfile" accept=".fwsc">
+    <button id="testgo" class="alt" disabled data-t="testinstall"></button></p>
   </div>
   <h2 data-t="voicesh"></h2>
   <div class="card">
@@ -237,6 +239,7 @@ const TEXT = {
     stockinstall: "純正ファームウェアを書き込む",
     stockok: "M-VAVE の FM-1 純正ファームウェア（V15 または V16）です。ボタンを押してください。",
     stockbad: "これは M-VAVE の FM-1 V15 / V16 のファイルではありません。上のリンクのファイルを選んでください。",
+    stockperf: "これは PERF-1 のファイルで、M-VAVE のものではありません。入れるには、ページ上部のインストールボタンの下で選んでください。",
     stockdone: "完了。FM-1 は純正ファームウェアで起動しました。",
     nomidi: "このブラウザでは使えません。Chrome か Edge で開いてください。", loadfail: "読み込めませんでした: ",
     start: "開始します", verify: "確認中", loader: "書き込みモードに切り替え中", write: "書き込み中",
@@ -254,6 +257,9 @@ const TEXT = {
     noreturn: "FM-1 が戻ってきません。電源を入れ直してください。",
     mismatch: "書き込みは終わりましたが、FM-1 が別のバージョンを報告しています: ",
     badpkg: "インストールするファイルが壊れています。ページを再読み込みしてください。",
+    testpick: "PERF-1 のテストビルド（GitHub の .fwsc ファイル）を入れる場合は、ここで選んでボタンを押してください:",
+    testinstall: "このファイルをインストール",
+    testok: "PERF-1 のファイルです: ", testbad: "これは PERF-1 のファイルではありません。",
     leave: "書き込み中です。ページを閉じないでください。",
     license: "GPL-3.0-only、無保証。ソース:",
     voicesh: "DX7 の音色を読み込む",
@@ -328,6 +334,7 @@ const TEXT = {
     stockinstall: "Install the stock firmware",
     stockok: "That is M-VAVE's FM-1 stock firmware (V15 or V16). Press the button to install it.",
     stockbad: "That is not M-VAVE's FM-1 V15 or V16 file. Choose the file from the link above.",
+    stockperf: "That is a PERF-1 file, not M-VAVE's. To install it, choose it under the Install button at the top of the page.",
     stockdone: "Done. The FM-1 has restarted with its original firmware.",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
     start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
@@ -345,6 +352,9 @@ const TEXT = {
     noreturn: "The FM-1 did not come back. Power-cycle it.",
     mismatch: "Written, but the FM-1 reports another version: ",
     badpkg: "The file to install is damaged. Reload the page.",
+    testpick: "Installing a PERF-1 test build (a .fwsc file from GitHub)? Choose it here, then press the button:",
+    testinstall: "Install this file",
+    testok: "That is a PERF-1 file: ", testbad: "That is not a PERF-1 file.",
     leave: "Writing. Do not close the page.",
     license: "GPL-3.0-only, no warranty. Source:",
     voicesh: "Load DX7 voices",
@@ -933,10 +943,10 @@ let writing = false;
 /* (0.17.92, the audit) one job on the FM-1 at a time: an install, a backup, a restore, the voices, the map, a kit. Each button returns at
    once while another runs (an Install clicked twice, or a restore's failure clearing the install's flag, let the idle release close the ports under the loader) */
 let devBusy = false;
-const DEV_BTNS = ["go", "stockgo", "fsgo", "fscheck", "vsend", "vclear", "mmsend", "mmread", "mmclear", "kitsend", "kitclear", "bksave", "bkrestore", "stgo"];
+const DEV_BTNS = ["go", "testgo", "stockgo","fsgo", "fscheck", "vsend", "vclear", "mmsend", "mmread", "mmclear", "kitsend", "kitclear", "bksave", "bkrestore", "stgo"];
 function devButtons(off) {
   if (off) { for (const b of DEV_BTNS) $(b).disabled = true; return; }
-  $("go").disabled = !image; $("stockgo").disabled = !stock; $("fsgo").disabled = !fsV15 || !image;
+  $("go").disabled = !image; $("testgo").disabled = !testPkg; $("stockgo").disabled = !stock; $("fsgo").disabled = !fsV15 || !image;
   for (const b of ["fscheck", "vclear", "mmread", "mmclear", "kitclear", "bksave", "stgo"]) $(b).disabled = false;
   $("vsend").disabled = !$("vlist").querySelector("input:checked");
   $("mmsend").disabled = !Object.keys(mmGet()).length;
@@ -966,6 +976,25 @@ document.addEventListener("visibilitychange", () => {
   } catch (e) { sayK("loadfail", e.message); }
 })();
 
+/* (1.0.3) a PERF-1 test build chosen by the user (a GitHub pre-release): only a PERF-1 identity (FM-1_7 + six digits); never counted */
+let testPkg = null;
+$("testfile").addEventListener("change", async (e) => {
+  testPkg = null;
+  $("testgo").disabled = true;
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const raw = new Uint8Array(await f.arrayBuffer());
+    const product = productOf(raw);
+    if (!/^FM-1_7\d{6}$/.test(product)) { sayK("testbad"); return; }
+    testPkg = { image: logicalImage(raw), product };
+    $("testgo").disabled = devBusy;
+    const v = product.slice(6);
+    sayK("testok", `${+v.slice(0, 2)}.${+v.slice(2, 4)}.${+v.slice(4, 6)} (${f.name})`);
+  } catch (err) { sayK("testbad"); }
+});
+$("testgo").addEventListener("click", () => { if (testPkg) run(testPkg.image, testPkg.product, false, "testinstall"); });
+
 /* stock firmware: M-VAVE's FM-1 V15, chosen by the user (M-VAVE's server allows no cross-site
    download) and checked against its SHA-256 before anything is written */
 const STOCK_SHA256 = ["db1642b2b6fa5c2cccb11ffd13878068bb28601678d3644049f99dc40e7edb8a",    /* V15 (FM-1_015) */
@@ -979,7 +1008,10 @@ $("stockfile").addEventListener("change", async (e) => {
   try {
     const raw = new Uint8Array(await f.arrayBuffer());
     const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    if (!STOCK_SHA256.includes(hex)) { sayK("stockbad"); return; }
+    if (!STOCK_SHA256.includes(hex)) {
+      let p = ""; try { p = productOf(raw); } catch (_) {}
+      sayK(/^FM-1_7\d{6}$/.test(p) ? "stockperf" : "stockbad"); return;
+    }
     stock = { image: logicalImage(raw), product: productOf(raw) };
     $("stockgo").disabled = devBusy;
     sayK("stockok");
