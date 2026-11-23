@@ -53,6 +53,7 @@ struct en_dbg {
     uint32_t crash_seen;                            /* the crash count already reported at a boot */
 } en_dbg __attribute__((section(".noinit")));
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
+static uint8_t rails;                               /* (1.0.2) VDC14's level | SYSVDD's << 3, read back after fm1_stock_rails */
 static volatile uint32_t tel_isr_in, tel_isr_out;   /* telemetry: ticks in the timer interrupt while a render ran (it nests into it) and outside it */
 static volatile uint32_t tel_hist[9];                  /* telemetry: renders by time: <5 ms, 5-6, ... 11-12, >= 12 ms */
 static volatile uint32_t tel_max_us;                /* telemetry: the longest render (a half block) since the last frame */
@@ -728,7 +729,8 @@ static void tel_service(void)
         w[10] = (uint32_t)en_shed_level | (uint32_t)en_chorus_c0 << 8 | (uint32_t)en_bass_c1 << 9 |   /* (bit 8: the chorus on the first core) */
                 (uint32_t)flash_chip << 12 | (uint32_t)susp_bad << 14 |   /* bits 12-13 the flash part (1 P25Q80, 2 UC25HQ80), 14 its erase didn't suspend (0.16.23) */
                 (uint32_t)boot_head << 15 |         /* bits 15-16 the startup code: 1 V15, 2 V16, 3 another (0.16.25) */
-                (uint32_t)cv_rows_sent << 17;       /* bits 17-24 the main band's 8-row blocks sent since the last frame (0.17.40; 18 a whole band) */
+                (uint32_t)cv_rows_sent << 17 |      /* bits 17-24 the main band's 8-row blocks sent since the last frame (0.17.40; 18 a whole band) */
+                (uint32_t)rails << 25;              /* bits 25-27 VDC14's level, 28-31 SYSVDD's, read back at boot (1.0.2: stock's 7 and 15) */
         w[11] = (uint32_t)en_playing | (uint32_t)(ui.view & 127u) << 1 |   /* 0.17.39: the page, and the bands sent since the last frame (header, main, knobs) */
                 (uint32_t)cv_sent[0] << 8 | (uint32_t)cv_sent[1] << 16 | (uint32_t)cv_sent[2] << 24;
         cv_sent[0] = cv_sent[1] = cv_sent[2] = cv_rows_sent = 0;
@@ -1008,6 +1010,8 @@ void fm1_cstart(void)
     stk_paint(STK_W(_ustack_lo), STK_W(_ustack_top));   /* (CPU1 is held: its stacks are free to paint) */
     stk_paint(STK_W(_sstack_lo), STK_W(_sstack_top));
     stk_paint(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 4096));
+    fm1_stock_rails();                              /* (1.0.2) M-VAVE's own supplies before anything loads them (fm1_sys.h): 0.8 ms */
+    rails = (uint8_t)(fm1_vdc14() | fm1_sysvdd() << 3);   /* read back (telemetry) */
 #if EN_CORE2
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS);
     /* One core after a crash (CPU1's data can go bad where no check reaches), in safe mode, or after CPU1

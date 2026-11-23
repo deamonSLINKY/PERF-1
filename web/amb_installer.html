@@ -854,7 +854,8 @@ function stRender(w) {
     [(GENRES[w.genre] || w.genre) + " " + (w.piece + 1), "", 0],   // (the FM-1 counts its pieces from 1)
     /* the flash part (0.16.23, bits 12-13 of the shed word): 1 P25Q80, 2 UC25HQ80, 3 another (saves stay in RAM); bit 14: its erase did not suspend */
     [String(w.stores) + ["", " · P25Q80", " · UC25HQ80", " · flash off"][(w.shed >> 12) & 3] + ((w.shed >> 14) & 1 ? " · no suspend" : "") +
-       ["", " · V15", " · V16 (12% slower)", " · other boot"][(w.shed >>> 15) & 3],   /* bits 15-16 the startup code (0.16.25) */
+       ["", " · V15", " · V16 (12% slower)", " · other boot"][(w.shed >>> 15) & 3] +   /* bits 15-16 the startup code (0.16.25) */
+       ((w.shed >>> 28) ? " · " + (0.93 + 0.03 * (w.shed >>> 28)).toFixed(2) + " / " + (1.25 + 0.05 * ((w.shed >>> 25) & 7)).toFixed(2) + " V" : ""),   /* (1.0.2) bits 25-31: SYSVDD / VDC14 read back */
      ((w.shed >> 12) & 3) === 3 ? "bad" : (w.shed >> 14) & 1 || ((w.shed >>> 15) & 3) === 2 ? "hot" : "", 0],
     [String(w.ui_frames), "", 0],
   ];

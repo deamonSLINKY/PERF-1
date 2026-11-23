@@ -18,6 +18,7 @@
 #pragma once
 #include <stdint.h>
 #include "fm1_cc.h"
+#include "fm1_time.h"
 #include "fm1_core1_stop.h"
 
 #define FM1_P33_CON (*(volatile uint32_t *)0x13E08u)
@@ -76,6 +77,32 @@ static uint8_t fm1_p33_read(uint32_t a)
 static void fm1_p33_write(uint32_t a, uint8_t d) { fm1__p33_op(0, a, d); }
 static void fm1_p33_or(uint32_t a, uint8_t d) { fm1__p33_op(1, a, d); }
 static void fm1_p33_and(uint32_t a, uint8_t d) { fm1__p33_op(2, a, d); }
+
+/* ------------------------------------------------------- VDC14, SYSVDD --- */
+/* (1.0.2; after X0X 1.0.9's fm1_sys.h, GPL-3.0, Charles Vestal, itself after Jangada's fm1_core_supply.) VDC14
+ * (P3_ANA_CON6 [2:0]): 1.25 V + 50 mV a level; SYSVDD (P3_ANA_CON9 [3:0], the core and SRAM): 0.93 V + 30 mV a level.
+ * The boot loader leaves 3 (1.40 V) and 11 (1.26 V); M-VAVE's own firmware (V15) raises them to 7 (1.60 V) and 15
+ * (1.38 V) as it starts, at the same 360 MHz (fm1-x0x#21, fc79's reading of its __hw_power_init). At the boot loader's,
+ * some units read SRAM wrong while both cores are busy (melodee#17/#18). Up only, a level per 100 us, VDC14 first:
+ * SYSVDD is regulated from it. No clock change. */
+#define FM1_P3_ANA_CON6 0x06u
+#define FM1_P3_ANA_CON9 0x09u
+static uint32_t fm1_vdc14(void) { return fm1_p33_read(FM1_P3_ANA_CON6) & 7u; }
+static uint32_t fm1_sysvdd(void) { return fm1_p33_read(FM1_P3_ANA_CON9) & 15u; }
+static void fm1_rail_raise(uint32_t a, uint32_t mask, uint32_t level)
+{
+    uint32_t v = fm1_p33_read(a) & mask;
+    while (v < level && v < mask) {
+        v++;
+        fm1_p33_write(a, (uint8_t)((fm1_p33_read(a) & ~mask) | v));
+        fm1_delay_us(100u);
+    }
+}
+static void fm1_stock_rails(void)               /* interrupts off, before CPU1 starts */
+{
+    fm1_rail_raise(FM1_P3_ANA_CON6, 7u, 7u);     /* VDC14 1.60 V */
+    fm1_rail_raise(FM1_P3_ANA_CON9, 15u, 15u);   /* SYSVDD 1.38 V */
+}
 
 /* ------------------------------------------------------------ watchdog --- */
 #define FM1_P3_WDT_CON 0x80u
