@@ -5155,14 +5155,14 @@ static void pad_publish(uint32_t w, uint32_t n);
 static void render_bass(uint32_t n);
 static void render_acid(uint32_t n);
 #ifndef EN_ACID_RAM
-#define EN_ACID_RAM 1                            /* (0.17.67) the acid's render runs from RAM (.ram_hot, copied at boot; EN_ACID_RAM=0 at build: from the flash).
+#define EN_ACID_RAM 0                            /* (1.0.4: 0, from the flash again, as 0.17.0: a reporter's FM-1 crashes at one PC in the bass's RAM code every time) (0.17.67) the acid's render runs from RAM (.ram_hot, copied at boot; EN_ACID_RAM=0 at build: from the flash).
                                                  * The maker's A/B (diag 0.17.65 / 0.17.66, TRANCE 01 hands off): late renders 1.48 a second from the flash,
                                                  * 0.16 from RAM, the slowest half 12.8 to 12.2 ms; the acid 343 to 266 us a chunk, its fixed cost a chunk
                                                  * (its code fetched from the flash every chunk) gone. Flattened (no calls) and called through a pointer:
                                                  * a pi32v2 call cannot reach between the flash and RAM. RAMTEXT has about 512 B left after it. */
 #endif
 #ifndef EN_BASS_RAM
-#define EN_BASS_RAM 1                            /* (0.17.68) the bass's render in RAM too, as the acid's (its fixed cost a chunk on the unit: about 230-250 us
+#define EN_BASS_RAM 0                            /* (1.0.4: 0, as the acid) (0.17.68) the bass's render in RAM too, as the acid's (its fixed cost a chunk on the unit: about 230-250 us
                                                  * of its 650-690); EN_BASS_RAM=0 at build: from the flash */
 #endif
 #if EN_BASS_RAM && !defined(EN_HOST) && !defined(EN_WEB)
