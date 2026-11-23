@@ -943,7 +943,7 @@ let writing = false;
 /* (0.17.92, the audit) one job on the FM-1 at a time: an install, a backup, a restore, the voices, the map, a kit. Each button returns at
    once while another runs (an Install clicked twice, or a restore's failure clearing the install's flag, let the idle release close the ports under the loader) */
 let devBusy = false;
-const DEV_BTNS = ["go", "testgo", "stockgo","fsgo", "fscheck", "vsend", "vclear", "mmsend", "mmread", "mmclear", "kitsend", "kitclear", "bksave", "bkrestore", "stgo"];
+const DEV_BTNS = ["go", "testgo", "stockgo", "fsgo", "fscheck", "vsend", "vclear", "mmsend", "mmread", "mmclear", "kitsend", "kitclear", "bksave", "bkrestore", "stgo"];
 function devButtons(off) {
   if (off) { for (const b of DEV_BTNS) $(b).disabled = true; return; }
   $("go").disabled = !image; $("testgo").disabled = !testPkg; $("stockgo").disabled = !stock; $("fsgo").disabled = !fsV15 || !image;
