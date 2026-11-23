@@ -146,6 +146,13 @@ static int fm1_core1_fault_c(const uint32_t *f)   /* 1: handled, CPU0 resumes */
 #endif
 }
 
+/* (1.0.5, diagnostic) a deliberate misaligned load, to check the crash screen on the unit: its PC (reti) should land at or just after
+ * this load, its RETS just after the call to it (main_fm1.c, REC + ARP + SEQ held 5 s) */
+__attribute__((noinline)) static uint32_t fm1_misalign_test(uint32_t *p)
+{
+    return *(volatile uint32_t *)((uintptr_t)p + 1u);
+}
+
 /* called from fm1_fatal_common (fm1_vec.S) with the saved frame:
  * f[0..15] r0..r15, f[16] reti, f[17] rete, f[18] retx, f[19] stub+6,
  * f[20] psr, f[21] icfg, f[22] usp, f[23] ssp, f[24] sp, f[25] interrupted rets */

@@ -104,6 +104,12 @@ static void fm1_stock_rails(void)               /* interrupts off, before CPU1 s
     fm1_rail_raise(FM1_P3_ANA_CON9, 15u, 15u);   /* SYSVDD 1.38 V */
 }
 
+/* ----------------------------------------------------------- SYS clock --- */
+/* (1.0.5, read only) PLL2_CON1 (0x119AC) [11:0] + 2 is the SYS VCO's multiplier: SYS = 24 MHz / 12 x it x 2/3, so MHz = mult x 4/3.
+ * After Melodee's fm1_clock.h (GPL-3.0, Kerem Kilic; live reads in melodee PR #27): the boot loader's 270 = 360 MHz. A soft reset
+ * keeps a retuned PLL, so a unit updated from such a session runs at that clock until its next power-off. */
+static uint32_t fm1_pll2_mult(void) { return (*(volatile uint32_t *)0x119ACu & 0xFFFu) + 2u; }
+
 /* ------------------------------------------------------------ watchdog --- */
 #define FM1_P3_WDT_CON 0x80u
 #define FM1_P3_VLD_KEEP 0x17u

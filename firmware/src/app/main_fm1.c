@@ -54,6 +54,7 @@ struct en_dbg {
 } en_dbg __attribute__((section(".noinit")));
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
 static uint8_t rails;                               /* (1.0.2) VDC14's level | SYSVDD's << 3, read back after fm1_stock_rails */
+static uint16_t clk_boot;                           /* (1.0.5, the crash screen) the SYS clock's multiplier at boot (fm1_pll2_mult, fm1_sys.h) */
 static volatile uint32_t tel_isr_in, tel_isr_out;   /* telemetry: ticks in the timer interrupt while a render ran (it nests into it) and outside it */
 static volatile uint32_t tel_hist[9];                  /* telemetry: renders by time: <5 ms, 5-6, ... 11-12, >= 12 ms */
 static volatile uint32_t tel_max_us;                /* telemetry: the longest render (a half block) since the last frame */
@@ -264,6 +265,28 @@ static void hexs(char *b, uint32_t v)
     b[8] = 0;
 }
 
+static char *decs(char *p, uint32_t v)              /* (1.0.5) v in decimal at p, ended; returns the end */
+{
+    char t[10];
+    uint32_t n = 0;
+    do {
+        t[n++] = (char)('0' + v % 10u);
+        v /= 10u;
+    } while (v);
+    while (n)
+        *p++ = t[--n];
+    *p = 0;
+    return p;
+}
+
+static char *cpys(char *p, const char *s)           /* (1.0.5) s at p, ended; returns the end */
+{
+    while (*s)
+        *p++ = *s++;
+    *p = 0;
+    return p;
+}
+
 static void fm1_fault(const fm1_crash_t *c)
 {
     char b[12];
@@ -289,6 +312,31 @@ static void fm1_fault(const fm1_crash_t *c)
     draw_text_box(10, 102, 220, &FONT_S, b, C_WHITE, 0);
     hexs(b, c->rets);
     draw_text_box(10, 120, 220, &FONT_S, b, C_WHITE, 0);
+    {   /* (1.0.5, diagnostic) the build and the SYS clock (MHz, the multiplier at boot / now), sp, seconds since boot, the four ETM
+         * trace PCs (their order not yet checked on the unit) */
+        char L[40], *p;
+        uint32_t i;
+        p = cpys(L, EN_VERSION " ");
+        p = decs(p, clk_boot * 4u / 3u);
+        p = cpys(p, " MHZ  ");
+        p = decs(p, clk_boot);
+        *p++ = '/';
+        decs(p, fm1_pll2_mult());
+        draw_text_box(10, 146, 220, &FONT_S, L, C_WHITE, 0);
+        p = cpys(L, "SP ");
+        hexs(p, c->sp);
+        p = cpys(p + 8, "  T ");
+        p = decs(p, c->uptime_ms / 1000u);
+        cpys(p, " S");
+        draw_text_box(10, 166, 220, &FONT_S, L, C_WHITE, 0);
+        for (i = 0; i < 4u; i += 2u) {
+            p = cpys(L, i ? "   " : "TR ");
+            hexs(p, c->etm[i]);
+            p[8] = ' ';
+            hexs(p + 9, c->etm[i + 1u]);
+            draw_text_box(10, 186 + 18 * (i >> 1), 220, &FONT_S, L, C_WHITE, 0);
+        }
+    }
     t0 = fm1_ticks();
     while ((uint32_t)(fm1_ticks() - t0) < 4000u * 1000u * FM1_TICKS_PER_US)
         ;
@@ -930,6 +978,15 @@ static void fm1_main(void)
                 enter_uboot("UBOOT");
             }
         }
+        {   /* (1.0.5, diagnostic) REC + ARP + SEQ held 5 s: a deliberate crash (fm1_irq.h), to read the crash screen's numbers against
+             * known code */
+            static uint32_t t1;
+            const uint32_t three = (1u << panel.btn[B_REC]) | (1u << panel.btn[B_ARP]) | (1u << panel.btn[B_SEQ]);
+            if ((fm1_in.buttons & three) != three)
+                t1 = fm1_ms;
+            else if (fm1_ms - t1 > 5000u)
+                fm1_misalign_test(&t1);
+        }
         main_where = 2;
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
         tel_service();
@@ -1012,6 +1069,7 @@ void fm1_cstart(void)
     stk_paint(STK_W(_cpu1_stacks_lo), STK_W(_cpu1_stacks_lo + 4096));
     fm1_stock_rails();                              /* (1.0.2) M-VAVE's own supplies before anything loads them (fm1_sys.h): 0.8 ms */
     rails = (uint8_t)(fm1_vdc14() | fm1_sysvdd() << 3);   /* read back (telemetry) */
+    clk_boot = (uint16_t)fm1_pll2_mult();         /* (1.0.5) the SYS clock's multiplier the boot loader (or a soft reset) left */
 #if EN_CORE2
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS);
     /* One core after a crash (CPU1's data can go bad where no check reaches), in safe mode, or after CPU1
