@@ -268,7 +268,7 @@ def build_stub():
 def build_app(stub):
     os.environ.setdefault("EN_CORE2", "1")      # the reverb on the second core (fallback to one core built in); EN_CORE2=0 for single core
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
-    for flag in ("EN_CDC", "EN_CORE2", "EN_DIAG", "EN_ACID_RAM", "EN_BASS_RAM"):   # (EN_ACID_RAM, 0.17.64: the acid's render in RAM, an experiment)
+    for flag in ("EN_CDC", "EN_CORE2", "EN_DIAG", "EN_ACID_RAM", "EN_BASS_RAM", "EN_CRASH_TEST"):   # (EN_ACID_RAM, 0.17.64: the acid's render in RAM, an experiment)
         v = os.environ.get(flag)    # unset: the default in firmware/src/main.c (EN_DIAG: firmware/src/dsp/amb.h)
         if v in ("0", "1"):
             flags.append(f"-D{flag}={v}")

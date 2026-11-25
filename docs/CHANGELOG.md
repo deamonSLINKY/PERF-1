@@ -28,6 +28,7 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 1.0.1)
 
+- **Release candidate (1.0.7).** 1.0.6 with the deliberate crash (REC + ARP + SEQ) built out (`EN_CRASH_TEST`, off). The maker's bench with 1.0.6: 22 genre/piece stops, 2.9 min, two cores, rails 1.38 / 1.60 V, CPU max 75 %, 0 crashes, 0 dropouts, 0 late renders (TRANCE 01 152 s: 0; 1.0.4/1.0.5 had about 2 a second).
 - **The bass and the acid from RAM again (1.0.6, a test).** 1.0.5 (the sound code from the flash) runs on the reporter's FM-1, but the crash numbers sent from 1.0.3 and 1.0.4 fit 1.0.0's code, so an earlier install may not have taken. 1.0.6 is 1.0.3's speed (the bass and the acid from RAM, M-VAVE's supply voltages, the full screen setup) with 1.0.5's crash screen: if it runs, the speed stays for everyone; if it crashes, the screen shows where.
 - **A crash screen that says more (1.0.5, a diagnostic test).** Under the five numbers the red `PERF-1 CRASH` screen now shows the build and the SYS clock (MHz, and the PLL's multiplier at boot / at the crash: `PLL2_CON1`, read as Melodee reads it; the boot loader's is 270 = 360 MHz, and a soft reset keeps a retuned clock until the next power-off), the stack pointer, the seconds since boot, and the four ETM trace PCs the crash record already kept. Holding REC + ARP + SEQ for 5 s crashes on purpose (a misaligned load), to read the screen against known code. Otherwise as 1.0.4 (the bass and the acid from the flash).
 

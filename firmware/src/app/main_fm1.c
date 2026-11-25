@@ -978,6 +978,10 @@ static void fm1_main(void)
                 enter_uboot("UBOOT");
             }
         }
+#ifndef EN_CRASH_TEST
+#define EN_CRASH_TEST 0                             /* (1.0.7: off in releases; read on the maker's unit with 1.0.5) */
+#endif
+#if EN_CRASH_TEST
         {   /* (1.0.5, diagnostic) REC + ARP + SEQ held 5 s: a deliberate crash (fm1_irq.h), to read the crash screen's numbers against
              * known code */
             static uint32_t t1;
@@ -987,6 +991,7 @@ static void fm1_main(void)
             else if (fm1_ms - t1 > 5000u)
                 fm1_misalign_test(&t1);
         }
+#endif
         main_where = 2;
         ota_service();                              /* M-UPGRADE handshake (other SysEx is dropped) */
         tel_service();
