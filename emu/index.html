@@ -1,0 +1,1123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PERF-1 Emulator</title>
+<meta name="description" content="PERF-1, a live-performance generative instrument firmware for the M-VAVE FM-1, in your browser: the same code the FM-1 runs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABXElEQVR42mNgGAWjAAeQFlD6Tw89OA369OzIf1IMJEcP1QykxHIWfJKXju8iGLxPP9xjRFdLCmAk5LOVc2MYwpOXMBxV0cWqxvrOZQaYGphjqOIAaQGl/0dVdBnkox0YGBgYGB4uPUDQMOs7l0l2BCMhyx8uPcBgfecyAwMDA0YoYBMn1RFM+CRhvn5yRJXhyRFVDHlc4qQAJmIUydjcZniYwIHpwAQOBhmb2xQ5AGcu2PPyNQpfaFMpg6ZWHIrY9WuLGBi04jDUokcnvihhpHaphmwZLC3hSxd4ywH0XABLdDDQyCuBwq///AJrQj66lIHB+g4D1pDAGwLoFriIi8JzBnIuwOV7fKFDdEGEz8cu4qIEywFCaYCFlIII3cfUAHjTwJ6XrxkY+lZjpAliooBqdQElUUAo+GkaBcRYPjyjgFTHUD0KqFIdk1sQUdUB5NQH5KSBUTAKBhwAAK4G8263HIhkAAAAAElFTkSuQmCC">
+<style>
+/* HYP-1's colours, as its screen: a charcoal ground, a cyberpunk purple (the primary), orange for what
+ * is live; one dark look, whatever the viewer's theme. The FM-1 itself keeps its grey. */
+:root { --ground: #0b1022; --ink: #f2efe6; --muted: #9aa3c7; --orange: #ffb000; --rule: #2c3766; --accent: #ffb000; --river: #7253e6; --river-2: #a58bff;
+        --green-1: #3e2a8c; --card: #121a33; color-scheme: dark; }
+body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
+       font: 400 17px/1.55 "Barlow Semi Condensed", "Helvetica Neue", Arial, sans-serif; }
+h1, h2, h3, .start button, kbd { font-family: "Chakra Petch", "Helvetica Neue", Arial, sans-serif !important; }
+main { max-width: 1360px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
+h1 { font-size: 1.6rem; font-weight: 700; line-height: 1.1; letter-spacing: .06em; margin: 0; }
+h1 a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: .55rem; }
+h1 img { image-rendering: pixelated; display: block; }
+header nav a.yt { color: var(--orange); }
+header { align-items: center !important; }
+.help h2, .midi h2 { text-transform: uppercase; letter-spacing: .04em; color: var(--river-2); }
+.start button { font-weight: 700; border-radius: 8px; }
+header p { margin: 0; color: var(--muted); }
+header nav { margin-left: auto; display: flex; gap: 1rem; }
+header nav a[aria-current] { text-decoration: none; color: var(--river-2); }
+a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.device { position: relative; width: 100%; aspect-ratio: 1000 / 640; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.device svg { pointer-events: none; }
+.hit { position: absolute; touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 12px; }
+.hit.knob { cursor: ns-resize; border-radius: 50%; }
+.hit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.device svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.device canvas { position: absolute; left: 31.8%; top: 9.6875%; width: 20%; height: 31.25%; image-rendering: pixelated; background: #000; border-radius: 2px; }
+.ctl { cursor: pointer; }
+.ctl.knob { cursor: ns-resize; }
+.btnface { transition: fill .06s; }
+.lit .btnface { fill: #ffb000; }
+.lit text.btn { fill: #241005; }
+.held .btnface, .held .keyface { stroke: #ffb000; stroke-width: 3; }
+.latched .btnface { stroke: #b46cff; stroke-width: 3; }
+.keyface { transition: fill .06s; }
+.lit .keyface.white { fill: #c99cff; }
+.lit .keyface.black { fill: #9a3cff; }
+.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .55); border-radius: 4.4% / 6.9%; }
+.start button { font: 400 1.2rem "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: .6em 1.6em;
+                border: 1px solid var(--river-2); background: var(--river); color: #fff; cursor: pointer; }
+.start button:hover { background: var(--accent); border-color: var(--accent); color: #1a0c03; }
+.start[hidden] { display: none; }
+.turn { display: none; margin: 0 0 .8rem; color: var(--muted); font-size: .92rem; }
+@media (orientation: portrait) and (max-width: 700px) { .turn { display: block; } }
+.start button:disabled { opacity: .6; cursor: progress; }
+.bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
+.bar button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .8em; cursor: pointer; }
+.bar button:hover { border-color: var(--accent); color: var(--accent); }
+.bar .btnlike { color: var(--ink); background: var(--card); border: 1px solid var(--rule); border-radius: 6px; padding: .3em .8em; cursor: pointer; }
+.bar .btnlike:hover { border-color: var(--accent); color: var(--accent); }
+.bar .cpu { font-variant-numeric: tabular-nums; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help p, .help ul { margin: 0; color: var(--muted); max-width: 60ch; }
+.help ul { padding-left: 1.1rem; }
+.help .knobs { grid-column: 1 / -1; }
+.knobs .pages { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem 2rem; margin-top: .4rem; }
+.knobs h3 { font: 600 1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .2rem; color: var(--ink); }
+.knobs h3 span { color: var(--accent); font-weight: 400; }
+.knobs dl { margin: 0; color: var(--muted); }
+.knobs dt { color: var(--ink); font-weight: 600; }
+.knobs dd { margin: 0 0 .45rem; }
+kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--rule); padding: 0 .3em; color: var(--river-2); }
+.help b { color: var(--ink); }
+.foot { margin-top: 2.4rem; padding-top: 1rem; border-top: 1px solid var(--rule); display: flex; flex-wrap: wrap; gap: .5rem 1.4rem; color: var(--muted); font-size: .95rem; }
+.midi { margin: 1.2rem 0 0; padding: .9rem 1rem; background: var(--card); border: 1px solid var(--rule); border-radius: 6px; }
+.midi h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.midi p { margin: .3rem 0 0; color: var(--muted); font-size: .92rem; max-width: 80ch; }
+.midi .bar { margin: .5rem 0 0; }
+.midi .bar button { background: var(--ground); }
+.midi .bar button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.midi .live { color: var(--river-2); }
+.midi ul { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .3rem 1rem; font-size: .9rem; }
+.midi li { display: flex; align-items: center; gap: .5rem; color: var(--muted); }
+.midi li b { color: var(--ink); font-weight: 600; }
+.midi li span, .midi li b { white-space: nowrap; }
+.midi li select { max-width: 9.5rem; }
+.midi li select, .midi li button { font: inherit; font-size: .85rem; color: var(--ink); background: var(--ground); border: 1px solid var(--rule); padding: .1em .3em; cursor: pointer; }
+.midi li button { margin-left: auto; }
+.device.learning .hit { outline: 1px dashed var(--river-2); outline-offset: 1px; }
+.device.learning .hit.picked { outline: 3px solid var(--accent); }
+.device.remote canvas { box-shadow: 0 0 0 3px var(--river); }
+/* stream view css: begin */
+#stage { display: none; }
+body.stream { overflow: hidden; padding: 0; background: #0c0b11; }
+body.stream > main, body.stream > footer { display: none; }
+body.stream #stage { display: block; position: fixed; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 50% 50%;
+  transform: translate(-50%, -50%) scale(var(--sv-s, .5)); overflow: hidden; color: #f2eade;
+  background: radial-gradient(ellipse 62% 62% at 50% 42%, var(--sv-glow), transparent 70%),
+              linear-gradient(#1a1824, #0c0b11); font-family: "Barlow Semi Condensed", Barlow, sans-serif; }
+#stage .sv-bg, #stage .sv-px, #stage .sv-vig { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+#stage .sv-px { image-rendering: pixelated; }
+#stage .sv-vig { display: none; background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 40%, rgba(0, 0, 0, .92) 100%); }
+#stage.grav .sv-vig { display: block; }
+#stage.grav { background: #000; }
+#stage .sv-dev { position: absolute; left: 56px; top: 190px; width: 1100px; }
+#stage .sv-dev .device { width: 1100px; }
+#stage .sv-big { position: absolute; left: 1174px; top: 128px; width: 704px; height: 704px; border-radius: 30px; background: #0b0a0e;
+  border: 2px solid #5a5468; box-sizing: border-box; display: grid; place-items: center; }
+#stage .sv-big canvas { width: 660px; height: 660px; image-rendering: pixelated; border-radius: 4px; background: #000; }
+#stage .sv-title { position: absolute; left: 56px; top: 44px; display: flex; align-items: center; gap: 22px; }
+#stage .sv-bars { display: flex; gap: 6px; } #stage .sv-bars i { display: block; height: 8px; border-radius: 2px; }
+#stage .sv-name { font: 700 62px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .04em; color: var(--sv-acc); }
+#stage .sv-tag { font: 500 32px/1.1 "Barlow Semi Condensed", sans-serif; color: #c9bfd8; }
+#stage .sv-link { position: absolute; left: 1174px; top: 60px; font: 700 26px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .1em;
+  color: #1a1206; background: #ff9a3c; border-radius: 999px; padding: 10px 22px; box-shadow: 0 0 24px #ff9a3c88; display: none; }
+#stage.linked .sv-link { display: block; }
+#stage .sv-moves { position: absolute; left: 1174px; top: 860px; width: 704px; display: flex; flex-wrap: nowrap; gap: 10px;
+  justify-content: flex-end; overflow: hidden; }
+#stage .sv-moves span { flex: none; white-space: nowrap; }
+#stage .sv-moves span { font: 600 26px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .05em; padding: 9px 16px; border-radius: 10px;
+  background: #22202c; border: 2px solid var(--sv-acc); color: #f2eade; transition: opacity .6s; }
+#stage .sv-moves span.old { opacity: .35; }
+#stage .sv-foot { position: absolute; right: 56px; bottom: 34px; font: 600 26px/1 "Barlow Semi Condensed", sans-serif; color: #85799a; letter-spacing: .04em; }
+  border-radius: 999px; background: #ff5e5b; color: #fff; font: 700 28px/1 "Barlow Semi Condensed", sans-serif; letter-spacing: .03em;
+  text-decoration: none; box-shadow: 0 0 22px #ff5e5b55; }
+#stage .sv-ctl { position: absolute; left: 56px; bottom: 26px; display: flex; gap: 12px; opacity: 0; transition: opacity .25s; }
+#stage:hover .sv-ctl { opacity: 1; }
+#stage.idle .sv-ctl { opacity: 0; }
+#stage.idle, #stage.idle * { cursor: none !important; }
+#stage .sv-ctl button { font: 600 22px "Barlow Semi Condensed", sans-serif; color: #f2eade; background: #2a2734; border: 1px solid #6b6380;
+  border-radius: 8px; padding: 6px 16px; cursor: pointer; }
+body.stream .held .btnface { stroke: #ff9a3c; stroke-width: 6; filter: drop-shadow(0 0 7px #ff9a3c); }
+body.stream .held .keyface { stroke: #ff9a3c; stroke-width: 6; filter: drop-shadow(0 0 8px #ff9a3c); }
+body.stream .ctl.knob.sv-turn > circle:first-child { stroke: #ff9a3c; stroke-width: 6; filter: drop-shadow(0 0 8px #ff9a3c); }
+/* stream view css: end */
+  @media screen { body { background: radial-gradient(1600px 720px at 50% -280px, rgba(114,83,230,.26), transparent 70%) fixed, url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .62  0 0 0 0 .58  0 0 0 0 1  0 0 0 .08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px), var(--ground); } }   /* (1.0 palette: the violet frame's glow) */
+
+  /* (1.0) the banner: the maker's festival picture, PERF-1 in the boot card's letters, the lights pulsing at 128 BPM */
+  .hero { position: relative; height: clamp(220px, 27vw, 400px); margin: 0 0 1.6rem; overflow: hidden; border-radius: 2px;
+          background: #05070f 50% 60% / cover no-repeat; image-rendering: pixelated; border: 1px solid #2c3766; border-top-color: #5a47c8;
+          box-shadow: 0 0 0 1px #05070f, 0 0 0 7px #161d3a, 0 0 0 8px #3d4a8a, 0 0 0 9px #05070f, 0 16px 48px rgba(114,83,230,.32), inset 0 1px 0 rgba(165,139,255,.3);
+          display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: clamp(14px, 3vw, 34px); gap: .5rem; }
+  .hero.slim { height: clamp(130px, 13vw, 190px); padding-top: clamp(10px, 1.6vw, 20px); background-position: 50% 42%; }
+  .hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+                  background: radial-gradient(55% 60% at 50% 30%, rgba(255,110,220,.42), transparent 70%),
+                              radial-gradient(30% 50% at 12% 20%, rgba(80,200,255,.30), transparent 70%),
+                              radial-gradient(30% 50% at 88% 20%, rgba(80,200,255,.30), transparent 70%);
+                  animation: hero-pulse .46875s ease-out infinite; }
+  .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+                 background: linear-gradient(rgba(5,7,15,.55), transparent 38%, transparent 70%, rgba(11,16,34,.75)); }
+  @keyframes hero-pulse { 0% { opacity: 1; } 55%, 100% { opacity: .2; } }
+  .hero .mark { position: relative; z-index: 1; height: clamp(46px, 7.5vw, 104px); width: auto; filter: drop-shadow(0 0 14px rgba(165,139,255,.55)); }
+  .hero.slim .mark { height: clamp(34px, 4.2vw, 58px); }
+  .hero .tagline { position: relative; z-index: 1; font: 600 clamp(11px, 1.1vw, 15px) "Chakra Petch", sans-serif; letter-spacing: .32em;
+                   color: #f2efe6; text-shadow: 0 0 10px rgba(114,83,230,.9), 0 1px 0 #05070f; }
+  @media (prefers-reduced-motion: reduce) { .hero::before { animation: none; opacity: .5; } }
+  @media print { .hero { display: none; } }
+</style>
+</head>
+<body>
+<!--p1top--><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&amp;display=swap"><style>html{scrollbar-gutter:stable}#p1top{--p1-ink:#f2efe6;--p1-acc:#a58bff;--p1-line:#7253e6;--p1-dim:#cfc8ff}#p1top,#p1top *{all:unset;box-sizing:border-box}#p1top{display:block;position:absolute;top:0;left:0;right:0;height:80px;z-index:60;font:500 16px/1.2 "Chakra Petch","Helvetica Neue",Arial,sans-serif;color:var(--p1-ink)}#p1top .in{display:flex;align-items:center;gap:16px;position:relative;max-width:1240px;height:100%;margin:0 auto;padding:14px 16px 0}#p1top .home{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font:700 21px/1 "Chakra Petch","Helvetica Neue",Arial,sans-serif;letter-spacing:.06em;color:var(--p1-ink)}#p1top .home img{display:block;width:46px;height:46px;image-rendering:pixelated}#p1top .nav{display:flex;flex-wrap:nowrap;gap:18px;margin-left:auto;white-space:nowrap}#p1top .nav a{display:inline;cursor:pointer;color:var(--p1-ink);text-decoration:underline;text-decoration-color:var(--p1-line);text-decoration-thickness:2px;text-underline-offset:5px}#p1top .nav a:hover{color:var(--p1-acc)}#p1top .nav a[aria-current]{color:var(--p1-acc);text-decoration:none}#p1top .kofi{display:block;position:absolute;top:6px;right:16px;cursor:pointer;font-size:13px;color:var(--p1-dim);text-decoration:underline;text-decoration-color:var(--p1-line);text-underline-offset:3px}#p1top a:focus-visible{outline:2px solid var(--p1-acc);outline-offset:3px}#p1top-space{display:block;height:80px}@media (max-width:760px){#p1top{height:150px}#p1top-space{height:150px}#p1top .in{flex-wrap:wrap;align-content:flex-start;gap:8px 16px;padding-top:22px}#p1top .nav{display:grid;grid-template-columns:repeat(3,max-content);gap:10px 20px;margin-left:0;width:100%}}@media print{#p1top,#p1top-space{display:none}}</style><div id="p1top"><div class="in"><a class="home" href="../"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAABcCAYAAADj79JYAAACGklEQVR42u2dMUoEMQBF/4iFjSCCKCgIooWCJ9DCwjtYKLLgGawXL+ANbMQtxM5SLCxc7BW0UIQFBcVG8ABr60SYEJNMMuP73bLMbPL5PLN/krWQRbMTC8Ofr18/nws1WKnnMyIkDMdwFEqFjXEP98el95dXdtUkpuc2HxIOUjAcxWR405me+3hJOEjBcBRQo64X3N5ceDE1tGwMdh0vCQcpCMPbtA63Mfn0aKf0/tbeSel1f3E16gTWnu7kMp7U3xNIOIZjOErZpZhMnt/eqLx+0LvKasIm8+lSQArC8DY/07Qx22S0yUhTvuvy0Pevm+kkHKRgOFLCPty2rn65Xqq+vuM34Nj3J+EgBWF4mxlu09z6Y9Q+fNAZq1xHx+7fSThIQRjeJIZfvn94fcDk+b6q9va5ytwrKON+vuNV5DNDJBykYDhSwmeabZNr/217XmDr10k4SMFwlLJL8d2XYnsmadPB+IzX9d2vN4Vktjn/fk/GfDUk4SAFw1Eu63Bfhm5OTzntc5HjvpTY624SDlIQhrfpjE/d62jzb4AS7w+nDwcpCMOVcZcS+oyP7zqahCMMx3D09z78176PwzOF7NNz61JIOEhBGC66FLWlS/H9/XESDlIwHNGlqLH/M4KEgxQMR3QpoktBGI7hiC6lduaTcJCC4YguRcnOaZJwkIIwnDM+6boUGA5SEIbTpejf/D4KCQcpCMMz1jcYZfe1K9DPsQAAAABJRU5ErkJggg==" width="46" height="46" alt="">PERF-1</a><div class="nav" role="navigation" aria-label="Pages"><a href="../emu/" aria-current="page">Emulator</a><a href="../editor/">Editor</a><a href="../studio/">Studio</a><a href="../pieces/">Library &amp; pieces</a><a href="../install/">Install</a><a href="../manual/">Manual</a></div><a class="kofi" href="https://ko-fi.com/deamonslinky" target="_blank" rel="noopener">&#9749; Buy me a coffee</a></div></div><div id="p1top-space"></div><!--/p1top-->
+<main>
+<div class="hero slim" style="background-image:url(../img/banner.png)"><svg class="mark" viewBox="0 0 36 8" role="img" aria-label="PERF-1" shape-rendering="crispEdges"><g fill="#ffb000"><rect x="0.5" y="0.5" width="1" height="1"/><rect x="1.5" y="0.5" width="1" height="1"/><rect x="2.5" y="0.5" width="1" height="1"/><rect x="3.5" y="0.5" width="1" height="1"/><rect x="0.5" y="1.5" width="1" height="1"/><rect x="4.5" y="1.5" width="1" height="1"/><rect x="0.5" y="2.5" width="1" height="1"/><rect x="4.5" y="2.5" width="1" height="1"/><rect x="0.5" y="3.5" width="1" height="1"/><rect x="1.5" y="3.5" width="1" height="1"/><rect x="2.5" y="3.5" width="1" height="1"/><rect x="3.5" y="3.5" width="1" height="1"/><rect x="0.5" y="4.5" width="1" height="1"/><rect x="0.5" y="5.5" width="1" height="1"/><rect x="0.5" y="6.5" width="1" height="1"/><rect x="6.5" y="0.5" width="1" height="1"/><rect x="7.5" y="0.5" width="1" height="1"/><rect x="8.5" y="0.5" width="1" height="1"/><rect x="9.5" y="0.5" width="1" height="1"/><rect x="10.5" y="0.5" width="1" height="1"/><rect x="6.5" y="1.5" width="1" height="1"/><rect x="6.5" y="2.5" width="1" height="1"/><rect x="6.5" y="3.5" width="1" height="1"/><rect x="7.5" y="3.5" width="1" height="1"/><rect x="8.5" y="3.5" width="1" height="1"/><rect x="9.5" y="3.5" width="1" height="1"/><rect x="6.5" y="4.5" width="1" height="1"/><rect x="6.5" y="5.5" width="1" height="1"/><rect x="6.5" y="6.5" width="1" height="1"/><rect x="7.5" y="6.5" width="1" height="1"/><rect x="8.5" y="6.5" width="1" height="1"/><rect x="9.5" y="6.5" width="1" height="1"/><rect x="10.5" y="6.5" width="1" height="1"/><rect x="12.5" y="0.5" width="1" height="1"/><rect x="13.5" y="0.5" width="1" height="1"/><rect x="14.5" y="0.5" width="1" height="1"/><rect x="15.5" y="0.5" width="1" height="1"/><rect x="12.5" y="1.5" width="1" height="1"/><rect x="16.5" y="1.5" width="1" height="1"/><rect x="12.5" y="2.5" width="1" height="1"/><rect x="16.5" y="2.5" width="1" height="1"/><rect x="12.5" y="3.5" width="1" height="1"/><rect x="13.5" y="3.5" width="1" height="1"/><rect x="14.5" y="3.5" width="1" height="1"/><rect x="15.5" y="3.5" width="1" height="1"/><rect x="12.5" y="4.5" width="1" height="1"/><rect x="14.5" y="4.5" width="1" height="1"/><rect x="12.5" y="5.5" width="1" height="1"/><rect x="15.5" y="5.5" width="1" height="1"/><rect x="12.5" y="6.5" width="1" height="1"/><rect x="16.5" y="6.5" width="1" height="1"/><rect x="18.5" y="0.5" width="1" height="1"/><rect x="19.5" y="0.5" width="1" height="1"/><rect x="20.5" y="0.5" width="1" height="1"/><rect x="21.5" y="0.5" width="1" height="1"/><rect x="22.5" y="0.5" width="1" height="1"/><rect x="18.5" y="1.5" width="1" height="1"/><rect x="18.5" y="2.5" width="1" height="1"/><rect x="18.5" y="3.5" width="1" height="1"/><rect x="19.5" y="3.5" width="1" height="1"/><rect x="20.5" y="3.5" width="1" height="1"/><rect x="21.5" y="3.5" width="1" height="1"/><rect x="18.5" y="4.5" width="1" height="1"/><rect x="18.5" y="5.5" width="1" height="1"/><rect x="18.5" y="6.5" width="1" height="1"/><rect x="25.5" y="3.5" width="1" height="1"/><rect x="26.5" y="3.5" width="1" height="1"/><rect x="27.5" y="3.5" width="1" height="1"/><rect x="32.5" y="0.5" width="1" height="1"/><rect x="31.5" y="1.5" width="1" height="1"/><rect x="32.5" y="1.5" width="1" height="1"/><rect x="32.5" y="2.5" width="1" height="1"/><rect x="32.5" y="3.5" width="1" height="1"/><rect x="32.5" y="4.5" width="1" height="1"/><rect x="32.5" y="5.5" width="1" height="1"/><rect x="31.5" y="6.5" width="1" height="1"/><rect x="32.5" y="6.5" width="1" height="1"/><rect x="33.5" y="6.5" width="1" height="1"/></g><g fill="#a58bff"><rect x="0" y="0" width="1" height="1"/><rect x="1" y="0" width="1" height="1"/><rect x="2" y="0" width="1" height="1"/><rect x="3" y="0" width="1" height="1"/><rect x="0" y="1" width="1" height="1"/><rect x="4" y="1" width="1" height="1"/><rect x="0" y="2" width="1" height="1"/><rect x="4" y="2" width="1" height="1"/><rect x="0" y="3" width="1" height="1"/><rect x="1" y="3" width="1" height="1"/><rect x="2" y="3" width="1" height="1"/><rect x="3" y="3" width="1" height="1"/><rect x="0" y="4" width="1" height="1"/><rect x="0" y="5" width="1" height="1"/><rect x="0" y="6" width="1" height="1"/><rect x="6" y="0" width="1" height="1"/><rect x="7" y="0" width="1" height="1"/><rect x="8" y="0" width="1" height="1"/><rect x="9" y="0" width="1" height="1"/><rect x="10" y="0" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="6" y="2" width="1" height="1"/><rect x="6" y="3" width="1" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="8" y="3" width="1" height="1"/><rect x="9" y="3" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/><rect x="6" y="5" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/><rect x="7" y="6" width="1" height="1"/><rect x="8" y="6" width="1" height="1"/><rect x="9" y="6" width="1" height="1"/><rect x="10" y="6" width="1" height="1"/><rect x="12" y="0" width="1" height="1"/><rect x="13" y="0" width="1" height="1"/><rect x="14" y="0" width="1" height="1"/><rect x="15" y="0" width="1" height="1"/><rect x="12" y="1" width="1" height="1"/><rect x="16" y="1" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/><rect x="16" y="2" width="1" height="1"/><rect x="12" y="3" width="1" height="1"/><rect x="13" y="3" width="1" height="1"/><rect x="14" y="3" width="1" height="1"/><rect x="15" y="3" width="1" height="1"/><rect x="12" y="4" width="1" height="1"/><rect x="14" y="4" width="1" height="1"/><rect x="12" y="5" width="1" height="1"/><rect x="15" y="5" width="1" height="1"/><rect x="12" y="6" width="1" height="1"/><rect x="16" y="6" width="1" height="1"/><rect x="18" y="0" width="1" height="1"/><rect x="19" y="0" width="1" height="1"/><rect x="20" y="0" width="1" height="1"/><rect x="21" y="0" width="1" height="1"/><rect x="22" y="0" width="1" height="1"/><rect x="18" y="1" width="1" height="1"/><rect x="18" y="2" width="1" height="1"/><rect x="18" y="3" width="1" height="1"/><rect x="19" y="3" width="1" height="1"/><rect x="20" y="3" width="1" height="1"/><rect x="21" y="3" width="1" height="1"/><rect x="18" y="4" width="1" height="1"/><rect x="18" y="5" width="1" height="1"/><rect x="18" y="6" width="1" height="1"/><rect x="25" y="3" width="1" height="1"/><rect x="26" y="3" width="1" height="1"/><rect x="27" y="3" width="1" height="1"/><rect x="32" y="0" width="1" height="1"/><rect x="31" y="1" width="1" height="1"/><rect x="32" y="1" width="1" height="1"/><rect x="32" y="2" width="1" height="1"/><rect x="32" y="3" width="1" height="1"/><rect x="32" y="4" width="1" height="1"/><rect x="32" y="5" width="1" height="1"/><rect x="31" y="6" width="1" height="1"/><rect x="32" y="6" width="1" height="1"/><rect x="33" y="6" width="1" height="1"/></g></svg><span class="tagline">LIVE &nbsp;//&nbsp; GENERATIVE &nbsp;//&nbsp; FREE</span></div>
+
+<p class="turn">Turn your phone sideways for bigger controls.</p>
+<div class="device" id="device">
+  <svg id="panel" viewBox="0 0 1000 640" role="application" aria-label="The FM-1: knobs, buttons, screen and keys"></svg>
+  <canvas id="screen" width="240" height="240" aria-label="The FM-1 screen"></canvas>
+  <div class="start" id="start"><button id="go">Switch on</button></div>
+</div>
+
+<div class="bar">
+  <span id="status">Off. Sound starts when you switch it on.</span>
+  <span class="cpu" id="cpu"></span>
+  <button id="reset" type="button" title="Power off and on (stored pieces kept)">New start</button>
+  <button id="forget" type="button" title="Forget every stored piece and the theme">Forget stored</button>
+</div>
+
+<section class="midi" id="midi" aria-labelledby="midi-h">
+  <h2 id="midi-h">Play it from your FM-1, or any MIDI controller</h2>
+  <p>Plug the FM-1 in by USB and press Connect MIDI (Chrome, Edge or Firefox; Safari has no Web MIDI). <b>With PERF-1 on the FM-1</b>, press <kbd>SEL</kbd> + <kbd>GLO</kbd> on it: its panel then plays this emulator exactly (buttons, the 27 keys, every knob and MASTER), its own sound goes quiet, its screen says REMOTE, and its lights follow the screen here. <kbd>SEL</kbd> + <kbd>GLO</kbd> again gives it back, stopped. (It speaks MIDI channel 16: keys are notes 48 up, buttons CC 102 up, knobs CC 85 up, MASTER CC 7; the lights come back through the FM-1's own MIDI output, which the browser has to see under the same name.)</p>
+  <p><b>With M-VAVE's firmware, or any other keyboard or controller</b>, its notes play the keys here straight away (any channel, folded into F3 to G5). For the rest use MIDI learn: press MIDI learn, click a knob, button or key on the panel, then move or press the control you want on your controller. A knob needs a knob or slider (a CC); a button or key takes a note or a CC (64 and over is down). A learned knob can be absolute or relative (64 &plusmn; n, or 1 up and 127 down): pick it in the list below, which also lets you forget one. What you learn is kept in this browser. MIDI clock, SysEx and program changes are ignored.</p>
+  <p><b>Your map on the FM-1 itself</b> (experimental): what you learn here can play the real PERF-1 too. Press <b>Send it to your FM-1</b> (the Install page's MIDI map section, in this browser) and your controller plays the FM-1's buttons, keys and knobs with no computer in between. <b>Download map</b> saves it as a .perfmap file to share or keep; <b>Load map</b> reads one.</p>
+  <p>Nothing learns? Your controller may keep its pads off MIDI. On an <b>MPC Sample</b>: SHIFT + pad 8 (MIDI Config), <b>MIDI Port</b> USB, <b>Pad MIDI Out</b> Always. While learning, anything heard shows above.</p>
+  <div class="bar">
+    <button id="midiOn" type="button">Connect MIDI</button>
+    <span id="midiStatus">Not connected.</span>
+    <button id="learn" type="button" aria-pressed="false" hidden>MIDI learn</button>
+    <button id="unlearn" type="button" hidden>Forget learned</button>
+    <button id="mapsave" type="button" hidden>Download map</button>
+    <label class="btnlike"><input type="file" id="mapload" accept=".perfmap,.json" hidden>Load map</label>
+    <a id="mapsend" href="../install/#midimap" hidden>Send it to your FM-1 &rarr;</a>
+  </div>
+  <ul id="maps" aria-label="Learned controls"></ul>
+</section>
+
+<section class="help">
+  <div class="knobs">
+    <h2>How to play it</h2>
+    <p>This is PERF-1 itself, the same code the FM-1 runs. Press <b>Switch on</b> and a piece starts.</p>
+    <ul>
+      <li><b>SELECT</b> walks the 37 pages. The four knobs under the screen change what each page shows. <b>ENV</b>, <b>LFO</b>, <b>ARP</b>, <b>SEQ</b>, <b>GLO</b> and <b>HOME</b> jump to a group. Press again for its next page.</li>
+      <li><b>PRESETS</b> picks the piece. <b>GLO</b> + <b>PRESETS</b> picks the genre. There are 22 genres of ten pieces.</li>
+      <li>Tap <b>SAVE</b> for a breakdown. Tap it again for the build and the drop.</li>
+      <li><b>FX</b> opens the effects. Tap a key to latch one, hold it to play it. Hold <b>FX</b> for the settings of the last one.</li>
+      <li>Hold <b>GLO</b> for the mix map: mutes, solos, scenes and the auto-DJ. Hold <b>SEQ</b> for the step sequencer. Hold <b>HOME</b> for the settings.</li>
+      <li>On a voice's pages the keys play that voice. On <b>Global</b> they edit the scale. <b>ALGORITHM</b> is the mood (on Global and Chords, the mode).</li>
+      <li><b>GLO</b>, then <b>SAVE</b> stores the piece. Stored pieces and the settings are kept in this browser. Switched on again, it comes back to the piece you played last (or a HYPNO piece at random: Settings, Start).</li>
+    </ul>
+    <p>Every page, key and setting is in the <a href="../manual/">manual</a>.</p>
+  </div>
+  <div>
+    <h2>Mouse, touch and keyboard</h2>
+    <ul>
+      <li>Drag a knob up or down, or use the scroll wheel over it. Click or touch buttons and keys (several fingers at once work); <kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
+      <li>White keys 1–8: <kbd>Q</kbd>–<kbd>I</kbd>, 9–16: <kbd>A</kbd>–<kbd>K</kbd>. Black keys 1–10: <kbd>1</kbd>–<kbd>0</kbd>, black key 11: <kbd>-</kbd>.</li>
+      <li><kbd>Space</kbd> PLAY, <kbd>Enter</kbd> REC, <kbd>Esc</kbd> HOME, <kbd>V</kbd> ENV, <kbd>L</kbd> LFO, <kbd>P</kbd> ARP, <kbd>M</kbd> SEQ, <kbd>O</kbd> GLO, <kbd>C</kbd> EDIT, <kbd>`</kbd> FX, <kbd>B</kbd> SAVE, <kbd>N</kbd> SEL, <kbd>Z</kbd> / <kbd>X</kbd> OCT− / OCT+. A held key is a held button, so hold <kbd>M</kbd> for the sequencer or <kbd>N</kbd> with another key for SEL combinations.</li>
+      <li><kbd>↑</kbd> <kbd>↓</kbd> turn SELECT. The other knobs (ALGORITHM, PRESETS, KNOB 1–4, MASTER) have no letter: use the mouse, or press <kbd>Tab</kbd> to a knob and turn it with the arrow keys.</li>
+      <li>Hover a control for a one-line tip. Stream view (a button under the panel, or <code>?stream</code> on the address) shows the FM-1 and its screen large on a 16:9 stage for capturing.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>What the emulator cannot do</h2>
+    <ul>
+      <li>Load DX7 voices from a .syx file, read the load telemetry or send MIDI out. Those need a real FM-1 (the installer page has the DX7 loader and Live status). The pluck has its 72 built-in sounds.</li>
+      <li>The load on the mix map (CPU, XR) is only an estimate of this computer's time. XR stays 0, and there is no second core. Stored pieces live in your browser's storage.</li>
+      <li>Remote mode is started on the FM-1 (SEL + GLO, with PERF-1 on it). MIDI needs Chrome, Edge or Firefox.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Credits</h2>
+    <p>PERF-1 is by deamonSLINKY (GPL-3.0-only); the people whose work it builds on are in the manual's <a href="https://deamonslinky.github.io/PERF-1/manual/#s19">credits</a>. The idea of running FM-1 firmware in the browser comes from <a href="https://www.groove-os.com/">Groove OS</a>'s emulator. Fonts: Chakra Petch and Barlow Semi Condensed (SIL OFL 1.1). M-VAVE and FM-1 are trademarks of their owners. PERF-1 is not affiliated with them.</p>
+  </div>
+</section>
+<footer class="foot"><span>PERF-1 by deamonSLINKY (GPL-3.0-only) &middot; <a href="https://deamonslinky.github.io/PERF-1/manual/#s19">credits</a></span><span><a href="https://github.com/deamonSLINKY/PERF-1/issues/new/choose" target="_blank" rel="noopener">Comments, ideas and bug reports</a></span><span><a href="https://github.com/deamonSLINKY/PERF-1" target="_blank" rel="noopener">Source on GitHub</a></span><span>M-VAVE and FM-1 are trademarks of their owners</span></footer>
+</main>
+
+<script>
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const BTN = { FX: 0, SEL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, "OCT-": 12, "OCT+": 13 };
+const ENC = { SELECT: 0, ALGORITHM: 1, PRESETS: 2, KNOB1: 3, KNOB2: 4, KNOB3: 5, KNOB4: 6 };
+const WHITE_K = [0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26];
+const BLACK_K = [1, 3, 5, 8, 10, 13, 15, 17, 20, 22, 25];
+const BLACK_AFTER = [0, 1, 2, 4, 5, 7, 8, 9, 11, 12, 14];
+const BODY = "#3a3d42", TRAY = "#26282c", KEY_W = "#d9dadc", KEY_B = "#c9cacd", KNOB = "#1f2124", BTNC = "#2e3135", LABEL = "#e8e8ea";
+const STORE_KEY = "hyp1-emu-store";
+
+const svg = document.getElementById("panel");
+function el(tag, attrs, parent = svg) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  parent.appendChild(e);
+  return e;
+}
+function text(parent, x, y, s, size, fill = LABEL, weight = 600) {
+  const t = el("text", { x, y, "text-anchor": "middle", "font-family": "'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif",
+                         "font-size": size, "font-weight": weight, fill, "letter-spacing": ".05em", class: "btn", "pointer-events": "none" }, parent);
+  t.textContent = s;
+  return t;
+}
+
+// ---------------------------------------------------------------- the panel
+el("rect", { x: 4, y: 4, width: 992, height: 632, rx: 44, fill: BODY });
+const knobs = {};
+function knob(x, y, r, label, role) {
+  const g = el("g", { class: "ctl knob", tabindex: 0, role: "slider", "aria-label": label });
+  el("circle", { cx: x, cy: y, r: r + 5, fill: TRAY }, g);
+  el("circle", { cx: x, cy: y, r, fill: KNOB, stroke: "#44474c", "stroke-width": 2 }, g);
+  const ind = el("line", { x1: x, y1: y - r + 5, x2: x, y2: y - r + 15, stroke: LABEL, "stroke-width": 3, "stroke-linecap": "round" }, g);
+  text(g, x, y - r - 12, label, 17);
+  el("circle", { cx: x, cy: y, r: r + 14, fill: "transparent" }, g);
+  knobs[label] = { g, ind, x, y, angle: 0, role };
+  return knobs[label];
+}
+knob(105, 100, 24, "MASTER", "master");
+knob(215, 100, 24, "SELECT", ENC.SELECT);
+knob(105, 205, 24, "PRESETS", ENC.PRESETS);
+knob(215, 205, 24, "ALGORITHM", ENC.ALGORITHM);
+for (let i = 0; i < 4; i++) knob(610 + i * 104, 100, 22, `KNOB${i + 1}`, ENC[`KNOB${i + 1}`]);
+
+const buttons = {};
+function button(x, y, w, h, label, two) {
+  const g = el("g", { class: "ctl", role: "button", "aria-label": label });
+  el("rect", { x, y, width: w, height: h, rx: 9, fill: BTNC, stroke: "#4a4d52", "stroke-width": 1.5, class: "btnface" }, g);
+  if (two) { text(g, x + w / 2, y + h / 2 - 1, label, 12); text(g, x + w / 2, y + h / 2 + 12, two, 12); }
+  else text(g, x + w / 2, y + h / 2 + 5, label, 15);
+  buttons[label] = { g, bit: BTN[label] };
+}
+el("rect", { x: 58, y: 258, width: 210, height: 58, rx: 14, fill: TRAY });
+button(72, 268, 82, 38, "OCT-"); button(170, 268, 82, 38, "OCT+");
+el("rect", { x: 300, y: 44, width: 236, height: 236, rx: 26, fill: "#111214" });
+el("rect", { x: 568, y: 160, width: 400, height: 140, rx: 18, fill: TRAY });
+const ROW1 = ["FX", "SEL", "ENV", "LFO", "EDIT", "GLO"], ROW2 = ["HOME", "SAVE", "ARP", "SEQ", "PLAY", "REC"];
+for (let i = 0; i < 6; i++) {
+  button(582 + i * 63, 174, 54, 48, ROW1[i]);
+  if (ROW2[i] === "PLAY") button(582 + i * 63, 236, 54, 48, "PLAY", "STOP"); else button(582 + i * 63, 236, 54, 48, ROW2[i]);
+}
+
+const keys = [];
+(function keybed(x0, y0, w, h) {
+  el("rect", { x: x0, y: y0, width: w, height: h, rx: 18, fill: TRAY });
+  const pitch = (w - 24) / 16, kw = pitch * 0.78;
+  for (let i = 0; i < 16; i++) {
+    const g = el("g", { class: "ctl", role: "button", "aria-label": `white key ${i + 1}` });
+    el("rect", { x: x0 + 12 + i * pitch + (pitch - kw) / 2, y: y0 + h * 0.43, width: kw, height: h * 0.52, rx: kw / 2, fill: KEY_W, class: "keyface white" }, g);
+    keys[WHITE_K[i]] = { g };
+  }
+  BLACK_AFTER.forEach((a, k) => {
+    const g = el("g", { class: "ctl", role: "button", "aria-label": `black key ${k + 1}` });
+    el("rect", { x: x0 + 12 + (a + 1) * pitch - kw / 2, y: y0 + h * 0.06, width: kw, height: h * 0.33, rx: kw / 2, fill: KEY_B, class: "keyface black" }, g);
+    keys[BLACK_K[k]] = { g };
+  });
+})(36, 340, 928, 270);
+
+// ---------------------------------------------------------------- touch targets
+// The drawing is only a picture (pointer-events: none). Each control gets an invisible HTML target
+// over it: browsers (iOS Safari above all) honour touch-action and touchstart on HTML elements but
+// not on SVG ones, so the controls keep their touches while a finger anywhere else on the device
+// scrolls the page natively.
+const device = document.getElementById("device");
+function hit(c, cls) {
+  const b = c.g.getBBox(), d = document.createElement("div");
+  d.className = "hit" + (cls ? " " + cls : "");
+  Object.assign(d.style, { left: `${b.x / 10}%`, top: `${b.y / 6.4}%`, width: `${b.width / 10}%`, height: `${b.height / 6.4}%` });
+  for (const a of ["role", "aria-label", "tabindex"]) if (c.g.hasAttribute(a)) { d.setAttribute(a, c.g.getAttribute(a)); c.g.removeAttribute(a); }
+  if (c.g.hasAttribute("aria-description")) { d.title = c.g.getAttribute("aria-description"); d.setAttribute("aria-description", d.title); }
+  c.g.setAttribute("aria-hidden", "true");
+  d.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  device.insertBefore(d, document.getElementById("start"));
+  c.hit = d;
+}
+// what each control does, on hover (the Buttons list below says the same)
+const TIP = { FX: "The effects menu, on / off", ENV: "Pad (again: env, LFO, chords); with SEL: the voice on screen by hand", LFO: "Bass (again: env, LFO)", EDIT: "The next chord", GLO: "Global", SEL: "Shift (hold): keys 1-6 pick the pattern; PRESETS on the next bar; ALGORITHM the sound of the voice on screen; ENV the voice on screen by hand", HOME: "Tempo", SAVE: "Breakdown / build; hold: drop. On Global: store the piece (hold: factory)",
+  ARP: "Acid (again: env, line)", SEQ: "Drums (again: Links, Kit, Drum drift); hold: the sequencer; with SEL: links on / off", PLAY: "Play / stop", REC: "Freeze: the chord holds, the reverb rings on",
+  "OCT-": "An octave down: this page's voice, or the song; sequencer: the drum above", "OCT+": "An octave up: this page's voice, or the song; sequencer: the drum below", SELECT: "Tempo", ALGORITHM: "Mode", PRESETS: "Piece, 01 to 10",
+  MASTER: "Volume" };
+for (const [n, c] of [...Object.entries(buttons), ...Object.entries(knobs)]) if (TIP[n]) c.g.setAttribute("aria-description", TIP[n]);
+for (const k of Object.values(knobs)) hit(k, "knob");
+for (const b of Object.values(buttons)) hit(b);
+keys.forEach((k) => hit(k));
+for (const [n, k] of Object.entries(knobs)) { k.hit.dataset.t = k.role === "master" ? "m" : "e" + k.role; k.name = n; }
+for (const [n, b] of Object.entries(buttons)) { b.hit.dataset.t = "b" + b.bit; b.name = n; }
+keys.forEach((k, i) => { k.hit.dataset.t = "k" + i; });
+
+// ---------------------------------------------------------------- state and input
+let node = null, btnMask = 0, keyMask = 0, latched = 0, master = 2800;
+const btnHeldBy = new Map(), keyHeldBy = new Map();      // pointer / key id -> bit
+function send(m) { if (node) node.port.postMessage(m); }
+function syncButtons() {
+  let m = latched;
+  for (const b of btnHeldBy.values()) m |= 1 << b;
+  if (m !== btnMask) { btnMask = m; send({ type: "buttons", mask: m }); }
+  for (const b of Object.values(buttons)) {
+    b.g.classList.toggle("held", !!(m & (1 << b.bit)));
+    b.g.classList.toggle("latched", !!(latched & (1 << b.bit)));
+    b.hit.classList.toggle("latched", !!(latched & (1 << b.bit)));
+    b.hit.setAttribute("aria-pressed", m & (1 << b.bit) ? "true" : "false");
+  }
+}
+function syncKeys() {
+  let m = 0;
+  for (const k of keyHeldBy.values()) m |= 1 << k;
+  if (m !== keyMask) { keyMask = m; send({ type: "keys", mask: m }); }
+  keys.forEach((k, i) => k.g.classList.toggle("held", !!(m & (1 << i))));
+}
+
+for (const b of Object.values(buttons)) {
+  b.hit.addEventListener("contextmenu", (e) => e.preventDefault());
+  b.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    if (e.shiftKey || e.button === 2) { latched ^= 1 << b.bit; syncButtons(); return; }
+    if (latched & (1 << b.bit)) { latched &= ~(1 << b.bit); syncButtons(); return; }
+    b.hit.setPointerCapture(e.pointerId);
+    btnHeldBy.set("p" + e.pointerId, b.bit);
+    syncButtons();
+  });
+}
+keys.forEach((k, i) => {
+  k.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    k.hit.setPointerCapture(e.pointerId);
+    keyHeldBy.set("p" + e.pointerId, i);
+    syncKeys();
+  });
+});
+function pointerUp(e) {
+  const id = "p" + e.pointerId;
+  if (btnHeldBy.delete(id)) syncButtons();
+  if (keyHeldBy.delete(id)) syncKeys();
+}
+device.addEventListener("pointerup", pointerUp);
+device.addEventListener("pointercancel", pointerUp);
+device.addEventListener("lostpointercapture", pointerUp);
+
+function drawKnob(k) {
+  k.ind.setAttribute("transform", `rotate(${k.angle} ${k.x} ${k.y})`);
+}
+function turn(k, n) {
+  if (!n) return;
+  if (k.role === "master") {
+    master = Math.max(0, Math.min(4096, master + n * 64));
+    k.angle = -135 + 270 * master / 4096;
+    send({ type: "master", value: master });
+  } else {
+    k.angle = (k.angle + n * 18) % 360;
+    send({ type: "enc", role: k.role, n });
+  }
+  drawKnob(k);
+}
+for (const k of Object.values(knobs)) {
+  if (k.role === "master") { k.angle = -135 + 270 * master / 4096; drawKnob(k); }
+  let drag = null, wheel = 0;
+  k.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    k.hit.setPointerCapture(e.pointerId);
+    drag = { y: e.clientY, acc: 0 };
+  });
+  k.hit.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    drag.acc += drag.y - e.clientY;
+    drag.y = e.clientY;
+    const step = k.role === "master" ? 3 : 7;
+    const n = Math.trunc(drag.acc / step);
+    if (n) { drag.acc -= n * step; turn(k, n); }
+  });
+  const end = () => { drag = null; };
+  k.hit.addEventListener("pointerup", end);
+  k.hit.addEventListener("pointercancel", end);
+  k.hit.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    if (Math.abs(dy) >= 50) { turn(k, dy < 0 ? 1 : -1); wheel = 0; return; }   // a mouse wheel notch: one detent
+    wheel -= dy;                                                                   // a trackpad: by distance
+    const n = Math.trunc(wheel / 25);
+    if (n) { wheel -= n * 25; turn(k, n); }
+  }, { passive: false });
+  k.hit.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowRight") { turn(k, 1); e.preventDefault(); e.stopPropagation(); }
+    if (e.key === "ArrowDown" || e.key === "ArrowLeft") { turn(k, -1); e.preventDefault(); e.stopPropagation(); }
+  });
+}
+
+const KEYMAP = {};
+"qwertyui".split("").forEach((c, i) => KEYMAP["Key" + c.toUpperCase()] = { key: WHITE_K[i] });
+"asdfghjk".split("").forEach((c, i) => KEYMAP["Key" + c.toUpperCase()] = { key: WHITE_K[8 + i] });
+"1234567890".split("").forEach((c, i) => KEYMAP["Digit" + c] = { key: BLACK_K[i] });
+KEYMAP.Minus = { key: BLACK_K[10] };
+Object.assign(KEYMAP, { Space: { btn: BTN.PLAY }, Enter: { btn: BTN.REC }, KeyV: { btn: BTN.ENV },
+                        Escape: { btn: BTN.HOME }, KeyZ: { btn: BTN["OCT-"] }, KeyX: { btn: BTN["OCT+"] },
+                        Backquote: { btn: BTN.FX }, KeyB: { btn: BTN.SAVE }, KeyL: { btn: BTN.LFO }, KeyP: { btn: BTN.ARP },
+                        KeyM: { btn: BTN.SEQ }, KeyO: { btn: BTN.GLO }, KeyN: { btn: BTN.SEL }, KeyC: { btn: BTN.EDIT } });
+addEventListener("keydown", (e) => {
+  if (!node || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.code === "ArrowUp" || e.code === "ArrowDown") { turn(knobs.SELECT, e.code === "ArrowUp" ? 1 : -1); e.preventDefault(); return; }
+  const m = KEYMAP[e.code];
+  if (!m) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  if (m.key !== undefined) { keyHeldBy.set("k" + e.code, m.key); syncKeys(); }
+  else { btnHeldBy.set("k" + e.code, m.btn); syncButtons(); }
+});
+addEventListener("keyup", (e) => {
+  const id = "k" + e.code;
+  if (keyHeldBy.delete(id)) syncKeys();
+  if (btnHeldBy.delete(id)) syncButtons();
+});
+addEventListener("blur", () => {
+  for (const id of [...btnHeldBy.keys()]) if (id[0] === "k") btnHeldBy.delete(id);
+  for (const id of [...keyHeldBy.keys()]) if (id[0] === "k") keyHeldBy.delete(id);
+  syncButtons(); syncKeys();
+});
+
+// ---------------------------------------------------------------- screen and lights
+const ctx = document.getElementById("screen").getContext("2d");
+const img = ctx.createImageData(240, 240);
+function drawScreen(fb) {
+  const d = img.data;
+  for (let i = 0; i < 240 * 240; i++) {
+    const v = fb[i], p = ((v >> 8) | (v << 8)) & 0xFFFF;
+    d[i * 4] = ((p >> 11) & 31) * 255 / 31;
+    d[i * 4 + 1] = ((p >> 5) & 63) * 255 / 63;
+    d[i * 4 + 2] = (p & 31) * 255 / 31;
+    d[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function drawLights(b, k) {
+  for (const x of Object.values(buttons)) x.g.classList.toggle("lit", !!(b & (1 << x.bit)));
+  keys.forEach((x, i) => x.g.classList.toggle("lit", !!(k & (1 << i))));
+}
+
+// ---------------------------------------------------------------- USB MIDI: the FM-1 as a remote, and MIDI learn
+// HYP-1's remote (SEL + GLO on the FM-1) speaks on channel 16: keys are notes 48 + k, buttons CC 102 + b
+// (127 down, 0 up), knobs CC 85 + role (64 + detents), MASTER CC 7, CC 116 hello (0: goodbye). We answer
+// with our lights the same way and CC 117 each second. Anything else: learned controls first, then any
+// note plays the key of its pitch (F3 .. G5, folded into range).
+const MAP_KEY = "hyp1-emu-midimap";
+const NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const midiUI = { on: document.getElementById("midiOn"), status: document.getElementById("midiStatus"), learn: document.getElementById("learn"),
+                 unlearn: document.getElementById("unlearn"), maps: document.getElementById("maps") };
+let midi = null, learning = false, picked = null, remote = null, sentB = 0, sentK = 0, ackTimer = 0, maps = {};
+try { maps = JSON.parse(localStorage.getItem(MAP_KEY) || "{}") || {}; } catch { maps = {}; }
+const knobByRole = (r) => Object.values(knobs).find((k) => k.role === r);
+function targetName(t, m) {
+  if (t === "m") return "MASTER";
+  if (t[0] === "p") return `${(m && m.name) || "Setting " + t.slice(1)} (a setting, on the FM-1)`;   // (0.16.18: learned on the editor page)
+  if (t[0] === "e") return knobByRole(+t.slice(1)).name.replace("KNOB", "KNOB ");
+  if (t[0] === "b") return Object.values(buttons).find((b) => b.bit === +t.slice(1)).name;
+  const k = +t.slice(1), n = 53 + k;
+  return `Key ${NOTE[n % 12]}${Math.floor(n / 12) - 1}`;
+}
+const srcName = (id) => { const [ty, ch, n] = id.split(":"); return `${ty === "n" ? "Note " + NOTE[n % 12] + (Math.floor(n / 12) - 1) : "CC " + n} ch ${+ch + 1}`; };
+function saveMaps() { try { localStorage.setItem(MAP_KEY, JSON.stringify(maps)); } catch {} drawMaps(); }
+function drawMaps() {
+  midiUI.maps.textContent = "";
+  for (const [id, m] of Object.entries(maps)) {
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${srcName(id)}</span> → <b></b>`;
+    li.querySelector("b").textContent = targetName(m.t, m);
+    if (id[0] === "c" && (m.t[0] === "e" || m.t[0] === "p" || m.t === "m")) {
+      const sel = document.createElement("select");
+      for (const [v, l] of [["abs", "absolute"], ["rel64", "relative (64 ± n)"], ["rel2c", "relative (1 up, 127 down)"]]) sel.add(new Option(l, v, false, m.mode === v));
+      sel.addEventListener("change", () => { m.mode = sel.value; saveMaps(); });
+      sel.setAttribute("aria-label", "How the controller sends this knob");
+      li.append(sel);
+    }
+    const x = document.createElement("button");
+    x.type = "button"; x.textContent = "✕"; x.title = "Forget this one"; x.setAttribute("aria-label", `Forget ${srcName(id)}`);
+    x.addEventListener("click", () => { delete maps[id]; saveMaps(); });
+    li.append(x);
+    midiUI.maps.append(li);
+  }
+  midiUI.unlearn.hidden = !midi || !Object.keys(maps).length;
+  document.getElementById("mapsave").hidden = document.getElementById("mapsend").hidden = !Object.keys(maps).length;
+}
+
+function hold(id, t, down) {               // a button or key, held from MIDI (id: who holds it)
+  const map = t[0] === "b" ? btnHeldBy : keyHeldBy;
+  if (down) map.set(id, +t.slice(1)); else map.delete(id);
+  if (t[0] === "b") syncButtons(); else syncKeys();
+}
+function setMaster(v) {
+  const k = knobs.MASTER;
+  master = Math.max(0, Math.min(4096, Math.round(v)));
+  k.angle = -135 + 270 * master / 4096;
+  send({ type: "master", value: master });
+  drawKnob(k);
+}
+function releaseFrom(prefix) {
+  for (const id of [...btnHeldBy.keys()]) if (id.startsWith(prefix)) btnHeldBy.delete(id);
+  for (const id of [...keyHeldBy.keys()]) if (id.startsWith(prefix)) keyHeldBy.delete(id);
+  syncButtons(); syncKeys();
+}
+
+function outFor(input) {                   // the FM-1's own output: the same port name
+  if (!midi) return null;
+  for (const o of midi.outputs.values()) if (o.name === input.name && o.state === "connected") return o;
+  for (const o of midi.outputs.values()) if (input.manufacturer && o.manufacturer === input.manufacturer && o.state === "connected") return o;
+  return null;
+}
+function midiLights(b, k, all) {           // our lights to the FM-1's panel, as they change
+  if (!remote || !remote.out) return;
+  const o = remote.out, cb = all ? 0x3FFF : (b ^ sentB), ck = all ? 0x7FFFFFF : (k ^ sentK);
+  try {
+    for (let i = 0; i < 14; i++) if (cb & (1 << i)) o.send([0xBF, 102 + i, b & (1 << i) ? 127 : 0]);
+    for (let i = 0; i < 27; i++) if (ck & (1 << i)) o.send(k & (1 << i) ? [0x9F, 48 + i, 100] : [0x8F, 48 + i, 0]);
+  } catch { /* unplugged mid-send */ }
+  sentB = b; sentK = k;
+}
+function remoteStart(input) {
+  remote = { input, out: outFor(input) };
+  document.getElementById("device").classList.add("remote");
+  const ack = () => { try { remote && remote.out && remote.out.send([0xBF, 117, 127]); } catch {} };
+  ack();
+  clearInterval(ackTimer);
+  ackTimer = setInterval(ack, 1000);
+  const m = window.ambLast;
+  if (m) midiLights(m.buttons, m.keys, true);
+  midiStatusText();
+}
+function remoteStop() {
+  if (!remote) return;
+  clearInterval(ackTimer);
+  try { remote.out && remote.out.send([0xBF, 117, 0]); } catch {}
+  remote = null;
+  releaseFrom("r");
+  document.getElementById("device").classList.remove("remote");
+  midiStatusText();
+}
+
+function onMidi(e, input) {
+  const [st, d1 = 0, d2 = 0] = e.data;
+  if (st >= 0xF0) return;                  // clock, SysEx: not ours
+  const type = st & 0xF0, ch = st & 15, on = type === 0x90 && d2 > 0, off = type === 0x80 || (type === 0x90 && d2 === 0);
+  if (type !== 0x90 && type !== 0x80 && type !== 0xB0) return;
+  const isRemote = ch === 15 && ((type === 0xB0 && (d1 === 116 || d1 === 7 || (d1 >= 85 && d1 <= 91) || (d1 >= 102 && d1 <= 115))) ||
+                                 (type !== 0xB0 && d1 >= 48 && d1 < 75));
+  // the HYP-1 remote
+  if (ch === 15 && type === 0xB0 && d1 === 116) { if (d2) { if (!remote || remote.input !== input) remoteStart(input); } else remoteStop(); return; }
+  if (learning && !(remote && remote.input === input && isRemote)) {
+    if (type === 0x80 || (type === 0x90 && !on)) return;
+    if (type === 0xB0 && d1 >= 120) return;
+    if (!picked) { midiUI.status.textContent = `Heard ${srcName((type === 0xB0 ? "c" : "n") + ":" + ch + ":" + d1)} from ${input.name}. Click a control here first, then move yours.`; return; }   // all notes off, reset and the like: a device sends them when its MIDI port changes, not a control (0.16.12)
+    const t = picked.dataset.t, id = (type === 0xB0 ? "c" : "n") + ":" + ch + ":" + d1;
+    if (type !== 0xB0 && (t[0] === "e" || t === "m")) { midiUI.status.textContent = "A knob needs a knob or slider (a CC), not a key."; return; }
+    for (const [k, m] of Object.entries(maps)) if (m.t === t) delete maps[k];     // one source per control
+    maps[id] = { t, mode: type === 0xB0 && (t[0] === "e" || t === "m") ? (d2 === 63 || d2 === 65 ? "rel64" : "abs") : undefined };
+    picked.classList.remove("picked"); picked = null;
+    midiUI.status.textContent = `${srcName(id)} → ${targetName(t)}. Click another control, or MIDI learn to finish.`;
+    saveMaps();
+    return;
+  }
+  // learned controls
+  const id = (type === 0xB0 ? "c" : "n") + ":" + ch + ":" + d1, m = maps[id];
+  if (m && m.t[0] === "p") return;          // a setting (the editor's): the FM-1 and the editor page play it, not this panel
+  if (m) {
+    if (type === 0xB0) {
+      if (m.t[0] === "b" || m.t[0] === "k") { hold("m" + id, m.t, d2 >= 64); return; }
+      let n = 0;
+      if (m.mode === "rel64") n = d2 - 64;
+      else if (m.mode === "rel2c") n = d2 < 64 ? d2 : d2 - 128;
+      else if (m.t === "m") { setMaster(d2 * 4096 / 127); m.last = d2; return; }
+      else { m.acc = (m.acc || 0) + (m.last === undefined ? 0 : d2 - m.last); m.last = d2; n = Math.trunc(m.acc / 2); m.acc -= n * 2; }
+      if (m.t === "m") setMaster(master + n * 64); else turn(knobByRole(+m.t.slice(1)), n);
+    } else if (m.t[0] === "b" || m.t[0] === "k") hold("m" + id, m.t, on);
+    return;
+  }
+  // the remote's panel
+  if (remote && remote.input === input && isRemote) {
+    if (type === 0xB0) {
+      if (d1 === 7) setMaster(d2 * 4096 / 127);
+      else if (d1 >= 102) hold("rb" + (d1 - 102), "b" + (d1 - 102), d2 >= 64);
+      else turn(knobByRole(d1 - 85), d2 - 64);
+    } else hold("rk" + (d1 - 48), "k" + (d1 - 48), on);
+    return;
+  }
+  // any other note: the key of its pitch, folded into F3 .. G5
+  if (type !== 0xB0) {
+    let n = d1;
+    while (n < 53) n += 12;
+    while (n > 79) n -= 12;
+    hold("n" + input.id + ":" + d1, "k" + (n - 53), on);
+  }
+}
+
+function midiStatusText() {
+  if (!midi) return;
+  const ins = [...midi.inputs.values()].filter((i) => i.state === "connected");
+  if (remote) midiUI.status.innerHTML = `<span class="live">${remote.input.name}: PERF-1 remote, playing this one</span>${remote.out ? "" : " (its lights: no matching output)"}`;
+  else if (learning) midiUI.status.textContent = picked ? `${targetName(picked.dataset.t)}: now move or press a control on your controller.` : "Click a control here to learn it.";
+  else midiUI.status.textContent = ins.length ? `Listening to ${ins.map((i) => i.name).join(", ")}.` : "No MIDI devices. Plug one in.";
+}
+function attachInputs() {
+  for (const input of midi.inputs.values()) input.onmidimessage = (e) => onMidi(e, input);
+  if (remote && remote.input.state !== "connected") remoteStop();
+  if (remote && !remote.out) remote.out = outFor(remote.input);
+  midiStatusText();
+}
+async function midiConnect(quiet) {
+  if (!navigator.requestMIDIAccess) { if (!quiet) midiUI.status.textContent = "This browser has no Web MIDI: use Chrome, Edge or Firefox."; return; }
+  try {
+    midi = await navigator.requestMIDIAccess({ sysex: false });
+    midi.onstatechange = attachInputs;
+    attachInputs();
+    midiUI.on.hidden = true;
+    midiUI.learn.hidden = false;
+    drawMaps();
+  } catch (err) {
+    if (!quiet) midiUI.status.textContent = "MIDI was not allowed" + (err && err.message ? ": " + err.message : ".");
+  }
+}
+midiUI.on.addEventListener("click", () => midiConnect(false));
+midiUI.learn.addEventListener("click", () => {
+  learning = !learning;
+  midiUI.learn.setAttribute("aria-pressed", learning);
+  midiUI.learn.textContent = learning ? "Done learning" : "MIDI learn";
+  document.getElementById("device").classList.toggle("learning", learning);
+  if (picked) { picked.classList.remove("picked"); picked = null; }
+  midiStatusText();
+});
+midiUI.unlearn.addEventListener("click", () => { maps = {}; releaseFrom("m"); saveMaps(); });
+document.getElementById("mapsave").addEventListener("click", () => {   // the learned list as a .perfmap file (0.16.11; the Install page reads the same)
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({ perfmap: 1, maps: Object.fromEntries(Object.entries(maps).map(([k, m]) => [k, { t: m.t, mode: m.mode, name: m.name }])) }, null, 1)], { type: "application/json" }));
+  a.download = "perf1-midi-map.perfmap";
+  a.click();
+});
+document.getElementById("mapload").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (!j || j.perfmap !== 1 || typeof j.maps !== "object") throw 0; releaseFrom("m"); maps = j.maps; saveMaps(); midiUI.status.textContent = "Loaded " + f.name + "."; }
+  catch { midiUI.status.textContent = "That is not a MIDI map file."; }
+  e.target.value = "";
+});
+window.addEventListener("storage", (e) => { if (e.key === MAP_KEY) { try { maps = JSON.parse(e.newValue || "{}") || {}; } catch { maps = {}; } drawMaps(); } });   // (read back from the FM-1 on the Install page)
+document.getElementById("device").addEventListener("pointerdown", (e) => {    // learning: a click picks, nothing pressed
+  if (!learning) return;
+  const h = e.target.closest && e.target.closest(".hit");
+  if (!h || !h.dataset.t) return;
+  e.preventDefault(); e.stopPropagation();
+  if (picked) picked.classList.remove("picked");
+  picked = h; h.classList.add("picked");
+  midiStatusText();
+}, true);
+drawMaps();
+if (navigator.permissions && navigator.requestMIDIAccess)                       // allowed before: connect at once
+  navigator.permissions.query({ name: "midi" }).then((p) => { if (p.state === "granted") midiConnect(true); }).catch(() => {});
+
+// ---------------------------------------------------------------- storage
+const storeSeen = {};          // (1.0) each object as this page last read or wrote it: only the ones the emulator changed are written, so a save
+function loadStore() {          // made meanwhile in another tab (the studio, the Library page, a second emulator) stays (as web/studio's saveStore)
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}, out = {};
+    for (const [o, b64] of Object.entries(raw)) {
+      try { out[o] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer; storeSeen[o] = b64; } catch { /* (a bad entry: left out, and left as it is) */ }
+    }
+    return out;
+  } catch { return {}; }
+}
+function saveStore(store) {
+  try {
+    const ch = {}, gone = Object.keys(storeSeen).filter((o) => !(o in store));   // (an object this page knew that the emulator dropped: dropped here too)
+    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); const b = btoa(s); if (b !== storeSeen[o]) ch[o] = b; }
+    if (!Object.keys(ch).length && !gone.length) return;
+    let raw = {};
+    try { raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}; } catch { raw = {}; }
+    Object.assign(raw, ch);
+    for (const o of gone) { delete raw[o]; delete storeSeen[o]; }
+    localStorage.setItem(STORE_KEY, JSON.stringify(raw));
+    Object.assign(storeSeen, ch);
+  } catch { /* storage unavailable: this session only */ }
+}
+
+// ---------------------------------------------------------------- switching on
+const status = document.getElementById("status"), cpu = document.getElementById("cpu");
+async function switchOn() {
+  const go = document.getElementById("go");
+  go.disabled = true;
+  go.textContent = "Starting...";
+  try {
+    const ac = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
+    const [wasm] = await Promise.all([fetch("amb.wasm", { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(`amb.wasm: ${r.status}`); return r.arrayBuffer(); }),
+                                      ac.audioWorklet.addModule("worklet.js?v=" + Date.now())]);
+    node = new AudioWorkletNode(ac, "amb", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+    node.connect(ac.destination);
+    const ready = new Promise((res) => {
+      node.port.onmessage = (e) => {
+        const m = e.data;
+        if (m.type === "ready") res();
+        else if (m.type === "frame") {
+          if (m.fb) drawScreen(m.fb);
+          drawLights(m.buttons, m.keys);
+          midiLights(m.buttons, m.keys);
+          window.ambLast = m;
+          if (m.load !== undefined) cpu.textContent = `PERF-1 uses ${m.load}% of this computer's time`;
+          if (m.store) saveStore(m.store);
+        }
+      };
+    });
+    node.port.postMessage({ type: "load", wasm, store: loadStore(), master, seed: (Math.random() * 4294967295) >>> 0 || 1 }, [wasm]);
+    await ready;
+    await ac.resume();
+    document.getElementById("start").hidden = true;
+    status.textContent = ac.sampleRate === 44100 ? "On." : `On (the browser runs audio at ${ac.sampleRate} Hz).`;
+    syncButtons(); syncKeys();
+  } catch (err) {
+    go.disabled = false;
+    go.textContent = "Switch on";
+    status.textContent = "Could not start: " + (err && err.message || err) + ". Chrome, Edge, Firefox and Safari should all work.";
+  }
+}
+document.getElementById("go").addEventListener("click", switchOn);
+document.getElementById("reset").addEventListener("click", () => location.reload());
+document.getElementById("forget").addEventListener("click", () => {
+  const f = document.getElementById("forget");
+  if (f.dataset.armed) {
+    try { localStorage.removeItem(STORE_KEY); } catch {}
+    location.reload();
+  } else {
+    f.dataset.armed = "1";
+    f.textContent = "Click again: forget all stored pieces";
+  }
+});
+/* stream view js: begin */
+(function streamView() {
+  const PACK = { "HYP-1": ["#b06cff", "hypnotic techno + acid"], "LOF-1": ["#e8873a", "a lofi groovebox: you play, the band follows"],
+                 "ECO-1": ["#76c35e", "a plant plays the FM-1"], "GRAV-1": ["#f2b84b", "a star and its planets play the FM-1"] };
+  const NOTE = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+  const name = (document.querySelector("h1").textContent.match(/[A-Z]+-1/) || ["FM-1"])[0];
+  const [acc, tag] = PACK[name] || ["#e8873a", ""];
+  const dev = document.getElementById("device"), home = dev.parentNode, after = dev.nextSibling;
+  const stage = document.createElement("div");
+  stage.id = "stage";
+  stage.style.setProperty("--sv-acc", acc);
+  stage.style.setProperty("--sv-glow", "rgba(" + [1, 3, 5].map((i) => parseInt(acc.slice(i, i + 2), 16)).join(",") + ",0.24)");
+  stage.innerHTML = `<canvas class="sv-bg" width="192" height="108" aria-hidden="true"></canvas><canvas class="sv-px" width="320" height="180" aria-hidden="true"></canvas><div class="sv-vig"></div><div class="sv-title"><div class="sv-bars"><i style="width:70px;background:${acc}"></i><i style="width:34px;background:#7eccc0"></i></div>
+    <div><div class="sv-name">${name}</div><div class="sv-tag">${tag}</div></div></div>
+    <div class="sv-link">FM-1 LINKED</div><div class="sv-dev"></div><div class="sv-big"><canvas width="240" height="240"></canvas></div>
+    <div class="sv-moves"></div>
+    <div class="sv-foot">${name}  ·  PERF-1 by deamonSLINKY</div>
+    <div class="sv-ctl"><button type="button" data-a="midi">Connect MIDI</button><button type="button" data-a="exit">Exit stream view</button></div>`;
+  document.body.appendChild(stage);
+  const big = stage.querySelector(".sv-big canvas"), bctx = big.getContext("2d"), screen = document.getElementById("screen");
+  const moves = stage.querySelector(".sv-moves");
+  bctx.imageSmoothingEnabled = false;
+  let on = false;
+  function fit() { stage.style.setProperty("--sv-s", Math.min(innerWidth / 1920, innerHeight / 1080)); }
+  function set(v) {
+    on = v;
+    document.body.classList.toggle("stream", on);
+    if (on) stage.querySelector(".sv-dev").appendChild(dev); else home.insertBefore(dev, after);
+    fit();
+    try { const u = new URL(location.href); if (on) u.searchParams.set("stream", ""); else u.searchParams.delete("stream"); history.replaceState(null, "", u); } catch {}
+  }
+  addEventListener("resize", fit);
+  let idleT = 0;                                  // the mouse still a moment: its bar and pointer gone (for captures)
+  function woke() {
+    stage.classList.remove("idle");
+    clearTimeout(idleT);
+    idleT = setTimeout(() => stage.classList.add("idle"), 2000);
+  }
+  stage.addEventListener("pointermove", woke);
+  stage.addEventListener("pointerdown", woke);
+  // THE BACKGROUND: an analyser on the emulator's output (the mix: its first two channels) for the music, and
+  // what the firmware reports of its sky, star or theme (window.ambLast.bg, from web_bg). Two canvases: soft
+  // (192 x 108, smoothed up) and pixel (320 x 180, kept sharp).
+  const bg = stage.querySelector(".sv-bg"), gctx = bg.getContext("2d");
+  const px = stage.querySelector(".sv-px"), pctx = px.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  stage.classList.toggle("grav", name === "GRAV-1");
+  function hueOf(h) {
+    const r = parseInt(h.slice(1, 3), 16) / 255, g = parseInt(h.slice(3, 5), 16) / 255, b = parseInt(h.slice(5, 7), 16) / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+    if (!d) return 0;
+    return (mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+  }
+  const hue0 = hueOf(acc);
+  let an = null, spec = null, binHz = 0, lastBg = 0, lastMove = performance.now();
+  const lvl = [0, 0, 0], peak = [1e-4, 1e-4, 1e-4], NB = 40, eq = new Float32Array(NB), eqPeak = new Float32Array(NB);
+  let bright = 0.5, loud = 0, topDb = -40;
+  function listen() {
+    if (an || typeof node === "undefined" || !node) return;
+    try {
+      an = node.context.createAnalyser();
+      an.fftSize = 2048;
+      an.smoothingTimeConstant = 0.6;
+      an.channelCount = 2;
+      an.channelCountMode = "explicit";
+      an.channelInterpretation = "discrete";     // the mix only, never the voices apart (channels 3-8)
+      node.connect(an);
+      spec = new Float32Array(an.frequencyBinCount);
+      binHz = node.context.sampleRate / an.fftSize;
+    } catch { an = null; }
+  }
+  function hear(dt) {                             // the music: three bands, brightness, loudness, 40 EQ bands
+    an.getFloatFrequencyData(spec);
+    const band = [0, 0, 0], eb = new Float32Array(NB).fill(-300);
+    let sum = 0, wsum = 0, top = -200;
+    for (let i = 1; i < spec.length; i++) {
+      const f = i * binHz, db = spec[i], m = Math.pow(10, db / 20);
+      if (f < 30 || f > 14000) continue;
+      band[f < 250 ? 0 : f < 2000 ? 1 : 2] += m * m;
+      sum += m;
+      wsum += m * Math.log2(f);
+      const k = Math.min(NB - 1, Math.max(0, Math.floor(NB * Math.log2(f / 40) / Math.log2(14000 / 40))));
+      if (db > -200) eb[k] = Math.max(eb[k], db);
+      top = Math.max(top, db);
+    }
+    if (sum > 1e-6) {
+      const c = Math.min(Math.max((wsum / sum - Math.log2(200)) / Math.log2(15), 0), 1);
+      bright += (c - bright) * Math.min(dt * 0.8, 1);
+    }
+    for (let k = 0; k < 3; k++) {                 // each band against its own recent loudest: quiet music moves too
+      const v = Math.sqrt(band[k]);
+      peak[k] = Math.max(v, peak[k] * Math.pow(0.5, dt / 8), 1e-4);
+      const tgt = Math.min(v / peak[k], 1);
+      lvl[k] += (tgt - lvl[k]) * Math.min(dt * (tgt > lvl[k] ? 5 : 0.9), 1);
+    }
+    topDb = Math.max(top, topDb - dt * 3);        // the EQ's scale: 50 dB under its recent loudest
+    const calm = still.matches ? 0.25 : 1;
+    for (let k = 0; k < NB; k++) {
+      const v = eb[k] > -250 ? Math.min(Math.max((eb[k] - (topDb - 50)) / 50, 0), 1) : 0;
+      eq[k] += (v - eq[k]) * Math.min(dt * (v > eq[k] ? 18 : 4) * calm, 1);
+      eqPeak[k] = Math.max(eq[k], eqPeak[k] - dt * 0.35);
+    }
+    loud += ((sum > 1e-4 ? (lvl[0] + lvl[1] + lvl[2]) / 3 : 0) - loud) * Math.min(dt * 2, 1);
+    return sum > 1e-4;
+  }
+  function glow(x, y, r, col, a) {                // col: [r, g, b] 0..255
+    const g = gctx.createRadialGradient(x, y, 0, x, y, r), c = col.join(",");
+    g.addColorStop(0, `rgba(${c},${a})`);
+    g.addColorStop(0.5, `rgba(${c},${a * 0.35})`);
+    g.addColorStop(1, `rgba(${c},0)`);
+    gctx.fillStyle = g;
+    gctx.fillRect(0, 0, 192, 108);
+  }
+  function hsl(h, s, l) {                         // -> [r, g, b] 0..255
+    h = ((h % 360) + 360) % 360 / 360;
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    const f = (t) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    return [f(h + 1 / 3), f(h), f(h - 1 / 3)].map((v) => Math.round(v * 255));
+  }
+  const mixc = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const rgb255 = (b, i) => [b[i] * 255, b[i + 1] * 255, b[i + 2] * 255].map(Math.round);
+
+  // LOF-1: soft glows shifting with the music
+  function paintLof(s) {
+    const calm = still.matches ? 0 : 1, lean = (bright - 0.5) * 50;
+    gctx.globalCompositeOperation = "lighter";
+    glow(70 + calm * 16 * Math.sin(s * 0.07), 78 + calm * 8 * Math.sin(s * 0.05 + 1), 80 + 18 * lvl[0], hsl(hue0 - 25 + lean, 0.7, 0.55), 0.06 + 0.22 * lvl[0]);
+    glow(110 + calm * 22 * Math.sin(s * 0.06 + 2), 42 + calm * 12 * Math.sin(s * 0.08), 70 + 14 * lvl[1], hsl(hue0 + lean, 0.7, 0.55), 0.05 + 0.2 * lvl[1]);
+    glow(150 + calm * 18 * Math.sin(s * 0.09 + 4), 30 + calm * 10 * Math.sin(s * 0.07 + 3), 52 + 12 * lvl[2], hsl(hue0 + 40 + lean, 0.7, 0.55), 0.04 + 0.16 * lvl[2]);
+  }
+
+  // HYP-1: EQ bars and a scrolling heatmap, in the screen theme's colours
+  const heat = document.createElement("canvas");
+  heat.width = 320;
+  heat.height = 120;
+  const hctx = heat.getContext("2d");
+  function paintHyp(look) {
+    const pad = look ? rgb255(look, 0) : [164, 76, 255], hot = look ? rgb255(look, 3) : [255, 128, 32];
+    const mid = look ? rgb255(look, 9) : [214, 128, 255], base = look ? rgb255(look, 6) : [22, 21, 27];
+    const ramp = (v) => v < 0.5 ? mixc(base, pad, v * 2) : v < 0.8 ? mixc(pad, mid, (v - 0.5) / 0.3) : mixc(mid, hot, (v - 0.8) / 0.2);
+    if (!still.matches) hctx.drawImage(heat, -1, 0);   // the heatmap: one column a frame, the newest at the right
+    for (let k = 0; k < NB; k++) {
+      const y0 = 120 - Math.round((k + 1) * 120 / NB), h = Math.round((k + 1) * 120 / NB) - Math.round(k * 120 / NB);
+      hctx.fillStyle = `rgb(${ramp(eq[k]).join(",")})`;
+      hctx.fillRect(319, y0, 1, h);
+    }
+    pctx.globalAlpha = 0.22;
+    pctx.drawImage(heat, 0, 0);
+    pctx.globalAlpha = 1;
+    const bw = 8, segH = 3, maxSeg = 20;          // the bars: LED segments, bottom up
+    for (let k = 0; k < NB; k++) {
+      const x = k * bw + 1, n = Math.round(eq[k] * maxSeg), pk = Math.round(eqPeak[k] * maxSeg);
+      for (let j = 0; j < n; j++) {
+        const v = j / maxSeg;
+        pctx.fillStyle = `rgba(${ramp(0.35 + v * 0.65).join(",")},${0.2 + 0.2 * v})`;
+        pctx.fillRect(x, 178 - (j + 1) * (segH + 1), bw - 2, segH);
+      }
+      if (pk > 0) {
+        pctx.fillStyle = `rgba(${hot.join(",")},0.45)`;
+        pctx.fillRect(x, 178 - pk * (segH + 1) - 2, bw - 2, 1);
+      }
+    }
+  }
+
+  // ECO-1: the sky of the emulator's day; grass after a minute untouched; fireflies at night
+  const FLIES = Array.from({ length: 26 }, (_, i) => ({ x: Math.random() * 320, y: 120 + Math.random() * 50, ph: Math.random() * 6.28,
+    sp: 0.4 + Math.random() * 0.8, dx: Math.random() * 6.28 }));
+  const BLADES = Array.from({ length: 160 }, (_, i) => ({ x: i * 2 + (Math.random() * 2 | 0), h: 6 + Math.random() * 16,
+    ph: Math.random() * 6.28, c: Math.random() }));
+  let idleFade = 0;
+  function skyCol(day, top, rain) {               // as the firmware's sky_colour
+    const sn = Math.sin((day - 0.25) * 6.2832), d = Math.min(Math.max((sn + 0.12) * 1.6, 0), 1);
+    const tw = Math.min(Math.max(1 - Math.abs(sn) * 5, 0), 1);
+    let c = top ? mixc([10, 14, 34], [72, 132, 196], d) : mixc([26, 32, 60], [170, 206, 226], d);
+    c = top ? mixc(c, [110, 80, 120], tw * 0.4) : mixc(c, [236, 142, 92], tw * 0.75);
+    return mixc(c, top ? [70, 76, 86] : [120, 126, 134], rain * 0.7 * d + rain * 0.25);
+  }
+  function paintEco(look, s, dt, now) {
+    const day = look ? look[0] : 0.3, sun = look ? look[1] : 1, rain = look ? look[2] : 0, wind = look ? look[3] : 0.2;
+    const top = skyCol(day, 1, rain), hor = skyCol(day, 0, rain);
+    const g = gctx.createLinearGradient(0, 0, 0, 108);    // the sky, dimmed: the stage stays the stage
+    g.addColorStop(0, `rgba(${top.join(",")},0.42)`);
+    g.addColorStop(0.75, `rgba(${hor.join(",")},0.36)`);
+    g.addColorStop(1, `rgba(${mixc(hor, [20, 30, 18], 0.6).join(",")},0.5)`);
+    gctx.fillStyle = g;
+    gctx.fillRect(0, 0, 192, 108);
+    const idle = (now - lastMove) / 1000 > 60;    // a minute untouched: the grass grows in (a touch: it goes)
+    idleFade = Math.min(Math.max(idleFade + (idle ? dt / 10 : -dt / 1.5), 0), 1);
+    if (idleFade <= 0) return;
+    const calm = still.matches ? 0 : 1, lit = 0.25 + 0.75 * sun, ga = idleFade * 0.75;
+    for (const b of BLADES) {                     // grass, waving in the emulator's wind
+      const sway = calm * (0.6 + 3.2 * wind) * Math.sin(s * (0.9 + 2.2 * wind) + b.ph + b.x * 0.04);
+      const col = mixc([28, 60, 24], [84, 150, 62], b.c * 0.8);
+      pctx.fillStyle = `rgba(${col.map((v) => Math.round(v * lit)).join(",")},${ga})`;
+      const h = Math.round(b.h);
+      for (let j = 0; j < h; j++) pctx.fillRect(Math.round(b.x + sway * (j / h) * (j / h)), 179 - j, 1, 1);
+    }
+    const night = Math.min(Math.max((0.25 - sun) / 0.2, 0), 1) * idleFade;
+    if (night <= 0) return;
+    for (const f of FLIES) {                      // fireflies: drifting low, glowing on and off
+      if (calm) {
+        f.dx += dt * 0.3 * f.sp;
+        f.x = (f.x + Math.cos(f.dx) * dt * 6 * f.sp + 320) % 320;
+        f.y = Math.min(Math.max(f.y + Math.sin(f.dx * 1.3) * dt * 4, 110), 172);
+      }
+      const on = Math.max(0, Math.sin(s * f.sp * 1.4 + f.ph)) ** 3 * night;
+      if (on < 0.02) continue;
+      const x = Math.round(f.x), y = Math.round(f.y);
+      pctx.fillStyle = `rgba(214,255,120,${on})`;
+      pctx.fillRect(x, y, 1, 1);
+      pctx.fillStyle = `rgba(180,240,90,${on * 0.35})`;
+      pctx.fillRect(x - 1, y, 1, 1); pctx.fillRect(x + 1, y, 1, 1); pctx.fillRect(x, y - 1, 1, 1); pctx.fillRect(x, y + 1, 1, 1);
+      gctx.globalCompositeOperation = "lighter";
+      glow(x * 0.6, y * 0.6, 7, [190, 250, 100], on * 0.25);
+      gctx.globalCompositeOperation = "source-over";
+    }
+  }
+
+  // GRAV-1: the star's colour from the centre, vignetting to black; pixel stars drifting across
+  const STARS = Array.from({ length: 150 }, () => ({ x: Math.random() * 320, y: Math.random() * 180, z: Math.random(),
+    ph: Math.random() * 6.28, c: Math.random() }));
+  let starSize = 0.5;
+  function paintGrav(look, s, dt) {
+    const col = look ? rgb255(look, 0) : [255, 213, 106], sz = look ? look[3] : 0.6, flare = look ? look[4] : 0;
+    starSize += (sz - starSize) * Math.min(dt * 2, 1);
+    const r = 46 + 22 * starSize + 10 * loud + 12 * flare;
+    gctx.globalCompositeOperation = "lighter";
+    glow(96, 54, r, col, 0.22 + 0.12 * loud + 0.15 * flare);
+    glow(96, 54, r * 0.45, mixc(col, [255, 255, 255], 0.3), 0.1 + 0.08 * starSize);
+    const calm = still.matches ? 0 : 1;
+    for (const st of STARS) {                     // three depths, the far ones slow and dim
+      if (calm) st.x -= dt * (1.2 + st.z * 5);
+      if (st.x < 0) { st.x += 320; st.y = Math.random() * 180; }
+      const tw = 0.55 + 0.45 * Math.sin(s * (0.6 + st.z) + st.ph), a = (0.15 + 0.55 * st.z) * tw;
+      const c = st.c < 0.7 ? [230, 235, 255] : st.c < 0.85 ? mixc(col, [255, 255, 255], 0.4) : [170, 190, 255];
+      pctx.fillStyle = `rgba(${c.join(",")},${a})`;
+      pctx.fillRect(Math.round(st.x), Math.round(st.y), 1, 1);
+      if (st.z > 0.92) { pctx.fillStyle = `rgba(${c.join(",")},${a * 0.3})`; pctx.fillRect(Math.round(st.x) - 1, Math.round(st.y), 3, 1); }
+    }
+  }
+
+  function drawBg(t) {
+    if (t - lastBg < 33) return;                  // 30 a second
+    const dt = Math.min((t - lastBg) / 1000, 0.1), s = t / 1000;
+    lastBg = t;
+    listen();
+    if (an) hear(dt);
+    const look = window.ambLast && window.ambLast.bg;
+    gctx.globalCompositeOperation = "source-over";
+    gctx.clearRect(0, 0, 192, 108);
+    pctx.clearRect(0, 0, 320, 180);
+    if (name === "HYP-1") paintHyp(look);
+    else if (name === "ECO-1") paintEco(look, s, dt, t);
+    else if (name === "GRAV-1") paintGrav(look, s, dt);
+    else paintLof(s);
+    gctx.globalCompositeOperation = "source-over";
+  }
+  (function tick(t) {                             // the screen, large; the remote's badge; the background
+    if (on) {
+      bctx.drawImage(screen, 0, 0);
+      stage.classList.toggle("linked", dev.classList.contains("remote"));
+      drawBg(t || 0);
+    }
+    requestAnimationFrame(tick);
+  })();
+  // the last few moves, under the screen
+  function say(s, same) {
+    lastMove = performance.now();               // a move: ECO-1's grass goes, and comes back a minute later
+    const last = moves.lastElementChild;
+    if (same && last && last.dataset.k === same && Date.now() - last.dataset.t < 900) {
+      last.dataset.n = +last.dataset.n + 1;
+      last.textContent = s + (last.dataset.n > 1 ? " ×" + last.dataset.n : "");
+      last.dataset.t = Date.now();
+      return;
+    }
+    const e = document.createElement("span");
+    e.textContent = s;
+    e.dataset.k = same || "";
+    e.dataset.n = 1;
+    e.dataset.t = Date.now();
+    moves.appendChild(e);
+    while (moves.children.length > 7) moves.firstElementChild.remove();
+  }
+  setInterval(() => { for (const e of moves.children) e.classList.toggle("old", Date.now() - e.dataset.t > 3000); }, 400);
+  const BTN_NAME = {};
+  for (const [n, b] of Object.entries(buttons)) BTN_NAME[b.bit] = n;
+  let seenB = 0, seenK = 0;
+  const _sb = syncButtons, _sk = syncKeys, _turn = turn;
+  syncButtons = function () {                     // what goes down, named; held ones glow (the page's .held)
+    _sb.apply(this, arguments);
+    let m = 0;
+    for (const b of btnHeldBy.values()) m |= 1 << b;
+    const down = m & ~seenB;
+    seenB = m;
+    if (down) {
+      const ns = Object.keys(BTN_NAME).filter((b) => down & (1 << b)).map((b) => BTN_NAME[b]);
+      const held = Object.keys(BTN_NAME).filter((b) => (m & ~down) & (1 << b)).map((b) => BTN_NAME[b]);
+      say((held.length ? held.join(" + ") + " + " : "") + ns.join(" + "));
+    }
+  };
+  syncKeys = function () {
+    _sk.apply(this, arguments);
+    let m = 0;
+    for (const k of keyHeldBy.values()) m |= 1 << k;
+    const down = m & ~seenK;
+    seenK = m;
+    for (let i = 0; i < 27; i++) if (down & (1 << i)) { const n = 53 + i; say("KEY " + NOTE[n % 12] + (Math.floor(n / 12) - 1)); }
+  };
+  turn = function (k, n) {                        // a knob turning: a ring for a moment, and its name
+    _turn.apply(this, arguments);
+    if (!n) return;
+    const label = Object.keys(knobs).find((x) => knobs[x] === k) || "KNOB";
+    k.g.classList.add("sv-turn");
+    clearTimeout(k.svT);
+    k.svT = setTimeout(() => k.g.classList.remove("sv-turn"), 700);
+    say(label.replace(/^KNOB(\d)/, "KNOB $1") + (n > 0 ? " ▲" : " ▼"), label + (n > 0 ? "+" : "-"));
+  };
+  stage.querySelector('[data-a="exit"]').addEventListener("click", () => set(false));
+  stage.querySelector('[data-a="midi"]').addEventListener("click", () => {
+    const b = document.getElementById("midi-go") || document.getElementById("midiOn");
+    if (b) b.click();
+  });
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = "Stream view";
+  btn.title = "For livestreams: the FM-1 and its screen large on a 16:9 stage (or open this page with ?stream)";
+  const bar = document.querySelector(".bar");
+  if (bar) bar.appendChild(btn);
+  btn.addEventListener("click", () => set(true));
+  if (new URLSearchParams(location.search).has("stream")) set(true);
+})();
+/* stream view js: end */
+</script>
+</body>
+</html>
