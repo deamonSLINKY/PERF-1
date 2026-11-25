@@ -1,5 +1,5 @@
 {
-  "what": "A groovebox that plays itself while you steer it: 22 genres and 220 pieces that play like tracks, with builds, breakdowns and fills. Pad, bass, 303-style acid and DX7 pluck voices, 21 drum kits plus your own samples, an auto-DJ, effects on the keys and a web studio. Works on the newer FM-1s too.",
+  "what": "A groovebox that plays itself while you steer it: 22 genres and 220 pieces that play like tracks, with builds, breakdowns and fills. Pad, bass, 303-style acid and DX7 pluck voices, 21 drum kits plus your own samples, an auto-DJ, effects on the keys, chords from a MIDI keyboard and a web studio. Works on the newer FM-1s too.",
   "author": "deamonSLINKY",
   "kinds": ["groove"],
   "play": "https://deamonslinky.github.io/PERF-1/emu/",

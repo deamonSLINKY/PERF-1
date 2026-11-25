@@ -24,14 +24,20 @@
 
 **1.0.1 is a fix-up of 1.0.0.** Its firmware is development build 1.0.7's code (it reports `FM-1_7010001`); the builds 1.0.1 to 1.0.7 in the git history are its steps (the public number reuses the first of them, a build that never left the maker's unit). The saves are unchanged. The next development builds count from 1.0.8.
 
+**1.1.0 is the ninth release.** Its firmware is development build 1.0.8's code with the new firmware number: it reports `FM-1_76010100`. From 1.0 on, PERF-1's number is `FM-1_76` + the version in two-digit groups, the range the Firmware Hub keeps for PERF-1 (the `FM-1_701…` numbers of 1.0.0 and 1.0.1 are shared with other firmwares). There is no public 1.0.2: that number was a test build. The saves are unchanged. The next development builds count from 1.1.1.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
-The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
+The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`), and from 1.1.0 as `FM-1_76XXYYZZ` (1.1.0 is `FM-1_76010100`); the installer checks it.
 
-## Next (development builds from 1.0.8)
+## Next (development builds from 1.1.1)
+
+## 1.1.0 (development build 1.0.8, and the new firmware number)
+
+In short: set the scale on the Progression page, play all twelve notes from the keys, and a firmware number the Firmware Hub can list. The steps:
 
 - **ALGORITHM sets the scale on the Progression page too (1.0.8).** Before, only on the Chords page (the page before it) and Global; on Progression it was the mood. Now you set your chords and their scale on one page (a player's ask, issue #2).
-- **A new firmware number for the Firmware Hub (from the next release).** From 1.0 on, PERF-1 identifies itself as `FM-1_76` + the version in two-digit groups (1.0.2 is `FM-1_76010002`; 0.x stays `FM-1_700…`). The old 1.x numbers (`FM-1_701…`) are shared with other firmwares (FuMi-1, HYP-1, CUTADOR), so the Hub could not list PERF-1 1.x; it reads `FM-1_76…` as PERF-1. The installer takes both forms. (Development build 1.0.8 alone reports `FM-1_7002008`.)
+- **A new firmware number for the Firmware Hub (1.1.0).** From 1.0 on, PERF-1 identifies itself as `FM-1_76` + the version in two-digit groups (1.1.0 is `FM-1_76010100`; 0.x stays `FM-1_700…`). The old 1.x numbers (`FM-1_701…`) are shared with other firmwares (FuMi-1, HYP-1, CUTADOR), so the Hub could not list PERF-1 1.x; it reads `FM-1_76…` as PERF-1. The installer takes both forms. (Development build 1.0.8 alone reports `FM-1_7002008`.)
 - **Jam keys: ALL 12 (1.0.8).** A fourth Keys setting on the Jam page: every key plays its own note, all twelve, not only the scale's (for chords and melodies from outside the scale). A MIDI keyboard in the Keys mode plays the same way. The page says `EVERY KEY PLAYS ITS OWN NOTE`.
 
 ## 1.0.1 (the builds 1.0.1 .. 1.0.7 are its steps)

@@ -429,7 +429,7 @@ def main():
         m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
-        # (1.0.9) from 1.0 on: FM-1_76 + major, minor, patch as two digits each (1.0.2 -> FM-1_76010002). FM-1_701xxxx is
+        # (1.1.0) from 1.0 on: FM-1_76 + major, minor, patch as two digits each (1.1.0 -> FM-1_76010100). FM-1_701xxxx is
         # FuMi-1's, HYP-1's and CUTADOR's, so the Firmware Hub could not tell 1.x apart; Sven (the Hub, 2026-11-25) gave PERF-1
         # FM-1_76XXYYZZ and accepts both it and the old FM-1_700xxxx. 0.x keeps FM-1_700YYZZ. (1.0.8 alone was FM-1_7002008.)
         # The plain handshake's short answer is then "FM-1_760" (ota.c: the model and three digits).
