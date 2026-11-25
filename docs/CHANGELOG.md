@@ -22,11 +22,17 @@
 
 **1.0.0 is the eighth release, and the first finished one.** Its firmware is development build 0.17.93's code (it reports `FM-1_7010000`); the builds 0.17.1 to 0.17.93 in the git history are its steps. There was no public 0.18: the 0.17.x work went straight into 1.0. The save formats are locked for all of 1.x. The next development builds count from 1.0.1.
 
+**1.0.1 is a fix-up of 1.0.0.** Its firmware is development build 1.0.7's code (it reports `FM-1_7010001`); the builds 1.0.1 to 1.0.7 in the git history are its steps (the public number reuses the first of them, a build that never left the maker's unit). The saves are unchanged. The next development builds count from 1.0.8.
+
 Before the first release the firmware was developed on two lines: a "main line" (0.3.x to 0.5.1) and an experimental `vis` branch that went through the numbers 0.4.0 to 0.12.8. The commit messages in the git history use those development numbers; they are all contained in 0.13.0. The leading 0 stays until PERF-1 reaches its first finished state, which will be 1.0.
 
 The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the installer checks it.
 
-## Next (development builds from 1.0.1)
+## Next (development builds from 1.0.8)
+
+## 1.0.1 (the builds 1.0.1 .. 1.0.7 are its steps)
+
+In short: M-VAVE's own supply voltages (for earlier FM-1s where 1.0 crashed a few seconds after starting), the right colours on newer FM-1s, a crash screen that tells more, and on the Install page a test build from a file and an install counter. The steps:
 
 - **Release candidate (1.0.7).** 1.0.6 with the deliberate crash (REC + ARP + SEQ) built out (`EN_CRASH_TEST`, off). The maker's bench with 1.0.6: 22 genre/piece stops, 2.9 min, two cores, rails 1.38 / 1.60 V, CPU max 75 %, 0 crashes, 0 dropouts, 0 late renders (TRANCE 01 152 s: 0; 1.0.4/1.0.5 had about 2 a second).
 - **The bass and the acid from RAM again (1.0.6, a test).** 1.0.5 (the sound code from the flash) runs on the reporter's FM-1, but the crash numbers sent from 1.0.3 and 1.0.4 fit 1.0.0's code, so an earlier install may not have taken. 1.0.6 is 1.0.3's speed (the bass and the acid from RAM, M-VAVE's supply voltages, the full screen setup) with 1.0.5's crash screen: if it runs, the speed stays for everyone; if it crashes, the screen shows where.
