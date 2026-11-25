@@ -343,7 +343,7 @@ short version.
 | **MASTER** | Sets the volume. |
 | **SELECT** | Goes through the pages in order. With **HOME** held: sets the tempo, from any page. In the FX menu: selects the bank (FX, BEAT FX, FLEX BEAT, DJ SNIPS). In the settings of an effect: goes to the next settings page. On the visualizers: goes to the next visualizer. |
 | **PRESETS** | Selects the piece, 1 to 10. With **SEL** held, the new piece starts on the next bar. With **GLO** held: selects the genre. |
-| **ALGORITHM** | Sets the mood, on all pages but two (so that a turn never changes the scale by accident). On the **Chords** page and **Global**: sets the mode of the scale (Aeolian is the natural minor, Dorian is a brighter minor, Phrygian is a darker minor, Mixolydian is a major with a flat seventh; the fourteen modes are in the list under **The scales**, section 5). With **SEL** held: sets the sound of the voice on the screen (on the drum pages, the full kit). |
+| **ALGORITHM** | Sets the mood, on all pages but three (so that a turn never changes the scale by accident). On the **Chords** page, the **Progression** page and **Global**: sets the mode of the scale (Aeolian is the natural minor, Dorian is a brighter minor, Phrygian is a darker minor, Mixolydian is a major with a flat seventh; the fourteen modes are in the list under **The scales**, section 5). With **SEL** held: sets the sound of the voice on the screen (on the drum pages, the full kit). |
 | **KNOB1**-**KNOB4** | Set the four values (a, b, c, d) of the page on the screen. |
 | **OCT-** | Moves down one octave, to -3. On the pages of a voice, it moves that voice (pad, bass or acid; the pluck goes down to -2). On all other pages, it moves the whole song. In the sequencer, it selects the previous drum. In the FX menu, it turns off all the effects. |
 | **OCT+** | Moves up one octave, to +3, in the same way. In the sequencer, it selects the next drum. |
@@ -506,7 +506,7 @@ columns a to d are **KNOB1** to **KNOB4**. These knobs go to eleven: a knob that
 | Global | **GLO** | Root | Theme (7) | Tune (+-50 cents) | Genre (the bank, the same as **GLO** + **PRESETS**) |
 | Set list | **GLO** x2 | Slot (1-16; or a white key) | Piece (the pieces of every genre, or Empty) | Bars (Auto, 4-128) | Play (off, loop, once) |
 | Code | **GLO** x3 | Place (1-9) | Letter | Roll (a new code) | |
-| Jam | **SELECT** | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp) | Octave (-2 to +2) | Sound (the sound of that voice) |
+| Jam | **SELECT** | Voice (pluck, pad, acid, bass) | Keys (scale, chords, harp, all 12) | Octave (-2 to +2) | Sound (the sound of that voice) |
 
 Words on these pages:
 
@@ -604,7 +604,7 @@ the song. The piece stores the octaves. When a voice goes down, it stops at the 
 
 ### The scales
 
-**ALGORITHM** on the Chords page or on Global selects the scale. Every scale starts on the root of the piece (Root on Global).
+**ALGORITHM** on the Chords page, the Progression page or Global selects the scale. Every scale starts on the root of the piece (Root on Global).
 
 | Scale | Its notes over A | Sounds |
 |---|---|---|
@@ -2111,7 +2111,7 @@ The **Jam** page changes the 27 keys into an instrument, so you can play with th
 | Knob | Setting | What it does |
 |---|---|---|
 | **KNOB1** | Voice | The sound that you play: the pluck, the pad, the acid or the bass. While the page shows, that part stops its own line. The part plays its line again when you leave the page. |
-| **KNOB2** | Keys | *Scale*: each key plays a note of the scale. A black key plays the scale note at or below it, so there are no wrong notes. *Chords*: each key plays a three-note chord (a triad) from the scale. *Harp*: the keys play the notes of the scale in order, one note for each key, from C3. |
+| **KNOB2** | Keys | *Scale*: each key plays a note of the scale. A black key plays the scale note at or below it, so there are no wrong notes. *Chords*: each key plays a three-note chord (a triad) from the scale. *Harp*: the keys play the notes of the scale in order, one note for each key, from C3. *All 12*: each key plays its own note, all twelve notes of the octave, in the scale or not (for chords from outside the scale, or a melody with notes outside it). A MIDI keyboard on **Keys** plays the same way. |
 | **KNOB3** | Octave | -2 to +2. |
 | **KNOB4** | Sound | The sound of the voice that you play: the DX voice of the pluck, or the sound of the pad, the acid or the bass. It is the same setting as on the page of that voice, and it is saved with the piece. |
 

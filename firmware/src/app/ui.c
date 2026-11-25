@@ -81,7 +81,7 @@ static const char *const SMN_NAME[3] = {"DRY", "SOME", "LOTS"};                 
 static const char *const FXQ_NAME[3] = {"OFF", "BEAT", "BAR"};                                   /* Flex Beat: when it starts */
 static const char *const FXM_NAME[2] = {"ONE SHOT", "LOOP"};
 static const char *const JV_NAME[4];
-static const char *const JM_NAME[3];
+static const char *const JM_NAME[4];
 static const char *const JO_NAME[5];
 static const char *const SAVER_NAME[4] = {"OFF", "1 MIN", "3 MIN", "10 MIN"};                  /* the screensaver: left alone this long while playing */
 static const char *const LOOK_NAME[4] = {"PLAIN", "SCANLINES", "CALM", "CALM+SCAN"};     /* (0.17.40) SCREEN's Look: the scanlines; Calm, the screen's small motion off (no imp up top, no knob tick, no page fade) */
@@ -233,7 +233,7 @@ static const struct {
                                                     * the reverb's returns ducked by the kick: as the kit has it, not at all, or Custom: its own depth and release */
     {"SNIP LAND", 62, 0, {{"Land", KN_NAME, EN_FXS_SM_LAND, LAND_NAME, 4}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}, {"", KN_NONE, 0, 0, 0}}},   /* (0.17.72, after SNIPS)
                                                     * the riser, the rewind and the roll timed to peak on the next beat, two beats or bar */
-    {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 3}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
+    {"JAM", 63, 0, {{"Voice", KN_NAME, 7, JV_NAME, 4}, {"Keys", KN_NAME, 8, JM_NAME, 4}, {"Octave", KN_NAME, 9, JO_NAME, 5}, {"Sound", KN_PAR, K_JSND, 0, 0}}},   /* (the last: ui_knob_param counts on it) (0.17.4: Sound, the voice's, for Answer) */
 };
 /* the gate's patterns (the loop's length in sixteenths; a pattern of 12 or 10 against the bar of 16 is a polymeter),
  * the last "CUSTOM": the keys' own. euc: a Euclidean pattern of that many hits instead of pat. And its targets. */
@@ -4017,7 +4017,7 @@ static void midi_key(int on, int n, int v, int vc)   /* a note from outside on v
     }
     if (vc == 0 && proj.par[P_CM_LVL] < 15)
         knob_set(P_CM_LVL, 40);                  /* the pluck has to be audible to be played */
-    r = jam_snap(n, pool);
+    r = ui.jam_mode == 3 ? n : jam_snap(n, pool);   /* (1.0.8) ALL 12: the key as it is */
     mpk[s].in = (uint8_t)n;
     mpk[s].vc = VC[vc];
     mpk[s].out[0] = (uint8_t)(r < 0 ? 0 : r);
@@ -5118,7 +5118,7 @@ static void input(void)
         if (btn >> B_SEL & 1u) {                      /* shift: the sound of the voice on screen (drums: the kit) */
             ui.btn_used |= 1u << B_SEL;
             shift_sound(e > 0 ? 1 : -1);
-        } else if ((ui.view == V_CHORDS || ui.view == V_GLOBAL) && !ui.fx_menu) {   /* (0.17.16) the mode only where the scale is edited */
+        } else if ((ui.view == V_CHORDS || ui.view == V_PROG || ui.view == V_GLOBAL) && !ui.fx_menu) {   /* (0.17.16) the mode only where the scale is edited (1.0.8: the Progression page too, a player's ask) */
             set_mode(proj.par[P_MODE] + (e > 0 ? 1 : -1));
         } else {                                      /* everywhere else the mood (the maker: a turn changing the scale by accident) */
             int m = ui.mood + 2 * e;
@@ -9667,7 +9667,7 @@ static void glide_tick(void)
  * keys are the scale's tones, one a key, up from the root). OCTAVE. ANSWER: when you stop (after at least two notes), the pluck plays your phrase
  * back an octave up on the next bar, once, and waits for the next. The scale is still the page's own: this page never edits it. */
 static const char *const JV_NAME[4] = {"PLUCK", "PAD", "ACID", "BASS"};
-static const char *const JM_NAME[3] = {"SCALE", "CHORDS", "HARP"};
+static const char *const JM_NAME[4] = {"SCALE", "CHORDS", "HARP", "ALL 12"};   /* (1.0.8: ALL 12, every key its own note, the 12 of the octave) */
 static const char *const JO_NAME[5] = {"-2", "-1", "0", "+1", "+2"};
 static int jam_snap(int m, uint32_t pool)       /* the note, or the scale tone below it */
 {
@@ -9695,7 +9695,7 @@ static int jam_notes(int i, uint8_t *out)       /* the notes of key i: 1 (scale,
         out[0] = 60;
         return 1;
     }
-    r = jam_snap(base, pool);
+    r = ui.jam_mode == 3 ? base : jam_snap(base, pool);   /* (1.0.8) ALL 12: the key as it is */
     if (r < 0)
         r = 0;
     out[n++] = (uint8_t)(r > 127 ? 127 : r);
@@ -9989,7 +9989,7 @@ static void draw_jam(void)
     int w, j;
     char t[16];
     cv_text(6, 2, &FONT_B, JV_NAME[ui.jam_voice & 3], KC_MOVE);
-    cv_text(6 + text_w(&FONT_B, JV_NAME[ui.jam_voice & 3]) + 8, 6, &FONT_XS, JM_NAME[ui.jam_mode % 3], K_DIM);
+    cv_text(6 + text_w(&FONT_B, JV_NAME[ui.jam_voice & 3]) + 8, 6, &FONT_XS, JM_NAME[ui.jam_mode & 3], K_DIM);
     const uint32_t ch = en_playing ? chord_pcs() : 0u;   /* the chord playing, in its own colour (0.15.21) */
     for (w = 0; w < 16; w++) {                   /* the keyboard: the white keys, then the black keys over them; the scale lit, the chord, the keys held bright */
         const int idx = WHITE_KEY[w], pc = (5 + idx) % 12, held = (int)(ui.keys >> idx & 1u), in = (int)(pool >> pc & 1u);
@@ -10018,7 +10018,7 @@ static void draw_jam(void)
     cv_text(6, 104, &FONT_XS, "OCTAVE", K_DIM);
     cv_text(52, 104, &FONT_XS, JO_NAME[ui.jam_oct % 5], K_TEXT);
     itoa_u((uint32_t)(proj.par[P_CM_LVL]), t);
-    cv_text(6, 124, &FONT_XS, "THE KEYS PLAY ONLY THE SCALE'S NOTES", K_DIM);
+    cv_text(6, 124, &FONT_XS, ui.jam_mode == 3 ? "EVERY KEY PLAYS ITS OWN NOTE" : "THE KEYS PLAY ONLY THE SCALE'S NOTES", K_DIM);
 }
 
 /* the screensaver (STAGE page): left alone while playing, the visualizers take the screen (the auto one); any key, button or dial turn brings the

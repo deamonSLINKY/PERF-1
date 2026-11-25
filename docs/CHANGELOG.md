@@ -30,6 +30,9 @@ The unit reports its version as `FM-1_7XXYYZZ` (0.13.0 is `FM-1_7001300`); the i
 
 ## Next (development builds from 1.0.8)
 
+- **ALGORITHM sets the scale on the Progression page too (1.0.8).** Before, only on the Chords page (the page before it) and Global; on Progression it was the mood. Now you set your chords and their scale on one page (a player's ask, issue #2).
+- **Jam keys: ALL 12 (1.0.8).** A fourth Keys setting on the Jam page: every key plays its own note, all twelve, not only the scale's (for chords and melodies from outside the scale). A MIDI keyboard in the Keys mode plays the same way. The page says `EVERY KEY PLAYS ITS OWN NOTE`.
+
 ## 1.0.1 (the builds 1.0.1 .. 1.0.7 are its steps)
 
 In short: M-VAVE's own supply voltages (for earlier FM-1s where 1.0 crashed a few seconds after starting), the right colours on newer FM-1s, a crash screen that tells more, and on the Install page a test build from a file and an install counter. The steps:
