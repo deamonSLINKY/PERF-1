@@ -206,6 +206,12 @@ def installs():
     ok(rc == 0 and dev.bad == 0 and "done: the FM-1 runs FM-1_7001613" in out,
        "install: PERF-1 answers FM-1_700 to the plain query (M-UPGRADE 3.11), its whole identity to HS_FULL")
 
+    raw76 = package("FM-1_76010009")              # (1.0.9) the Hub's range for PERF-1 from 1.0: the short answer FM-1_760
+    dev = FakeFM1(I.logical_image(raw76), identity="FM-1_7010001", after_write="FM-1_76010009")
+    rc, out, err = cli([pkgfile("perf76.fwsc", raw76), "--yes"], dev)
+    ok(rc == 0 and dev.bad == 0 and "done: the FM-1 runs FM-1_76010009" in out,
+       "install: 1.0.1 (FM-1_7010001) -> FM-1_76010009, FM-1_760 to the plain query, the whole identity after")
+
     raw10 = package("FM-1_9001000")
     dev = FakeFM1(I.logical_image(raw10), identity="FM-1_909", after_write="FM-1_9001000")
     rc, out, err = cli([pkgfile("x10.fwsc", raw10), "--yes"], dev)

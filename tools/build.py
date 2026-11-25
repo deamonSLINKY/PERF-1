@@ -57,7 +57,7 @@ SDK_SHA256 = {
     "cfg/eq_cfg_hw.bin": "41167491bffed4651750719c973d2758adeb9021a5670d02d6a53c85ed80ea7d",
 }
 
-PRODUCT = "FM-1_700"                # package identity; release builds are FM-1_700 + four digits (see main)
+PRODUCT = "FM-1_700"                # package identity; release builds are FM-1_76XXYYZZ (see main)
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/ui.c)
 
 
@@ -418,7 +418,7 @@ def mmio_check():
 def main():
     global PRODUCT, VERSION
     ap = argparse.ArgumentParser()
-    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_700(X+1)YYZ (0.x: FM-1_700YYZZ), version string X.Y[.Z]")
+    ap.add_argument("--release", metavar="X.Y[.Z]", help="release build: identity FM-1_76XXYYZZ (0.x: FM-1_700YYZZ), version string X.Y[.Z]")
     ap.add_argument("--sdk", type=Path, help="JieLi AC79 SDK checkout (default: $AC79_SDK)")
     a = ap.parse_args()
     name = "perf1.fwsc"
@@ -429,17 +429,12 @@ def main():
         m = re.fullmatch(r"(\d{1,2})\.(\d{1,2})(?:\.(\d{1,2}))?(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y[.Z][-suffix], up to two digits each")
-        # (1.0.8) from 1.0 on: FM-1_700 + (major + 1) + minor (two digits) + patch (one digit): 1.0.2 -> FM-1_7002002, 2.1.3 ->
-        # FM-1_7003013. The Firmware Hub reads PERF-1 as FM-1_700 + four digits (FM-1_701xxxx is FuMi-1's and HYP-1's, 2026-11-25),
-        # and every 1.x number sits above 0.17's FM-1_7001700, so the order holds. A public release keeps its patch at 0-9; a
-        # development build past .9 takes the old FM-1_7XXYYZZ (it never goes to the Hub).
+        # (1.0.9) from 1.0 on: FM-1_76 + major, minor, patch as two digits each (1.0.2 -> FM-1_76010002). FM-1_701xxxx is
+        # FuMi-1's, HYP-1's and CUTADOR's, so the Firmware Hub could not tell 1.x apart; Sven (the Hub, 2026-11-25) gave PERF-1
+        # FM-1_76XXYYZZ and accepts both it and the old FM-1_700xxxx. 0.x keeps FM-1_700YYZZ. (1.0.8 alone was FM-1_7002008.)
+        # The plain handshake's short answer is then "FM-1_760" (ota.c: the model and three digits).
         maj, mnr, pat = int(m[1]), int(m[2]), int(m[3] or 0)
-        if 1 <= maj <= 8 and pat <= 9:
-            PRODUCT = "FM-1_700%d%02d%d" % (maj + 1, mnr, pat)
-        else:
-            PRODUCT = "FM-1_7%02d%02d%02d" % (maj, mnr, pat)
-            if maj >= 1:
-                print(f"note: --release {a.release}: patch over 9, identity {PRODUCT} (old form: not for a public release)")
+        PRODUCT = ("FM-1_76%02d%02d%02d" if maj >= 1 else "FM-1_7%02d%02d%02d") % (maj, mnr, pat)
         VERSION = a.release.upper()
         name = f"perf1-{a.release}.fwsc"   # (0.17.55: was amb-X.fwsc; the name is only the file, the identity is inside)
     fm1pkg_make.SDK = a.sdk

@@ -976,7 +976,9 @@ document.addEventListener("visibilitychange", () => {
   } catch (e) { sayK("loadfail", e.message); }
 })();
 
-/* (1.0.3) a PERF-1 test build chosen by the user (a GitHub pre-release): only a PERF-1 identity (FM-1_7 + six digits); never counted */
+/* (1.0.3) a PERF-1 test build chosen by the user (a GitHub pre-release): only a PERF-1 identity (FM-1_7 + six digits, or from 1.0.9
+   FM-1_76 + six: PERF_ID); never counted */
+const PERF_ID = /^FM-1_7(6?)(\d\d)(\d\d)(\d\d)$/;
 let testPkg = null;
 $("testfile").addEventListener("change", async (e) => {
   testPkg = null;
@@ -986,11 +988,11 @@ $("testfile").addEventListener("change", async (e) => {
   try {
     const raw = new Uint8Array(await f.arrayBuffer());
     const product = productOf(raw);
-    if (!/^FM-1_7\d{6}$/.test(product)) { sayK("testbad"); return; }
+    const pv = PERF_ID.exec(product);
+    if (!pv) { sayK("testbad"); return; }
     testPkg = { image: logicalImage(raw), product };
     $("testgo").disabled = devBusy;
-    const v = product.slice(6);
-    sayK("testok", `${+v.slice(0, 2)}.${+v.slice(2, 4)}.${+v.slice(4, 6)} (${f.name})`);
+    sayK("testok", `${+pv[2]}.${+pv[3]}.${+pv[4]} (${f.name})`);
   } catch (err) { sayK("testbad"); }
 });
 $("testgo").addEventListener("click", () => { if (testPkg) run(testPkg.image, testPkg.product, false, "testinstall"); });
@@ -1010,7 +1012,7 @@ $("stockfile").addEventListener("change", async (e) => {
     const hex = [...new Uint8Array(await crypto.subtle.digest("SHA-256", raw))].map((b) => b.toString(16).padStart(2, "0")).join("");
     if (!STOCK_SHA256.includes(hex)) {
       let p = ""; try { p = productOf(raw); } catch (_) {}
-      sayK(/^FM-1_7\d{6}$/.test(p) ? "stockperf" : "stockbad"); return;
+      sayK(PERF_ID.test(p) ? "stockperf" : "stockbad"); return;
     }
     stock = { image: logicalImage(raw), product: productOf(raw) };
     $("stockgo").disabled = devBusy;

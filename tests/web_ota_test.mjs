@@ -29,6 +29,7 @@ function check(what, cond) { console.log((what + " ").padEnd(70, ".") + (cond ? 
 const cases = [
   ["PERF-1 0.16.13 on: FM-1_700, then the whole identity", (q) => same(q, HS_QUERY) ? "FM-1_700" : same(q, HS_FULL) ? "FM-1_7001613" : null, "FM-1_7001613", true],
   ["PERF-1 before 0.16.13: the whole identity to the plain query", (q) => same(q, HS_QUERY) ? "FM-1_7001612" : null, "FM-1_7001612", false],
+  ["PERF-1 1.0.9 on: FM-1_760, then FM-1_76XXYYZZ", (q) => same(q, HS_QUERY) ? "FM-1_760" : same(q, HS_FULL) ? "FM-1_76010009" : null, "FM-1_76010009", true],
   ["AMB-1 / HYP-1: FM-1_700, no answer to 01", (q) => same(q, HS_QUERY) ? "FM-1_700" : null, "FM-1_700", true],
   ["the stock firmware: FM-1_015, never asked with 01", (q) => same(q, HS_QUERY) ? "FM-1_015" : null, "FM-1_015", false],
   ["the update loader: ota-FM-1_015, never asked with 01", (q) => same(q, HS_QUERY) ? "ota-FM-1_015" : null, "ota-FM-1_015", false],

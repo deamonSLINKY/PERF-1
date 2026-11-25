@@ -29,7 +29,7 @@ if not pkg.exists():
     pkg = SRC / "build" / f"amb-{ver}.fwsc"   # (before 0.17.55)
 raw = pkg.read_bytes()
 product = product_of(raw)
-if not re.fullmatch(r"FM-1_7\d{6}", product):
+if not re.fullmatch(r"FM-1_76?\d{6}", product):   # (1.0.9: FM-1_76XXYYZZ from 1.0)
     sys.exit(f"{pkg}: identity {product!r}: make a release build (tools/release.sh {ver})")
 if b"FELUCCA-LOADER-1" not in raw:
     sys.exit(f"{pkg}: no update loader in it")
